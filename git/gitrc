@@ -1,0 +1,22 @@
+alias g='git status'
+alias gb='git branch'
+alias gba='git branch -a'
+alias gl='git lg' 
+alias gc='git commit -v'
+alias gca='git commit -v -a'
+# commit pending changes, quote all args as message
+function gg() {
+	git commit -v -a -m "$*" 
+}
+alias gg2='git commit -v -a -m \"$*\"'
+alias gco='git checkout'
+alias gd='git diff'
+# setup a tracking branch from [remote] [branch_name]
+function gbt() {
+	git branch --track $2 $1/$2
+	git checkout $2
+}
+function grf() {
+	rm $1
+	git checkout $1
+}

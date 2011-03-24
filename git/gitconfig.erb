@@ -1,0 +1,26 @@
+[user]
+	name = <%= print("Your Name: "); STDOUT.flush; STDIN.gets.chomp %>
+	email = <%= print("Email: "); STDOUT.flush; STDIN.gets.chomp %>
+[github]
+	user = <%= print("Github user: "); STDOUT.flush; STDIN.gets.chomp %>
+	token = <%= print("Github token: "); STDOUT.flush; STDIN.gets.chomp %>
+[alias]
+	lg = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)&lt;%an&gt;%Creset' --abbrev-commit --date=relative
+	co = checkout
+	type = cat-file -t
+	dump = cat-file -p
+	br = branch
+	st = status
+	commit = ci
+[core]
+		autoclrf = false
+[mergetool]
+	keepBackup = false
+[diff]
+	external = /usr/local/bin/araxisgitdiff
+	renames = true
+[mergetool "araxismergetool"]
+	cmd = /usr/local/bin/araxisgitmerge "$PWD/$REMOTE" "$PWD/$BASE" "$PWD/$LOCAL" "$PWD/$MERGED"
+	trustExitCode = false
+[merge] 
+	tool = araxismergetool

@@ -1,0 +1,56 @@
+# see http://virtualenv.openplans.org/
+# and http://www.doughellmann.com/docs/virtualenvwrapper/
+export WORKON_HOME=$HOME/.virtualenvs
+export PIP_VIRTUALENV_BASE=$WORKON_HOME
+export PIP_RESPECT_VIRTUALENV=true
+export VIRTUAL_ENV_DISABLE_PROMPT=true
+source /usr/local/bin/virtualenvwrapper.sh
+
+# virtualenv aliases
+# http://blog.doughellmann.com/2010/01/virtualenvwrapper-tips-and-tricks.html
+alias v='workon'
+alias v.deactivate='deactivate'
+alias v.mk='mkvirtualenv --no-site-packages'
+alias v.mk_withsitepackages='mkvirtualenv'
+alias v.rm='rmvirtualenv'
+alias v.switch='workon'
+alias v.add2virtualenv='add2virtualenv'
+alias v.cdsitepackages='cdsitepackages'
+alias v.cd='cdvirtualenv'
+alias v.lssitepackages='lssitepackages'
+
+# Mac OS X specific settings
+# if [ `uname` == 'Darwin' ]; then
+# 
+#     # The last Python added to PATH will be the default Python
+#     PY_VER=( '3.2' '2.7' '2.6' )
+#     PY_VER_ELEMENTS=${#PY_VER[@]}
+#     DEFAULT_PY=${PY_VER[${PY_VER_ELEMENTS}-1]}
+#     PY_FW="/Library/Frameworks/Python.framework/Versions"
+# 
+#     for (( i=0;i<$PY_VER_ELEMENTS;i++)); do
+#         if [ -x ${PY_FW}/${PY_VER[${i}]}/bin/python${PY_VER[${i}]} ]; then
+#             PATH="${PY_FW}/${PY_VER[${i}]}/bin:${PATH}"
+#             export PATH
+#         fi
+#     done
+# 
+#     # Check for virtualenv in the default Python
+#     if [ -x ${PY_FW}/${DEFAULT_PY}/bin/virtualenv ]; then
+#         export VIRTUALENV_USE_DISTRIBUTE=true
+#         export WORKON_HOME=$HOME/.virtualenvs
+#     fi
+# 
+#     # Check for pip
+#     if [ -x ${PY_FW}/${DEFAULT_PY}/bin/pip ]; then
+#         export PIP_VIRTUALENV_BASE=$WORKON_HOME
+#         export PIP_REQUIRE_VIRTUALENV=true
+#         export PIP_DOWNLOAD_CACHE=$HOME/.pip_download_cache
+#     fi
+# 
+#     # Enable virtualenvwrapper
+#     if [ -x ${PY_FW}/${DEFAULT_PY}/bin/virtualenvwrapper.sh ]; then
+#         source ${PY_FW}/${DEFAULT_PY}/bin/virtualenvwrapper.sh
+#     fi
+# 
+# fi

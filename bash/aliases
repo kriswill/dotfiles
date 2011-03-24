@@ -1,0 +1,82 @@
+alias reload='source ~/.config/bash/aliases'
+alias ea='vim ~/.config/bash/aliases && reload'
+
+function ht() { 
+	history | awk '{a[$2]++}END{for(i in a){print a[i] " " i}}' | sort -rn | head
+}
+
+# Pathing
+alias ..='cd ..;'
+alias ...='.. ..'
+
+if [ $system_name = 'Darwin' ]; then
+  function manpdf() { man -t $@ | open -f -a Preview; }
+  function osinfo() { 
+     x1="$(/usr/bin/sw_vers -productName)"
+     x2="$(/usr/bin/sw_vers -productVersion)"
+     x3="$(/usr/bin/sw_vers -buildVersion)"
+     x4="$(/usr/bin/arch)"
+     echo "${x1} - ${x2} - ${x3} - ${x4}"
+  }
+  alias ls='ls -G'
+  alias pubkey='pubkey | pbcopy && echo "Keys copied to clipboard"'
+  alias et="m"
+  alias o='open .'
+  alias b='open -a chrome'
+  alias eprof="mate ~/.config"
+  alias hidefile='/usr/bin/SetFile -a "V"'
+  alias showfile='/usr/bin/SetFile -a "v"'
+  alias startpg='sudo /Library/StartupItems/PostgreSQL/PostgreSQL start'
+#  alias readrails="mate `ruby -rubygems -e "puts( ['rails', 'activerecord', 'activeresource', 'actionpack', 'activesupport'].collect { |gem| gems = Gem.source_index.find_name(gem); gems.last.full_gem_path; }.join(' '))"`"
+else
+  alias ls='ls --color=auto'
+fi
+
+# process status
+alias tu='top -o cpu' 
+alias tm='top -o vsize'
+
+# ls aliases
+alias ls='ls $LS_OPTIONS'
+alias l='ls $LS_OPTIONS -lh'
+alias la='ls $LS_OPTIONS -lAh'
+
+# Ruby
+alias irb='irb --readline -r irb/completion'
+alias rii='ri -Tf ansi'
+alias gemi='sudo gem install --no-rdoc --no-ri'
+
+# Rails
+# alias ss='./script/server'
+# alias sg='./script/generate'
+# alias sp='./script/plugin install'
+# alias sc='./script/console'
+# alias s='./script/spec'
+# alias rmig='rake db:migrate'
+
+# MySQL
+alias mysql-start="sudo launchctl load -w /Library/LaunchDaemons/com.mysql.mysqld.plist"
+alias mysql-stop="sudo launchctl unload -w /Library/LaunchDaemons/com.mysql.mysqld.plist"
+
+# MongoDB
+function mongo-start() {
+	launchctl load -w ~/Library/LaunchAgents/org.mongodb.mongod.plist
+	launchctl start org.mongodb.mongod
+}
+function mongo-stop() {
+	launchctl stop org.mongodb.mongod
+	launchctl unload -w ~/Library/LaunchAgents/org.mongodb.mongod.plist
+}
+
+
+# function m() {
+#   # Shell (bash) function which opens a directory as a project in TextMate  
+#   #   excluding directories that tend to slow down "Find in Project"
+#   
+#   shopt -s extglob  # Enable extended globbing
+#    
+#   # Invoke TextMate upon all the files and directories except those listed
+#   mate !(@(cache|db|log|tmp)) "$@"
+#   
+#   shopt -u extglob  # Disable extended globbing
+# }

@@ -1,0 +1,10 @@
+source ~/.bashrc
+# Get the aliases and functions
+
+if [ -f ~/.bashrc ]; then
+  . ~/.bashrc
+fi
+
+if [ -f `brew --prefix`/Library/Contributions/brew_bash_completion.sh ]; then
+  . `brew --prefix`/Library/Contributions/brew_bash_completion.sh
+fi
