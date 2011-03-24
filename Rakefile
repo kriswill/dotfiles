@@ -46,6 +46,15 @@ task :git => :init do
    end
 end
 
+desc 'backup terminal settings'
+task :backup_terminal_settings => :init do
+  filename = 'com.apple.Terminal.plist'
+  source = File.join $homedir, 'Library', 'Preferences', filename
+  target = File.join $dotconf, 'terminal', filename
+  FileUtils.copy source, target
+  system "plutil -convert xml1 #{target}"
+end
+
 def link_file(source, target)
   puts "linking #{target}"
   FileUtils.ln_sf source, target
