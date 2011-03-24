@@ -1,27 +1,35 @@
 require 'rake'
 require 'erb'
 
-task :default => [:bash, :ruby, :vim]
+task :default => [:bash, :bin, :ruby, :vim]
 
 desc 'configure ~/.config symlink'
 task :init do
   $homedir = File.expand_path '~'
   $currdir = File.expand_path '.' 
   $dotconf = File.join $homedir, '.config'
-  puts "linking ~/.config -> #{$currdir}"
   relink_file $currdir, $dotconf
+  $homebin = File.join $homedir, 'bin'
 end
 
 desc 'configure bash links'
 task :bash => :init do
-  ['bashrc', 'bash_profile', 'inputrc', 'nanorc', 'ackrc'].each do |file|
+  %w[bashrc bash_profile inputrc nanorc ackrc].each do |file|
     relink_file File.join($dotconf, 'bash', file), File.join($homedir, ".#{file}")
+  end
+end
+
+desc 'configure ~/bin'
+task :bin => :init do
+  FileUtil.mkdir $homebin unless File.exist? $homebin
+  %w[vcprompt pg beautify colors].each do |file|
+    relink_file File.join($dotconf, 'bin', file), File.join($homebin, file)
   end
 end
 
 desc 'configure ruby links'
 task :ruby => :init do
-  ['rdebugrc', 'irbrc', 'gemrc', 'autotest'].each do |file|
+  %w[rdebugrc irbrc gemrc autotest].each do |file|
     relink_file File.join($dotconf, 'ruby', file), File.join($homedir, ".#{file}")
   end
 end
@@ -29,7 +37,7 @@ end
 desc 'configure vim links'
 task :vim => :init do
   relink_file File.join($dotconf, 'vim'), File.join($homedir, '.vim')
-  ['vimrc', 'gvimrc'].each do |file|
+  %w[vimrc gvimrc].each do |file|
     relink_file File.join($dotconf, 'vim', file), File.join($homedir, ".#{file}")
   end
 end
@@ -50,9 +58,27 @@ desc 'backup terminal settings'
 task :backup_terminal_settings => :init do
   filename = 'com.apple.Terminal.plist'
   source = File.join $homedir, 'Library', 'Preferences', filename
-  target = File.join $dotconf, 'terminal', filename
-  FileUtils.copy source, target
-  system "plutil -convert xml1 #{target}"
+  if File.exist?(source) then
+    target = File.join $dotconf, 'terminal', filename
+    FileUtils.copy source, target
+    system "plutil -convert xml1 #{target}"
+  end
+end
+
+desc 'configure terminal'
+task :terminal => :init do
+  filename = 'com.apple.Terminal.plist'
+  target = File.join $homedir, 'Library', 'Preferences', filename
+  source = File.join $dotconf, 'terminal', filename
+  backup = "#{source}.bak"
+  FileUtils.copy target, backup unless File.exist?(backup)
+  relink_file source, target
+end
+
+desc 'download latest vcprompt'
+task :update_vcprompt => :init do
+  system "curl -s https://github.com/xvzf/vcprompt/raw/master/bin/vcprompt > bin/vcprompt"
+  FileUtils.chmod 0755, "bin/vcprompt"
 end
 
 def link_file(source, target)

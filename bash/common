@@ -2,8 +2,9 @@ system_name=`uname -s` # Sets 'Darwin' or 'Linux' etc
 
 # Common functionality between Zsh and Bash
 source $DOT_FILES/bash/exports
+source $DOT_FILES/bash/colors
 source $DOT_FILES/git/gitrc
 source $DOT_FILES/bash/aliases
 
-export VCPROMPT=~/.config/misc/vcprompt.py
+export VCPROMPT=~/bin/vcprompt
 source $DOT_FILES/bash/prompt
