@@ -27,11 +27,9 @@ bash_prompt_command() {
     fi
 }
 
+# used to output the python virtualenv name
 venv() {
-	if [ ${#VIRTUAL_ENV} -gt "0" ]
-	then
-		echo -e "${K} e[${R}$(basename ${VIRTUAL_ENV})${K}]"
-	fi
+	[ ${#VIRTUAL_ENV} -gt "0" ] && echo -e "${K} e[${R}$(basename ${VIRTUAL_ENV})${K}]"
 }
 
 vcs(){
@@ -48,19 +46,15 @@ bash_prompt() {
           ;;
     esac
     
-    local UC=$W                 # user's color
-    [ $UID -eq "0" ] && UC=$EMR   # root's color
+    local UC=$W                 	# user's color
+    [ $UID -eq "0" ] && UC=$EMR		# root's color
     
-    #PS1="$TITLEBAR\n${UC}\u${EMK}@${UC}\h ${EMB}\${NEW_PWD}\n${EMG}→ ${NONE}"
 	PS1="$TITLEBAR\n\
 \[${UC}\]\u\
 \$(vcs)\
 \$(venv)\
  \[${EMB}\]\${NEW_PWD} \
 \n\[${EMG}\]→\[${NONE}\] "
-#"${R}\${VENV}"
-	# without colors: PS1="[\u@\h \${NEW_PWD}]\\$ "
-    # extra backslash in front of \$ to make bash colorize the prompt
 }
 
 PROMPT_COMMAND=bash_prompt_command
