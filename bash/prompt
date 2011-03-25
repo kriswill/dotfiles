@@ -25,20 +25,17 @@ bash_prompt_command() {
         NEW_PWD=${NEW_PWD:$pwdoffset:$pwdmaxlen}
         NEW_PWD=${trunc_symbol}/${NEW_PWD#*/}
     fi
-	# get the python virtualenv name for the prompt	
-	# VENV=""
-	# if [ ${#VIRTUAL_ENV} -gt "0" ]
-	# then
-	# 	VENV=$(basename ${VIRTUAL_ENV})
-	# fi
-	#printf "%s%$(($COLUMNS-${#PS1L}))s" "$PS1L" "$VENV"
 }
 
 venv() {
 	if [ ${#VIRTUAL_ENV} -gt "0" ]
 	then
-		echo -e "${K}venv:${R}$(basename ${VIRTUAL_ENV})"
+		echo -e "${K} e[${R}$(basename ${VIRTUAL_ENV})${K}]"
 	fi
+}
+
+vcs(){
+	echo -e $(vcprompt --format "${K} %n[${R}%b${EMG}%m${EMR}%u${EMY}%a${K}]")
 }
 
 bash_prompt() {
@@ -50,17 +47,16 @@ bash_prompt() {
          local TITLEBAR=""
           ;;
     esac
-
     
     local UC=$W                 # user's color
-    [ $UID -eq "0" ] && UC=$R   # root's color
+    [ $UID -eq "0" ] && UC=$EMR   # root's color
     
     #PS1="$TITLEBAR\n${UC}\u${EMK}@${UC}\h ${EMB}\${NEW_PWD}\n${EMG}→ ${NONE}"
 	PS1="$TITLEBAR\n\
-\[${UC}\]\u \
-\[${EMB}\]\${NEW_PWD} \
-\[${EMK}\]\$(vcprompt) \
-\$(venv) \
+\[${UC}\]\u\
+\$(vcs)\
+\$(venv)\
+ \[${EMB}\]\${NEW_PWD} \
 \n\[${EMG}\]→\[${NONE}\] "
 #"${R}\${VENV}"
 	# without colors: PS1="[\u@\h \${NEW_PWD}]\\$ "
