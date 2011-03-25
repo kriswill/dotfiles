@@ -2,15 +2,35 @@ set nocompatible
 
 " allow backspacing over everything in insert mode
 set backspace=indent,eol,start
-
 set nobackup
 set nowritebackup
-set history=50		        " keep 50 lines of command line history
-set ruler                 " show the cursor position all the time
+set history=50            " keep 50 lines of command line history
+
 set showcmd               " display incomplete commands
 set incsearch             " do incremental searching
 set nowrap                " Switch wrap off for everything
 set laststatus=2          " Always display the status line
+set ignorecase            " case only matters with mixed case expressions
+set smartcase
+set number
+set numberwidth=5
+
+set title                 " enable automatic title setting for terminals
+set titleold="Terminal"
+set titlestring=%F
+
+" activate a permanent ruler and disable Toolbar, and add line
+" highlightng as well as numbers.
+" And disable the sucking pydoc preview window for the omni completion
+" also highlight current line and disable the blinking cursor.
+set ruler                 " show the cursor position all the time
+set guioptions-=T
+set completeopt-=preview
+set gcr=a:blinkon0
+if has("gui_running")
+  set cursorline
+endif
+set ttyfast
 
 " Switch syntax highlighting on, when the terminal has colors
 " Also switch on highlighting the last used search pattern.
@@ -21,3 +41,14 @@ endif
 
 " \ is the leader character
 let mapleader = ","
+let maplocalleader="\\"
+
+" Local config
+if filereadable(".vimrc.local")
+  source .vimrc.local
+endif
+
+" go with smartindent if there is no plugin indent file.
+" but don't outdent hashes
+set smartindent
+inoremap # X#
