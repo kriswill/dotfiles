@@ -55,3 +55,11 @@ endif
 " but don't outdent hashes
 set smartindent
 inoremap # X#
+
+" Gundo.vim settings        see http://sjl.bitbucket.org/gundo.vim/
+nnoremap <F5> :GundoToggle<CR>
+let g:gundo_width = 40
+let g:gundo_preview_height = 20 
+" let g:gundo_right = 1
+
+" end .vimrc
