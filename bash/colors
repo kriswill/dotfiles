@@ -29,3 +29,25 @@ BGB="\033[44m"
 BGM="\033[45m"
 BGC="\033[46m"
 BGW="\033[47m"
+
+colors() {
+	echo && echo -e "${NONE}Foreground color codes:" && echo
+	echo -n -e "${NONE}{NONE}" && echo "	${NONE}"
+	echo -n -e "${W}{W}" && echo -n "	${W}" && echo -n -e "${EMW}	{EMW}" && echo "	${EMW}"
+	echo -n -e "${B}{B}" && echo -n "	${B}" && echo -n -e "${EMB}	{EMB}" && echo "	${EMB}"
+	echo -n -e "${G}{G}" && echo -n "	${G}" && echo -n -e "${EMG}	{EMG}" && echo "	${EMG}"
+	echo -n -e "${C}{C}" && echo -n "	${C}" && echo -n -e "${EMC}	{EMG}" && echo "	${EMC}"
+	echo -n -e "${R}{R}" && echo -n "	${R}" && echo -n -e "${EMR}	{EMR}" && echo "	${EMR}"
+	echo -n -e "${M}{M}" && echo -n "	${M}" && echo -n -e "${EMM}	{EMM}" && echo "	${EMM}"
+	echo -n -e "${Y}{Y}" && echo -n "	${Y}" && echo -n -e "${EMY}	{EMY}" && echo "	${EMY}"
+	echo -n -e "${K}{K}" && echo -n "	${K}" && echo -n -e "${EMK}	{EMK}" && echo "	${EMK}"
+	echo && echo -e "${NONE}Background color codes:" && echo
+	echo -n -e "${BGK}{BGK}" && echo "	${BGK}"
+	echo -n -e "${BGR}{BGR}" && echo "	${BGR}"
+	echo -n -e "${BGG}{BGG}" && echo "	${BGG}"
+	echo -n -e "${BGY}{BGY}" && echo "	${BGY}"
+	echo -n -e "${BGB}{BGB}" && echo "	${BGB}"
+	echo -n -e "${BGM}{BGM}" && echo "	${BGM}"
+	echo -n -e "${BGC}{BGC}" && echo "	${BGC}"
+	echo -n -e "${K}${BGW}{BGW}" && echo "	${BGW}"
+}

@@ -1,23 +1,15 @@
 export CURRENT_SHELL=`which bash`
-export DOT_FILES=$HOME/.config
-
-# All things that are both ZSH and Bash compatible
-. $DOT_FILES/bash/common
-. $DOT_FILES/bash/save-directory
-. $DOT_FILES/bash/virtualenvs-python # vars for python virtualenvs-wrapper
-. $DOT_FILES/git/git-completion
 
 alias reload=". ~/.bashrc"
 
-if [ $system_name == 'Darwin' ]; then
-  . $DOT_FILES/bash/terminal
-fi
+# All things that are both ZSH and Bash compatible
+source ~/.config/bash/common
+source ~/.config/bash/save-directory
+source ~/.config/bash/virtualenvs-python # vars for python virtualenvs-wrapper
+source ~/.config/git/git-completion
 
-if [ -f /etc/bash_completion ]; then
-  . /etc/bash_completion
-# else
-  # . $DOT_FILES/bash/bash_completion
-fi
+[[ $system_name == 'Darwin' ]] && source ~/.config/bash/terminal
+[[ -s /etc/bash_completion ]] && source /etc/bash_completion
 
 # readline settings
 bind "set completion-ignore-case on" 
@@ -28,10 +20,10 @@ shopt -s checkwinsize
 shopt -s histappend
 shopt -s globstar 2>/dev/null # Bash 4 and above only
 
-complete -C $DOT_FILES/ruby/rake-completion.rb -o default rake}
+complete -C ~/.config/ruby/rake-completion.rb -o default rake}
 
 # RVM
-[[ -s $HOME/.rvm/scripts/rvm ]] && source $HOME/.rvm/scripts/rvm
+[[ -s ~/.rvm/scripts/rvm ]] && source ~/.rvm/scripts/rvm
 
 _autojump() 
 {
@@ -49,3 +41,7 @@ if [[ ! $PROMPT_COMMAND =~ autojump ]]; then
 fi 
 alias jumpstat="autojump --stat"
 function j { new_path="$(autojump $@)";if [ -n "$new_path" ]; then echo -e "\\033[31m${new_path}\\033[0m"; cd "$new_path";fi }
+
+if [ -f `brew --prefix`/Library/Contributions/brew_bash_completion.sh ]; then
+  . `brew --prefix`/Library/Contributions/brew_bash_completion.sh
+fi

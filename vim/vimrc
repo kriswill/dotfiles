@@ -4,6 +4,8 @@ set nocompatible
 " See http://vimcasts.org/episodes/synchronizing-plugins-with-git-submodules-and-pathogen/
 call pathogen#runtime_append_all_bundles()
 call pathogen#helptags()
+" console color scheme
+colorscheme ir_black
 
 " allow backspacing over everything in insert mode
 set backspace=indent,eol,start

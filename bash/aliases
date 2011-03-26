@@ -26,7 +26,7 @@ if [ $system_name = 'Darwin' ]; then
   alias eprof="mate ~/.config"
   alias hidefile='/usr/bin/SetFile -a "V"'
   alias showfile='/usr/bin/SetFile -a "v"'
-  alias startpg='sudo /Library/StartupItems/PostgreSQL/PostgreSQL start'
+#  alias startpg='sudo /Library/StartupItems/PostgreSQL/PostgreSQL start'
 #  alias readrails="mate `ruby -rubygems -e "puts( ['rails', 'activerecord', 'activeresource', 'actionpack', 'activesupport'].collect { |gem| gems = Gem.source_index.find_name(gem); gems.last.full_gem_path; }.join(' '))"`"
 else
   alias ls='ls --color=auto'
@@ -46,14 +46,6 @@ alias irb='irb --readline -r irb/completion'
 alias rii='ri -Tf ansi'
 alias gemi='sudo gem install --no-rdoc --no-ri'
 
-# Rails
-# alias ss='./script/server'
-# alias sg='./script/generate'
-# alias sp='./script/plugin install'
-# alias sc='./script/console'
-# alias s='./script/spec'
-# alias rmig='rake db:migrate'
-
 # MySQL
 alias mysql-start="sudo launchctl load -w /Library/LaunchDaemons/com.mysql.mysqld.plist"
 alias mysql-stop="sudo launchctl unload -w /Library/LaunchDaemons/com.mysql.mysqld.plist"
@@ -67,16 +59,3 @@ function mongo-stop() {
 	launchctl stop org.mongodb.mongod
 	launchctl unload -w ~/Library/LaunchAgents/org.mongodb.mongod.plist
 }
-
-
-# function m() {
-#   # Shell (bash) function which opens a directory as a project in TextMate  
-#   #   excluding directories that tend to slow down "Find in Project"
-#   
-#   shopt -s extglob  # Enable extended globbing
-#    
-#   # Invoke TextMate upon all the files and directories except those listed
-#   mate !(@(cache|db|log|tmp)) "$@"
-#   
-#   shopt -u extglob  # Disable extended globbing
-# }

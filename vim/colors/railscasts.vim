@@ -24,45 +24,45 @@ let g:colors_name = "railscasts"
 hi Normal     guifg=#E6E1DC guibg=#232323
 hi Cursor     guibg=#FFFFFF
 hi CursorLine guibg=#333435
-hi LineNr     guifg=#666666
+hi LineNr     guifg=#666666 ctermfg=black
 hi Visual     guibg=#5A647E
 hi Search     guifg=NONE    guibg=#131313  gui=NONE
 hi Folded     guifg=#F6F3E8 guibg=#444444  gui=NONE
-hi Directory  guifg=#A5C160 gui=NONE
+hi Directory  guifg=#A5C160 gui=NONE	   ctermfg=green
 hi Error      guifg=#FFFFFF guibg=#990000
 hi MatchParen guifg=NONE    guibg=#131313
 hi Title      guifg=#E6E1DC
 
-hi Comment    guifg=#BC9357 guibg=NONE     gui=italic
+hi Comment    guifg=#BC9357 guibg=NONE     gui=italic	ctermfg=brown	ctermbg=NONE	cterm=NONE
 hi! link Todo Comment
 
-hi String     guifg=#A5C160
+hi String     guifg=#A5C160 ctermfg=green	ctermbg=NONE	cterm=NONE
 hi! link Number String
 hi! link rubyStringDelimiter String
 
 " nil, self, symbols
-hi Constant guifg=#6D9CBD
+hi Constant guifg=#6D9CBD ctermfg=darkblue
 
 " def, end, include, load, require, alias, super, yield, lambda, proc
-hi Define guifg=#CC7733 gui=NONE
+hi Define guifg=#CC7733 gui=NONE ctermfg=darkred
 hi! link Include Define
 hi! link Keyword Define
 hi! link Macro Define
 
 " #{foo}, <%= bar %>
-hi Delimiter guifg=#509E50
+hi Delimiter guifg=#509E50 ctermfg=green
 " hi erubyDelimiter guifg=NONE
 
 " function name (after def)
-hi Function guifg=#FFC66D gui=NONE
+hi Function guifg=#FFC66D gui=NONE ctermfg=brown
 
 "@var, @@var, $var
-hi Identifier guifg=#CFCFFF gui=NONE
+hi Identifier guifg=#CFCFFF gui=NONE ctermfg=lightblue
 
 " #if, #else, #endif
 
 " case, begin, do, for, if, unless, while, until, else
-hi Statement guifg=#CC7733 gui=NONE
+hi Statement guifg=#CC7733 gui=NONE ctermfg=darkred
 hi! link PreProc Statement
 hi! link PreCondit Statement
 
