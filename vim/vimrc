@@ -4,8 +4,8 @@ set nocompatible
 " See http://vimcasts.org/episodes/synchronizing-plugins-with-git-submodules-and-pathogen/
 call pathogen#runtime_append_all_bundles()
 call pathogen#helptags()
-" console color scheme
-colorscheme ir_black
+
+colorscheme railscasts
 
 " allow backspacing over everything in insert mode
 set backspace=indent,eol,start
@@ -59,9 +59,22 @@ set smartindent
 inoremap # X#
 
 " Gundo.vim settings        see http://sjl.bitbucket.org/gundo.vim/
-nnoremap <F5> :GundoToggle<CR>
-let g:gundo_width = 40
+nnoremap <Leader>u :GundoToggle<CR>
 let g:gundo_preview_height = 20 
+let g:gundo_width = 40
 " let g:gundo_right = 1
 
-" end .vimrc
+" Kris' personal command mappings
+
+" Bubble single lines
+nmap <C-k> [e
+nmap <C-j> ]e
+" Bubble multiple lines
+vmap <C-k> [egv
+vmap <C-j> ]egv
+" map 3-finger trackpad swipe gestures to buffer switches
+nmap <SwipeLeft> :bN<CR>
+nmap <SwipeRight> :bn<CR>
+" split edit vimrc
+nnoremap <leader>ev <C-w><C-s><C-l>:e $MYVIMRC<CR>
+
