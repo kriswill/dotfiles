@@ -22,7 +22,7 @@ end
 desc 'configure ~/bin'
 task :bin => :init do
   FileUtil.mkdir $homebin unless File.exist? $homebin
-  %w[vcprompt pg beautify colors].each do |file|
+  %w[vcprompt pg beautify].each do |file|
     relink_file File.join($dotconf, 'bin', file), File.join($homebin, file)
   end
 end
