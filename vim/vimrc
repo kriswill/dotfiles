@@ -77,4 +77,7 @@ nmap <SwipeLeft> :bN<CR>
 nmap <SwipeRight> :bn<CR>
 " split edit vimrc
 nnoremap <leader>ev <C-w><C-s><C-l>:e $MYVIMRC<CR>
+" NERDtree on <leader>t
+nnoremap <leader>t :NERDTree<CR>
+let NERDTreeIgnore=['\~$', '\.pyc$', '\.pyo$', '\.class$', 'pip-log\.txt$', '\.o$']
 
