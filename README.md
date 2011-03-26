@@ -33,7 +33,7 @@ Ruby configuration
 VIM
 ---
 
-I use MacVIM on OS/X.  The configuration files are setup to use this version of VIM (7.3 as of this writing).  I use Pathogen to configure VIM plugins in the .config/vim/bundles directory.  Each plugin is configured as a git submodule.  To update the plugins run:
+I use MacVIM on OS/X.  The configuration files are setup to use this version of VIM (7.3 as of this writing).  I use [Pathogen](https://github.com/tpope/vim-pathogen) to configure VIM plugins in the `.config/vim/bundles` directory.  Each plugin is configured as a git submodule.  To update the plugins run:
 
 	$ cd ~/.config
 	$ git submodule update --init
