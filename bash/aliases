@@ -28,9 +28,26 @@ if [ $system_name = 'Darwin' ]; then
   alias showfile='/usr/bin/SetFile -a "v"'
 #  alias startpg='sudo /Library/StartupItems/PostgreSQL/PostgreSQL start'
 #  alias readrails="mate `ruby -rubygems -e "puts( ['rails', 'activerecord', 'activeresource', 'actionpack', 'activesupport'].collect { |gem| gems = Gem.source_index.find_name(gem); gems.last.full_gem_path; }.join(' '))"`"
+
+	# MySQL
+	alias mysql-start="sudo launchctl load -w /Library/LaunchDaemons/com.mysql.mysqld.plist"
+	alias mysql-stop="sudo launchctl unload -w /Library/LaunchDaemons/com.mysql.mysqld.plist"
+
+	# MongoDB
+	function mongo-start() {
+		launchctl load -w ~/Library/LaunchAgents/org.mongodb.mongod.plist
+		launchctl start org.mongodb.mongod
+	}
+	function mongo-stop() {
+		launchctl stop org.mongodb.mongod
+		launchctl unload -w ~/Library/LaunchAgents/org.mongodb.mongod.plist
+	}
 else
   alias ls='ls --color=auto'
 fi
+
+# key bindings
+alias keybinds='bind -P | grep not -v | cut -d" " -f1,6,7,8,9,10,11 | sed "s/[\"\\,.]//g" | column -t' # print all keybinds in terminal
 
 # process status
 alias tu='top -o cpu' 
@@ -46,16 +63,3 @@ alias irb='irb --readline -r irb/completion'
 alias rii='ri -Tf ansi'
 alias gemi='sudo gem install --no-rdoc --no-ri'
 
-# MySQL
-alias mysql-start="sudo launchctl load -w /Library/LaunchDaemons/com.mysql.mysqld.plist"
-alias mysql-stop="sudo launchctl unload -w /Library/LaunchDaemons/com.mysql.mysqld.plist"
-
-# MongoDB
-function mongo-start() {
-	launchctl load -w ~/Library/LaunchAgents/org.mongodb.mongod.plist
-	launchctl start org.mongodb.mongod
-}
-function mongo-stop() {
-	launchctl stop org.mongodb.mongod
-	launchctl unload -w ~/Library/LaunchAgents/org.mongodb.mongod.plist
-}
