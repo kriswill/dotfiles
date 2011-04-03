@@ -12,6 +12,7 @@ fi
 # /usr/share/big_dir_name -> ../share/big_dir_name if pwdmaxlen=20
 ##################################################
 bash_prompt_command() {
+		RETURN=$?
     # How many characters of the $PWD should be kept
     local pwdmaxlen=45
     # Indicate that there has been dir truncation
@@ -25,6 +26,8 @@ bash_prompt_command() {
         NEW_PWD=${NEW_PWD:$pwdoffset:$pwdmaxlen}
         NEW_PWD=${trunc_symbol}/${NEW_PWD#*/}
     fi
+		
+		#EXIT_CODE='$(if [[ $RETURN = 0 ]]; then echo -ne ""; else echo -ne "\[$EMR\]$RETURN\[$NONE\] "; fi;)'
 }
 
 
@@ -48,6 +51,12 @@ rv(){
 	[ $PROMPT_RV -eq "1" ] && (local v=`ruby --version`; local arr=(${v// / }); echo -e "${K} ruby[${R}${arr[1]%p*}${K}]")
 }
 
+arrow(){
+	local ARROW=$EMR
+	[ "$RETURN" -eq "0" ] && ARROW=$EMG
+	echo -e "${ARROW}→${NONE} "
+}
+
 bash_prompt() {
     case $TERM in
      xterm*|rxvt*)
@@ -59,7 +68,7 @@ bash_prompt() {
     esac
     
     local UC=$W                 	# user's color
-    [ $UID -eq "0" ] && UC=$EMR		# root's color
+    [ $UID -eq 0 ] && UC=$EMR			# root's color
     
 	PS1="$TITLEBAR\n\
 \[${UC}\]\u\
@@ -67,7 +76,8 @@ bash_prompt() {
 \$(venv)\
 \$(rv)\
  \[${EMB}\]\${NEW_PWD} \
-\n\[${EMG}\]→\[${NONE}\] "
+\n\[${K}\]${RETURN}\
+\$(arrow)"
 }
 
 PROMPT_COMMAND=bash_prompt_command
