@@ -8,7 +8,10 @@ source ~/.config/bash/save-directory
 source ~/.config/bash/virtualenvs-python # vars for python virtualenvs-wrapper
 source ~/.config/git/git-completion
 
-[[ $system_name == 'Darwin' ]] && source ~/.config/bash/terminal
+if [ $system_name == 'Darwin' ]; then
+	source `brew --prefix`/Library/Contributions/brew_bash_completion.sh
+	source ~/.config/bash/terminal
+fi
 [[ -s /etc/bash_completion ]] && source /etc/bash_completion
 
 # readline settings
