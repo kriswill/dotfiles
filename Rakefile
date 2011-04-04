@@ -22,7 +22,8 @@ end
 desc 'configure ~/bin'
 task :bin => :init do
   FileUtil.mkdir $homebin unless File.exist? $homebin
-  %w[vcprompt pg beautify].each do |file|
+  %w[vcprompt pg beautify ack].each do |file|
+    FileUtils.chmod 0755, file
     relink_file File.join($dotconf, 'bin', file), File.join($homebin, file)
   end
 end
