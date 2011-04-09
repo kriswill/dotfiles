@@ -76,10 +76,24 @@ task :terminal => :init do
   relink_file source, target
 end
 
-desc 'download latest vcprompt'
-task :update_vcprompt => :init do
-  system "curl -s https://github.com/xvzf/vcprompt/raw/master/bin/vcprompt > bin/vcprompt"
-  FileUtils.chmod 0755, "bin/vcprompt"
+namespace :install do
+  desc 'download latest vcprompt'
+  task :vcprompt => :init do
+    system "curl -s https://github.com/xvzf/vcprompt/raw/master/bin/vcprompt > bin/vcprompt"
+    FileUtils.chmod 0755, "bin/vcprompt"
+  end
+  
+  desc 'install pow.  see http://pow.cx/manual.html'
+  task :pow do
+    system "curl get.pow.cx | sh"
+  end
+end
+
+namespace :remove do
+  desc 'uninstall pow'
+  task :pow do
+    system "curl get.pow.cx/uninstall.sh | sh"
+  end
 end
 
 def link_file(source, target)

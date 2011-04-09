@@ -27,6 +27,7 @@ complete -C ~/.config/ruby/rake-completion.rb -o default rake}
 
 # RVM
 [[ -s ~/.rvm/scripts/rvm ]] && source ~/.rvm/scripts/rvm
+[[ -r $rvm_path/scripts/completion ]] && source $rvm_path/scripts/completion
 
 _autojump() 
 {
