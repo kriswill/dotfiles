@@ -1,24 +1,25 @@
 # see http://virtualenv.openplans.org/
 # and http://www.doughellmann.com/docs/virtualenvwrapper/
-export WORKON_HOME=$HOME/.virtualenvs
-export PIP_VIRTUALENV_BASE=$WORKON_HOME
-export PIP_RESPECT_VIRTUALENV=true
-export VIRTUAL_ENV_DISABLE_PROMPT=true
-source /usr/local/bin/virtualenvwrapper.sh
+if [ -s /usr/local/bin/virtualenvwrapper.sh ]; then
+	export WORKON_HOME=$HOME/.virtualenvs
+	export PIP_VIRTUALENV_BASE=$WORKON_HOME
+	export PIP_RESPECT_VIRTUALENV=true
+	export VIRTUAL_ENV_DISABLE_PROMPT=true
+	source /usr/local/bin/virtualenvwrapper.sh
 
-# virtualenv aliases
-# http://blog.doughellmann.com/2010/01/virtualenvwrapper-tips-and-tricks.html
-alias v='workon'
-alias v.deactivate='deactivate'
-alias v.mk='mkvirtualenv --no-site-packages'
-alias v.mk_withsitepackages='mkvirtualenv'
-alias v.rm='rmvirtualenv'
-alias v.switch='workon'
-alias v.add2virtualenv='add2virtualenv'
-alias v.cdsitepackages='cdsitepackages'
-alias v.cd='cdvirtualenv'
-alias v.lssitepackages='lssitepackages'
-
+	# virtualenv aliases
+	# http://blog.doughellmann.com/2010/01/virtualenvwrapper-tips-and-tricks.html
+	alias v='workon'
+	alias v.deactivate='deactivate'
+	alias v.mk='mkvirtualenv --no-site-packages'
+	alias v.mk_withsitepackages='mkvirtualenv'
+	alias v.rm='rmvirtualenv'
+	alias v.switch='workon'
+	alias v.add2virtualenv='add2virtualenv'
+	alias v.cdsitepackages='cdsitepackages'
+	alias v.cd='cdvirtualenv'
+	alias v.lssitepackages='lssitepackages'
+fi 
 # Mac OS X specific settings
 # if [ `uname` == 'Darwin' ]; then
 # 
