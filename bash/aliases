@@ -26,6 +26,11 @@ if [ $system_name = 'Darwin' ]; then
   alias eprof="mate ~/.config"
   alias hidefile='/usr/bin/SetFile -a "V"'
   alias showfile='/usr/bin/SetFile -a "v"'
+
+	alias selen='/usr/bin/java -jar /Applications/Sauce\ RC.app/Contents/Resources/controller/selenium-server.jar -timeout 30 -port 5666'
+	
+	alias kiwi='ssh -v kiwi.coceve.com'
+	alias kiwitun='kiwi -f -R 5756:localhost:4444 -N'
 #  alias startpg='sudo /Library/StartupItems/PostgreSQL/PostgreSQL start'
 #  alias readrails="mate `ruby -rubygems -e "puts( ['rails', 'activerecord', 'activeresource', 'actionpack', 'activesupport'].collect { |gem| gems = Gem.source_index.find_name(gem); gems.last.full_gem_path; }.join(' '))"`"
 
