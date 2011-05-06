@@ -9,7 +9,6 @@ source ~/.config/bash/virtualenvs-python # vars for python virtualenvs-wrapper
 source ~/.config/git/git-completion
 
 if [ $system_name == 'Darwin' ]; then
-	source `brew --prefix`/Library/Contributions/brew_bash_completion.sh
 	source ~/.config/bash/terminal
 fi
 [[ -s /etc/bash_completion ]] && source /etc/bash_completion
@@ -23,7 +22,7 @@ shopt -s checkwinsize
 shopt -s histappend
 shopt -s globstar 2>/dev/null # Bash 4 and above only
 
-complete -C ~/.config/ruby/rake-completion.rb -o default rake}
+complete -C ~/.config/ruby/rake-completion.rb -o default rake
 
 # RVM
 [[ -s ~/.rvm/scripts/rvm ]] && source ~/.rvm/scripts/rvm

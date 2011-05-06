@@ -38,7 +38,7 @@ venv() {
 }
 
 
-PROMPT_VCS=0 # version control system name, branch and dirty status
+PROMPT_VCS=1 # version control system name, branch and dirty status
 
 enable.prompt.vcs(){
 	PROMPT_VCS=1
