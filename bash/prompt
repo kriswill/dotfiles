@@ -40,17 +40,15 @@ venv() {
 
 PROMPT_VCS=1 # version control system name, branch and dirty status
 
-enable.prompt.vcs(){
-	PROMPT_VCS=1
+prompt.vcs.enable (){
+  PROMPT_VCS=1
 }
-disable.prompt.vcs(){
-	PROMPT_VCS=0
+prompt.vcs.disable(){
+  PROMPT_VCS=0
 }
-
 vcs(){
 	[ $PROMPT_VCS -eq "1" ] && echo -e $(vcprompt --format "${K} %n[${R}%b${EMG}%m${EMR}%u${EMY}%a${K}]")
 }
-
 
 PROMPT_RV=0 # ruby version
 
