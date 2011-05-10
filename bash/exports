@@ -4,7 +4,7 @@ if [ $system_name = 'Darwin' ]; then
   export GEM_OPEN_EDITOR='mate'
 	export NODE_PATH=`brew --prefix`/lib/node
 else
-  export EDITOR='nano -w'
+  export EDITOR='vim'
 fi
 
 [[ -s /usr/local/mysql/bin ]] && export PATH="/usr/local/mysql/bin/:$PATH"
