@@ -56,7 +56,7 @@ endif
 " go with smartindent if there is no plugin indent file.
 " but don't outdent hashes
 set smartindent
-inoremap # X#
+" inoremap # X#
 
 " Gundo.vim settings        see http://sjl.bitbucket.org/gundo.vim/
 nnoremap <Leader>u :GundoToggle<CR>
