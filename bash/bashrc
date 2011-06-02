@@ -1,18 +1,18 @@
-export CURRENT_SHELL=`which bash`
+[[ -s ~/.bash_local ]] && source ~/.bash_local
 
-alias reload=". ~/.bashrc"
 
-# All things that are both ZSH and Bash compatible
-source ~/.config/bash/common
+source ~/.config/bash/exports
+source ~/.config/bash/colors
+source ~/.config/git/gitrc
+source ~/.config/bash/aliases
+source ~/.config/bash/prompt
 source ~/.config/bash/save-directory
-source ~/.config/bash/virtualenvs-python # vars for python virtualenvs-wrapper
+source ~/.config/bash/virtualenvs-python
 source ~/.config/git/git-completion
 
 [[ -s ~/.bash_local ]] && source ~/.bash_local 
 
-if [ $system_name == 'Darwin' ]; then
-	source ~/.config/bash/terminal
-fi
+[ $SYSTEM_NAME == 'Darwin' ] && source ~/.config/bash/terminal
 [[ -s /etc/bash_completion ]] && source /etc/bash_completion
 
 # readline settings
@@ -30,7 +30,7 @@ complete -C ~/.config/ruby/rake-completion.rb -o default rake
 [[ -s ~/.rvm/scripts/rvm ]] && source ~/.rvm/scripts/rvm
 [[ -r $rvm_path/scripts/completion ]] && source $rvm_path/scripts/completion
 
-if [ $system_name = 'Darwin' ]; then
+if [ $SYSTEM_NAME = 'Darwin' ]; then
 	if [ -f `brew --prefix`/Library/Contributions/brew_bash_completion.sh ]; then
 	  . `brew --prefix`/Library/Contributions/brew_bash_completion.sh
 	fi

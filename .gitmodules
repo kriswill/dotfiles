@@ -16,3 +16,6 @@
 [submodule "vim/bundle/vim-ruby"]
 	path = vim/bundle/vim-ruby
 	url = https://github.com/vim-ruby/vim-ruby.git
+[submodule "node/nvm"]
+	path = node/nvm
+	url = https://github.com/creationix/nvm.git

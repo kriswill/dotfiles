@@ -1,4 +1,6 @@
-if [ $system_name = 'Darwin' ]; then
+export SYSTEM_NAME=`uname -s`
+
+if [ $SYSTEM_NAME = 'Darwin' ]; then
   export EDITOR='mate -w'
   export CDPATH='.:~:~/src:~/src/oss'
   export GEM_OPEN_EDITOR='mate'
