@@ -8,6 +8,8 @@ source ~/.config/bash/save-directory
 source ~/.config/bash/virtualenvs-python # vars for python virtualenvs-wrapper
 source ~/.config/git/git-completion
 
+[[ -s ~/.bash_local ]] && source ~/.bash_local 
+
 if [ $system_name == 'Darwin' ]; then
 	source ~/.config/bash/terminal
 fi
