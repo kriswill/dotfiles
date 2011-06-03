@@ -1,7 +1,7 @@
 require 'rake'
 require 'erb'
 
-task :default => [:bash, :bin, :ruby, :vim]
+task :default => [:bash, :bin, :autojump, :ruby, :vim]
 
 desc 'configure ~/.config symlink'
 task :init do
@@ -10,6 +10,7 @@ task :init do
   $dotconf = File.join $homedir, '.config'
   relink_file $currdir, $dotconf
   $homebin = File.join $homedir, 'bin'
+  FileUtils.mkdir $homebin unless File.exist? $homebin
 end
 
 desc 'configure bash links'
@@ -19,9 +20,16 @@ task :bash => :init do
   end
 end
 
+desc 'configure autojump'
+task :autojump => :init do
+  source = File.join $dotconf, 'bash', 'autojump', 'autojump'
+  target = File.join $homebin, 'autojump'
+  relink_file source, target
+  FileUtils.chmod 0755, target
+end
+
 desc 'configure ~/bin'
 task :bin => :init do
-  FileUtils.mkdir $homebin unless File.exist? $homebin
   %w[vcprompt pg beautify jsbeautify ack cloc].each do |file|
     source = File.join $dotconf, 'bin', file
     FileUtils.chmod 0755, source

@@ -1,6 +1,5 @@
 [[ -s ~/.bash_local ]] && source ~/.bash_local
 
-
 source ~/.config/bash/exports
 source ~/.config/bash/colors
 source ~/.config/git/gitrc
@@ -10,9 +9,6 @@ source ~/.config/bash/save-directory
 source ~/.config/bash/virtualenvs-python
 source ~/.config/git/git-completion
 
-[[ -s ~/.bash_local ]] && source ~/.bash_local 
-
-[ $SYSTEM_NAME == 'Darwin' ] && source ~/.config/bash/terminal
 [[ -s /etc/bash_completion ]] && source /etc/bash_completion
 
 # readline settings
@@ -24,8 +20,6 @@ shopt -s checkwinsize
 shopt -s histappend
 shopt -s globstar 2>/dev/null # Bash 4 and above only
 
-complete -C ~/.config/ruby/rake-completion.rb -o default rake
-
 # RVM - Ruby Version Manager
 [[ -s ~/.rvm/scripts/rvm ]] && source ~/.rvm/scripts/rvm
 [[ -r $rvm_path/scripts/completion ]] && source $rvm_path/scripts/completion
@@ -34,24 +28,12 @@ complete -C ~/.config/ruby/rake-completion.rb -o default rake
 [[ -s ~/.nvm/nvm.sh ]] && source ~/.nvm/nvm.sh
 
 if [ $SYSTEM_NAME = 'Darwin' ]; then
-	if [ -f `brew --prefix`/Library/Contributions/brew_bash_completion.sh ]; then
-	  . `brew --prefix`/Library/Contributions/brew_bash_completion.sh
-	fi
+  . ~/.config/bash/terminal
+  BREW_COMPLETION=`brew --prefix`/Library/Contributions/brew_bash_completion.sh
+	[[ -s ${BREW_COMPLETION} ]] && . ${BREW_COMPLETION}
 fi
 
-_autojump() 
-{
-        local cur
-        cur=${COMP_WORDS[*]:1}
-        while read i
-        do
-            COMPREPLY=("${COMPREPLY[@]}" "${i}")
-        done  < <(autojump --bash --completion $cur)
-}
-complete -F _autojump j
-AUTOJUMP='{ (autojump -a "$(pwd -P)"&)>/dev/null 2>>${HOME}/.autojump_errors;} 2>/dev/null'
-if [[ ! $PROMPT_COMMAND =~ autojump ]]; then
-  export PROMPT_COMMAND="${PROMPT_COMMAND:-:} && $AUTOJUMP"
-fi 
-alias jumpstat="autojump --stat"
-function j { new_path="$(autojump $@)";if [ -n "$new_path" ]; then echo -e "\\033[31m${new_path}\\033[0m"; cd "$new_path";fi }
+complete -C ~/.config/ruby/rake-completion.rb -o default rake
+
+INIT_AUTOJUMP=~/.config/bash/autojump/autojump.bash
+[[ -s ${INIT_AUTOJUMP} ]] && . ${INIT_AUTOJUMP}

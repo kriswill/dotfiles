@@ -19,3 +19,6 @@
 [submodule "node/nvm"]
 	path = node/nvm
 	url = https://github.com/creationix/nvm.git
+[submodule "bash/autojump"]
+	path = bash/autojump
+	url = https://github.com/joelthelion/autojump.git
