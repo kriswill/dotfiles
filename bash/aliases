@@ -2,7 +2,7 @@ alias reload='source ~/.config/bash/aliases'
 alias ea='vim ~/.config/bash/aliases && reload'
 
 function ht() { 
-	history | awk '{a[$2]++}END{for(i in a){print a[i] " " i}}' | sort -rn | head
+  history | awk '{a[$2]++}END{for(i in a){print a[i] " " i}}' | sort -rn | head
 }
 
 # Pathing
@@ -27,33 +27,37 @@ if [ $SYSTEM_NAME = 'Darwin' ]; then
   alias hidefile='/usr/bin/SetFile -a "V"'
   alias showfile='/usr/bin/SetFile -a "v"'
 
-	alias selen='/usr/bin/java -jar /Applications/Sauce\ RC.app/Contents/Resources/controller/selenium-server.jar -timeout 30 -port 5666'
-	
-	alias kiwi='ssh -v kiwi.coceve.com'
-	alias kiwi.tunnel='kiwi -f -R 5756:localhost:4444 -N'
-	alias kiwi.mount='mkdir -p /Volumes/kiwi && sshfs kris@kiwi.coceve.com:/home/kris/pbwiki /Volumes/kiwi -o auto_cache,reconnect,follow_symlinks,local,volname=PBwiki && ln -s /Volumes/kiwi /kiwi'
-	alias kiwi.umount='umount /Volumes/kiwi && rm -rf /kiwi'
+  alias selen='/usr/bin/java -jar /Applications/Sauce\ RC.app/Contents/Resources/controller/selenium-server.jar -timeout 30 -port 5666'
+
+  alias kiwi='ssh -v kiwi.coceve.com'
+  alias kiwi.tunnel='kiwi -f -R 5756:localhost:4444 -N'
+  alias kiwi.mount='mkdir -p /Volumes/kiwi && sshfs kris@kiwi.coceve.com:/home/kris/pbwiki /Volumes/kiwi -o auto_cache,reconnect,follow_symlinks,local,volname=PBwiki && ln -s /Volumes/kiwi /kiwi'
+  alias kiwi.umount='umount /Volumes/kiwi && rm -rf /kiwi'
 #  alias startpg='sudo /Library/StartupItems/PostgreSQL/PostgreSQL start'
 #  alias readrails="mate `ruby -rubygems -e "puts( ['rails', 'activerecord', 'activeresource', 'actionpack', 'activesupport'].collect { |gem| gems = Gem.source_index.find_name(gem); gems.last.full_gem_path; }.join(' '))"`"
 
-	# MongoDB
-	function mongo-start() {
-		launchctl load -w ~/Library/LaunchAgents/org.mongodb.mongod.plist
-		launchctl start org.mongodb.mongod
-	}
-	function mongo-stop() {
-		launchctl stop org.mongodb.mongod
-		launchctl unload -w ~/Library/LaunchAgents/org.mongodb.mongod.plist
-	}
+  # MongoDB
+  function mongo-start() {
+    launchctl load -w ~/Library/LaunchAgents/org.mongodb.mongod.plist
+    launchctl start org.mongodb.mongod
+  }
+  function mongo-stop() {
+    launchctl stop org.mongodb.mongod
+    launchctl unload -w ~/Library/LaunchAgents/org.mongodb.mongod.plist
+  }
 else
   alias ls='ls --color=auto'
 fi
+
+alias ekiwi='ssh -f -N -R 5722:localhost:22 kris@kiwi.coceve.com'
+alias list-ssh='ps ax | grep "ssh" | grep -v grep'
+alias list-t='ps ax | grep "ssh.*[0-9]:.*:[0-9]"'
 
 # key bindings
 alias keybinds='bind -P | grep not -v | cut -d" " -f1,6,7,8,9,10,11 | sed "s/[\"\\,.]//g" | column -t' # print all keybinds in terminal
 
 # process status
-alias tu='top -o cpu' 
+alias tu='top -o cpu'
 alias tm='top -o vsize'
 
 # ls aliases
@@ -65,4 +69,3 @@ alias la='ls $LS_OPTIONS -lAh'
 alias irb='irb --readline -r irb/completion'
 alias rii='ri -Tf ansi'
 alias gemi='sudo gem install --no-rdoc --no-ri'
-

@@ -1,0 +1,25 @@
+export NICE_HOSTNAME=kiwi.coceve.com
+export SHORT_HOST=kiwi
+
+function edit {
+  command=""
+  if [[ $1 ]]
+    then
+    if [[ ${1:0:1} = "/" ]]
+      then
+        abs_path="$1"
+      else
+        abs_path="`pwd`/$1"
+    fi
+    line_number=`echo $abs_path | cut -d : -f 2`
+    if [[ $line_number = $abs_path ]]
+      then
+        jump=''
+      else
+        jump=+$line_number
+        abs_path=`echo $abs_path | cut -d : -f 1`
+    fi
+    command="$jump sftp://`whoami`@$NICE_HOSTNAME/$abs_path"
+  fi
+  ssh -p 5722 localhost "mate $command"
+}
