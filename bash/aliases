@@ -49,6 +49,10 @@ else
   alias ls='ls --color=auto'
 fi
 
+alias ekiwi='ssh -f -N -R 5722:localhost:22 kris@kiwi.coceve.com'
+alias list-ssh='ps ax | grep "ssh" | grep -v grep'
+alias list-t='ps ax | grep "ssh.*[0-9]:.*:[0-9]"'
+
 # key bindings
 alias keybinds='bind -P | grep not -v | cut -d" " -f1,6,7,8,9,10,11 | sed "s/[\"\\,.]//g" | column -t' # print all keybinds in terminal
 
