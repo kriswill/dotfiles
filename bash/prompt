@@ -65,7 +65,7 @@ arrow(){
 bash_prompt() {
     case $TERM in
      xterm*|rxvt*)
-         local TITLEBAR='\[\033]0;\u ${NEW_PWD}\007\]'
+         local TITLEBAR='\[\033]0;${SHORT_HOST} ${NEW_PWD}\007\]'
           ;;
      *)
          local TITLEBAR=""
