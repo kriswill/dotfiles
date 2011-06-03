@@ -4,7 +4,7 @@ if [ $SYSTEM_NAME = 'Darwin' ]; then
   export EDITOR='mate -w'
   export CDPATH='.:~:~/src:~/src/oss'
   export GEM_OPEN_EDITOR='mate'
-	export NODE_PATH=`brew --prefix`/lib/node
+#	export NODE_PATH=`brew --prefix`/lib/node
 else
   export EDITOR='vim'
 fi

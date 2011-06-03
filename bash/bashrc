@@ -26,9 +26,12 @@ shopt -s globstar 2>/dev/null # Bash 4 and above only
 
 complete -C ~/.config/ruby/rake-completion.rb -o default rake
 
-# RVM
+# RVM - Ruby Version Manager
 [[ -s ~/.rvm/scripts/rvm ]] && source ~/.rvm/scripts/rvm
 [[ -r $rvm_path/scripts/completion ]] && source $rvm_path/scripts/completion
+
+# NVM - Node Version Manager
+[[ -s ~/.nvm/nvm.sh ]] && source ~/.nvm/nvm.sh
 
 if [ $SYSTEM_NAME = 'Darwin' ]; then
 	if [ -f `brew --prefix`/Library/Contributions/brew_bash_completion.sh ]; then
