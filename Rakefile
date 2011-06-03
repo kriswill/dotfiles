@@ -25,7 +25,7 @@ task :bin => :init do
   %w[vcprompt pg beautify jsbeautify ack cloc].each do |file|
     source = File.join $dotconf, 'bin', file
     FileUtils.chmod 0755, source
-    relink_file source, File.join $homebin, file
+    relink_file source, File.join($homebin, file)
   end
 end
 
@@ -40,14 +40,14 @@ desc 'configure node version manager (nvm)'
 task :nvm => :init do
   dotnvm = File.join $homedir, '.nvm'
   FileUtils.mkdir dotnvm unless File.exist? dotnvm
-  relink_file File.join($dotconf, 'node', 'nvm', 'nvm.sh'), File.join dotnvm, 'nvm.sh'
+  relink_file File.join($dotconf, 'node', 'nvm', 'nvm.sh'), File.join(dotnvm, 'nvm.sh')
 end
 
 desc 'configure vim links'
 task :vim => :init do
   relink_file File.join($dotconf, 'vim'), File.join($homedir, '.vim')
   %w[vimrc gvimrc].each do |file|
-    relink_file File.join($dotconf, 'vim', file), File.join $homedir, ".#{file}"
+    relink_file File.join($dotconf, 'vim', file), File.join($homedir, ".#{file}")
   end
 end
 
