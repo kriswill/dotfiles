@@ -1,0 +1,2 @@
+#export NICE_HOSTNAME=kiwi.coceve.com
+export SHORT_HOST=local

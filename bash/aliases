@@ -29,10 +29,11 @@ if [ $SYSTEM_NAME = 'Darwin' ]; then
 
   alias selen='/usr/bin/java -jar /Applications/Sauce\ RC.app/Contents/Resources/controller/selenium-server.jar -timeout 30 -port 5666'
 
-  alias kiwi='ssh -v kiwi.coceve.com'
-  alias kiwi.tunnel='kiwi -f -R 5756:localhost:4444 -N'
-  alias kiwi.mount='mkdir -p /Volumes/kiwi && sshfs kris@kiwi.coceve.com:/home/kris/pbwiki /Volumes/kiwi -o auto_cache,reconnect,follow_symlinks,local,volname=PBwiki && ln -s /Volumes/kiwi /kiwi'
+  alias kiwi='ssh kiwi.coceve.com'
+  alias kiwi.tun22='ssh -f -N -R 5722:localhost:22 kris@kiwi.coceve.com'
+  alias kiwi.tun56='kiwi -f -R 5756:localhost:4444 -N'
   alias kiwi.umount='umount /Volumes/kiwi && rm -rf /kiwi'
+  alias kiwi.mount='kiwi.umount && mkdir -p /Volumes/kiwi && sshfs kris@kiwi.coceve.com:/home/kris/pbwiki /Volumes/kiwi -o auto_cache,reconnect,follow_symlinks,local,volname=PBwiki && ln -s /Volumes/kiwi /kiwi'
 #  alias startpg='sudo /Library/StartupItems/PostgreSQL/PostgreSQL start'
 #  alias readrails="mate `ruby -rubygems -e "puts( ['rails', 'activerecord', 'activeresource', 'actionpack', 'activesupport'].collect { |gem| gems = Gem.source_index.find_name(gem); gems.last.full_gem_path; }.join(' '))"`"
 
@@ -49,7 +50,6 @@ else
   alias ls='ls --color=auto'
 fi
 
-alias ekiwi='ssh -f -N -R 5722:localhost:22 kris@kiwi.coceve.com'
 alias list-ssh='ps ax | grep "ssh" | grep -v grep'
 alias list-t='ps ax | grep "ssh.*[0-9]:.*:[0-9]"'
 
