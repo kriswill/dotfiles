@@ -29,11 +29,13 @@ if [ $SYSTEM_NAME = 'Darwin' ]; then
 
   alias selen='/usr/bin/java -jar /Applications/Sauce\ RC.app/Contents/Resources/controller/selenium-server.jar -timeout 30 -port 5666'
 
-  alias kiwi='ssh kiwi.coceve.com'
-  alias kiwi.tun22='ssh -f -N -R 5722:localhost:22 kris@kiwi.coceve.com'
+  alias ssh.logs='ssh sf7.sfo.coceve.local'
+  alias ssh.kiwi='ssh kiwi.coceve.com'
+  alias kiwi='ssh.kiwi'
+  alias kiwi.tun22='kiwi -f -R 5722:localhost:22 -N'
   alias kiwi.tun56='kiwi -f -R 5756:localhost:4444 -N'
   alias kiwi.umount='cd ~;umount /Volumes/kiwi && rm -rf /kiwi'
-  alias kiwi.mount='mkdir -p /Volumes/kiwi && sshfs kris@kiwi.coceve.com:/home/kris/pbwiki /Volumes/kiwi -o auto_cache,reconnect,follow_symlinks,local,volname=PBwiki && ln -s /Volumes/kiwi /kiwi && prompt.vcs.disable && cd /kiwi'
+  alias kiwi.mount='mkdir -p /Volumes/kiwi && sshfs kris@kiwi.coceve.com:/home/kris/pbwiki /Volumes/kiwi -o auto_cache,reconnect,follow_symlinks,local,allow_other,volname=PBwiki && ln -s /Volumes/kiwi /kiwi && prompt.vcs.disable && cd /kiwi'
 #  alias startpg='sudo /Library/StartupItems/PostgreSQL/PostgreSQL start'
 #  alias readrails="mate `ruby -rubygems -e "puts( ['rails', 'activerecord', 'activeresource', 'actionpack', 'activesupport'].collect { |gem| gems = Gem.source_index.find_name(gem); gems.last.full_gem_path; }.join(' '))"`"
 
@@ -64,6 +66,7 @@ alias tm='top -o vsize'
 alias ls='ls $LS_OPTIONS'
 alias l='ls $LS_OPTIONS -lh'
 alias la='ls $LS_OPTIONS -lAh'
+alias ld='ls $LS_OPTIONS -lad */'
 
 # Ruby
 alias irb='irb --readline -r irb/completion'
