@@ -19,6 +19,6 @@ export VISUAL=$EDITOR
 export TERM=xterm-color
 export GREP_OPTIONS='--color=always' GREP_COLOR='1;32'
 export CLICOLOR=1
-export LSCOLORS=ExFxCxDxBxegedabagacad
+export LS_COLORS=ExFxCxDxBxegedabagacad
 export LESS='-R' # repaint - keeps grep colors intact
 export HISTSIZE=1000000
