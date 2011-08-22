@@ -18,7 +18,6 @@ if [ $SYSTEM_NAME = 'Darwin' ]; then
      x4="$(/usr/bin/arch)"
      echo "${x1} - ${x2} - ${x3} - ${x4}"
   }
-  alias ls='ls -G'
   alias pubkey='pubkey | pbcopy && echo "Keys copied to clipboard"'
   alias et="m"
   alias o='open .'
@@ -48,8 +47,6 @@ if [ $SYSTEM_NAME = 'Darwin' ]; then
     launchctl stop org.mongodb.mongod
     launchctl unload -w ~/Library/LaunchAgents/org.mongodb.mongod.plist
   }
-else
-  alias ls='ls --color=auto'
 fi
 
 function fromunixtime { 

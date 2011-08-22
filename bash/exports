@@ -5,7 +5,6 @@ if [ $SYSTEM_NAME = 'Darwin' ]; then
   export CDPATH='.:~:~/src:~/src/oss'
   export GEM_OPEN_EDITOR='mate'
 	export NODE_PATH=/usr/local/lib/node_modules
-#	export NODE_PATH=`brew --prefix`/lib/node
 else
   export EDITOR='vim'
 fi
@@ -22,8 +21,17 @@ export GREP_OPTIONS='--color=always --line-number --mmap'
 export GREP_COLOR='0;32'
 # grep 2.9+
 export GREP_COLORS="ms=00;32:mc=01;31:sl=:cx=:fn=01;34:ln=0;33:bn=32:se=36"
-#export GREP_COLOR="1;32;41" 
 export CLICOLOR=1
-export LS_COLORS=ExFxCxDxBxegedabagacad
+
 export LESS=-R # repaint - keeps grep colors intact
 export HISTSIZE=1000000
+
+if ls --color -d . >/dev/null 2>&1; then
+    export GNU_LS=1
+		export LS_OPTIONS=--color
+		export LS_COLORS=ExFxCxDxBxegedabagacad
+elif ls -G -d . >/dev/null 2>&1; then
+    export BSD_LS=1
+		export LS_OPTIONS=-G
+		export LSCOLORS=ExFxCxDxBxegedabagacad
+fi
