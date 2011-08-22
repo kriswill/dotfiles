@@ -30,7 +30,7 @@ end
 
 desc 'configure ~/bin'
 task :bin => :init do
-  %w[vcprompt pg beautify jsbeautify ack cloc].each do |file|
+  %w[vcprompt pg beautify jsbeautify ack cloc git-wtf].each do |file|
     source = File.join $dotconf, 'bin', file
     FileUtils.chmod 0755, source
     relink_file source, File.join($homebin, file)
