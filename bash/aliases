@@ -52,6 +52,11 @@ else
   alias ls='ls --color=auto'
 fi
 
+function fromunixtime { 
+	perl -e "require 'ctime.pl'; print &ctime($1);" 
+}
+
+# ssh
 alias list-ssh='ps ax | grep "ssh" | grep -v grep'
 alias list-t='ps ax | grep "ssh.*[0-9]:.*:[0-9]"'
 
@@ -68,7 +73,15 @@ alias l='ls $LS_OPTIONS -lh'
 alias la='ls $LS_OPTIONS -lAh'
 alias ld='ls $LS_OPTIONS -lad */'
 
+#tail
+alias t='tail'
+alias tf='tail -F'
+
 # Ruby
 alias irb='irb --readline -r irb/completion'
 alias rii='ri -Tf ansi'
-alias gemi='sudo gem install --no-rdoc --no-ri'
+
+#imagemagick
+
+alias imginfo="identify -format '-- %f -- \nType: %m\nSize: %b bytes\nResolution: %wpx x %hpx\nColors: %k'"
+alias imgres="identify -format '%wx%h\n'"
