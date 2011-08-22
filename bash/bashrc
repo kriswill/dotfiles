@@ -24,8 +24,11 @@ shopt -s globstar 2>/dev/null # Bash 4 and above only
 [[ -s ~/.rvm/scripts/rvm ]] && source ~/.rvm/scripts/rvm
 [[ -r $rvm_path/scripts/completion ]] && source $rvm_path/scripts/completion
 
-# NVM - Node Version Manager
-[[ -s ~/.nvm/nvm.sh ]] && source ~/.nvm/nvm.sh
+
+if [ $SYSTEM_NAME = 'Linux' ]; then
+	# NVM - Node Version Manager
+	[[ -s ~/.nvm/nvm.sh ]] && source ~/.nvm/nvm.sh
+fi
 
 if [ $SYSTEM_NAME = 'Darwin' ]; then
   . ~/.config/bash/terminal
