@@ -22,3 +22,6 @@
 [submodule "bash/autojump"]
 	path = bash/autojump
 	url = https://github.com/joelthelion/autojump.git
+[submodule "git/wtf"]
+	path = git/wtf
+	url = git@github.com:kriswill/git-wtf.git
