@@ -28,8 +28,8 @@ export HISTSIZE=1000000
 
 if ls --color -d . >/dev/null 2>&1; then
     export GNU_LS=1
-		export LS_OPTIONS=--color
-		export LS_COLORS=ExFxCxDxBxegedabagacad
+		export LS_OPTIONS=--color=auto
+		eval `dircolors -b ~/.dir_colors`
 elif ls -G -d . >/dev/null 2>&1; then
     export BSD_LS=1
 		export LS_OPTIONS=-G
