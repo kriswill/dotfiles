@@ -10,6 +10,8 @@ alias ..='cd ..;'
 alias ...='.. ..'
 
 if [ $SYSTEM_NAME = 'Darwin' ]; then
+  alias slt='open -a "Sublime Text 2"'
+
   function manpdf() { man -t $@ | open -f -a Preview; }
   function osinfo() { 
      x1="$(/usr/bin/sw_vers -productName)"

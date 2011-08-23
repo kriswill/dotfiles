@@ -1,6 +1,49 @@
 export NICE_HOSTNAME=`hostname -f`
 export SHORT_HOST=`hostname`
 
+[[ -s ~/.bash_local ]] && source ~/.bash_local
+
+source ~/.config/bash/exports
+source ~/.config/bash/colors
+source ~/.config/git/gitrc
+source ~/.config/bash/aliases
+source ~/.config/bash/prompt
+source ~/.config/bash/save-directory
+source ~/.config/bash/virtualenvs-python
+source ~/.config/git/git-completion
+
+[[ -s /etc/bash_completion ]] && source /etc/bash_completion
+
+# readline settings
+bind "set completion-ignore-case on" 
+bind "set bell-style none" # No bell, because it's damn annoying
+bind "set show-all-if-ambiguous On" # this allows you to automatically show completion without double tab-ing
+
+shopt -s checkwinsize
+shopt -s histappend
+shopt -s globstar 2>/dev/null # Bash 4 and above only
+
+# RVM - Ruby Version Manager
+[[ -s ~/.rvm/scripts/rvm ]] && source ~/.rvm/scripts/rvm
+[[ -r $rvm_path/scripts/completion ]] && source $rvm_path/scripts/completion
+
+
+if [ $SYSTEM_NAME = 'Linux' ]; then
+  # NVM - Node Version Manager
+  [[ -s ~/.nvm/nvm.sh ]] && source ~/.nvm/nvm.sh
+fi
+
+if [ $SYSTEM_NAME = 'Darwin' ]; then
+  . ~/.config/bash/terminal
+  BREW_COMPLETION=`brew --prefix`/Library/Contributions/brew_bash_completion.sh
+  [[ -s ${BREW_COMPLETION} ]] && . ${BREW_COMPLETION}
+fi
+
+complete -C ~/.config/ruby/rake-completion.rb -o default rake
+
+INIT_AUTOJUMP=~/.config/bash/autojump/autojump.bash
+[[ -s ${INIT_AUTOJUMP} ]] && . ${INIT_AUTOJUMP}
+
 if [ -f ~/.bashrc ]; then
   . ~/.bashrc
 fi
