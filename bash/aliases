@@ -36,7 +36,7 @@ if [ $SYSTEM_NAME = 'Darwin' ]; then
   alias kiwi.tun22='kiwi -f -R 5722:localhost:22 -N'
   alias kiwi.tun56='kiwi -f -R 5756:localhost:4444 -N'
   alias kiwi.umount='cd ~;umount /Volumes/kiwi && rm -rf /kiwi'
-  alias kiwi.mount='mkdir -p /Volumes/kiwi && sshfs kris@kiwi.coceve.com:/home/kris/pbwiki /Volumes/kiwi -o auto_cache,reconnect,follow_symlinks,local,allow_other,volname=PBwiki && ln -s /Volumes/kiwi /kiwi && prompt.vcs.disable && cd /kiwi'
+  alias kiwi.mount='mkdir -p /Volumes/kiwi && sshfs kris@kiwi.coceve.com:/home/kris /Volumes/kiwi -o auto_cache,reconnect,follow_symlinks,local,allow_other,volname=kiwi && ln -s /Volumes/kiwi /kiwi && prompt.vcs.disable && cd /kiwi'
 #  alias startpg='sudo /Library/StartupItems/PostgreSQL/PostgreSQL start'
 #  alias readrails="mate `ruby -rubygems -e "puts( ['rails', 'activerecord', 'activeresource', 'actionpack', 'activesupport'].collect { |gem| gems = Gem.source_index.find_name(gem); gems.last.full_gem_path; }.join(' '))"`"
 
