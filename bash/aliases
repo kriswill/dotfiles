@@ -1,7 +1,7 @@
 alias reload='source ~/.config/bash/aliases'
 alias ea='vim ~/.config/bash/aliases && reload'
 
-function ht() { 
+function ht() {
   history | awk '{a[$2]++}END{for(i in a){print a[i] " " i}}' | sort -rn | head
 }
 
@@ -13,7 +13,7 @@ if [ $SYSTEM_NAME = 'Darwin' ]; then
   alias slt='open -a "Sublime Text 2"'
 
   function manpdf() { man -t $@ | open -f -a Preview; }
-  function osinfo() { 
+  function osinfo() {
      x1="$(/usr/bin/sw_vers -productName)"
      x2="$(/usr/bin/sw_vers -productVersion)"
      x3="$(/usr/bin/sw_vers -buildVersion)"
@@ -36,7 +36,7 @@ if [ $SYSTEM_NAME = 'Darwin' ]; then
   alias kiwi.tun22='kiwi -f -R 5722:localhost:22 -N'
   alias kiwi.tun56='kiwi -f -R 5756:localhost:4444 -N'
   alias kiwi.umount='cd ~;umount /Volumes/kiwi && rm -rf /kiwi'
-  alias kiwi.mount='mkdir -p /Volumes/kiwi && sshfs kris@kiwi.coceve.com:/home/kris /Volumes/kiwi -o auto_cache,reconnect,follow_symlinks,local,allow_other,volname=kiwi && ln -s /Volumes/kiwi /kiwi && prompt.vcs.disable && cd /kiwi'
+  alias kiwi.mount='mkdir -p /Volumes/kiwi && sshfs kris@kiwi.coceve.com:/home/kris /Volumes/kiwi -o auto_cache,reconnect,follow_symlinks,local,allow_other,volname=kiwi,volicon=/Users/kris/.config/assets/kiwi.icns && ln -s /Volumes/kiwi /kiwi && prompt.vcs.disable && cd /kiwi'
 #  alias startpg='sudo /Library/StartupItems/PostgreSQL/PostgreSQL start'
 #  alias readrails="mate `ruby -rubygems -e "puts( ['rails', 'activerecord', 'activeresource', 'actionpack', 'activesupport'].collect { |gem| gems = Gem.source_index.find_name(gem); gems.last.full_gem_path; }.join(' '))"`"
 
@@ -51,8 +51,8 @@ if [ $SYSTEM_NAME = 'Darwin' ]; then
   }
 fi
 
-function fromunixtime { 
-	perl -e "require 'ctime.pl'; print &ctime($1);" 
+function fromunixtime {
+	perl -e "require 'ctime.pl'; print &ctime($1);"
 }
 
 # ssh
