@@ -15,7 +15,7 @@ end
 
 desc 'configure bash links'
 task :bash => :init do
-  %w[bashrc bash_profile inputrc nanorc ackrc].each do |file|
+  %w[bashrc bash_profile inputrc ackrc].each do |file|
     relink_file File.join($dotconf, 'bash', file), File.join($homedir, ".#{file}")
   end
 end
