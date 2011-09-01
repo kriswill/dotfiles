@@ -1,7 +1,7 @@
 export NICE_HOSTNAME=kiwi.coceve.com
 export SHORT_HOST=kiwi
 
-alias log='tail -F /var/log/apache2/syslog-kris.log'
+alias log='tail -F /var/log/apache2/syslog-kris.log | grep -v tracking'
 alias db.dev='mysql -u kris -p --host=dev-user-db --tee=/home/kris/sqllog.txt'
 alias db.user='mysql -u kris -p --host=user-db-backup --tee=/home/kris/sqllog.txt'
 alias db.core='mysql -u kris -p --host=core-db-backup --tee=/home/kris/sqllog.txt'

@@ -16,14 +16,14 @@ fi
 export GIT_EDITOR=$EDITOR
 export VISUAL=$EDITOR
 
-export TERM=xterm-color
-export GREP_OPTIONS='--color=always --line-number --mmap' 
+#export TERM=xterm-color
+export GREP_OPTIONS='--color=always' 
 export GREP_COLOR='0;32'
 # grep 2.9+
 export GREP_COLORS="ms=00;32:mc=01;31:sl=:cx=:fn=01;34:ln=0;33:bn=32:se=36"
 export CLICOLOR=1
 
-export LESS=-R # repaint - keeps grep colors intact
+export LESS=-R 
 export HISTSIZE=1000000
 
 if ls --color -d . >/dev/null 2>&1; then
