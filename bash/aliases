@@ -28,6 +28,9 @@ if [ $SYSTEM_NAME = 'Darwin' ]; then
   alias hidefile='/usr/bin/SetFile -a "V"'
   alias showfile='/usr/bin/SetFile -a "v"'
 
+  alias bgsaver='/System/Library/Frameworks/ScreenSaver.framework/Resources/ScreenSaverEngine.app/Contents/MacOS/ScreenSaverEngine -background &'
+  alias bgsaver.stop='killall ScreenSaverEngine'
+
   alias selen='/usr/bin/java -jar /Applications/Sauce\ RC.app/Contents/Resources/controller/selenium-server.jar -timeout 30 -port 5666'
 
   alias ssh.logs='ssh sf7.sfo.coceve.local'
