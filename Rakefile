@@ -6,7 +6,7 @@ task :default => [:bash, :bin, :autojump, :ruby, :vim]
 desc 'configure ~/.config symlink'
 task :init do
   $homedir = File.expand_path '~'
-  $currdir = File.expand_path '.' 
+  $currdir = File.expand_path '.'
   $dotconf = File.join $homedir, '.config'
   relink_file $currdir, $dotconf
   $homebin = File.join $homedir, 'bin'
@@ -63,9 +63,9 @@ end
 desc 'configure git links'
 task :git => :init do
   #erb = File.join($dotconf, 'git', 'gitconfig.erb')
-  #gitconfig = File.join($dotconf, 'git', 'gitconfig') 
+  #gitconfig = File.join($dotconf, 'git', 'gitconfig')
   #generate(erb, gitconfig) unless File.exists gitconfig
-  
+
    ['gitrc', 'gitconfig', 'gitignore', 'gitk', 'gitattributes'].each do |file|
      relink_file File.join($dotconf, 'git', file), File.join($homedir, ".#{file}")
    end
@@ -98,7 +98,7 @@ namespace :install do
     system "curl -s https://github.com/xvzf/vcprompt/raw/master/bin/vcprompt > bin/vcprompt"
     FileUtils.chmod 0755, "bin/vcprompt"
   end
-  
+
   desc 'install pow.  see http://pow.cx/manual.html'
   task :pow do
     system "curl get.pow.cx | sh"
