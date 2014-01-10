@@ -38,6 +38,7 @@ if [ $SYSTEM_NAME = 'Darwin' ]; then
   alias kiwi='ssh.kiwi'
   alias kiwi.tun22='kiwi -f -R 5722:localhost:22 -N'
   alias kiwi.tun56='kiwi -f -R 5756:localhost:4444 -N'
+  alias kiwi.ldap='kiwi -L 10389:dev-ldap-master.coceve.com:389'
   alias kiwi.umount='cd ~;umount /Volumes/kiwi && rm -rf /kiwi'
   alias kiwi.mount='mkdir -p /Volumes/kiwi && sshfs kris@kiwi.coceve.com:/home/kris /Volumes/kiwi -o auto_cache,reconnect,follow_symlinks,local,allow_other,volname=kiwi,volicon=/Users/kris/.config/assets/kiwi.icns && prompt.vcs.disable && cd /Volumes/kiwi'
   alias ports.listen='sudo lsof -i -nP | grep "(LISTEN)"'
