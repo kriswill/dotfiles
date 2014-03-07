@@ -9,6 +9,7 @@ alias grm='git rebase master'
 alias gp='git pull'
 alias gpr='git pull --rebase'
 alias gmd='git merge develop'
+alias gdt='git diff-tree --name-status -r HEAD^^..HEAD'
 # commit pending changes, quote all args as message
 function gc() {
 	git commit -v -a -m "$*" 
