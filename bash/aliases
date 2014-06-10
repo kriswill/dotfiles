@@ -10,8 +10,9 @@ alias ..='cd ..;'
 alias ...='.. ..'
 
 if [ $SYSTEM_NAME = 'Darwin' ]; then
-  [[ -s "/Applications/Sublime Text 2.app" ]] && ln -s "/Applications/Sublime Text 2.app/Contents/SharedSupport/bin/subl" ~/bin/subl
-
+  if [[ ! -f ~/bin/subl ]]; then
+    [[ -s "/Applications/Sublime Text 2.app" ]] && ln -s "/Applications/Sublime Text 2.app/Contents/SharedSupport/bin/subl" ~/bin/subl
+  fi
   function manpdf() { man -t $@ | open -f -a Preview; }
   function osinfo() {
      x1="$(/usr/bin/sw_vers -productName)"
