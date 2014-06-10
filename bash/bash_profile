@@ -15,7 +15,7 @@ source ~/.config/git/git-completion
 [[ -s /etc/bash_completion ]] && source /etc/bash_completion
 
 # readline settings
-bind "set completion-ignore-case on" 
+bind "set completion-ignore-case on"
 bind "set bell-style none" # No bell, because it's damn annoying
 bind "set show-all-if-ambiguous On" # this allows you to automatically show completion without double tab-ing
 
@@ -35,6 +35,9 @@ fi
 
 if [ $SYSTEM_NAME = 'Darwin' ]; then
   . ~/.config/bash/terminal
+  # brew install bash-completion
+  # BASH_COMPLETION=`brew --prefix`/etc/bash_completion
+  # [[ -s ${BASH_COMPLETION} ]] && . ${BASH_COMPLETION}
   BREW_COMPLETION=`brew --prefix`/Library/Contributions/brew_bash_completion.sh
   [[ -s ${BREW_COMPLETION} ]] && . ${BREW_COMPLETION}
 fi
