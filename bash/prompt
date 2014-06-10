@@ -26,7 +26,7 @@ bash_prompt_command() {
         NEW_PWD=${NEW_PWD:$pwdoffset:$pwdmaxlen}
         NEW_PWD=${trunc_symbol}/${NEW_PWD#*/}
     fi
-		
+
 		#EXIT_CODE='$(if [[ $RETURN = 0 ]]; then echo -ne ""; else echo -ne "\[$EMR\]$RETURN\[$NONE\] "; fi;)'
 }
 
@@ -47,7 +47,7 @@ prompt.vcs.disable(){
   PROMPT_VCS=0
 }
 vcs(){
-	[ $PROMPT_VCS -eq "1" ] && echo -e $(vcprompt --format "${K} %n[${R}%b${EMG}%m${EMR}%u${EMY}%a${K}]")
+	[ $PROMPT_VCS -eq "1" ] && echo -e $(vcprompt -f "${K} %n[${R}%b${EMG}%m${EMR}%u${K}]")
 }
 
 PROMPT_RV=0 # ruby version
@@ -71,10 +71,10 @@ bash_prompt() {
          local TITLEBAR=""
           ;;
     esac
-    
+
     local UC=$W                 	# user's color
     [ $UID -eq 0 ] && UC=$EMR			# root's color
-    
+
 	PS1="$TITLEBAR\n\
 \[${UC}\]\u\
 \$(vcs)\
