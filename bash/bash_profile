@@ -9,8 +9,8 @@ source ~/.config/git/gitrc
 source ~/.config/bash/aliases
 source ~/.config/bash/prompt
 source ~/.config/bash/save-directory
-source ~/.config/bash/virtualenvs-python
-source ~/.config/git/git-completion
+#source ~/.config/bash/virtualenvs-python
+#source ~/.config/git/git-completion
 
 [[ -s /etc/bash_completion ]] && source /etc/bash_completion
 

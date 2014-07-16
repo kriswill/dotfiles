@@ -12,10 +12,10 @@ alias gmd='git merge develop'
 alias gdt='git diff-tree --name-status -r HEAD^^..HEAD'
 # commit pending changes, quote all args as message
 function gc() {
-	git commit -v -a -m "$*" 
+	git commit -v -a -m "$*"
 }
 function gg() {
-  git grep --color -n "$*"
+  git grep -I --color -n  "$*"
 }
 alias gco='git checkout'
 alias gd='git diff'
