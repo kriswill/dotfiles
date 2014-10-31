@@ -36,10 +36,9 @@ fi
 if [ $SYSTEM_NAME = 'Darwin' ]; then
   . ~/.config/bash/terminal
   # brew install bash-completion
-  # BASH_COMPLETION=`brew --prefix`/etc/bash_completion
-  # [[ -s ${BASH_COMPLETION} ]] && . ${BASH_COMPLETION}
-  BREW_COMPLETION=`brew --prefix`/Library/Contributions/brew_bash_completion.sh
-  [[ -s ${BREW_COMPLETION} ]] && . ${BREW_COMPLETION}
+  if [ -f $(brew --prefix)/etc/bash_completion ]; then
+    source $(brew --prefix)/etc/bash_completion
+  fi
 fi
 
 complete -C ~/.config/ruby/rake-completion.rb -o default rake
