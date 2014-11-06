@@ -10,9 +10,6 @@ alias ..='cd ..;'
 alias ...='.. ..'
 
 if [ $SYSTEM_NAME = 'Darwin' ]; then
-  if [[ ! -f ~/bin/subl ]]; then
-    [[ -s "/Applications/Sublime Text 2.app" ]] && ln -s "/Applications/Sublime Text 2.app/Contents/SharedSupport/bin/subl" ~/bin/subl
-  fi
   function manpdf() { man -t $@ | open -f -a Preview; }
   function osinfo() {
      x1="$(/usr/bin/sw_vers -productName)"
@@ -36,15 +33,11 @@ if [ $SYSTEM_NAME = 'Darwin' ]; then
 
   alias ssh.logs='ssh sf7.sfo.coceve.local'
   alias ssh.kiwi='ssh kiwi.coceve.com'
-  alias kiwi='ssh.kiwi'
-  alias kiwi.tun22='kiwi -f -R 5722:localhost:22 -N'
-  alias kiwi.tun56='kiwi -f -R 5756:localhost:4444 -N'
-  alias kiwi.ldap='kiwi -L 10389:dev-ldap-master.coceve.com:389'
-  alias kiwi.umount='cd ~;umount /Volumes/kiwi && rm -rf /kiwi'
-  alias kiwi.mount='mkdir -p /Volumes/kiwi && sshfs kris@kiwi.coceve.com:/home/kris /Volumes/kiwi -o auto_cache,reconnect,follow_symlinks,defer_permissions,local,allow_other,noappledouble,volname=kiwi,volicon=/Users/kris/.config/assets/kiwi.icns && prompt.vcs.disable && cd /Volumes/kiwi'
   alias ports.listen='sudo lsof -i -nP | grep "(LISTEN)"'
-#  alias startpg='sudo /Library/StartupItems/PostgreSQL/PostgreSQL start'
-#  alias readrails="mate `ruby -rubygems -e "puts( ['rails', 'activerecord', 'activeresource', 'actionpack', 'activesupport'].collect { |gem| gems = Gem.source_index.find_name(gem); gems.last.full_gem_path; }.join(' '))"`"
+
+  # Docker 1.3
+  alias docker.clean='docker rm $(docker ps -aq)'
+  alias docker.cleanimages='docker rmi $(docker images --filter dangling=true --quiet)'
 
   # MongoDB
   function mongo-start() {
