@@ -1,5 +1,5 @@
 export NICE_HOSTNAME=`hostname -f`
-export SHORT_HOST=`hostname`
+export SHORT_HOST=`hostname -s`
 
 [[ -s ~/.bash_local ]] && source ~/.bash_local
 
@@ -27,7 +27,6 @@ shopt -s globstar 2>/dev/null # Bash 4 and above only
 [[ -s ~/.rvm/scripts/rvm ]] && source ~/.rvm/scripts/rvm
 [[ -r $rvm_path/scripts/completion ]] && source $rvm_path/scripts/completion
 
-
 if [ $SYSTEM_NAME = 'Linux' ]; then
   # NVM - Node Version Manager
   [[ -s ~/.nvm/nvm.sh ]] && source ~/.nvm/nvm.sh
@@ -35,10 +34,12 @@ fi
 
 if [ $SYSTEM_NAME = 'Darwin' ]; then
   . ~/.config/bash/terminal
+  # boot2docker 1.3.1
+  [[ -s /usr/local/bin/boot2docker ]] && $(boot2docker shellinit 2>/dev/null)
+  # brew install nvm (0.18.0)
+  [[ -s $(brew --prefix nvm)/nvm.sh ]] && source $(brew --prefix nvm)/nvm.sh
   # brew install bash-completion
-  if [ -f $(brew --prefix)/etc/bash_completion ]; then
-    source $(brew --prefix)/etc/bash_completion
-  fi
+  [[ -s $(brew --prefix)/etc/bash_completion ]] && source $(brew --prefix)/etc/bash_completion
 fi
 
 complete -C ~/.config/ruby/rake-completion.rb -o default rake

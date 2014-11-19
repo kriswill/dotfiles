@@ -1,5 +1,5 @@
 if [ -z "$PS1" ]; then
-   return
+  return
 fi
 
 ##################################################
@@ -12,31 +12,30 @@ fi
 # /usr/share/big_dir_name -> ../share/big_dir_name if pwdmaxlen=20
 ##################################################
 bash_prompt_command() {
-		RETURN=$?
-    # How many characters of the $PWD should be kept
-    local pwdmaxlen=45
-    # Indicate that there has been dir truncation
-    local trunc_symbol=".."
-    local dir=${PWD##*/}
-    pwdmaxlen=$(( ( pwdmaxlen < ${#dir} ) ? ${#dir} : pwdmaxlen ))
-    NEW_PWD=${PWD/#$HOME/\~}
-    local pwdoffset=$(( ${#NEW_PWD} - pwdmaxlen ))
-    if [ ${pwdoffset} -gt "0" ]
-    then
-        NEW_PWD=${NEW_PWD:$pwdoffset:$pwdmaxlen}
-        NEW_PWD=${trunc_symbol}/${NEW_PWD#*/}
-    fi
+  RETURN=$?
+  # How many characters of the $PWD should be kept
+  local pwdmaxlen=45
+  # Indicate that there has been dir truncation
+  local trunc_symbol=".."
+  local dir=${PWD##*/}
+  pwdmaxlen=$(( ( pwdmaxlen < ${#dir} ) ? ${#dir} : pwdmaxlen ))
+  NEW_PWD=${PWD/#$HOME/\~}
+  local pwdoffset=$(( ${#NEW_PWD} - pwdmaxlen ))
+  if [ ${pwdoffset} -gt "0" ]
+  then
+    NEW_PWD=${NEW_PWD:$pwdoffset:$pwdmaxlen}
+    NEW_PWD=${trunc_symbol}/${NEW_PWD#*/}
+  fi
 
-		#EXIT_CODE='$(if [[ $RETURN = 0 ]]; then echo -ne ""; else echo -ne "\[$EMR\]$RETURN\[$NONE\] "; fi;)'
+  #EXIT_CODE='$(if [[ $RETURN = 0 ]]; then echo -ne ""; else echo -ne "\[$EMR\]$RETURN\[$NONE\] "; fi;)'
 }
 
 
 PROMPT_VENV=0 # python virtualenv name
 
 venv() {
-	[ $PROMPT_VENV -eq "1" ] && [ ${#VIRTUAL_ENV} -gt "0" ] && echo -e "${K} e[${R}$(basename ${VIRTUAL_ENV})${K}]"
+  [ $PROMPT_VENV -eq "1" ] && [ ${#VIRTUAL_ENV} -gt "0" ] && echo -e "${K} e[${R}$(basename ${VIRTUAL_ENV})${K}]"
 }
-
 
 PROMPT_VCS=1 # version control system name, branch and dirty status
 
@@ -47,35 +46,35 @@ prompt.vcs.disable(){
   PROMPT_VCS=0
 }
 vcs(){
-	[ $PROMPT_VCS -eq "1" ] && echo -e $(vcprompt -f "${K} %n[${R}%b${EMG}%m${EMR}%u${K}]")
+  [ $PROMPT_VCS -eq "1" ] && echo -e $(vcprompt -f "${K} %n[${R}%b${EMG}%m${EMR}%u${K}]")
 }
 
 PROMPT_RV=0 # ruby version
 
 rv(){
-	[ $PROMPT_RV -eq "1" ] && (local v=`ruby --version`; local arr=(${v// / }); echo -e "${K} ruby[${R}${arr[1]%p*}${K}]")
+  [ $PROMPT_RV -eq "1" ] && (local v=`ruby --version`; local arr=(${v// / }); echo -e "${K} ruby[${R}${arr[1]%p*}${K}]")
 }
 
 arrow(){
-	local ARROW=$EMR
-	[ "$RETURN" -eq "0" ] && ARROW=$EMG
-	echo -e "${ARROW}→${NONE} "
+  local ARROW=$EMR
+  [ "$RETURN" -eq "0" ] && ARROW=$EMG
+  echo -e "${ARROW}→${NONE} "
 }
 
 bash_prompt() {
-    case $TERM in
-     xterm*|rxvt*)
-         local TITLEBAR='\[\033]0;${SHORT_HOST} ${NEW_PWD}\007\]'
-          ;;
-     *)
-         local TITLEBAR=""
-          ;;
-    esac
+  case $TERM in
+    xterm*|rxvt*)
+      local TITLEBAR='\[\033]0;${SHORT_HOST} ${NEW_PWD}\007\]'
+      ;;
+    *)
+    local TITLEBAR=""
+    ;;
+  esac
 
-    local UC=$W                 	# user's color
-    [ $UID -eq 0 ] && UC=$EMR			# root's color
+  local UC=$W                    # user's color
+  [ $UID -eq 0 ] && UC=$EMR      # root's color
 
-	PS1="$TITLEBAR\n\
+  PS1="$TITLEBAR\n\
 \[${UC}\]\u\
 \$(vcs)\
 \$(venv)\

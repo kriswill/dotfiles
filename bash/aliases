@@ -40,14 +40,14 @@ if [ $SYSTEM_NAME = 'Darwin' ]; then
   alias docker.cleanimages='docker rmi $(docker images --filter dangling=true --quiet)'
 
   # MongoDB
-  function mongo-start() {
-    launchctl load -w ~/Library/LaunchAgents/org.mongodb.mongod.plist
-    launchctl start org.mongodb.mongod
-  }
-  function mongo-stop() {
-    launchctl stop org.mongodb.mongod
-    launchctl unload -w ~/Library/LaunchAgents/org.mongodb.mongod.plist
-  }
+  # function mongo-start() {
+  #   launchctl load -w ~/Library/LaunchAgents/org.mongodb.mongod.plist
+  #   launchctl start org.mongodb.mongod
+  # }
+  # function mongo-stop() {
+  #   launchctl stop org.mongodb.mongod
+  #   launchctl unload -w ~/Library/LaunchAgents/org.mongodb.mongod.plist
+  # }
 fi
 
 function fromunixtime {
