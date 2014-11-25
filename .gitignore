@@ -8,3 +8,5 @@ vim/sessions
 git/gitconfig
 **/*.swp
 **/tags
+
+configstore/update-notifier-bower.yml
