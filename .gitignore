@@ -10,3 +10,5 @@ git/gitconfig
 **/tags
 
 configstore/update-notifier-bower.yml
+
+configstore/insight-bower.yml
