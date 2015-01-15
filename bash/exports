@@ -4,8 +4,6 @@ if [ $SYSTEM_NAME = 'Darwin' ]; then
   export CDPATH='.:~:~/src:~/src/oss'
   # needed by NVM as location to install Node.js versions
   export NVM_DIR=~/.nvm
-  # set by NVM to correct version of Node.js
-  # export NODE_PATH=/usr/local/lib/node_modules
   export EDITOR='atom --wait'
   export GEM_OPEN_EDITOR='atom'
 else
@@ -15,9 +13,8 @@ fi
 # needed to support Golang's package system
 [[ -s ~/go ]] && export GOPATH=~/go && export PATH="$GOPATH/bin:$PATH"
 [[ -s /usr/local/opt/go/libexec/bin ]] && export PATH="/usr/local/opt/go/libexec/bin:$PATH"
-[[ -s /usr/local/mysql/bin ]] && export PATH="/usr/local/mysql/bin/:$PATH"
-[[ -s ~/bin ]] && export PATH="~/bin:$PATH"
 export PATH="$PATH:$HOME/.rvm/bin" # Add RVM to PATH for scripting
+[[ -s ~/bin ]] && export PATH="~/bin:$PATH"
 
 # ruby console config
 [[ -s ~/.irbrc ]] && export IRBRC="~/.irbrc"

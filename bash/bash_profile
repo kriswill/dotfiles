@@ -9,8 +9,6 @@ source ~/.config/git/gitrc
 source ~/.config/bash/aliases
 source ~/.config/bash/prompt
 source ~/.config/bash/save-directory
-#source ~/.config/bash/virtualenvs-python
-#source ~/.config/git/git-completion
 
 [[ -s /etc/bash_completion ]] && source /etc/bash_completion
 
@@ -33,11 +31,17 @@ if [ $SYSTEM_NAME = 'Linux' ]; then
 fi
 
 if [ $SYSTEM_NAME = 'Darwin' ]; then
+  # boot2docker 1.4
+  [[ -s $(brew --prefix)/bin/boot2docker ]] && $(boot2docker shellinit 2>/dev/null)
   . ~/.config/bash/terminal
-  # boot2docker 1.3.1
-  [[ -s /usr/local/bin/boot2docker ]] && $(boot2docker shellinit 2>/dev/null)
-  # brew install nvm (0.18.0)
-  [[ -s $(brew --prefix nvm)/nvm.sh ]] && source $(brew --prefix nvm)/nvm.sh
+  # brew install nvm (0.22.2)
+  if [ -f $(brew --prefix nvm)/nvm.sh ]; then
+    source $(brew --prefix nvm)/nvm.sh
+  elif [ -f ~/.nvm/nvm.sh ]; then
+    source ~/.nvm/nvm.sh
+    export NVM_NODEJS_ORG_MIRROR="https://iojs.org/dist/"
+    export NVM_NODE_PREFIX="iojs"
+  fi
   # brew install bash-completion
   [[ -s $(brew --prefix)/etc/bash_completion ]] && source $(brew --prefix)/etc/bash_completion
 fi
