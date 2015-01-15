@@ -20,3 +20,6 @@ Icon
 Network Trash Folder
 Temporary Items
 .apdisk
+
+# Files that are created by github's client software?
+doc/tags
