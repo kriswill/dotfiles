@@ -39,8 +39,8 @@ if [ $SYSTEM_NAME = 'Darwin' ]; then
     source $(brew --prefix nvm)/nvm.sh
   elif [ -f ~/.nvm/nvm.sh ]; then
     source ~/.nvm/nvm.sh
-    export NVM_NODEJS_ORG_MIRROR="https://iojs.org/dist/"
-    export NVM_NODE_PREFIX="iojs"
+    #export NVM_NODEJS_ORG_MIRROR="https://iojs.org/dist/"
+    #export NVM_NODE_PREFIX="iojs"
   fi
   # brew install bash-completion
   [[ -s $(brew --prefix)/etc/bash_completion ]] && source $(brew --prefix)/etc/bash_completion

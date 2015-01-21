@@ -1,7 +1,0 @@
-set guioptions-=T " hide toolbar
-set lines=60 columns=120
-
-colorscheme railscasts
-
-" Sets the font and size
-set guifont=Bitstream\ Vera\ Sans\ Mono:h16
