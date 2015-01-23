@@ -10,6 +10,8 @@ source ~/.config/bash/aliases
 source ~/.config/bash/prompt
 source ~/.config/bash/save-directory
 
+test -f ~/.git-completion.bash && . $_
+
 [[ -s /etc/bash_completion ]] && source /etc/bash_completion
 
 # readline settings
