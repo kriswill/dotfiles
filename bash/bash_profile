@@ -1,18 +1,15 @@
 export NICE_HOSTNAME=`hostname -f`
 export SHORT_HOST=`hostname -s`
 
-[[ -s ~/.bash_local ]] && source ~/.bash_local
-
-source ~/.config/bash/exports
-source ~/.config/bash/colors
-source ~/.config/git/gitrc
-source ~/.config/bash/aliases
-source ~/.config/bash/prompt
-source ~/.config/bash/save-directory
-
+test -s ~/.bash_local && . $_
+test -f ~/.config/bash/exports && . $_
+test -f ~/.config/bash/colors && . $_
+test -f ~/.config/git/gitrc && . $_
+test -f ~/.config/bash/aliases && . $_
+test -f ~/.config/bash/prompt && . $_
+test -f ~/.config/bash/save-directory && . $_
 test -f ~/.git-completion.bash && . $_
-
-[[ -s /etc/bash_completion ]] && source /etc/bash_completion
+test -s /etc/bash_completion && . $_
 
 # readline settings
 bind "set completion-ignore-case on"
@@ -24,35 +21,27 @@ shopt -s histappend
 shopt -s globstar 2>/dev/null # Bash 4 and above only
 
 # RVM - Ruby Version Manager
-[[ -s ~/.rvm/scripts/rvm ]] && source ~/.rvm/scripts/rvm
-[[ -r $rvm_path/scripts/completion ]] && source $rvm_path/scripts/completion
+test -s ~/.rvm/scripts/rvm && . $_
+test -r $rvm_path/scripts/completion && . $_
 
 if [ $SYSTEM_NAME = 'Linux' ]; then
   # NVM - Node Version Manager
-  [[ -s ~/.nvm/nvm.sh ]] && source ~/.nvm/nvm.sh
+  test -s ~/.nvm/nvm.sh && . $_
 fi
 
 if [ $SYSTEM_NAME = 'Darwin' ]; then
+  test -s ~/.config/bash/terminal && . $_
   # boot2docker 1.4
-  [[ -s $(brew --prefix)/bin/boot2docker ]] && $(boot2docker shellinit 2>/dev/null)
-  . ~/.config/bash/terminal
+  test -s $(brew --prefix)/bin/boot2docker && $(boot2docker shellinit 2>/dev/null)
   # brew install nvm (0.22.2)
-  if [ -f $(brew --prefix nvm)/nvm.sh ]; then
-    source $(brew --prefix nvm)/nvm.sh
-  elif [ -f ~/.nvm/nvm.sh ]; then
-    source ~/.nvm/nvm.sh
-    #export NVM_NODEJS_ORG_MIRROR="https://iojs.org/dist/"
-    #export NVM_NODE_PREFIX="iojs"
-  fi
+  test -s $(brew --prefix nvm)/nvm.sh && . $_
   # brew install bash-completion
-  [[ -s $(brew --prefix)/etc/bash_completion ]] && source $(brew --prefix)/etc/bash_completion
+  test -s $(brew --prefix)/etc/bash_completion && . $_
 fi
 
 complete -C ~/.config/ruby/rake-completion.rb -o default rake
 
 INIT_AUTOJUMP=~/.config/bash/autojump/autojump.bash
-[[ -s ${INIT_AUTOJUMP} ]] && . ${INIT_AUTOJUMP}
+test -s ${INIT_AUTOJUMP} && . $_
 
-if [ -f ~/.bashrc ]; then
-  . ~/.bashrc
-fi
+test -f ~/.bashrc && . $_
