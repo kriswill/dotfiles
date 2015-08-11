@@ -1,7 +1,7 @@
 require 'rake'
 require 'erb'
 
-task :default => [:bash, :bin, :autojump, :ruby, :vim]
+task :default => [:bash, :bin, :autojump, :ruby, :vim, :ctags]
 
 desc 'configure ~/.config symlink'
 task :init do
@@ -44,19 +44,17 @@ task :ruby => :init do
   end
 end
 
-desc 'configure node version manager (nvm)'
-task :nvm => :init do
-  dotnvm = File.join $homedir, '.nvm'
-  FileUtils.mkdir dotnvm unless File.exist? dotnvm
-  relink_file File.join($dotconf, 'node', 'nvm', 'nvm.sh'), File.join(dotnvm, 'nvm.sh')
-end
-
 desc 'configure vim links'
 task :vim => :init do
   relink_file File.join($dotconf, 'vim'), File.join($homedir, '.vim')
   %w[vimrc gvimrc].each do |file|
     relink_file File.join($dotconf, 'vim', file), File.join($homedir, ".#{file}")
   end
+end
+
+desc 'configure ctags'
+task :ctags => :init do
+  relink_file File.join($dotconf, 'dev', 'ctags'), File.join($homedir, '.ctags')
 end
 
 # WIP

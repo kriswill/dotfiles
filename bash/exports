@@ -30,6 +30,7 @@ export CLICOLOR=1
 
 export LESS=-R
 export HISTSIZE=1000000
+export HISTCONTROL=erasedups
 
 if ls --color -d . >/dev/null 2>&1; then
   export GNU_LS=1
