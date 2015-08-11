@@ -9,6 +9,5 @@ git/gitconfig
 **/*.swp
 **/tags
 
-configstore/update-notifier-bower.yml
-
-configstore/insight-bower.yml
+configstore
+.mono

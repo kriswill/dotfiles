@@ -39,6 +39,7 @@ if [ $SYSTEM_NAME = 'Darwin' ]; then
   alias docker.clean='docker rm $(docker ps --no-trunc -aq)'
   alias docker.cleanimages='docker rmi $(docker images --filter dangling=true --quiet)'
 
+  alias ember.clean='rm -rf node_modules bower_components dist tmp'
   # MongoDB
   # function mongo-start() {
   #   launchctl load -w ~/Library/LaunchAgents/org.mongodb.mongod.plist

@@ -13,7 +13,6 @@ fi
 # needed to support Golang's package system
 [[ -s ~/go ]] && export GOPATH=~/go && export PATH="$GOPATH/bin:$PATH"
 [[ -s /usr/local/opt/go/libexec/bin ]] && export PATH="/usr/local/opt/go/libexec/bin:$PATH"
-export PATH="$PATH:$HOME/.rvm/bin" # Add RVM to PATH for scripting
 [[ -s ~/bin ]] && export PATH="~/bin:$PATH"
 
 # ruby console config
