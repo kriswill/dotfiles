@@ -31,8 +31,8 @@ fi
 
 if [ $SYSTEM_NAME = 'Darwin' ]; then
   test -s ~/.config/bash/terminal && . $_
-  # boot2docker 1.4
-  test -s $(brew --prefix)/bin/boot2docker && $($_ shellinit 2>/dev/null)
+  # set Docker environment variables using docker-machine
+  test -f /usr/local/bin/docker-machine && eval $($_ env default)
   # brew install nvm (0.22.2)
   test -s $(brew --prefix nvm)/nvm.sh && . $_
   # brew install bash-completion
