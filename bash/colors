@@ -1,4 +1,4 @@
-NONE="\033[0m"    # unsets color to term's fg color
+NONE="\033[0m\033[49m"    # unsets color to term's fg color
 
 # regular colors
 K="\033[0;30m"    # black
@@ -42,12 +42,12 @@ colors() {
 	echo -n -e "${Y}{Y}" && echo -n "	${Y}" && echo -n -e "${EMY}	{EMY}" && echo "	${EMY}"
 	echo -n -e "${K}{K}" && echo -n "	${K}" && echo -n -e "${EMK}	{EMK}" && echo "	${EMK}"
 	echo && echo -e "${NONE}Background color codes:" && echo
-	echo -n -e "${BGK}{BGK}" && echo "	${BGK}" && echo -n -e "${NONE}"
-	echo -n -e "${BGR}{BGR}" && echo "	${BGR}" && echo -n -e "${NONE}"
-	echo -n -e "${K}${BGG}{BGG}" && echo "	${BGG}" && echo -n -e "${NONE}"
-	echo -n -e "${K}${BGY}{BGY}" && echo "	${BGY}" && echo -n -e "${NONE}"
-	echo -n -e "${BGB}{BGB}" && echo "	${BGB}" && echo -n -e "${NONE}"
-	echo -n -e "${BGM}{BGM}" && echo "	${BGM}" && echo -n -e "${NONE}"
-	echo -n -e "${K}${BGC}{BGC}" && echo "	${BGC}" && echo -n -e "${NONE}"
-	echo -n -e "${K}${BGW}{BGW}" && echo "	${BGW}" && echo -n -e "${NONE}"
+	echo -n -e "${NONE}${BGK}{BGK}" 		&& echo -n "	${BGK}" && echo -e "${NONE}"
+	echo -n -e "${NONE}${BGR}{BGR}" 		&& echo -n "	${BGR}" && echo -e "${NONE}"
+	echo -n -e "${NONE}${K}${BGG}{BGG}" && echo -n "	${BGG}" && echo -e "${NONE}"
+	echo -n -e "${NONE}${K}${BGY}{BGY}" && echo -n "	${BGY}" && echo -e "${NONE}"
+	echo -n -e "${NONE}${BGB}{BGB}" 		&& echo -n "	${BGB}" && echo -e "${NONE}"
+	echo -n -e "${NONE}${BGM}{BGM}" 		&& echo -n "	${BGM}" && echo -e "${NONE}"
+	echo -n -e "${NONE}${K}${BGC}{BGC}" && echo -n "	${BGC}" && echo -e "${NONE}"
+	echo -n -e "${NONE}${K}${BGW}{BGW}" && echo -n "	${BGW}" && echo -e "${NONE}"
 }

@@ -2,7 +2,7 @@ set meta-flag on
 set input-meta on
 set output-meta on
 set convert-meta off
- 
+
 # By default up/down are bound to previous-history
 # and next-history respectively. The following does the
 # same but gives the extra functionality where if you
@@ -16,14 +16,15 @@ set convert-meta off
 "\e[A": history-search-backward
 
 $if Bash
+  # Midnight commander "brew install mc"
   # F10 toggles mc on and off
   # Note Ctrl-o toggles panes on and off in mc
-  "\e[21~": "mc\C-M"
- 
-  #do history expansion when space entered
+  # "\e[21~": "mc\C-M"
+
+  # do history expansion when space entered
   Space: magic-space
 $endif
- 
+
 # Include system wide settings which are ignored
 # by default if one has their own .inputrc
 $include /etc/inputrc
