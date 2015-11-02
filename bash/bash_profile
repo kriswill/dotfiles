@@ -39,11 +39,11 @@ if [ $SYSTEM_NAME = 'Darwin' ]; then
   test -s $(brew --prefix)/etc/bash_completion && . $_
 fi
 
-export PATH="~/.rvm/bin:$PATH" # Add RVM to PATH for scripting
-
 complete -C ~/.config/ruby/rake-completion.rb -o default rake
 
 INIT_AUTOJUMP=~/.config/bash/autojump/autojump.bash
 test -s ${INIT_AUTOJUMP} && . $_
 
 test -f ~/.bashrc && . $_
+
+export PATH="$PATH:$HOME/.rvm/bin" # Add RVM to PATH for scripting

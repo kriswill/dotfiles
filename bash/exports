@@ -6,6 +6,7 @@ if [ $SYSTEM_NAME = 'Darwin' ]; then
   export NVM_DIR=~/.nvm
   export EDITOR='atom --wait'
   export GEM_OPEN_EDITOR='atom'
+  export ATOM_REPOS_HOME=~/src/oss
 else
   export EDITOR='vim'
 fi
