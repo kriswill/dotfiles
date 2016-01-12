@@ -25,6 +25,7 @@ if [ $SYSTEM_NAME = 'Darwin' ]; then
   alias b='open -a chrome'
   alias hidefile='/usr/bin/SetFile -a "V"'
   alias showfile='/usr/bin/SetFile -a "v"'
+  alias ip='echo $(ipconfig getifaddr en0)'
 
   alias bgsaver='/System/Library/Frameworks/ScreenSaver.framework/Resources/ScreenSaverEngine.app/Contents/MacOS/ScreenSaverEngine -background &'
   alias bgsaver.stop='killall ScreenSaverEngine'
@@ -40,6 +41,7 @@ fi
 alias docker.clean='docker rm $(docker ps --no-trunc -aq)'
 alias docker.cleanimages='docker rmi $(docker images --filter dangling=true --quiet)'
 alias dc='docker-compose'
+alias dm='docker-machine'
 
 
 function fromunixtime {
