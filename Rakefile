@@ -10,7 +10,7 @@ task :init do
   $dotconf = File.join $homedir, '.config'
   relink_file $currdir, $dotconf
   $homebin = File.join $homedir, 'bin'
-  FileUtils.mkdir $homebin unless File.exist? $homebin
+  mkdir $homebin unless File.exist? $homebin
 end
 
 desc 'configure bash links'
@@ -25,14 +25,14 @@ task :autojump => :init do
   source = File.join $dotconf, 'bash', 'autojump', 'autojump'
   target = File.join $homebin, 'autojump'
   relink_file source, target
-  FileUtils.chmod 0755, target
+  chmod 0755, target
 end
 
 desc 'configure ~/bin'
 task :bin => :init do
-  %w[pg beautify jsbeautify ack cloc git-wtf].each do |file|
+  %w[pg beautify jsbeautify ack cloc git-wtf vcprompt].each do |file|
     source = File.join $dotconf, 'bin', file
-    FileUtils.chmod 0755, source
+    chmod 0755, source
     relink_file source, File.join($homebin, file)
   end
 end
@@ -75,7 +75,7 @@ task :backup_terminal_settings => :init do
   source = File.join $homedir, 'Library', 'Preferences', filename
   if File.exist?(source) then
     target = File.join $dotconf, 'terminal', filename
-    FileUtils.copy source, target
+    copy source, target
     system "plutil -convert xml1 #{target}"
   end
 end
@@ -86,7 +86,7 @@ task :terminal => :init do
   target = File.join $homedir, 'Library', 'Preferences', filename
   source = File.join $dotconf, 'terminal', filename
   backup = "#{source}.bak"
-  FileUtils.copy target, backup unless File.exist?(backup)
+  copy target, backup unless File.exist?(backup)
   relink_file source, target
 end
 
@@ -94,7 +94,7 @@ namespace :install do
   desc 'download latest vcprompt'
   # task :vcprompt => :init do
   #   system "curl -s https://github.com/xvzf/vcprompt/raw/master/bin/vcprompt > bin/vcprompt"
-  #   FileUtils.chmod 0755, "bin/vcprompt"
+  #   chmod 0755, "bin/vcprompt"
   # end
 
   # desc 'install pow.  see http://pow.cx/manual.html'
@@ -110,18 +110,10 @@ namespace :uninstall do
   # end
 end
 
-def link_file(source, target)
-  puts "linking #{target}"
-  FileUtils.ln_sf source, target
-end
-
-def remove_file(file)
-  FileUtils.rm file, :force => true if File.exist?(file)
-end
-
 def relink_file(source, target)
-  remove_file target
-  link_file source, target
+  remove_file file, force: true
+  puts "linking #{target}"
+  ln_sf source, target
 end
 
 def generate(source, target)

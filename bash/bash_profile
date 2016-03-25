@@ -21,8 +21,11 @@ shopt -s histappend # make bash append to ~/.bash_history file
 shopt -s globstar 2>/dev/null # Bash 4 and above only
 
 # RVM - Ruby Version Manager
-test -s ~/.rvm/scripts/rvm && . $_
-test -r $rvm_path/scripts/completion && . $_
+# test -s ~/.rvm/scripts/rvm && . $_
+# test -r $rvm_path/scripts/completion && . $_
+
+# RBENV - Alternate to RVM
+eval "$(rbenv init -)"
 
 if [ $SYSTEM_NAME = 'Linux' ]; then
   # NVM - Node Version Manager
