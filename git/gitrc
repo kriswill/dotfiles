@@ -5,6 +5,7 @@ alias gb='git branch'
 alias gba='git branch -a'
 alias gl='git lg'
 alias gca='git commit --amend'
+alias gcsa='git commit -S --amend'
 alias grm='git rebase master'
 alias gp='git pull'
 alias gpr='git pull --rebase'
@@ -13,6 +14,10 @@ alias gdt='git diff-tree --name-status -r HEAD^^..HEAD'
 # commit pending changes, quote all args as message
 function gc() {
 	git commit -v -a -m "$*"
+}
+# sign commit with gpg
+function gcs() {
+	git commit -S -v -a -m "$*"
 }
 function gg() {
   git grep -I --color -n  "$*"
