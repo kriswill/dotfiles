@@ -40,6 +40,7 @@ fi
 # Docker 1.8
 alias docker.clean='docker rm $(docker ps --no-trunc -aq)'
 alias docker.cleanimages='docker rmi $(docker images --filter dangling=true --quiet)'
+alias d='docker'
 alias dc='docker-compose'
 alias dm='docker-machine'
 

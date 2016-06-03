@@ -20,10 +20,6 @@ shopt -s checkwinsize
 shopt -s histappend # make bash append to ~/.bash_history file
 shopt -s globstar 2>/dev/null # Bash 4 and above only
 
-# RVM - Ruby Version Manager
-# test -s ~/.rvm/scripts/rvm && . $_
-# test -r $rvm_path/scripts/completion && . $_
-
 # RBENV - Alternate to RVM
 eval "$(rbenv init -)"
 
@@ -42,11 +38,12 @@ if [ $SYSTEM_NAME = 'Darwin' ]; then
   test -s $(brew --prefix)/etc/bash_completion && . $_
 fi
 
+# setup bash completion
 complete -C ~/.config/ruby/rake-completion.rb -o default rake
+complete -F _docker d
+complete -F _docker_compose dc
+complete -F _docker_machine dm
+test -s ~/.config/bash/autojump/autojump.bash && . $_
 
-INIT_AUTOJUMP=~/.config/bash/autojump/autojump.bash
-test -s ${INIT_AUTOJUMP} && . $_
-
+# run bashrc if present
 test -f ~/.bashrc && . $_
-
-export PATH="$PATH:$HOME/.rvm/bin" # Add RVM to PATH for scripting
