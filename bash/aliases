@@ -38,12 +38,15 @@ if [ $SYSTEM_NAME = 'Darwin' ]; then
 fi
 
 # Docker 1.8
-alias docker.clean='docker rm $(docker ps --no-trunc -aq)'
-alias docker.cleanimages='docker rmi $(docker images --filter dangling=true --quiet)'
 alias d='docker'
 alias dc='docker-compose'
 alias dm='docker-machine'
-
+alias docker.clean='docker rm $(docker ps --no-trunc -aq)'
+alias d.clean='docker.clean'
+alias docker.cleanimages='docker rmi $(docker images --filter dangling=true --quiet)'
+alias d.ci='docker.cleanimages'
+alias docker.cleanvolumes='docker volume rm $(docker volume ls -qf dangling=true)'
+alias d.cv='docker.cleanvolumes'
 
 function fromunixtime {
 	perl -e "require 'ctime.pl'; print &ctime($1);"

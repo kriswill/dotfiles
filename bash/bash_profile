@@ -21,7 +21,9 @@ shopt -s histappend # make bash append to ~/.bash_history file
 shopt -s globstar 2>/dev/null # Bash 4 and above only
 
 # RBENV - Alternate to RVM
-eval "$(rbenv init -)"
+# if type rbenv | grep -q '^function$' >/dev/null 2>&1; then
+#   eval "$(rbenv init -)"
+# fi
 
 if [ $SYSTEM_NAME = 'Linux' ]; then
   # NVM - Node Version Manager
@@ -36,6 +38,8 @@ if [ $SYSTEM_NAME = 'Darwin' ]; then
   test -s $(brew --prefix nvm)/nvm.sh && . $_
   # brew install bash-completion
   test -s $(brew --prefix)/etc/bash_completion && . $_
+  # java version switcher
+  if which jenv > /dev/null; then eval "$(jenv init -)"; fi
 fi
 
 # setup bash completion
