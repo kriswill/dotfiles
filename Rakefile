@@ -1,7 +1,7 @@
 require 'rake'
 require 'erb'
 
-task :default => [:bash, :bin, :autojump, :ruby, :vim, :ctags]
+task :default => [:bash, :bin, :autojump, :ruby, :ctags]
 
 desc 'configure ~/.config symlink'
 task :init do
@@ -41,14 +41,6 @@ desc 'configure ruby links'
 task :ruby => :init do
   %w[rdebugrc irbrc gemrc autotest].each do |file|
     relink_file File.join($dotconf, 'ruby', file), File.join($homedir, ".#{file}")
-  end
-end
-
-desc 'configure vim links'
-task :vim => :init do
-  relink_file File.join($dotconf, 'vim'), File.join($homedir, '.vim')
-  %w[vimrc gvimrc].each do |file|
-    relink_file File.join($dotconf, 'vim', file), File.join($homedir, ".#{file}")
   end
 end
 

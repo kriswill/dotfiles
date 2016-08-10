@@ -11,6 +11,7 @@ fi
 # /home/me/stuff          -> ~/stuff               if USER=me
 # /usr/share/big_dir_name -> ../share/big_dir_name if pwdmaxlen=20
 ##################################################
+
 bash_prompt_command() {
   RETURN=$?
   # How many characters of the $PWD should be kept
@@ -32,7 +33,7 @@ bash_prompt_command() {
 
 PROMPT_VCS=1 # version control system name, branch and dirty status
 
-prompt.vcs.enable (){
+prompt.vcs.enable(){
   PROMPT_VCS=1
 }
 prompt.vcs.disable(){
@@ -40,12 +41,6 @@ prompt.vcs.disable(){
 }
 vcs(){
   [ $PROMPT_VCS -eq "1" ] && echo -e $(vcprompt -f "${K} %n[${R}%b${EMG}%m${EMR}%u${K}]")
-}
-
-arrow(){
-  local ARROW=$EMR
-  [ "$RETURN" -eq "0" ] && ARROW=$EMG
-  echo -e "${ARROW}→${NONE} "
 }
 
 bash_prompt() {
@@ -61,12 +56,16 @@ bash_prompt() {
   local UC=$W                    # user's color
   [ $UID -eq 0 ] && UC=$EMR      # root's color
 
-  PS1="$TITLEBAR\n\
-\[${UC}\]\u\
-\$(vcs)\
- \[${EMB}\]\${NEW_PWD} \
-\n\[${K}\]${RETURN}\
-\$(arrow)"
+  local ARROW_COLOR=$EMR
+  [ $? -eq 0 ] && ARROW_COLOR=$EMG
+
+  PS1="\[${TITLEBAR}\
+${UC}\u\
+\$(vcs) \
+${EMB}\${NEW_PWD} \
+${K} \
+\[${NONE}\]\n\[${ARROW_COLOR}\]→ \[${NONE}\]"
+
 }
 
 PROMPT_COMMAND=bash_prompt_command
