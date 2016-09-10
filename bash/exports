@@ -16,7 +16,14 @@ fi
 [[ -s /usr/local/opt/go/libexec/bin ]] && export PATH="/usr/local/opt/go/libexec/bin:$PATH"
 [[ -s ~/bin ]] && export PATH="~/bin:$PATH"
 
+# https://github.com/wofr06/lesspipe
+if which lesspipe.sh > /dev/null; then
+  export LESSOPEN="|lesspipe.sh %s"
+  export LESSQUIET=1
+fi
+
 # ruby console config
+export RBENV_VERSION=2.3.1
 [[ -s ~/.irbrc ]] && export IRBRC="~/.irbrc"
 
 export GIT_EDITOR=$EDITOR

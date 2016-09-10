@@ -1,7 +1,76 @@
-# From http://codesnippets.joyent.com/posts/show/1516
 
-# declare -x PROMPT_COMMAND='printf "\e]0;$(/bin/pwd | /usr/bin/tr -d "[[:cntrl:]]") \a"'
+# prints information about the terminal application you are using
+function terminfo() {
 
+  # make OPTIND local to prevent odd behaviour with getops when running a function multiple times
+  local OPTIND v
+  local _verbose=0
+
+  while getopts "v" OPTION
+  do
+    case $OPTION in
+      v) _verbose=1
+         ;;
+    esac
+  done
+
+  # OPTIND = The value of the last option argument processed by the getopts builtin command
+  shift "$((OPTIND-1))"
+
+  # get the process ID for the current shell
+  local pid=$$
+
+  # search for the top-most process parent, extracting the command
+  while true; do
+
+    # store the last pid, so we can recover it when we hit the root process
+    lastpid=$pid
+    # get the parent pid, xargs to trim whitespace off
+    pid=$(ps -h -o ppid= -p $pid 2>/dev/null | xargs)
+
+    # if we hit root pid (1), jump out of the loop
+    [[ $(echo $pid) == 1 ]] && pid=$lastpid && break
+
+    # get the full executable path
+    comm=$(ps -h -o comm= -p $pid 2>/dev/null)
+    # basename gets only the executable name
+    base=`basename "${comm}" 2>/dev/null`
+
+  done
+
+  # find the app version number if on a Mac
+  if [[ "$OSTYPE" == "darwin"* ]]; then
+    dotapp=".app"
+    if [[ $comm == *".app"* ]]; then
+      # parse out the beginning of the path, up to xxx.app -- bash-foo
+      macapp="${comm%".app"*}.app"
+      # use plutil to parse out app's info plist, which is XML, blech
+      version=$(plutil -p "${macapp}/Contents/Info.plist" | grep "CFBundleShortVersionString")
+      # if there is a value, then get the real version number
+      if [[ $? -ne 0 ]]; then
+        version=$(plutil -p "${macapp}/Contents/Info.plist" | grep "CFBundleVersion")
+      fi
+      # parse out the digits
+      version=$(echo $version | grep -o '"[[:digit:].]*"' | sed 's/"//g')
+    fi
+  fi
+
+  # print the info - in color!
+  B="\033[0;34m"    # blue
+  C="\033[0;49;96m" # cyan
+  W="\033[0;37m"    # white
+
+  printf "\n${C}Application${B}: ${W}${base}"
+  printf "\n${C}Process ID${B}:  ${W}${pid}"
+  test ${version+x} &&
+    printf "\n${C}Version${B}:     ${W}${version}"
+  if [[ $_verbose -ne 0 ]]; then
+    test ${macapp+x} &&
+      printf "\n${C}Full Path${B}:   ${W}${macapp}"
+    # TODO: maybe add some more info here
+  fi
+  printf "\n\n"
+}
 
 # Minimise terminal window to Dock
 function mintw() { printf "\e[2t"; return 0; }
@@ -9,31 +78,31 @@ function mintw() { printf "\e[2t"; return 0; }
 # Send Terminal window to background
 function bgtw() { printf "\e[6t"; return 0; }
 
-function hidetw() { 
-   /usr/bin/osascript -e 'tell application "System Events" to set visible of some item of ( get processes whose name = "Terminal" ) to false'
-   return 0
+function hidetw() {
+  /usr/bin/osascript -e 'tell application "System Events" to set visible of some item of ( get processes whose name = "Terminal" ) to false'
+  return 0
 }
 
 # positive integer test (including zero)
 function positive_int() { return $(test "$@" -eq "$@" > /dev/null 2>&1 && test "$@" -ge 0 > /dev/null 2>&1); }
 
 # move the Terminal window
-function mvtw() { 
-   if [[ $# -eq 2 ]] && $(positive_int "$1") && $(positive_int "$2"); then 
-      printf "\e[3;${1};${2};t"
-      return 0
-   fi
-   return 1
+function mvtw() {
+  if [[ $# -eq 2 ]] && $(positive_int "$1") && $(positive_int "$2"); then
+    printf "\e[3;${1};${2};t"
+    return 0
+  fi
+  return 1
 }
 
 # resize the Terminal window
-function sizetw() { 
-   if [[ $# -eq 2 ]] && $(positive_int "$1") && $(positive_int "$2"); then 
-      printf "\e[8;${1};${2};t"
-      /usr/bin/clear
-      return 0
-   fi
-   return 1
+function sizetw() {
+  if [[ $# -eq 2 ]] && $(positive_int "$1") && $(positive_int "$2"); then
+    printf "\e[8;${1};${2};t"
+    /usr/bin/clear
+    return 0
+  fi
+  return 1
 }
 
 # full screen
@@ -54,8 +123,8 @@ function lc() { printf "lines: $(/usr/bin/tput lines)\ncolums: $(/usr/bin/tput c
 # open a new Terminal window in same location as current directory
 unset -f newin
 function newin() {
-   /bin/pwd | /usr/bin/pbcopy
-   /usr/bin/open -a Terminal
-   /usr/bin/osascript -e 'tell application "Terminal" to do script with command "cd \"$(/usr/bin/pbpaste)\"; echo \" \" | /usr/bin/pbcopy; /usr/bin/clear"'
-   return 0 
+  /bin/pwd | /usr/bin/pbcopy
+  /usr/bin/open -a Terminal
+  /usr/bin/osascript -e 'tell application "Terminal" to do script with command "cd \"$(/usr/bin/pbpaste)\"; echo \" \" | /usr/bin/pbcopy; /usr/bin/clear"'
+  return 0
 }

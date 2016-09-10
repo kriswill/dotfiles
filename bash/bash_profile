@@ -8,8 +8,6 @@ test -f ~/.config/git/gitrc && . $_
 test -f ~/.config/bash/aliases && . $_
 test -f ~/.config/bash/prompt && . $_
 test -f ~/.config/bash/save-directory && . $_
-test -f ~/.git-completion.bash && . $_
-test -s /etc/bash_completion && . $_
 
 # readline settings
 bind "set completion-ignore-case on"
@@ -20,11 +18,6 @@ shopt -s checkwinsize
 shopt -s histappend # make bash append to ~/.bash_history file
 shopt -s globstar 2>/dev/null # Bash 4 and above only
 
-# RBENV - Alternate to RVM
-# if type rbenv | grep -q '^function$' >/dev/null 2>&1; then
-#   eval "$(rbenv init -)"
-# fi
-
 if [ $SYSTEM_NAME = 'Linux' ]; then
   # NVM - Node Version Manager
   test -s ~/.nvm/nvm.sh && . $_
@@ -33,21 +26,32 @@ fi
 if [ $SYSTEM_NAME = 'Darwin' ]; then
   test -s ~/.config/bash/terminal && . $_
   # set Docker environment variables using docker-machine
-  # test -f /usr/local/bin/docker-machine && eval $($_ env default)
-  # brew install nvm (0.22.2)
+  # brew install nvm
   test -s $(brew --prefix nvm)/nvm.sh && . $_
   # brew install bash-completion
   test -s $(brew --prefix)/etc/bash_completion && . $_
+
   # java version switcher
   if which jenv > /dev/null; then eval "$(jenv init -)"; fi
 fi
 
-# setup bash completion
+# RBENV - Alternate to RVM
+# if type rbenv | grep -q '^function$' >/dev/null 2>&1; then
+eval "$(rbenv init -)"
+test -s ~/.travis/travis.sh && . $_
+# fi
+
+# setup bash completions
+# install these from https://github.com/Homebrew/homebrew-completions
+# ex brew install
+test -s ~/.config/git/git-completion && . $_
 complete -C ~/.config/ruby/rake-completion.rb -o default rake
 complete -F _docker d
 complete -F _docker_compose dc
 complete -F _docker_machine dm
 test -s ~/.config/bash/autojump/autojump.bash && . $_
+complete -o default -o nospace -F _git g # auto-completion for g -> git
+
 
 # run bashrc if present
 test -f ~/.bashrc && . $_

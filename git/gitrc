@@ -1,9 +1,10 @@
+# Git aliases and ergonomics
 alias g='git'
-complete -o default -o nospace -F _git g # auto-completion for g -> git
-alias gs='git st'
+alias gs='git st -sb'
 alias gb='git branch'
 alias gba='git branch -a'
 alias gl='git lg'
+alias glt='git lgt'
 alias gca='git commit --amend'
 alias gcsa='git commit -S --amend'
 alias grm='git rebase master'

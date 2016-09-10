@@ -35,6 +35,7 @@ if [ $SYSTEM_NAME = 'Darwin' ]; then
   alias ports.listen='sudo lsof -i -nP | grep "(LISTEN)"'
 
   alias ember.clean='rm -rf node_modules bower_components dist tmp'
+  alias rm.dsstore='find . -name ".DS_Store" -type f -delete'
 fi
 
 # Docker 1.8
