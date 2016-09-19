@@ -44,14 +44,17 @@ test -s ~/.travis/travis.sh && . $_
 # setup bash completions
 # install these from https://github.com/Homebrew/homebrew-completions
 # ex brew install
-test -s ~/.config/git/git-completion && . $_
+if [ -s ~/.config/git/git-completion ]; then
+   . ~/.config/git/git-completion
+   # add git completion to aliases
+   __git_complete g __git_main
+   __git_complete gco _git_checkout
+fi
 complete -C ~/.config/ruby/rake-completion.rb -o default rake
 complete -F _docker d
 complete -F _docker_compose dc
 complete -F _docker_machine dm
 test -s ~/.config/bash/autojump/autojump.bash && . $_
-complete -o default -o nospace -F _git g # auto-completion for g -> git
-
 
 # run bashrc if present
 test -f ~/.bashrc && . $_
