@@ -5,6 +5,10 @@ function ht() {
   history | awk '{a[$2]++}END{for(i in a){print a[i] " " i}}' | sort -rn | head
 }
 
+function ef() { 
+  echo; for dir in ./*; do (echo "======== $dir ========"; echo; cd "$dir" && "$@"); echo; done 
+}
+
 # Pathing
 alias ..='cd ..;'
 alias ...='.. ..'
@@ -69,6 +73,7 @@ alias tm='top -o vsize'
 alias l='ls $LS_OPTIONS -lh'
 alias la='ls $LS_OPTIONS -lAh'
 alias ld='ls $LS_OPTIONS -lad */'
+alias lf='ls $LS_OPTIONS -ap | grep -v /'
 
 #tail
 alias t='tail'

@@ -8,6 +8,7 @@ test -f ~/.config/git/gitrc && . $_
 test -f ~/.config/bash/aliases && . $_
 test -f ~/.config/bash/prompt && . $_
 test -f ~/.config/bash/save-directory && . $_
+test -f ~/.config/bash/gop && . $_
 
 # readline settings
 bind "set completion-ignore-case on"

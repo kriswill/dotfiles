@@ -1,0 +1,30 @@
+GOP_REPO=~/src/gliffy/online-play
+EMBER_ONLINE_REPO=~/src/gliffy/ember-products/online-editor
+EMBER_ONLINE_VIEWER_REPO=~/src/gliffy/ember-products/online-viewer
+EMBER_ONLINE_DOCS_REPO=~/src/gliffy/ember-products/online-documents
+
+# Commands to bring up/down/stop/restart the dev docker stack, or just bring up the MySQL db container
+gop-dc() { pushd $GOP_REPO > /dev/null; docker-compose -f docker-compose.yml -f docker-compose-dev.yml $@; popd > /dev/null;  }
+gop-sync() { pushd $GOP_REPO > /dev/null; docker-sync start; popd > /dev/null; }
+gop-up() { pushd $GOP_REPO > /dev/null; docker-compose -f docker-compose.yml -f docker-compose-dev.yml up -d; popd > /dev/null; }
+gop-down() { pushd $GOP_REPO > /dev/null; docker-compose -f docker-compose.yml -f docker-compose-dev.yml down; popd > /dev/null; }
+gop-stop() { pushd $GOP_REPO > /dev/null; docker-compose -f docker-compose.yml -f docker-compose-dev.yml stop; popd > /dev/null; }
+gop-restart() { pushd $GOP_REPO > /dev/null; docker-compose -f docker-compose.yml -f docker-compose-dev.yml restart $1; popd > /dev/null; }
+gop-db() { docker run -d -v gliffyonlineplay_data:/var/lib/mysql -p 3306:3306 --network="gliffy" --name="mysql" gliffy/docker-mysql; }
+gop-logs() { docker logs -f app; }
+# Delete the MySQL volume, bring up just the MySQL container, ember deploy to init the db with ember manifests, destroy the MySQL container.
+# Make sure your .env in the ember-online repos are set up correctly before using this.
+gop-db-reset() {
+	pushd $GOP_REPO > /dev/null
+	gop-down
+	docker volume rm play_data
+	gop-db
+	cd $EMBER_ONLINE_REPO
+	ember deploy local --verbose
+	cd $EMBER_ONLINE_VIEWER_REPO
+	ember deploy local --verbose
+	cd $EMBER_ONLINE_DOCS_REPO
+	ember deploy local --verbose
+	docker rm -f mysql
+	popd > /dev/null
+}

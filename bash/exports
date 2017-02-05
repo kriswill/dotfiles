@@ -7,6 +7,7 @@ if [ $SYSTEM_NAME = 'Darwin' ]; then
   export EDITOR='atom --wait'
   export GEM_OPEN_EDITOR='atom'
   export ATOM_REPOS_HOME=~/src/oss
+  test -s $(brew --prefix phantomjs)/bin/phantomjs && export PHANTOMJS_BIN=$_
 else
   export EDITOR='vim'
 fi
@@ -15,6 +16,9 @@ fi
 [[ -s ~/go ]] && export GOPATH=~/go && export PATH="$GOPATH/bin:$PATH"
 [[ -s /usr/local/opt/go/libexec/bin ]] && export PATH="/usr/local/opt/go/libexec/bin:$PATH"
 [[ -s ~/bin ]] && export PATH="~/bin:$PATH"
+
+# add play framework to PATH
+test -d ~/etc/play-2.2.2 && export PATH="$_:$PATH"
 
 # https://github.com/wofr06/lesspipe
 if which lesspipe.sh > /dev/null; then
