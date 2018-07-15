@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 GOP_REPO=~/src/gliffy/online-play
 EMBER_ONLINE_REPO=~/src/gliffy/ember-products/online-editor
 EMBER_ONLINE_VIEWER_REPO=~/src/gliffy/ember-products/online-viewer
@@ -28,3 +30,28 @@ gop-db-reset() {
 	docker rm -f mysql
 	popd > /dev/null
 }
+
+USERNAME=kris.williams
+STAGE4=stage4-bastion.us-east-1.lte-glfy.net
+PROD4=prod4-bastion.us-east-1.lte-glfy.net
+alias ssh.stage4='ssh -A ${USERNAME}@${STAGE4}'
+alias ssh.prod4='ssh -A ${USERNAME}@${PROD4}'
+
+alias ssh.tunnel.ds2-test='ssh -l kriswilliams us-east-1.bastion.gliffy.net -L 127.0.0.1:33306:ds2-test.c8lpckfbuxuz.us-east-1.rds.amazonaws.com:3306'
+
+# ben_stage_user_rw 06hDkY6fZN22IYt9eWXC
+# ds2_stage_user_rw KcydE63JAcRnco9uaUY7
+alias ssh.tunnel.ds2-stage-pg='ssh -l kriswilliams us-east-1.bastion.gliffy.net -L 127.0.0.1:35432:gliffy-postgres-db-staging.c8lpckfbuxuz.us-east-1.rds.amazonaws.com:5432'
+alias ssh.tunnel.ben-stage-pg='ssh -l kriswilliams us-east-1.bastion.gliffy.net -L 127.0.0.1:45432:benjamin-app-stage.c8lpckfbuxuz.us-east-1.rds.amazonaws.com:5432'
+alias ssh.tunnel.ds2-growth-pg='ssh -l kriswilliams us-east-1.bastion.gliffy.net -L 127.0.0.1:35432:gliffy-postgres-db-staging.c8lpckfbuxuz.us-east-1.rds.amazonaws.com:5432'
+alias ssh.tunnel.ben-growth-pg='ssh -l kriswilliams us-east-1.bastion.gliffy.net -L 127.0.0.1:45432:benjamin-app-stage.c8lpckfbuxuz.us-east-1.rds.amazonaws.com:5432'
+
+
+alias dump.stage.ds2.diagrams="psql -h localhost -p 35432 -U ds2_stage_user_rw --command \"\\copy public.diagrams TO STDOUT;\" DS2-staging > ds2-stage-diagrams.txt"
+alias dump.stage.ds2.diagram-versions="psql -h localhost -p 35432 -U ds2_stage_user_rw --command \"\\copy public.diagram_versions TO STDOUT;\" DS2-staging > ds2-stage-diagram-versions.txt"
+alias dump.stage.ben.stripe-customers="psql -h localhost -p 45432 -U ben_stage_user_rw --command \"\\copy public.stripe_customers TO STDOUT;\" ben_stage > ben-stage-stripe-customers.txt"
+alias dump.stage.ben.stripe-subscriptions="psql -h localhost -p 45432 -U ben_stage_user_rw --command \"\\copy public.stripe_subscriptions TO STDOUT;\" ben_stage > ben-stage-stripe-subscriptions.txt"
+
+# ben_growth_user_rw 06hDkY6fZN22IYt9eWXC
+alias dump.growth.ben.stripe-customers="psql -h localhost -p 45432 -U ben_growth_user_rw --command \"\\copy public.stripe_customers TO STDOUT;\" ben_growth > ben-growth-stripe-customers.txt"
+alias dump.growth.ben.stripe-subscriptions="psql -h localhost -p 45432 -U ben_growth_user_rw --command \"\\copy public.stripe_subscriptions TO STDOUT;\" ben_growth > ben-growth-stripe-subscriptions.txt"
