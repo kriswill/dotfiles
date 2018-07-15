@@ -4,8 +4,10 @@ export SHORT_HOST=`hostname -s`
 test -s ~/.bash_local && . $_
 test -f ~/.config/bash/exports && . $_
 test -f ~/.config/bash/colors && . $_
+# test -f ~/.config/gnupg/agent && . $_
 test -f ~/.config/git/gitrc && . $_
 test -f ~/.config/bash/aliases && . $_
+test -f ~/.config/bash/aliases-kubernetes && . $_
 test -f ~/.config/bash/prompt && . $_
 test -f ~/.config/bash/save-directory && . $_
 test -f ~/.config/bash/gop && . $_
@@ -31,7 +33,7 @@ if [ $SYSTEM_NAME = 'Darwin' ]; then
   test -s $(brew --prefix nvm)/nvm.sh && . $_
   # brew install bash-completion
   test -s $(brew --prefix)/etc/bash_completion && . $_
-
+  test -s $(brew --prefix)/etc/profile.d/autojump.sh && . $_
   # java version switcher
   if which jenv > /dev/null; then eval "$(jenv init -)"; fi
 fi
@@ -41,6 +43,9 @@ fi
 eval "$(rbenv init -)"
 test -s ~/.travis/travis.sh && . $_
 # fi
+
+# Rust cargo shell init
+test -s ~/.cargo/env && . $_
 
 # setup bash completions
 # install these from https://github.com/Homebrew/homebrew-completions
@@ -55,7 +60,6 @@ complete -C ~/.config/ruby/rake-completion.rb -o default rake
 complete -F _docker d
 complete -F _docker_compose dc
 complete -F _docker_machine dm
-test -s ~/.config/bash/autojump/autojump.bash && . $_
 
 # run bashrc if present
 test -f ~/.bashrc && . $_
