@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 export SYSTEM_NAME=`uname -s`
 
 if [ $SYSTEM_NAME = 'Darwin' ]; then
@@ -8,9 +10,13 @@ if [ $SYSTEM_NAME = 'Darwin' ]; then
   export GEM_OPEN_EDITOR='atom'
   export ATOM_REPOS_HOME=~/src/oss
   test -s $(brew --prefix phantomjs)/bin/phantomjs && export PHANTOMJS_BIN=$_
+  # need by Rust racer to perform auto-completion lookups
+  export RUST_SRC_PATH=~/.rustup/toolchains/stable-x86_64-apple-darwin/lib/rustlib/src/rust/src
 else
   export EDITOR='vim'
 fi
+
+export BYOBU_PREFIX=/usr/local
 
 # needed to support Golang's package system
 [[ -s ~/go ]] && export GOPATH=~/go && export PATH="$GOPATH/bin:$PATH"
