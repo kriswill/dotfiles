@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 alias reload='source ~/.config/bash/aliases'
 alias ea='vim ~/.config/bash/aliases && reload'
 
@@ -5,8 +7,8 @@ function ht() {
   history | awk '{a[$2]++}END{for(i in a){print a[i] " " i}}' | sort -rn | head
 }
 
-function ef() { 
-  echo; for dir in ./*; do (echo "======== $dir ========"; echo; cd "$dir" && "$@"); echo; done 
+function ef() {
+  echo; for dir in ./*; do (echo "======== $dir ========"; echo; cd "$dir" && "$@"); echo; done
 }
 
 # Pathing
@@ -42,7 +44,10 @@ if [ $SYSTEM_NAME = 'Darwin' ]; then
   alias rm.dsstore='find . -name ".DS_Store" -type f -delete'
 fi
 
-# Docker 1.8
+alias rm.node_modules='find . -name "node_modules" -type d -prune -exec rm -rf "{}" +'
+alias rm.dist='find . -name "dist" -type d -prune -exec rm -rf "{}" +'
+alias rm.tmp='find . -name "tmp" -type d -prune -exec rm -rf "{}" +'
+# Docker
 alias d='docker'
 alias dc='docker-compose'
 alias dm='docker-machine'
@@ -52,11 +57,11 @@ alias docker.cleanimages='docker rmi $(docker images --filter dangling=true --qu
 alias d.ci='docker.cleanimages'
 alias docker.cleanvolumes='docker volume rm $(docker volume ls -qf dangling=true)'
 alias d.cv='docker.cleanvolumes'
-
-function fromunixtime {
-	perl -e "require 'ctime.pl'; print &ctime($1);"
-}
-
+alias docker.rm='docker rm $(docker ps -q -f status=exited)'
+alias d.rm='docker.rm'
+alias d.ps='docker ps --format "table {{.Names}}\t{{.ID}}\t{{.Ports}}"'
+alias d.ps.labels='docker ps --format "table {{.Names}}\t{{.ID}}\t{{.Labels}}"'
+alias dct='docker-compose -p gp-test -f docker-compose.yml -f docker-compose.test.yml'
 # ssh
 alias list-ssh='ps ax | grep "ssh" | grep -v grep'
 alias list-t='ps ax | grep "ssh.*[0-9]:.*:[0-9]"'
@@ -69,7 +74,6 @@ alias tu='top -o cpu'
 alias tm='top -o vsize'
 
 # ls aliases
-#alias ls='ls $LS_OPTIONS'
 alias l='ls $LS_OPTIONS -lh'
 alias la='ls $LS_OPTIONS -lAh'
 alias ld='ls $LS_OPTIONS -lad */'
