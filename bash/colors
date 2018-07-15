@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 NONE="\033[0m"    # unsets color to term's fg color
 
 # regular colors
