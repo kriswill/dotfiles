@@ -39,6 +39,8 @@ alias ssh.prod4='ssh -A ${USERNAME}@${PROD4}'
 
 alias ssh.tunnel.ds2-test='ssh -l kriswilliams us-east-1.bastion.gliffy.net -L 127.0.0.1:33306:ds2-test.c8lpckfbuxuz.us-east-1.rds.amazonaws.com:3306'
 
+# alias ssh.tunnel.pg-prod4-rr='ssh -l kris.williams prod4-bastion.us-east-1.lte-glfy.net -L 127.0.0.1:35432:gliffy-postgres-db-production-rr.c8lpckfbuxuz.us-east-1.rds.amazonaws.com:5432'
+alias ssh.tunnel.pg-prod4-rr='ssh -l kriswilliams us-east-1.bastion.gliffy.net -L 127.0.0.1:35432:gliffy-postgres-db-production-rr.c8lpckfbuxuz.us-east-1.rds.amazonaws.com:5432'
 # ben_stage_user_rw 06hDkY6fZN22IYt9eWXC
 # ds2_stage_user_rw KcydE63JAcRnco9uaUY7
 alias ssh.tunnel.ds2-stage-pg='ssh -l kriswilliams us-east-1.bastion.gliffy.net -L 127.0.0.1:35432:gliffy-postgres-db-staging.c8lpckfbuxuz.us-east-1.rds.amazonaws.com:5432'
@@ -55,3 +57,24 @@ alias dump.stage.ben.stripe-subscriptions="psql -h localhost -p 45432 -U ben_sta
 # ben_growth_user_rw 06hDkY6fZN22IYt9eWXC
 alias dump.growth.ben.stripe-customers="psql -h localhost -p 45432 -U ben_growth_user_rw --command \"\\copy public.stripe_customers TO STDOUT;\" ben_growth > ben-growth-stripe-customers.txt"
 alias dump.growth.ben.stripe-subscriptions="psql -h localhost -p 45432 -U ben_growth_user_rw --command \"\\copy public.stripe_subscriptions TO STDOUT;\" ben_growth > ben-growth-stripe-subscriptions.txt"
+
+# ssh tunnels to gliffy-2018
+PROD=ec2-18-215-70-108.compute-1.amazonaws.com
+alias ssh.prod='ssh ${PROD}'
+PROD_DB_SHARED=db-pls.gliffy.local
+alias ssh.tunnel.prod-shared='ssh ${PROD} -L 127.0.0.1:35432:${PROD_DB_SHARED}:5432'
+# ssh tunnels gliffy-dev
+QA1=ec2-18-235-125-152.compute-1.amazonaws.com
+alias ssh.qa1='ssh ${QA1}'
+alias ssh.tunnel.qa1-pls='ssh ${QA1} -L 127.0.0.1:33306:db-pls.gliffy.local:3306'
+alias ssh.tunnel.qa1-beacon='ssh ${QA1} -L 127.0.0.1:33307:db-beacon.gliffy.local:3306'
+QA1_DB_SHARED=qa1-pg-shared-201809202302571330000000e7.cvz5silngoti.us-east-1.rds.amazonaws.com
+alias ssh.tunnel.qa1-shared='ssh ${QA1} -L 127.0.0.1:35432:${QA1_DB_SHARED}:5432'
+QA2=ec2-34-225-16-211.compute-1.amazonaws.com
+alias ssh.qa2='ssh ${QA2}'
+alias ssh.tunnel.qa2-pls='ssh ${QA2} -L 127.0.0.1:33306:db-pls.gliffy.local:3306'
+alias ssh.tunnel.qa2-beacon='ssh ${QA2} -L 127.0.0.1:33307:db-beacon.gliffy.local:3306'
+QA2_DB_SHARED=qa1-pg-shared-201809202302571330000000e7.cvz5silngoti.us-east-1.rds.amazonaws.com
+alias ssh.tunnel.qa2-shared='ssh ${QA2} -L 127.0.0.1:35432:${QA2_DB_SHARED}:5432'
+
+# docker run --rm -v `pwd`/flyway/conf:/flyway/conf -v `pwd`/flyway/sql:/flyway/sql boxfuse/flyway info
