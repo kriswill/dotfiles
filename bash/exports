@@ -9,7 +9,6 @@ if [ $SYSTEM_NAME = 'Darwin' ]; then
   export EDITOR='atom --wait'
   export GEM_OPEN_EDITOR='atom'
   export ATOM_REPOS_HOME=~/src/oss
-  test -s $(brew --prefix phantomjs)/bin/phantomjs && export PHANTOMJS_BIN=$_
   # need by Rust racer to perform auto-completion lookups
   export RUST_SRC_PATH=~/.rustup/toolchains/stable-x86_64-apple-darwin/lib/rustlib/src/rust/src
 else
@@ -27,10 +26,10 @@ export BYOBU_PREFIX=/usr/local
 test -d ~/etc/play-2.2.2 && export PATH="$_:$PATH"
 
 # https://github.com/wofr06/lesspipe
-if which lesspipe.sh > /dev/null; then
-  export LESSOPEN="|lesspipe.sh %s"
-  export LESSQUIET=1
-fi
+# if which lesspipe.sh > /dev/null; then
+#   export LESSOPEN="|lesspipe.sh %s"
+#   export LESSQUIET=1
+# fi
 
 # ruby console config
 export RBENV_VERSION=2.3.1
@@ -47,9 +46,18 @@ export GREP_COLORS="ms=00;32:mc=01;31:sl=:cx=:fn=01;34:ln=0;33:bn=32:se=36"
 export CLICOLOR=1
 
 export LESS=-R
-export HISTSIZE=1000000
-export HISTCONTROL=erasedups
 export HISTIGNORE="&:[ ]*:exit:atom:rm:cd:cat:type:touch:mv:ls:la:history"
+
+export HH_CONFIG=hicolor         # get more colors
+shopt -s histappend              # append new history items to .bash_history
+export HISTCONTROL=ignorespace   # leading space hides commands from history
+export HISTFILESIZE=1000000      # increase history file size (default is 500)
+export HISTSIZE=${HISTFILESIZE}  # increase history size (default is 500)
+# if this is interactive shell, then bind hh to Ctrl-r (for Vi mode check doc)
+if [[ $- =~ .*i.* ]]; then bind '"\C-r": "\C-a hh -- \C-j"'; fi
+# if this is interactive shell, then bind 'kill last command' to Ctrl-x k
+if [[ $- =~ .*i.* ]]; then bind '"\C-xk": "\C-a hh -k \C-j"'; fi
+
 
 if ls --color -d . >/dev/null 2>&1; then
   export GNU_LS=1
