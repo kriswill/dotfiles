@@ -11,6 +11,10 @@ function ef() {
   echo; for dir in ./*; do (echo "======== $dir ========"; echo; cd "$dir" && "$@"); echo; done
 }
 
+function realpath() {
+  /usr/bin/python -c "import os,sys; print os.path.realpath(sys.argv[1])" "$0";
+}
+
 # Pathing
 alias ..='cd ..;'
 alias ...='.. ..'
@@ -23,6 +27,9 @@ if [ $SYSTEM_NAME = 'Darwin' ]; then
      x3="$(/usr/bin/sw_vers -buildVersion)"
      x4="$(/usr/bin/arch)"
      echo "${x1} - ${x2} - ${x3} - ${x4}"
+  }
+  function psenv() {
+    ps eww -o command $1  | tr ' ' \\n
   }
   alias afk="/System/Library/CoreServices/Menu\ Extras/User.menu/Contents/Resources/CGSession -suspend"
   alias pubkey='pubkey | pbcopy && echo "Keys copied to clipboard"'
@@ -42,6 +49,12 @@ if [ $SYSTEM_NAME = 'Darwin' ]; then
 
   alias ember.clean='rm -rf node_modules bower_components dist tmp'
   alias rm.dsstore='find . -name ".DS_Store" -type f -delete'
+fi
+
+if [ $SYSTEM_NAME = 'Linux' ]; then
+  function psenv() {
+    cat /proc/$1/environ | tr \\0 \\n
+  }
 fi
 
 alias rm.node_modules='find . -name "node_modules" -type d -prune -exec rm -rf "{}" +'
