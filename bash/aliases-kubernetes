@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+command -v kubectl >/dev/null 2>&1 || return
+
 alias k='kubectl'
 alias kp='kubectl proxy'
 
