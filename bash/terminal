@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 
 # prints information about the terminal application you are using
 function terminfo() {
