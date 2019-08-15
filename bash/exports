@@ -21,6 +21,7 @@ export BYOBU_PREFIX=/usr/local
 [[ -s ~/go ]] && export GOPATH=~/go && export PATH="$GOPATH/bin:$PATH"
 [[ -s /usr/local/opt/go/libexec/bin ]] && export PATH="/usr/local/opt/go/libexec/bin:$PATH"
 [[ -s ~/bin ]] && export PATH="~/bin:$PATH"
+[[ -s /usr/local/sbin ]] && export PATH="/usr/local/sbin:$PATH"
 
 # add play framework to PATH
 test -d ~/etc/play-2.2.2 && export PATH="$_:$PATH"
