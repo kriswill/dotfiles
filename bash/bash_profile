@@ -36,6 +36,8 @@ if [ $SYSTEM_NAME = 'Darwin' ]; then
   test -s $(brew --prefix)/etc/bash_completion && . $_
 
   test -s $(brew --prefix)/etc/profile.d/autojump.sh && . $_
+  test -f /usr/local/opt/chtf/share/chtf/chtf.sh && . $_
+
   # java version switcher
   if which jenv > /dev/null; then eval "$(jenv init -)"; fi
 fi
