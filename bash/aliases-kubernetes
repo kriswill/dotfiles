@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 
+# check for the kubectl command
 command -v kubectl >/dev/null 2>&1 || return
+
+# makes sure that k8s API is running
+# lsof -i :6443 || return
 
 alias k='kubectl'
 alias kp='kubectl proxy'
