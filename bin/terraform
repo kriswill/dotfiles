@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+# Runs terraform without a session token, which permits it to perform
+# STS API calls to AWS, which is needed for certain resource provisioning 
+# commands.  Defaults to `gliffy-2018` profile
+
+default_profile=gliffy-2018
+
+exec aws-vault exec -n "${AWS_DEFAULT_PROFILE:-$default_profile}" -- /usr/local/bin/terraform "$@"
