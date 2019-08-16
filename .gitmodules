@@ -22,6 +22,3 @@
 [submodule "git/wtf"]
 	path = git/wtf
 	url = git@github.com:kriswill/git-wtf.git
-[submodule "git/flow"]
-	path = git/flow
-	url = git://github.com/nvie/gitflow.git
