@@ -13,6 +13,7 @@ test -f ~/.config/bash/aliases-kubernetes && . $_
 test -f ~/.config/bash/prompt && . $_
 test -f ~/.config/bash/save-directory && . $_
 test -f ~/.config/bash/gliffy && . $_
+test -f ~/.config/bash/fzf && . $_
 
 # readline settings
 bind "set completion-ignore-case on"
