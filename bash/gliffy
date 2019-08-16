@@ -58,12 +58,37 @@ alias dump.stage.ben.stripe-subscriptions="psql -h localhost -p 45432 -U ben_sta
 alias dump.growth.ben.stripe-customers="psql -h localhost -p 45432 -U ben_growth_user_rw --command \"\\copy public.stripe_customers TO STDOUT;\" ben_growth > ben-growth-stripe-customers.txt"
 alias dump.growth.ben.stripe-subscriptions="psql -h localhost -p 45432 -U ben_growth_user_rw --command \"\\copy public.stripe_subscriptions TO STDOUT;\" ben_growth > ben-growth-stripe-subscriptions.txt"
 
+PROD4=prod4-bastion.us-east-1.lte-glfy.net
+alias ssh.prod4='ssh -A ${PROD4}'
+alias ssh.tunnel.prod4-gop-ro='ssh ${PROD4} -T -L 127.0.0.1:33306:gop-db-prod.gliffy.net:3306'
+
 # ssh tunnels to gliffy-2018
-PROD=ec2-18-215-70-108.compute-1.amazonaws.com
+PROD=gliffy-2018-bastion-ops
 alias ssh.prod='ssh ${PROD}'
-PROD_DB_SHARED=db-pls.gliffy.local
+PROD_DB_SHARED=db-shared.gliffy.local
 alias ssh.tunnel.prod-shared='ssh ${PROD} -L 127.0.0.1:35432:${PROD_DB_SHARED}:5432'
-# ssh tunnels gliffy-dev
+alias ssh.tunnel.prod-beacon='ssh ${PROD} -L 127.0.0.1:33306:db-beacon.gliffy.local:3306'
+alias ssh.tunnel.prod-pls='ssh ${PROD} -L 127.0.0.1:33307:db-pls.gliffy.local:3306'
+
+STAGE=ec2-54-89-101-148.compute-1.amazonaws.com
+alias ssh.stage='ssh ${STAGE}'
+STAGE_DB_SHARED=db-shared.gliffy.local
+alias ssh.tunnel.stage-shared='ssh ${STAGE} -L 127.0.0.1:35432:${STAGE_DB_SHARED}:5432'
+alias ssh.tunnel.stage-beacon='ssh ${STAGE} -L 127.0.0.1:33306:db-beacon.gliffy.local:3306'
+alias ssh.tunnel.stage-pls='ssh ${STAGE} -L 127.0.0.1:33307:db-pls.gliffy.local:3306'
+
+DEV1=bastion.dev1.nonprod-gliffy.net
+alias ssh.dev1='ssh ${DEV1}'
+alias ssh.tunnel.dev1.db.beacon='ssh ${DEV1} -L 127.0.0.1:33307:db-beacon.gliffy.local:3306'
+alias ssh.tunnel.dev1.db.shared='ssh -N -f -M -S /tmp/tunnel-dev1-db-shared -L 127.0.0.1:35432:db-shared.gliffy.local:5432 ${DEV1}'
+alias ssh.tunnel.dev1.db.shared.close='ssh -S /tmp/tunnel-dev1-db-shared -O exit ${DEV1}'
+
+DEV2=kris@bastion.dev2.nonprod-gliffy.net
+alias ssh.dev2='ssh ${DEV2}'
+alias ssh.tunnel.dev2.db.beacon='ssh ${DEV2} -L 127.0.0.1:33307:db-beacon.gliffy.local:3306'
+alias ssh.tunnel.dev2.db.shared='ssh -N -f -M -S /tmp/tunnel-dev2-db-shared -L 127.0.0.1:35432:db-shared.gliffy.local:5432 ${DEV2}'
+alias ssh.tunnel.dev2.db.shared.close='ssh -S /tmp/tunnel-dev2-db-shared -O exit ${DEV2}'
+
 QA1=ec2-18-235-125-152.compute-1.amazonaws.com
 alias ssh.qa1='ssh ${QA1}'
 alias ssh.tunnel.qa1-pls='ssh ${QA1} -L 127.0.0.1:33306:db-pls.gliffy.local:3306'
