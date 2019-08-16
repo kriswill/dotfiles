@@ -20,7 +20,7 @@ alias ..='cd ..;'
 alias ...='.. ..'
 
 if [ $SYSTEM_NAME = 'Darwin' ]; then
-  function manpdf() { man -t $@ | open -f -a Preview; }
+  function manpdf() { man -t "$@" | open -f -a Preview; }
   function osinfo() {
      x1="$(/usr/bin/sw_vers -productName)"
      x2="$(/usr/bin/sw_vers -productVersion)"
@@ -78,7 +78,7 @@ alias dct='docker-compose -p gp-test -f docker-compose.yml -f docker-compose.tes
 # ssh
 alias list-ssh='ps ax | grep "ssh" | grep -v grep'
 alias list-t='ps ax | grep "ssh.*[0-9]:.*:[0-9]"'
-alias path.list="echo \"${PATH//:/$'\n'}\""
+alias path.list="echo \"\${PATH//:/\$'\n'}\""
 
 # key bindings
 alias keybinds='bind -P | grep not -v | cut -d" " -f1,6,7,8,9,10,11 | sed "s/[\"\\,.]//g" | column -t' # print all keybinds in terminal

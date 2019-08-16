@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 # see http://virtualenv.openplans.org/
 # and http://www.doughellmann.com/docs/virtualenvwrapper/
 if [ -s /usr/local/bin/virtualenvwrapper.sh ]; then

@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
-export SYSTEM_NAME=`uname -s`
+SYSTEM_NAME=$(uname -s)
+export SYSTEM_NAME
 
 if [ $SYSTEM_NAME = 'Darwin' ]; then
   export CDPATH='.:~:~/src:~/src/oss'
@@ -20,7 +21,7 @@ export BYOBU_PREFIX=/usr/local
 # needed to support Golang's package system
 [[ -s ~/go ]] && export GOPATH=~/go && export PATH="$GOPATH/bin:$PATH"
 [[ -s /usr/local/opt/go/libexec/bin ]] && export PATH="/usr/local/opt/go/libexec/bin:$PATH"
-[[ -s ~/bin ]] && export PATH="~/bin:$PATH"
+[[ -s ~/bin ]] && export PATH="$HOME/bin:$PATH"
 [[ -s /usr/local/sbin ]] && export PATH="/usr/local/sbin:$PATH"
 
 # add play framework to PATH
@@ -34,7 +35,7 @@ test -d ~/etc/play-2.2.2 && export PATH="$_:$PATH"
 
 # ruby console config
 export RBENV_VERSION=2.3.1
-[[ -s ~/.irbrc ]] && export IRBRC="~/.irbrc"
+[[ -s ~/.irbrc ]] && export IRBRC="$HOME/.irbrc"
 
 export GIT_EDITOR=$EDITOR
 export VISUAL=$EDITOR

@@ -1,17 +1,17 @@
-# set -x
+#!/usr/bin/env bash
 
-export NICE_HOSTNAME=`hostname -f`
-export SHORT_HOST=`hostname -s`
+NICE_HOSTNAME=$(hostname -f)
+SHORT_HOST=$(hostname -s)
+export NICE_HOSTNAME
+export SHORT_HOST
 
 test -s ~/.bash_local && . $_
 test -f ~/.config/bash/exports && . $_
 test -f ~/.config/bash/colors && . $_
-# test -f ~/.config/gnupg/agent && . $_
 test -f ~/.config/git/gitrc && . $_
 test -f ~/.config/bash/aliases && . $_
 test -f ~/.config/bash/aliases-kubernetes && . $_
 test -f ~/.config/bash/prompt && . $_
-test -f ~/.config/bash/save-directory && . $_
 test -f ~/.config/bash/gliffy && . $_
 test -f ~/.config/bash/fzf && . $_
 
@@ -32,15 +32,14 @@ if [ $SYSTEM_NAME = 'Darwin' ]; then
   test -s ~/.config/bash/terminal && . $_
   # set Docker environment variables using docker-machine
   # brew install nvm
-  test -s $(brew --prefix nvm)/nvm.sh && . $_
+  test -s "$(brew --prefix nvm)"/nvm.sh && . $_
   # brew install bash-completion
-  test -s $(brew --prefix)/etc/bash_completion && . $_
-
-  test -s $(brew --prefix)/etc/profile.d/autojump.sh && . $_
-  test -f /usr/local/opt/chtf/share/chtf/chtf.sh && . $_
+  test -s "$(brew --prefix)"/etc/bash_completion && . $_
+  test -s "$(brew --prefix)"/etc/profile.d/autojump.sh && . $_
+  test -s /usr/local/opt/chtf/share/chtf/chtf.sh && . $_
 
   # java version switcher
-  if which jenv > /dev/null; then eval "$(jenv init -)"; fi
+  if command -v jenv > /dev/null; then eval "$(jenv init -)"; fi
 fi
 
 # RBENV - Alternate to RVM

@@ -4,6 +4,7 @@
 function terminfo() {
 
   # make OPTIND local to prevent odd behaviour with getops when running a function multiple times
+  # shellcheck disable=SC2034
   local OPTIND v
   local _verbose=0
 
@@ -12,6 +13,7 @@ function terminfo() {
     case $OPTION in
       v) _verbose=1
          ;;
+      *) ;; # nothing
     esac
   done
 
@@ -41,7 +43,6 @@ function terminfo() {
 
   # find the app version number if on a Mac
   if [[ "$OSTYPE" == "darwin"* ]]; then
-    dotapp=".app"
     if [[ $comm == *".app"* ]]; then
       # parse out the beginning of the path, up to xxx.app -- bash-foo
       macapp="${comm%".app"*}.app"
@@ -85,11 +86,12 @@ function hidetw() {
 }
 
 # positive integer test (including zero)
+# shellcheck disable=SC2046,SC2065
 function positive_int() { return $(test "$@" -eq "$@" > /dev/null 2>&1 && test "$@" -ge 0 > /dev/null 2>&1); }
 
 # move the Terminal window
 function mvtw() {
-  if [[ $# -eq 2 ]] && $(positive_int "$1") && $(positive_int "$2"); then
+  if [[ $# -eq 2 ]] && positive_int "$1" && positive_int "$2"; then
     printf "\e[3;${1};${2};t"
     return 0
   fi
@@ -98,7 +100,7 @@ function mvtw() {
 
 # resize the Terminal window
 function sizetw() {
-  if [[ $# -eq 2 ]] && $(positive_int "$1") && $(positive_int "$2"); then
+  if [[ $# -eq 2 ]] && positive_int "$1" && positive_int "$2"; then
     printf "\e[8;${1};${2};t"
     /usr/bin/clear
     return 0

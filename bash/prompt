@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 if [ -z "$PS1" ]; then
   return
 fi
@@ -13,7 +15,7 @@ fi
 ##################################################
 
 bash_prompt_command() {
-  RETURN=$?
+  # RETURN=$?
   # How many characters of the $PWD should be kept
   local pwdmaxlen=45
   # Indicate that there has been dir truncation
@@ -40,7 +42,7 @@ prompt.vcs.disable(){
   PROMPT_VCS=0
 }
 vcs(){
-  [ $PROMPT_VCS -eq "1" ] && echo -e $(vcprompt -f "${K} %n[${R}%b${EMG}%m${EMR}%u${K}]")
+  [ $PROMPT_VCS -eq "1" ] && echo -e "$(vcprompt -f "${K} %n[${R}%b${EMG}%m${EMR}%u${K}]")"
 }
 
 bash_prompt() {
