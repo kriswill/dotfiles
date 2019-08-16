@@ -209,7 +209,9 @@ alias ksysrm='ksys delete'
 alias ksys.run='ksys run --rm --restart=Never --image-pull-policy=IfNotPresent -i -t'
 alias ksysg='ksys get'
 
-alias ksys.admin-token="ksysd secret $(ksysg secret | grep admin-user | awk '{print $1}')"
+ksys.admin-token() {
+  ksysd secret $(ksysg secret | grep admin-user | awk '{print $1}')
+}
 
 alias ksysg.json='ksys get -o=json'
 alias ksysg.wide='ksys get -o=wide'
