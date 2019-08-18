@@ -2,13 +2,14 @@
 
 command -v fzf >/dev/null 2>&1 || return
 
-export FZF_DEFAULT_OPTS="--height 40% --border"
+test -s ~/.config/git/forgit && . $_
+
+export FZF_DEFAULT_OPTS="--ansi --preview-window 'right:50%' " #--preview 'bat --color=always --style=header,grid --line-range :300 {}'"
 
 # fuzzy searching directories in autojump database
 jf() {
   if [[ "$#" -ne 0 ]]; then
-      cd $(autojump $@)
-      return
+      cd "$(autojump "$@")" || return
   fi
-  cd "$(autojump -s | sort -k1gr | awk '$1 ~ /[0-9]:/ && $2 ~ /^\// { for (i=2; i<=NF; i++) { print $(i) } }' |  fzf --height 40% --reverse --inline-info)" 
+  cd "$(autojump -s | sort -k1gr | awk '$1 ~ /[0-9]:/ && $2 ~ /^\// { for (i=2; i<=NF; i++) { print $(i) } }' |  fzf --height 40% --reverse --inline-info)" || exit
 }
