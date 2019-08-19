@@ -10,12 +10,14 @@ alias k='kubectl'
 source <(kubectl completion bash)
 complete -F __start_kubectl k
 command -v helm >/dev/null 2>&1 && . <(helm completion bash)
+# add krew to path if present
+test -L "${KREW_ROOT:-$HOME/.krew}/bin/kubectl-krew" && export PATH="${KREW_ROOT:-$HOME/.krew}/bin:$PATH"
 
 alias kp='kubectl proxy'
 
 alias ka='kubectl apply --recursive -f'
-alias kx='kubectl exec -i -t'
-alias kxn='kubectl exec -i -t --namespace'
+alias kx='kubectl exec -it'
+alias kxn='kubectl exec -it --namespace'
 alias klogs='kubectl logs -f'
 alias klogsn='kubectl logs -f --namespace'
 alias krm='kubectl delete'
