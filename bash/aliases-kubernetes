@@ -11,6 +11,7 @@ source <(kubectl completion bash)
 complete -F __start_kubectl k
 command -v helm >/dev/null 2>&1 && . <(helm completion bash)
 # add krew to path if present
+# https://github.com/kubernetes-sigs/krew#installation
 test -L "${KREW_ROOT:-$HOME/.krew}/bin/kubectl-krew" && export PATH="${KREW_ROOT:-$HOME/.krew}/bin:$PATH"
 
 alias kp='kubectl proxy'
