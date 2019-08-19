@@ -7,6 +7,10 @@ command -v kubectl >/dev/null 2>&1 || return
 # lsof -i :6443 || return
 
 alias k='kubectl'
+source <(kubectl completion bash)
+complete -F __start_kubectl k
+command -v helm >/dev/null 2>&1 && . <(helm completion bash)
+
 alias kp='kubectl proxy'
 
 alias ka='kubectl apply --recursive -f'
