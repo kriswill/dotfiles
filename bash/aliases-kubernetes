@@ -217,7 +217,7 @@ alias ksys.run='ksys run --rm --restart=Never --image-pull-policy=IfNotPresent -
 alias ksysg='ksys get'
 
 ksys.admin-token() {
-  ksysd secret $(ksysg secret | grep admin-user | awk '{print $1}')
+  ksysd secret "$(ksysg secret | grep admin-user | awk '{print $1}')"
 }
 
 alias ksysg.json='ksys get -o=json'
