@@ -63,8 +63,9 @@ if [ $SYSTEM_NAME = 'Linux' ]; then
 fi
 
 if command -v bat >/dev/null 2>&1; then
-  alias yaml="bat -l yaml"
-  alias jyaml="ruby -ryaml -rjson -e 'puts YAML.dump(JSON.parse(STDIN.read))' | yaml"
+  alias yaml="bat -p -l yaml"
+  alias j2y="ruby -ryaml -rjson -e 'puts YAML.dump(JSON.parse(STDIN.read))'"
+  alias jyaml="j2y | yaml"
 fi
 
 alias rm.node_modules='find . -name "node_modules" -type d -prune -exec rm -rf "{}" +'
