@@ -36,9 +36,6 @@ alias dump.stage.ds2.diagram-versions="psql -h localhost -p 35432 -U ds2_stage_u
 alias dump.stage.ben.stripe-customers="psql -h localhost -p 45432 -U ben_stage_user_rw --command \"\\copy public.stripe_customers TO STDOUT;\" ben_stage > ben-stage-stripe-customers.txt"
 alias dump.stage.ben.stripe-subscriptions="psql -h localhost -p 45432 -U ben_stage_user_rw --command \"\\copy public.stripe_subscriptions TO STDOUT;\" ben_stage > ben-stage-stripe-subscriptions.txt"
 
-# ben_growth_user_rw 06hDkY6fZN22IYt9eWXC
-alias dump.growth.ben.stripe-customers="psql -h localhost -p 45432 -U ben_growth_user_rw --command \"\\copy public.stripe_customers TO STDOUT;\" ben_growth > ben-growth-stripe-customers.txt"
-alias dump.growth.ben.stripe-subscriptions="psql -h localhost -p 45432 -U ben_growth_user_rw --command \"\\copy public.stripe_subscriptions TO STDOUT;\" ben_growth > ben-growth-stripe-subscriptions.txt"
 
 # shellcheck disable=SC2034
 prod4="prod4-bastion.us-east-1.lte-glfy.net"
@@ -56,13 +53,17 @@ alias ssh.tunnel.prod-beacon='ssh ${PROD} -L 127.0.0.1:33306:db-beacon.gliffy.lo
 alias ssh.tunnel.prod-pls='ssh ${PROD} -L 127.0.0.1:33307:db-pls.gliffy.local:3306'
 
 # shellcheck disable=SC2034
-STAGE=ec2-54-89-101-148.compute-1.amazonaws.com
-alias ssh.stage='ssh ${STAGE}'
+STAGE_BASTION=us-east-1-bastion-gliffy-net-217
+alias ssh.stage='ssh ${STAGE_BASTION}'
 # shellcheck disable=SC2034
-STAGE_DB_SHARED=db-shared.gliffy.local
-alias ssh.tunnel.stage-shared='ssh ${STAGE} -L 127.0.0.1:35432:${STAGE_DB_SHARED}:5432'
-alias ssh.tunnel.stage-beacon='ssh ${STAGE} -L 127.0.0.1:33306:db-beacon.gliffy.local:3306'
-alias ssh.tunnel.stage-pls='ssh ${STAGE} -L 127.0.0.1:33307:db-pls.gliffy.local:3306'
+STAGE_BEN_DB=benjamin-app-stage.c8lpckfbuxuz.us-east-1.rds.amazonaws.com
+alias ssh.tunnel.stage.ben='ssh ${STAGE_BASTION} -L 127.0.0.1:35433:${STAGE_BEN_DB}:5432'
+# shellcheck disable=SC2034
+STAGE_DS2_DB=stage-ds2-02.c8lpckfbuxuz.us-east-1.rds.amazonaws.com
+alias ssh.tunnel.stage.ds2='ssh ${STAGE_BASTION} -L 127.0.0.1:35432:${STAGE_DS2_DB}:5432'
+# shellcheck disable=SC2034
+STAGE_GOP_DB=gop-db-stage.gliffy.net
+alias ssh.tunnel.stage.gop='ssh ${STAGE_BASTION} -L 127.0.0.1:33306:${STAGE_GOP_DB}:3306'
 
 # shellcheck disable=SC2034
 DEV1=bastion.dev1.nonprod-gliffy.net
