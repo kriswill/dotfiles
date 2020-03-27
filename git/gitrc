@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 # Git aliases and ergonomics
 alias g='git'
 alias gs='git st -sb'

@@ -1,5 +1,31 @@
 #!/usr/bin/env bash
 
+# bash file load sequence:
+# +----------------+-----------+-----------+------+
+# |                |Interactive|Interactive|Script|
+# |                |login      |non-login  |      |
+# +----------------+-----------+-----------+------+
+# |/etc/profile    |   A       |           |      |
+# +----------------+-----------+-----------+------+
+# |/etc/bash.bashrc|           |    A      |      |
+# +----------------+-----------+-----------+------+
+# |~/.bashrc       |           |    B      |      |
+# +----------------+-----------+-----------+------+
+# |~/.bash_profile |   B1      |           |      |
+# +----------------+-----------+-----------+------+
+# |~/.bash_login   |   B2      |           |      |
+# +----------------+-----------+-----------+------+
+# |~/.profile      |   B3      |           |      |
+# +----------------+-----------+-----------+------+
+# |BASH_ENV        |           |           |  A   |
+# +----------------+-----------+-----------+------+
+# |~/.bash_logout  |    C      |           |      |
+# +----------------+-----------+-----------+------+
+
+# uncomment to start profile
+# exec 3>&2 2>/tmp/bashstart.$$.log
+# set -x
+
 NICE_HOSTNAME=$(hostname -f)
 SHORT_HOST=$(hostname -s)
 export NICE_HOSTNAME
@@ -34,7 +60,7 @@ if [ $SYSTEM_NAME = 'Darwin' ]; then
   # brew install nvm
   test -s "$(brew --prefix nvm)"/nvm.sh && . $_
   # brew install bash-completion
-  test -s "$(brew --prefix)"/etc/bash_completion && . $_
+  test -s "$(brew --prefix bash-completion)"/etc/bash_completion && . $_
   test -s "$(brew --prefix)"/etc/profile.d/autojump.sh && . $_
   test -s /usr/local/opt/chtf/share/chtf/chtf.sh && . $_
 
@@ -54,16 +80,12 @@ test -s ~/.cargo/env && . $_
 # setup bash completions
 # install these from https://github.com/Homebrew/homebrew-completions
 # ex brew install
-if [ -s ~/.config/git/git-completion ]; then
-   . ~/.config/git/git-completion
-   # add git completion to aliases
-   __git_complete g __git_main
-   __git_complete gco _git_checkout
-fi
 complete -C ~/.config/ruby/rake-completion.rb -o default rake
 complete -F _docker d
 complete -F _docker_compose dc
 complete -F _docker_machine dm
-
+complete -o bashdefault -o default -o nospace -F __git_wrap__git_main g
+__git_complete gco _git_checkout
+__git_complete gb _git_branch
 # run bashrc if present
 test -f ~/.bashrc && . $_
