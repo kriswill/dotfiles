@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 if [ -z "$PS1" ]; then
-  return
+  exit
 fi
 
 ##################################################
