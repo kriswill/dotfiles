@@ -1,5 +1,5 @@
-Kris' Dot Files
-===============
+Kris' _Legacy_ Dotfiles 
+=======================
 
 My unix shell and vim configuration files
 
