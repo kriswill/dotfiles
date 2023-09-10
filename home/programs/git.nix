@@ -12,8 +12,6 @@ let
       tool = "vim_mergetool";
     };
     mergetool."vim_mergetool" = {
-      #cmd = "nvim -d -c \"wincmd l\" -c \"norm ]c\" \"$LOCAL\" \"$MERGED\" \"$REMOTE\"";
-      # this command requires the vim-mergetool plugin
       cmd = "nvim -f -c \"MergetoolStart\" \"$MERGED\" \"$BASE\" \"$LOCAL\" \"$REMOTE\"";
       prompt = false;
     };
@@ -37,13 +35,15 @@ in
     tig           # diff and commit view
   ];
 
+  programs.gh.enable = true;
+
   programs.git = {
     enable = true;
     aliases = {
       amend = "commit --amend -m";
       fixup = "!f(){ git reset --soft HEAD~\${1} && git commit --amend -C HEAD; };f";
       # lines of code
-      loc = "!f(){ git ls-files | ${rg} \"\\.\${1}\" | xargs wc -l; };f"; 
+      loc = "!f(){ git ls-files | ${rg} \"\\.\${1}\" | xargs wc -l; };f";
       br = "branch";
       co = "checkout";
       st = "status";
