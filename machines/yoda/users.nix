@@ -1,28 +1,25 @@
-{ pkgs, home-manager, ... }: 
+{ pkgs, username, ... }: 
 
-let
-  user = "k";
-in
 {
   users = {
-    users.${user} = {
+    users.${username} = {
       isNormalUser = true;
       uid = 1000;
-      description = "${user}";
-      group = "${user}";
+      description = "${username}";
+      group = "${username}";
       extraGroups = [ "networkmanager" "wheel" "libvirtd" ];
 
       packages = with pkgs; [
         firefox
         dconf2nix
-        vscode.fhs
+        # vscode.fhs
       ];
       openssh.authorizedKeys.keys = [
         "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBxqhXoAlCKYNwsB1YrszftURThiCI94oeR0W9EDhrLy"
       ];
     };
-    groups.${user}.gid = 1000;
+    groups.${username}.gid = 1000;
   };
   
-  home-manager.users.${user} = import ./home.nix;
+  # home-manager.users.${username} = import ./home.nix;
 }

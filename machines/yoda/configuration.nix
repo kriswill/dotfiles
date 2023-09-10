@@ -2,19 +2,12 @@
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running ‘nixos-help’).
 
-{ config, pkgs, inputs, ... }:
+{ config, pkgs, inputs, username, ... }:
 
-let
-  inherit (inputs)
-    self
-    nixos-hardware
-    home-manager;
-in
 {
   imports =
     [ # Include the results of the hardware scan.
       ./hardware-configuration.nix
-      home-manager.nixosModules.home-manager
       ./system-packages.nix
       ./users.nix
       ./neovim.nix
@@ -81,7 +74,7 @@ in
   nix = {
     package = pkgs.nixFlakes;
     settings = {
-      trusted-users = [ "k" ];
+      trusted-users = [ username ];
     };
     extraOptions = ''
       experimental-features = nix-command flakes

@@ -5,5 +5,5 @@
     enable = true;
     enableAutosuggestions = true;
     syntaxHighlighting.enable = true;
-  }
+  };
 }

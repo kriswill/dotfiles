@@ -21,7 +21,8 @@ in
       };
       font = {
         normal = {
-          family = "JetBrainsMono Nerd Font";
+          # family = "JetBrainsMono Nerd Font";
+          family = "Source Code Pro";
           style = "Medium";
         };
         size = fontSize;

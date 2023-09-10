@@ -1,12 +1,5 @@
 { pkgs, config, ... }:
 {
-  # Enable OpenGL
-  hardware.opengl = {
-    enable = true;
-    driSupport = true;
-    driSupport32Bit = true;
-  };
-
   # Enable the X11 windowing system.
   services.xserver = {
     enable = true;
@@ -20,6 +13,13 @@
     # Configure keymap in X11
     layout = "us";
     xkbVariant = "";
+  };
+
+  # Enable OpenGL
+  hardware.opengl = {
+    enable = true;
+    driSupport = true;
+    driSupport32Bit = true;
   };
 
   hardware.nvidia = {
