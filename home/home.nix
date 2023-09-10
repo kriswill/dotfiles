@@ -3,25 +3,26 @@
 let
   homeDirectory = "/home/${username}";
   configHome = "${homeDirectory}/.config";
-  
+
   defaultPkgs = with pkgs; [
     (nerdfonts.override { fonts = [ "JetBrainsMono" "SourceCodePro" ]; })
     eza                # pretty ls
     ncdu               # disk space explorer
     nix-output-monitor # nom: output logger for nix build
-    ripgrep            # rg: fast replacement for grep
+    ripgrep            # fast replacement for grep
     tldr               # short manual for common shell commands
     dconf2nix          # convert dconf settings to nix
     discord
+    firefox
   ];
 in
 {
   programs.home-manager.enable = true;
-  
+
   imports = builtins.concatMap import [
     ./programs
   ];
-  
+
   xdg = {
     inherit configHome;
     enable = true;
@@ -29,7 +30,7 @@ in
 
   # Needed for Nerd Fonts to be found
   fonts.fontconfig.enable = true;
-  
+
   home = {
     inherit username homeDirectory;
     packages = defaultPkgs;

@@ -1,7 +1,7 @@
 { pkgs, specialArgs, ... }:
 
 let
-  fontSize = 16; # if specialArgs.hidpi then 10 else 8;
+  fontSize = 16;
 in
 {
   programs.alacritty = {
@@ -11,7 +11,7 @@ in
       bell = {
         animation = "EaseOutExpo";
         duration = 5;
-        color = "#ffffff";
+        color = "#efefef";
       };
       colors = {
         primary = {

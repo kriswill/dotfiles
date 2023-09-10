@@ -3,17 +3,17 @@
 {
   # List packages installed in system profile. To search, run:
   environment.systemPackages = with pkgs; [
-    bat
-    eza
-    fzf
-    git
-    hstr
-    htop
-    neofetch
-    nix-info
-    ripgrep
-    sysz
-    wget
+    bat      # A cat clone with wings.
+    eza      # A better ls
+    fzf      # A command-line fuzzy finder
+    git      # the stupid content tracker
+    hstr     # Bash and Zsh shell history suggest box
+    htop     # interactive process viewer
+    neofetch # displays system info
+    nix-info # display Nix system information
+    ripgrep  # a better grep
+    sysz     # systemd browsing tool
+    wget     # a network utility to retrieve files from the Web
   ];
 
   programs._1password.enable = true;

@@ -2,6 +2,9 @@ let
   etc = { pkgs, ... }: {
     programs = {
       bat.enable = true;
+      jq.enable = true;
+      nix-index.enable = true;
+      ssh.enable = true;
 
       direnv = {
         enable = true;
@@ -21,16 +24,11 @@ let
         };
       };
 
-      jq.enable = true;
-      ssh.enable = true;
-      nix-index.enable = true;
-
       zoxide = {
         enable = true;
         enableZshIntegration = true;
         options = [ ];
       };
-
     };
   };
 in
