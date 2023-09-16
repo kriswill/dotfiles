@@ -5,7 +5,10 @@ let
   configHome = "${homeDirectory}/.config";
 
   defaultPkgs = with pkgs; [
-    (nerdfonts.override { fonts = [ "JetBrainsMono" "SourceCodePro" ]; })
+    (nerdfonts.override { fonts = [
+      "SourceCodePro"
+      "JetBrainsMono"
+    ]; })
     eza                # pretty ls
     ncdu               # disk space explorer
     nix-output-monitor # nom: output logger for nix build
