@@ -7,9 +7,13 @@
     videoDrivers = ["nvidia"];
 
     # Enable the GNOME Desktop Environment.
-    displayManager.gdm.enable = true;
-    desktopManager.gnome.enable = true;
-
+    displayManager = {
+      defaultSession = "gnome";
+      gdm.enable = true;
+    };
+    desktopManager = {
+      gnome.enable = true;
+    };
     # Configure keymap in X11
     layout = "us";
     xkbVariant = "";
@@ -31,9 +35,9 @@
     powerManagement.enable = true;
 
     # Use the NVidia open source kernel module (which isn't “nouveau”).
-    # Support is limited to the Turing and later architectures. Full list of 
-    # supported GPUs is at: 
-    # https://github.com/NVIDIA/open-gpu-kernel-modules#compatible-gpus 
+    # Support is limited to the Turing and later architectures. Full list of
+    # supported GPUs is at:
+    # https://github.com/NVIDIA/open-gpu-kernel-modules#compatible-gpus
     # Only available from driver 515.43.04+
     open = false;
 
