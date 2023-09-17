@@ -5,14 +5,13 @@
 { config, pkgs, inputs, username, ... }:
 
 {
-  imports =
-    [ # Include the results of the hardware scan.
-      ./hardware-configuration.nix
-      ./system-packages.nix
-      ./users.nix
-      ./neovim.nix
-      ./xserver.nix
-    ];
+  imports = [
+    ./hardware-configuration.nix
+    ./system-packages.nix
+    ./users.nix
+    ./neovim.nix
+    ./xserver.nix
+  ];
 
   # Bootloader.
   boot.loader.systemd-boot.enable = true;
@@ -51,7 +50,6 @@
 
   # Enable sound with pipewire.
   sound.enable = true;
-  hardware.pulseaudio.enable = false;
   security.rtkit.enable = true;
   services.pipewire = {
     enable = true;
@@ -84,11 +82,11 @@
 
   # Some programs need SUID wrappers, can be configured further or are
   # started in user sessions.
-  # programs.mtr.enable = true;
-  # programs.gnupg.agent = {
-  #   enable = true;
-  #   enableSSHSupport = true;
-  # };
+  programs.mtr.enable = true;
+  programs.gnupg.agent = {
+    enable = true;
+    enableSSHSupport = true;
+  };
 
   # List services that you want to enable:
 
@@ -113,6 +111,6 @@
   # this value at the release version of the first install of this system.
   # Before changing this value read the documentation for this option
   # (e.g. man configuration.nix or on https://nixos.org/nixos/options.html).
-  system.stateVersion = "23.05"; # Did you read the comment?
+  system.stateVersion = "23.11"; # Did you read the comment?
 
 }

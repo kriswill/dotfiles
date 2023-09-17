@@ -40,6 +40,6 @@ in
     sessionVariables = {
       EDITOR = "code --wait";
     };
-    stateVersion = "23.05";
+    stateVersion = "23.11";
   };
 }
