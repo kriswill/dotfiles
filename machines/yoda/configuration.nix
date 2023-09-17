@@ -2,7 +2,7 @@
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running ‘nixos-help’).
 
-{ config, pkgs, inputs, username, ... }:
+{ config, pkgs, inputs, username, lib, ... }:
 
 {
   imports = [
@@ -51,6 +51,7 @@
   # Enable sound with pipewire.
   sound.enable = true;
   security.rtkit.enable = true;
+  hardware.pulseaudio.enable = lib.mkForce false;
   services.pipewire = {
     enable = true;
     alsa.enable = true;
