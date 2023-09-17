@@ -2,6 +2,8 @@
 
 {
   users = {
+    defaultUserShell = pkgs.zsh;
+
     users.${username} = {
       isNormalUser = true;
       uid = 1000;

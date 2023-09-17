@@ -4,7 +4,11 @@
   services.xserver = {
     enable = true;
 
-    videoDrivers = ["nvidia"];
+    videoDrivers = [ "nvidia" ];
+
+    # Configure keymap in X11
+    layout = "us";
+    xkbVariant = "";
 
     # Enable the GNOME Desktop Environment.
     displayManager = {
@@ -14,9 +18,6 @@
     desktopManager = {
       gnome.enable = true;
     };
-    # Configure keymap in X11
-    layout = "us";
-    xkbVariant = "";
   };
 
   # Enable OpenGL
