@@ -14,8 +14,41 @@
   ];
 
   # Bootloader.
-  boot.loader.systemd-boot.enable = true;
-  boot.loader.efi.canTouchEfiVariables = true;
+  boot.loader = {
+    timeout = 5;
+
+    efi = {
+      canTouchEfiVariables = false;
+      efiSysMountPoint = "/boot";
+    };
+    # 1) pick systemd-boot:
+    # systemd-boot.enable = true;
+    # 2) pick grub 2:
+    grub = {
+      enable = true;
+      efiSupport = true;
+      efiInstallAsRemovable = true;
+      devices = [ "nodev" ];
+      useOSProber = true;
+      extraEntriesBeforeNixOS = true;
+    };
+  };
+
+  boot.supportedFilesystems = [ "ntfs" ];
+
+  # Mount the Windows NTFS NVME drives
+  fileSystems = {
+    "/ntfs/windows" = {
+      device = "/dev/nvme0n1p4";
+      fsType = "ntfs-3g";
+      options = [ "rw" "uid=1000"];
+    };
+    "/ntfs/games" = {
+      device = "/dev/nvme1n1p2";
+      fsType = "ntfs-3g";
+      options = [ "rw" "uid=1000"];
+    };
+  };
 
   networking.hostName = "yoda"; # Define your hostname.
   # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.

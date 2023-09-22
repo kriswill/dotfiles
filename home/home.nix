@@ -17,6 +17,7 @@ let
     dconf2nix          # convert dconf settings to nix
     discord
     firefox
+    opera
   ];
 in
 {

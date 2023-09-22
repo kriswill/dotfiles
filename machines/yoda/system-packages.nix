@@ -16,6 +16,7 @@
       sysz     # systemd browsing tool
       wget     # a network utility to retrieve files from the Web
       nvtop    # an htop like monitoring tool for NVIDIA GPUs
+      inxi     # system information script
     ];
     shells = with pkgs; [ zsh ];
     sessionVariables = {
@@ -23,6 +24,24 @@
       # see: https://github.com/NixOS/nixpkgs/pull/147557
       NIXOS_OZONE_WL = "1";
     };
+    gnome.excludePackages = ( with pkgs; [
+        gnome-photos
+        gnome-tour
+    ]) ++ (with pkgs.gnome; [
+        cheese
+        gnome-music
+        gedit
+        epiphany
+        geary
+        gnome-characters
+        tali
+        iagno
+        hitori
+        atomix
+        yelp
+        gnome-contacts
+        gnome-initial-setup
+    ]);
   };
 
   programs = {

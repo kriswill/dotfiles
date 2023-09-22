@@ -17,7 +17,9 @@
     };
     desktopManager = {
       gnome.enable = true;
+      xterm.enable = false;
     };
+    excludePackages = [ pkgs.xterm ];
   };
 
   # Enable OpenGL
