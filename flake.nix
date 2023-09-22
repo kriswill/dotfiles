@@ -37,7 +37,7 @@
           inherit username;
         };
         modules = [
-          ./machines/yoda/configuration.nix
+          ./machines/yoda
 
           home-manager.nixosModules.home-manager
           {
