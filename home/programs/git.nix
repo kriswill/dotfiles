@@ -30,8 +30,8 @@ in
 {
   home.packages = with pkgs.gitAndTools; [
     diff-so-fancy # git diff with colors
-    git-crypt     # git files encryption
-    tig           # diff and commit view
+    git-crypt # git files encryption
+    tig # diff and commit view
   ];
 
   programs.gh.enable = true;
