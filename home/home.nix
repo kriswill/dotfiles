@@ -5,16 +5,18 @@ let
   configHome = "${homeDirectory}/.config";
 
   defaultPkgs = with pkgs; [
-    (nerdfonts.override { fonts = [
-      "SourceCodePro"
-      "JetBrainsMono"
-    ]; })
-    eza                # pretty ls
-    ncdu               # disk space explorer
+    (nerdfonts.override {
+      fonts = [
+        "SourceCodePro"
+        "JetBrainsMono"
+      ];
+    })
+    eza # pretty ls
+    ncdu # disk space explorer
     nix-output-monitor # nom: output logger for nix build
-    ripgrep            # fast replacement for grep
-    tldr               # short manual for common shell commands
-    dconf2nix          # convert dconf settings to nix
+    ripgrep # fast replacement for grep
+    tldr # short manual for common shell commands
+    dconf2nix # convert dconf settings to nix
     discord
     firefox
     opera

@@ -7,7 +7,7 @@
 {
   imports = [
     ./hardware-configuration.nix
-    ./boot.loader.nix
+    ./boot.nix
     ./system-packages.nix
     ./users.nix
     ./neovim.nix
@@ -21,12 +21,12 @@
     "/ntfs/windows" = {
       device = "/dev/nvme0n1p4";
       fsType = "ntfs-3g";
-      options = [ "rw" "uid=1000"];
+      options = [ "rw" "uid=1000" ];
     };
     "/ntfs/games" = {
       device = "/dev/nvme1n1p2";
       fsType = "ntfs-3g";
-      options = [ "rw" "uid=1000"];
+      options = [ "rw" "uid=1000" ];
     };
   };
 

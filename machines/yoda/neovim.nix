@@ -8,8 +8,8 @@
       vimAlias = true;
       configure = {
         packages.myPlugins = with pkgs.vimPlugins; {
-          start = [ vim-lastplace vim-nix ]; 
-          opt = [];
+          start = [ vim-lastplace vim-nix ];
+          opt = [ ];
         };
         customRC = ''
           set nocompatible
@@ -17,5 +17,6 @@
         '';
       };
     }
-  )];
+    )
+  ];
 }
