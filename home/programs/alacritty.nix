@@ -1,7 +1,7 @@
 { pkgs, specialArgs, ... }:
 
 let
-  fontSize = 16;
+  fontSize = 13;
 in
 {
   programs.alacritty = {
@@ -15,15 +15,31 @@ in
       };
       colors = {
         primary = {
-          background = "#040404";
-          foreground = "#c5c8c6";
+          background = "#121212";
+          foreground = "#f6f5f4";
+          color0 = "#1d1f21";
+          color8 = "#c01c28";
+          color1 = "#cc6666";
+          color9 = "#ed333b";
+          color2 = "#2ec27e";
+          color10 = "#57e389";
+          color3 = "#f5c211";
+          color11 = "#f8e45c";
+          color4 = "#1e78e4";
+          color12 = "#51a1ff";
+          color5 = "#9841bb";
+          color13 = "#c061cb";
+          color6 = "#0ab9dc";
+          color14 = "#4fd2fd";
+          color7 = "#c0bfbc";
+          color15 = "#f6f5f4";
         };
       };
       font = {
         normal = {
           # family = "JetBrainsMono Nerd Font";
-          family = "Source Code Pro";
-          style = "Medium";
+          family = "SauceCodePro Nerd Font";
+          style = "Regular";
         };
         size = fontSize;
       };
@@ -43,8 +59,8 @@ in
       selection.save_to_clipboard = true;
       shell.program = "${pkgs.zsh}/bin/zsh";
       window = {
-        decorations = "full";
-        opacity = 0.90;
+        decorations = "none";
+        opacity = 0.92;
         padding = {
           x = 5;
           y = 5;
