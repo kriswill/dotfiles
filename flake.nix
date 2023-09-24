@@ -1,56 +1,46 @@
 {
   description = "Kris's NixOS Flake";
 
-  nixConfig = {
-    experimental-features = [ "nix-command" "flakes" ];
-    substituters = [
-      # Nix community's cache server
-      "https://nix-community.cachix.org"
-      "https://cache.nixos.org/"
-    ];
-
-    extra-substituters = [];
-    extra-trusted-public-keys = [
-      "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
-    ];
-  };
-
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-
-    home-manager = {
-      url = "github:nix-community/home-manager";
+    nix-formatter-pack = {
+      url = "github:Gerschtli/nix-formatter-pack";
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };
 
-  outputs = { nixpkgs, home-manager, ... }@inputs:
-  let
-    username = "k";
-  in
-  {
-    nixosConfigurations = {
-      "yoda" = nixpkgs.lib.nixosSystem {
-        system = "x86_64-linux";
-        specialArgs = {
-          inherit inputs;
-          inherit username;
-        };
-        modules = [
-          ./machines/yoda
+  outputs =
+    inputs @ { self
+    , nixpkgs
+    , home-manager
+    , nix-formatter-pack
+    , ...
+    }:
+    let
+      username = "k";
+      forEachSystem = nixpkgs.lib.genAttrs [ "x86_64-linux" "aarch64-linux" "aarch64-darwin" ];
+      formatterPackArgsFor = forEachSystem (system: {
+        inherit nixpkgs system;
+        checkFiles = [ self ];
 
-          home-manager.nixosModules.home-manager
-          {
-            home-manager.useGlobalPkgs = true;
-            home-manager.useUserPackages = true;
-            home-manager.users.${username} = import ./home/home.nix;
-            home-manager.extraSpecialArgs = {
-              inherit inputs;
-              inherit username;
-            };
-          }
-        ];
+        config.tools = {
+          deadnix = {
+            enable = true;
+            noLambdaPatternNames = true;
+          };
+          nixpkgs-fmt.enable = true;
+          statix.enable = true;
+        };
+      });
+    in
+    {
+      nixosConfigurations = import ./machines {
+        inherit nixpkgs home-manager inputs username;
       };
+
+      checks = forEachSystem (system: {
+        nix-formatter-pack-check = nix-formatter-pack.lib.mkCheck formatterPackArgsFor.${system};
+      });
+
+      formatter = forEachSystem (system: nix-formatter-pack.lib.mkFormatter formatterPackArgsFor.${system});
     };
-  };
 }
