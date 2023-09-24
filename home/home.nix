@@ -20,6 +20,7 @@ let
     discord
     firefox
     opera
+    gcolor3
   ];
 in
 {
