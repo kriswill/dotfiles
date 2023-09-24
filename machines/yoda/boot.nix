@@ -4,9 +4,10 @@
   boot = {
     kernelPackages = pkgs.linuxPackages_6_5;
     kernelParams = [
-      # "quiet"
+      "quiet"
       # "systemd.show_status=auto"
       # "udev.log_level=3"
+      "noatime"
       "video=1920x1200"
     ];
 
