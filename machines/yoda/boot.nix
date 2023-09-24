@@ -2,6 +2,26 @@
 
 {
   boot = {
+    kernelPackages = pkgs.linuxPackages_6_5;
+    kernelParams = [
+      # "quiet"
+      # "systemd.show_status=auto"
+      # "udev.log_level=3"
+      "video=1920x1200"
+    ];
+
+    consoleLogLevel = 3;
+    kernelModules = [ "kvm-intel" ];
+    extraModulePackages = [ ];
+    supportedFilesystems = [ "ntfs" ]; # for windows disks
+
+    initrd = {
+      # Quiet boot
+      verbose = false;
+      availableKernelModules = [ "xhci_pci" "ahci" "nvme" "usbhid" "uas" "sd_mod" ];
+      kernelModules = [ ];
+    };
+
     loader = {
       timeout = 5;
 
@@ -32,15 +52,7 @@
         '';
       };
     };
-    # Quiet boot
-    initrd.verbose = false;
-    consoleLogLevel = 3;
-    kernelParams = [
-      "quiet"
-      "systemd.show_status=auto"
-      "udev.log_level=3"
-      "video=1920x1200"
-    ];
+
     # plymouth = {
     #   enable = true;
     #   themePackages = [ pkgs.adi1090x-plymouth-themes ];
