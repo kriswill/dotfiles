@@ -35,6 +35,7 @@ in
 [
   ./alacritty.nix
   ./git.nix
+  ./kitty.nix
   ./starship.nix
   ./vscode.nix
   ./zsh.nix
