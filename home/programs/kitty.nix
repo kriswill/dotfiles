@@ -1,4 +1,4 @@
-{ ... }:
+_:
 
 {
   programs.kitty = {
@@ -9,7 +9,7 @@
     };
     shellIntegration.enableZshIntegration = true;
 
-    extraConfig = (builtins.readFile ./kitty-theme/adwaita.conf);
+    extraConfig = builtins.readFile ./kitty-theme/adwaita.conf;
 
     settings = {
       background_opacity = "0.9";

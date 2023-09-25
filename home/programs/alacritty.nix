@@ -6,6 +6,7 @@ in
 {
   programs.alacritty = {
     enable = true;
+
     settings = {
       env.TERM = "xterm-256color";
       bell = {
@@ -17,22 +18,26 @@ in
         primary = {
           background = "#121212";
           foreground = "#f6f5f4";
-          color0 = "#1d1f21";
-          color8 = "#c01c28";
-          color1 = "#cc6666";
-          color9 = "#ed333b";
-          color2 = "#2ec27e";
-          color10 = "#57e389";
-          color3 = "#f5c211";
-          color11 = "#f8e45c";
-          color4 = "#1e78e4";
-          color12 = "#51a1ff";
-          color5 = "#9841bb";
-          color13 = "#c061cb";
-          color6 = "#0ab9dc";
-          color14 = "#4fd2fd";
-          color7 = "#c0bfbc";
-          color15 = "#f6f5f4";
+        };
+        normal = {
+          black = "#1d1f21";
+          red = "#ed333b";
+          green = "#2ec27e";
+          yellow = "#f5c211";
+          blue = "#1e78e4";
+          magenta = "#9841bb";
+          cyan = "#0ab9dc";
+          white = "#c0bfbc";
+        };
+        bright = {
+          black = "#5e5c64";
+          red = "#cc6666";
+          green = "#57e389";
+          yellow = "#f8e45c";
+          blue = "#51a1ff";
+          magenta = "#c061cb";
+          cyan = "#4fd2fd";
+          white = "#f6f5f4";
         };
       };
       font = {
@@ -61,6 +66,10 @@ in
       window = {
         decorations = "none";
         opacity = 0.92;
+        dimensions = {
+          columns = 120;
+          lines = 50;
+        };
         padding = {
           x = 5;
           y = 5;
@@ -69,4 +78,3 @@ in
     };
   };
 }
-

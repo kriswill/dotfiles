@@ -24,6 +24,10 @@
       # see: https://github.com/NixOS/nixpkgs/pull/147557
       NIXOS_OZONE_WL = "1";
     };
+    # fix for many rust based guis on wayland/gnome/nixos
+    # https://github.com/alacritty/alacritty/issues/4780#issuecomment-890408502
+    variables.XCURSOR_THEME = "Adwaita";
+
     gnome.excludePackages = (with pkgs; [
       gnome-photos
       gnome-tour
