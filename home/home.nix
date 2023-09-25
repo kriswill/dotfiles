@@ -21,6 +21,7 @@ let
     firefox
     opera
     gcolor3
+    xdg-utils # Multiple packages depend on xdg-open at runtime. This includes Discord
   ];
 in
 {
@@ -33,6 +34,22 @@ in
   xdg = {
     inherit configHome;
     enable = true;
+  };
+
+  gtk = {
+    enable = true;
+    # iconTheme.package = pkgs.papirus-icon-theme;
+    # iconTheme.name = "ePapirus";
+    # theme.package = pkgs.layan-gtk-theme;
+    # theme.name = "Layan-light-solid";
+    # font.name = "Roboto";
+    # font.package = pkgs.noto-fonts;
+    gtk3.extraConfig = {
+      gtk-application-prefer-dark-theme = true;
+      gtk-button-images = false;
+      gtk-menu-images = false;
+      gtk-toolbar-style = "GTK_TOOLBAR_ICONS";
+    };
   };
 
   # Needed for Nerd Fonts to be found

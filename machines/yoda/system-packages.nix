@@ -17,6 +17,9 @@
       wget # a network utility to retrieve files from the Web
       nvtop # an htop like monitoring tool for NVIDIA GPUs
       inxi # system information script
+      usbutils # USB Device Utilities
+      lshw # list hardware
+      pciutils # PCI bus related utilities
     ];
     shells = with pkgs; [ zsh ];
     sessionVariables = {
@@ -72,6 +75,7 @@
         ll = "ls -lhF";
         la = "ls -lahF";
         l = "la";
+        t = "ls -T -I '.git'";
         cat = "bat";
       };
     };
