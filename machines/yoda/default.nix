@@ -13,6 +13,7 @@
     ./neovim.nix
     ./desktop.nix
     ./nvidia.nix
+    ./steam.nix
   ];
 
   networking.hostName = "yoda"; # Define your hostname.

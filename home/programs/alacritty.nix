@@ -1,7 +1,7 @@
 { pkgs, specialArgs, ... }:
 
 let
-  fontSize = 13;
+  fontSize = 14;
 in
 {
   programs.alacritty = {
@@ -65,14 +65,14 @@ in
       shell.program = "${pkgs.zsh}/bin/zsh";
       window = {
         decorations = "none";
-        opacity = 0.92;
+        opacity = 0.87;
         dimensions = {
           columns = 120;
           lines = 50;
         };
         padding = {
-          x = 5;
-          y = 5;
+          x = 10;
+          y = 10;
         };
       };
     };

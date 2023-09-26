@@ -1,4 +1,4 @@
-{ config, ...}:
+{ config, ... }:
 {
   services.xserver.videoDrivers = [ "nvidia" ];
   # Enable OpenGL
