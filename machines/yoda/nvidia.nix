@@ -1,27 +1,6 @@
-{ pkgs, config, ... }:
+{ config, ...}:
 {
-  # Enable the X11 windowing system.
-  services.xserver = {
-    enable = true;
-
-    videoDrivers = [ "nvidia" ];
-
-    # Configure keymap in X11
-    layout = "us";
-    xkbVariant = "";
-
-    # Enable the GNOME Desktop Environment.
-    displayManager = {
-      defaultSession = "gnome";
-      gdm.enable = true;
-    };
-    desktopManager = {
-      gnome.enable = true;
-      xterm.enable = false;
-    };
-    excludePackages = [ pkgs.xterm ];
-  };
-
+  services.xserver.videoDrivers = [ "nvidia" ];
   # Enable OpenGL
   hardware.opengl = {
     enable = true;
