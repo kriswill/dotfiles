@@ -7,7 +7,7 @@ let
   defaultPkgs = with pkgs; [
     (nerdfonts.override {
       fonts = [
-        "SourceCodePro"
+        "SourceCodePro" # `SauceCodePro Nerd Font`
         "JetBrainsMono"
       ];
     })
