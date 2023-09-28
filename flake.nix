@@ -18,6 +18,7 @@
     }:
     let
       username = "k";
+      rootPath = self;
       forEachSystem = nixpkgs.lib.genAttrs [ "x86_64-linux" "aarch64-linux" "aarch64-darwin" ];
       formatterPackArgsFor = forEachSystem (system: {
         inherit nixpkgs system;
@@ -35,7 +36,7 @@
     in
     {
       nixosConfigurations = import ./machines {
-        inherit nixpkgs home-manager inputs username;
+        inherit nixpkgs home-manager inputs rootPath username;
       };
 
       checks = forEachSystem (system: {
