@@ -12,6 +12,7 @@
       htop # interactive process viewer
       neofetch # displays system info
       nix-info # display Nix system information
+      nvd # nix package version diff tool
       ripgrep # a better grep
       sysz # systemd browsing tool
       wget # a network utility to retrieve files from the Web
