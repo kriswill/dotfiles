@@ -1,4 +1,4 @@
-{ pkgs, ... }:
+{ config, pkgs, ... }:
 
 {
   boot = {
@@ -13,7 +13,6 @@
 
     consoleLogLevel = 3;
     kernelModules = [ "kvm-intel" ];
-    extraModulePackages = [ ];
     supportedFilesystems = [ "ntfs" ]; # for windows disks
 
     initrd = {
@@ -53,6 +52,9 @@
         '';
       };
     };
+
+    # enables OBS virtual camera
+    extraModulePackages = with config.boot.kernelPackages; [ v4l2loopback ];
 
     # plymouth = {
     #   enable = true;

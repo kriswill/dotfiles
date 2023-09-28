@@ -5,7 +5,7 @@ let
       jq.enable = true;
       nix-index.enable = true;
       ssh.enable = true;
-
+      obs-studio.enable = true;
       direnv = {
         enable = true;
         nix-direnv.enable = true;
