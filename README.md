@@ -13,3 +13,8 @@ Use the following command to clear out old kernels/generations:
   ```sh
   sudo /run/current-system/bin/switch-to-configuration switch
   ```
+## THINGS FOR LATER
+
+### Backups
+
+* [Kopia nix config](https://github.com/xddxdd/nixos-config/blob/8eeba4e85b70a6ccf0830d8fb743c34a12d6239e/nixos/server-components/backup.nix)
