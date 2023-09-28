@@ -27,7 +27,7 @@ let
       zoxide = {
         enable = true;
         enableZshIntegration = true;
-        options = [ ];
+        options = [ "--cmd" "j" ];
       };
     };
   };

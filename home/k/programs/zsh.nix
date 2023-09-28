@@ -9,6 +9,17 @@
       enable = true;
     };
 
+    shellAliases = {
+      ls = "eza";
+      ld = "ls -D";
+      ll = "ls -lhF";
+      la = "ls -lahF";
+      l = "la";
+      t = "ls -T -I '.git'";
+      cat = "bat";
+      ".." = "cd ..;";
+      "..." = ".. ..";
+    };
     initExtra = ''
       # Zsh run-help function
       autoload -Uz run-help

@@ -1,4 +1,4 @@
-{ nixpkgs, inputs, username, rootPath, home-manager, ... }:
+{ nixpkgs, inputs, rootPath, home-manager, ... }:
 
 let
   pkgs = import nixpkgs {
@@ -6,13 +6,12 @@ let
     system = "x86_64-linux";
     config.allowUnfree = true;
   };
-in
-{
+
+  username = "k";
   "yoda" = nixpkgs.lib.nixosSystem {
     system = "x86_64-linux";
     specialArgs = {
-      inherit inputs;
-      inherit username;
+      inherit inputs username;
     };
     modules = [
       ./yoda
@@ -22,15 +21,43 @@ in
         home-manager = {
           useGlobalPkgs = true;
           useUserPackages = true;
-          users.${username} = import ./yoda/home-manager.nix {
+          users."${username}" = import ./yoda/home-manager.nix {
             inherit pkgs rootPath username;
           };
           extraSpecialArgs = {
-            inherit inputs;
-            inherit username;
+            inherit inputs username;
           };
         };
       }
     ];
   };
+
+  username = "g";
+  "potato" = nixpkgs.lib.nixosSystem {
+    system = "x86_64-linux";
+    specialArgs = {
+      inherit inputs username;
+    };
+    modules = [
+      ./potato
+
+      home-manager.nixosModules.home-manager
+      {
+        home-manager = {
+          useGlobalPkgs = true;
+          useUserPackages = true;
+          users."${username}" = import ./potato/home-manager.nix {
+            inherit pkgs rootPath username;
+          };
+          extraSpecialArgs = {
+            inherit inputs username;
+          };
+        };
+      }
+    ];
+  };
+in
+{
+  inherit yoda potato;
 }
+
