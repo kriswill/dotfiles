@@ -17,7 +17,6 @@
     , ...
     }:
     let
-      username = "k";
       rootPath = self;
       forEachSystem = nixpkgs.lib.genAttrs [ "x86_64-linux" "aarch64-linux" "aarch64-darwin" ];
       formatterPackArgsFor = forEachSystem (system: {
@@ -36,7 +35,7 @@
     in
     {
       nixosConfigurations = import ./machines {
-        inherit nixpkgs home-manager inputs rootPath username;
+        inherit nixpkgs home-manager inputs rootPath;
       };
 
       checks = forEachSystem (system: {
@@ -45,4 +44,13 @@
 
       formatter = forEachSystem (system: nix-formatter-pack.lib.mkFormatter formatterPackArgsFor.${system});
     };
+
+  nixConfig = {
+    extra-substituters = [
+      "https://nix-community.cachix.org"
+    ];
+    extra-trusted-public-keys = [
+      "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
+    ];
+  };
 }

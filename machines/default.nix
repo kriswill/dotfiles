@@ -7,6 +7,8 @@ let
     config.allowUnfree = true;
   };
 
+  ####  yoda  #################################################################
+
   username = "k";
   "yoda" = nixpkgs.lib.nixosSystem {
     system = "x86_64-linux";
@@ -31,8 +33,12 @@ let
       }
     ];
   };
+  in let
+
+  ####  potato  ###############################################################
 
   username = "g";
+
   "potato" = nixpkgs.lib.nixosSystem {
     system = "x86_64-linux";
     specialArgs = {
@@ -56,8 +62,18 @@ let
       }
     ];
   };
+  in let
+
+  ####  nix  ##################################################################
+
+  "nix" = nixpkgs.lib.nixosSystem {
+    system = "aarch64-linux";
+    modules = [
+      ./nix
+    ];
+  };
 in
 {
-  inherit yoda potato;
+  inherit yoda potato nix;
 }
 
