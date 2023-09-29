@@ -1,5 +1,5 @@
 #
-# Configuration for host "nix" running on a Macbook Pro M1Max using Parallels 18.2 (53488)
+# Configuration for host "nix" running on a Macbook Pro M1Max using Parallels Version 19.0.0 (54570)
 #
 { config, pkgs, nixvim, ... }:
 

@@ -79,7 +79,7 @@
         t = "l -T -L3";
         l = "ls -lhF --git -I '.git|.DS_'";
         sudo = "sudo "; # allow for using aliases with sudo
-        nrs = "nixos-rebuild switch --flake ~/src/nixos-config --upgrade |& nom";
+        nrs = "sudo -s nixos-rebuild switch --upgrade";
         g = "git";
       };
       interactiveShellInit = ''
