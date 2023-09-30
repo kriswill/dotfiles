@@ -26,7 +26,7 @@ in
       enable = true;
       config = {
         user = {
-          name  = "Kris Williams";
+          name = "Kris Williams";
           email = "115474+kriswill@users.noreply.github.com";
         };
         # signingkey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBxqhXoAlCKYNwsB1YrszftURThiCI94oeR0W9EDhrLy";

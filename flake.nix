@@ -7,6 +7,8 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
+    nurpkgs.url = "github:nix-community/NUR";
+
   };
 
   outputs =
@@ -35,7 +37,8 @@
     in
     {
       nixosConfigurations = import ./machines {
-        inherit nixpkgs home-manager inputs rootPath;
+        inherit nixpkgs home-manager rootPath;
+        flake-inputs = inputs;
       };
 
       checks = forEachSystem (system: {
@@ -44,13 +47,4 @@
 
       formatter = forEachSystem (system: nix-formatter-pack.lib.mkFormatter formatterPackArgsFor.${system});
     };
-
-  nixConfig = {
-    extra-substituters = [
-      "https://nix-community.cachix.org"
-    ];
-    extra-trusted-public-keys = [
-      "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
-    ];
-  };
 }

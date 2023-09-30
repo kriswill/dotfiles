@@ -1,8 +1,8 @@
-{ nixpkgs, inputs, rootPath, home-manager, ... }:
+{ nixpkgs, flake-inputs, rootPath, home-manager, ... }:
 
 let
   pkgs = import nixpkgs {
-    inherit inputs;
+    inherit flake-inputs;
     system = "x86_64-linux";
     config.allowUnfree = true;
   };
@@ -13,7 +13,8 @@ let
   "yoda" = nixpkgs.lib.nixosSystem {
     system = "x86_64-linux";
     specialArgs = {
-      inherit inputs username;
+      inherit username;
+      flake-inputs = flake-inputs;
     };
     modules = [
       ./yoda
@@ -27,42 +28,12 @@ let
             inherit pkgs rootPath username;
           };
           extraSpecialArgs = {
-            inherit inputs username;
+            inherit username flake-inputs;
           };
         };
       }
     ];
   };
-  in let
-
-  ####  potato  ###############################################################
-
-  username = "g";
-
-  "potato" = nixpkgs.lib.nixosSystem {
-    system = "x86_64-linux";
-    specialArgs = {
-      inherit inputs username;
-    };
-    modules = [
-      ./potato
-
-      home-manager.nixosModules.home-manager
-      {
-        home-manager = {
-          useGlobalPkgs = true;
-          useUserPackages = true;
-          users."${username}" = import ./potato/home-manager.nix {
-            inherit pkgs rootPath username;
-          };
-          extraSpecialArgs = {
-            inherit inputs username;
-          };
-        };
-      }
-    ];
-  };
-  in let
 
   ####  nix  ##################################################################
 
@@ -70,10 +41,12 @@ let
     system = "aarch64-linux";
     modules = [
       ./nix
+      ../nixos
     ];
+    specialArgs.flake-inputs = flake-inputs;
   };
 in
 {
-  inherit yoda potato nix;
+  inherit yoda nix;
 }
 
