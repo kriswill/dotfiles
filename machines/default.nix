@@ -6,16 +6,13 @@ let
     system = "x86_64-linux";
     config.allowUnfree = true;
   };
-
+in {
   ####  yoda  #################################################################
 
-  username = "k";
   "yoda" = nixpkgs.lib.nixosSystem {
     system = "x86_64-linux";
-    specialArgs = {
-      inherit username;
-      flake-inputs = flake-inputs;
-    };
+    specialArgs.flake-inputs = flake-inputs;
+
     modules = [
       ./yoda
 
@@ -24,11 +21,11 @@ let
         home-manager = {
           useGlobalPkgs = true;
           useUserPackages = true;
-          users."${username}" = import ./yoda/home-manager.nix {
-            inherit pkgs rootPath username;
+          users.k = import ./yoda/home-manager.nix {
+            inherit pkgs rootPath;
           };
           extraSpecialArgs = {
-            inherit username flake-inputs;
+            inherit flake-inputs;
           };
         };
       }
@@ -45,8 +42,4 @@ let
     ];
     specialArgs.flake-inputs = flake-inputs;
   };
-in
-{
-  inherit yoda nix;
 }
-
