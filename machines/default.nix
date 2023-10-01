@@ -6,7 +6,8 @@ let
     system = "x86_64-linux";
     config.allowUnfree = true;
   };
-in {
+in
+{
   ####  yoda  #################################################################
 
   "yoda" = nixpkgs.lib.nixosSystem {

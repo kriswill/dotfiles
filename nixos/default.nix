@@ -3,7 +3,7 @@
   imports = [
     flake-inputs.home-manager.nixosModules.home-manager
     ./nix.nix
-    ./programs.nix
+    ./programs
     ./fonts.nix
     ./users.nix
   ];
@@ -21,6 +21,7 @@
 
   boot.tmp.cleanOnBoot = true;
   security.rtkit.enable = true;
+  security.sudo.wheelNeedsPassword = false;
 
   # This value determines the NixOS release from which the default
   # settings for stateful data, like file locations and database versions

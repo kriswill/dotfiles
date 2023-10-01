@@ -1,4 +1,6 @@
-{ flake-inputs, pkgs, nixpkgs, ... }: {
+{ flake-inputs, pkgs, nixpkgs, ... }:
+
+{
   nix = {
     package = pkgs.nixFlakes;
 
