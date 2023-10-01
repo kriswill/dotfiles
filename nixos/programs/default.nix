@@ -3,8 +3,6 @@
   imports = [ ./vim.nix ./zsh.nix ];
 
   environment = {
-    shells = with pkgs; [ zsh ];
-
     systemPackages = with pkgs; [
       bat
       curl
@@ -28,7 +26,6 @@
       # No option to unset in NixOS
       unset SSH_ASKPASS
     '';
-    pathsToLink = [ "/share/zsh" ];
   };
 
   programs = {
