@@ -1,6 +1,7 @@
-{ nixpkgs, flake-inputs, rootPath, home-manager, ... }:
+{ flake-inputs, rootPath, ... }:
 
 let
+  inherit (flake-inputs) home-manager nixpkgs;
   pkgs = import nixpkgs {
     inherit flake-inputs;
     system = "x86_64-linux";
@@ -12,7 +13,7 @@ in
 
   "yoda" = nixpkgs.lib.nixosSystem {
     system = "x86_64-linux";
-    specialArgs.flake-inputs = flake-inputs;
+    specialArgs = { inherit flake-inputs; };
 
     modules = [
       ./yoda
@@ -41,6 +42,6 @@ in
       ./nix
       ../nixos
     ];
-    specialArgs.flake-inputs = flake-inputs;
+    specialArgs = { inherit flake-inputs; };
   };
 }

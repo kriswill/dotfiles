@@ -14,16 +14,17 @@
   outputs =
     inputs @ { self
     , nixpkgs
-    , home-manager
+    # , home-manager
     , nix-formatter-pack
     , ...
     }:
     let
       rootPath = self;
+      flake-inputs = inputs;
       forEachSystem = nixpkgs.lib.genAttrs [ "x86_64-linux" "aarch64-linux" "aarch64-darwin" ];
       formatterPackArgsFor = forEachSystem (system: {
         inherit nixpkgs system;
-        checkFiles = [ self ];
+        checkFiles = [ rootPath ];
 
         config.tools = {
           deadnix = {
@@ -37,8 +38,7 @@
     in
     {
       nixosConfigurations = import ./machines {
-        inherit nixpkgs home-manager rootPath;
-        flake-inputs = inputs;
+        inherit flake-inputs rootPath;
       };
 
       checks = forEachSystem (system: {
