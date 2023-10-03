@@ -36,13 +36,15 @@
       grub = {
         enable = true;
         efiSupport = true;
-        # efiInstallAsRemovable = true;
         devices = [ "nodev" ];
-        useOSProber = true;
-        # extraEntriesBeforeNixOS = true;
-        # windows:
-        # /dev/nvme0n1p2@/efi/Microsoft/Boot/bootmgfw.efi
+        # useOSProber = true;
         extraEntries = ''
+          menuentry "Windows 10" --class windows --class os {
+            insmod part_gpt
+            insmod ntfs
+            search --no-floppy --fs-uuid --set=root 1C4D-64E1
+            chainloader /efi/Microsoft/Boot/bootmgfw.efi
+          }
           menuentry "Reboot" {
             reboot
           }

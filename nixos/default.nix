@@ -12,8 +12,16 @@
 
   services = {
     gvfs.enable = true;
-    openssh.enable = true;
     printing.enable = false;
+  };
+
+  # Enable the OpenSSH daemon.
+  services.openssh = {
+    enable = true;
+    settings = {
+      PasswordAuthentication = false;
+      KbdInteractiveAuthentication = false;
+    };
   };
 
   # no root user

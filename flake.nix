@@ -14,7 +14,7 @@
   outputs =
     inputs @ { self
     , nixpkgs
-    # , home-manager
+      # , home-manager
     , nix-formatter-pack
     , ...
     }:

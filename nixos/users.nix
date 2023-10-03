@@ -11,7 +11,7 @@ in
     users = {
       k = {
         isNormalUser = true;
-        extraGroups = [ "wheel" "video" "networkmanager" ];
+        extraGroups = [ "wheel" "video" "networkmanager" "libvirtd" ];
         openssh.authorizedKeys.keys = [ ssh-key ];
       };
     };

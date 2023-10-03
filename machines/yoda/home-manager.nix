@@ -1,6 +1,7 @@
-{ pkgs, username, rootPath, ... }:
+{ pkgs, rootPath, ... }:
 
 let
+  username = "k";
   homeDirectory = "/home/${username}";
   configHome = "${homeDirectory}/.config";
 

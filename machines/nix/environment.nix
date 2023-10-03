@@ -6,8 +6,6 @@
       EDITOR = "code";
     };
 
-    shells = [ pkgs.zsh ];
-
     systemPackages = with pkgs; [
       alacritty
       btop

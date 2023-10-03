@@ -4,23 +4,32 @@
 
   environment = {
     systemPackages = with pkgs; [
-      bat
-      curl
-      eza
-      fzf
+      bat # cat clone with wings.
+      curl # a network utility to retrieve files from the Web
+      eza # better ls
+      fzf # command-line fuzzy finder
       gh
-      git
+      git # the stupid content tracker
       home-manager
-      hstr
-      ncdu
-      lsof
-      neofetch
+      hstr # bash and Zsh shell history suggest box
+      htop # interactive process viewer
+      inxi # system information script
+      lshw # list hardware
+      lsof # list of open files
+      ncdu # disk usage analyzer with an ncurses interface
+      dua # disk Usage Analyzer
+      neofetch # displays system info
+      nix-info # display Nix system information
+      nvd # nix package version diff tool
+      nvtop # an htop like monitoring tool for NVIDIA GPUs
       pavucontrol
-      ranger
-      ripgrep
-      sysz
+      pciutils # pci bus related utilities
+      ranger # file manager
+      ripgrep # better grep
+      sysz # systemd browsing tool
+      usbutils # usb Device Utilities
+      wget # network utility to retrieve files from the Web
       zoxide
-      # firefox
     ];
     extraInit = ''
       # No option to unset in NixOS
@@ -28,7 +37,14 @@
     '';
   };
 
+  # Some programs need SUID wrappers, can be configured further or are
+  # started in user sessions.
   programs = {
+    mtr.enable = true;
+    gnupg.agent = {
+      enable = true;
+      enableSSHSupport = true;
+    };
     dconf.enable = true;
     starship.enable = true;
     _1password.enable = true;

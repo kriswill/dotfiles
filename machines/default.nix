@@ -17,6 +17,7 @@ in
 
     modules = [
       ./yoda
+      ../nixos
 
       home-manager.nixosModules.home-manager
       {
