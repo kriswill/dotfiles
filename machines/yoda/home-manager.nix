@@ -18,11 +18,12 @@ let
     ripgrep # fast replacement for grep
     tldr # short manual for common shell commands
     dconf2nix # convert dconf settings to nix
-    discord
-    firefox
-    opera
-    gcolor3
+    discord # slack for gamers
+    firefox # browser
+    opera # browser
+    gcolor3 # color picker
     xdg-utils # Multiple packages depend on xdg-open at runtime. This includes Discord
+    element-desktop-wayland # matrix client
   ];
 in
 {
@@ -62,6 +63,6 @@ in
     sessionVariables = {
       EDITOR = "code --wait";
     };
-    stateVersion = "23.11";
+    stateVersion = "24.05";
   };
 }

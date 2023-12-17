@@ -2,7 +2,7 @@
 
 {
   boot = {
-    kernelPackages = pkgs.linuxPackages_6_5;
+    kernelPackages = pkgs.linuxPackages_latest;
     kernelParams = [
       "quiet"
       # "systemd.show_status=auto"
@@ -37,14 +37,14 @@
         enable = true;
         efiSupport = true;
         devices = [ "nodev" ];
-        # useOSProber = true;
+        useOSProber = true;
+        # menuentry "Windows 10" --class windows --class os {
+        #   insmod part_gpt
+        #   insmod ntfs
+        #   search --no-floppy --fs-uuid --set=root 1C4D-64E1
+        #   chainloader /efi/Microsoft/Boot/bootmgfw.efi
+        # }
         extraEntries = ''
-          menuentry "Windows 10" --class windows --class os {
-            insmod part_gpt
-            insmod ntfs
-            search --no-floppy --fs-uuid --set=root 1C4D-64E1
-            chainloader /efi/Microsoft/Boot/bootmgfw.efi
-          }
           menuentry "Reboot" {
             reboot
           }

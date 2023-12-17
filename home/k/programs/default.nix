@@ -39,7 +39,7 @@ in
   ./starship.nix
   ./vscode.nix
   ./zsh.nix
-  #./dconf.nix
+  ./dconf.nix
   #./neofetch.nix
   etc
 ]
