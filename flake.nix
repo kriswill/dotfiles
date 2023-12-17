@@ -9,7 +9,6 @@
     };
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
     nurpkgs.url = "github:nix-community/NUR";
-
   };
 
   outputs =
