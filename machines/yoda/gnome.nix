@@ -35,10 +35,10 @@
   environment.gnome.excludePackages = (with pkgs; [
     gnome-photos
     gnome-tour
+    gedit
   ]) ++ (with pkgs.gnome; [
     cheese
     gnome-music
-    gedit
     epiphany
     geary
     gnome-characters
