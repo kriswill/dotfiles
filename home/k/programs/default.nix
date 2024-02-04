@@ -40,6 +40,7 @@ in
   ./vscode.nix
   ./zsh.nix
   ./dconf.nix
+  ./firefox
   #./neofetch.nix
   etc
 ]
