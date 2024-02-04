@@ -42,6 +42,16 @@ in
             icon = "${pkgs.nixos-icons}/share/icons/hicolor/scalable/apps/nix-snowflake.svg";
             definedAliases = [ "@np" ];
           };
+          "Home Manager Options" = {
+            urls = [{
+              template = "https://mipmip.github.io/home-manager-option-search/";
+              params = [
+                { name = "query"; value = "{searchTerms}"; }
+              ];
+            }];
+            icon = "${pkgs.nixos-icons}/share/icons/hicolor/scalable/apps/nix-snowflake.svg";
+            definedAliases = [ "@hm" ];
+          };
           "NixOS Wiki" = {
             urls = [
               { template = "https://nixos.wiki/index.php?search={searchTerms}"; }
