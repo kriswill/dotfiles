@@ -14,17 +14,17 @@
   };
 
   # Mount the Windows NTFS NVME drives
-  fileSystems."/ntfs/windows" = {
-    device = "/dev/nvme0n1p4";
-    fsType = "ntfs-3g";
-    options = [ "rw" "uid=1000" ];
-  };
+  #fileSystems."/ntfs/windows" = {
+  #  device = "/dev/nvme0n1p4";
+  #  fsType = "ntfs-3g";
+  #  options = [ "rw" "uid=1000" ];
+  #};
 
-  fileSystems."/ntfs/games" = {
-   device = "/dev/nvme1n1p2";
-   fsType = "ntfs-3g";
-   options = [ "rw" "uid=1000" ];
-  };
+  #fileSystems."/ntfs/games" = {
+  # device = "/dev/nvme1n1p2";
+  # fsType = "ntfs-3g";
+  # options = [ "rw" "uid=1000" ];
+  #};
 
   swapDevices = [{ device = "/dev/disk/by-uuid/efa877e0-28bf-42b6-b8f9-4be7018d66df"; }];
 
