@@ -20,6 +20,7 @@ let
     dconf2nix # convert dconf settings to nix
     discord # slack for gamers
     # firefox # browser
+    brave
     opera # browser
     gcolor3 # color picker
     xdg-utils # Multiple packages depend on xdg-open at runtime. This includes Discord

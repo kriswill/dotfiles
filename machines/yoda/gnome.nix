@@ -11,7 +11,8 @@
     # Enable the GNOME Desktop Environment.
     displayManager = {
       defaultSession = "gnome";
-      gdm.enable = true;
+      # gdm.enable = true;
+      sddm.enable = true;
     };
     desktopManager = {
       gnome.enable = true;

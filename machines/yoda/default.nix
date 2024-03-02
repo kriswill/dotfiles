@@ -5,7 +5,8 @@
     ./hardware-configuration.nix
     ./boot.nix
     ./virtualization.nix
-    ./gnome.nix
+    #./gnome.nix
+    ./desktops.nix
     ./nvidia.nix
     ./steam.nix
   ];
