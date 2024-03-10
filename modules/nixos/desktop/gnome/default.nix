@@ -65,9 +65,10 @@ in
     k = {
       desktop.addons = {
         # electron-support = enabled;
-        # gtk = enabled;
+        gtk = enabled;
         alacritty = enabled;
         # wallpapers = enabled;
+        thunar = enabled;
       };
       system.xkb.enable = true;
     };

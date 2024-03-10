@@ -19,8 +19,7 @@ in
     #   dropbox
     #   dupeguru
     #   filelight
-    #   fontpreview
-    #   gparted
+    gparted
     #   keepass
     #   pkgs.khanelinix.pocketcasts
     ];
@@ -34,11 +33,11 @@ in
       desktop = {
         gnome = enabled;
 
-        # addons = {
-        #   gtk = enabled;
+        addons = {
+          gtk = enabled;
         #   qt = enabled;
         #   wallpapers = enabled;
-        # };
+        };
       };
     };
   };

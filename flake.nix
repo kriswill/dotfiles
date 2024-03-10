@@ -40,6 +40,9 @@
       channels-config = {
         allowUnfree = true;
       };
+      overlays = [
+        flake.overlays.default
+      ];
       systems = {
         modules = {
           nixos = [

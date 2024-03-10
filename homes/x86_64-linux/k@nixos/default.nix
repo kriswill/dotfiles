@@ -13,9 +13,9 @@ in
       home-manager = enabled;
     };
 
-    # system = {
-    #   xdg = enabled;
-    # };
+    system = {
+      xdg = enabled;
+    };
 
     suites = {
       common = enabled;
