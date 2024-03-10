@@ -25,6 +25,7 @@ let
     gcolor3 # color picker
     xdg-utils # Multiple packages depend on xdg-open at runtime. This includes Discord
     element-desktop-wayland # matrix client
+    zoom-us # video conferencing
   ];
 in
 {
