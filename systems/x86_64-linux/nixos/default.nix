@@ -38,7 +38,7 @@ in
 
     system = {
       boot = enabled;
-      # fonts = enabled;
+      fonts = enabled;
       locale = enabled;
       networking = enabled;
       time = enabled;

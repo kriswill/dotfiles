@@ -63,12 +63,12 @@ in
     };
 
     k = {
-      # desktop.addons = {
-      #   electron-support = enabled;
-      #   gtk = enabled;
-      #   kitty = enabled;
-      #   wallpapers = enabled;
-      # };
+      desktop.addons = {
+        # electron-support = enabled;
+        # gtk = enabled;
+        alacritty = enabled;
+        # wallpapers = enabled;
+      };
       system.xkb.enable = true;
     };
 
