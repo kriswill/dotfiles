@@ -2,6 +2,7 @@
 let
   inherit (lib) mkIf;
   inherit (lib.internal) mkBoolOpt enabled;
+  inherit (pkgs.stdenv) isLinux;
 
   cfg = config.k.suites.common;
 in
@@ -28,45 +29,44 @@ in
         # tmux = enabled;
         # yazi = enabled;
       };
-/*
+
       desktop = {
-        # addons = {
-        #   kitty = enabled;
-        #   gtk.enable = pkgs.stdenv.isLinux;
-        #   qt.enable = pkgs.stdenv.isLinux;
-        #   wezterm = enabled;
-        # };
+        addons = {
+          # alacritty = enabled;
+          # gtk.enable = isLinux;
+          # qt.enable = isLinux;
+          # wezterm = enabled;
+        };
 
         # theme = enabled;
       };
 
-      services = {
+      #services = {
         # TODO: reenable after fixed
         # udiskie.enable = pkgs.stdenv.isLinux;
-      };
+      #};
 
-      security = {
+      #security = {
         # gpg = enabled;
-      };
+      #};
 
       system = {
         shell = {
-          bash = enabled;
-          fish = enabled;
+          #bash = enabled;
+          #fish = enabled;
           zsh = enabled;
         };
       };
 
-      tools = {
-        bat = enabled;
-        direnv = enabled;
-        fzf = enabled;
-        git = enabled;
-        lsd = enabled;
-        oh-my-posh = enabled;
-        topgrade = enabled;
-      };
-      */
+      # tools = {
+      #   bat = enabled;
+      #   direnv = enabled;
+      #   fzf = enabled;
+      #   git = enabled;
+      #   lsd = enabled;
+      #   oh-my-posh = enabled;
+      #   topgrade = enabled;
+      # };
     };
 
     programs.readline = {

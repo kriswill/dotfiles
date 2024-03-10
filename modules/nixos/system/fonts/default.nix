@@ -25,8 +25,7 @@ in
             "Noto Color Emoji"
           ];
           monospace = [
-            "MonaspiceNe Nerd Font"
-            "CaskaydiaCove Nerd Font Mono"
+            "JetBrainsMono Nerd Font"
           ];
         };
       };

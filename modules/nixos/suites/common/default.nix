@@ -45,11 +45,11 @@ in
     #     tailscale = enabled;
     #   };
 
-    #   system = {
-    #     fonts = enabled;
-    #     locale = enabled;
-    #     time = enabled;
-    #   };
+      system = {
+        fonts = enabled;
+        #locale = enabled;
+        #time = enabled;
+      };
 
       tools = {
         # colorls = enabled;

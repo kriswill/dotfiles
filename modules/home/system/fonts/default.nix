@@ -1,9 +1,7 @@
-{ config, lib, options, pkgs, ... }:
+{ lib, options, pkgs, ... }:
 let
-  inherit (lib) types mkIf;
-  inherit (lib.internal) mkBoolOpt mkOpt enabled;
-
-  cfg = config.k.system.fonts;
+  inherit (lib) types;
+  inherit (lib.internal) mkBoolOpt mkOpt;
 in
 {
   options.k.system.fonts = with types; {
@@ -13,16 +11,5 @@ in
         (nerdfonts.override { fonts = [ "JetBrainsMono" ]; })
       ] "Custom font packages to install.";
     default = mkOpt types.str "JetBrainsMono Nerd Font" "Default font name";
-  };
-
-  config = mkIf cfg.enable {
-    environment.variables = {
-      # Enable icons in tooling since we have nerdfonts.
-      LOG_ICONS = "true";
-    };
-
-    fonts = {
-      fontDir = enabled;
-    };
   };
 }
