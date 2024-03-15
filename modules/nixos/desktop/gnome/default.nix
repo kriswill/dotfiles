@@ -45,13 +45,13 @@ in
     environment = {
       systemPackages = with pkgs;
         [
-        #   gnome.gnome-tweaks
-        #   gnome.nautilus-python
-        #   wl-clipboard
+          #   gnome.gnome-tweaks
+          #   gnome.nautilus-python
+          #   wl-clipboard
         ]
         # ++ defaultExtensions
         # ++ cfg.extensions;
-        ;
+      ;
       gnome.excludePackages = with pkgs.gnome; [
         epiphany
         geary

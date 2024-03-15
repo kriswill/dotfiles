@@ -23,7 +23,7 @@ in
   config = mkIf cfg.enable {
     home.packages = with pkgs; [ ripgrep ];
     /*
-    home = {
+      home = {
       packages = with pkgs; [
         cpplint
         jqp
@@ -34,22 +34,22 @@ in
       shellAliases = {
         prefetch-sri = "nix store prefetch-file $1";
       };
-    };
-   */
+      };
+     */
     k = {
       apps = {
         vscode = enabled;
       };
 
       #cli-apps = {
-        # FIX: nixpkg broke
-        # helix = enabled;
-        #lazydocker.enable = cfg.dockerEnable;
-        #lazygit = enabled;
-        #neovim = {
-        #  enable = true;
-        #  default = true;
-        #};
+      # FIX: nixpkg broke
+      # helix = enabled;
+      #lazydocker.enable = cfg.dockerEnable;
+      #lazygit = enabled;
+      #neovim = {
+      #  enable = true;
+      #  default = true;
+      #};
       #};
 
       #tools = {

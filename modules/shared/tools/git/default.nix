@@ -12,14 +12,14 @@ in
 
   config = mkIf cfg.enable {
     environment.systemPackages = with pkgs; [
-    #   bfg-repo-cleaner
+      #   bfg-repo-cleaner
       git
-    #   git-crypt
-    #   git-filter-repo
-    #   git-lfs
-    #   gitflow
-    #   gitleaks
-    #   gitlint
+      #   git-crypt
+      #   git-filter-repo
+      #   git-lfs
+      #   gitflow
+      #   gitleaks
+      #   gitlint
     ];
   };
 }

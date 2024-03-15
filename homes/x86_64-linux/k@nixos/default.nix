@@ -1,4 +1,4 @@
-{ config, lib, ...}:
+{ config, lib, ... }:
 let
   inherit (lib.internal) enabled;
 in

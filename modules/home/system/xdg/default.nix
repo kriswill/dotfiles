@@ -1,4 +1,4 @@
-{ config, lib, ...}:
+{ config, lib, ... }:
 let
   inherit (lib) mkEnableOption mkIf;
 
@@ -66,7 +66,7 @@ let
     "application/x-compressed-tar" = [ "org.kde.ark.desktop" ];
     "application/x-extension-htm" = browser;
     "application/x-extension-html" = browser;
-      # pplication/x-extension-ics" = mail;
+    # pplication/x-extension-ics" = mail;
     # "application/x-extension-m4a" = video;
     # "application/x-extension-mp4" = video;
     "application/x-extension-shtml" = browser;
@@ -116,9 +116,9 @@ let
     "image/x-xpixmap" = [ "org.kde.gwenview.desktop" ];
     "image/x-xwindowdump" = [ "org.kde.gwenview.desktop" ];
     "inode/directory" = fileManager;
-      # essage/rfc822" = mail;
+    # essage/rfc822" = mail;
     "text/*" = editor;
-      # ext/calendar" = mail;
+    # ext/calendar" = mail;
     "text/html" = browser;
     "text/plain" = editor;
     # "video/*" = video;
@@ -130,14 +130,14 @@ let
     "x-scheme-handler/gitkraken" = [ "GitKraken.desktop" ];
     "x-scheme-handler/http" = browser;
     "x-scheme-handler/https" = browser;
-      # "x-scheme-handler/mailto" = mail;
-      # -scheme-handler/mid" = mail;
+    # "x-scheme-handler/mailto" = mail;
+    # -scheme-handler/mid" = mail;
     "x-scheme-handler/spotify" = [ "spotify.desktop" ];
     "x-scheme-handler/terminal" = terminal;
     "x-scheme-handler/tg" = [ "org.telegram.desktop.desktop" ];
     "x-scheme-handler/unknown" = browser;
-      # -scheme-handler/webcal" = mail;
-      # -scheme-handler/webcals" = mail;
+    # -scheme-handler/webcal" = mail;
+    # -scheme-handler/webcals" = mail;
     "x-scheme-handler/x-github-client" = [ "github-desktop.desktop" ];
     "x-scheme-handler/x-github-desktop-auth" = [ "github-desktop.desktop" ];
     "x-www-browser" = browser;

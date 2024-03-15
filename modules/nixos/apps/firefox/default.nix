@@ -1,9 +1,4 @@
-{ config
-, lib
-, options
-, pkgs
-, ...
-}:
+{ config, lib, options, pkgs, ... }:
 let
   inherit (lib) mkIf mkMerge;
   inherit (lib.internal) mkBoolOpt enabled;

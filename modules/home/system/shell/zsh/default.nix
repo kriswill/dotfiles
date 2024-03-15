@@ -60,10 +60,10 @@ in
             name = "zsh-history";
             src = pkgs.zsh-history;
           }
-        #   {
-        #     name = "zsh-history-to-fish";
-        #     src = pkgs.zsh-history-to-fish;
-        #   }
+          #   {
+          #     name = "zsh-history-to-fish";
+          #     src = pkgs.zsh-history-to-fish;
+          #   }
           {
             name = "zsh-navigation-tools";
             src = pkgs.zsh-navigation-tools;

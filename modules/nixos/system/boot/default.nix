@@ -13,22 +13,22 @@ in
   };
 
   config = mkIf cfg.enable {
-/*
-    environment.systemPackages = with pkgs;  [
+    /*
+      environment.systemPackages = with pkgs;  [
       efibootmgr
       efitools
       efivar
       fwupd
-    ] ++ lib.optionals cfg.secureBoot [
+      ] ++ lib.optionals cfg.secureBoot [
       sbctl
-    ];
-*/
+      ];
+    */
     boot.loader.grub.enable = true;
     boot.loader.grub.device = "/dev/vda";
     boot.loader.grub.useOSProber = true;
 
-/*
-    boot = {
+    /*
+      boot = {
       kernelParams = lib.optionals cfg.plymouth [ "quiet" ];
 
       lanzaboote = mkIf cfg.secureBoot {
@@ -54,9 +54,9 @@ in
         theme = "catppuccin-macchiato";
         themePackages = [ pkgs.catppuccin-plymouth ];
       };
-    };
+      };
 
-    services.fwupd.enable = true;
+      services.fwupd.enable = true;
     */
   };
 }

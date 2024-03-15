@@ -6,7 +6,8 @@
 
 {
   imports =
-    [ # Include the results of the hardware scan.
+    [
+      # Include the results of the hardware scan.
       ./hardware-configuration.nix
     ];
 
@@ -87,12 +88,12 @@
     packages = with pkgs; [
       firefox
       vscode-fhs
-    #  thunderbird
+      #  thunderbird
     ];
   };
 
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
-  
+
   # List packages installed in system profile. To search, run:
   # $ nix search wget
   environment.systemPackages = with pkgs; [

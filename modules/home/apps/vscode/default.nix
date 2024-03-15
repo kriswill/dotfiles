@@ -12,7 +12,7 @@ in
 
   config = mkIf cfg.enable {
     /*
-    home.file = {
+      home.file = {
       ".vscode/argv.json" = mkIf config.k.security.keyring.enable {
         text = builtins.toJSON {
           "enable-crash-reporter" = true;
@@ -20,8 +20,8 @@ in
           "password-store" = "gnome";
         };
       };
-    };
-   */
+      };
+     */
     programs.vscode = {
       enable = true;
       enableUpdateCheck = true;

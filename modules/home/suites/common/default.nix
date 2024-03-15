@@ -17,9 +17,9 @@ in
     xdg.configFile.wgetrc.text = "";
 
     k = {
-    #   apps = {
-    #     firefox = enabled;
-    #   };
+      #   apps = {
+      #     firefox = enabled;
+      #   };
 
       cli-apps = {
         # bottom = enabled;
@@ -42,12 +42,12 @@ in
       };
 
       #services = {
-        # TODO: reenable after fixed
-        # udiskie.enable = pkgs.stdenv.isLinux;
+      # TODO: reenable after fixed
+      # udiskie.enable = pkgs.stdenv.isLinux;
       #};
 
       #security = {
-        # gpg = enabled;
+      # gpg = enabled;
       #};
 
       system = {
@@ -59,13 +59,13 @@ in
       };
 
       tools = {
-      # bat = enabled;
+        # bat = enabled;
         direnv = enabled;
-      # fzf = enabled;
+        # fzf = enabled;
         git = enabled;
-      # lsd = enabled;
-      # oh-my-posh = enabled;
-      # topgrade = enabled;
+        # lsd = enabled;
+        # oh-my-posh = enabled;
+        # topgrade = enabled;
       };
     };
 

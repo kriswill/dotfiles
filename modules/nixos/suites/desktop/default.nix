@@ -13,15 +13,15 @@ in
 
   config = mkIf cfg.enable {
     environment.systemPackages = with pkgs; [
-    #   authy
-    #   barrier
-    #   bleachbit
-    #   dropbox
-    #   dupeguru
-    #   filelight
-    gparted
-    #   keepass
-    #   pkgs.khanelinix.pocketcasts
+      #   authy
+      #   barrier
+      #   bleachbit
+      #   dropbox
+      #   dupeguru
+      #   filelight
+      gparted
+      #   keepass
+      #   pkgs.khanelinix.pocketcasts
     ];
 
     k = {
@@ -35,8 +35,8 @@ in
 
         addons = {
           gtk = enabled;
-        #   qt = enabled;
-        #   wallpapers = enabled;
+          #   qt = enabled;
+          #   wallpapers = enabled;
         };
       };
     };

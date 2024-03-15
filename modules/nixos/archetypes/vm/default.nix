@@ -1,8 +1,4 @@
-{ config
-, lib
-, options
-, ...
-}:
+{ config, lib, options, ... }:
 let
   inherit (lib) mkIf;
   inherit (lib.internal) mkBoolOpt enabled;

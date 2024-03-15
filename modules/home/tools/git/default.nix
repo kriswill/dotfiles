@@ -42,12 +42,12 @@ in
           fetch = {
             prune = true;
           };
-/*
+          /*
           gpg.format = "ssh";
           "gpg \"ssh\"".program = mkIf cfg._1password (''''
             + ''${lib.optionalString pkgs.stdenv.isLinux (getExe' pkgs._1password-gui "op-ssh-sign")}''
             + ''${lib.optionalString pkgs.stdenv.isDarwin "${pkgs._1password-gui}/Applications/1Password.app/Contents/MacOS/op-ssh-sign"}'');
-*/
+          */
           init = {
             defaultBranch = "main";
           };

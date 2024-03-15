@@ -10,40 +10,40 @@ in
 
   config = mkIf cfg.enable {
     environment.systemPackages = with pkgs; [
-    #   appimage-run
-    #   clac
+      #   appimage-run
+      #   clac
       fastfetch
-    #   feh
-    #   jq
-    #   khanelinix.trace-symlink
-    #   khanelinix.trace-which
-    #   ncdu
-    #   toilet
-    #   tree
-    #   upower
-    #   util-linux
+      #   feh
+      #   jq
+      #   khanelinix.trace-symlink
+      #   khanelinix.trace-which
+      #   ncdu
+      #   toilet
+      #   tree
+      #   upower
+      #   util-linux
     ];
 
     k = {
-    #   cli-apps = {
-    #     ranger = enabled;
-    #   };
+      #   cli-apps = {
+      #     ranger = enabled;
+      #   };
 
-    #   hardware = {
-    #     power = enabled;
-    #   };
+      #   hardware = {
+      #     power = enabled;
+      #   };
 
       nix = enabled;
 
-    #   security = {
-    #     gpg = enabled;
-    #   };
+      #   security = {
+      #     gpg = enabled;
+      #   };
 
-    #   services = {
-    #     openssh = enabled;
-    #     printing = enabled;
-    #     tailscale = enabled;
-    #   };
+      #   services = {
+      #     openssh = enabled;
+      #     printing = enabled;
+      #     tailscale = enabled;
+      #   };
 
       system = {
         fonts = enabled;

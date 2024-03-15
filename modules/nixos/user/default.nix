@@ -48,8 +48,8 @@ in
 
   config = {
     environment.systemPackages = with pkgs; [
-    #   fortune
-    #   lolcat
+      #   fortune
+      #   lolcat
       propagatedIcon
     ];
 
