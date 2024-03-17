@@ -19,5 +19,6 @@ in
         #spice-webdav = enabled;
       };
     };
+#    services.qemuGuest = enabled;
   };
 }
