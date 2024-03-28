@@ -7,8 +7,10 @@
       enable = true;
 
       # Configure keymap
-      layout = "us";
-      xkbVariant = "";
+      xkb = {
+        layout = "us";
+        variant = "";
+      };
 
       displayManager = {
         # Enable automatic login for the user.
@@ -31,11 +33,11 @@
     gnome-photos
     gnome-tour
     xterm # ancient terminal
+    gedit # text editor
   ]) ++ (with pkgs.gnome; [
     cheese # webcam tool
     gnome-music
     gnome-terminal
-    gedit # text editor
     epiphany # web browser
     geary # email reader
     evince # document viewer

@@ -13,7 +13,7 @@
     ./gnome.nix
   ];
 
-  boot.kernelPackages = pkgs.linuxPackages_6_4;
+  boot.kernelPackages = pkgs.linuxPackages_latest;
 
   # Use Systemd EFI boot only (no grub)
   boot.loader = {
