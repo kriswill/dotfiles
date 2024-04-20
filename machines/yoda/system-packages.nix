@@ -16,7 +16,7 @@
       ripgrep # a better grep
       sysz # systemd browsing tool
       wget # a network utility to retrieve files from the Web
-      nvtop # an htop like monitoring tool for NVIDIA GPUs
+      nvtopPackages.full # an htop like monitoring tool for NVIDIA GPUs
       inxi # system information script
       usbutils # USB Device Utilities
       lshw # list hardware
