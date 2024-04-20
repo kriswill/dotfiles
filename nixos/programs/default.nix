@@ -18,10 +18,9 @@
       lsof # list of open files
       ncdu # disk usage analyzer with an ncurses interface
       dua # disk Usage Analyzer
-      neofetch # displays system info
+      fastfetch # displays system info
       nix-info # display Nix system information
       nvd # nix package version diff tool
-      nvtop # an htop like monitoring tool for NVIDIA GPUs
       pavucontrol
       pciutils # pci bus related utilities
       ranger # file manager
