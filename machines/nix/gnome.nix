@@ -12,19 +12,20 @@
         variant = "";
       };
 
-      displayManager = {
-        # Enable automatic login for the user.
-        autoLogin.enable = true;
-        autoLogin.user = "k";
-
-        # the GNOME Desktop Environment.
-        gdm.enable = true;
-      };
-      desktopManager = {
+     displayManager.gdm.enable = true;
+     desktopManager = {
         gnome.enable = true;
         xterm.enable = false;
       };
       excludePackages = [ pkgs.xterm ];
+    };
+    displayManager = {
+      # Enable automatic login for the user.
+      autoLogin.enable = true;
+      autoLogin.user = "k";
+
+      # the GNOME Desktop Environment.
+      # gdm.enable = true;
     };
   };
 
