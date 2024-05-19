@@ -41,6 +41,7 @@ in
   ./zsh.nix
   ./dconf.nix
   ./firefox
+  ./wine
   #./neofetch.nix
   etc
 ]

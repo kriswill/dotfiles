@@ -29,6 +29,7 @@
       usbutils # usb Device Utilities
       wget # network utility to retrieve files from the Web
       zoxide
+      gnumake
     ];
     extraInit = ''
       # No option to unset in NixOS

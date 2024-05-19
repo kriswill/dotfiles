@@ -1,19 +1,18 @@
 { pkgs, config, lib, ... }:
-let
-  dm = "gnome";
-in
 {
   services.xserver = {
     enable = true;
     xkb.layout = "us";
-    displayManager.sddm.enable = true;
-    displayManager.defaultSession = dm;
     desktopManager = {
       gnome.enable = true;
       plasma5.enable = true;
     };
   };
 
+  services.displayManager = {
+    defaultSession = "gnome";
+    sddm.enable = true;
+  };
   # stuff for the desktops
   qt = {
     enable = true;

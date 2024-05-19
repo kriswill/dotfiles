@@ -26,6 +26,7 @@ let
     xdg-utils # Multiple packages depend on xdg-open at runtime. This includes Discord
     element-desktop-wayland # matrix client
     zoom-us # video conferencing
+    lutris # game manager
   ];
 in
 {
