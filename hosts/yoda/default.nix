@@ -18,14 +18,16 @@
   # };
 
   # gaming kernel
-  boot.kernelPackages = lib.mkForce pkgs.linuxPackages_cachyos;
+  # boot.kernelPackages = lib.mkForce pkgs.linuxPackages_cachyos;
   environment.systemPackages = [pkgs.scx];
 
-  # hardware = {
-  #   opentabletdriver.enable = true;
-  #   xpadneo.enable = true;
-  # };
-
+  hardware = {
+    nvidia = {
+      open = false;
+      powerManagement.enable = true;
+    };
+  };
+  boot.kernelParams = [ "nvidia.NVreg_PreserveVideoMemoryAllocations=1" ];
 
   # security.tpm2.enable = true;
 

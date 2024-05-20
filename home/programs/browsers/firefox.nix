@@ -1,7 +1,7 @@
 {
   programs.firefox = {
     enable = true;
-    profiles.mihai = {
+    profiles.k = {
       userChrome = ''
         /* Hide tab bar. Used with Sidebery */
         #TabsToolbar {

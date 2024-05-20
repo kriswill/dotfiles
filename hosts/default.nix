@@ -7,7 +7,7 @@
   flake.nixosConfigurations = let
     # shorten paths
     inherit (inputs.nixpkgs.lib) nixosSystem;
-    howdy = inputs.nixpkgs-howdy;
+    # howdy = inputs.nixpkgs-howdy;
     mod = "${self}/system";
 
     # get the basic config to build on top of

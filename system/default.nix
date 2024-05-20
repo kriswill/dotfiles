@@ -6,9 +6,9 @@ let
     ./hardware/opengl.nix
     ./hardware/fwupd.nix
 
-    ./network/avahi.nix
+    # ./network/avahi.nix
     ./network/default.nix
-    ./network/tailscale.nix
+    # ./network/tailscale.nix
 
     ./programs
 
