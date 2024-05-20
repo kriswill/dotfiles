@@ -1,11 +1,12 @@
-{ config, pkgs, flake-inputs, ... }:
+{ config, pkgs, inputs, ... }:
 {
   imports = [
-    flake-inputs.home-manager.nixosModules.home-manager
+    inputs.home-manager.nixosModules.home-manager
     ./nix.nix
     ./programs
     ./fonts.nix
     ./users.nix
+    ./desktops
   ];
 
   time.timeZone = "America/Los_Angeles";

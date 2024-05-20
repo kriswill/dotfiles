@@ -1,4 +1,4 @@
-{ flake-inputs, pkgs, nixpkgs, ... }:
+{ inputs, pkgs, nixpkgs, ... }:
 
 {
   nix = {
@@ -17,19 +17,19 @@
     gc = {
       automatic = true;
     };
-    nixPath = [ "nixpkgs=${flake-inputs.nixpkgs}" ];
+    nixPath = [ "nixpkgs=${inputs.nixpkgs}" ];
     registry.nixpkgs = {
       from = {
         id = "nixpkgs";
         type = "indirect";
       };
-      flake = flake-inputs.nixpkgs;
+      flake = inputs.nixpkgs;
     };
   };
 
   nixpkgs = {
     overlays = [
-      flake-inputs.nurpkgs.overlay
+      inputs.nurpkgs.overlay
     ];
     # Allow unfree packages
     config = {

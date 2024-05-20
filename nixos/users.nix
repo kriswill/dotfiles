@@ -1,7 +1,7 @@
 { pkgs, ... }:
 
 let
-  ssh-key = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBxqhXoAlCKYNwsB1YrszftURThiCI94oeR0W9EDhrLy";
+  signingkey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBxqhXoAlCKYNwsB1YrszftURThiCI94oeR0W9EDhrLy";
 in
 {
   users = {
@@ -12,7 +12,7 @@ in
       k = {
         isNormalUser = true;
         extraGroups = [ "wheel" "video" "networkmanager" "libvirtd" ];
-        openssh.authorizedKeys.keys = [ ssh-key ];
+        openssh.authorizedKeys.keys = [ signingkey ];
       };
     };
   };
@@ -27,7 +27,7 @@ in
         user = {
           name = "Kris Williams";
           email = "115474+kriswill@users.noreply.github.com";
-          signingkey = ssh-key;
+          inherit signingkey;
         };
         init.defaultBranch = "main";
       }

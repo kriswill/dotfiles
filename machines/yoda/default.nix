@@ -5,13 +5,14 @@
     ./hardware-configuration.nix
     ./boot.nix
     ./virtualization.nix
-    #./gnome.nix
-    ./desktops.nix
     ./nvidia.nix
     ./steam.nix
   ];
 
-  networking.hostName = "yoda"; # Define your hostname.
+  # gnome.enable = true;
+  hyprland.enable = true;
+
+  networking.hostName = "yoda";
   # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
 
   # Configure network proxy if necessary
@@ -44,7 +45,6 @@
     #media-session.enable = true;
   };
 
-
   # This value determines the NixOS release from which the default
   # settings for stateful data, like file locations and database versions
   # on your system were taken. It‘s perfectly fine and recommended to leave
@@ -52,5 +52,4 @@
   # Before changing this value read the documentation for this option
   # (e.g. man configuration.nix or on https://nixos.org/nixos/options.html).
   system.stateVersion = "24.05"; # Did you read the comment?
-
 }

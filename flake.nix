@@ -9,6 +9,10 @@
     };
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
     nurpkgs.url = "github:nix-community/NUR";
+    hyprland = {
+      url = "git+https://github.com/hyprwm/Hyprland?submodules=1";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs =
@@ -20,7 +24,6 @@
     }:
     let
       rootPath = self;
-      flake-inputs = inputs;
       forEachSystem = nixpkgs.lib.genAttrs [ "x86_64-linux" "aarch64-linux" "aarch64-darwin" ];
       formatterPackArgsFor = forEachSystem (system: {
         inherit nixpkgs system;
@@ -38,7 +41,7 @@
     in
     {
       nixosConfigurations = import ./machines {
-        inherit flake-inputs rootPath;
+        inherit inputs rootPath;
       };
 
       checks = forEachSystem (system: {

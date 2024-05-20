@@ -1,4 +1,4 @@
-{ flake-inputs, pkgs, nixpkgs, lib, ... }:
+{ pkgs, nixpkgs, lib, ... }:
 
 {
   boot = {
