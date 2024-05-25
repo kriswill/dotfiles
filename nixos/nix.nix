@@ -29,7 +29,7 @@
 
   nixpkgs = {
     overlays = [
-      inputs.nurpkgs.overlay
+      inputs.nur.overlay
     ];
     # Allow unfree packages
     config = {

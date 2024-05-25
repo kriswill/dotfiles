@@ -6,14 +6,10 @@
       xkb.layout = "us";
       desktopManager = {
         gnome.enable = true;
-        plasma5.enable = true;
+        # plasma5.enable = true;
       };
     };
 
-    services.displayManager = {
-      defaultSession = "gnome";
-      sddm.enable = true;
-    };
     # stuff for the desktops
     qt = {
       enable = true;

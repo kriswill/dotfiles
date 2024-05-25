@@ -12,4 +12,9 @@
   options.hyprland = {
     enable = lib.mkEnableOption "Hyprland";
   };
+
+  config.services.displayManager = {
+    defaultSession = "gnome";
+    sddm.enable = true;
+  };
 }

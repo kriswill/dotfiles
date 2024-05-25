@@ -22,7 +22,7 @@ _:
       scrollback_lines = 20000;
       term = "xterm-256color";
       visual_bell_duration = "0.1";
-      XDG_CURRENT_DESKTOP = "GNOME";
+      # XDG_CURRENT_DESKTOP = "GNOME";
     };
   };
 }

@@ -9,8 +9,9 @@
     ./steam.nix
   ];
 
-  # gnome.enable = true;
-  hyprland.enable = true;
+  gnome.enable = true;
+  # hyprland.enable = true;
+  services.displayManager.defaultSession = lib.mkForce "gnome";
 
   networking.hostName = "yoda";
   # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.

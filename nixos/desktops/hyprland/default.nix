@@ -2,14 +2,13 @@
   pkgs,
   inputs,
   config,
-  asztal,
   lib,
   ...
 }: {
 
-  imports = [
-    inputs.hyprland.nixosModules.default
-  ];
+  # imports = [
+  #   inputs.hyprland.nixosModules.default
+  # ];
 
   config = lib.mkIf config.hyprland.enable {
     nix.settings = {
@@ -19,28 +18,52 @@
       ];
     };
 
-    services.displayManager.gdm.enable = true;
+    services.displayManager = {
+    #   defaultSession = "hyprland";
+    #   sddm.enable = true;
+      sddm.wayland.enable = true;
+    };
 
     programs.hyprland = {
       enable = true;
-      package = inputs.hyprland.packages.${pkgs.system}.hyprland;
       xwayland.enable = true;
     };
 
-    xdg.portal = {
-      enable = true;
-      extraPortals = with pkgs; [
-        xdg-desktop-portal-gtk
-      ];
+    environment.sessionVariables = {
+      WLR_NO_HARDWARE_CURSORS = "1";
+      NIXOS_OZONE_WL = "1";
     };
 
+    hardware = {
+      opengl.enable = true;
+      opengl.driSupport = true;
+      opengl.driSupport32Bit = true;
+      nvidia.modesetting.enable = true;
+    };
+
+
+    environment.systemPackages = with pkgs; [
+      dunst # notification deamon for hyprland
+      libnotify # needed for dunst to work
+      waybar # bar for hyprland
+      swww # wallpaper
+      rofi-wayland
+    ];
+
+
+    # xdg.portal = {
+    #   enable = true;
+    #   extraPortals = with pkgs; [
+    #     xdg-desktop-portal-gtk
+    #   ];
+    # };
+/*
     security = {
       polkit.enable = true;
       #pam.services.ags = {};
     };
 
-    environment.systemPackages = with pkgs;
-    with gnome; [
+    environment.systemPackages = with pkgs; with gnome; [
       morewaita-icon-theme
       adwaita-icon-theme
       qogir-icon-theme
@@ -84,8 +107,6 @@
       gvfs.enable = true;
       devmon.enable = true;
       udisks2.enable = true;
-      upower.enable = true;
-      power-profiles-daemon.enable = true;
       accounts-daemon.enable = true;
       gnome = {
         evolution-data-server.enable = true;
@@ -129,5 +150,7 @@
     #   '';
     # in
     #   builtins.readFile wp;
+  */
   };
+
 }

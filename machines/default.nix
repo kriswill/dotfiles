@@ -2,17 +2,18 @@
 
 let
   inherit (inputs) home-manager nixpkgs;
-  pkgs = import nixpkgs {
-    inherit inputs;
-    system = "x86_64-linux";
-    config.allowUnfree = true;
-  };
 in
 {
   ####  yoda  #################################################################
 
-  "yoda" = nixpkgs.lib.nixosSystem {
+  "yoda" = let
     system = "x86_64-linux";
+    pkgs = import nixpkgs {
+      inherit inputs system;
+      config.allowUnfree = true;
+    };
+  in nixpkgs.lib.nixosSystem {
+    inherit system;
     specialArgs = { inherit inputs; };
 
     modules = [
