@@ -1,4 +1,4 @@
-{ inputs, pkgs, nixpkgs, ... }:
+{ inputs, outputs, pkgs, nixpkgs, ... }:
 
 {
   nix = {
@@ -30,6 +30,7 @@
   nixpkgs = {
     overlays = [
       inputs.nur.overlay
+      outputs.overlays.unstable-packages
     ];
     # Allow unfree packages
     config = {

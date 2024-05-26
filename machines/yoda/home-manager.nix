@@ -1,4 +1,4 @@
-{ pkgs, rootPath, ... }:
+{ outputs, pkgs, rootPath, ... }:
 
 let
   username = "k";

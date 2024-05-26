@@ -1,4 +1,4 @@
-{ inputs, rootPath, ... }:
+{ inputs, rootPath, outputs, ... }:
 
 let
   inherit (inputs) home-manager nixpkgs;
@@ -16,7 +16,7 @@ in
     in
     nixpkgs.lib.nixosSystem {
       inherit system;
-      specialArgs = { inherit inputs; };
+      specialArgs = { inherit inputs outputs; };
 
       modules = [
         ./yoda
@@ -28,10 +28,10 @@ in
             useGlobalPkgs = true;
             useUserPackages = true;
             users.k = import ./yoda/home-manager.nix {
-              inherit pkgs rootPath;
+              inherit pkgs rootPath outputs;
             };
             extraSpecialArgs = {
-              inherit inputs;
+              inherit inputs outputs;
             };
           };
         }
@@ -46,6 +46,6 @@ in
       ./nix
       ../nixos
     ];
-    specialArgs = { inherit inputs; };
+    specialArgs = { inherit inputs outputs; };
   };
 }

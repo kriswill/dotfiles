@@ -1,11 +1,11 @@
-{ pkgs, ... }:
+{ pkgs, pkgs-unstable, ... }:
 
 {
-  environment.systemPackages = with pkgs; [
+  environment.systemPackages = with pkgs.unstable; [
     (neovim.override {
       vimAlias = true;
       configure = {
-        packages.myPlugins = with pkgs.vimPlugins; {
+        packages.myPlugins = with pkgs.unstable.vimPlugins; {
           start = [
             vim-lastplace
             vim-nix

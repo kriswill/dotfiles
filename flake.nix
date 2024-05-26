@@ -25,8 +25,9 @@
     , ...
     }:
     let
-      inherit (nixpkgs.lib) genAttrs;
       rootPath = self;
+      inherit (self) outputs;
+      inherit (nixpkgs.lib) genAttrs;
       systems = genAttrs [ "x86_64-linux" "aarch64-linux" "aarch64-darwin" ];
       formatterPackArgsFor = systems (system: {
         inherit nixpkgs system;
@@ -44,8 +45,11 @@
     in
     {
       nixosConfigurations = import ./machines {
-        inherit inputs rootPath;
+        inherit inputs rootPath outputs;
       };
+
+      # Custom packages and modifications, exported as overlays
+      overlays = import ./overlays { inherit inputs; };
 
       checks = systems (system: {
         nix-formatter-pack-check = nix-formatter-pack.lib.mkCheck formatterPackArgsFor.${system};
@@ -55,7 +59,6 @@
 
       devShells = systems (system: {
         "${system}.default" = nixpkgs.legacyPackages.${system}.mkShell {
-          # buildInputs = [ nix-formatter-pack ];
           shellHook = ''
             echo "HI!"
           '';

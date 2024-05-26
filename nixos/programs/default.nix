@@ -1,6 +1,9 @@
 { pkgs, ... }: {
 
-  imports = [ ./vim.nix ./zsh.nix ];
+  imports = [
+    ./vim.nix
+    ./zsh.nix
+  ];
 
   environment = {
     systemPackages = with pkgs; [
