@@ -19,7 +19,8 @@
       cat = "bat";
       ".." = "cd ..;";
       "..." = ".. ..";
-      lg = "lazygit";
+      lg = "${pkgs.lazygit}/bin/lazygit";
+      ff = "${pkgs.fastfetch}/bin/fastfetch";
     };
     initExtra = ''
       # Zsh run-help function
