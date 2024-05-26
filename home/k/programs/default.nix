@@ -35,14 +35,14 @@ let
 in
 [
   ./alacritty.nix
+  ./brave
+  ./dconf.nix
+  ./firefox
   ./git.nix
   ./kitty.nix
   ./starship.nix
   ./vscode.nix
-  ./zsh.nix
-  ./dconf.nix
-  ./firefox
   ./wine
-  #./neofetch.nix
+  ./zsh.nix
   etc
 ]

@@ -19,6 +19,7 @@
       cat = "bat";
       ".." = "cd ..;";
       "..." = ".. ..";
+      lg = "lazygit";
     };
     initExtra = ''
       # Zsh run-help function
