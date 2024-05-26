@@ -25,9 +25,10 @@
     , ...
     }:
     let
+      inherit (nixpkgs.lib) genAttrs;
       rootPath = self;
-      forEachSystem = nixpkgs.lib.genAttrs [ "x86_64-linux" "aarch64-linux" "aarch64-darwin" ];
-      formatterPackArgsFor = forEachSystem (system: {
+      systems = genAttrs [ "x86_64-linux" "aarch64-linux" "aarch64-darwin" ];
+      formatterPackArgsFor = systems (system: {
         inherit nixpkgs system;
         checkFiles = [ rootPath ];
 
@@ -46,10 +47,19 @@
         inherit inputs rootPath;
       };
 
-      checks = forEachSystem (system: {
+      checks = systems (system: {
         nix-formatter-pack-check = nix-formatter-pack.lib.mkCheck formatterPackArgsFor.${system};
       });
 
-      formatter = forEachSystem (system: nix-formatter-pack.lib.mkFormatter formatterPackArgsFor.${system});
+      formatter = systems (system: nix-formatter-pack.lib.mkFormatter formatterPackArgsFor.${system});
+
+      devShells = systems (system: {
+        "${system}.default" = nixpkgs.legacyPackages.${system}.mkShell {
+          # buildInputs = [ nix-formatter-pack ];
+          shellHook = ''
+            echo "HI!"
+          '';
+        };
+      });
     };
 }

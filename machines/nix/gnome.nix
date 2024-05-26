@@ -12,8 +12,8 @@
         variant = "";
       };
 
-     displayManager.gdm.enable = true;
-     desktopManager = {
+      #  displayManager.gdm.enable = true;
+      desktopManager = {
         gnome.enable = true;
         xterm.enable = false;
       };

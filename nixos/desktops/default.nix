@@ -2,7 +2,7 @@
 {
   imports = [
     ./gnome
-    ./hyprland
+    # ./hyprland
   ];
 
   options.gnome = {
