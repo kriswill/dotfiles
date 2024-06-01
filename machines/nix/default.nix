@@ -10,8 +10,8 @@
     ./environment.nix
     ./networking.nix
     ./services.nix
-    ./gnome.nix
   ];
+  gnome.enable = true;
 
   boot.kernelPackages = pkgs.linuxPackages_latest;
 
