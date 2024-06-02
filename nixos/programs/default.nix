@@ -33,6 +33,7 @@
       wget # network utility to retrieve files from the Web
       zoxide
       gnumake
+      kitty
     ];
     extraInit = ''
       # No option to unset in NixOS

@@ -5,9 +5,9 @@
 , ...
 }: {
 
-  # imports = [
-  #   inputs.hyprland.nixosModules.default
-  # ];
+  imports = [
+    inputs.hyprland.nixosModules.default
+  ];
 
   config = lib.mkIf config.hyprland.enable {
     nix.settings = {
@@ -19,7 +19,7 @@
 
     services.displayManager = {
       #   defaultSession = "hyprland";
-      #   sddm.enable = true;
+      sddm.enable = true;
       sddm.wayland.enable = true;
     };
 
@@ -33,9 +33,9 @@
       NIXOS_OZONE_WL = "1";
     };
 
-    hardware = {
-      nvidia.modesetting.enable = true;
-    };
+    # hardware = {
+    #   nvidia.modesetting.enable = true;
+    # };
 
 
     environment.systemPackages = with pkgs; [
@@ -44,44 +44,44 @@
       waybar # bar for hyprland
       swww # wallpaper
       rofi-wayland
+      morewaita-icon-theme
+
+      qogir-icon-theme
+      loupe
+      gnome.nautilus
+      baobab
+      wl-gammactl
+      wl-clipboard
+      wayshot
+      pavucontrol
+      brightnessctl
+      swww
+    # ]; /* // (with gnome; [
+      gnome.adwaita-icon-theme
+      gnome-text-editor
+      gnome.gnome-calendar
+      gnome.gnome-boxes
+      gnome.gnome-system-monitor
+      gnome.gnome-control-center
+      gnome.gnome-weather
+      gnome.gnome-calculator
+      gnome.gnome-clocks
+      gnome.gnome-software # for flatpak
     ];
 
-
-    # xdg.portal = {
-    #   enable = true;
-    #   extraPortals = with pkgs; [
-    #     xdg-desktop-portal-gtk
-    #   ];
-    # };
+    xdg.portal = {
+      enable = true;
+#      extraPortals = with pkgs; [
+#        xdg-desktop-portal-gtk
+#      ];
+    };
 
     # security = {
     #   polkit.enable = true;
     #   #pam.services.ags = {};
     # };
 
-    # environment.systemPackages = with pkgs; with gnome; [
-    #   morewaita-icon-theme
-    #   adwaita-icon-theme
-    #   qogir-icon-theme
-    #   loupe
-    #   nautilus
-    #   baobab
-    #   gnome-text-editor
-    #   gnome-calendar
-    #   gnome-boxes
-    #   gnome-system-monitor
-    #   gnome-control-center
-    #   gnome-weather
-    #   gnome-calculator
-    #   gnome-clocks
-    #   gnome-software # for flatpak
-    #   wl-gammactl
-    #   wl-clipboard
-    #   wayshot
-    #   pavucontrol
-    #   brightnessctl
-    #   swww
-    # ];
+
 
     # systemd = {
     #   user.services.polkit-gnome-authentication-agent-1 = {

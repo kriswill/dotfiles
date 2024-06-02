@@ -12,6 +12,7 @@
     ./services.nix
   ];
   gnome.enable = true;
+  hyprland.enable = true;
 
   boot.kernelPackages = pkgs.linuxPackages_latest;
 

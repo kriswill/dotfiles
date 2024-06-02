@@ -2,7 +2,7 @@
 {
   imports = [
     ./gnome
-    # ./hyprland
+    ./hyprland
   ];
 
   options.gnome = {
@@ -14,7 +14,8 @@
   };
 
   config.services.displayManager = {
-    defaultSession = "gnome";
+    defaultSession = "hyprland";
     sddm.enable = true;
+    sddm.wayland.enable = true;
   };
 }

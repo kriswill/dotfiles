@@ -7,6 +7,7 @@
     settings = {
       auto-optimise-store = true;
       experimental-features = [ "nix-command" "flakes" ];
+      system-features = [ "nixos-test" "benchmark" "big-parallel" "kvm" ];
       substituters = [
         "https://nix-community.cachix.org"
       ];
