@@ -3,6 +3,7 @@
 {
   imports = [
     ./alacritty.nix
+    ./fastfetch
     # ./brave # not on mac
     # ./dconf.nix
     # ./firefox
