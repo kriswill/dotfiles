@@ -45,7 +45,7 @@
           users."${username}" = path;
           sharedModules = [ ];
           extraSpecialArgs = {
-            inherit inputs;
+            inherit inputs username;
           };
         };
       };
