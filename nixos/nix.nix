@@ -33,8 +33,8 @@
       inputs.nur.overlay
       outputs.overlays.unstable-packages
     ];
-    # Allow unfree packages
     config = {
+      # Allow unfree packages
       allowUnfree = true;
       allowUnsupportedSystem = true;
     };

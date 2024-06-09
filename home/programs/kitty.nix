@@ -1,11 +1,12 @@
-_:
+{ pkgs, ... }:
 
 {
   programs.kitty = {
     enable = true;
+    package = pkgs.unstable.kitty;
     font = {
       name = "SauceCodePro Nerd Font";
-      size = 14;
+      size = 18;
     };
     shellIntegration.enableZshIntegration = true;
 
@@ -17,7 +18,7 @@ _:
       copy_on_select = "clipboard";
       enable_audio_bell = "no";
       hide_window_decorations = "yes";
-      linux_display_server = "wayland";
+      # linux_display_server = "wayland";
       placement_strategy = "center";
       scrollback_lines = 20000;
       term = "xterm-256color";

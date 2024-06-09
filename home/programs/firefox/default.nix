@@ -1,6 +1,6 @@
 { config, pkgs, ... }:
 let
-  user_js = config.home.homeDirectory + "/src/nix-config/home/${config.home.username}/programs/firefox/user.js";
+  user_js = config.home.homeDirectory + "/src/nix-config/home/programs/firefox/user.js";
   inherit (pkgs.nur.repos.rycee) firefox-addons;
 in
 {

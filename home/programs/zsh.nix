@@ -1,4 +1,4 @@
-{ pkgs, ... }:
+{ pkgs, lib, ... }:
 
 {
   programs.zsh = {
@@ -10,7 +10,7 @@
     };
 
     shellAliases = {
-      ls = "eza";
+      ls = "${pkgs.eza}/bin/eza --icons";
       ld = "ls -D";
       ll = "ls -lhF";
       la = "ls -lahF";
@@ -21,7 +21,9 @@
       "..." = ".. ..";
       lg = "${pkgs.lazygit}/bin/lazygit";
       ff = "${pkgs.fastfetch}/bin/fastfetch";
+      drs = lib.mkIf pkgs.stdenvNoCC.isDarwin "darwin-rebuild switch --flake ~/src/nix-config";
     };
+
     initExtra = ''
       # Zsh run-help function
       autoload -Uz run-help

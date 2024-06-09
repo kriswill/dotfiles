@@ -1,7 +1,6 @@
-{ outputs, pkgs, rootPath, ... }:
+{ outputs, pkgs, rootPath, username, ... }:
 
 let
-  username = "k";
   homeDirectory = "/home/${username}";
   configHome = "${homeDirectory}/.config";
 
@@ -30,7 +29,7 @@ in
   programs.home-manager.enable = true;
 
   imports = builtins.concatMap import [
-    "${rootPath}/home/${username}/programs"
+    "${rootPath}/home/programs"
   ];
 
   xdg = {
