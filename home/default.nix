@@ -1,8 +1,11 @@
-{ config, pkgs, lib, ... }:
+{ config, pkgs, lib, username, ... }:
 
 let
-  username = "k";
-  homeDirectory = lib.mkForce (if pkgs.stdenvNoCC.isDarwin then "/Users/${username}" else "/home/${username}");
+  homeDirectory = lib.mkForce (
+    if pkgs.stdenvNoCC.isDarwin 
+    then "/Users/${username}" 
+    else "/home/${username}"
+  );
 in
 {
   imports = [

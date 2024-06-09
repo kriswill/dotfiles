@@ -7,9 +7,10 @@
     # ./dconf.nix
     # ./firefox
     ./git.nix
-    ./kitty.nix
+    ./kitty
     ./starship.nix
     # ./vscode.nix
+    ./neovim
     # ./wine
     ./zsh.nix
   ];
