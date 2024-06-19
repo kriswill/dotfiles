@@ -11,8 +11,7 @@
   cat = "${pkgs.bat}/bin/bat";
 
   # system related
-  sudo = "sudo "; # allow for using aliases with sudo
-  nrs = "sudo -s nixos-rebuild switch --upgrade";
+  nrs = "${pkgs.nh}/bin/nh os switch ~/src/nix-config";
 
   # git related
   g = "${pkgs.git}/bin/git";

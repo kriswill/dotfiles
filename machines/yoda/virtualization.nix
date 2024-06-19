@@ -10,6 +10,8 @@
 
   environment.systemPackages = with pkgs; [
     virt-manager
+    qemu_kvm
+    virtiofsd
   ];
 
   virtualisation = {
