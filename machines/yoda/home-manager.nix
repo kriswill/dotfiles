@@ -31,7 +31,7 @@ in
 
   imports = builtins.concatMap import [
     "${rootPath}/home/${username}/programs"
-  ];
+  ] ++ [ ./hyprland.nix ];
 
   xdg = {
     inherit configHome;

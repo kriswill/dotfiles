@@ -17,10 +17,10 @@ _:
       copy_on_select = "clipboard";
       enable_audio_bell = "no";
       hide_window_decorations = "yes";
-      linux_display_server = "wayland";
+      # linux_display_server = "wayland";
       placement_strategy = "center";
       scrollback_lines = 20000;
-      term = "xterm-256color";
+      # term = "xterm-256color";
       visual_bell_duration = "0.1";
       # XDG_CURRENT_DESKTOP = "GNOME";
     };

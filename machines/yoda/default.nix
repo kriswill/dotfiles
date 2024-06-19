@@ -10,7 +10,7 @@
   ];
 
   gnome.enable = true;
-  # hyprland.enable = true;
+  hyprland.enable = true;
   services.displayManager.defaultSession = lib.mkForce "gnome";
 
   networking.hostName = "yoda";

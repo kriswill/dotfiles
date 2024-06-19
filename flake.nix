@@ -13,7 +13,7 @@
     nur.url = "github:nix-community/nur";
     hyprland = {
       url = "git+https://github.com/hyprwm/Hyprland?submodules=1";
-      inputs.nixpkgs.follows = "nixpkgs";
+      #inputs.nixpkgs.follows = "nixpkgs";
     };
   };
 
@@ -44,12 +44,12 @@
       });
     in
     {
+      # Custom packages and modifications, exported as overlays
+      overlays = import ./overlays { inherit inputs; };
+
       nixosConfigurations = import ./machines {
         inherit inputs rootPath outputs;
       };
-
-      # Custom packages and modifications, exported as overlays
-      overlays = import ./overlays { inherit inputs; };
 
       checks = systems (system: {
         nix-formatter-pack-check = nix-formatter-pack.lib.mkCheck formatterPackArgsFor.${system};

@@ -24,6 +24,7 @@
     };
 
     programs.hyprland = {
+      package = inputs.hyprland.packages.x86_64-linux.hyprland;
       enable = true;
       xwayland.enable = true;
     };
@@ -33,9 +34,8 @@
       NIXOS_OZONE_WL = "1";
     };
 
-    # hardware = {
-    #   nvidia.modesetting.enable = true;
-    # };
+    hardware = #lib.mkIf (config.networking.hostname == "yoda") {
+    { nvidia.modesetting.enable = true; };
 
 
     environment.systemPackages = with pkgs; [
@@ -56,7 +56,7 @@
       pavucontrol
       brightnessctl
       swww
-    # ]; /* // (with gnome; [
+      # ]; /* // (with gnome; [
       gnome.adwaita-icon-theme
       gnome-text-editor
       gnome.gnome-calendar
@@ -71,9 +71,9 @@
 
     xdg.portal = {
       enable = true;
-#      extraPortals = with pkgs; [
-#        xdg-desktop-portal-gtk
-#      ];
+      #      extraPortals = with pkgs; [
+      #        xdg-desktop-portal-gtk
+      #      ];
     };
 
     # security = {
