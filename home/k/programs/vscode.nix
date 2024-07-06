@@ -3,7 +3,7 @@
 {
   programs.vscode = {
     enable = true;
-    # package= pkgs.vscode;
+    package= pkgs.unstable.vscode;
     #package = (pkgs.vscode.override { isInsiders = true; }).overrideAttrs (oldAttrs: rec {
     #  src = (builtins.fetchTarball {
     #    url = "https://update.code.visualstudio.com/latest/linux-x64/insider";

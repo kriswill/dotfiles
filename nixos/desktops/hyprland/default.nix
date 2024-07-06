@@ -5,9 +5,9 @@
 , ...
 }: {
 
-  imports = [
-    inputs.hyprland.nixosModules.default
-  ];
+  # imports = [
+  #   inputs.hyprland.nixosModules.default
+  # ];
 
   config = lib.mkIf config.hyprland.enable {
     nix.settings = {
@@ -24,7 +24,7 @@
     };
 
     programs.hyprland = {
-      package = inputs.hyprland.packages.x86_64-linux.hyprland;
+      # package = inputs.hyprland.packages.x86_64-linux.hyprland;
       enable = true;
       xwayland.enable = true;
     };
