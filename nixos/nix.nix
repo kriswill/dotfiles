@@ -10,6 +10,10 @@
     package = pkgs.nixFlakes;
 
     settings = {
+      trusted-users = [
+        "root"
+        "@wheel"
+      ];
       auto-optimise-store = true;
       experimental-features = [
         "nix-command"
@@ -43,6 +47,10 @@
       inputs.nur.overlay
       (final: prev: {
         unstable = import inputs.nixpkgs-unstable {
+          inherit (final) system;
+          config.allowUnfree = true;
+        };
+        trunk = import inputs.nixpkgs-trunk {
           inherit (final) system;
           config.allowUnfree = true;
         };

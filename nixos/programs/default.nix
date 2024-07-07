@@ -35,6 +35,7 @@
       zoxide
       gnumake
       kitty
+      duf
     ];
     extraInit = ''
       # No option to unset in NixOS
