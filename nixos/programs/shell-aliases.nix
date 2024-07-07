@@ -1,20 +1,24 @@
 { pkgs, ... }:
 
+with pkgs;
+let
+  inherit (lib) getExe;
+in
 {
   # file listing
-  ls = "${pkgs.eza}/bin/eza --icons";
+  ls = "${getExe eza} --icons";
   ld = "l -D";
   ll = "l -lhF";
   la = "l -a";
   t = "l -T -L3";
   l = "ls -lhF --git -I '.git|.DS_'";
-  cat = "${pkgs.bat}/bin/bat";
+  cat = "${getExe bat}";
 
   # system related
-  nrs = "${pkgs.nh}/bin/nh os switch ~/src/nix-config";
+  nrs = "${getExe nh} os switch $HOME/src/github/kriswill/dotfiles";
 
   # git related
-  g = "${pkgs.git}/bin/git";
+  g = "${getExe git}";
   gco = "g checkout";
   gba = "g branch -a";
 }

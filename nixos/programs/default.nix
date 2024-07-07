@@ -47,6 +47,8 @@
   programs = {
     nh = {
       enable = true;
+      # this doesn't work?
+      # flake = "/home/k/src/github/kriswill/dotfiles";
       clean.enable = true;
       clean.extraArgs = "--keep-since 4d --keep 5";
     };

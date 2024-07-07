@@ -35,7 +35,8 @@
 
       devshells.default =
         let
-          nix = ''$([ "$\{USE_NOM:-0}" = '1' ] && echo ${lib.getExe pkgs.unstable.nix-output-monitor} || echo nix)'';
+          inherit (lib) getExe;
+          nix = ''$([ "$\{USE_NOM:-0}" = '1' ] && echo ${getExe pkgs.unstable.nix-output-monitor} || echo nix)'';
           nixfmt = pkgs.unstable.nixfmt-rfc-style;
         in
         {
@@ -58,7 +59,7 @@
             {
               name = "format";
               help = "Format all the files";
-              command = ''${lib.getExe pkgs.unstable.nixfmt-rfc-style} "$@" **/*.nix'';
+              command = ''${getExe pkgs.unstable.nixfmt-rfc-style} "$@" **/*.nix'';
             }
           ];
         };

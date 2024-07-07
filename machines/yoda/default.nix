@@ -2,6 +2,7 @@
   config,
   pkgs,
   lib,
+  inputs,
   ...
 }:
 
@@ -12,7 +13,18 @@
     ./virtualization.nix
     ./nvidia.nix
     ./steam.nix
+    inputs.home-manager.nixosModules.home-manager
   ];
+
+  home-manager = {
+    useGlobalPkgs = true;
+    useUserPackages = true;
+    backupFileExtension = "home-manager-backup";
+    users.k = import ./home-manager.nix { inherit pkgs; };
+    extraSpecialArgs = {
+      inherit inputs;
+    };
+  };
 
   gnome.enable = true;
   hyprland.enable = true;
