@@ -12,9 +12,8 @@
       curl # a network utility to retrieve files from the Web
       eza # better ls
       fzf # command-line fuzzy finder
-      gh
+      gh # github cli
       git # the stupid content tracker
-      home-manager
       hstr # bash and Zsh shell history suggest box
       htop # interactive process viewer
       inxi # system information script
@@ -32,10 +31,10 @@
       sysz # systemd browsing tool
       usbutils # usb Device Utilities
       wget # network utility to retrieve files from the Web
-      zoxide
-      gnumake
-      kitty
-      duf
+      zoxide # cd with memory
+      gnumake # old-shcool build tool
+      kitty # best terminal emulator
+      duf # disk usage utility
     ];
     extraInit = ''
       # No option to unset in NixOS
