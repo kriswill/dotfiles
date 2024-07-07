@@ -1,10 +1,10 @@
 { pkgs, ... }:
 
 {
-  # Version: 1.90.2
+  # Version: 1.91.0
   programs.vscode = {
     enable = true;
-    package = pkgs.unstable.vscode;
+    package = pkgs.trunk.vscode;
     #package = (pkgs.vscode.override { isInsiders = true; }).overrideAttrs (oldAttrs: rec {
     #  src = (builtins.fetchTarball {
     #    url = "https://update.code.visualstudio.com/latest/linux-x64/insider";

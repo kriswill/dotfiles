@@ -24,6 +24,7 @@ let
     element-desktop-wayland # matrix client
     zoom-us # video conferencing
     lutris # game manager
+    unstable.devenv
   ];
 in
 {
