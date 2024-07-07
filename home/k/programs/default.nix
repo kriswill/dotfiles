@@ -45,6 +45,6 @@ in
   ./starship.nix
   ./vscode.nix
   ./wine
-  ./zsh.nix
+  ./zsh
   etc
 ]

@@ -10,14 +10,11 @@
   environment = {
     systemPackages = with pkgs; [
       bat # A cat clone with wings.
-      eza # A better ls
       fzf # A command-line fuzzy finder
       git # the stupid content tracker
       hstr # Bash and Zsh shell history suggest box
       htop # interactive process viewer
-      neofetch # displays system info
       nix-info # display Nix system information
-      nvd # nix package version diff tool
       ripgrep # a better grep
       sysz # systemd browsing tool
       wget # a network utility to retrieve files from the Web
@@ -79,15 +76,6 @@
           "main"
           "brackets"
         ];
-      };
-      shellAliases = {
-        ls = "eza";
-        ld = "ls -D";
-        ll = "ls -lhF";
-        la = "ls -lahF";
-        l = "la";
-        t = "ls -T -I '.git'";
-        cat = "bat";
       };
     };
   };

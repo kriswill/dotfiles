@@ -19,10 +19,15 @@
       _module.args.pkgs = import inputs.nixpkgs {
         inherit system;
         overlays = [
+          inputs.nur.overlay
           # attach nixpkgs-unstable to pkgs.unstable
           (final: prev: {
             unstable = import inputs.nixpkgs-unstable {
               x = builtins.trace "final = ${final}";
+              inherit (final) system;
+              config.allowUnfree = true;
+            };
+            trunk = import inputs.nixpkgs-trunk {
               inherit (final) system;
               config.allowUnfree = true;
             };

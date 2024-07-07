@@ -39,4 +39,23 @@ in
       ];
     };
   };
+
+  flake.homeConfigurations = {
+    ####  k  ###################################################################
+    "k@yoda" = withSystem "x86_64-linux" (
+      ctx@{
+        config,
+        inputs',
+        pkgs,
+        ...
+      }:
+      inputs.home-manager.lib.homeManagerConfiguration {
+        inherit pkgs;
+        extraSpecialArgs = {
+          inherit inputs;
+        };
+        modules = [ ./yoda/home-manager.nix ];
+      }
+    );
+  };
 }

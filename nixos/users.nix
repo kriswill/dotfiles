@@ -18,6 +18,7 @@ in
           "libvirtd"
         ];
         openssh.authorizedKeys.keys = [ signingkey ];
+        packages = with pkgs; [ home-manager ];
       };
     };
   };

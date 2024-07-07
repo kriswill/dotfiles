@@ -7,35 +7,31 @@
 }:
 
 {
+  networking.hostName = "yoda";
+
   imports = [
     ./hardware-configuration.nix
     ./boot.nix
     ./virtualization.nix
     ./nvidia.nix
     ./steam.nix
-    inputs.home-manager.nixosModules.home-manager
+    # inputs.home-manager.nixosModules.home-manager
   ];
 
-  home-manager = {
-    useGlobalPkgs = true;
-    useUserPackages = true;
-    backupFileExtension = "home-manager-backup";
-    users.k = import ./home-manager.nix { inherit pkgs; };
-    extraSpecialArgs = {
-      inherit inputs;
-    };
-  };
+  # home-manager = {
+  #   useGlobalPkgs = true;
+  #   useUserPackages = true;
+  #   backupFileExtension = "home-manager-backup";
+  #   # if not using home-manager switch separately
+  #   # users.k = import ./home-manager.nix { inherit pkgs; };
+  #   extraSpecialArgs = {
+  #     inherit inputs;
+  #   };
+  # };
 
   gnome.enable = true;
   hyprland.enable = true;
   services.displayManager.defaultSession = lib.mkForce "gnome";
-
-  networking.hostName = "yoda";
-  # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
-
-  # Configure network proxy if necessary
-  # networking.proxy.default = "http://user:password@proxy:port/";
-  # networking.proxy.noProxy = "127.0.0.1,localhost,internal.domain";
 
   # Enable networking
   networking.networkmanager.enable = true;

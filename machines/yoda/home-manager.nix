@@ -30,6 +30,7 @@ let
     zoom-us # video conferencing
     lutris # game manager
     unstable.devenv
+    unzip zip
   ];
 in
 {
