@@ -65,4 +65,3 @@ in
     userName = "Kris Williams";
   } // (pkgs.sxm.git or { });
 }
-

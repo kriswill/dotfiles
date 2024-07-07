@@ -1,4 +1,4 @@
-{ outputs, pkgs, rootPath, ... }:
+{ pkgs, ... }:
 
 let
   username = "k";
@@ -27,10 +27,13 @@ let
   ];
 in
 {
-  programs.home-manager.enable = true;
+  programs.home-manager = {
+    enable = true;
+  };
+
 
   imports = builtins.concatMap import [
-    "${rootPath}/home/${username}/programs"
+    ../../home/${username}/programs
   ] ++ [ ./hyprland.nix ];
 
   xdg = {

@@ -1,4 +1,5 @@
-{ pkgs, ... }: {
+{ pkgs, ... }:
+{
   dconf.settings = {
     "org/virt-manager/virt-manager/connections" = {
       autoconnect = [ "qemu:///system" ];
@@ -10,7 +11,5 @@
       binding = "<Super>Return";
     };
   };
-  home.packages = with pkgs.gnome; [
-    dconf-editor
-  ];
+  home.packages = with pkgs.gnome; [ dconf-editor ];
 }

@@ -1,51 +1,44 @@
-{ inputs, rootPath, outputs, ... }:
+{ inputs, withSystem, ... }:
 
-let
-  inherit (inputs) home-manager nixpkgs;
-in
 {
-  ####  yoda  #################################################################
+  flake.nixosConfigurations = {
+    ####  yoda  ################################################################
+    "yoda" = withSystem "x86_64-linux" (ctx@{config, inputs', pkgs, ...}:
 
-  "yoda" =
-    let
-      system = "x86_64-linux";
-      pkgs = import nixpkgs {
-        inherit inputs system;
-        config.allowUnfree = true;
-      };
-    in
-    nixpkgs.lib.nixosSystem {
-      inherit system;
-      specialArgs = { inherit inputs outputs; };
+      inputs.nixpkgs.lib.nixosSystem {
+        specialArgs = { inherit inputs; packages = config.packages; };
 
-      modules = [
-        ./yoda
-        ../nixos
+        modules = [
+          ./yoda
+          ../nixos
 
-        home-manager.nixosModules.home-manager
-        {
-          home-manager = {
-            useGlobalPkgs = true;
-            useUserPackages = true;
-            users.k = import ./yoda/home-manager.nix {
-              inherit pkgs rootPath outputs;
+          inputs.home-manager.nixosModules.home-manager
+          {
+            home-manager = {
+              useGlobalPkgs = true;
+              useUserPackages = true;
+              backupFileExtension = "home-manager-backup";
+              users.k = import ./yoda/home-manager.nix {
+                inherit pkgs;
+              };
+              extraSpecialArgs = {
+                inherit inputs;
+              };
             };
-            extraSpecialArgs = {
-              inherit inputs outputs;
-            };
-          };
-        }
-      ];
-    };
-
-  ####  nix  ##################################################################
-
-  "nix" = nixpkgs.lib.nixosSystem {
-    system = "aarch64-linux";
-    modules = [
-      ./nix
-      ../nixos
-    ];
-    specialArgs = { inherit inputs outputs; };
+          }
+        ];
+      }
+    );
+    ####  nix  #################################################################
+    "nix" = withSystem "aarch64-linux" (ctx@{ config, inputs', ...}:
+      inputs.nixpkgs.lib.nixosSystem {
+        specialArgs = { inherit inputs; packages = config.packages; };
+        modules = [
+          ./nix
+          ../nixos
+        ];
+      }
+    );
   };
 }
+
