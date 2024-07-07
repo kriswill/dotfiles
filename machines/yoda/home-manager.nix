@@ -18,7 +18,12 @@ let
     ripgrep # fast replacement for grep
     tldr # short manual for common shell commands
     dconf2nix # convert dconf settings to nix
-    discord # slack for gamers
+    # discord # slack for gamers
+    (discord.override {
+      withOpenASAR = true;
+      withVencord = true;
+    })
+    vesktop
     gcolor3 # color picker
     xdg-utils # Multiple packages depend on xdg-open at runtime. This includes Discord
     element-desktop-wayland # matrix client
