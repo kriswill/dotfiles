@@ -15,7 +15,7 @@
 
   config = {
     services.displayManager = {
-      defaultSession = "Gnome";
+      defaultSession = "gnome";
       sddm = {
         enable = true;
         theme = "cattpuccin-mocha";

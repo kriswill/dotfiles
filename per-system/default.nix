@@ -53,7 +53,7 @@
             {
               name = "format";
               help = "Format all the files";
-              command = "nix fmt";
+              command = ''${lib.getExe pkgs.nixfmt-rfc-style} "$@"'';
             }
           ];
       };
@@ -75,7 +75,10 @@
       pre-commit = {
         check.enable = true;
         settings = {
-          excludes = [ "flake.lock" ];
+          excludes = [
+            "flake.lock"
+            ".direnv/*"
+          ];
           hooks = {
             stylua.enable = true;
             nixfmt = {
