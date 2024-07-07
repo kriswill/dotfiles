@@ -18,7 +18,14 @@
     initrd = {
       # Quiet boot
       verbose = false;
-      availableKernelModules = [ "xhci_pci" "ahci" "nvme" "usbhid" "uas" "sd_mod" ];
+      availableKernelModules = [
+        "xhci_pci"
+        "ahci"
+        "nvme"
+        "usbhid"
+        "uas"
+        "sd_mod"
+      ];
       kernelModules = [ ];
     };
 

@@ -1,10 +1,10 @@
-{ inputs, ... }:
+{ self, inputs, ... }:
 {
 
-  imports = [
-    inputs.devshell.flakeModule
-    inputs.pre-commit-hooks.flakeModule
-    inputs.treefmt-nix.flakeModule
+  imports = with inputs; [
+    devshell.flakeModule
+    pre-commit-hooks.flakeModule
+    treefmt-nix.flakeModule
   ];
 
   perSystem =
@@ -18,30 +18,35 @@
     {
       _module.args.pkgs = import inputs.nixpkgs {
         inherit system;
-        #overlays = with inputs; [
-        # agenix-rekey.overlays.default
-        # fenix.overlays.default
-        # nuenv.overlays.default
-        # self.overlays.nixpkgs-unstable
-        #];
+        overlays = [
+          # attach nixpkgs-unstable to pkgs.unstable
+          (final: prev: {
+            unstable = import inputs.nixpkgs-unstable {
+              x = builtins.trace "final = ${final}";
+              inherit (final) system;
+              config.allowUnfree = true;
+            };
+          })
+        ];
         config = {
           allowUnfree = true;
         };
       };
 
-      devshells.default = {
-        packages = with pkgs; [
-          git
-          ripgrep
-          fd
-          fzf
-        ];
+      devshells.default =
+        let
+          nix = ''$([ "$\{USE_NOM:-0}" = '1' ] && echo ${lib.getExe pkgs.unstable.nix-output-monitor} || echo nix)'';
+          nixfmt = pkgs.unstable.nixfmt-rfc-style;
+        in
+        {
+          packages = with pkgs; [
+            git
+            ripgrep
+            fd
+            fzf
+          ];
 
-        commands =
-          let
-            nix = ''$([ "$\{USE_NOM:-0}" = '1' ] && echo ${lib.getExe pkgs.nix-output-monitor} || echo nix)'';
-          in
-          [
+          commands = [
             {
               name = "checks";
               help = "Run all flake checks";
@@ -53,21 +58,18 @@
             {
               name = "format";
               help = "Format all the files";
-              command = ''${lib.getExe pkgs.nixfmt-rfc-style} "$@"'';
+              command = ''${lib.getExe pkgs.unstable.nixfmt-rfc-style} "$@" **/*.nix'';
             }
           ];
-      };
+        };
 
-      formatter = pkgs.nixfmt-rfc-style;
+      formatter = pkgs.unstable.nixfmt-rfc-style;
 
       treefmt.config = {
         projectRootFile = "flake.nix";
 
         programs = {
-          nixfmt = {
-            enable = true;
-            package = pkgs.nixfmt-rfc-style;
-          };
+          nixfmt.enable = true;
           statix.enable = true;
         };
       };
@@ -81,9 +83,11 @@
           ];
           hooks = {
             stylua.enable = true;
-            nixfmt = {
+            rfc101 = {
               enable = true;
-              package = pkgs.nixfmt-rfc-style;
+              name = "RFC-101 formatting";
+              entry = "${pkgs.lib.getExe pkgs.unstable.nixfmt-rfc-style}";
+              files = "\\.nix$";
             };
           };
         };

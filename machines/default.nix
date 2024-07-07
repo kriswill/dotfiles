@@ -3,10 +3,19 @@
 {
   flake.nixosConfigurations = {
     ####  yoda  ################################################################
-    "yoda" = withSystem "x86_64-linux" (ctx@{config, inputs', pkgs, ...}:
+    "yoda" = withSystem "x86_64-linux" (
+      ctx@{
+        config,
+        inputs',
+        pkgs,
+        ...
+      }:
 
       inputs.nixpkgs.lib.nixosSystem {
-        specialArgs = { inherit inputs; packages = config.packages; };
+        specialArgs = {
+          inherit inputs;
+          inherit (config) packages;
+        };
 
         modules = [
           ./yoda
@@ -18,9 +27,7 @@
               useGlobalPkgs = true;
               useUserPackages = true;
               backupFileExtension = "home-manager-backup";
-              users.k = import ./yoda/home-manager.nix {
-                inherit pkgs;
-              };
+              users.k = import ./yoda/home-manager.nix { inherit pkgs; };
               extraSpecialArgs = {
                 inherit inputs;
               };
@@ -30,9 +37,13 @@
       }
     );
     ####  nix  #################################################################
-    "nix" = withSystem "aarch64-linux" (ctx@{ config, inputs', ...}:
+    "nix" = withSystem "aarch64-linux" (
+      ctx@{ config, inputs', ... }:
       inputs.nixpkgs.lib.nixosSystem {
-        specialArgs = { inherit inputs; packages = config.packages; };
+        specialArgs = {
+          inherit inputs;
+          inherit (config) packages;
+        };
         modules = [
           ./nix
           ../nixos
@@ -41,4 +52,3 @@
     );
   };
 }
-

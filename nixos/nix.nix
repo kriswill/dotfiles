@@ -1,4 +1,9 @@
-{ inputs, pkgs, nixpkgs, ... }:
+{
+  inputs,
+  pkgs,
+  nixpkgs,
+  ...
+}:
 
 {
   nix = {
@@ -6,14 +11,18 @@
 
     settings = {
       auto-optimise-store = true;
-      experimental-features = [ "nix-command" "flakes" ];
-      system-features = [ "nixos-test" "benchmark" "big-parallel" "kvm" ];
-      substituters = [
-        "https://nix-community.cachix.org"
+      experimental-features = [
+        "nix-command"
+        "flakes"
       ];
-      trusted-public-keys = [
-        "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
+      system-features = [
+        "nixos-test"
+        "benchmark"
+        "big-parallel"
+        "kvm"
       ];
+      substituters = [ "https://nix-community.cachix.org" ];
+      trusted-public-keys = [ "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs=" ];
     };
     # set by nh.clean.enable
     # gc = {

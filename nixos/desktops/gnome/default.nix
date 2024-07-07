@@ -1,4 +1,9 @@
-{ pkgs, config, lib, ... }:
+{
+  pkgs,
+  config,
+  lib,
+  ...
+}:
 {
   config = lib.mkIf config.gnome.enable {
     services.xserver = {
@@ -21,24 +26,26 @@
     # resolve conflict for plasma and gnome
     programs.ssh.askPassword = lib.mkForce "/nix/store/0dsjcbp33ibm4zkbhm99d3fxslnaj28v-seahorse-43.0/libexec/seahorse/ssh-askpass";
 
-    environment.gnome.excludePackages = (with pkgs; [
-      gnome-photos
-      gnome-tour
-      gedit
-    ]) ++ (with pkgs.gnome; [
-      cheese
-      gnome-music
-      epiphany
-      # geary
-      gnome-characters
-      tali
-      iagno
-      hitori
-      atomix
-      yelp
-      gnome-contacts
-      gnome-initial-setup
-    ]);
+    environment.gnome.excludePackages =
+      (with pkgs; [
+        gnome-photos
+        gnome-tour
+        gedit
+      ])
+      ++ (with pkgs.gnome; [
+        cheese
+        gnome-music
+        epiphany
+        # geary
+        gnome-characters
+        tali
+        iagno
+        hitori
+        atomix
+        yelp
+        gnome-contacts
+        gnome-initial-setup
+      ]);
 
     environment.systemPackages = with pkgs; [
       gnome.gnome-tweaks

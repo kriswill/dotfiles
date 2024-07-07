@@ -15,7 +15,8 @@
     pre-commit-hooks.inputs.nixpkgs.follows = "nixpkgs";
   };
 
-  outputs = inputs @ { flake-parts, ... }:
+  outputs =
+    inputs@{ flake-parts, ... }:
     flake-parts.lib.mkFlake { inherit inputs; } (
       { ... }:
       {
@@ -26,13 +27,7 @@
           "aarch64-darwin"
         ];
 
-        imports =
-        (with inputs; [
-          devshell.flakeModule
-          pre-commit-hooks.flakeModule
-        ])
-        ++
-        [
+        imports = [
           ./machines
           ./per-system
         ];

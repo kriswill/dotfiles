@@ -11,7 +11,10 @@
     autosuggestions.enable = true;
     syntaxHighlighting = {
       enable = true;
-      highlighters = [ "main" "brackets" ];
+      highlighters = [
+        "main"
+        "brackets"
+      ];
     };
     shellAliases = import ./shell-aliases.nix { inherit pkgs; };
     interactiveShellInit = ''

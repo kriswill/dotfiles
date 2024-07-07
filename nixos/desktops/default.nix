@@ -1,4 +1,10 @@
-{ inputs, pkgs, config, lib, ... }:
+{
+  inputs,
+  pkgs,
+  config,
+  lib,
+  ...
+}:
 {
   options.gnome = {
     enable = lib.mkEnableOption "Gnome";
@@ -23,13 +29,13 @@
       };
     };
 
-    environment.systemPackages = with pkgs; [(
-      catppuccin-sddm.override {
+    environment.systemPackages = with pkgs; [
+      (catppuccin-sddm.override {
         flavor = "mocha";
         font = "Noto Sans";
         fontSize = "14";
         loginBackground = true;
-      }
-    )];
+      })
+    ];
   };
 }
