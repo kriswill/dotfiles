@@ -1,31 +1,7 @@
 { pkgs, ... }:
 
 let
-  gitConfig = {
-    core = {
-      editor = "nvim";
-      pager = "diff-so-fancy | less --tabs=4 -RFX";
-    };
-    init.defaultBranch = "main";
-    merge = {
-      conflictStyle = "diff3";
-      tool = "vim_mergetool";
-    };
-    mergetool."vim_mergetool" = {
-      cmd = "nvim -f -c \"MergetoolStart\" \"$MERGED\" \"$BASE\" \"$LOCAL\" \"$REMOTE\"";
-      prompt = false;
-    };
-    pull.rebase = false;
-    push.autoSetupRemote = true;
-    url = {
-      "https://github.com/".insteadOf = "gh:";
-      "ssh://git@github.com".pushInsteadOf = "gh:";
-      "https://gitlab.com/".insteadOf = "gl:";
-      "ssh://git@gitlab.com".pushInsteadOf = "gl:";
-    };
-  };
-
-  rg = "${pkgs.ripgrep}/bin/rg";
+  rg = "${pkgs.lib.getExe pkgs.ripgrep}";
 in
 {
   home.packages = with pkgs.gitAndTools; [
@@ -52,7 +28,32 @@ in
       ca = "commit -am";
       dc = "diff --cached";
     };
-    extraConfig = gitConfig;
+    extraConfig = {
+      core = {
+        editor = "nvim";
+        pager = "diff-so-fancy | less --tabs=4 -RFX";
+      };
+      init.defaultBranch = "main";
+      merge = {
+        conflictStyle = "diff3";
+        tool = "vim_mergetool";
+      };
+      mergetool."vim_mergetool" = {
+        cmd = "nvim -f -c \"MergetoolStart\" \"$MERGED\" \"$BASE\" \"$LOCAL\" \"$REMOTE\"";
+        prompt = false;
+      };
+      pull.rebase = false;
+      push.autoSetupRemote = true;
+      url = {
+        "https://github.com/".insteadOf = "gh:";
+        "ssh://git@github.com".pushInsteadOf = "gh:";
+        "https://gitlab.com/".insteadOf = "gl:";
+        "ssh://git@gitlab.com".pushInsteadOf = "gl:";
+      };
+      maintenance = {
+        repo = "/home/k/src/github/kriswill/nixpkgs";
+      };
+    };
     ignores = [
       "*.direnv"
       "*.envrc"
