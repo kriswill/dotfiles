@@ -38,7 +38,7 @@ in
 [
   ./alacritty.nix
   ./brave
-  ./dconf.nix
+  ./dconf
   ./firefox
   ./git.nix
   ./kitty.nix
