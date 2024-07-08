@@ -6,9 +6,15 @@
       uris = [ "qemu:///system" ];
     };
     "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0" = {
-      command = "${pkgs.kitty}/bin/kitty";
+      command = "${pkgs.lib.getExe pkgs.kitty}";
       name = "Kitty";
       binding = "<Super>Return";
+    };
+    "org/gnome/shell" = {
+      disable-user-extensions = false;
+      enabled-extensions = [
+        "tilingshell@ferrarodomenico.com"
+      ];
     };
   };
   home.packages = with pkgs.gnome; [ dconf-editor ];

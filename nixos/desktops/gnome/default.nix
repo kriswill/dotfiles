@@ -2,6 +2,7 @@
   pkgs,
   config,
   lib,
+  packages,
   ...
 }:
 {
@@ -55,6 +56,7 @@
       libsForQt5.kalk # calculator
       libsForQt5.kpmcore # library for partition manager
       partition-manager # KDE partition manager
+      (packages.tilingshell)
     ];
   };
 }

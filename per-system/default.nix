@@ -38,6 +38,8 @@
         };
       };
 
+      packages.tilingshell = import ../packages/tilingshell { inherit (pkgs) stdenvNoCC lib fetchzip; };
+
       devshells.default =
         let
           inherit (lib) getExe;
