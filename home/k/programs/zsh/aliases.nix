@@ -5,6 +5,9 @@ let
   inherit (lib) getExe;
 in
 {
+  ".." = "cd ..";
+  "..." = "cd ../..";
+  "...." = "cd ../../..";
   # file listing
   ls = "${getExe eza} --icons";
   ld = "l -D";
