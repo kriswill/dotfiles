@@ -1,9 +1,10 @@
-{ pkgs, pkgs-unstable, ... }:
+{ pkgs, ... }:
 
 {
   environment.systemPackages = with pkgs.unstable; [
     (neovim.override {
       vimAlias = true;
+      viAlias = true;
       configure = {
         packages.myPlugins = with pkgs.unstable.vimPlugins; {
           start = [

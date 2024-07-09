@@ -1,4 +1,4 @@
-{ config, pkgs, ... }:
+{ config, pkgs, lib, ... }:
 
 {
   boot = {
@@ -8,7 +8,7 @@
       # "systemd.show_status=auto"
       # "udev.log_level=3"
       "noatime"
-      "video=1920x1200"
+      "video=DP-1:3440x1440"
     ];
 
     consoleLogLevel = 3;
@@ -51,6 +51,12 @@
         #   search --no-floppy --fs-uuid --set=root 1C4D-64E1
         #   chainloader /efi/Microsoft/Boot/bootmgfw.efi
         # }
+        theme = lib.mkForce (pkgs.fetchFromGitHub {
+          owner = "catppuccin";
+          repo = "grub";
+          rev = "88f6124757331fd3a37c8a69473021389b7663ad";
+          sha256 = "sha256-e8XFWebd/GyX44WQI06Cx6sOduCZc5z7/YhweVQGMGY=";
+        } + "/src/catppuccin-mocha-grub-theme");
         extraEntries = ''
           menuentry "Reboot" {
             reboot
@@ -59,6 +65,13 @@
             halt
           }
         '';
+        extraConfig = ''
+          GRUB_GFXMODE=3440x1440,auto
+          GRUB_GFXPAYLOAD_LINUX=keep
+          GRUB_CMDLINE_LINUX_DEFAULT="loglevel=2 quiet acpi_enforce_resources=lax"
+        '';
+        # doesn't work?
+        # GRUB_INIT_TUNE="1750 523 1 392 1 523 1 659 1 784 1 1047 1 784 1 415 1 523 1 622 1 831 1 622 1 831 1 1046 1 1244 1 1661 1 1244 1 466 1 587 1 698 1 932 1 1195 1 1397 1 1865 1 1397 1"
       };
     };
 

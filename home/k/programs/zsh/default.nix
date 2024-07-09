@@ -11,12 +11,7 @@
 
     shellAliases = import ./aliases.nix { inherit pkgs; };
 
-    initExtra = ''
-      # Zsh run-help function
-      autoload -Uz run-help
-      (( ''${+aliases[run-help]} )) && unalias run-help
-      alias help=run-help
-    '';
+    initExtra = builtins.readFile ./init-extra.sh;
   };
 }
 

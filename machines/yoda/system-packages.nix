@@ -25,11 +25,6 @@
       pciutils # PCI bus related utilities
     ];
     shells = with pkgs; [ zsh ];
-    sessionVariables = {
-      # Needed to run Electron apps under Wayland
-      # see: https://github.com/NixOS/nixpkgs/pull/147557
-      NIXOS_OZONE_WL = "1";
-    };
     # fix for many rust based guis on wayland/gnome/nixos
     # https://github.com/alacritty/alacritty/issues/4780#issuecomment-890408502
     variables.XCURSOR_THEME = "Adwaita";

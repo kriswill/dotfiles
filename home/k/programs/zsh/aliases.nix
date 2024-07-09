@@ -3,6 +3,7 @@
 with pkgs;
 let
   inherit (lib) getExe;
+  dotfiles = "/home/k/src/github/kriswill/dotfiles";
 in
 {
   ".." = "cd ..";
@@ -19,12 +20,13 @@ in
 
   # system related
   ff = "${getExe fastfetch}";
-  nrs = "${getExe nh} os switch $HOME/src/github/kriswill/dotfiles";
-  hms = "${getExe nh} home switch $HOME/src/github/kriswill/dotfiles";
+  nrs = "${getExe nh} os switch ${dotfiles}";
+  hms = "${getExe nh} home switch ${dotfiles}";
 
   # git related
   g = "${getExe git}";
   gco = "g checkout";
   gba = "g branch -a";
   lg = "${getExe lazygit}";
+  man = "${getExe bat-extras.batman}";
 }

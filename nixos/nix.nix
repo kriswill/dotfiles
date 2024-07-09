@@ -55,7 +55,6 @@
           config.allowUnfree = true;
         };
       })
-      #outputs.overlays.unstable-packages
     ];
     # Allow unfree packages
     config = {

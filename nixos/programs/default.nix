@@ -9,19 +9,23 @@
   environment = {
     systemPackages = with pkgs; [
       bat # cat clone with wings.
+      bat-extras.batman
       curl # a network utility to retrieve files from the Web
+      dua # disk Usage Analyzer
+      duf # disk usage utility
       eza # better ls
+      fastfetch # displays system info
+      fd # simple, fast and user-friendly alternative to find
       fzf # command-line fuzzy finder
       gh # github cli
       git # the stupid content tracker
+      gnumake # old-shcool build tool
       hstr # bash and Zsh shell history suggest box
       htop # interactive process viewer
       inxi # system information script
       lshw # list hardware
       lsof # list of open files
       ncdu # disk usage analyzer with an ncurses interface
-      dua # disk Usage Analyzer
-      fastfetch # displays system info
       nix-info # display Nix system information
       nvd # nix package version diff tool
       pavucontrol
@@ -29,13 +33,16 @@
       ranger # file manager
       ripgrep # better grep
       sysz # systemd browsing tool
+      tldr # short man pages
       usbutils # usb Device Utilities
       wget # network utility to retrieve files from the Web
       zoxide # cd with memory
-      gnumake # old-shcool build tool
-      kitty # best terminal emulator
-      duf # disk usage utility
-    ];
+    ] ++ (with pkgs.bat-extras; [
+      batdiff # nice diffs
+      batgrep # ripgrep with wings
+      batman # man pages using bat
+      batpipe # less preprocessor
+    ]);
     extraInit = ''
       # No option to unset in NixOS
       unset SSH_ASKPASS
@@ -62,4 +69,29 @@
     _1password.enable = true;
     _1password-gui.enable = true;
   };
+
+  programs.less = {
+    # Dealing with a large text file page by page, resulting in fast loading speeds.
+    enable = true;
+    lessopen = null;
+  };
+  environment.variables = let
+    common = [
+      "--RAW-CONTROL-CHARS" # Only allow colors.
+      "--mouse"
+      "--wheel-lines=5"
+      "--LONG-PROMPT"
+    ];
+  in {
+    PAGER = "less";
+    # Don't use `programs.less.envVariables.LESS`, which will be override by `LESS` set by `man`.
+    LESS = pkgs.lib.concatStringsSep " " common;
+    SYSTEMD_LESS = pkgs.lib.concatStringsSep " " (common
+      ++ [
+        "--quit-if-one-screen"
+        "--chop-long-lines"
+        "--no-init" # Keep content after quit.
+      ]);
+  };
+
 }

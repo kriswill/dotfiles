@@ -1,7 +1,9 @@
-{ pkgs, ... }:
+# TODO: maybe some of this should be in home-manager?
+{ pkgs, lib, ... }:
 
 let
   signingkey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBxqhXoAlCKYNwsB1YrszftURThiCI94oeR0W9EDhrLy";
+  inherit (lib) getExe;
 in
 {
   users = {
@@ -18,7 +20,7 @@ in
           "libvirtd"
         ];
         openssh.authorizedKeys.keys = [ signingkey ];
-        packages = with pkgs; [ home-manager ];
+        packages = [ pkgs.home-manager ];
       };
     };
   };
@@ -37,8 +39,8 @@ in
         };
         init.defaultBranch = "main";
       }
-      { credential."https://github.com".helper = "!${pkgs.gh}/bin/gh auth git-credential"; }
-      { credential."https://gist.github.com".helper = "!${pkgs.gh}/bin/gh auth git-credential"; }
+      { credential."https://github.com".helper = "!${getExe pkgs.gh} auth git-credential"; }
+      { credential."https://gist.github.com".helper = "!${getExe pkgs.gh} auth git-credential"; }
       { gpg.format = "ssh"; }
       { gpg."ssh".program = "${pkgs._1password-gui}/bin/op-ssh-sign"; }
       { commit.gpgsign = true; }

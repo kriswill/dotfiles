@@ -68,7 +68,11 @@ in
     inherit username homeDirectory;
     packages = defaultPkgs;
     sessionVariables = {
-      EDITOR = "code --wait";
+      EDITOR = "code";
+      # Needed to run Electron apps under Wayland
+      # see: https://github.com/NixOS/nixpkgs/pull/147557
+      NIXOS_OZONE_WL = "1";
+      HOME_SESSION_VARIABLES = "1";
     };
     stateVersion = "24.05";
   };
