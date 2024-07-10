@@ -12,6 +12,7 @@ let
         "JetBrainsMono"
       ];
     })
+    has # command existence checker
     eza # pretty ls
     ncdu # disk space explorer
     nix-output-monitor # nom: output logger for nix build
@@ -30,7 +31,8 @@ let
     zoom-us # video conferencing
     lutris # game manager
     unstable.devenv
-    unzip zip
+    unzip
+    zip
   ];
 in
 {

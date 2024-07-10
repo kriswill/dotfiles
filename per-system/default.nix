@@ -31,6 +31,7 @@
               inherit (final) system;
               config.allowUnfree = true;
             };
+            wallpapers = import ../packages/shared/wallpapers.nix;
           })
         ];
         config = {
@@ -38,7 +39,15 @@
         };
       };
 
-      packages.tilingshell = import ../packages/tilingshell { inherit (pkgs) stdenvNoCC lib fetchzip; };
+      packages = {
+        tilingshell = import ../packages/tilingshell { inherit (pkgs) stdenvNoCC lib fetchzip; };
+
+        sddm-eucalyptus-drop = import ../packages/sddm-eucalyptus-drop { inherit pkgs; };
+
+        distro-grub-themes-nixos = import ../packages/distro-grub-themes {
+          inherit (pkgs) stdenvNoCC fetchurl;
+        };
+      };
 
       devshells.default =
         let

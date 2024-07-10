@@ -14,4 +14,3 @@
     initExtra = builtins.readFile ./init-extra.sh;
   };
 }
-

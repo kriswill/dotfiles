@@ -54,6 +54,7 @@
           inherit (final) system;
           config.allowUnfree = true;
         };
+        wallpapers = import ../packages/shared/wallpapers.nix;
       })
     ];
     # Allow unfree packages

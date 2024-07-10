@@ -52,6 +52,7 @@
       gnome.gnome-tweaks
       gnome.gnome-system-monitor
       #gnomeExtensions.custom-vpn-toggler
+      gnomeExtensions.dual-monitor-toggle
       evince
       libsForQt5.kalk # calculator
       libsForQt5.kpmcore # library for partition manager
