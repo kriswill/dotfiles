@@ -17,10 +17,11 @@
     pre-commit-hooks.url = "github:cachix/pre-commit-hooks.nix";
     pre-commit-hooks.inputs.nixpkgs.follows = "nixpkgs-unstable";
     systems.url = "github:nix-systems/default";
+    grub2-themes.url = "github:vinceliuice/grub2-themes";
   };
 
   outputs =
-    inputs@{ flake-parts, systems, ... }:
+    inputs@{ flake-parts, ... }:
     flake-parts.lib.mkFlake { inherit inputs; } {
       systems = import inputs.systems;
       imports = [

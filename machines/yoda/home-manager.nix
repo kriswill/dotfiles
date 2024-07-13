@@ -16,6 +16,7 @@ let
     eza # pretty ls
     ncdu # disk space explorer
     nix-output-monitor # nom: output logger for nix build
+    unstable.devenv
     ripgrep # fast replacement for grep
     tldr # short manual for common shell commands
     dconf2nix # convert dconf settings to nix
@@ -33,6 +34,8 @@ let
     unstable.devenv
     unzip
     zip
+    ### decompile java programs
+    cfr
   ];
 in
 {
