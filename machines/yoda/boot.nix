@@ -16,9 +16,9 @@
       # "systemd.show_status=auto"
       # "udev.log_level=3"
       "noatime"
-      "video=DP-0:3440x1440@99.9"
+      #"video=DP-0:3440x1440@99.9"
     ];
-
+    binfmt.emulatedSystems = [ "aarch64-linux" ];
     consoleLogLevel = 3;
     kernelModules = [ "kvm-intel" ];
     supportedFilesystems = [ "ntfs" ]; # for windows disks
@@ -83,9 +83,9 @@
             halt
           }
         '';
-        extraConfig = ''
-          GRUB_CMDLINE_LINUX_DEFAULT="loglevel=2 quiet acpi_enforce_resources=lax nvidia_drm.modeset=1"
-        '';
+        #extraConfig = ''
+        #  GRUB_CMDLINE_LINUX_DEFAULT="loglevel=2 quiet acpi_enforce_resources=lax nvidia_drm.modeset=1"
+        #'';
         # doesn't work?
         # GRUB_GFXMODE=3440x1440,auto
         # GRUB_INIT_TUNE="1750 523 1 392 1 523 1 659 1 784 1 1047 1 784 1 415 1 523 1 622 1 831 1 622 1 831 1 1046 1 1244 1 1661 1 1244 1 466 1 587 1 698 1 932 1 1195 1 1397 1 1865 1 1397 1"
