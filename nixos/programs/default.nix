@@ -2,8 +2,8 @@
 {
 
   imports = [
-    ./neovim
-    ./zsh.nix
+    ./nvim
+    ./zsh
   ];
 
   environment = {
@@ -11,7 +11,6 @@
       with pkgs;
       [
         bat # cat clone with wings.
-        bat-extras.batman
         curl # a network utility to retrieve files from the Web
         dua # disk Usage Analyzer
         duf # disk usage utility

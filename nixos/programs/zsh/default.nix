@@ -1,7 +1,7 @@
-{ pkgs, lib, ... }:
+{ pkgs, ... }:
 
 let
-  inherit (lib) getExe;
+  inherit (pkgs.lib) getExe;
 in
 {
   environment = {
@@ -19,9 +19,13 @@ in
         "brackets"
       ];
     };
-    shellAliases = import ./shell-aliases.nix { inherit pkgs; };
+    shellAliases = import ./aliases.nix { inherit pkgs; };
     interactiveShellInit = ''
       eval "$(${getExe pkgs.zoxide} init --cmd j zsh)"
+      if [ -n "''${commands[fzf-share]}" ]; then
+        source "$(fzf-share)/key-bindings.zsh"
+        source "$(fzf-share)/completion.zsh"
+      fi
     '';
   };
 }

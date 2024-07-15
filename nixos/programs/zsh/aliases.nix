@@ -5,6 +5,7 @@ let
   inherit (lib) getExe;
 in
 {
+  ".." = "cd ..";
   cat = "${getExe bat}";
 
   # git related
