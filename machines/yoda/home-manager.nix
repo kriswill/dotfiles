@@ -25,13 +25,14 @@ let
       withOpenASAR = true;
       withVencord = true;
     })
-    vesktop
+    unstable.github-desktop # github for dummies
+    unstable.vesktop
     gcolor3 # color picker
     xdg-utils # Multiple packages depend on xdg-open at runtime. This includes Discord
-    element-desktop-wayland # matrix client
+    unstable.element-desktop-wayland # matrix client
     zoom-us # video conferencing
     lutris # game manager
-    unstable.devenv
+    unstable.devenv # development environments
     unzip
     zip
     ### decompile java programs
