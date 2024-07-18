@@ -48,7 +48,7 @@ in
     nixpkgs-fmt
     nixd # LSP for Nix language
     tldr
-    ncdu
+   # ncdu
     # tmux
     nix-output-monitor
     ripgrep

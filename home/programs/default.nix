@@ -14,13 +14,13 @@
     ./neovim
     # ./wine
     ./zsh.nix
+    ./ssh.nix
   ];
 
   programs = {
     bat.enable = true;
     jq.enable = true;
     nix-index.enable = true;
-    ssh.enable = true;
     # obs-studio.enable = true; # not on mac
     lazygit.enable = true;
 

@@ -10,7 +10,7 @@
     };
 
     shellAliases = {
-      ls = "${pkgs.eza}/bin/eza --icons";
+      ls = "${pkgs.eza}/bin/eza --icons --hyperlink";
       ld = "ls -D";
       ll = "ls -lhF";
       la = "ls -lahF";
@@ -21,7 +21,7 @@
       "..." = ".. ..";
       lg = "${pkgs.lazygit}/bin/lazygit";
       ff = "${pkgs.fastfetch}/bin/fastfetch";
-      drs = lib.mkIf pkgs.stdenvNoCC.isDarwin "darwin-rebuild switch --flake ~/src/nix-config";
+      drs = lib.mkIf pkgs.stdenvNoCC.isDarwin "darwin-rebuild switch --flake ~/src/dotfiles";
     };
 
     initExtra = ''

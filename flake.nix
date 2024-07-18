@@ -1,49 +1,30 @@
 {
   description = "Kris' Nix Configuration";
 
-  inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-24.05";
-    nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixos-unstable";
-    nur.url = "github:nix-community/nur";
-    nix-formatter-pack = {
-      url = "github:Gerschtli/nix-formatter-pack";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-    nix-darwin = {
-      url = "github:LnL7/nix-darwin";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-    home-manager = {
-      url = "github:nix-community/home-manager/release-24.05";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-    hyprland = {
-      url = "git+https://github.com/hyprwm/Hyprland?submodules=1";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-  };
-
   outputs =
     inputs @ { self
     , nixpkgs
     , nixpkgs-unstable
+    , systems
     , nix-darwin
     , home-manager
     , nix-formatter-pack
     , ...
     }:
     let
-      inherit (self) outputs;
-      inherit (nixpkgs.lib) genAttrs;
+      inherit (self) outputs lib;
+      inherit (lib) genAttrs;
       inherit (nix-darwin.lib) darwinSystem;
-      systems = genAttrs [ "x86_64-linux" "aarch64-linux" "aarch64-darwin" ];
+
       # This defines the home-manager config module
       mkHomeManager = path: username: {
         home-manager = {
           useUserPackages = true;
           useGlobalPkgs = true;
           users."${username}" = path;
-          sharedModules = [ ];
+          sharedModules = [
+            inputs.mac-app-util.homeManagerModules.default
+           ];
           extraSpecialArgs = {
             inherit inputs username;
           };
@@ -64,9 +45,11 @@
       });
     in
     {
+      lib = builtins.foldl' (lib: overlay: lib.extend overlay) nixpkgs.lib [
+        (import ./lib)
+      ];
       # Custom packages and modifications, exported as overlays
       overlays = import ./overlays { inherit inputs; };
-      rootPath = self;
 
       nixosConfigurations = import ./machines {
         inherit inputs outputs;
@@ -107,18 +90,33 @@
       };
       darwinPackages = self.darwinConfigurations."k".pkgs;
 
-      checks = systems (system: {
-        nix-formatter-pack-check = nix-formatter-pack.lib.mkCheck formatterPackArgsFor.${system};
-      });
+#     checks = systems (system: {
+#       nix-formatter-pack-check = nix-formatter-pack.lib.mkCheck formatterPackArgsFor.${system};
+#     });
 
-      formatter = systems (system: nix-formatter-pack.lib.mkFormatter formatterPackArgsFor.${system});
+#     formatter = systems (system: nix-formatter-pack.lib.mkFormatter formatterPackArgsFor.${system});
 
-      devShells = systems (system: {
-        "${system}.default" = nixpkgs.legacyPackages.${system}.mkShell {
-          shellHook = ''
-            echo "HI!"
-          '';
-        };
-      });
+#      devShells = systems (system: {
+#        "${system}.default" = nixpkgs.legacyPackages.${system}.mkShell {
+#          shellHook = ''
+#            echo "HI!"
+#          '';
+#        };
+#      });
     };
+
+  inputs = {
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-24.05";
+    nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixos-unstable";
+    systems.url = "github:nix-systems/default";
+    nur.url = "github:nix-community/nur";
+    nix-formatter-pack.url = "github:Gerschtli/nix-formatter-pack";
+    nix-darwin.url = "github:LnL7/nix-darwin";
+    nix-darwin.inputs.nixpkgs.follows = "nixpkgs";
+    mac-app-util.url = "github:hraban/mac-app-util";
+    home-manager.url = "github:nix-community/home-manager/release-24.05";
+    home-manager.inputs.nixpkgs.follows = "nixpkgs";
+    hyprland.url = "git+https://github.com/hyprwm/Hyprland?submodules=1";
+    hyprland.inputs.nixpkgs.follows = "nixpkgs";
+  };
 }
