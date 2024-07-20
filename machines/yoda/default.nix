@@ -42,6 +42,17 @@
   # Select internationalisation properties.
   i18n.defaultLocale = "en_US.UTF-8";
 
+  services.netdata = {
+    enable = true;
+    config = {
+      global = {
+        "debug log" = "syslog";
+        "access log" = "syslog";
+        "error log" = "syslog";
+      };
+    };
+  };
+
   # Enable sound with pipewire.
   sound.enable = true;
   security.rtkit.enable = true;
