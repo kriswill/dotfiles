@@ -36,7 +36,9 @@ let
     unzip
     zip
     ### decompile java programs
-    cfr
+    #cfr
+    vlc # video player
+    unstable.hydrapaper # wallpaper manager for gnome
   ];
 in
 {
