@@ -1,15 +1,65 @@
-vim.g.mapleader = ' '
-vim.g.maplocalleader = ' '
+--
+-- My super basic Neovim configuration
+--
+cmd = vim.cmd
+api = vim.api
+opt = vim.opt
+g = vim.g
+
+g.mapleader = ' '
+g.maplocalleader = ' '
+
+cmd([[
+  syntax enable
+  set smartindent
+  set autoindent
+  set clipboard+=unnamedplus
+  set nocompatible
+  set backspace=indent,eol,start
+  set termguicolors
+  colorscheme PaperColor  
+]])
+
+local options = {
+  encoding = "utf-8",
+  fileencoding = "utf-8",
+  number = true,
+  rnu = true,
+  cursorline = true,
+  expandtab = true,
+  tabstop = 2,
+  shiftwidth = 2,
+  softtabstop = 2,
+  scrolloff = 5,
+  wrap = true,
+  tw = 0,
+  splitright = true,
+  splitbelow = true,
+  showmode = false,
+  updatetime = 5000, -- slow down swap file to 5s
+  virtualedit = "block",
+  mouse = "a",
+}
+
+for k, v in pairs(options) do
+  opt[k] = v
+end
+
+local function hi(group, fg, bg)
+  if fg == nil then fg = "none" end
+  if bg == nil then bg = "none" end
+  cmd("hi " .. group .. " guifg=" .. fg .. " guibg=" .. bg) 
+end
 
 -- set statusline colors
-vim.cmd([[
-  hi VertSplit guifg=#151515
-  hi User1 guifg=#999999 guibg=#151515
-  hi User2 guifg=#eea040 guibg=#151515
-  hi User3 guifg=#0072ff guibg=#151515
-  hi User4 guifg=#ffffff guibg=#151515
-  hi User5 guifg=#777777 guibg=#151515
-]])
+hi("VertSplit", "#151515")
+hi("User1", "#999999", "#151515")
+hi("User2", "#eea040", "#151515")
+hi("User3", "#0072ff", "#151515")
+hi("User4", "#ffffff", "#151515")
+hi("User5", "#777777", "#151515")
+-- set background to transparent - kitty
+hi("Normal")
 
 -- set statusline
 vim.o.statusline = table.concat({
@@ -30,11 +80,16 @@ vim.o.statusline = table.concat({
 -- })
 
 
-require('nvim-treesitter.configs').setup {
-	highlight = {
-		enable = true
+local hasTreesitter, treesitter = pcall(require, "nvim-treesitter.configs")
+if hasTreesitter then
+  treesitter.setup {
+    highlight = {
+      enable = true,
+	    use_languagetree = true,
+    },
+    indent = true,
   }
-}
+end
 
 -- Enable telescope extensions, if they are installed
 pcall(require('telescope').load_extension, 'fzf')
@@ -45,3 +100,4 @@ vim.keymap.set('n', '<leader>ff', builtin.find_files, {})
 vim.keymap.set('n', '<leader>fg', builtin.live_grep, {})
 vim.keymap.set('n', '<leader>fb', builtin.buffers, {})
 vim.keymap.set('n', '<leader>fh', builtin.help_tags, {})
+
