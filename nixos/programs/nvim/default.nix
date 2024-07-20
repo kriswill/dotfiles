@@ -3,7 +3,8 @@
 
 {
   programs.neovim = {
-    enable = lib.mkDefault true;
+    enable = true;
+    package = pkgs.unstable.neovim-unwrapped;
     defaultEditor = true;
     viAlias = true;
     vimAlias = true;
@@ -13,7 +14,7 @@
         start = [
           nvim-fzf
           nvim-treesitter.withAllGrammars
-          papercolor-theme
+#          papercolor-theme
           plenary-nvim # needed for telescope
           telescope-file-browser-nvim
           telescope-fzy-native-nvim
