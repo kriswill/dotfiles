@@ -69,22 +69,6 @@
               hostPlatform = "aarch64-darwin";
               overlays = [ outputs.overlays.nixpkgs-unstable ];
             };}
-            # {
-            #   _module.args = { inherit inputs outputs; };
-            #   nixpkgs = import inputs.nixpkgs {
-            #     system = "aarch64-darwin";
-            #     overlays = [
-            #       inputs.nur.overlay
-            #       outputs.overlays.nixpkgs-unstable
-            #     ];
-            #   };
-            #   useGlobalPkgs = true;
-            #   useUserPackages = true;
-            #   home-manager = {
-            #     users.k = import ./home;
-            #   };
-            #   users.users.k.home = "/Users/k";
-            # }
           ];
         };
       };

@@ -1,8 +1,8 @@
 local keymap = vim.keymap.set
 
 -- General keymaps
-keymap("i", "jk", "<ESC>") -- exit insert mode with jk
-keymap("i", "ii", "<ESC>") -- exit insert mode with ii
+keymap("i", "jk", "<ESC>") -- Exit insert mode with jk
+keymap("i", "ii", "<ESC>") -- Exit insert mode with ii
 keymap("n", "<leader>wq", ":wq<CR>") -- save and quit
 keymap("n", "<leader>qq", ":q!<CR>") -- quit without saving
 keymap("n", "<leader>ww", ":w<CR>") -- save
@@ -38,8 +38,6 @@ keymap("n", "<leader>qn", ":cnext<CR>") -- jump to next quickfix list item
 keymap("n", "<leader>qp", ":cprev<CR>") -- jump to prev quickfix list item
 keymap("n", "<leader>ql", ":clast<CR>") -- jump to last quickfix list item
 keymap("n", "<leader>qc", ":cclose<CR>") -- close quickfix list
-
-
 
 -- Vim REST Console
 keymap("n", "<leader>xr", ":call VrcQuery()<CR>") -- Run REST query
@@ -80,3 +78,4 @@ keymap("n", '<leader>di', function() require "dap.ui.widgets".hover() end)
 keymap("n", '<leader>d?', function() local widgets = require "dap.ui.widgets"; widgets.centered_float(widgets.scopes) end)
 keymap("n", '<leader>df', '<cmd>Telescope dap frames<cr>')
 keymap("n", '<leader>dh', '<cmd>Telescope dap commands<cr>')
+
