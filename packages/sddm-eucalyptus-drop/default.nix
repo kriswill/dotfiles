@@ -1,4 +1,6 @@
-{ pkgs, ... }:
+{ pkgs,
+  background-image ? pkgs.wallpapers.yoda-dagoba-2,
+  ... }:
 
 pkgs.stdenvNoCC.mkDerivation rec {
   pname = "sddm-eucalyptus-drop";
@@ -10,13 +12,19 @@ pkgs.stdenvNoCC.mkDerivation rec {
     qtquickcontrols
     qtgraphicaleffects
   ];
-  src = pkgs.fetchzip {
-    url = "https://gitlab.com/api/v4/projects/37107648/packages/generic/sddm-eucalyptus-drop/${version}/sddm-eucalyptus-drop-v${version}.zip";
-    hash = "sha256-BNLh+U2vq17PTf+i5nE2criLG5J94Nxj1+2dZ63GHf4=";
+  src = pkgs.fetchFromGitLab {
+    owner = "Matt.Jolly";
+    repo = "sddm-eucalyptus-drop";
+    rev = "v2.0.0";
+    sha256 = "wq6V3UOHteT6CsHyc7+KqclRMgyDXjajcQrX/y+rkA0=";
   };
   installPhase = ''
-    mkdir -p $out/share/sddm/themes
-    cp -aR $src $out/share/sddm/themes/eucalyptus-drop
+    runHook preInstall
+    THEME_DIR=$out/share/sddm/themes/eucalyptus-drop
+    mkdir -p $THEME_DIR
+    cp -r * $THEME_DIR
+    cat theme.conf | sed "s|Background=.*|background=\"${background-image}\"|g" > $THEME_DIR/theme.conf
+    runHook postInstall
   '';
   meta = with pkgs.lib; {
     description = "Eucalyptus Drop is an enhanced fork of SDDM Sugar Candy by Marian Arlt.";
