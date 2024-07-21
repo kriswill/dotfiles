@@ -4,8 +4,7 @@ with pkgs;
 let
   inherit (lib) getExe;
   dotfiles = "/home/k/src/github/kriswill/dotfiles";
-in
-{
+in {
   ".." = "cd ..";
   "..." = "cd ../..";
   "...." = "cd ../../..";

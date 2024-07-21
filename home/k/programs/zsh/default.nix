@@ -5,9 +5,7 @@
     enable = true;
     autosuggestion.enable = true;
     enableCompletion = true;
-    syntaxHighlighting = {
-      enable = true;
-    };
+    syntaxHighlighting = { enable = true; };
 
     shellAliases = import ./aliases.nix { inherit pkgs; };
 

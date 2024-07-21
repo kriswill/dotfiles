@@ -14,9 +14,7 @@ in {
     includes = [ "${config.home.homeDirectory}/.ssh/config.d/*" ];
     forwardAgent = true;
     extraConfig = if isDarwin then darwin-extra-config else linux-extra-config;
-    matchBlocks = {
-      "gitlab.com".user = "git";
-    };
+    matchBlocks = { "gitlab.com".user = "git"; };
   };
   #sops.secrets.hosts = {
   #  sopsFile = ../../secrets/ssh.yaml;

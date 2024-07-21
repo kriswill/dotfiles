@@ -1,17 +1,11 @@
-{ pkgs,
-  background-image ? pkgs.wallpapers.yoda-dagoba-2,
-  ... }:
+{ pkgs, background-image ? pkgs.wallpapers.yoda-dagoba-2, ... }:
 
 pkgs.stdenvNoCC.mkDerivation rec {
   pname = "sddm-eucalyptus-drop";
   version = "2.0.0";
   dontBuild = true;
   dontWrapQtApps = true;
-  buildInputs = with pkgs.qt5; [
-    qtbase
-    qtquickcontrols
-    qtgraphicaleffects
-  ];
+  buildInputs = with pkgs.qt5; [ qtbase qtquickcontrols qtgraphicaleffects ];
   src = pkgs.fetchFromGitLab {
     owner = "Matt.Jolly";
     repo = "sddm-eucalyptus-drop";
@@ -27,7 +21,8 @@ pkgs.stdenvNoCC.mkDerivation rec {
     runHook postInstall
   '';
   meta = with pkgs.lib; {
-    description = "Eucalyptus Drop is an enhanced fork of SDDM Sugar Candy by Marian Arlt.";
+    description =
+      "Eucalyptus Drop is an enhanced fork of SDDM Sugar Candy by Marian Arlt.";
     homepage = "https://gitlab.com/Matt.Jolly/sddm-eucalyptus-drop";
     license = licenses.gpl3;
     platforms = platforms.linux;

@@ -5,7 +5,7 @@
     enable = true;
 
     package = pkgs.unstable.kitty;
-    
+
     font = {
       name = "SauceCodePro Nerd Font";
       size = 14.0;
@@ -32,8 +32,8 @@
       # XDG_CURRENT_DESKTOP = "GNOME";
     };
     shellIntegration = {
-        mode = "enabled";
-        enableZshIntegration = true;
+      mode = "enabled";
+      enableZshIntegration = true;
     };
   };
 }
