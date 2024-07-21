@@ -1,8 +1,11 @@
-_:
+{ pkgs, ... }:
 
 {
   programs.kitty = {
     enable = true;
+
+    package = pkgs.unstable.kitty;
+    
     font = {
       name = "SauceCodePro Nerd Font";
       size = 14.0;
