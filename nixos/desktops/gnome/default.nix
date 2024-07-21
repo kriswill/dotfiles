@@ -32,6 +32,7 @@
         gnome-photos
         gnome-tour
         gedit
+        wl-clipboard-rs
       ])
       ++ (with pkgs.gnome; [
         cheese
