@@ -6,7 +6,6 @@ let
         bat.enable = true;
         jq.enable = true;
         nix-index.enable = true;
-        ssh.enable = true;
         obs-studio.enable = true;
         lazygit.enable = true;
         direnv = {
@@ -46,5 +45,6 @@ in
   ./vscode.nix
   ./wine
   ./zsh
+  ./ssh
   etc
 ]
