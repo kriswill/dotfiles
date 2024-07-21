@@ -7,7 +7,7 @@
 
 {
   nix = {
-    package = pkgs.nixFlakes;
+    package = pkgs.unstable.nixVersions.latest;
 
     settings = {
       trusted-users = [
