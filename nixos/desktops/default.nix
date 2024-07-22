@@ -16,9 +16,14 @@
     enable = lib.mkEnableOption "Hyprland";
   };
 
+  options.i3 = {
+    enable = lib.mkEnableOption "i3";
+  };
+
   imports = [
     ./gnome
     ./hyprland
+    ./i3
     ./sddm.nix
   ];
 

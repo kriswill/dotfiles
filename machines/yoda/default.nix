@@ -31,6 +31,7 @@
 
   gnome.enable = true;
   hyprland.enable = true;
+  i3.enable = true;
   services.displayManager.defaultSession = lib.mkForce "gnome";
 
   # Enable networking
