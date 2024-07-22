@@ -22,6 +22,7 @@
           vim-lastplace
           vim-nix
           which-key-nvim
+          lightline-vim
         ];
         opt = [ ];
       };
@@ -30,6 +31,7 @@
   environment.systemPackages = with pkgs.unstable; [
     tree-sitter
     stylua
+    fd
     fzf
     wget
     fswatch

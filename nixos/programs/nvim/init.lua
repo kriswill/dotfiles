@@ -52,33 +52,38 @@ local function hi(group, fg, bg)
 end
 
 -- set statusline colors
-hi("VertSplit", "#151515")
-hi("User1", "#999999", "#151515")
-hi("User2", "#eea040", "#151515")
-hi("User3", "#0072ff", "#151515")
-hi("User4", "#ffffff", "#151515")
-hi("User5", "#777777", "#151515")
+-- hi("VertSplit", "#151515")
+-- hi("User1", "#999999", "#151515")
+-- hi("User2", "#eea040", "#151515")
+-- hi("User3", "#0072ff", "#151515")
+-- hi("User4", "#ffffff", "#151515")
+-- hi("User5", "#777777", "#151515")
 -- set background to transparent - kitty
 hi("Normal")
 
 -- set statusline
-vim.o.statusline = table.concat({
-  "%1* %n %*",       -- buffer number
-  "%3* %y %*",       -- file type
-  -- "%4* %<%F %*",  -- full path
-  "%4* %<%f %*",     -- file name
-  "%2* %m %*",       -- modified flag
-  "%1* %= %5l %*",   -- current line
-  "%2* / %L %*",     -- total lines
-  "%1* %4v %*",      -- virtual column number
-  "%2* 0x%04B %*",   -- character under cursor
-  "%5* %{&ff} %*",   -- file format
-})
-
--- require("which-key").setup({
---   keys = { "<leader>", "<localleader>" },
+-- vim.o.statusline = table.concat({
+--   "%1* %n %*",       -- buffer number
+--   "%3* %y %*",       -- file type
+--   -- "%4* %<%F %*",  -- full path
+--   "%4* %<%f %*",     -- file name
+--   "%2* %m %*",       -- modified flag
+--   "%1* %= %5l %*",   -- current line
+--   "%2* / %L %*",     -- total lines
+--   "%1* %4v %*",      -- virtual column number
+--   "%2* 0x%04B %*",   -- character under cursor
+--   "%5* %{&ff} %*",   -- file format
 -- })
 
+local wkloaded, which_key = pcall(require('which-key'))
+if wkloaded then
+  which_key.setup({
+    keys = { "<leader>", "<localleader>" },
+  })
+end
+
+vim.keymap.set('n', '<tab>', '<cmd>bnext<cr>', { desc = 'next buffer' })
+vim.keymap.set('n', '<S-tab>', '<cmd>bprevious<cr>', { desc = 'previous buffer' })
 
 local hasTreesitter, treesitter = pcall(require, "nvim-treesitter.configs")
 if hasTreesitter then
@@ -96,8 +101,8 @@ pcall(require('telescope').load_extension, 'fzf')
 pcall(require('telescope').load_extension, 'ui-select')
 
 local builtin = require('telescope.builtin')
-vim.keymap.set('n', '<leader>ff', builtin.find_files, {})
-vim.keymap.set('n', '<leader>fg', builtin.live_grep, {})
-vim.keymap.set('n', '<leader>fb', builtin.buffers, {})
-vim.keymap.set('n', '<leader>fh', builtin.help_tags, {})
+vim.keymap.set('n', '<leader>ff', builtin.find_files, { desc = 'Find Files' })
+vim.keymap.set('n', '<leader>fg', builtin.live_grep, { desc = 'Grep Files' })
+vim.keymap.set('n', '<leader>fb', builtin.buffers, { desc = 'Find Buffers' })
+vim.keymap.set('n', '<leader>fh', builtin.help_tags, { desc = 'Find Help' })
 
