@@ -40,8 +40,10 @@ let
   ln = config.lib.file.mkOutOfStoreSymlink;
 in
 {
-  xdg.configFile."nvim/lua".source = ln nvimDir + "/lua";
-  xdg.configFile."nvim/ftplugin".source = ln nvimDir + "/ftplugin";
-  xdg.configFile."nvim/init.lua".source = ln nvimDir + "/init.lua";
-  xdg.configFile."nvim/lazy-lock.json".source = ln nvimDir + "/lazy-lock.json";
+  xdg.configFile = {
+    "nvim/lua".source = ln nvimDir + "/lua";
+    "nvim/ftplugin".source = ln nvimDir + "/ftplugin";
+    "nvim/init.lua".source = ln nvimDir + "/init.lua";
+    "nvim/lazy-lock.json".source = ln nvimDir + "/lazy-lock.json";
+  };
 })

@@ -4,9 +4,15 @@
     enable = true;
     font = {
       name = "SauceCodePro Nerd Font Mono";
-      size = 18.0;
+      # name = "JetBrainsMono Nerd Font Mono";
+      size = 16.0;
     };
     settings = {
+      update_check_interval = 0;
+      # fade | slant | separator | powerline | custom | hidden
+      tab_bar_style = "powerline";
+      # angled | slanted | round
+      tab_powerline_style = "slanted";
       placement_strategy = "top-left";
       window_margin_width = "0";
       window_padding_width = "5";

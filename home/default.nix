@@ -92,7 +92,7 @@ in
   #
   # if you don't want to manage your shell through Home Manager.
   sessionVariables = {
-    EDITOR = "${lib.getExe pkgs.nvim}";
+    EDITOR = "${lib.getExe pkgs.neovim}";
   };
   };
 }
