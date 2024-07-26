@@ -39,6 +39,7 @@ let
     #cfr
     vlc # video player
     unstable.hydrapaper # wallpaper manager for gnome
+    efitools # manipulate UEFI secure boot variables
   ];
 in
 {

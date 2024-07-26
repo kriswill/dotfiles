@@ -40,5 +40,6 @@ in [
   ./wine
   ./zsh
   ./ssh
+  ./i3
   etc
 ]
