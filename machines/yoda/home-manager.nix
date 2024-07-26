@@ -1,4 +1,4 @@
-{ pkgs, ... }:
+{ inputs, pkgs, ... }:
 
 let
   username = "k";
@@ -47,7 +47,12 @@ in
     enable = true;
   };
 
-  imports = builtins.concatMap import [ ../../home/${username}/programs ] ++ [ ./hyprland.nix ];
+  # imports = builtins.concatMap import [ ../../home/${username}/programs ] ++ [ ./hyprland.nix ];
+  imports = [ 
+    inputs.anyrun.homeManagerModules.default 
+    ( ../../home/${username}/programs ) 
+  ];
+  
 
   xdg = {
     inherit configHome;

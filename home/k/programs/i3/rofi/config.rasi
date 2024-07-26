@@ -14,5 +14,4 @@ terminal: "kitty";
 xoffset: 0;
 yoffset: 0;
 }
-//@theme "/home/k/.nix-profile/share/rofi/themes/sidebar.rasi"
 @theme "/home/k/.config/rofi/themes/sidebar.rasi"

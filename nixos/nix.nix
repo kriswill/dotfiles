@@ -55,6 +55,9 @@
           config.allowUnfree = true;
         };
         wallpapers = import ../packages/shared/wallpapers.nix;
+        xdg-desktop-portal-gtk = prev.xdg-desktop-portal-gtk.override {
+          buildPortalsInGnome = false;
+        };
       })
     ];
     # Allow unfree packages

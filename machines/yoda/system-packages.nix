@@ -23,6 +23,7 @@
       usbutils # USB Device Utilities
       lshw # list hardware
       pciutils # PCI bus related utilities
+      yq-go # yaml parser like jq
     ];
     shells = with pkgs; [ zsh ];
     # fix for many rust based guis on wayland/gnome/nixos

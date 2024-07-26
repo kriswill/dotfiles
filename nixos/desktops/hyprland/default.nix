@@ -44,6 +44,7 @@
       libnotify # needed for dunst to work
       waybar # bar for hyprland
       swww # wallpaper
+      wofi
       rofi-wayland
       morewaita-icon-theme
 
@@ -56,25 +57,25 @@
       wayshot
       pavucontrol
       brightnessctl
-      swww
-      # ]; /* // (with gnome; [
-      gnome.adwaita-icon-theme
       gnome-text-editor
-      gnome.gnome-calendar
-      gnome.gnome-boxes
-      gnome.gnome-system-monitor
-      gnome.gnome-control-center
-      gnome.gnome-weather
-      gnome.gnome-calculator
-      gnome.gnome-clocks
-      gnome.gnome-software # for flatpak
-    ];
+     ] ++ (with pkgs.gnome; [
+      adwaita-icon-theme
+      gnome-calendar
+      gnome-boxes
+      gnome-system-monitor
+      gnome-control-center
+      gnome-weather
+      gnome-calculator
+      gnome-clocks
+      gnome-software # for flatpak
+    ]);
 
     xdg.portal = {
       enable = true;
-      #      extraPortals = with pkgs; [
-      #        xdg-desktop-portal-gtk
-      #      ];
+      wlr.enable = true;
+      extraPortals = with pkgs; [
+        xdg-desktop-portal-gtk
+      ];
     };
 
     # security = {

@@ -52,13 +52,7 @@
         enable = true;
         efiSupport = true;
         devices = [ "nodev" ];
-        useOSProber = true;
-        # menuentry "Windows 10" --class windows --class os {
-        #   insmod part_gpt
-        #   insmod ntfs
-        #   search --no-floppy --fs-uuid --set=root 1C4D-64E1
-        #   chainloader /efi/Microsoft/Boot/bootmgfw.efi
-        # }
+        # useOSProber = true;
         # Catppuccin
         # theme = lib.mkForce (pkgs.fetchFromGitHub {
         #   owner = "catppuccin";
@@ -81,6 +75,12 @@
           }
           menuentry "Poweroff" {
             halt
+          }
+          menuentry "Windows" --class windows --class os {
+            insmod part_gpt
+            insmod fat
+            search --no-floppy --fs-uuid --set=root 1C4D-64E1
+            chainloader /efi/Microsoft/Boot/bootmgfw.efi
           }
         '';
         #extraConfig = ''
