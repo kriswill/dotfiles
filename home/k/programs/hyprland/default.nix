@@ -4,7 +4,7 @@ let
 in
   with pkgs.unstable; {
     
-  xdg.configFile."hypr".source = ln ./config;
+  xdg.configFile."hypr".source = ln "/home/k/src/dotfiles/home/k/programs/hyprland/config";
   programs.waybar = {
     enable = true;
     systemd.enable = true;
