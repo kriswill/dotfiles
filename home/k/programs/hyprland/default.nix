@@ -1,6 +1,10 @@
-{ pkgs, ... }:
-
-with pkgs.unstable; {
+{ config, pkgs, ... }:
+let
+  ln = config.lib.file.mkOutOfStoreSymlink;
+in
+  with pkgs.unstable; {
+    
+  xdg.configFile."hypr".source = ln ./config;
   programs.waybar = {
     enable = true;
     systemd.enable = true;

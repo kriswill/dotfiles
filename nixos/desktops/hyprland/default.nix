@@ -76,6 +76,7 @@
       extraPortals = with pkgs; [
         xdg-desktop-portal-gtk
       ];
+      configPackages = with pkgs; [ xdg-desktop-portal-gtk ];
     };
 
     # security = {

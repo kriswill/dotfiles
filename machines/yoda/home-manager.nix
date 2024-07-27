@@ -5,18 +5,17 @@ let
   homeDirectory = "/home/${username}";
   configHome = "${homeDirectory}/.config";
 
-  defaultPkgs = with pkgs; [
+  defaultPkgs = with pkgs.unstable; [
     (nerdfonts.override {
       fonts = [
         "SourceCodePro" # `SauceCodePro Nerd Font`
         "JetBrainsMono"
       ];
     })
+    bustle # freedesktop database viewer
     has # command existence checker
-    eza # pretty ls
     ncdu # disk space explorer
     nix-output-monitor # nom: output logger for nix build
-    unstable.devenv
     ripgrep # fast replacement for grep
     tldr # short manual for common shell commands
     dconf2nix # convert dconf settings to nix
@@ -25,20 +24,20 @@ let
       withOpenASAR = true;
       withVencord = true;
     })
-    unstable.github-desktop # github for dummies
-    unstable.vesktop
+    github-desktop # github for dummies
+    vesktop
     gcolor3 # color picker
     xdg-utils # Multiple packages depend on xdg-open at runtime. This includes Discord
-    unstable.element-desktop-wayland # matrix client
+    element-desktop-wayland # matrix client
     zoom-us # video conferencing
     lutris # game manager
-    unstable.devenv # development environments
+    devenv # development environments
     unzip
     zip
     ### decompile java programs
     #cfr
     vlc # video player
-    unstable.hydrapaper # wallpaper manager for gnome
+    hydrapaper # wallpaper manager for gnome
     efitools # manipulate UEFI secure boot variables
   ];
 in
@@ -53,14 +52,35 @@ in
     ( ../../home/${username}/programs ) 
   ];
   
+  dconf = {
+    settings = {
+      "org/gnome/desktop/interface" = {
+        gtk-theme = "Adwaita-dark";
+        color-scheme = "prefer-dark";
+      };
+    };
+  };
 
   xdg = {
     inherit configHome;
     enable = true;
   };
 
+  qt = {
+    enable = true;
+    platformTheme.name = "Adwaita-dark";
+    style = {
+      name = "Adwaita-dark";
+      package = pkgs.unstable.adwaita-qt;
+    };
+  };
+
   gtk = {
     enable = true;
+    theme = {
+      name = "Adwaita-dark";
+      package = pkgs.unstable.gnome.gnome-themes-extra;
+    };
     # iconTheme.package = pkgs.papirus-icon-theme;
     # iconTheme.name = "ePapirus";
     # theme.package = pkgs.layan-gtk-theme;

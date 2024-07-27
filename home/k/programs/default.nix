@@ -1,6 +1,6 @@
 { pkgs, ... }: {
   imports = [
-    ./anyrun  
+    ./anyrun
     ./alacritty.nix
     ./brave
     ./dconf
@@ -11,6 +11,7 @@
     ./starship.nix
     ./vscode.nix
     ./wine
+    ./yazi
     ./zsh
     ./ssh
     ./i3
