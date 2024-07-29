@@ -6,12 +6,7 @@
 }:
 
 {
-  environment = {
-    variables = {
-      EDITOR = "code";
-    };
-
-    systemPackages = with pkgs; [
+  environment.systemPackages = with pkgs; [
       alacritty
       btop
 

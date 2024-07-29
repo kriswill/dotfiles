@@ -11,7 +11,6 @@
     ./networking.nix
     ./services.nix
   ];
-  gnome.enable = true;
   hyprland.enable = true;
 
   boot.kernelPackages = pkgs.linuxPackages;
