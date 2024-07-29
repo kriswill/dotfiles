@@ -18,9 +18,10 @@
     pre-commit-hooks.inputs.nixpkgs.follows = "nixpkgs-unstable";
     systems.url = "github:nix-systems/default";
     grub2-themes.url = "github:vinceliuice/grub2-themes";
+    stylix.url = "github:danth/stylix";
     # swww.url = "github:LGFae/swww";
-    anyrun.url = "github:anyrun-org/anyrun";
-    anyrun.inputs.nixpkgs.follows = "nixpkgs-unstable";
+    # anyrun.url = "github:anyrun-org/anyrun";
+    # anyrun.inputs.nixpkgs.follows = "nixpkgs-unstable";
   };
   
   nixConfig = {

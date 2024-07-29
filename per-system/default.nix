@@ -14,7 +14,6 @@
         # attach nixpkgs-unstable to pkgs.unstable
         (final: prev: {
           unstable = import inputs.nixpkgs-unstable {
-            x = builtins.trace "final = ${final}";
             inherit (final) system;
             config.allowUnfree = true;
           };
@@ -23,8 +22,11 @@
             config.allowUnfree = true;
           };
           wallpapers = import ../packages/shared/wallpapers.nix;
-          xdg-desktop-portal-gtk = prev.xdg-desktop-portal-gtk.override {
-            buildPortalsInGnome = false;
+          xdg-desktop-portal-gtk = prev.xdg-desktop-portal-gtk.overrideAttrs {
+            postInstall = ''
+              sed -i 's/UseIn=gnome/UseIn=gnome;Hyprland;none+i3/' $out/share/xdg-desktop-portal/portals/gtk.portal
+            '';
+            # buildPortalsInGnome = false;
           };
         })
       ];
