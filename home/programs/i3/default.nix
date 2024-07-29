@@ -4,7 +4,7 @@ let
   background = pkgs.wallpapers.yoda-dagoba-2;
   ln = config.lib.file.mkOutOfStoreSymlink;
   i3src =
-    "${config.home.homeDirectory}/src/dotfiles/home/${config.home.username}/programs/i3";
+    "${config.home.homeDirectory}/src/dotfiles/home/programs/i3";
 in {
   # to rotate my left monitor
   imports = [ ./grobi ];

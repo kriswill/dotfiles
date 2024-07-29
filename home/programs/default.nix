@@ -1,6 +1,5 @@
 { pkgs, ... }: {
   imports = [
-    ./anyrun
     ./alacritty.nix
     ./brave
     ./dconf

@@ -45,9 +45,8 @@ in
   };
 
   imports = [ 
-    # inputs.stylix.homeManagerModules.stylix
-    ( ../../home/${username}/programs ) 
-    ( ../../home/${username}/scripts ) 
+    ../../home/programs 
+    ../../home/scripts 
   ];
   
   dconf = {
