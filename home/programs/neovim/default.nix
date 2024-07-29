@@ -1,14 +1,15 @@
 { config, pkgs, ... }:
 
+with pkgs.unstable;
 {
   programs.neovim = {
     enable = true;
-    package = pkgs.unstable.neovim-unwrapped;
+    package = neovim-unwrapped;
     viAlias = true;
     vimAlias = true;
-    extraPackages = with pkgs; [
+    extraPackages = [
       # Formatters
-      alejandra # Nix
+      nixpkgs-fmt
       black # Python
       prettierd # Multiple language formatter
       shfmt # Shell
@@ -17,12 +18,15 @@
 
       # LSP
       lua-language-server
-      nixd
+      lua5_1
+      luarocks
+      nil 
       # rustTools
       go_1_22
       (go-tools.override { buildGoModule = buildGo122Module; })
 
       # tools
+      tree-sitter
       git
       cmake
       gnumake

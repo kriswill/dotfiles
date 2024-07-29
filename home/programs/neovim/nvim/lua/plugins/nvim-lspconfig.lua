@@ -1,6 +1,4 @@
--- LSP Support
 return {
-  -- LSP Configuration
   -- https://github.com/neovim/nvim-lspconfig
   'neovim/nvim-lspconfig',
   event = 'VeryLazy',
@@ -17,9 +15,9 @@ return {
 
     -- Additional lua configuration, makes nvim stuff amazing!
     -- https://github.com/folke/neodev.nvim
-    {'folke/neodev.nvim' },
+    { 'folke/neodev.nvim' },
   },
-  config = function ()
+  config = function()
     require('mason').setup()
     require('mason-lspconfig').setup({
       -- Install these LSPs automatically
@@ -34,12 +32,13 @@ return {
         'quick_lint_js',
         -- 'tsserver', -- requires npm to be installed
         -- 'yamlls', -- requires npm to be installed
+        --'nil_ls' -- nix language server
       }
     })
 
     local lspconfig = require('lspconfig')
     local lsp_capabilities = require('cmp_nvim_lsp').default_capabilities()
-    local lsp_attach = function(client, bufnr)
+    local lsp_attach = function(i, bufnr)
       -- Create your keybindings here...
     end
 
@@ -59,7 +58,23 @@ return {
         Lua = {
           diagnostics = {
             -- Get the language server to recognize the `vim` global
-            globals = {'vim'},
+            globals = { 'vim' },
+          },
+        },
+      },
+    }
+
+    -- Nix LSP settings
+    lspconfig.nil_ls.setup {
+      autostart = true,
+      cmd = { "nil" },
+      filetypes = { "nix" },
+      root_pattern = { "flake.nix", ".git" },
+      single_file_support = true,
+      settings = {
+        ['nil'] = {
+          formatting = {
+            command = { "nixpkgs-fmt" },
           },
         },
       },
@@ -69,10 +84,8 @@ return {
     local open_floating_preview = vim.lsp.util.open_floating_preview
     function vim.lsp.util.open_floating_preview(contents, syntax, opts, ...)
       opts = opts or {}
-      opts.border = opts.border or "rounded" -- Set border to rounded
+      opts.border = opts.border or "rounded"
       return open_floating_preview(contents, syntax, opts, ...)
     end
-
   end
 }
-

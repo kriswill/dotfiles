@@ -4,6 +4,6 @@ return {
 	config = function()
 		local c = require("nvim-highlight-colors")
 		c.setup({})
-    vim.keymap.set("n", "<leader>c", function() c.toggle() end, { desc = "Toggle Color Highlights" })
+    vim.keymap.set("n", "<leader>tc", function() c.toggle() end, { desc = "Toggle Color Highlights" })
 	end,
 }
