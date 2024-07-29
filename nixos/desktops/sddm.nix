@@ -56,8 +56,8 @@ in
     };
   };
 
-  environment.systemPackages = with pkgs; [
-    sddm-astronaut-theme
+  environment.systemPackages = with pkgs.unstable; [
+    sddm-astronaut
   ];
   #   [ packages.sddm-eucalyptus-drop ]
   #   ++ [ pkgs.qt6.qt5compat ]
