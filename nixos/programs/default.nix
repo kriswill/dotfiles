@@ -38,6 +38,7 @@
         usbutils # usb Device Utilities
         wget # network utility to retrieve files from the Web
         zoxide # cd with memory
+        tcpdump # Network sniffer
       ]
       ++ (with pkgs.bat-extras; [
         batdiff # nice diffs
