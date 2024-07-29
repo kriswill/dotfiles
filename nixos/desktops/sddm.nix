@@ -39,6 +39,15 @@ let
     "--shell=kiosk"
     "-c ${weston-ini}"
   ];
+
+  sddm-astronaut = pkgs.unstable.sddm-astronaut.override {
+    themeConfig = {
+      Background = pkgs.wallpapers.yoda-dagoba-2;
+      AccentColor = "#6E815B";
+      FormPosition = "left";
+      ForceHideCompletePassword = true;
+    };
+  };
 in
 {
   services.displayManager = {
@@ -49,20 +58,12 @@ in
         compositor = lib.mkForce "weston";
         compositorCommand = weston-command;
       };
-      # custom themes need this package to work with qt5 sddm greeter
-      package = pkgs.kdePackages.sddm;
-      # theme = "eucalyptus-drop";
-      theme = "astronaut";
+      package = pkgs.unstable.kdePackages.sddm;
+      extraPackages = [ 
+        sddm-astronaut 
+      ];
+      theme = "sddm-astronaut-theme";
     };
   };
-
-  environment.systemPackages = with pkgs.unstable; [
-    sddm-astronaut
-  ];
-  #   [ packages.sddm-eucalyptus-drop ]
-  #   ++ [ pkgs.qt6.qt5compat ]
-  #   ++ [
-  #     pkgs.libsForQt5.qt5.qtgraphicaleffects
-  #     pkgs.libsForQt5.qt5.qtsvg
-  #   ];
+  environment.systemPackages = [ sddm-astronaut ];
 }
