@@ -30,19 +30,6 @@
           };
         };
       };
-      formatterPackArgsFor = systems (system: {
-        inherit nixpkgs system;
-        checkFiles = [ self ];
-
-        config.tools = {
-          deadnix = {
-            enable = true;
-            noLambdaPatternNames = true;
-          };
-          nixpkgs-fmt.enable = true;
-          statix.enable = true;
-        };
-      });
     in
     {
       lib = builtins.foldl' (lib: overlay: lib.extend overlay) nixpkgs.lib [
@@ -73,20 +60,6 @@
         };
       };
       darwinPackages = self.darwinConfigurations."k".pkgs;
-
-#     checks = systems (system: {
-#       nix-formatter-pack-check = nix-formatter-pack.lib.mkCheck formatterPackArgsFor.${system};
-#     });
-
-#     formatter = systems (system: nix-formatter-pack.lib.mkFormatter formatterPackArgsFor.${system});
-
-#      devShells = systems (system: {
-#        "${system}.default" = nixpkgs.legacyPackages.${system}.mkShell {
-#          shellHook = ''
-#            echo "HI!"
-#          '';
-#        };
-#      });
     };
 
   inputs = {
@@ -100,7 +73,7 @@
     mac-app-util.url = "github:hraban/mac-app-util";
     home-manager.url = "github:nix-community/home-manager/release-24.05";
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
-    hyprland.url = "git+https://github.com/hyprwm/Hyprland?submodules=1";
-    hyprland.inputs.nixpkgs.follows = "nixpkgs";
+    fenix.url = "github:nix-community/fenix";
+    fenix.inputs.nixpkgs.follows = "nixpkgs-unstable";
   };
 }

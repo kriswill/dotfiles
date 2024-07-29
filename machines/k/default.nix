@@ -1,7 +1,8 @@
 #
 # k - my personal macbook pro M1 max, 64GB RAM
 #
-{ pkgs, self, inputs, outputs, ... }: {
+{ self, pkgs, ... }: {
+  
   # $ nix-env -qaP | grep wget
   environment.systemPackages = with pkgs; [
     home-manager
@@ -38,4 +39,22 @@
   #     allowUnsupportedSystem = true;
   #   };
   # };
+  homebrew = {
+    enable = true;
+    global.brewfile = true;
+    onActivation = {
+      upgrade = true;
+      cleanup = "zap";
+      autoUpdate = true;
+    };
+    casks = [
+      "rwts-pdfwriter"
+      "zerotier-one"
+      "1password-cli"
+    ];
+    brews = [];
+    masApps = {
+      "Xcode" = 497799835;
+    };
+  };
 }
