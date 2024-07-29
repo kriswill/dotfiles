@@ -17,12 +17,6 @@
       trusted-public-keys = [ "hyprland.cachix.org-1:a7pgxzMz7+chwVL3/pzj6jIBMioiJM7ypFP8PwtkuGc=" ];
     };
 
-    services.displayManager = {
-      #   defaultSession = "hyprland";
-      sddm.enable = true;
-      sddm.wayland.enable = true;
-    };
-
     programs.hyprland = {
       # package = inputs.hyprland.packages.x86_64-linux.hyprland;
       enable = true;

@@ -39,9 +39,6 @@
         inherit (pkgs) stdenvNoCC lib fetchzip;
       };
 
-      sddm-eucalyptus-drop =
-        import ../packages/sddm-eucalyptus-drop { inherit pkgs; };
-
       distro-grub-themes-nixos = import ../packages/distro-grub-themes {
         inherit (pkgs) stdenvNoCC fetchurl;
       };
