@@ -22,11 +22,12 @@
             config.allowUnfree = true;
           };
           wallpapers = import ../packages/shared/wallpapers.nix;
-          xdg-desktop-portal-gtk = prev.xdg-desktop-portal-gtk.overrideAttrs {
+          xdg-desktop-portal-gtk = (prev.xdg-desktop-portal-gtk.overrideAttrs {
             postInstall = ''
               sed -i 's/UseIn=gnome/UseIn=gnome;Hyprland;none+i3/' $out/share/xdg-desktop-portal/portals/gtk.portal
             '';
-            # buildPortalsInGnome = false;
+          }).override {
+            buildPortalsInGnome = false;
           };
         })
       ];
