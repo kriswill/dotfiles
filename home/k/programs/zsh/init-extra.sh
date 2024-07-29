@@ -7,4 +7,6 @@ alias help=run-help
 # let batman command autocomplete like man
 compdef batman=man
 
+export EDITOR=nvim
+export PATH=$(realpath ~/bin):$PATH
 ### end zsh.initExtras
