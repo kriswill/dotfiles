@@ -15,27 +15,23 @@
     ./virtualization.nix
     ./nvidia.nix
     ./steam.nix
-    # inputs.home-manager.nixosModules.home-manager
   ];
 
-  # home-manager = {
-  #   useGlobalPkgs = true;
-  #   useUserPackages = true;
-  #   backupFileExtension = "home-manager-backup";
-  #   # if not using home-manager switch separately
-  #   # users.k = import ./home-manager.nix { inherit pkgs; };
-  #   extraSpecialArgs = {
-  #     inherit inputs;
-  #   };
-  # };
-
-  gnome.enable = true;
+  # gnome.enable = true;
   hyprland.enable = true;
   i3.enable = true;
-  services.displayManager.defaultSession = lib.mkForce "gnome";
 
   # Enable networking
   networking.networkmanager.enable = true;
+  # overlay network
+  services.zerotierone = {
+    enable = true;
+
+    joinNetworks = [
+      # Test Network 
+      "1c33c1ced0b9fe7c"
+    ];
+  };
 
   # Set your time zone.
   time.timeZone = "America/Los_Angeles";

@@ -27,5 +27,5 @@
     ./sddm.nix
   ];
 
-  config.services.displayManager.defaultSession = lib.mkDefault "gnome";
+#   config.services.displayManager.defaultSession = lib.mkDefault "gnome";
 }

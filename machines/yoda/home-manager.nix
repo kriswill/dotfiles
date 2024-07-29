@@ -34,8 +34,6 @@ let
     devenv # development environments
     unzip
     zip
-    ### decompile java programs
-    #cfr
     vlc # video player
     hydrapaper # wallpaper manager for gnome
     efitools # manipulate UEFI secure boot variables
@@ -46,10 +44,10 @@ in
     enable = true;
   };
 
-  # imports = builtins.concatMap import [ ../../home/${username}/programs ] ++ [ ./hyprland.nix ];
   imports = [ 
-    inputs.anyrun.homeManagerModules.default 
+    # inputs.stylix.homeManagerModules.stylix
     ( ../../home/${username}/programs ) 
+    ( ../../home/${username}/scripts ) 
   ];
   
   dconf = {
@@ -81,12 +79,6 @@ in
       name = "Adwaita-dark";
       package = pkgs.unstable.gnome.gnome-themes-extra;
     };
-    # iconTheme.package = pkgs.papirus-icon-theme;
-    # iconTheme.name = "ePapirus";
-    # theme.package = pkgs.layan-gtk-theme;
-    # theme.name = "Layan-light-solid";
-    # font.name = "Roboto";
-    # font.package = pkgs.noto-fonts;
     gtk3.extraConfig = {
       gtk-application-prefer-dark-theme = true;
       gtk-button-images = false;
@@ -102,7 +94,6 @@ in
     inherit username homeDirectory;
     packages = defaultPkgs;
     sessionVariables = {
-      EDITOR = "code";
       # Needed to run Electron apps under Wayland
       # see: https://github.com/NixOS/nixpkgs/pull/147557
       NIXOS_OZONE_WL = "1";

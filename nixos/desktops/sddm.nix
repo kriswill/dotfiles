@@ -51,15 +51,18 @@ in
       };
       # custom themes need this package to work with qt5 sddm greeter
       package = pkgs.kdePackages.sddm;
-      theme = "eucalyptus-drop";
+      # theme = "eucalyptus-drop";
+      theme = "astronaut";
     };
   };
 
-  environment.systemPackages =
-    [ packages.sddm-eucalyptus-drop ]
-    ++ [ pkgs.qt6.qt5compat ]
-    ++ [
-      pkgs.libsForQt5.qt5.qtgraphicaleffects
-      pkgs.libsForQt5.qt5.qtsvg
-    ];
+  environment.systemPackages = with pkgs; [
+    sddm-astronaut-theme
+  ];
+  #   [ packages.sddm-eucalyptus-drop ]
+  #   ++ [ pkgs.qt6.qt5compat ]
+  #   ++ [
+  #     pkgs.libsForQt5.qt5.qtgraphicaleffects
+  #     pkgs.libsForQt5.qt5.qtsvg
+  #   ];
 }
