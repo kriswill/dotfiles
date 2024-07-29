@@ -70,17 +70,20 @@
 
         # gfxmodeEfi = "3440x1440";
         extraEntries = ''
+          menuentry "Windows" --class windows --class os {
+            insmod part_gpt
+            insmod fat
+            search --no-floppy --fs-uuid --set=root 1C4D-64E1
+            chainloader /efi/Microsoft/Boot/bootmgfw.efi
+          }
           menuentry "Reboot" {
             reboot
           }
           menuentry "Poweroff" {
             halt
           }
-          menuentry "Windows" --class windows --class os {
-            insmod part_gpt
-            insmod fat
-            search --no-floppy --fs-uuid --set=root 1C4D-64E1
-            chainloader /efi/Microsoft/Boot/bootmgfw.efi
+          mentuentry "BIOS Settings" --id "uefi-firmware" {
+            fwsetup
           }
         '';
         #extraConfig = ''
