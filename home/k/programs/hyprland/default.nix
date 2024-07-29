@@ -5,6 +5,14 @@ in
   with pkgs.unstable; {
     
   xdg.configFile."hypr".source = ln "/home/k/src/dotfiles/home/k/programs/hyprland/config";
+
+  home.packages = [
+    # screenshot tools
+    grim
+    slurp
+    swappy 
+    hyprpicker # https://github.com/hyprwm/hyprpicker
+  ];
   programs.waybar = {
     enable = true;
     systemd.enable = true;
