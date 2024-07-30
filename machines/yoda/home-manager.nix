@@ -27,6 +27,7 @@ let
     github-desktop # github for dummies
     vesktop
     gcolor3 # color picker
+    xdg-desktop-portal # might need this...
     xdg-utils # Multiple packages depend on xdg-open at runtime. This includes Discord
     element-desktop-wayland # matrix client
     zoom-us # video conferencing
