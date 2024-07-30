@@ -1,16 +1,17 @@
 # minimal neovim for working with root or during installation
 { pkgs, lib, ... }:
 
+with pkgs.unstable; 
 {
   programs.neovim = {
     enable = true;
-    package = pkgs.unstable.neovim-unwrapped;
+    package = neovim-unwrapped;
     defaultEditor = true;
     viAlias = true;
     vimAlias = true;
     configure = {
       customRC = "luafile ${./init.lua}";
-      packages.myPlugins = with pkgs.unstable.vimPlugins; {
+      packages.myPlugins = with vimPlugins; {
         start = [
           nvim-fzf
           nvim-treesitter.withAllGrammars
@@ -19,6 +20,7 @@
           telescope-file-browser-nvim
           telescope-fzy-native-nvim
           telescope-nvim
+          nvim-comment
           vim-lastplace
           vim-nix
           which-key-nvim
@@ -28,7 +30,7 @@
       };
     };
   };
-  environment.systemPackages = with pkgs.unstable; [
+  environment.systemPackages = [
     tree-sitter
     stylua
     fd

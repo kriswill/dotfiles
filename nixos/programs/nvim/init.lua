@@ -5,6 +5,7 @@ cmd = vim.cmd
 api = vim.api
 opt = vim.opt
 g = vim.g
+map = api.nvim_set_keymap
 
 g.mapleader = ' '
 g.maplocalleader = ' '
@@ -82,8 +83,19 @@ if wkloaded then
   })
 end
 
-vim.keymap.set('n', '<tab>', '<cmd>bnext<cr>', { desc = 'next buffer' })
-vim.keymap.set('n', '<S-tab>', '<cmd>bprevious<cr>', { desc = 'previous buffer' })
+require('nvim_comment').setup({
+  comment_empty = false
+})
+
+-- Key maps
+map('n', '<tab>', '<cmd>bnext<cr>', { desc = 'next buffer' })
+map('n', '<S-tab>', '<cmd>bprevious<cr>', { desc = 'previous buffer' })
+map('n', '<A-h>', '<C-w>h', { noremap = true, silent = false, desc = 'move to left window' })
+map('n', '<A-j>', '<C-w>j', { noremap = true, silent = false, desc = 'move to window below' })
+map('n', '<A-k>', '<C-w>k', { noremap = true, silent = false, desc = 'move to window above' })
+map('n', '<A-l>', '<C-w>l', { noremap = true, silent = false, desc = 'move to right window' })
+map('n', '<C-/>', ':CommentToggle<CR>', { noremap = true, silent = true, desc = "Toggle comments" })
+map('v', '<C-/>', ':CommentToggle<CR>', { noremap = true, silent = true, desc = "Toggle comments" })
 
 local hasTreesitter, treesitter = pcall(require, "nvim-treesitter.configs")
 if hasTreesitter then
