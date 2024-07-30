@@ -62,20 +62,6 @@ end
 -- set background to transparent - kitty
 hi("Normal")
 
--- set statusline
--- vim.o.statusline = table.concat({
---   "%1* %n %*",       -- buffer number
---   "%3* %y %*",       -- file type
---   -- "%4* %<%F %*",  -- full path
---   "%4* %<%f %*",     -- file name
---   "%2* %m %*",       -- modified flag
---   "%1* %= %5l %*",   -- current line
---   "%2* / %L %*",     -- total lines
---   "%1* %4v %*",      -- virtual column number
---   "%2* 0x%04B %*",   -- character under cursor
---   "%5* %{&ff} %*",   -- file format
--- })
-
 local wkloaded, which_key = pcall(require('which-key'))
 if wkloaded then
   which_key.setup({
