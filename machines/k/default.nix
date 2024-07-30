@@ -5,6 +5,7 @@
   
   # $ nix-env -qaP | grep wget
   environment.systemPackages = with pkgs; [
+    unstable.darwin.iproute2mac
     home-manager
   ];
   security.pam.enableSudoTouchIdAuth = true;
