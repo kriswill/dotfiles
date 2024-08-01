@@ -1,9 +1,9 @@
 {
   mainBar = {
     layer = "top"; # Waybar at top layer
-    position = "top"; # Waybar position (top|bottom|left|right)
-    height = 24; # Waybar height (to be removed for auto height)
-    spacing = 4; # Gaps between modules (4px)
+    position = "bottom"; # Waybar position (top|bottom|left|right)
+    height = 28; # Waybar height (to be removed for auto height)
+    spacing = 6; # Gaps between modules (4px)
     modules-left = [
       "hyprland/workspaces"
     ];
@@ -44,11 +44,20 @@
       # "icon-size = 21;
       spacing = 5;
     };
-    clock = {
-      # timezone = "America/New_York";
-      tooltip-format = "<big>{:%F %a}</big>\n<tt><small>{calendar}</small></tt>";
-      format-alt = "{:%Y-%m-%d}";
+    "clock#time" = {
+      interval = 1;
+      format = "{:%I:%M:%S %p}";
+      timezone = "America/Los_Angeles";
+      tooltip-format = ''
+        <big>{:%Y %B}</big>
+        <tt><small>{calendar}</small></tt>
+      '';
     };
+    # clock = {
+    #   timezone = "America/Los_Angeles";
+    #   tooltip-format = "<big>{:%F %a}</big>\n<tt><small>{calendar}</small></tt>";
+    #   format-alt = "{:%Y-%m-%d}";
+    # };
     cpu = {
       format = "{usage}% ";
       tooltip = false;

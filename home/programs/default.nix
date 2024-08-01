@@ -10,6 +10,7 @@
     ./starship.nix
     ./neovim
     ./vscode.nix
+    ./waybar
     ./wine
     ./yazi
     ./zsh

@@ -4,8 +4,8 @@
 }
 
 window#waybar {
-    background-color: alpha(#222, 0.5);
-    border-top: 3px solid alpha(#DDD, 0.1);
+    background-color: alpha(#222, 0.7);
+    /* border-top: 3px solid alpha(#DDD, 0.1); */
     color: #DDD;
     transition-property: background-color;
     transition-duration: .5s;
@@ -49,7 +49,7 @@ button:hover {
     padding: 0 10px;
     color: #DDD;
     background: alpha(#DDD, 0.1);
-    border-radius: 0 0 10px 10px;
+    border-radius: 10px 10px 0 0;
 }
 
 #window,
