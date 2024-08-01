@@ -55,7 +55,7 @@ in {
         "https://gitlab.com/".insteadOf = "gl:";
         "ssh://git@gitlab.com".pushInsteadOf = "gl:";
       };
-      maintenance = { repo = "/home/k/src/github/kriswill/nixpkgs"; };
+      # maintenance = { repo = "/home/k/src/github/kriswill/nixpkgs"; };
     };
     ignores = [ "*.direnv" "*.envrc" ];
     #signing = {
