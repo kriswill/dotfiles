@@ -1,0 +1,160 @@
+* {
+    font-family: FontAwesome, Roboto, Helvetica, Arial, sans-serif;
+    font-size: 13px;
+}
+
+window#waybar {
+    background-color: alpha(#222, 0.5);
+    border-top: 3px solid alpha(#DDD, 0.1);
+    color: #DDD;
+    transition-property: background-color;
+    transition-duration: .5s;
+}
+
+button {
+    box-shadow: inset 0 3px transparent;
+    border: none;
+    border-radius: 0;
+}
+
+button:hover {
+    background: inherit;
+    box-shadow: inset 0 3px #DDD;
+}
+
+#workspaces button {
+    padding: 0 5px;
+    background-color: transparent;
+    color: #DDD;
+}
+
+#workspaces button:hover {
+    background: alpha(#DDD, 0.1);
+}
+
+#workspaces button.urgent {
+    background-color: #F53C3C;
+}
+
+#clock,
+#battery,
+#cpu,
+#memory,
+#temperature,
+#backlight,
+#network,
+#pulseaudio,
+#tray,
+#idle_inhibitor {
+    padding: 0 10px;
+    color: #DDD;
+    background: alpha(#DDD, 0.1);
+    border-radius: 0 0 10px 10px;
+}
+
+#window,
+#workspaces {
+    margin: 0 4px;
+}
+
+/* If workspaces is the leftmost module, omit left margin */
+.modules-left > widget:first-child > #workspaces {
+    margin-left: 0;
+}
+
+/* If workspaces is the rightmost module, omit right margin */
+.modules-right > widget:last-child > #workspaces {
+    margin-right: 0;
+}
+
+#clock {
+    box-shadow: inset 0 3px #64727D;
+}
+
+#battery {
+    box-shadow: inset 0 3px #26A65B;
+    color: #DDD;
+}
+
+#battery.charging {
+    color: #26A65B;
+}
+
+@keyframes blink {
+    to {
+        box-shadow: inset 0 3px #DDD;
+    }
+}
+
+/* Using steps() instead of linear as a timing function to limit cpu usage */
+#battery.critical:not(.charging) {
+    box-shadow: inset 0 3px #F53C3C;
+    color: #F53C3C;
+    animation-name: blink;
+    animation-duration: 0.5s;
+    animation-timing-function: steps(12);
+    animation-iteration-count: infinite;
+    animation-direction: alternate;
+}
+
+#power-profiles-daemon {
+    padding-right: 15px;
+}
+
+#cpu {
+    box-shadow: inset 0 3px #2ECC71;
+}
+
+#memory {
+    box-shadow: inset 0 3px #9B59B6;
+}
+
+#backlight {
+    box-shadow: inset 0 3px #90B1B1;
+}
+
+#network {
+    box-shadow: inset 0 3px #2980B9;
+}
+
+#network.disconnected {
+    box-shadow: inset 0 3px #F53C3C;
+}
+
+#pulseaudio {
+    box-shadow: inset 0 3px #F1C40F;
+}
+
+#pulseaudio.muted {
+    box-shadow: inset 0 3px #90B1B1;
+}
+
+#temperature {
+    box-shadow: inset 0 3px #F0932B;
+}
+
+#temperature.critical {
+    box-shadow: inset 0 3px #EB4D4B;
+}
+
+#tray {
+    box-shadow: inset 0 3px #2980B9;
+    border-radius: 0 0 0 10px;
+}
+
+#tray > .passive {
+    -gtk-icon-effect: dim;
+}
+
+#tray > .needs-attention {
+    -gtk-icon-effect: highlight;
+    box-shadow: inset 0 3px #EB4D4B;
+}
+
+#idle_inhibitor {
+    box-shadow: inset 0 3px #2D3436;
+}
+
+#idle_inhibitor.activated {
+    box-shadow: inset 0 3px #ECF0F1;
+}

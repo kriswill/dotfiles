@@ -12,6 +12,7 @@
     ./wine
     ./yazi
     ./zsh
+    ./rofi
     ./ssh
     ./i3
   ];
@@ -29,9 +30,18 @@
       enable = true;
       nix-direnv.enable = true;
     };
+    fd = {
+      enable = true;
+      ignores = [
+        ".git/"
+        "*.bak"
+        ".direnv/"
+      ];
+    };
     fzf = {
       enable = true;
       enableZshIntegration = true;
+      defaultCommand = "fd --type f";
     };
     htop = {
       enable = true;

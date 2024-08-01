@@ -1,0 +1,18 @@
+configuration {
+  disable-history: false;
+  display-combi: " 🖥️  All";
+  display-drun: " 🏃  Run";
+  display-window: " 🪟  Window";
+  drun-display-format: "{icon} {name}";
+  hide-scrollbar: true;
+  icon-theme: "Oranchelo";
+  location: 0;
+  modi: "drun,window,combi";
+  show-icons: true;
+  sidebar-mode: true;
+  terminal: "kitty";
+  xoffset: 0;
+  yoffset: 0;
+}
+
+@theme "/nix/store/p9lfq6r6s1ia73rxzb3i7r0w53bgifvj-rofi-1.7.5+wayland3/share/rofi/themes/material.rasi"

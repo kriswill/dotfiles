@@ -13,49 +13,6 @@ in
     swappy 
     hyprpicker # https://github.com/hyprwm/hyprpicker
   ];
-  programs.waybar = {
-    enable = true;
-    systemd.enable = true;
-    package = waybar;
-    settings = {
-      mainBar = {
-        layer = "top";
-        spacing = 8;
-        modules-left = [ "hyprland/submap" ];
-        modules-center = [ "hyprland/workspaces" ];
-        modules-right = [ "tray" "pulsaudio" "clock" ];
-        tray.spacing = 10;
-        clock = {
-          format = "{:%T}";
-          format-alt = "{:%F}";
-          interval = 1;
-          tooltip-format = "<big>{:%Y %B}</big>\n<tt><small>{calendar}</small></tt>";
-        };
-        "hyprland/submap" = {
-          format = " <b>{}</b>";
-          tooltop = false;
-        };
-        "hyprland/workspaces".persistent-workspaces = {
-          "1" = [];
-          "2" = [];
-          "3" = [];
-          "4" = [];
-          "5" = [];
-          "6" = [];
-          "7" = [];
-          "8" = [];
-          "9" = [];
-          "10" = [];
-        };
-        pulseaudio = {
-          format = "{icon}";
-          format-bluetooth = "{icon}";
-          format-bluetooth-muted = "";
-          format-muted = "";
-          format-icons.default = [ "" "" "" ];
-          on-click = "${pavucontrol}/bin/pavucontrol";
-        };
-      };
 
       # style = /*css*/''
       #   * {
@@ -80,6 +37,4 @@ in
       #   #workspaces button.empty {color: #a0a0a0;}
       #   #workspaces button.visible {color: #290056; font-weight: bolder;}
       # '';
-    };
-  };
 }
