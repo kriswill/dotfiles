@@ -8,6 +8,7 @@
     ./hyprland
     ./kitty.nix
     ./starship.nix
+    ./neovim
     ./vscode.nix
     ./wine
     ./yazi
