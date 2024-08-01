@@ -11,6 +11,7 @@
     ./neovim
     ./vscode.nix
     ./waybar
+    ./gBar
     ./wine
     ./yazi
     ./zsh
