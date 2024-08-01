@@ -39,6 +39,7 @@
         wget # network utility to retrieve files from the Web
         zoxide # cd with memory
         tcpdump # Network sniffer
+        psmisc # killall, pstree, fuser, etc -- https://gitlab.com/psmisc/psmisc
       ]
       ++ (with pkgs.bat-extras; [
         batdiff # nice diffs

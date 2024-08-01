@@ -18,6 +18,7 @@ in
           "video"
           "networkmanager"
           "libvirtd"
+          "input"
         ];
         openssh.authorizedKeys.keys = [ signingkey ];
         packages = [ pkgs.home-manager ];

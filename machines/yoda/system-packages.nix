@@ -24,6 +24,7 @@
       lshw # list hardware
       pciutils # PCI bus related utilities
       yq-go # yaml parser like jq
+      fuser # report on which processes are using a file
     ];
     shells = with pkgs; [ zsh ];
     # fix for many rust based guis on wayland/gnome/nixos
