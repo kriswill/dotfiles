@@ -43,7 +43,7 @@ in
   flake.homeConfigurations = {
     ####  k  ###################################################################
     "k@yoda" = withSystem "x86_64-linux" (
-      ctx@{
+      {
         config,
         inputs',
         pkgs,
@@ -54,7 +54,9 @@ in
         extraSpecialArgs = {
           inherit inputs;
         };
-        modules = [ ./yoda/home-manager.nix ];
+        modules = [
+          ./yoda/home-manager.nix
+        ];
       }
     );
   };
