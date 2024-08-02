@@ -1,4 +1,4 @@
-{ self, inputs, ... }: {
+{ inputs, ... }: {
 
   imports = with inputs; [
     devshell.flakeModule
