@@ -3,6 +3,7 @@
     ./alacritty.nix
     ./brave
     ./dconf
+    ./fastfetch
     ./firefox
     ./git.nix
     ./hyprland

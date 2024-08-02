@@ -15,7 +15,6 @@
         dua # disk Usage Analyzer
         duf # disk usage utility
         eza # better ls
-        fastfetch # displays system info
         fd # simple, fast and user-friendly alternative to find
         fzf # command-line fuzzy finder
         gh # github cli
