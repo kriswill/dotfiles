@@ -34,7 +34,7 @@ with pkgs.unstable;
       fswatch # file watcher - replaces libuv.fs_event in neovim v0.10
       sqlite
       nodejs
-      wget # used by mason
+      zig
     ];
   };
 } // (
