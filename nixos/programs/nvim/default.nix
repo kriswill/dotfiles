@@ -1,7 +1,7 @@
 # minimal neovim for working with root or during installation
 { pkgs, lib, ... }:
 
-with pkgs.unstable; 
+with pkgs.unstable;
 {
   programs.neovim = {
     enable = true;
@@ -15,7 +15,6 @@ with pkgs.unstable;
         start = [
           nvim-fzf
           nvim-treesitter.withAllGrammars
-#          papercolor-theme
           plenary-nvim # needed for telescope
           telescope-file-browser-nvim
           telescope-fzy-native-nvim
