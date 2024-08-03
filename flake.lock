@@ -506,16 +506,15 @@
       "locked": {
         "lastModified": 1722570041,
         "narHash": "sha256-3573bQ7Ik1a8+fLjd1+5f/LBYuXh3xCLFP5ciDLl7TM=",
-        "ref": "refs/heads/main",
+        "owner": "kriswill",
+        "repo": "nixvim",
         "rev": "ab33000b18fc790c08b0873d125bdbbed35c10fd",
-        "shallow": true,
-        "type": "git",
-        "url": "file:/home/k/src/nixvim"
+        "type": "github"
       },
       "original": {
-        "shallow": true,
-        "type": "git",
-        "url": "file:/home/k/src/nixvim"
+        "owner": "kriswill",
+        "repo": "nixvim",
+        "type": "github"
       }
     },
     "nixvim_2": {

@@ -1,10 +1,9 @@
-{
-  inputs,
-  pkgs,
-  packages,
-  config,
-  lib,
-  ...
+{ inputs
+, pkgs
+, packages
+, config
+, lib
+, ...
 }:
 
 {
@@ -27,5 +26,12 @@
     ./sddm.nix
   ];
 
-#   config.services.displayManager.defaultSession = lib.mkDefault "gnome";
+  config = {
+    qt = {
+      enable = true;
+      platformTheme = "gnome";
+      style = "adwaita-dark";
+    };
+  };
+  #   config.services.displayManager.defaultSession = lib.mkDefault "gnome";
 }

@@ -4,6 +4,7 @@
     services.xserver = {
       enable = true;
       xkb.layout = "us";
+      dpi = 96;
       windowManager.i3 = {
         enable = true;
         package = pkgs.i3;

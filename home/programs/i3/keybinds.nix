@@ -1,5 +1,7 @@
-let mod = "Mod4";
-in {
+let
+  mod = "Mod4";
+in
+{
   "${mod}+Return" = "exec kitty";
   "${mod}+Shift+q" = "kill";
   "${mod}+d" = "exec --no-startup-id dmenu_run";
@@ -60,7 +62,7 @@ in {
   "${mod}+7" = "workspace number 7";
   "${mod}+8" = "workspace number 8";
   "${mod}+9" = "workspace number 9";
-  "${mod}+0" = "workspace number 10";
+  "${mod}+0" = "workspace number 0";
 
   # move focused container to workspace
   "${mod}+Shift+1" = "move container to workspace number 1";
@@ -72,19 +74,15 @@ in {
   "${mod}+Shift+7" = "move container to workspace number 7";
   "${mod}+Shift+8" = "move container to workspace number 8";
   "${mod}+Shift+9" = "move container to workspace number 9";
-  "${mod}+Shift+0" = "move container to workspace number 10";
+  "${mod}+Shift+0" = "move container to workspace number 0";
 
   # restart i3 inplace (preserves your layout/session, can be used to upgrade i3)
   "${mod}+Shift+r" = "restart";
   # exit i3 (logs you out of your X session)
   "${mod}+Shift+e" = "exit i3";
 
-  "XF86AudioRaiseVolume" =
-    "exec --no-startup-id pactl set-sink-volume @DEFAULT_SINK@ +10% && $refresh_i3status";
-  "XF86AudioLowerVolume" =
-    "exec --no-startup-id pactl set-sink-volume @DEFAULT_SINK@ -10% && $refresh_i3status";
-  "XF86AudioMute" =
-    "exec --no-startup-id pactl set-sink-mute @DEFAULT_SINK@ toggle && $refresh_i3status";
-  "XF86AudioMicMute" =
-    "exec --no-startup-id pactl set-source-mute @DEFAULT_SOURCE@ toggle && $refresh_i3status";
+  "XF86AudioRaiseVolume" = "exec pamixer -i 5";
+  "XF86AudioLowerVolume" = "exec pamixer -d 5";
+  "XF86AudioMute" = "exec pamixer -t";
+  "XF86AudioMicMute" = "exec pamixer $(pamixer --list-sources | grep input | cut -d ' ' -f1) -t";
 }

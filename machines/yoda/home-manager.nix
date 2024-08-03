@@ -38,6 +38,7 @@ let
     vlc # video player
     hydrapaper # wallpaper manager for gnome
     efitools # manipulate UEFI secure boot variables
+    dolphin-emu-beta # old game ROM emulator
   ];
 in
 {
@@ -45,15 +46,15 @@ in
     enable = true;
   };
 
-  imports = [ 
-    ../../home/programs 
-    ../../home/scripts 
+  imports = [
+    ../../home/programs
+    ../../home/scripts
   ];
-  
+
   dconf = {
     settings = {
       "org/gnome/desktop/interface" = {
-        gtk-theme = "Adwaita-dark";
+        gtk-theme = "Adwaita-Dark";
         color-scheme = "prefer-dark";
       };
     };
@@ -76,7 +77,7 @@ in
   gtk = {
     enable = true;
     theme = {
-      name = "Adwaita-dark";
+      name = "Adwaita-Dark";
       package = pkgs.unstable.gnome-themes-extra;
     };
     gtk3.extraConfig = {
