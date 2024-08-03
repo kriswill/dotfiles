@@ -1,8 +1,6 @@
 { inputs, lib, ... }:
-let
-  nvim = inputs.nixvim.packages.x86_64-linux.default;
-in
-{
+let nvim = inputs.nixvim.packages.x86_64-linux.default;
+in {
   home.packages = [ nvim ];
   programs.zsh.shellAliases = {
     "vim" = "${lib.getExe nvim}";

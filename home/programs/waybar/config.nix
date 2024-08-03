@@ -4,12 +4,8 @@
     position = "bottom"; # Waybar position (top|bottom|left|right)
     height = 28; # Waybar height (to be removed for auto height)
     spacing = 6; # Gaps between modules (4px)
-    modules-left = [
-      "hyprland/workspaces"
-    ];
-    modules-center = [
-      "hyprland/window"
-    ];
+    modules-left = [ "hyprland/workspaces" ];
+    modules-center = [ "hyprland/window" ];
     modules-right = [
       "idle_inhibitor"
       "pulseaudio"
@@ -62,9 +58,7 @@
       format = "{usage}% ";
       tooltip = false;
     };
-    memory = {
-      format = "{}% ";
-    };
+    memory = { format = "{}% "; };
     temperature = {
       critical-threshold = 80;
       format = "{temperatureC}°C {icon}";

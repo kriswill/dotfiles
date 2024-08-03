@@ -26,9 +26,7 @@
             postInstall = ''
               sed -i 's/UseIn=gnome/UseIn=gnome;Hyprland;none+i3/' $out/share/xdg-desktop-portal/portals/gtk.portal
             '';
-          }).override {
-            buildPortalsInGnome = false;
-          };
+          }).override { buildPortalsInGnome = false; };
         })
       ];
       config = { allowUnfree = true; };

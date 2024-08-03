@@ -21,9 +21,10 @@
     ./i3
   ];
 
-  home.packages = with pkgs.unstable; [
-    yq-go # yaml parser
-  ];
+  home.packages = with pkgs.unstable;
+    [
+      yq-go # yaml parser
+    ];
   programs = {
     bat.enable = true;
     jq.enable = true;
@@ -36,11 +37,7 @@
     };
     fd = {
       enable = true;
-      ignores = [
-        ".git/"
-        "*.bak"
-        ".direnv/"
-      ];
+      ignores = [ ".git/" "*.bak" ".direnv/" ];
     };
     fzf = {
       enable = true;

@@ -6,7 +6,10 @@ with pkgs.unstable; {
     enable = true;
     package = yazi;
     enableZshIntegration = true; # adds function "ya"
-    settings = import ./settings.nix { inherit lib; pkgs = pkgs.unstable; };
+    settings = import ./settings.nix {
+      inherit lib;
+      pkgs = pkgs.unstable;
+    };
   };
 
   # xdg.configFile = {

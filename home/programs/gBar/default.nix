@@ -1,8 +1,6 @@
 { config, inputs, pkgs, ... }:
-let
-  ln = config.lib.file.mkOutOfStoreSymlink;
-in 
-{
+let ln = config.lib.file.mkOutOfStoreSymlink;
+in {
   imports = [ inputs.gBar.homeManagerModules.x86_64-linux.default ];
 
   programs.gBar = {
@@ -14,11 +12,9 @@ in
     };
   };
 
-  home.packages = [
-    inputs.gBar.defaultPackage.x86_64-linux
-    pkgs.unstable.pamixer
-  ];
+  home.packages =
+    [ inputs.gBar.defaultPackage.x86_64-linux pkgs.unstable.pamixer ];
 
-
-  xdg.configFile."gBar/style.scss".source = ln "/home/k/src/dotfiles/home/programs/gBar/style.scss";
+  xdg.configFile."gBar/style.scss".source =
+    ln "/home/k/src/dotfiles/home/programs/gBar/style.scss";
 }

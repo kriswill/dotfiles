@@ -1,10 +1,9 @@
-{
-  inputs,
-  config,
-  pkgs,
-  lib,
-  packages,
-  ...
+{ inputs
+, config
+, pkgs
+, lib
+, packages
+, ...
 }:
 
 {
@@ -53,19 +52,6 @@
         efiSupport = true;
         devices = [ "nodev" ];
         # useOSProber = true;
-        # Catppuccin
-        # theme = lib.mkForce (pkgs.fetchFromGitHub {
-        #   owner = "catppuccin";
-        #   repo = "grub";
-        #   rev = "88f6124757331fd3a37c8a69473021389b7663ad";
-        #   sha256 = "sha256-e8XFWebd/GyX44WQI06Cx6sOduCZc5z7/YhweVQGMGY=";
-        # } + "/src/catppuccin-mocha-grub-theme");
-        # theme = pkgs.fetchzip {
-        #   url = "https://github.com/AdisonCavani/distro-grub-themes/raw/master/themes/nixos.tar";
-        #   hash = "sha256-KQAXNK6sWnUVwOvYzVfolYlEtzFobL2wmDvO8iESUYE=";
-        #   stripRoot = false;
-        # };
-
         #theme = packages.distro-grub-themes-nixos;
 
         # gfxmodeEfi = "3440x1440";
