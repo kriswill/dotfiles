@@ -27,6 +27,19 @@ in
   # so we can set wallpapers without rebuilding
   home.packages = with pkgs.unstable; [ feh xclip grobi pamixer flameshot ];
   xdg.configFile."i3/polybar.ini".source = ln "${i3src}/polybar.ini";
+  xdg.configFile."flameshot/flameshot.ini".text = lib.generators.toINI { } {
+    General = {
+      "contrastOpacity" = 188;
+      "copyOnDoubleClick" = true;
+      "drawColor" = "#fff600";
+      "drawThickness" = 26;
+      "saveAfterCopy" = true;
+      "saveAsFileExtension" = "png";
+      "savePath" = "${config.home.homeDirectory}/Pictures/Screenshots";
+      "savePathFixed" = true;
+      "showHelp" = true;
+    };
+  };
   # to rotate my left monitor
   imports = [ ./grobi ];
 
