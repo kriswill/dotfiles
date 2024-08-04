@@ -1,4 +1,4 @@
-{ pkgs, ... }: {
+_: {
   imports = [
     ./alacritty.nix
     ./brave
@@ -21,11 +21,8 @@
     ./i3
   ];
 
-  home.packages = with pkgs.unstable;
-    [
-      yq-go # yaml parser
-    ];
   programs = {
+    home-manager.enable = true;
     bat.enable = true;
     jq.enable = true;
     nix-index.enable = true;
@@ -42,7 +39,7 @@
     fzf = {
       enable = true;
       enableZshIntegration = true;
-      defaultCommand = "fd --type f";
+      defaultCommand = "fd -f";
     };
     htop = {
       enable = true;

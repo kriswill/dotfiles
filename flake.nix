@@ -41,13 +41,9 @@
     ];
   };
 
-  outputs =
-    inputs@{ flake-parts, ... }:
+  outputs = inputs@{ flake-parts, ... }:
     flake-parts.lib.mkFlake { inherit inputs; } {
       systems = import inputs.systems;
-      imports = [
-        ./machines
-        ./per-system
-      ];
+      imports = [ ./machines ./per-system ];
     };
 }

@@ -1,8 +1,8 @@
 { inputs, ... }: {
 
   imports = with inputs; [
+    ./pre-commit-hooks.nix
     devshell.flakeModule
-    pre-commit-hooks.flakeModule
     treefmt-nix.flakeModule
   ];
 
@@ -44,13 +44,17 @@
 
     devshells.default = let
       inherit (lib) getExe;
+      inherit (pkgs.unstable) nix-output-monitor;
       nix = ''
         $([ "$\{USE_NOM:-0}" = '1' ] && echo ${
-          getExe pkgs.unstable.nix-output-monitor
+          getExe nix-output-monitor
         } || echo nix)'';
-      nixfmt = pkgs.unstable.nixfmt-rfc-style;
     in {
-      packages = with pkgs.unstable; [ git ripgrep fd fzf nixfmt ];
+      packages = builtins.attrValues {
+        inherit (pkgs.unstable) git ripgrep fd fzf treefmt nixfmt;
+
+        inherit (config.pre-commit.settings) package;
+      };
 
       commands = [
         {
@@ -69,7 +73,7 @@
       ];
     };
 
-    formatter = pkgs.unstable.nixfmt;
+    formatter = pkgs.unstable.treefmt;
 
     treefmt.config = {
       projectRootFile = "flake.nix";
@@ -77,22 +81,6 @@
       programs = {
         nixfmt.enable = true;
         statix.enable = true;
-      };
-    };
-
-    pre-commit = {
-      check.enable = true;
-      settings = {
-        excludes = [ "flake.lock" ".direnv/*" ];
-        hooks = {
-          stylua.enable = true;
-          rfc101 = {
-            enable = true;
-            name = "RFC-101 formatting";
-            entry = "${pkgs.lib.getExe pkgs.unstable.nixfmt-rfc-style}";
-            files = "\\.nix$";
-          };
-        };
       };
     };
   };

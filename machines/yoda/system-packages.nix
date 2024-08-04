@@ -1,9 +1,4 @@
-{
-  pkgs,
-  environment,
-  username,
-  ...
-}:
+{ pkgs, environment, username, ... }:
 
 {
   # List packages installed in system profile. To search, run:
@@ -31,12 +26,7 @@
     # https://github.com/alacritty/alacritty/issues/4780#issuecomment-890408502
     variables.XCURSOR_THEME = "Adwaita";
 
-    gnome.excludePackages =
-      (with pkgs; [
-        gnome-photos
-        gnome-tour
-        gedit
-      ])
+    gnome.excludePackages = (with pkgs; [ gnome-photos gnome-tour gedit ])
       ++ (with pkgs.gnome; [
         cheese
         gnome-music
@@ -69,10 +59,7 @@
       autosuggestions.enable = true;
       syntaxHighlighting = {
         enable = true;
-        highlighters = [
-          "main"
-          "brackets"
-        ];
+        highlighters = [ "main" "brackets" ];
       };
     };
   };

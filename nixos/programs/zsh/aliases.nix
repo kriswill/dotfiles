@@ -1,10 +1,8 @@
 { pkgs }:
 
 with pkgs;
-let
-  inherit (lib) getExe;
-in
-{
+let inherit (lib) getExe;
+in {
   ".." = "cd ..";
   cat = "${getExe bat}";
 

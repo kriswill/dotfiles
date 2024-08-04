@@ -1,26 +1,14 @@
-{
-  pkgs,
-  nixpkgs,
-  lib,
-  ...
-}:
+{ pkgs, nixpkgs, lib, ... }:
 
 {
   boot = {
     kernelModules = [ "kvm-intel" ];
-    kernelParams = [
-      "intel_iommu=on"
-      "iommu=pt"
-    ];
+    kernelParams = [ "intel_iommu=on" "iommu=pt" ];
   };
 
   programs.dconf.enable = lib.mkDefault true;
 
-  environment.systemPackages = with pkgs; [
-    virt-manager
-    qemu_kvm
-    virtiofsd
-  ];
+  environment.systemPackages = with pkgs; [ virt-manager qemu_kvm virtiofsd ];
 
   virtualisation = {
     libvirtd = {

@@ -10,7 +10,7 @@ let
     settingsSha256 = "sha256-WFZhQZB6zL9d5MUChl2kCKQ1q9SgD0JlP4CMXEwp2jE=";
     persistencedSha256 = "sha256-Vz33gNYapQ4++hMqH3zBB4MyjxLxwasvLzUJsCcyY4k=";
   };
-  
+
   driver_555_58_02 = config.boot.kernelPackages.nvidiaPackages.mkDriver {
     version = "555.58.02";
     sha256_64bit = "sha256-xctt4TPRlOJ6r5S54h5W6PT6/3Zy2R4ASNFPu8TSHKM=";
@@ -29,8 +29,7 @@ let
     settingsSha256 = "sha256-b4nhUMCzZc3VANnNb0rmcEH6H7SK2D5eZIplgPV59c8=";
     persistencedSha256 = "sha256-MhITuC8tH/IPhCOUm60SrPOldOpitk78mH0rg+egkTE=";
   };
-in
-{
+in {
   services.xserver.videoDrivers = [ "nvidia" ];
   # Enable OpenGL
 
@@ -60,10 +59,7 @@ in
       enable = true;
       driSupport = true;
       driSupport32Bit = true;
-      extraPackages = with pkgs; [
-        vaapiVdpau
-        libvdpau-va-gl
-      ];
+      extraPackages = with pkgs; [ vaapiVdpau libvdpau-va-gl ];
     };
 
     # unstable only
@@ -79,8 +75,8 @@ in
   };
 
   boot = {
-    initrd.kernelModules = ["nvidia"];
-    blacklistedKernelModules = ["nouveau"];
+    initrd.kernelModules = [ "nvidia" ];
+    blacklistedKernelModules = [ "nouveau" ];
     extraModulePackages = [ driver_555_58_02 ];
     kernelParams = [
       "nvidia.NVreg_PreserveVideoMemoryAllocations=1"
@@ -88,7 +84,7 @@ in
       "nvidia-drm.fbdev=1"
     ];
   };
-  
+
   environment.variables = {
     GBM_BACKEND = "nvidia-drm";
     LIBVA_DRIVER_NAME = "nvidia";
@@ -98,7 +94,5 @@ in
     ELECTRON_OZONE_PLATFORM_HINT = "auto";
   };
 
-  environment.systemPackages = with pkgs; [
-    egl-wayland
-  ];
+  environment.systemPackages = with pkgs; [ egl-wayland ];
 }

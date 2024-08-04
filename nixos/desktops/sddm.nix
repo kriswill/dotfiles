@@ -1,11 +1,4 @@
-{
-  inputs,
-  pkgs,
-  packages,
-  config,
-  lib,
-  ...
-}:
+{ inputs, pkgs, packages, config, lib, ... }:
 
 let
   xcfg = config.services.xserver;
@@ -48,8 +41,7 @@ let
       ForceHideCompletePassword = true;
     };
   };
-in
-{
+in {
   services.displayManager = {
     sddm = {
       enable = true;
@@ -59,9 +51,7 @@ in
         compositorCommand = weston-command;
       };
       package = pkgs.unstable.kdePackages.sddm;
-      extraPackages = [ 
-        sddm-astronaut 
-      ];
+      extraPackages = [ sddm-astronaut ];
       theme = "sddm-astronaut-theme";
     };
   };

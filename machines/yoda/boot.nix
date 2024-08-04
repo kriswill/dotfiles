@@ -1,10 +1,4 @@
-{ inputs
-, config
-, pkgs
-, lib
-, packages
-, ...
-}:
+{ inputs, config, pkgs, lib, packages, ... }:
 
 {
   imports = [ inputs.grub2-themes.nixosModules.default ];
@@ -25,14 +19,8 @@
     initrd = {
       # Quiet boot
       verbose = false;
-      availableKernelModules = [
-        "xhci_pci"
-        "ahci"
-        "nvme"
-        "usbhid"
-        "uas"
-        "sd_mod"
-      ];
+      availableKernelModules =
+        [ "xhci_pci" "ahci" "nvme" "usbhid" "uas" "sd_mod" ];
       kernelModules = [ ];
     };
 

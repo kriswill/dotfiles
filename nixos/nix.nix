@@ -1,32 +1,18 @@
-{
-  inputs,
-  pkgs,
-  nixpkgs,
-  ...
-}:
+{ inputs, pkgs, nixpkgs, ... }:
 
 {
   nix = {
     package = pkgs.unstable.nixVersions.latest;
 
     settings = {
-      trusted-users = [
-        "root"
-        "@wheel"
-      ];
+      trusted-users = [ "root" "@wheel" ];
       auto-optimise-store = true;
-      experimental-features = [
-        "nix-command"
-        "flakes"
-      ];
-      system-features = [
-        "nixos-test"
-        "benchmark"
-        "big-parallel"
-        "kvm"
-      ];
+      experimental-features = [ "nix-command" "flakes" ];
+      system-features = [ "nixos-test" "benchmark" "big-parallel" "kvm" ];
       substituters = [ "https://nix-community.cachix.org" ];
-      trusted-public-keys = [ "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs=" ];
+      trusted-public-keys = [
+        "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
+      ];
     };
     # set by nh.clean.enable
     # gc = {

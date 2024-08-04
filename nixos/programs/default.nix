@@ -1,14 +1,9 @@
-{ pkgs, ... }:
-{
+{ pkgs, ... }: {
 
-  imports = [
-    ./nvim
-    ./zsh
-  ];
+  imports = [ ./nvim ./zsh ];
 
   environment = {
-    systemPackages =
-      with pkgs;
+    systemPackages = with pkgs;
       [
         bat # cat clone with wings.
         curl # a network utility to retrieve files from the Web
@@ -39,8 +34,7 @@
         zoxide # cd with memory
         tcpdump # Network sniffer
         psmisc # killall, pstree, fuser, etc -- https://gitlab.com/psmisc/psmisc
-      ]
-      ++ (with pkgs.bat-extras; [
+      ] ++ (with pkgs.bat-extras; [
         batdiff # nice diffs
         batgrep # ripgrep with wings
         batman # man pages using bat
@@ -78,26 +72,21 @@
     enable = true;
     lessopen = null;
   };
-  environment.variables =
-    let
-      common = [
-        "--RAW-CONTROL-CHARS" # Only allow colors.
-        "--mouse"
-        "--wheel-lines=5"
-        "--LONG-PROMPT"
-      ];
-    in
-    {
-      PAGER = "less";
-      # Don't use `programs.less.envVariables.LESS`, which will be override by `LESS` set by `man`.
-      LESS = pkgs.lib.concatStringsSep " " common;
-      SYSTEMD_LESS = pkgs.lib.concatStringsSep " " (
-        common
-        ++ [
-          "--quit-if-one-screen"
-          "--chop-long-lines"
-          "--no-init" # Keep content after quit.
-        ]
-      );
-    };
+  environment.variables = let
+    common = [
+      "--RAW-CONTROL-CHARS" # Only allow colors.
+      "--mouse"
+      "--wheel-lines=5"
+      "--LONG-PROMPT"
+    ];
+  in {
+    PAGER = "less";
+    # Don't use `programs.less.envVariables.LESS`, which will be override by `LESS` set by `man`.
+    LESS = pkgs.lib.concatStringsSep " " common;
+    SYSTEMD_LESS = pkgs.lib.concatStringsSep " " (common ++ [
+      "--quit-if-one-screen"
+      "--chop-long-lines"
+      "--no-init" # Keep content after quit.
+    ]);
+  };
 }
