@@ -41,8 +41,7 @@ let
       ForceHideCompletePassword = true;
     };
   };
-in
-{
+in {
   services.displayManager = {
     sddm = {
       enable = true;
