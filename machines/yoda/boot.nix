@@ -40,9 +40,9 @@
         efiSupport = true;
         devices = [ "nodev" ];
         # useOSProber = true;
-        #theme = packages.distro-grub-themes-nixos;
+        theme = lib.mkForce packages.distro-grub-themes-nixos;
 
-        # gfxmodeEfi = "3440x1440";
+        gfxmodeEfi = lib.mkForce "3440x1440";
         extraEntries = ''
           menuentry "Windows" --class windows --class os {
             insmod part_gpt
@@ -67,11 +67,11 @@
         # GRUB_GFXMODE=3440x1440,auto
         # GRUB_INIT_TUNE="1750 523 1 392 1 523 1 659 1 784 1 1047 1 784 1 415 1 523 1 622 1 831 1 622 1 831 1 1046 1 1244 1 1661 1 1244 1 466 1 587 1 698 1 932 1 1195 1 1397 1 1865 1 1397 1"
       };
-      grub2-theme = {
-        enable = true;
-        theme = "stylish";
-        footer = true;
-      };
+      # grub2-theme = {
+      #   enable = true;
+      #   theme = "stylish"; 
+      #   footer = true;
+      # };
     };
 
     # enables OBS virtual camera

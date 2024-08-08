@@ -38,6 +38,7 @@
       # hydrapaper # wallpaper manager for gnome
       efitools # manipulate UEFI secure boot variables
       dolphin-emu-beta # old game ROM emulator
+      sloccount # count lines of code
     ];
 
     sessionVariables = {

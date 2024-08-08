@@ -1,4 +1,4 @@
-{ inputs, pkgs, packages, config, lib, ... }:
+{ pkgs, config, lib, ... }:
 
 let
   xcfg = config.services.xserver;
@@ -41,7 +41,8 @@ let
       ForceHideCompletePassword = true;
     };
   };
-in {
+in
+{
   services.displayManager = {
     sddm = {
       enable = true;

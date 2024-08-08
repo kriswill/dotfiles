@@ -7,8 +7,8 @@
     nixpkgs-trunk.url = "github:NixOS/nixpkgs";
     home-manager.url = "github:nix-community/home-manager/release-24.05";
     home-manager.inputs.nixpkgs.follows = "nixpkgs-unstable";
-    nixvim.url = "github:kriswill/nixvim";
-    # nixvim.url = "git+file:/home/k/src/nixvim?shallow=1";
+    # nixvim.url = "github:kriswill/nixvim";
+    nixvim.url = "git+file:/home/k/src/nixvim?shallow=1";
     nixvim.inputs.nixpkgs.follows = "nixpkgs-unstable";
     nur.url = "github:nix-community/nur";
     flake-parts.url = "github:hercules-ci/flake-parts";

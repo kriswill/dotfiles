@@ -8,6 +8,7 @@ in {
     config = {
       Location = "B";
       EnableSNI = true;
+      DateTimeStyle = "%a %D %H:%M:%S";
       #SNIIconSize = { };
     };
   };
