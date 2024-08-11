@@ -1,12 +1,17 @@
-{ stdenvNoCC, lib, fetchzip, }:
-let uuid = "tilingshell@ferrarodomenico.com";
-in stdenvNoCC.mkDerivation rec {
+{
+  stdenvNoCC,
+  lib,
+  fetchzip,
+}:
+let
+  uuid = "tilingshell@ferrarodomenico.com";
+in
+stdenvNoCC.mkDerivation rec {
   pname = "tilingshell";
   version = "11.0.0";
 
   src = fetchzip {
-    url =
-      "https://github.com/domferr/tilingshell/releases/download/${version}/${uuid}.zip";
+    url = "https://github.com/domferr/tilingshell/releases/download/${version}/${uuid}.zip";
     hash = "sha256-7ocvXad8VVl8ePuD918PXLOiGuxEBwxpyVD3RuBnAtM=";
     stripRoot = false;
   };

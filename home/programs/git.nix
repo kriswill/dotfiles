@@ -1,7 +1,9 @@
 { pkgs, ... }:
 
-let rg = "${pkgs.lib.getExe pkgs.ripgrep}";
-in {
+let
+  rg = "${pkgs.lib.getExe pkgs.ripgrep}";
+in
+{
   home.packages = with pkgs.gitAndTools; [
     diff-so-fancy # git diff with colors
     git-crypt # git files encryption
@@ -16,17 +18,14 @@ in {
 
     aliases = {
       amend = "commit --amend -m";
-      fixup =
-        "!f(){ git reset --soft HEAD~\${1} && git commit --amend -C HEAD; };f";
+      fixup = "!f(){ git reset --soft HEAD~\${1} && git commit --amend -C HEAD; };f";
       # lines of code
       loc = ''!f(){ git ls-files | ${rg} "\.''${1}" | xargs wc -l; };f'';
       br = "branch";
       co = "checkout";
       st = "status";
-      ls = ''
-        log --pretty=format:"%C(yellow)%h%Cred%d\\ %Creset%s%Cblue\\ [%cn]" --decorate'';
-      ll = ''
-        log --pretty=format:"%C(yellow)%h%Cred%d\\ %Creset%s%Cblue\\ [%cn]" --decorate --numstat'';
+      ls = ''log --pretty=format:"%C(yellow)%h%Cred%d\\ %Creset%s%Cblue\\ [%cn]" --decorate'';
+      ll = ''log --pretty=format:"%C(yellow)%h%Cred%d\\ %Creset%s%Cblue\\ [%cn]" --decorate --numstat'';
       cm = "commit -m";
       ca = "commit -am";
       dc = "diff --cached";
@@ -43,8 +42,7 @@ in {
         tool = "vim_mergetool";
       };
       mergetool."vim_mergetool" = {
-        cmd =
-          ''nvim -f -c "MergetoolStart" "$MERGED" "$BASE" "$LOCAL" "$REMOTE"'';
+        cmd = ''nvim -f -c "MergetoolStart" "$MERGED" "$BASE" "$LOCAL" "$REMOTE"'';
         prompt = false;
       };
       pull.rebase = false;
@@ -57,7 +55,10 @@ in {
       };
       # maintenance = { repo = "/home/k/src/github/kriswill/nixpkgs"; };
     };
-    ignores = [ "*.direnv" "*.envrc" ];
+    ignores = [
+      "*.direnv"
+      "*.envrc"
+    ];
     #signing = {
     #  key = "121D4302A64B2261";
     #  signByDefault = true;

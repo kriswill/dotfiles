@@ -1,7 +1,8 @@
 # minimal neovim for working with root or during installation
-{ pkgs, lib, ... }:
+{ pkgs, ... }:
 
-with pkgs.unstable; {
+with pkgs.unstable;
+{
   programs.neovim = {
     enable = true;
     package = neovim-unwrapped;
@@ -28,5 +29,12 @@ with pkgs.unstable; {
       };
     };
   };
-  environment.systemPackages = [ tree-sitter stylua fd fzf wget fswatch ];
+  environment.systemPackages = [
+    tree-sitter
+    stylua
+    fd
+    fzf
+    wget
+    fswatch
+  ];
 }

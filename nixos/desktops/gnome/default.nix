@@ -1,4 +1,11 @@
-{ pkgs, config, lib, packages, ... }: {
+{
+  pkgs,
+  config,
+  lib,
+  packages,
+  ...
+}:
+{
   config = lib.mkIf config.gnome.enable {
     services.xserver = {
       enable = true;
@@ -18,11 +25,15 @@
 
     programs.dconf.enable = true;
     # resolve conflict for plasma and gnome
-    programs.ssh.askPassword = lib.mkForce
-      "/nix/store/0dsjcbp33ibm4zkbhm99d3fxslnaj28v-seahorse-43.0/libexec/seahorse/ssh-askpass";
+    programs.ssh.askPassword = lib.mkForce "/nix/store/0dsjcbp33ibm4zkbhm99d3fxslnaj28v-seahorse-43.0/libexec/seahorse/ssh-askpass";
 
     environment.gnome.excludePackages =
-      (with pkgs; [ gnome-photos gnome-tour gedit wl-clipboard-rs ])
+      (with pkgs; [
+        gnome-photos
+        gnome-tour
+        gedit
+        wl-clipboard-rs
+      ])
       ++ (with pkgs.gnome; [
         cheese
         gnome-music

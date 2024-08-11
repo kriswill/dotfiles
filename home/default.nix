@@ -1,7 +1,11 @@
 { pkgs, ... }:
 
 {
-  imports = [ ./xdg ./programs ./scripts ];
+  imports = [
+    ./xdg
+    ./programs
+    ./scripts
+  ];
 
   home = {
     packages = with pkgs.unstable; [
@@ -27,7 +31,6 @@
       github-desktop # github for dummies
       yq-go # yaml parser
       gcolor3 # color picker
-      xdg-utils # Multiple packages depend on xdg-open at runtime. This includes Discord
       element-desktop-wayland # matrix client
       zoom-us # video conferencing
       lutris # game manager

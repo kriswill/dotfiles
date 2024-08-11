@@ -3,7 +3,8 @@
 let
   ln = config.lib.file.mkOutOfStoreSymlink;
   src = "${config.home.homeDirectory}/src/github/kriswill/dotfiles";
-in {
+in
+{
   home.packages = [
     # rofi 
     pkgs.unstable.rofi-wayland

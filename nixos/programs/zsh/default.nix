@@ -1,7 +1,9 @@
 { pkgs, ... }:
 
-let inherit (pkgs.lib) getExe;
-in {
+let
+  inherit (pkgs.lib) getExe;
+in
+{
   environment = {
     shells = [ pkgs.zsh ];
     pathsToLink = [ "/share/zsh" ];
@@ -12,7 +14,10 @@ in {
     autosuggestions.enable = true;
     syntaxHighlighting = {
       enable = true;
-      highlighters = [ "main" "brackets" ];
+      highlighters = [
+        "main"
+        "brackets"
+      ];
     };
     shellAliases = import ./aliases.nix { inherit pkgs; };
     interactiveShellInit = ''

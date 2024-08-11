@@ -1,8 +1,12 @@
-{ inputs, ... }: {
+{ inputs, ... }:
+{
   imports = [ inputs.pre-commit-hooks.flakeModule ];
 
   perSystem.pre-commit.settings = {
-    excludes = [ "flake.lock" ".direnv" ];
+    excludes = [
+      "flake.lock"
+      ".direnv"
+    ];
 
     hooks = {
       nil.enable = true;

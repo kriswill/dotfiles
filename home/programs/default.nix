@@ -34,7 +34,11 @@ _: {
     };
     fd = {
       enable = true;
-      ignores = [ ".git/" "*.bak" ".direnv/" ];
+      ignores = [
+        ".git/"
+        "*.bak"
+        ".direnv/"
+      ];
     };
     fzf = {
       enable = true;
@@ -51,7 +55,10 @@ _: {
     zoxide = {
       enable = true;
       enableZshIntegration = true;
-      options = [ "--cmd" "j" ];
+      options = [
+        "--cmd"
+        "j"
+      ];
     };
   };
 }

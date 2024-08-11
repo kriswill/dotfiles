@@ -13,21 +13,21 @@ show_help() {
 }
 
 # Process options
-while [[ "$#" -gt 0 ]]; do
+while [[ $# -gt 0 ]]; do
   case "$1" in
-    -h|--help)
-      show_help
-      exit 0
-      ;;
-    -d)
-      delimiter="$2"
-      shift 2
-      continue
-      ;;
-    *)
-      # Ignore unrecognized options
-      shift
-      ;;
+  -h | --help)
+    show_help
+    exit 0
+    ;;
+  -d)
+    delimiter="$2"
+    shift 2
+    continue
+    ;;
+  *)
+    # Ignore unrecognized options
+    shift
+    ;;
   esac
 done
 
@@ -41,7 +41,7 @@ else
 fi
 
 # Split the input using the specified delimiter
-IFS="$delimiter" read -ra segments <<< "$input"
+IFS="$delimiter" read -ra segments <<<"$input"
 
 # Output each segment on a new line
 for segment in "${segments[@]}"; do

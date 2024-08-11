@@ -1,6 +1,7 @@
 { pkgs, lib, ... }:
 
-with pkgs.unstable; {
+with pkgs.unstable;
+{
 
   programs.yazi = {
     enable = true;

@@ -7,14 +7,17 @@ let
   darwin-extra-config = ''
     IdentityAgent "~/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock"
   '';
-in {
+in
+{
 
   programs.ssh = {
     enable = true;
     includes = [ "${config.home.homeDirectory}/.ssh/config.d/*" ];
     forwardAgent = true;
     extraConfig = if isDarwin then darwin-extra-config else linux-extra-config;
-    matchBlocks = { "gitlab.com".user = "git"; };
+    matchBlocks = {
+      "gitlab.com".user = "git";
+    };
   };
   #sops.secrets.hosts = {
   #  sopsFile = ../../secrets/ssh.yaml;

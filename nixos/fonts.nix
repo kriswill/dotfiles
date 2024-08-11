@@ -6,7 +6,10 @@
     fontconfig = {
       enable = true;
       defaultFonts = {
-        monospace = [ "JetBrainsMono Nerd Font Mono" "Noto Mono" ];
+        monospace = [
+          "JetBrainsMono Nerd Font Mono"
+          "Noto Mono"
+        ];
         sansSerif = [ "Noto Sans" ];
         serif = [ "Noto Serif" ];
       };
@@ -17,7 +20,12 @@
       vegur
       noto-fonts
 
-      (nerdfonts.override { fonts = [ "JetBrainsMono" "DejaVuSansMono" ]; })
+      (nerdfonts.override {
+        fonts = [
+          "JetBrainsMono"
+          "DejaVuSansMono"
+        ];
+      })
     ];
   };
 }

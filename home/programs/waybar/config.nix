@@ -58,11 +58,17 @@
       format = "{usage}% ";
       tooltip = false;
     };
-    memory = { format = "{}% "; };
+    memory = {
+      format = "{}% ";
+    };
     temperature = {
       critical-threshold = 80;
       format = "{temperatureC}°C {icon}";
-      format-icons = [ "" "" "" ];
+      format-icons = [
+        ""
+        ""
+        ""
+      ];
     };
     # backlight = {
     #   scroll-step = 5;
@@ -104,7 +110,11 @@
         phone = "";
         portable = "";
         car = "";
-        default = [ "" "" "" ];
+        default = [
+          ""
+          ""
+          ""
+        ];
       };
       on-click = "pavucontrol";
     };
