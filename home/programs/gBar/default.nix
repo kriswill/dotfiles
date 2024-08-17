@@ -8,7 +8,7 @@ let
   ln = config.lib.file.mkOutOfStoreSymlink;
 in
 {
-  imports = [ inputs.gBar.homeManagerModules.x86_64-linux.default ];
+  imports = [ inputs.gBar.homeManagerModules.aarch64-linux.default ];
 
   programs.gBar = {
     enable = true;
@@ -21,7 +21,7 @@ in
   };
 
   home.packages = [
-    inputs.gBar.defaultPackage.x86_64-linux
+    inputs.gBar.defaultPackage.aarch64-linux
     pkgs.unstable.pamixer
   ];
 

@@ -23,17 +23,17 @@
       tldr # short manual for common shell commands
       dconf2nix # convert dconf settings to nix
       # slack for gamers
-      (discord.override {
-        withOpenASAR = true;
-        withVencord = true;
-      })
-      vesktop # alt discord client
+      # (discord.override {
+      #   withOpenASAR = true;
+      #   withVencord = true;
+      # })
+      # vesktop # alt discord client
       github-desktop # github for dummies
       yq-go # yaml parser
       gcolor3 # color picker
       element-desktop-wayland # matrix client
-      zoom-us # video conferencing
-      lutris # game manager
+      # zoom-us # video conferencing
+      # lutris # game manager
       devenv # development environments
       unzip
       zip

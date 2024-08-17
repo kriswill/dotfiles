@@ -12,8 +12,8 @@ _: {
     ./neovim
     ./vscode.nix
     ./waybar
-    ./gBar
-    ./wine
+    # ./gBar
+    # ./wine
     ./yazi
     ./zsh
     ./rofi

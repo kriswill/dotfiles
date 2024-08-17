@@ -48,6 +48,25 @@ in
           modules = [ ./yoda/home-manager.nix ];
         }
       );
+      ####  k  ###################################################################
+      "k@nix" = withSystem "aarch64-linux" (
+        { pkgs, ... }:
+        inputs.home-manager.lib.homeManagerConfiguration {
+          inherit pkgs;
+          extraSpecialArgs = {
+            inherit inputs;
+          };
+          modules = [ 
+          {
+            imports = [ ../home ];
+
+            home = rec {
+              username = "k";
+              homeDirectory = "/home/${username}";
+            };
+          }];
+        }
+      );
     };
   };
 }

@@ -35,7 +35,7 @@
   outputs =
     inputs@{ self, flake-parts, ... }:
     flake-parts.lib.mkFlake { inherit inputs; } (top: {
-      systems = [ "x86_64-linux" ];
+      systems = [ "x86_64-linux" "aarch64-linux" ];
       imports = [
         ./machines
         ./devShells.nix

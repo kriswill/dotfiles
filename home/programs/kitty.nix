@@ -19,7 +19,7 @@
       tab_bar_style = "powerline";
       # angled | slanted | round
       tab_powerline_style = "slanted";
-      background_opacity = "0.9";
+      # background_opacity = "0.9";
       confirm_os_window_close = 0;
       copy_on_select = "clipboard";
       enable_audio_bell = "no";
