@@ -1,9 +1,9 @@
-{ pkgs, ... }:
+{ pkgs, lib, ... }:
 
 let
-  fontSize = 14;
+  fontSize = 16;
 in
-{
+with pkgs.unstable; {
   programs.alacritty = {
     enable = true;
 
@@ -69,13 +69,13 @@ in
       hints.enabled = [
         {
           regex = ''(mailto:|gemini:|gopher:|https:|http:|news:|file:|git:|ssh:|ftp:)[^\u0000-\u001F\u007F-\u009F<>"\\s{-}\\^⟨⟩`]+'';
-          command = "${pkgs.mimeo}/bin/mimeo";
+          command = "${lib.getExe mimeo}";
           post_processing = true;
           mouse.enabled = true;
         }
       ];
       selection.save_to_clipboard = true;
-      shell.program = "${pkgs.zsh}/bin/zsh";
+      shell.program = "${lib.getExe zsh}";
       window = {
         decorations = "none";
         opacity = 0.87;
@@ -84,8 +84,8 @@ in
           lines = 50;
         };
         padding = {
-          x = 10;
-          y = 10;
+          x = 4;
+          y = 4;
         };
       };
     };

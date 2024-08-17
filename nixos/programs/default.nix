@@ -40,7 +40,7 @@
         psmisc # killall, pstree, fuser, etc -- https://gitlab.com/psmisc/psmisc
       ]
       ++ (with pkgs.unstable.bat-extras; [
-        batdiff # nice diffs
+        # batdiff # nice diffs
         batgrep # ripgrep with wings
         batman # man pages using bat
         batpipe # less preprocessor

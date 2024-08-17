@@ -11,7 +11,7 @@
   ];
   hyprland.enable = true;
 
-  boot.kernelPackages = pkgs.linuxPackages;
+  boot.kernelPackages = pkgs.linuxPackages_latest;
 
   # Use Systemd EFI boot only (no grub)
   boot.loader = {
