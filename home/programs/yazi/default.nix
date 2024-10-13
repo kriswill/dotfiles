@@ -1,6 +1,6 @@
 { pkgs, lib, ... }:
 
-with pkgs.unstable;
+with pkgs;
 {
 
   programs.yazi = {
@@ -8,8 +8,7 @@ with pkgs.unstable;
     package = yazi;
     enableZshIntegration = true; # adds function "ya"
     settings = import ./settings.nix {
-      inherit lib;
-      pkgs = pkgs.unstable;
+      inherit lib pkgs;
     };
   };
 

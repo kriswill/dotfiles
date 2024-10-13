@@ -5,7 +5,7 @@
 , lib
 , ...
 }:
-with pkgs.unstable;
+with pkgs;
 let
   ln = config.lib.file.mkOutOfStoreSymlink;
   cursorPackage = pkgs.bibata-hyprcursor;

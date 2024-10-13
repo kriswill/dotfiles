@@ -14,7 +14,7 @@ let
       --output DP-0 --mode 3440x1440 --rate 59.97 --pos 0x0 --rotate left \
       --output DP-2 --mode 3440x1440 --rate 59.97 --pos 1440x1250 --primary
   '';
-  polybar = "${lib.getExe pkgs.unstable.polybar} --reload toph -c ~/.config/i3/polybar.ini";
+  polybar = "${lib.getExe pkgs.polybar} --reload toph -c ~/.config/i3/polybar.ini";
 
   polybar_script =
     pkgs.writeScript "polybar_script" # sh
@@ -32,7 +32,7 @@ let
 in
 {
   # so we can set wallpapers without rebuilding
-  home.packages = with pkgs.unstable; [
+  home.packages = with pkgs; [
     feh
     xclip
     grobi
@@ -64,7 +64,7 @@ in
 
       modifier = "Mod4"; # Windows Key
       floating.modifier = "Mod4";
-      terminal = "${lib.getBin pkgs.unstable.kitty}";
+      terminal = "${lib.getBin pkgs.kitty}";
       keybindings = import ./keybinds.nix;
       defaultWorkspace = "workspace number 1";
 
@@ -75,7 +75,7 @@ in
           notification = false;
         }
         {
-          command = "${lib.getExe pkgs.unstable.feh} --bg-scale ${background}";
+          command = "${lib.getExe pkgs.feh} --bg-scale ${background}";
           always = true;
           notification = false;
         }

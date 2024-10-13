@@ -45,7 +45,6 @@
   };
 
   # Enable sound with pipewire.
-  sound.enable = true;
   security.rtkit.enable = true;
   hardware.pulseaudio.enable = lib.mkForce false;
   services.pipewire = {

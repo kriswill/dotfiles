@@ -2,15 +2,15 @@
 let
   # https://github.com/NixOS/nixpkgs/blob/master/pkgs/os-specific/linux/nvidia-x11/default.nix
 
-  driver_555_58_02 = config.boot.kernelPackages.nvidiaPackages.mkDriver {
-    version = "555.58.02";
-    sha256_64bit = "sha256-xctt4TPRlOJ6r5S54h5W6PT6/3Zy2R4ASNFPu8TSHKM=";
-    sha256_aarch64 = "sha256-wb20isMrRg8PeQBU96lWJzBMkjfySAUaqt4EgZnhyF8=";
-    openSha256 = "sha256-8hyRiGB+m2hL3c9MDA/Pon+Xl6E788MZ50WrrAGUVuY=";
-    settingsSha256 = "sha256-ZpuVZybW6CFN/gz9rx+UJvQ715FZnAOYfHn5jt5Z2C8=";
-    persistencedSha256 = "sha256-a1D7ZZmcKFWfPjjH1REqPM5j/YLWKnbkP9qfRyIyxAw=";
-  };
-
+  # driver_555_58_02 = config.boot.kernelPackages.nvidiaPackages.mkDriver {
+  #   version = "555.58.02";
+  #   sha256_64bit = "sha256-xctt4TPRlOJ6r5S54h5W6PT6/3Zy2R4ASNFPu8TSHKM=";
+  #   sha256_aarch64 = "sha256-wb20isMrRg8PeQBU96lWJzBMkjfySAUaqt4EgZnhyF8=";
+  #   openSha256 = "sha256-8hyRiGB+m2hL3c9MDA/Pon+Xl6E788MZ50WrrAGUVuY=";
+  #   settingsSha256 = "sha256-ZpuVZybW6CFN/gz9rx+UJvQ715FZnAOYfHn5jt5Z2C8=";
+  #   persistencedSha256 = "sha256-a1D7ZZmcKFWfPjjH1REqPM5j/YLWKnbkP9qfRyIyxAw=";
+  # };
+  nvidiaDriver = config.boot.kernelPackages.nvidiaPackages.stable;
 in
 # doesn't compile 2024/07/29
 {
@@ -19,7 +19,7 @@ in
 
   hardware = {
     nvidia = {
-      package = driver_555_58_02;
+      package = nvidiaDriver;
       # Modesetting is needed most of the time
       modesetting.enable = true;
 
@@ -41,8 +41,8 @@ in
 
     opengl = {
       enable = true;
-      driSupport = true;
-      driSupport32Bit = true;
+      # driSupport = true;
+      # driSupport32Bit = true;
       extraPackages = with pkgs; [
         vaapiVdpau
         libvdpau-va-gl
@@ -64,7 +64,7 @@ in
   boot = {
     initrd.kernelModules = [ "nvidia" ];
     blacklistedKernelModules = [ "nouveau" ];
-    extraModulePackages = [ driver_555_58_02 ];
+    extraModulePackages = [ nvidiaDriver ];
     kernelParams = [
       "nvidia.NVreg_PreserveVideoMemoryAllocations=1"
       "nvidia-drm.modeset=1"

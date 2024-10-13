@@ -47,11 +47,11 @@
     enable = true;
     theme = {
       name = "adw-gtk-dark";
-      package = pkgs.unstable.adw-gtk3;
+      package = pkgs.adw-gtk3;
     };
     iconTheme = {
       name = "Adwaita";
-      package = pkgs.unstable.adwaita-icon-theme;
+      package = pkgs.adwaita-icon-theme;
     };
     gtk2.configLocation = "${config.xdg.configHome}/gtk-2.0/gtkrc";
     gtk3.extraConfig = {
@@ -67,7 +67,7 @@
     platformTheme.name = "Adwaita-dark";
     style = {
       name = "Adwaita-dark";
-      package = pkgs.unstable.adwaita-qt;
+      package = pkgs.adwaita-qt;
     };
   };
 }

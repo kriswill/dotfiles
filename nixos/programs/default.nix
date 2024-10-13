@@ -8,7 +8,7 @@
 
   environment = {
     systemPackages =
-      with pkgs.unstable;
+      with pkgs;
       [
         bat # cat clone with wings.
         curl # a network utility to retrieve files from the Web
@@ -39,7 +39,7 @@
         tcpdump # Network sniffer
         psmisc # killall, pstree, fuser, etc -- https://gitlab.com/psmisc/psmisc
       ]
-      ++ (with pkgs.unstable.bat-extras; [
+      ++ (with pkgs.bat-extras; [
         batdiff # nice diffs
         batgrep # ripgrep with wings
         batman # man pages using bat

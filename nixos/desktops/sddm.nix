@@ -38,7 +38,7 @@ let
     "-c ${weston-ini}"
   ];
 
-  sddm-astronaut = pkgs.unstable.sddm-astronaut.override {
+  sddm-astronaut = pkgs.sddm-astronaut.override {
     themeConfig = {
       Background = pkgs.wallpapers.yoda-dagoba-2;
       AccentColor = "#6E815B";
@@ -56,7 +56,7 @@ in
         compositor = lib.mkForce "weston";
         compositorCommand = weston-command;
       };
-      package = pkgs.unstable.kdePackages.sddm;
+      package = pkgs.kdePackages.sddm;
       extraPackages = [ sddm-astronaut ];
       theme = "sddm-astronaut-theme";
     };

@@ -1,5 +1,5 @@
 { config, pkgs, ... }: 
-with pkgs.unstable; {
+with pkgs; {
   programs.neovim = {
     enable = true;
     package = neovim-unwrapped;

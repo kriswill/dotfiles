@@ -8,7 +8,7 @@
   ];
 
   home = {
-    packages = with pkgs.unstable; [
+    packages = with pkgs; [
       (nerdfonts.override {
         fonts = [
           "SourceCodePro" # `SauceCodePro Nerd Font`

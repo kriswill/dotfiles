@@ -1,7 +1,7 @@
 # minimal neovim for working with root or during installation
 { pkgs, ... }:
 
-with pkgs.unstable;
+with pkgs;
 {
   programs.neovim = {
     enable = true;

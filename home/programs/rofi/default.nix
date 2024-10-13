@@ -7,7 +7,7 @@ in
 {
   home.packages = [
     # rofi 
-    pkgs.unstable.rofi-wayland
+    pkgs.rofi-wayland
   ];
   # make a symlink for rofi -- allow for theme selector to work...
   xdg.configFile."rofi".source = ln "${src}/home/programs/rofi/config";

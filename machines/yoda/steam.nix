@@ -10,7 +10,7 @@
     gamescope.enable = true;
   };
   environment = {
-    systemPackages = with pkgs.unstable; [
+    systemPackages = with pkgs; [
       mangohud
       protonup
     ];

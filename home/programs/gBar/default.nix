@@ -22,7 +22,7 @@ in
 
   home.packages = [
     inputs.gBar.defaultPackage.x86_64-linux
-    pkgs.unstable.pamixer
+    pkgs.pamixer
   ];
 
   xdg.configFile."gBar/style.scss".source = ln "/home/k/src/dotfiles/home/programs/gBar/style.scss";

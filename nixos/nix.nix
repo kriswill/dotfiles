@@ -1,13 +1,12 @@
 {
   inputs,
   pkgs,
-  nixpkgs,
   ...
 }:
 
 {
   nix = {
-    package = pkgs.unstable.nixVersions.latest;
+    package = pkgs.nixVersions.latest;
 
     settings = {
       trusted-users = [
@@ -46,25 +45,21 @@
     overlays = [
       inputs.nur.overlay
       (final: prev: {
-        unstable = import inputs.nixpkgs-unstable {
-          inherit (final) system;
-          config.allowUnfree = true;
-        };
         trunk = import inputs.nixpkgs-trunk {
           inherit (final) system;
           config.allowUnfree = true;
         };
         wallpapers = import ../packages/shared/wallpapers.nix;
-        xdg-desktop-portal-gtk =
-          (prev.xdg-desktop-portal-gtk.overrideAttrs {
-            postInstall = ''
-              sed -i 's/UseIn=gnome/UseIn=gnome;Hyprland;none+i3/' $out/share/xdg-desktop-portal/portals/gtk.portal
-            '';
-          }).override
-            {
-              # prevent collision with Gnome when installing alongside Hyprland
-              buildPortalsInGnome = false;
-            };
+        # xdg-desktop-portal-gtk =
+        #   (prev.xdg-desktop-portal-gtk.overrideAttrs {
+        #     postInstall = ''
+        #       sed -i 's/UseIn=gnome/UseIn=gnome;Hyprland;none+i3/' $out/share/xdg-desktop-portal/portals/gtk.portal
+        #     '';
+        #   }).override
+        #     {
+        #       # prevent collision with Gnome when installing alongside Hyprland
+        #       buildPortalsInGnome = false;
+        #     };
       })
     ];
     # Allow unfree packages

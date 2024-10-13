@@ -1,5 +1,5 @@
 { pkgs, ... }:
-with pkgs.unstable;
+with pkgs;
 {
 
   imports = [ ./settings.nix ];

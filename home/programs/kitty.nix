@@ -4,7 +4,7 @@
   programs.kitty = {
     enable = true;
 
-    package = pkgs.unstable.kitty;
+    # package = pkgs.kitty;
 
     font = {
       name = "SauceCodePro Nerd Font";
