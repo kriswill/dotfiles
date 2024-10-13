@@ -23,7 +23,10 @@ _: {
 
   programs = {
     home-manager.enable = true;
-    bat.enable = true;
+    bat = {
+      enable = true;
+      config.theme = "1337";
+    };
     jq.enable = true;
     nix-index.enable = true;
     obs-studio.enable = true;

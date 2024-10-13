@@ -39,9 +39,6 @@ with pkgs; {
       rainbow-delimiters-nvim
       telescope-fzy-native-nvim
       telescope-nvim
-      # vim-floaterm
-      # vim-sneak
-      # vim-vsnip
       which-key-nvim
     ];
 
