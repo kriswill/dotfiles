@@ -33,25 +33,24 @@
         gnome-tour
         gedit
         wl-clipboard-rs
+        gnome-contacts
+        gnome-initial-setup
       ])
       ++ (with pkgs.gnome; [
         cheese
         gnome-music
         epiphany
-        # geary
         gnome-characters
         tali
         iagno
         hitori
         atomix
         yelp
-        gnome-contacts
-        gnome-initial-setup
       ]);
 
     environment.systemPackages = with pkgs; [
-      gnome.gnome-tweaks
-      gnome.gnome-system-monitor
+      gnome-tweaks
+      gnome-system-monitor
       #gnomeExtensions.custom-vpn-toggler
       gnomeExtensions.dual-monitor-toggle
       evince

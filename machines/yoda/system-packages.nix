@@ -1,6 +1,5 @@
 {
   pkgs,
-  environment,
   username,
   ...
 }:
@@ -30,27 +29,6 @@
     # fix for many rust based guis on wayland/gnome/nixos
     # https://github.com/alacritty/alacritty/issues/4780#issuecomment-890408502
     variables.XCURSOR_THEME = "Adwaita";
-
-    gnome.excludePackages =
-      (with pkgs; [
-        gnome-photos
-        gnome-tour
-        gedit
-      ])
-      ++ (with pkgs.gnome; [
-        cheese
-        gnome-music
-        epiphany
-        geary
-        gnome-characters
-        tali
-        iagno
-        hitori
-        atomix
-        yelp
-        gnome-contacts
-        gnome-initial-setup
-      ]);
   };
 
   programs = {

@@ -12,7 +12,6 @@ let
   # };
   nvidiaDriver = config.boot.kernelPackages.nvidiaPackages.stable;
 in
-# doesn't compile 2024/07/29
 {
   services.xserver.videoDrivers = [ "nvidia" ];
   # Enable OpenGL
@@ -39,26 +38,16 @@ in
       nvidiaSettings = true;
     };
 
-    opengl = {
+    graphics = {
       enable = true;
-      # driSupport = true;
-      # driSupport32Bit = true;
+      enable32Bit = true;
       extraPackages = with pkgs; [
-        vaapiVdpau
+        # https://github.com/NixOS/nixpkgs/blob/ae88a0775335e6b66016565543392a7575923644/pkgs/development/libraries/libva-vdpau-driver/default.nix
+        libva-vdpau-driver
+        # https://github.com/i-rinat/libvdpau-va-gl
         libvdpau-va-gl
       ];
     };
-
-    # unstable only
-    # graphics = {
-    #   # in https://github.com/lutris/docs/blob/master/InstallingDrivers.md#renderer-configuration-opengl-vulkan
-    #   extraPackages = with pkgs; [
-    #     rocm-opencl-icd
-    #     rocm-opencl-runtime
-    #   ];
-    #   enable = true;
-    #   enable32Bit = true;
-    # };
   };
 
   boot = {

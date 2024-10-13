@@ -10,7 +10,7 @@ local buf_map = function(bufnr, mode, lhs, rhs, opts)
 	})
 end
 
-lspc.tsserver.setup({
+lspc.ts_ls.setup({
 	on_attach = function(client, bufnr)
 		client.resolved_capabilities.document_formatting = false
 		client.resolved_capabilities.document_range_formatting = false
