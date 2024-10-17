@@ -34,7 +34,28 @@ with pkgs; {
       nvim-dap-ui
       nvim-lspconfig
       nvim-tree-lua
-      (nvim-treesitter.withPlugins (_: tree-sitter.allGrammars))
+      (nvim-treesitter.withPlugins (p: with p; [
+        bash
+        c cpp
+        dockerfile
+        go
+        gomod
+        html
+        javascript
+        json jsonc
+        lua
+        make
+        markdown
+        nix
+        python
+        rust
+        sql
+        toml
+        typescript
+        vim
+        yaml
+        zig
+      ])) 
       plenary-nvim
       rainbow-delimiters-nvim
       telescope-fzy-native-nvim
