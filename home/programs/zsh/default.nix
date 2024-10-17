@@ -19,6 +19,9 @@
         (( ''${+aliases[run-help]} )) && unalias run-help
         alias help=run-help
 
+        setopt interactivecomments # allow comments on the command-line
+        setopt AUTO_CD # type directory path name to change to that dir
+
         # let batman command autocomplete like man
         compdef batman=man
 
