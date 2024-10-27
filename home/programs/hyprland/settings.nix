@@ -40,11 +40,16 @@ in
 
     exec-once = [
       "hyprctl setcursor ${cursor} ${cursorSize}"
-      "swww-daemon -q && swww img -o DP-1 ~/Pictures/yoda-dagobah.webp && swww img -o DP-2 ~/Pictures/yoda-dagoba-render.jpg"
+      # "swww-daemon -q && swww img -o DP-1 ~/Pictures/yoda-dagobah.webp && swww img -o DP-2 ~/Pictures/yoda-dagoba-render.jpg"
+      "systemctl --user start hyprpaper"
       "1password --silent"
       "dunst"
       "gBar bar DP-2"
     ];
+
+    # cursor = [
+    #   "no_hardware_cursors = true"
+    # ];
 
     source = [
       "./monitors.conf"
