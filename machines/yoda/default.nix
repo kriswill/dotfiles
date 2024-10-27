@@ -1,4 +1,4 @@
-{ config, lib, ... }:
+{ lib, pkgs, ... }:
 
 {
   networking.hostName = "yoda";
@@ -26,6 +26,10 @@
       "1c33c1ced0b9fe7c"
     ];
   };
+
+  # logitech profile editing
+  services.ratbagd.enable = true;
+  environment.systemPackages = [ pkgs.piper ];
 
   # Set your time zone.
   time.timeZone = "America/Los_Angeles";
