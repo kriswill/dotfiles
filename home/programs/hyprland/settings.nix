@@ -24,8 +24,8 @@ in
     "$file-manager" = "nautilus";
     "$menu" = "${lib.getExe rofi-wayland} -show drun";
     "$screenshot" = "grim -t png -l0 -g \"$(slurp)\" - | swappy -f -";
-    "$1password-quick" = "${lib.getExe _1password} --quick-access";
-    "$1password-toggle" = "${lib.getExe _1password} --toggle";
+    "$1password-quick" = "${lib.getExe _1password-cli} --quick-access";
+    "$1password-toggle" = "${lib.getExe _1password-cli} --toggle";
 
     env = [
       "HYPRCURSOR_THEME,${cursor}"

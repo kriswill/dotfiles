@@ -51,7 +51,7 @@
       HOME_SESSION_VARIABLES = "1";
     };
 
-    stateVersion = "24.05";
+    stateVersion = "24.11";
   };
 
   # Needed for Nerd Fonts to be found

@@ -64,5 +64,5 @@
     #media-session.enable = true;
   };
 
-  system.stateVersion = "24.05"; # Be Careful!
+  system.stateVersion = "24.11"; # Be Careful!
 }
