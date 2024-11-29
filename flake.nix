@@ -4,16 +4,16 @@
   outputs =
     inputs @ { self
     , nixpkgs
-    , nixpkgs-unstable
-    , systems
+    , determinate
+    # , systems
     , nix-darwin
     , home-manager
-    , nix-formatter-pack
+    # , nix-formatter-pack
     , ...
     }:
     let
-      inherit (self) outputs lib;
-      inherit (lib) genAttrs;
+      # inherit (self) outputs lib;
+      # inherit (lib) genAttrs;
       inherit (nix-darwin.lib) darwinSystem;
 
       # This defines the home-manager config module
@@ -50,12 +50,13 @@
           };
           modules = [
             ./machines/k
+            determinate.darwinModules.default
             home-manager.darwinModules.home-manager
             (mkHomeManager ./home "k")
             {nixpkgs = {
-              hostPlatform = "aarch64-darwin";
-              overlays = [ outputs.overlays.nixpkgs-unstable ];
-            };}
+               hostPlatform = "aarch64-darwin";
+               # overlays = [ outputs.overlays.nixpkgs-unstable ];
+             };}
           ];
         };
       };
@@ -63,17 +64,15 @@
     };
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-24.05";
-    nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixos-unstable";
-    systems.url = "github:nix-systems/default";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-24.11-darwin";
+    # systems.url = "github:nix-systems/default";
     nur.url = "github:nix-community/nur";
-    nix-formatter-pack.url = "github:Gerschtli/nix-formatter-pack";
+    # nix-formatter-pack.url = "github:Gerschtli/nix-formatter-pack";
+    determinate.url = "https://flakehub.com/f/DeterminateSystems/determinate/0.1";
     nix-darwin.url = "github:LnL7/nix-darwin";
-    nix-darwin.inputs.nixpkgs.follows = "nixpkgs";
     mac-app-util.url = "github:hraban/mac-app-util";
-    home-manager.url = "github:nix-community/home-manager/release-24.05";
+    home-manager.url = "github:nix-community/home-manager/release-24.11";
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
     fenix.url = "github:nix-community/fenix";
-    fenix.inputs.nixpkgs.follows = "nixpkgs-unstable";
   };
 }

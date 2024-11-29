@@ -1,6 +1,6 @@
 { config, pkgs, ... }:
 
-with pkgs.unstable;
+with pkgs;
 {
   programs.neovim = {
     enable = true;
@@ -20,7 +20,7 @@ with pkgs.unstable;
       lua-language-server
       lua5_1
       luarocks
-      nil 
+      nil
       # rustTools
       go_1_22
       (go-tools.override { buildGoModule = buildGo122Module; })
@@ -39,7 +39,7 @@ with pkgs.unstable;
   };
 } // (
 let
-  # used to link files to .config/nvim/* 
+  # used to link files to .config/nvim/*
   nvimDir = config.home.homeDirectory + "/src/dotfiles/home/programs/neovim/nvim";
   ln = config.lib.file.mkOutOfStoreSymlink;
 in
