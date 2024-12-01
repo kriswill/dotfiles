@@ -12,7 +12,7 @@
     , ...
     }:
     let
-      # inherit (self) outputs lib;
+      inherit (self) outputs lib;
       # inherit (lib) genAttrs;
       inherit (nix-darwin.lib) darwinSystem;
 

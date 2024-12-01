@@ -52,5 +52,14 @@
       enableZshIntegration = true;
       options = [ "--cmd" "j" ];
     };
+
+    yazi = {
+      enable = true;
+      shellWrapperName = "y";
+      enableZshIntegration = true;
+      settings = {
+        manager.ratio = [ 1 3 4 ];
+      };
+    };
   };
 }
