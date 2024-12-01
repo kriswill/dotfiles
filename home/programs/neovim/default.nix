@@ -21,6 +21,7 @@ with pkgs;
       lua5_1
       luarocks
       nil
+      nixd
       # rustTools
       go_1_22
       (go-tools.override { buildGoModule = buildGo122Module; })
@@ -34,7 +35,6 @@ with pkgs;
       fswatch # file watcher - replaces libuv.fs_event in neovim v0.10
       sqlite
       nodejs
-      wget # used by mason
     ];
   };
 } // (
