@@ -8,9 +8,9 @@
 with pkgs.unstable;
 let
   ln = config.lib.file.mkOutOfStoreSymlink;
-  # cursorPackage = pkgs.bibata-hyprcursor;
+  cursorPackage = pkgs.bibata-hyprcursor;
   cursorSize = toString config.home.pointerCursor.size;
-  # cursor = "Bibata-Modern-Classic-Hyprcursor";
+  cursor = "Bibata-Modern-Classic-Hyprcursor";
   conf = "${config.home.homeDirectory}/src/dotfiles/home/programs/hyprland/config";
 in
 {
@@ -28,8 +28,8 @@ in
     "$1password-toggle" = "${lib.getExe _1password} --toggle";
 
     env = [
-      # "HYPRCURSOR_THEME,${cursor}"
-      # "HYPRCURSOR_SIZE,${cursorSize}"
+      "HYPRCURSOR_THEME,${cursor}"
+      "HYPRCURSOR_SIZE,${cursorSize}"
       "XCURSOR_SIZE,${cursorSize}"
       "QT_WAYLAND_DISABLE_WINDOWDECORATION,1"
       "QT_QPA_PLATFORM,wayland"
@@ -39,7 +39,7 @@ in
     ];
 
     exec-once = [
-      # "hyprctl setcursor ${cursor} ${cursorSize}"
+      "hyprctl setcursor ${cursor} ${cursorSize}"
       "swww-daemon -q && swww img -o DP-1 ~/Pictures/yoda-dagobah.webp && swww img -o DP-2 ~/Pictures/yoda-dagoba-render.jpg"
       "1password --silent"
       "dunst"
@@ -65,6 +65,6 @@ in
       "hypr/look-and-feel.conf".source = ln "${conf}/look-and-feel.conf";
       "hypr/windowrulev2.conf".source = ln "${conf}/windowrulev2.conf";
     };
-    # dataFile."icons/${cursor}".source = "${cursorPackage}/share/icons/${cursor}";
+    dataFile."icons/${cursor}".source = "${cursorPackage}/share/icons/${cursor}";
   };
 }
