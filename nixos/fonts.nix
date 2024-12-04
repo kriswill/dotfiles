@@ -19,13 +19,9 @@
     packages = with pkgs; [
       vegur
       noto-fonts
-
-      (nerdfonts.override {
-        fonts = [
-          "JetBrainsMono"
-          "DejaVuSansMono"
-        ];
-      })
+      nerd-fonts.jetbrains-mono
+      nerd-fonts.dejavu-sans-mono
+      nerd-fonts.sauce-code-pro
     ];
   };
 }

@@ -18,6 +18,9 @@
     grub2-themes.url = "github:vinceliuice/grub2-themes";
     gBar.url = "github:scorpion-26/gBar";
     gBar.inputs.nixpkgs.follows = "nixpkgs";
+    gman-nvim.url = "github:earthgman/vim-config";
+    # gman-nvim.path = "/home/k/src/github/earthgman/vim-config";
+    gman-nvim.inputs.nixpkgs.follows = "nixpkgs";
   };
 
   nixConfig = {
@@ -45,12 +48,15 @@
       perSystem =
         { config, system, ... }:
         {
-          _module.args.pkgs = import inputs.nixpkgs {
-            localSystem = system;
-            overlays = [ self.overlays.default ];
-            config = {
-              allowUnfree = true;
-              allowAliases = true;
+          _module.args = {
+            inherit inputs;
+            pkgs = import inputs.nixpkgs {
+              localSystem = system;
+              overlays = [ self.overlays.default ];
+              config = {
+                allowUnfree = true;
+                allowAliases = true;
+              };
             };
           };
 

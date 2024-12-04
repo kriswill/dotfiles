@@ -9,12 +9,9 @@
 
   home = {
     packages = with pkgs; [
-      (nerdfonts.override {
-        fonts = [
-          "SourceCodePro" # `SauceCodePro Nerd Font`
-          "JetBrainsMono"
-        ];
-      })
+      nerd-fonts.noto
+      nerd-fonts.jetbrains-mono
+      nerd-fonts.sauce-code-pro # `SauceCodePro Nerd Font` 
       bustle # freedesktop database viewer
       has # command existence checker
       ncdu # disk space explorer
