@@ -13,32 +13,35 @@ with pkgs;
     # ];
 
     systemd = {
-      variables = [ "--all" ];
-      extraCommands = [
-        "systemctl --user stop graphical-session.target"
-        "systemctl --user start hyprland-session.target"
-      ];
+      enable = false;
+      # variables = [ "--all" ];
+      # extraCommands = [
+      #   "systemctl --user stop graphical-session.target"
+      #   "systemctl --user start hyprland-session.target"
+      # ];
     };
   };
 
-  services.hyprpaper = let
-    dp1 = "${../../../packages/shared/wallpapers/yoda-dagoba-1.webp}";
-    dp2 = "${../../../packages/shared/wallpapers/yoda-dagoba-2.jpg}";
-  in {
-    enable = true;
-    settings = {
-      ipc = "on";
-      splash = false;
-      preload = [
-        dp1
-        dp2
-      ];
-      wallpaper = [
-        "DP-1, ${dp1}"
-        "DP-2, ${dp2}"
-      ];
+  services.hyprpaper =
+    let
+      dp1 = "${../../../packages/shared/wallpapers/yoda-dagoba-1.webp}";
+      dp2 = "${../../../packages/shared/wallpapers/yoda-dagoba-2.jpg}";
+    in
+    {
+      enable = true;
+      settings = {
+        ipc = "on";
+        splash = false;
+        preload = [
+          dp1
+          dp2
+        ];
+        wallpaper = [
+          "DP-1, ${dp1}"
+          "DP-2, ${dp2}"
+        ];
+      };
     };
-  };
 
   home.packages =
     [

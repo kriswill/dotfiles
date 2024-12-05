@@ -1,8 +1,7 @@
-{
-  pkgs,
-  config,
-  lib,
-  ...
+{ pkgs
+, config
+, lib
+, ...
 }:
 {
   config = lib.mkIf config.hyprland.enable {
@@ -15,6 +14,8 @@
       # package = inputs.hyprland.packages.x86_64-linux.hyprland;
       enable = true;
       xwayland.enable = true;
+      # in home-manager 'wayland.windowManagers.hyprland.systemd.enable = false;'
+      withUWSM = true;
     };
 
     environment.sessionVariables = {
