@@ -68,7 +68,7 @@
           menuentry "Poweroff" {
             halt
           }
-          mentuentry "BIOS Settings" --id "uefi-firmware" {
+          menuentry "BIOS Settings" --id "uefi-firmware" {
             fwsetup
           }
         '';
