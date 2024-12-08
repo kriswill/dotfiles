@@ -40,6 +40,8 @@
       dolphin-emu-beta # old game ROM emulator
       sloccount # count lines of code
       ledger-live-desktop
+      appimage-run
+      chromium
     ];
 
     sessionVariables = {

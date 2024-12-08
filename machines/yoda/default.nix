@@ -29,7 +29,9 @@
 
   # logitech profile editing
   services.ratbagd.enable = true;
-  environment.systemPackages = [ pkgs.piper ];
+  environment.systemPackages = with pkgs; [
+    piper
+  ];
 
   # Set your time zone.
   time.timeZone = "America/Los_Angeles";
@@ -49,6 +51,8 @@
   };
 
   hardware.ledger.enable = true;
+  # sudo -E chromium --no-sandbox
+  hardware.wooting.enable = true;
 
   # Enable sound with pipewire.
   security.rtkit.enable = true;
