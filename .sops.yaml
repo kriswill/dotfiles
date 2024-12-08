@@ -1,0 +1,8 @@
+keys:
+  - &k age10qtfgdp0zs6rm3ljy4c40sk5a7r64sqewstskdy03r4mwh4xrc6s65e37x
+
+creation_rules:
+  - path_regex: hosts/yoda/secrets.yaml
+    key_groups:
+      - age:
+        - *k
