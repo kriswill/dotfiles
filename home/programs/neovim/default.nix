@@ -1,15 +1,21 @@
-{ inputs, config, pkgs, ... }:
+{ inputs, pkgs, ... }:
 let
   neovim = inputs.gman-nvim.homeManagerModule.default;
 in
+
 {
   imports = [ neovim ];
   programs.neovim = {
     enable = true;
     plugins = with pkgs.vimPlugins; [
-      gruvbox
-      nvim-colorizer-lua
+      lualine-nvim
     ];
+    extraLuaConfig = ''
+      print("append a line")
+    '';
+  };
+  xdg.configFile = {
+    "nvim/lua/core/keymap.lua".source = ./nvim/lua/core/keymaps.lua;
   };
 }
 # with pkgs; {
