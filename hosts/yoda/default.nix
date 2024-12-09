@@ -1,6 +1,11 @@
-{ config, lib, ... }:
+{ inputs, lib, ... }:
 {
-  imports = [ ./disko.nix ./hardware-configuration.nix ];
+  imports = [
+    ./disko.nix
+    ./hardware-configuration.nix
+    inputs.nix-config.nixosProfiles.gaming
+  ];
+  time.timeZone = "America/Los_Angeles";
   home-manager.profilesDir = ../../home;
   modules = {
     onepassword.enable = true;
