@@ -11,4 +11,7 @@
   # ];
   # programs.kitty.enable = false;
   # custom.terminal = "gnome-terminal";
+  custom.browser = "brave";
+  programs.firefox.enable = true;
+  programs.yazi.enable = true;
 }
