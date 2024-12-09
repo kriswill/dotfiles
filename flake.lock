@@ -254,11 +254,11 @@
         "wallpapers": "wallpapers"
       },
       "locked": {
-        "lastModified": 1733709132,
-        "narHash": "sha256-g5CshLZUe+lZFtIY/l1pUDe9tYrIy1Yqd09U0zBHnn0=",
+        "lastModified": 1733717266,
+        "narHash": "sha256-OqBBJqrmFUtAqySYQTFHrUkaRYLsaWU0jU52RiwyNAQ=",
         "owner": "earthgman",
         "repo": "nix-config",
-        "rev": "e04f9561da55eb4d4a278a386144435b703e537a",
+        "rev": "0efb653115e83bc487d79dbe0dbb821da9f5e7dc",
         "type": "github"
       },
       "original": {
