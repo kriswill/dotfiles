@@ -1,19 +1,20 @@
 {
   disko.devices = {
     disk = {
-      vda = {
-        device = "/dev/vda";
+      sda = {
+        device = "/dev/sda";
         type = "disk";
         content = {
           type = "gpt";
           partitions = {
             boot = {
               type = "EF00";
-              size = "256M";
+              size = "1G";
               content = {
                 type = "filesystem";
                 format = "vfat";
                 mountpoint = "/boot";
+                mountOptions = [ "umask=0077" ];
               };
             };
             root = {

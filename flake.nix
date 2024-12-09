@@ -2,7 +2,7 @@
   description = "Kris's main flake";
 
   inputs = {
-    nix-config.url = "github:earthgman/nix-config/v5";
+    nix-config.url = "github:earthgman/nix-config";
   };
 
   outputs = flake-inputs@ { self, nix-config, ... }:

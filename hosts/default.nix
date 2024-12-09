@@ -3,7 +3,7 @@
   yoda = lib.mkHost {
     inherit inputs;
     hostName = "yoda";
-    vm = true;
+    gpu = "nvidia";
     cpu = "intel";
     users = [ "k" ];
     desktop = "hyprland";
