@@ -3,6 +3,7 @@
   imports = [
     ./git.nix
     inputs.nix-config.homeProfiles.essentials
+    ./zsh
   ] ++ lib.optionals (builtins.pathExists ../hosts/${hostName}/users/k) [
     ../hosts/${hostName}/users/k/hm.nix
   ];
@@ -12,6 +13,6 @@
   # programs.kitty.enable = false;
   # custom.terminal = "gnome-terminal";
   custom.browser = "brave";
-  programs.firefox.enable = true;
+  # programs.firefox.enable = true;
   programs.yazi.enable = true;
 }
