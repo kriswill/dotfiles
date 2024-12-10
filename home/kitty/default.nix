@@ -7,7 +7,7 @@
       size = 14.0;
     };
 
-    extraConfig = builtins.readFile ./adwaita.conf;
+    extraConfig = builtins.readFile ./theme.conf;
 
     settings = lib.mkForce {
       update_check_interval = 0;

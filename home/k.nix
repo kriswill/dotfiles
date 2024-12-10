@@ -16,7 +16,11 @@
   custom.browser = "brave";
   # programs.firefox.enable = true;
   programs.yazi.enable = true;
-  stylix.targets.kitty.enable = false;
+  stylix.targets = {
+    kitty.enable = false;
+    bat.enable = false;
+    yazi.enable = false;
+  };
   home.packages = with pkgs.nerd-fonts; [
     sauce-code-pro
   ];
