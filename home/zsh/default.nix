@@ -1,11 +1,15 @@
-{ pkgs, ... }:
+{ config
+, pkgs
+, lib
+, ...
+}:
 {
   programs.zsh = {
     autosuggestion.enable = true;
     enableCompletion = true;
     syntaxHighlighting.enable = true;
 
-    shellAliases = import ./aliases.nix { inherit pkgs; };
+    shellAliases = lib.mkForce (import ./aliases.nix { inherit pkgs config; });
 
     autocd = true;
 

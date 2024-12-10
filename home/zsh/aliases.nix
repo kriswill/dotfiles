@@ -1,9 +1,12 @@
-{ pkgs }:
+{ config
+, pkgs
+, ...
+}:
 
 with pkgs;
 let
   inherit (lib) getExe;
-  dotfiles = "${home.homeDirectory}/src/github/kriswill/dotfiles";
+  dotfiles = "${config.home.homeDirectory}/src/github/kriswill/dotfiles";
 in
 {
   "..." = "../..";
