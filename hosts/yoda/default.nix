@@ -2,6 +2,8 @@
 {
   imports = [
     ./disko.nix
+    ./boot.nix
+    ./sddm.nix
     ./hardware-configuration.nix
     inputs.nix-config.nixosProfiles.gaming
   ];
@@ -11,8 +13,6 @@
     onepassword.enable = true;
     sops.enable = true;
   };
-  boot.loader.efi.canTouchEfiVariables = lib.mkForce false;
-  boot.loader.grub.efiInstallAsRemovable = true;
   sops = {
     # default location
     # /var/lib/sops-nix/keys.txt
