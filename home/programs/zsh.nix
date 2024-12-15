@@ -22,13 +22,15 @@
       lg = "${pkgs.lazygit}/bin/lazygit";
       ff = "${pkgs.fastfetch}/bin/fastfetch";
       drs = lib.mkIf pkgs.stdenvNoCC.isDarwin "darwin-rebuild switch --flake ~/src/dotfiles";
+      gv = "NVIM_APPNAME=gman nvim";
     };
 
-    initExtra = ''
-      # Zsh run-help function
-      autoload -Uz run-help
-      (( ''${+aliases[run-help]} )) && unalias run-help
-      alias help=run-help
-    '';
+    initExtra = builtins.readFile ./initExtra.sh;
+    # initExtra = ''
+    #   # Zsh run-help function
+    #   autoload -Uz run-help
+    #   (( ''${+aliases[run-help]} )) && unalias run-help
+    #   alias help=run-help
+    # '';
   };
 }
