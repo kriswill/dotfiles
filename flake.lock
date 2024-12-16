@@ -266,7 +266,9 @@
         "home-manager": "home-manager",
         "icons": "icons",
         "nix-library": "nix-library",
-        "nixpkgs": "nixpkgs_2",
+        "nixpkgs": [
+          "nixpkgs"
+        ],
         "nixpkgs-master": "nixpkgs-master",
         "nixpkgs-stable": "nixpkgs-stable",
         "nur": "nur",
@@ -276,16 +278,36 @@
         "wallpapers": "wallpapers"
       },
       "locked": {
-        "lastModified": 1734238757,
-        "narHash": "sha256-NXW4yFlYoj5fU3T47qXpjzGhvTt/Vr4FtCAzSKyz+Vk=",
+        "lastModified": 1734242271,
+        "narHash": "sha256-yUHNaxeJ8obDzCFtgXzev5VCyMsg4VVfTEfPujsS44U=",
         "owner": "earthgman",
         "repo": "nix-config",
-        "rev": "c932cba1951684be247cf3ce1ab6d9018e7e67cd",
+        "rev": "00d014dddec162c02357a2ad9e9a20b4c39797c1",
         "type": "github"
       },
       "original": {
         "owner": "earthgman",
         "repo": "nix-config",
+        "type": "github"
+      }
+    },
+    "nix-index-database": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1734234111,
+        "narHash": "sha256-icEMqBt4HtGH52PU5FHidgBrNJvOfXH6VQKNtnD1aw8=",
+        "owner": "nix-community",
+        "repo": "nix-index-database",
+        "rev": "311d6cf3ad3f56cb051ffab1f480b2909b3f754d",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nix-community",
+        "repo": "nix-index-database",
         "type": "github"
       }
     },
@@ -373,22 +395,6 @@
     },
     "nixpkgs_3": {
       "locked": {
-        "lastModified": 1733940404,
-        "narHash": "sha256-Pj39hSoUA86ZePPF/UXiYHHM7hMIkios8TYG29kQT4g=",
-        "owner": "nixos",
-        "repo": "nixpkgs",
-        "rev": "5d67ea6b4b63378b9c13be21e2ec9d1afc921713",
-        "type": "github"
-      },
-      "original": {
-        "owner": "nixos",
-        "ref": "nixos-unstable",
-        "repo": "nixpkgs",
-        "type": "github"
-      }
-    },
-    "nixpkgs_4": {
-      "locked": {
         "lastModified": 1732238832,
         "narHash": "sha256-sQxuJm8rHY20xq6Ah+GwIUkF95tWjGRd1X8xF+Pkk38=",
         "owner": "NixOS",
@@ -403,10 +409,26 @@
         "type": "github"
       }
     },
+    "nixpkgs_4": {
+      "locked": {
+        "lastModified": 1734274429,
+        "narHash": "sha256-wl9o+8lyLxU182xws0yNo4odQNVaH8w7a7DzrcbZiSk=",
+        "owner": "NixOs",
+        "repo": "nixpkgs",
+        "rev": "539eaf79a5abc7efc5463dcc267d91e6ee4c3b49",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOs",
+        "ref": "nixos-unstable-small",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
     "nur": {
       "inputs": {
         "flake-parts": "flake-parts",
-        "nixpkgs": "nixpkgs_3",
+        "nixpkgs": "nixpkgs_2",
         "treefmt-nix": "treefmt-nix"
       },
       "locked": {
@@ -425,7 +447,9 @@
     },
     "root": {
       "inputs": {
-        "nix-config": "nix-config"
+        "nix-config": "nix-config",
+        "nix-index-database": "nix-index-database",
+        "nixpkgs": "nixpkgs_4"
       }
     },
     "sops-nix": {
@@ -459,7 +483,7 @@
         "flake-utils": "flake-utils",
         "gnome-shell": "gnome-shell",
         "home-manager": "home-manager_2",
-        "nixpkgs": "nixpkgs_4",
+        "nixpkgs": "nixpkgs_3",
         "systems": "systems",
         "tinted-foot": "tinted-foot",
         "tinted-kitty": "tinted-kitty",
@@ -590,7 +614,7 @@
     "wallpapers": {
       "flake": false,
       "locked": {
-        "narHash": "sha256-a6GKexr/m9IBvRcw4EGOgP8oHjTCp4WJsZj6SZaLlx4=",
+        "narHash": "sha256-A0y29/CGiPI5fYyMJyQoLUDMyAujcbAQTJzoIKrd1g8=",
         "type": "file",
         "url": "https://raw.githubusercontent.com/EarthGman/assets/master/wallpapers.json"
       },

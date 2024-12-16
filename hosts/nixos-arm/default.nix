@@ -1,6 +1,7 @@
-{
+{ inputs, ... }: {
   imports = [
     ./disko.nix
+    inputs.nix-index-database.nixosModules.nix-index
   ];
   boot.initrd.availableKernelModules = [
     "ahci"
