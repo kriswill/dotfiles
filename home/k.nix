@@ -1,12 +1,13 @@
-{ inputs, pkgs, lib, hostName, ... }:
+{ inputs, vm, pkgs, lib, hostName, ... }:
 {
   imports = [
     ./git.nix
-    inputs.nix-config.homeProfiles.essentials
     ./zsh
     ./kitty
   ] ++ lib.optionals (builtins.pathExists ../hosts/${hostName}/users/k) [
     ../hosts/${hostName}/users/k/hm.nix
+  ] ++ lib.optionals (hostName != "nixos-arm") [
+    inputs.nix-config.homeProfiles.essentials
   ];
   # home.packages = with pkgs; [
   #   gnome-terminal
@@ -14,9 +15,11 @@
   # programs.kitty.enable = false;
   custom.terminal = "alacritty";
   custom.browser = "brave";
-  # programs.firefox.enable = true;
-  programs.yazi.enable = true;
-  programs.alacritty.enable = true;
+  programs = {
+    yazi.enable = true;
+    alacritty.enable = true;
+    fzf.enable = true;
+  };
   stylix.targets = {
     kitty.enable = false;
     alacritty.enable = false;
