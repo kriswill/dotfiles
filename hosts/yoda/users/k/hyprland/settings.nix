@@ -2,7 +2,7 @@
 
 let
   ln = config.lib.file.mkOutOfStoreSymlink;
-  conf = "/etc/nixos/hosts/yoda/users/k/hyprland/config";
+  conf = "/home/k/src/dotfiles/hosts/yoda/users/k/hyprland/config";
 in
 {
   wayland.windowManager.hyprland.settings = {
