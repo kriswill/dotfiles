@@ -19,7 +19,7 @@ with pkgs; {
       dp2 = builtins.fetchurl wallpapers.yoda-dagoba-2;
     in
     {
-      enable = lib.mkForce true;
+      enable = true;
       settings = {
         ipc = "on";
         splash = false;
