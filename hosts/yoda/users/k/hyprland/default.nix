@@ -11,15 +11,15 @@ with pkgs; {
     clock.format = lib.mkForce " {:%I:%M %p  %m.%d.%Y}";
   };
 
+  services.swww.enable = false;
+
   services.hyprpaper =
     let
       dp1 = builtins.fetchurl wallpapers.yoda-dagoba-1;
       dp2 = builtins.fetchurl wallpapers.yoda-dagoba-2;
-      # dp1 = ../../../assets/wallpapers/yoda-dagoba-1.webp;
-      # dp2 = ../../../assets/wallpapers/yoda-dagoba-2.jpg;
     in
     {
-      enable = true;
+      enable = lib.mkForce true;
       settings = {
         ipc = "on";
         splash = false;

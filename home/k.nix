@@ -19,6 +19,7 @@
     yazi.enable = true;
     alacritty.enable = true;
     fzf.enable = true;
+    libreoffice.enable = false;
   };
   stylix.targets = {
     kitty.enable = false;
