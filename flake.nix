@@ -2,7 +2,7 @@
   description = "Kris's main flake";
 
   inputs = {
-    nixpkgs.url = "github:NixOs/nixpkgs/nixos-unstable-small";
+    nixpkgs.url = "github:NixOs/nixpkgs/nixos-unstable";
     nix-config.url = "github:earthgman/nix-config";
     nix-config.inputs.nixpkgs.follows = "nixpkgs";
     nix-index-database.url = "github:nix-community/nix-index-database";
