@@ -9,15 +9,9 @@
   ] ++ lib.optionals (hostName != "nixos-arm") [
     inputs.nix-config.homeProfiles.essentials
   ];
-  # home.packages = with pkgs; [
-  #   gnome-terminal
-  # ];
-  # programs.kitty.enable = false;
-  custom.terminal = "alacritty";
   custom.browser = "brave";
   programs = {
     yazi.enable = true;
-    alacritty.enable = true;
     fzf.enable = true;
     libreoffice.enable = false;
   };

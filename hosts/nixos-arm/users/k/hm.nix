@@ -7,6 +7,11 @@
     image = builtins.fetchurl wallpapers.blue-marble-2;
   };
 
+  custom.terminal = "alacritty";
+  programs = {
+    alacritty.enable = true;
+    fzf.enable = true;
+  };
   programs = {
     fastfetch.image = builtins.fetchurl icons.yoda;
   };
