@@ -3,8 +3,9 @@
   imports = [
     ./disko.nix
     ./boot.nix
-    ./sddm.nix
+    ./nix.nix
     ./hardware-configuration.nix
+    ./sddm.nix
     inputs.nix-config.nixosProfiles.gaming
   ];
   time.timeZone = "America/Los_Angeles";
