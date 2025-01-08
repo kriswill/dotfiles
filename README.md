@@ -1,20 +1,28 @@
-# Kris' Nix Configuration **WORK-IN-PROGRESS**
+# Kris' Nix Configuration
 
+## MacOS - using nix-darwin
 
+* Install Homebrew:
 
-## If /boot gets filled up with kernel generations
+    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
-When frequently rebuilding the OS, sometimes the `/boot` partition will
-fill up with generations and alternate Linux kernel versions.  If the disk fills
-up then it will not be possible to `nixos rebuild`.
+* Install Determinate Nix Installer:
 
-Use the following command to clear out old kernels/generations:
+    curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install --determinate
 
-  ```sh
-  sudo /run/current-system/bin/switch-to-configuration switch
-  ```
-## THINGS FOR LATER
+* Clone repo:
 
-### Backups
+    mkdir -p ~/src/github/kriswill
+    git clone https://github.com/kriswill/dotfiles ~/src/github/kriswill/dotfiles
+    ln -s $(realpath ~/src/github/kriswill)/dotfiles $(realpath ~/src)/dotfiles
+    cd $(realpath ~/src/dotfiles)
+    git switch nix-darwin
 
-* [Kopia nix config](https://github.com/xddxdd/nixos-config/blob/8eeba4e85b70a6ccf0830d8fb743c34a12d6239e/nixos/server-components/backup.nix)
+* Move determinate's nix.conf out of the way:
+
+    sudo mv /etc/nix/nix.conf /etc/nix/nix.conf.before-nix-darwin
+
+* install (nix-darwin)
+
+    cd ~/src/dotfiles
+    nix --extra-experimental-features "nix-command flakes" run nix-darwin -- switch --flake .

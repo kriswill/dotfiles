@@ -59,17 +59,32 @@
              };}
           ];
         };
+        "kwilliams1023" = darwinSystem {
+          specialArgs = {
+            inherit self inputs outputs;
+          };
+          modules = [
+            ./machines/kwilliams1023
+            determinate.darwinModules.default
+            home-manager.darwinModules.home-manager
+            (mkHomeManager ./home "k")
+            {nixpkgs = { hostPlatform = "aarch64-darwin"; };}
+          ];
+        };
       };
-      darwinPackages = self.darwinConfigurations."k".pkgs;
+      k-darwinPackages = self.darwinConfigurations."k".pkgs;
+      kwilliams1023-darwinPackages = self.darwinConfigurations."kwilliams1023".pkgs;
     };
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-24.11-darwin";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
     # systems.url = "github:nix-systems/default";
     nur.url = "github:nix-community/nur";
     # nix-formatter-pack.url = "github:Gerschtli/nix-formatter-pack";
     determinate.url = "https://flakehub.com/f/DeterminateSystems/determinate/0.1";
+    determinate.inputs.nixpkgs.follows = "nixpkgs";
     nix-darwin.url = "github:LnL7/nix-darwin";
+    nix-darwin.inputs.nixpkgs.follows = "nixpkgs";
     mac-app-util.url = "github:hraban/mac-app-util";
     home-manager.url = "github:nix-community/home-manager/release-24.11";
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
