@@ -78,9 +78,7 @@
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
-    # systems.url = "github:nix-systems/default";
     nur.url = "github:nix-community/nur";
-    # nix-formatter-pack.url = "github:Gerschtli/nix-formatter-pack";
     determinate.url = "https://flakehub.com/f/DeterminateSystems/determinate/0.1";
     determinate.inputs.nixpkgs.follows = "nixpkgs";
     nix-darwin.url = "github:LnL7/nix-darwin";
