@@ -15,12 +15,13 @@ with pkgs;
       shfmt # Shell
       isort
       stylua # Lua
+      luajitPackages.jsregexp # luasnip
 
       # LSP
       lua-language-server
       lua5_1
       luarocks
-      nil
+      # nil
       nixd
       # rustTools
       go_1_22
@@ -35,6 +36,7 @@ with pkgs;
       fswatch # file watcher - replaces libuv.fs_event in neovim v0.10
       sqlite
       nodejs
+      wget
     ];
   };
 } // (
