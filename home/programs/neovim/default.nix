@@ -24,8 +24,8 @@ with pkgs;
       # nil
       nixd
       # rustTools
-      go_1_22
-      (go-tools.override { buildGoModule = buildGo122Module; })
+      go_1_23
+      (go-tools.override { buildGoModule = buildGo123Module; })
 
       # tools
       tree-sitter
