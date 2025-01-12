@@ -10,10 +10,12 @@
     inputs.nix-config.homeProfiles.essentials
   ];
   custom.browser = "brave";
+  custom.terminal = "ghostty";
   programs = {
     yazi.enable = true;
     fzf.enable = true;
     libreoffice.enable = false;
+    ghostty.enable = true;
   };
   stylix.targets = {
     kitty.enable = false;

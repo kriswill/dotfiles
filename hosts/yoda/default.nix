@@ -3,7 +3,7 @@
   imports = [
     ./disko.nix
     ./boot.nix
-    ./nix.nix
+    # ./nix.nix
     ./hardware-configuration.nix
     ./sddm.nix
     inputs.nix-config.nixosProfiles.gaming
