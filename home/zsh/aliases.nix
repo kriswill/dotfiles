@@ -30,5 +30,4 @@ in
   gco = "g checkout";
   gba = "g branch -a";
   lg = "${getExe lazygit}";
-  man = "${getExe bat-extras.batman}";
 }

@@ -16,6 +16,7 @@
     fzf.enable = true;
     libreoffice.enable = false;
     ghostty.enable = true;
+    neovim.imperativeLua = true;
   };
   stylix.targets = {
     kitty.enable = false;
