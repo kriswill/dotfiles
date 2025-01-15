@@ -7,6 +7,8 @@ with pkgs;
     package = neovim-unwrapped;
     viAlias = true;
     vimAlias = true;
+    withRuby = false;
+
     extraPackages = [
       # Formatters
       nixpkgs-fmt
@@ -21,7 +23,7 @@ with pkgs;
       lua-language-server
       lua5_1
       luarocks
-      # nil
+      nil
       nixd
       # rustTools
       go_1_23
