@@ -5,15 +5,12 @@
     inputs @ { self
     , nixpkgs
     , determinate
-    # , systems
     , nix-darwin
     , home-manager
-    # , nix-formatter-pack
     , ...
     }:
     let
       inherit (self) outputs lib;
-      # inherit (lib) genAttrs;
       inherit (nix-darwin.lib) darwinSystem;
 
       # This defines the home-manager config module
@@ -37,10 +34,6 @@
       ];
       # Custom packages and modifications, exported as overlays
       overlays = import ./overlays { inherit inputs; };
-
-      nixosConfigurations = import ./machines {
-        inherit inputs outputs;
-      };
 
       #> darwin-rebuild build --flake .#k
       darwinConfigurations = {
