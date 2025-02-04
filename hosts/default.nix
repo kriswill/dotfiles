@@ -6,7 +6,7 @@
     gpu = "nvidia";
     cpu = "intel";
     users = [ "k" ];
-    desktop = "hyprland";
+    desktop = "sway,hyprland";
     platform = "x86_64-linux";
     stateVersion = "25.05";
     configDir = ./yoda;

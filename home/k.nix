@@ -11,20 +11,23 @@
   ];
   custom.browser = "brave";
   custom.terminal = "ghostty";
+
   programs = {
     yazi.enable = true;
     fzf.enable = true;
     libreoffice.enable = false;
-    ghostty.enable = true;
+    ghostty.enable = lib.mkForce false;
     neovim.imperativeLua = true;
   };
   stylix.targets = {
     kitty.enable = false;
+    ghostty.enable = false;
     alacritty.enable = false;
     bat.enable = false;
     yazi.enable = false;
   };
-  home.packages = with pkgs.nerd-fonts; [
-    sauce-code-pro
+  home.packages = with pkgs; [
+    ghostty
+    nerd-fonts.sauce-code-pro
   ];
 }

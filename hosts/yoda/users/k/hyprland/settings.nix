@@ -6,9 +6,9 @@ let
 in
 {
   wayland.windowManager.hyprland.settings = {
-    source = [
-      "./monitors.conf"
-    ];
+    # source = [
+    #   "./monitors.conf"
+    # ];
   };
 
   xdg = {
