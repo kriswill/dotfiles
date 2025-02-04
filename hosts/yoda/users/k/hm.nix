@@ -6,6 +6,7 @@
   stylix.enable = true;
   home.packages = with pkgs; [
     wowup-cf
+    tldr
     # xwaylandvideobridge
   ];
   programs = {
