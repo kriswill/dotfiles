@@ -13,6 +13,7 @@
   modules = {
     onepassword.enable = true;
     sops.enable = true;
+    printing.enable = false;
   };
   sops = {
     # default location

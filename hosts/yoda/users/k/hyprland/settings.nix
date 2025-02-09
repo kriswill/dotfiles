@@ -6,6 +6,7 @@ let
 in
 {
   wayland.windowManager.hyprland.settings = {
+    # monitor = "DP-1, transform, 3"; # 270 degrees
     # source = [
     #   "./monitors.conf"
     # ];

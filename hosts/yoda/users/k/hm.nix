@@ -36,9 +36,9 @@
               transform = "270";
             }
             {
-              criteria = "ASUSTek COMPUTER INC PG34WCDM";
+              criteria = "ASUSTek COMPUTER INC PG34WCDM RCLMRS02251";
               position = "0,0";
-              mode = "3440x1440@239.98399Hz";
+              mode = "3440x1440@239.98Hz";
             }
           ];
         };
