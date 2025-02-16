@@ -61,8 +61,14 @@
           ];
         };
       };
-      k-darwinPackages = self.darwinConfigurations."k".pkgs;
-      kwilliams1023-darwinPackages = self.darwinConfigurations."kwilliams1023".pkgs;
+      darwinPackages = self.darwinConfigurations."k".pkgs;
+      devShells.aarch64-darwin.default = self.darwinPackages.mkShell {
+        name = "dotfiles";
+        packages = with self.darwinPackages; [
+          deadnix
+          statix
+        ];
+      };
     };
 
   inputs = {
@@ -72,8 +78,10 @@
     nix-darwin.url = "github:LnL7/nix-darwin";
     nix-darwin.inputs.nixpkgs.follows = "nixpkgs";
     mac-app-util.url = "github:hraban/mac-app-util";
-    home-manager.url = "github:nix-community/home-manager/release-24.11";
+    home-manager.url = "https://flakehub.com/f/nix-community/home-manager/*.tar.gz";
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
-    fenix.url = "github:nix-community/fenix";
+    # NOT working on aarch64-darwin - using homebrew for now
+    # ghostty.url = "github:ghostty-org/ghostty";
+    fenix.url = "https://flakehub.com/f/nix-community/fenix/0.1.2156.tar.gz";
   };
 }

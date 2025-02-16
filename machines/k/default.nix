@@ -16,6 +16,7 @@
       home-manager
     ] ++ [ 
       inputs.fh.packages.${pkgs.stdenv.hostPlatform.system}.default 
+      # inputs.ghostty.packages.aarch64-darwin.default
     ]; 
     shellAliases = {
       drs = "darwin-rebuild switch --flake ~/src/dotfiles";
@@ -63,6 +64,7 @@
         name = "launchcontrol";
         greedy = true;
       }
+      "ghostty"
     ];
     brews = [];
     masApps = {
