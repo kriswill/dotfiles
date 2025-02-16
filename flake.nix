@@ -4,7 +4,6 @@
   outputs =
     inputs @ { self
     , nixpkgs
-    , determinate
     , nix-darwin
     , home-manager
     , ...
@@ -35,7 +34,6 @@
       # Custom packages and modifications, exported as overlays
       overlays = import ./overlays { inherit inputs; };
 
-      #> darwin-rebuild build --flake .#k
       darwinConfigurations = {
         "k" = darwinSystem {
           specialArgs = {
@@ -43,7 +41,6 @@
           };
           modules = [
             ./machines/k
-            determinate.darwinModules.default
             home-manager.darwinModules.home-manager
             (mkHomeManager ./home "k")
             {nixpkgs = {
@@ -58,7 +55,6 @@
           };
           modules = [
             ./machines/kwilliams1023
-            determinate.darwinModules.default
             home-manager.darwinModules.home-manager
             (mkHomeManager ./home "k")
             {nixpkgs = { hostPlatform = "aarch64-darwin"; };}
@@ -70,10 +66,9 @@
     };
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+    nixpkgs.url = "https://flakehub.com/f/NixOS/nixpkgs/0.1.0.tar.gz";
     nur.url = "github:nix-community/nur";
-    determinate.url = "https://flakehub.com/f/DeterminateSystems/determinate/0.1";
-    determinate.inputs.nixpkgs.follows = "nixpkgs";
+    fh.url = "https://flakehub.com/f/DeterminateSystems/fh/*.tar.gz";
     nix-darwin.url = "github:LnL7/nix-darwin";
     nix-darwin.inputs.nixpkgs.follows = "nixpkgs";
     mac-app-util.url = "github:hraban/mac-app-util";

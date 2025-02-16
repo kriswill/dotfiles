@@ -1,7 +1,7 @@
 #
 # k - my personal macbook pro M1 max, 64GB RAM
 #
-{ self, pkgs, ... }: {
+{ self, inputs, pkgs, lib, ... }: {
 
   # Used for backwards compatibility, please read the changelog before changing.
   # $ darwin-rebuild changelog
@@ -12,9 +12,11 @@
   environment = {
     # $ nix-env -qaP | grep wget
     systemPackages = with pkgs; [
-      darwin.iproute2mac
+      iproute2mac
       home-manager
-    ];
+    ] ++ [ 
+      inputs.fh.packages.${pkgs.stdenv.hostPlatform.system}.default 
+    ]; 
     shellAliases = {
       drs = "darwin-rebuild switch --flake ~/src/dotfiles";
     };
@@ -32,15 +34,17 @@
   programs.zsh.enable = true;
 
   nix = {
-    linux-builder = {
-      enable = true;
-      ephemeral = true;
-      systems = [ "aarch64-linux" ];
-      config.nixpkgs.hostPlatform = "aarch64-linux";
-    };
+    # MUST be set to false when using Determinate Installer
+    enable = lib.mkForce false;
+    # linux-builder = {
+    #   enable = true;
+    #   ephemeral = true;
+    #   systems = [ "aarch64-linux" ];
+    #   config.nixpkgs.hostPlatform = "aarch64-linux";
+    # };
 
     # This line is a prerequisite
-    settings.trusted-users = [ "@admin" ];
+    # settings.trusted-users = [ "@admin" ];
   };
 
   homebrew = {
