@@ -12,10 +12,9 @@
 
 * Clone repo:
 
-      mkdir -p ~/src/github/kriswill
-      git clone https://github.com/kriswill/dotfiles ~/src/github/kriswill/dotfiles
-      ln -s $(realpath ~/src/github/kriswill)/dotfiles $(realpath ~/src)/dotfiles
-      cd $(realpath ~/src/dotfiles)
+      mkdir -p ~/src
+      git clone https://github.com/kriswill/dotfiles ~/src/dotfiles
+      cd ~/src/dotfiles
       git switch nix-darwin
 
 * Move determinate's nix.conf out of the way:
@@ -24,5 +23,4 @@
 
 * install (nix-darwin)
 
-      cd ~/src/dotfiles
       nix --extra-experimental-features "nix-command flakes" run nix-darwin -- switch --flake .
