@@ -73,11 +73,6 @@ return {
 		scroll = { enabled = true },
 		statuscolumn = { enabled = true },
 		words = { enabled = true },
-		styles = {
-			notification = {
-				-- wo = { wrap = true } -- Wrap notifications
-			},
-		},
 	},
 	keys = {
 		-- Top Pickers & Explorer
@@ -134,7 +129,7 @@ return {
 		{
 			"<leader>fc",
 			function()
-				Snacks.picker.files({ cwd = vim.fn.stdpath("config") })
+				Snacks.picker.files({ cwd = vim.fn.stdpath("config")[0] or "" })
 			end,
 			desc = "Find Config File",
 		},
