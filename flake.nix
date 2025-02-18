@@ -9,7 +9,7 @@
     , ...
     }:
     let
-      inherit (self) outputs lib;
+      inherit (self) outputs;
       inherit (nix-darwin.lib) darwinSystem;
 
       # This defines the home-manager config module
@@ -58,6 +58,7 @@
             home-manager.darwinModules.home-manager
             (mkHomeManager ./home "k")
             {nixpkgs = { hostPlatform = "aarch64-darwin"; };}
+            {environment.systemPackages = [ inputs.fh.packages.aarch64-darwin.default ]; }
           ];
         };
       };
@@ -75,6 +76,7 @@
     nixpkgs.url = "https://flakehub.com/f/NixOS/nixpkgs/0.1.0.tar.gz";
     nur.url = "github:nix-community/nur";
     fh.url = "https://flakehub.com/f/DeterminateSystems/fh/*.tar.gz";
+    fh.inputs.nixpkgs.follows = "nixpkgs";
     nix-darwin.url = "github:LnL7/nix-darwin";
     nix-darwin.inputs.nixpkgs.follows = "nixpkgs";
     mac-app-util.url = "github:hraban/mac-app-util";

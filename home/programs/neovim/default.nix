@@ -24,13 +24,12 @@ with pkgs;
       lua5_1
       luarocks
       marksman
-      nil
-      nixd
 
       go_1_23
       (go-tools.override { buildGoModule = buildGo123Module; })
 
       # tools
+      cargo
       cmake
       fswatch # file watcher - replaces libuv.fs_event in neovim v0.10
       fzf
