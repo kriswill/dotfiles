@@ -33,15 +33,16 @@
   programs.zsh.enable = true;
 
   nix = {
-    linux-builder = {
-      enable = true;
-      ephemeral = true;
-      systems = [ "aarch64-linux" ];
-      config.nixpkgs.hostPlatform = "aarch64-linux";
-    };
-
-    # This line is a prerequisite
-    settings.trusted-users = [ "@admin" ];
+    enable = false;
+    # linux-builder = {
+    #   enable = true;
+    #   ephemeral = true;
+    #   systems = [ "aarch64-linux" ];
+    #   config.nixpkgs.hostPlatform = "aarch64-linux";
+    # };
+    #
+    # # This line is a prerequisite
+    # settings.trusted-users = [ "@admin" ];
   };
 
   home-manager.backupFileExtension = "bak";
@@ -58,6 +59,7 @@
       "rwts-pdfwriter"
       "zerotier-one"
       "1password-cli"
+      "ghostty"
       # {
       #   name = "launchcontrol";
       #   greedy = true;
