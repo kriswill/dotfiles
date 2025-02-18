@@ -11,33 +11,35 @@ with pkgs;
 
     extraPackages = [
       # Formatters
-      nixpkgs-fmt
       black # Python
+      isort
+      luajitPackages.jsregexp # luasnip
+      nixpkgs-fmt
       prettierd # Multiple language formatter
       shfmt # Shell
-      isort
       stylua # Lua
-      luajitPackages.jsregexp # luasnip
 
       # LSP
       lua-language-server
       lua5_1
       luarocks
+      marksman
       nil
       nixd
-      # rustTools
+
       go_1_23
       (go-tools.override { buildGoModule = buildGo123Module; })
 
       # tools
-      tree-sitter
-      git
       cmake
-      gnumake
-      fzf
       fswatch # file watcher - replaces libuv.fs_event in neovim v0.10
-      sqlite
+      fzf
+      git
+      gnumake
+      imagemagick
       nodejs
+      sqlite
+      tree-sitter
       wget
     ];
   };

@@ -1,6 +1,9 @@
 { pkgs, lib, ... }:
 
-{
+with pkgs; let
+  inherit (lib) mkIf;
+  inherit (stdenv) isDarwin;
+in {
   programs.zsh = {
     enable = true;
     autosuggestion.enable = true;
@@ -10,7 +13,7 @@
     };
 
     shellAliases = {
-      ls = "${pkgs.eza}/bin/eza --icons --hyperlink";
+      ls = "${eza}/bin/eza --icons --hyperlink";
       ld = "ls -D";
       ll = "ls -lhF";
       la = "ls -lahF";
@@ -19,9 +22,9 @@
       cat = "bat";
       ".." = "cd ..;";
       "..." = ".. ..";
-      lg = "${pkgs.lazygit}/bin/lazygit";
-      ff = "${pkgs.fastfetch}/bin/fastfetch";
-      drs = lib.mkIf pkgs.stdenvNoCC.isDarwin "darwin-rebuild switch --flake ~/src/dotfiles";
+      lg = "${lazygit}/bin/lazygit";
+      ff = "${fastfetch}/bin/fastfetch";
+      drs = mkIf isDarwin "darwin-rebuild switch --flake ~/src/dotfiles";
       gv = "NVIM_APPNAME=gman nvim";
     };
 
