@@ -4,17 +4,13 @@
   imports = [
     ./alacritty.nix
     ./fastfetch
-    # ./brave # not on mac
-    # ./dconf.nix
-    # ./firefox
     ./git.nix
     ./kitty
-    ./starship.nix
-    # ./vscode.nix
     ./neovim
-    # ./wine
-    ./zsh.nix
     ./ssh.nix
+    ./starship.nix
+    ./tmux.nix
+    ./zsh.nix
   ];
 
   programs = {
