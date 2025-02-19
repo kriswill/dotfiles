@@ -75,15 +75,17 @@
   inputs = {
     nixpkgs.url = "https://flakehub.com/f/NixOS/nixpkgs/0.1.0.tar.gz";
     nur.url = "github:nix-community/nur";
+    nur.inputs.nixpkgs.follows = "nixpkgs";
     fh.url = "https://flakehub.com/f/DeterminateSystems/fh/*.tar.gz";
     fh.inputs.nixpkgs.follows = "nixpkgs";
     nix-darwin.url = "github:LnL7/nix-darwin";
     nix-darwin.inputs.nixpkgs.follows = "nixpkgs";
     mac-app-util.url = "github:hraban/mac-app-util";
+    mac-app-util.inputs.nixpkgs.follows = "nixpkgs";
     home-manager.url = "https://flakehub.com/f/nix-community/home-manager/*.tar.gz";
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
     # NOT working on aarch64-darwin - using homebrew for now
-    # ghostty.url = "github:ghostty-org/ghostty";
-    fenix.url = "https://flakehub.com/f/nix-community/fenix/0.1.2156.tar.gz";
+    # # ghostty.url = "github:ghostty-org/ghostty";
+    # fenix.url = "https://flakehub.com/f/nix-community/fenix/0.1.2156.tar.gz";
   };
 }
