@@ -159,8 +159,8 @@ return {
 		-- 		})
 		-- 	end,
 		-- },
-  -- stylua: ignore start
 	},
+	-- stylua: ignore end
 	init = function()
 		vim.api.nvim_create_autocmd("User", {
 			pattern = "VeryLazy",
