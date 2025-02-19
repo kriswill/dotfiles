@@ -1,4 +1,5 @@
 -- This has to be set before initializing lazy
+---@diagnostic disable-next-line: missing-fields
 require("core.lazy").load({
   profiling = {
     loader = false,
