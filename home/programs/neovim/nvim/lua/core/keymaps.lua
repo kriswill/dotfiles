@@ -10,6 +10,9 @@ keymap("n", "gx", ":!open <c-r><c-a><CR>") -- open URL under cursor
 -- keymap("n", "<C-u>", "<C-u>zz", { desc = "Move up one page, then vertically center buffer" })
 -- keymap("n", "<C-d>", "<C-d>zz", { desc = "Move down one page, then vertically center buffer" })
 
+vim.keymap.set("v", "<", "<gv") -- outdent visual block
+vim.keymap.set("v", ">", ">gv") -- indent visual block
+
 -- Split window management
 -- keymap("n", "<leader>sv", "<C-w>v", { desc = "Split window vertically" })
 -- keymap("n", "<leader>sh", "<C-w>s", { desc = "Split window horizontally" })
