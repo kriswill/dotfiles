@@ -1,8 +1,9 @@
 {
   "kanagawa.nvim": { "branch": "master", "commit": "2de175482f215c69a1d12ab10a8bf2a7a2e44ff2" },
   "lazy.nvim": { "branch": "main", "commit": "e5e9bf48211a13d9ee6c1077c88327c49c1ab4a0" },
-  "lualine-so-fancy.nvim": { "branch": "main", "commit": "6ba7b138f2ca435673eb04c2cf85f0757df69b07" },
-  "lualine.nvim": { "branch": "master", "commit": "f4f791f67e70d378a754d02da068231d2352e5bc" },
+  "mini.icons": { "branch": "main", "commit": "ec61af6e606fc89ee3b1d8f2f20166a3ca917a36" },
+  "mini.statusline": { "branch": "main", "commit": "83209bfbca156f9e4a5ec47a2a8ce1e5ce26311d" },
+  "oil.nvim": { "branch": "master", "commit": "975a77cce3c8cb742bc1b3629f4328f5ca977dad" },
   "snacks.nvim": { "branch": "main", "commit": "b100c937177536cf2aa634ddd2aa5b8a1dd23ace" },
   "which-key.nvim": { "branch": "main", "commit": "370ec46f710e058c9c1646273e6b225acf47cbed" }
 }
