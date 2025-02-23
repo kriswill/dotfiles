@@ -34,19 +34,8 @@
 
   programs.zsh.enable = true;
 
-  nix = {
-    # MUST be set to false when using Determinate Installer
-    enable = lib.mkForce false;
-    # linux-builder = {
-    #   enable = true;
-    #   ephemeral = true;
-    #   systems = [ "aarch64-linux" ];
-    #   config.nixpkgs.hostPlatform = "aarch64-linux";
-    # };
-
-    # This line is a prerequisite
-    # settings.trusted-users = [ "@admin" ];
-  };
+  # Cannot let nix-darwin control nix when using determinate
+  nix.enable = lib.mkForce false;
 
   homebrew = {
     enable = true;
