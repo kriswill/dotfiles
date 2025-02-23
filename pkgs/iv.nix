@@ -26,6 +26,8 @@ buildGoModule rec {
   ldflags = [
     "-s"
     "-w"
+    "-X main.version=${version}"
+    "-X main.name=${pname}"
   ];
 
   trimpath = true;
