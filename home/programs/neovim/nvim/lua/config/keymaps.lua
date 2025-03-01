@@ -2,10 +2,10 @@ vim.g.mapleader = " "                                   -- change leader to a sp
 vim.g.maplocalleader = " "                              -- change localleader to a space
 
 local keymap = vim.keymap.set
-
 -- General keymaps
 keymap("i", "jk", "<ESC>") -- Exit insert mode with jk
 keymap("i", "ii", "<ESC>") -- Exit insert mode with ii
+keymap({ 'n', 'v' }, '<Space>', '<Nop>', { silent = true })
 -- keymap("n", "<leader>wq", ":wq<CR>") -- save and quit
 -- keymap("n", "<leader>qq", ":q!<CR>") -- quit without saving
 -- keymap("n", "<leader>ww", ":w<CR>") -- save

@@ -12,7 +12,11 @@ if not vim.loop.fs_stat(lazypath) then
 end
 vim.opt.rtp:prepend(lazypath)
 
-require("lazy").setup({import = "plugins"}, {
+require("lazy").setup({
+  spec = {
+    'tpope/vim-sleuth',
+    { import = "plugins"},
+  },
   install = {
     colorscheme = { "kanagawa" }
   },
@@ -29,7 +33,7 @@ require("lazy").setup({import = "plugins"}, {
   },
   performance = {
     rtp = {
-      disabled_plugins = {
+            disabled_plugins = {
         "gzip",
         "tarPlugin",
         "tohtml",

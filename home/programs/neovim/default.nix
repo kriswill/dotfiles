@@ -20,6 +20,7 @@ with pkgs;
       stylua # Lua
 
       # LSP
+      tree-sitter
       lua-language-server
       lua5_1
       luarocks
