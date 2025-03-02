@@ -121,8 +121,8 @@ return {
   ---@type snacks.Config
   opts = {
     bigfile = { enabled = true },
-    image = { enabled = true },
     explorer = { enabled = true },
+    image = { enabled = true },
     indent = { enabled = false },
     input = { enabled = true },
     notifier = { enabled = true, timeout = 3000 },
