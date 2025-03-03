@@ -4,11 +4,17 @@
 #
 { self, pkgs, ... }: {
 
-  # Used for backwards compatibility, please read the changelog before changing.
-  # $ darwin-rebuild changelog
-  system.stateVersion = 5;
-  # Set Git commit hash for darwin-version.
-  system.configurationRevision = self.rev or self.dirtyRev or null;
+  system = {
+    # Used for backwards compatibility, please read the changelog before changing.
+    # $ darwin-rebuild changelog
+    stateVersion = 5;
+    # Set Git commit hash for darwin-version.
+    configurationRevision = self.rev or self.dirtyRev or null;
+    keyboard = {
+      enableKeyMapping = true;
+      remapCapsLockToControl = true;
+    };
+  };
 
   environment = {
     # $ nix-env -qaP | grep wget
@@ -32,18 +38,8 @@
 
   programs.zsh.enable = true;
 
-  nix = {
-    enable = false;
-    # linux-builder = {
-    #   enable = true;
-    #   ephemeral = true;
-    #   systems = [ "aarch64-linux" ];
-    #   config.nixpkgs.hostPlatform = "aarch64-linux";
-    # };
-    #
-    # # This line is a prerequisite
-    # settings.trusted-users = [ "@admin" ];
-  };
+  # Prevent nix-darwin from managing nix - conflicts with Determinate installer  
+  nix.enable = false;
 
   home-manager.backupFileExtension = "bak";
 
