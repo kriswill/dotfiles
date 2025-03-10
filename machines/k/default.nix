@@ -22,8 +22,7 @@
       drs = "darwin-rebuild switch --flake ~/src/dotfiles";
     };
   };
-  security.pam.enableSudoTouchIdAuth = true;
-
+  security.pam.services.sudo_local.touchIdAuth = true;
   # nix repl -f '<nixpkgs>'
   # > nerd-fonts.<tab>
   fonts.packages = with pkgs.nerd-fonts; [ 

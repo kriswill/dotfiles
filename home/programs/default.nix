@@ -5,7 +5,7 @@
     ./alacritty.nix
     ./fastfetch
     ./git.nix
-    # ./kitty
+    ./kitty
     ./neovim
     ./ssh.nix
     ./starship.nix
