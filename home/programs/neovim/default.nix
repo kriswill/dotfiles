@@ -26,8 +26,8 @@ with pkgs;
       luarocks
       marksman
 
-      go_1_23
-      (go-tools.override { buildGoModule = buildGo123Module; })
+      go_1_24
+      (go-tools.override { buildGoModule = buildGo124Module; })
 
       # tools
       cargo
