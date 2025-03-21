@@ -1,11 +1,11 @@
-vim.g.mapleader = " "                                   -- change leader to a space
-vim.g.maplocalleader = " "                              -- change localleader to a space
+vim.g.mapleader = " " -- change leader to a space
+vim.g.maplocalleader = " " -- change localleader to a space
 
 local keymap = vim.keymap.set
 -- General keymaps
 keymap("i", "jk", "<ESC>") -- Exit insert mode with jk
 keymap("i", "ii", "<ESC>") -- Exit insert mode with ii
-keymap({ 'n', 'v' }, '<Space>', '<Nop>', { silent = true })
+keymap({ "n", "v" }, "<Space>", "<Nop>", { silent = true })
 -- keymap("n", "<leader>wq", ":wq<CR>") -- save and quit
 -- keymap("n", "<leader>qq", ":q!<CR>") -- quit without saving
 -- keymap("n", "<leader>ww", ":w<CR>") -- save
@@ -51,6 +51,9 @@ vim.keymap.set("v", ">", ">gv") -- indent visual block
 -- keymap("n", "<leader>xr", ":call VrcQuery()<CR>") -- Run REST query
 --
 -- LSP
+keymap("n", "<leader>cf", function()
+  require("conform").format({ lsp_format = "fallback" })
+end, { desc = "Format current file" })
 -- keymap("n", "<leader>gg", "<cmd>lua vim.lsp.buf.hover()<CR>")
 -- keymap("n", "<leader>gd", "<cmd>lua vim.lsp.buf.definition()<CR>")
 -- keymap("n", "<leader>gD", "<cmd>lua vim.lsp.buf.declaration()<CR>")
