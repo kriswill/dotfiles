@@ -28,26 +28,28 @@ in
     # The home.packages option allows you to install Nix packages into your
     # environment.
     packages = with pkgs; [
-      fastfetch # maintained neofetch
-      fd # file finding
-      jq # json querying
+      age # encryption tool
       bat # cat with wings
+      comma # https://github.com/nix-community/comma
+      fastfetch # maintained version neofetch
+      fd # file finding
+      figlet # text to big fancy letters in ASCII
+      go # an awesome language
+      jq # json querying
+      keycastr # keystroke visualizer
+      localsend # share files with other devices on the local network
+      ncdu # analyze disk usage
+      # nh # https://github.com/viperML/nh
+      nix-index # local database of nixpkgs
+      nix-output-monitor # better visual output for nix builds
+      nixpkgs-fmt # format Nix code
+      ripgrep # fast grep replacement
+      tldr # simplified man pages
       tree # print directory trees
-      comma
-      nix-index
-      nixpkgs-fmt
-      tldr
-      nix-output-monitor
-      ripgrep
-      localsend
-      figlet
-      age
-      keycastr
-      go
 
-      # # You can also create simple shell scripts directly inside your
-      # # configuration. For example, this adds a command 'my-hello' to your
-      # # environment:
+      # You can also create simple shell scripts directly inside your
+      # configuration. For example, this adds a command 'my-hello' to your
+      # environment:
       (writeShellScriptBin "my-hello" ''
         echo "Hello, ${config.home.username}!"
       '')
@@ -56,12 +58,12 @@ in
     # Home Manager is pretty good at managing dotfiles. The primary way to manage
     # plain files is through 'home.file'.
     file = {
-      # # Building this configuration will create a copy of 'dotfiles/screenrc' in
-      # # the Nix store. Activating the configuration will then make '~/.screenrc' a
-      # # symlink to the Nix store copy.
+      # Building this configuration will create a copy of 'dotfiles/screenrc' in
+      # the Nix store. Activating the configuration will then make '~/.screenrc' a
+      # symlink to the Nix store copy.
       # ".screenrc".source = dotfiles/screenrc;
 
-      # # You can also set the file content immediately.
+      # You can also set the file content immediately.
       # ".gradle/gradle.properties".text = ''
       #   org.gradle.console=verbose
       #   org.gradle.daemon.idletimeout=3600000

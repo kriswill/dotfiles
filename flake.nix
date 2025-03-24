@@ -4,13 +4,13 @@
   outputs =
     inputs @ { self
     , nixpkgs
-    , nix-darwin
+    , darwin
     , home-manager
     , ...
     }:
     let
       inherit (self) outputs;
-      inherit (nix-darwin.lib) darwinSystem;
+      inherit (darwin.lib) darwinSystem;
 
       # This defines the home-manager config module
       mkHomeManager = path: username: {
@@ -82,7 +82,7 @@
       url = "https://flakehub.com/f/DeterminateSystems/fh/*.tar.gz";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    nix-darwin = {
+    darwin = {
       url = "github:LnL7/nix-darwin";
       inputs.nixpkgs.follows = "nixpkgs";
     };

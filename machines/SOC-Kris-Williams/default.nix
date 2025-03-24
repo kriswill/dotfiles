@@ -2,7 +2,7 @@
 # SOC-Kris-Williams - my work Apple M2 Pro, 32GB RAM
 # hostname enforced by IT
 #
-{ self, pkgs, ... }: {
+{ self, pkgs, inputs, ... }: {
 
   system = {
     # Used for backwards compatibility, please read the changelog before changing.
@@ -23,7 +23,7 @@
       home-manager
     ];
     shellAliases = {
-      drs = "darwin-rebuild switch --flake ~/src/dotfiles";
+      drs = "${inputs.darwin.packages.${pkgs.stdenv.hostPlatform.system}.darwin-rebuild}/bin/darwin-rebuild switch --flake ~/src/dotfiles |& ${pkgs.nix-output-monitor}/bin/nom";
     };
   };
   security.pam.services.sudo_local.touchIdAuth = true;

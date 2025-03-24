@@ -24,7 +24,6 @@ in {
       "..." = ".. ..";
       lg = "${lazygit}/bin/lazygit";
       ff = "${fastfetch}/bin/fastfetch";
-      drs = mkIf isDarwin "darwin-rebuild switch --flake ~/src/dotfiles";
       gv = "NVIM_APPNAME=gman nvim";
     };
 

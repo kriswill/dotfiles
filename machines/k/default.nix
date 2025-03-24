@@ -19,7 +19,7 @@
       # inputs.ghostty.packages.aarch64-darwin.default
     ]; 
     shellAliases = {
-      drs = "darwin-rebuild switch --flake ~/src/dotfiles";
+      drs = "${inputs.darwin.packages.${pkgs.stdenv.hostPlatform.system}.darwin-rebuild}/bin/darwin-rebuild switch --flake ~/src/dotfiles |& ${pkgs.nix-output-monitor}/bin/nom";
     };
   };
   security.pam.services.sudo_local.touchIdAuth = true;

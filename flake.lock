@@ -15,6 +15,26 @@
         "type": "github"
       }
     },
+    "darwin": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1742741935,
+        "narHash": "sha256-ZCNvPYWkL9hxzgWn1gmYCZItqBU4ujsWjwWNpcwCjfQ=",
+        "owner": "LnL7",
+        "repo": "nix-darwin",
+        "rev": "ebb88c3428dcdd95c06dca4d49b9791a65ab777b",
+        "type": "github"
+      },
+      "original": {
+        "owner": "LnL7",
+        "repo": "nix-darwin",
+        "type": "github"
+      }
+    },
     "fenix": {
       "inputs": {
         "nixpkgs": [
@@ -198,26 +218,6 @@
         "url": "https://flakehub.com/f/nix-community/naersk/0.1.345.tar.gz"
       }
     },
-    "nix-darwin": {
-      "inputs": {
-        "nixpkgs": [
-          "nixpkgs"
-        ]
-      },
-      "locked": {
-        "lastModified": 1742741935,
-        "narHash": "sha256-ZCNvPYWkL9hxzgWn1gmYCZItqBU4ujsWjwWNpcwCjfQ=",
-        "owner": "LnL7",
-        "repo": "nix-darwin",
-        "rev": "ebb88c3428dcdd95c06dca4d49b9791a65ab777b",
-        "type": "github"
-      },
-      "original": {
-        "owner": "LnL7",
-        "repo": "nix-darwin",
-        "type": "github"
-      }
-    },
     "nixpkgs": {
       "locked": {
         "lastModified": 1742422364,
@@ -241,11 +241,11 @@
         "treefmt-nix": "treefmt-nix"
       },
       "locked": {
-        "lastModified": 1742840525,
-        "narHash": "sha256-qpBPCJY9TWvV31hDH/K7jtdFYiCK/e7KC+l4yyyN5ds=",
+        "lastModified": 1742849190,
+        "narHash": "sha256-Isnx5t+L/G7AxpUwNvFgPiYc4IcZjdBrg3MIVz1cfnk=",
         "owner": "nix-community",
         "repo": "nur",
-        "rev": "387780271700a8fa6daff0d8c9acdf49876e258b",
+        "rev": "797067d7e3601713a3b43f823248a6232486376c",
         "type": "github"
       },
       "original": {
@@ -256,11 +256,11 @@
     },
     "root": {
       "inputs": {
+        "darwin": "darwin",
         "fh": "fh",
         "home-manager": "home-manager",
         "mac-app-util": "mac-app-util",
         "minimal-tmux": "minimal-tmux",
-        "nix-darwin": "nix-darwin",
         "nixpkgs": "nixpkgs",
         "nur": "nur"
       }
