@@ -49,12 +49,12 @@
              };}
           ];
         };
-        "kwilliams1023" = darwinSystem {
+        "SOC-Kris-Williams" = darwinSystem {
           specialArgs = {
             inherit self inputs outputs;
           };
           modules = [
-            ./machines/kwilliams1023
+            ./machines/SOC-Kris-Williams
             home-manager.darwinModules.home-manager
             (mkHomeManager ./home "k")
             {nixpkgs = { hostPlatform = "aarch64-darwin"; };}

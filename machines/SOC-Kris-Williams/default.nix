@@ -1,5 +1,5 @@
 #
-# kwilliams1023 - my work Apple M2 Pro, 32GB RAM
+# SOC-Kris-Williams - my work Apple M2 Pro, 32GB RAM
 # hostname enforced by IT
 #
 { self, pkgs, ... }: {
