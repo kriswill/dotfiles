@@ -13,6 +13,8 @@ bindkey -M vicmd v edit-command-line
 # add red background to stderr
 autoload -Uz add-zle-hook-widget
 
+eval "$(/opt/homebrew/bin/brew shellenv)"
+
 function stderred() {
     RED_BG=$'\e[41m'
     RESET=$'\e[0m'
