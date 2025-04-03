@@ -9,6 +9,8 @@
   #     config.allowUnfree = true;
   #   };
   # };
+  neovim = import ./neovim {};
+
   kitty = final: prev: {
     kitty = prev.kitty.overrideAttrs (old: {
       preCheck = ''
