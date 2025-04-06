@@ -1,6 +1,7 @@
 { pkgs, lib, ... }:
 
-with pkgs; let
+with pkgs;
+let
   inherit (lib) mkIf;
   inherit (stdenv) isDarwin;
 in {
@@ -8,9 +9,7 @@ in {
     enable = true;
     autosuggestion.enable = true;
     enableCompletion = true;
-    syntaxHighlighting = {
-      enable = true;
-    };
+    syntaxHighlighting = { enable = true; };
 
     shellAliases = {
       ls = "${eza}/bin/eza --icons --hyperlink";

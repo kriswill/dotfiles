@@ -6,7 +6,7 @@ return {
       javascript = { "prettierd", "prettier" },
       lua = { "stylua" },
       markdown = { "deno_fmt", "prettierd", "prettierd" },
-      nix = { "nixfmt", "nixpkgs-fmt" },
+      nix = { "nixfmt" },
       python = { "isort", "black" },
       rust = { "rustfmt" },
       typescript = { "prettierd", "prettier" },

@@ -14,10 +14,11 @@ with pkgs;
       black # Python
       isort
       luajitPackages.jsregexp # luasnip
-      nixpkgs-fmt
+      nixfmt
       prettierd # Multiple language formatter
       shfmt # Shell
       stylua # Lua
+      yamlfmt
 
       # LSP
       tree-sitter
@@ -43,13 +44,12 @@ with pkgs;
       wget
     ];
   };
-} // (
-let
+} // (let
   # used to link files to .config/nvim/*
-  nvimDir = config.home.homeDirectory + "/src/dotfiles/home/programs/neovim/nvim";
+  nvimDir = config.home.homeDirectory
+    + "/src/dotfiles/home/programs/neovim/nvim";
   ln = config.lib.file.mkOutOfStoreSymlink;
-in
-{
+in {
   xdg.configFile = {
     "nvim/lua".source = ln nvimDir + "/lua";
     "nvim/ftplugin".source = ln nvimDir + "/ftplugin";
