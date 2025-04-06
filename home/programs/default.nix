@@ -54,9 +54,7 @@
       enable = true;
       shellWrapperName = "y";
       enableZshIntegration = true;
-      settings = {
-        manager.ratio = [ 1 3 4 ];
-      };
+      settings = { manager.ratio = [ 1 3 4 ]; };
     };
   };
 }

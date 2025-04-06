@@ -1,6 +1,7 @@
 { pkgs, lib, inputs, ... }:
-with pkgs; let
-  inherit (lib) getExe; 
+with pkgs;
+let
+  inherit (lib) getExe;
   minimal-tmux = inputs.minimal-tmux.packages.${system}.default;
 in {
   programs.tmux = {
@@ -12,11 +13,7 @@ in {
     mouse = true;
     shortcut = "space";
     terminal = "screen-256color";
-    plugins = with tmuxPlugins; [
-      vim-tmux-navigator
-    ] ++ [
-      minimal-tmux
-    ];
+    plugins = with tmuxPlugins; [ vim-tmux-navigator ] ++ [ minimal-tmux ];
     extraConfig = ''
       set -g default-command ${getExe zsh}
       set -g default-terminal "xterm-ghostty"

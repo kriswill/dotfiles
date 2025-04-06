@@ -1,9 +1,7 @@
 { pkgs, specialArgs, ... }:
 
-let
-  fontSize = 14;
-in
-{
+let fontSize = 14;
+in {
   programs.alacritty = {
     enable = true;
 
@@ -49,18 +47,30 @@ in
         size = fontSize;
       };
       keyboard.bindings = [
-        { key = 53; mods = "Shift"; mode = "Vi"; action = "SearchBackward"; }
-        { key = "Return"; mods = "Shift"; chars = "\\\\x1b[13;2u"; }
-        { key = "Return"; mods = "Control"; chars = "\\\\x1b[13;5u"; }
-      ];
-      hints.enabled = [
         {
-          regex = ''(mailto:|gemini:|gopher:|https:|http:|news:|file:|git:|ssh:|ftp:)[^\u0000-\u001F\u007F-\u009F<>"\\s{-}\\^⟨⟩`]+'';
-          command = "${pkgs.mimeo}/bin/mimeo";
-          post_processing = true;
-          mouse.enabled = true;
+          key = 53;
+          mods = "Shift";
+          mode = "Vi";
+          action = "SearchBackward";
+        }
+        {
+          key = "Return";
+          mods = "Shift";
+          chars = "\\\\x1b[13;2u";
+        }
+        {
+          key = "Return";
+          mods = "Control";
+          chars = "\\\\x1b[13;5u";
         }
       ];
+      hints.enabled = [{
+        regex = ''
+          (mailto:|gemini:|gopher:|https:|http:|news:|file:|git:|ssh:|ftp:)[^\u0000-\u001F\u007F-\u009F<>"\\s{-}\\^⟨⟩`]+'';
+        command = "${pkgs.mimeo}/bin/mimeo";
+        post_processing = true;
+        mouse.enabled = true;
+      }];
       selection.save_to_clipboard = true;
       shell.program = "${pkgs.zsh}/bin/zsh";
       window = {

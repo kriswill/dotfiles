@@ -1,4 +1,3 @@
-#
 # k - my personal macbook pro M1 max, 64GB RAM
 #
 { self, inputs, pkgs, lib, ... }: {
@@ -11,21 +10,21 @@
 
   environment = {
     # $ nix-env -qaP | grep wget
-    systemPackages = with pkgs; [
-      iproute2mac
-      home-manager
-    ] ++ [ 
-      inputs.fh.packages.${pkgs.stdenv.hostPlatform.system}.default 
-      # inputs.ghostty.packages.aarch64-darwin.default
-    ]; 
+    systemPackages = with pkgs;
+      [ iproute2mac home-manager ] ++ [
+        inputs.fh.packages.${pkgs.stdenv.hostPlatform.system}.default
+        # inputs.ghostty.packages.aarch64-darwin.default
+      ];
     shellAliases = {
-      drs = "${inputs.darwin.packages.${pkgs.stdenv.hostPlatform.system}.darwin-rebuild}/bin/darwin-rebuild switch --flake ~/src/dotfiles |& ${pkgs.nix-output-monitor}/bin/nom";
+      drs = "${
+          inputs.darwin.packages.${pkgs.stdenv.hostPlatform.system}.darwin-rebuild
+        }/bin/darwin-rebuild switch --flake ~/src/dotfiles |& ${pkgs.nix-output-monitor}/bin/nom";
     };
   };
   security.pam.services.sudo_local.touchIdAuth = true;
   # nix repl -f '<nixpkgs>'
   # > nerd-fonts.<tab>
-  fonts.packages = with pkgs.nerd-fonts; [ 
+  fonts.packages = with pkgs.nerd-fonts; [
     victor-mono
     sauce-code-pro
     jetbrains-mono
@@ -54,9 +53,7 @@
       }
       "ghostty"
     ];
-    brews = [];
-    masApps = {
-      "Xcode" = 497799835;
-    };
+    brews = [ ];
+    masApps = { "Xcode" = 497799835; };
   };
 }

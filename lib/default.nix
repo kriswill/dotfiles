@@ -1,6 +1,7 @@
 lib: lib0:
 let
-  libAttrs = lib.mapAttrs (_: fn: fn { inherit lib; }) (lib.importDir ./. "default.nix");
+  libAttrs =
+    lib.mapAttrs (_: fn: fn { inherit lib; }) (lib.importDir ./. "default.nix");
 in lib0 // {
   # birdos = {
   #   lib = libAttrs;

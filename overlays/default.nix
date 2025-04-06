@@ -9,7 +9,7 @@
   #     config.allowUnfree = true;
   #   };
   # };
-  neovim = import ./neovim {};
+  neovim = import ./neovim { };
 
   kitty = final: prev: {
     kitty = prev.kitty.overrideAttrs (old: {

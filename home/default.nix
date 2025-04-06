@@ -1,16 +1,12 @@
 { config, pkgs, lib, username, ... }:
 
 let
-  homeDirectory = lib.mkForce (
-    if pkgs.stdenvNoCC.isDarwin
-    then "/Users/${username}"
-    else "/home/${username}"
-  );
-in
-{
-  imports = [
-    ./programs
-  ];
+  homeDirectory = lib.mkForce (if pkgs.stdenvNoCC.isDarwin then
+    "/Users/${username}"
+  else
+    "/home/${username}");
+in {
+  imports = [ ./programs ];
 
   home = {
     inherit username homeDirectory;
@@ -23,7 +19,6 @@ in
     # want to update the value, then make sure to first check the Home Manager
     # release notes.
     stateVersion = "24.11"; # Please read the comment before changing.
-
 
     # The home.packages option allows you to install Nix packages into your
     # environment.
@@ -42,7 +37,7 @@ in
       # nh # https://github.com/viperML/nh
       nix-index # local database of nixpkgs
       nix-output-monitor # better visual output for nix builds
-      nixpkgs-fmt # format Nix code
+      nixfmt # format Nix code
       ripgrep # fast grep replacement
       tldr # simplified man pages
       tree # print directory trees
@@ -80,8 +75,6 @@ in
     #  /etc/profiles/per-user/k/etc/profile.d/hm-session-vars.sh
     #
     # if you don't want to manage your shell through Home Manager.
-    sessionVariables = {
-      EDITOR = "${lib.getExe pkgs.neovim}";
-    };
+    sessionVariables = { EDITOR = "${lib.getExe pkgs.neovim}"; };
   };
 }

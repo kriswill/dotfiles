@@ -1,4 +1,3 @@
-#
 # SOC-Kris-Williams - my work Apple M2 Pro, 32GB RAM
 # hostname enforced by IT
 #
@@ -18,12 +17,11 @@
 
   environment = {
     # $ nix-env -qaP | grep wget
-    systemPackages = with pkgs; [
-      iproute2mac
-      home-manager
-    ];
+    systemPackages = with pkgs; [ iproute2mac home-manager ];
     shellAliases = {
-      drs = "${inputs.darwin.packages.${pkgs.stdenv.hostPlatform.system}.darwin-rebuild}/bin/darwin-rebuild switch --flake ~/src/dotfiles |& ${pkgs.nix-output-monitor}/bin/nom";
+      drs = "${
+          inputs.darwin.packages.${pkgs.stdenv.hostPlatform.system}.darwin-rebuild
+        }/bin/darwin-rebuild switch --flake ~/src/dotfiles |& ${pkgs.nix-output-monitor}/bin/nom";
     };
   };
   security.pam.services.sudo_local.touchIdAuth = true;
@@ -61,9 +59,7 @@
       #   greedy = true;
       # }
     ];
-    brews = [];
-    masApps = {
-      "Xcode" = 497799835;
-    };
+    brews = [ ];
+    masApps = { "Xcode" = 497799835; };
   };
 }
