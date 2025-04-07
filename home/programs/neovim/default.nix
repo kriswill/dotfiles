@@ -12,11 +12,11 @@ with pkgs;
     extraPackages = [
       # Formatters
       black # Python
-      isort
+      isort # Python
       luajitPackages.jsregexp # luasnip
       nixfmt
       prettierd # Multiple language formatter
-      shfmt # Shell
+      shfmt
       stylua # Lua
       yamlfmt
 

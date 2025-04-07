@@ -224,6 +224,19 @@ return {
         --   },
         -- },
       },
+
+      yamlls = {
+        settings = {
+          yaml = {
+            validate = true,
+            hover = true,
+            completion = true,
+            schemaStore = {
+              enable = false,
+            },
+          },
+        },
+      },
     }
 
     -- Ensure the servers and tools above are installed

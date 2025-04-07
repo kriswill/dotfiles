@@ -11,7 +11,8 @@ return {
       rust = { "rustfmt" },
       typescript = { "prettierd", "prettier" },
       xml = { "xmllint", "xmlformat" },
-      yaml = { "prettierd", "prettier", "yamlfmt", "yq" },
+      yaml = { "yamlfmt", "yq" },
+      sh = { "shfmt" },
     },
     default_format_opts = {
       lsp_format = "fallback",
