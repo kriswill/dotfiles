@@ -1,9 +1,15 @@
-{ pkgs, lib, inputs, ... }:
+{
+  pkgs,
+  lib,
+  inputs,
+  ...
+}:
 with pkgs;
 let
   inherit (lib) getExe;
   minimal-tmux = inputs.minimal-tmux.packages.${system}.default;
-in {
+in
+{
   programs.tmux = {
     enable = true;
     shell = getExe zsh;

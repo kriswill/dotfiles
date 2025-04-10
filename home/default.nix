@@ -1,11 +1,17 @@
-{ config, pkgs, lib, username, ... }:
+{
+  config,
+  pkgs,
+  lib,
+  username,
+  ...
+}:
 
 let
-  homeDirectory = lib.mkForce (if pkgs.stdenvNoCC.isDarwin then
-    "/Users/${username}"
-  else
-    "/home/${username}");
-in {
+  homeDirectory = lib.mkForce (
+    if pkgs.stdenvNoCC.isDarwin then "/Users/${username}" else "/home/${username}"
+  );
+in
+{
   imports = [ ./programs ];
 
   home = {
@@ -37,7 +43,6 @@ in {
       # nh # https://github.com/viperML/nh
       nix-index # local database of nixpkgs
       nix-output-monitor # better visual output for nix builds
-      nixfmt # format Nix code
       ripgrep # fast grep replacement
       tldr # simplified man pages
       tree # print directory trees
@@ -76,6 +81,8 @@ in {
     #  /etc/profiles/per-user/k/etc/profile.d/hm-session-vars.sh
     #
     # if you don't want to manage your shell through Home Manager.
-    sessionVariables = { EDITOR = "${lib.getExe pkgs.neovim}"; };
+    sessionVariables = {
+      EDITOR = "${lib.getExe pkgs.neovim}";
+    };
   };
 }

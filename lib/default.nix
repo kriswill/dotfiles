@@ -1,8 +1,9 @@
 lib: lib0:
 let
-  libAttrs =
-    lib.mapAttrs (_: fn: fn { inherit lib; }) (lib.importDir ./. "default.nix");
-in lib0 // {
+  libAttrs = lib.mapAttrs (_: fn: fn { inherit lib; }) (lib.importDir ./. "default.nix");
+in
+lib0
+// {
   # birdos = {
   #   lib = libAttrs;
   #   inherit (libAttrs) colors;
@@ -22,8 +23,7 @@ in lib0 // {
 
   systems = lib0.systems // {
     architectures = lib0.systems.architectures // {
-      featureSupport = arch:
-        lib.mapAttrs (_: f: f arch) lib.systems.architectures.predicates;
+      featureSupport = arch: lib.mapAttrs (_: f: f arch) lib.systems.architectures.predicates;
     };
   };
 

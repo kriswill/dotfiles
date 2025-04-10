@@ -47,14 +47,23 @@
     zoxide = {
       enable = true;
       enableZshIntegration = true;
-      options = [ "--cmd" "j" ];
+      options = [
+        "--cmd"
+        "j"
+      ];
     };
 
     yazi = {
       enable = true;
       shellWrapperName = "y";
       enableZshIntegration = true;
-      settings = { manager.ratio = [ 1 3 4 ]; };
+      settings = {
+        manager.ratio = [
+          1
+          3
+          4
+        ];
+      };
     };
   };
 }

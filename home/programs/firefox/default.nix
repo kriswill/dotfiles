@@ -1,9 +1,9 @@
 { config, pkgs, ... }:
 let
-  user_js = config.home.homeDirectory
-    + "/src/dotfiles/home/programs/firefox/user.js";
+  user_js = config.home.homeDirectory + "/src/dotfiles/home/programs/firefox/user.js";
   inherit (pkgs.nur.repos.rycee) firefox-addons;
-in {
+in
+{
   home = {
     file = {
       ".mozilla/firefox/${config.home.username}/user.js".source =
@@ -25,57 +25,65 @@ in {
           force = true;
           engines = {
             "Searx" = {
-              urls = [{
-                template = "https://searx.tiekoetter.com/search";
-                params = [{
-                  name = "q";
-                  value = "{searchTerms}";
-                }];
-              }];
+              urls = [
+                {
+                  template = "https://searx.tiekoetter.com/search";
+                  params = [
+                    {
+                      name = "q";
+                      value = "{searchTerms}";
+                    }
+                  ];
+                }
+              ];
               definedAliases = [ "@sx" ];
             };
             "Nix Packages" = {
-              urls = [{
-                template = "https://search.nixos.org/packages";
-                params = [
-                  {
-                    name = "type";
-                    value = "packages";
-                  }
-                  {
-                    name = "query";
-                    value = "{searchTerms}";
-                  }
-                ];
-              }];
-              icon =
-                "${pkgs.nixos-icons}/share/icons/hicolor/scalable/apps/nix-snowflake.svg";
+              urls = [
+                {
+                  template = "https://search.nixos.org/packages";
+                  params = [
+                    {
+                      name = "type";
+                      value = "packages";
+                    }
+                    {
+                      name = "query";
+                      value = "{searchTerms}";
+                    }
+                  ];
+                }
+              ];
+              icon = "${pkgs.nixos-icons}/share/icons/hicolor/scalable/apps/nix-snowflake.svg";
               definedAliases = [ "@np" ];
             };
             "Home Manager Options" = {
-              urls = [{
-                template =
-                  "https://mipmip.github.io/home-manager-option-search/";
-                params = [{
-                  name = "query";
-                  value = "{searchTerms}";
-                }];
-              }];
-              icon =
-                "${pkgs.nixos-icons}/share/icons/hicolor/scalable/apps/nix-snowflake.svg";
+              urls = [
+                {
+                  template = "https://mipmip.github.io/home-manager-option-search/";
+                  params = [
+                    {
+                      name = "query";
+                      value = "{searchTerms}";
+                    }
+                  ];
+                }
+              ];
+              icon = "${pkgs.nixos-icons}/share/icons/hicolor/scalable/apps/nix-snowflake.svg";
               definedAliases = [ "@hm" ];
             };
             "NixOS Wiki" = {
-              urls = [{
-                template = "https://nixos.wiki/index.php?search={searchTerms}";
-              }];
+              urls = [
+                {
+                  template = "https://nixos.wiki/index.php?search={searchTerms}";
+                }
+              ];
               iconUpdateURL = "https://nixos.wiki/favicon.png";
               updateInterval = 24 * 60 * 60 * 1000; # every day
               definedAliases = [ "@nw" ];
             };
             "Bing".metaData.hidden = true;
-            "Google".metaData.alias =
-              "@g"; # builtin engines only support specifying one additional alias
+            "Google".metaData.alias = "@g"; # builtin engines only support specifying one additional alias
           };
         };
       };

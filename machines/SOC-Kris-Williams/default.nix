@@ -1,7 +1,13 @@
 # SOC-Kris-Williams - my work Apple M2 Pro, 32GB RAM
 # hostname enforced by IT
 #
-{ self, pkgs, inputs, ... }: {
+{
+  self,
+  pkgs,
+  inputs,
+  ...
+}:
+{
 
   system = {
     # Used for backwards compatibility, please read the changelog before changing.
@@ -17,11 +23,14 @@
 
   environment = {
     # $ nix-env -qaP | grep wget
-    systemPackages = with pkgs; [ iproute2mac home-manager ];
+    systemPackages = with pkgs; [
+      iproute2mac
+      home-manager
+    ];
     shellAliases = {
       drs = "${
-          inputs.darwin.packages.${pkgs.stdenv.hostPlatform.system}.darwin-rebuild
-        }/bin/darwin-rebuild switch --flake ~/src/dotfiles |& ${pkgs.nix-output-monitor}/bin/nom";
+        inputs.darwin.packages.${pkgs.stdenv.hostPlatform.system}.darwin-rebuild
+      }/bin/darwin-rebuild switch --flake ~/src/dotfiles |& ${pkgs.nix-output-monitor}/bin/nom";
     };
   };
   security.pam.services.sudo_local.touchIdAuth = true;
@@ -36,7 +45,7 @@
 
   programs.zsh.enable = true;
 
-  # Prevent nix-darwin from managing nix - conflicts with Determinate installer  
+  # Prevent nix-darwin from managing nix - conflicts with Determinate installer
   nix.enable = false;
 
   home-manager.backupFileExtension = "bak";
@@ -60,6 +69,8 @@
       # }
     ];
     brews = [ ];
-    masApps = { "Xcode" = 497799835; };
+    masApps = {
+      "Xcode" = 497799835;
+    };
   };
 }

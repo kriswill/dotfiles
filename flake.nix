@@ -1,7 +1,14 @@
 {
   description = "Kris' Nix Configuration";
 
-  outputs = inputs@{ self, nixpkgs, darwin, home-manager, ... }:
+  outputs =
+    inputs@{
+      self,
+      nixpkgs,
+      darwin,
+      home-manager,
+      ...
+    }:
     let
       inherit (self) outputs;
       inherit (darwin.lib) darwinSystem;
@@ -16,9 +23,9 @@
           extraSpecialArgs = { inherit inputs username; };
         };
       };
-    in {
-      lib = builtins.foldl' (lib: overlay: lib.extend overlay) nixpkgs.lib
-        [ (import ./lib) ];
+    in
+    {
+      lib = builtins.foldl' (lib: overlay: lib.extend overlay) nixpkgs.lib [ (import ./lib) ];
       # Custom packages and modifications, exported as overlays
       overlays = import ./overlays { inherit inputs; };
 
@@ -43,10 +50,13 @@
             ./machines/SOC-Kris-Williams
             home-manager.darwinModules.home-manager
             (mkHomeManager ./home "k")
-            { nixpkgs = { hostPlatform = "aarch64-darwin"; }; }
             {
-              environment.systemPackages =
-                [ inputs.fh.packages.aarch64-darwin.default ];
+              nixpkgs = {
+                hostPlatform = "aarch64-darwin";
+              };
+            }
+            {
+              environment.systemPackages = [ inputs.fh.packages.aarch64-darwin.default ];
             }
           ];
         };
@@ -54,7 +64,10 @@
       darwinPackages = self.darwinConfigurations."k".pkgs;
       devShells.aarch64-darwin.default = self.darwinPackages.mkShell {
         name = "dotfiles";
-        packages = with self.darwinPackages; [ deadnix statix ];
+        packages = with self.darwinPackages; [
+          deadnix
+          statix
+        ];
       };
     };
 

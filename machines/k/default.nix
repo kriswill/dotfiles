@@ -1,6 +1,13 @@
 # k - my personal macbook pro M1 max, 64GB RAM
 #
-{ self, inputs, pkgs, lib, ... }: {
+{
+  self,
+  inputs,
+  pkgs,
+  lib,
+  ...
+}:
+{
 
   # Used for backwards compatibility, please read the changelog before changing.
   # $ darwin-rebuild changelog
@@ -10,15 +17,20 @@
 
   environment = {
     # $ nix-env -qaP | grep wget
-    systemPackages = with pkgs;
-      [ iproute2mac home-manager ] ++ [
+    systemPackages =
+      with pkgs;
+      [
+        iproute2mac
+        home-manager
+      ]
+      ++ [
         inputs.fh.packages.${pkgs.stdenv.hostPlatform.system}.default
         # inputs.ghostty.packages.aarch64-darwin.default
       ];
     shellAliases = {
       drs = "${
-          inputs.darwin.packages.${pkgs.stdenv.hostPlatform.system}.darwin-rebuild
-        }/bin/darwin-rebuild switch --flake ~/src/dotfiles |& ${pkgs.nix-output-monitor}/bin/nom";
+        inputs.darwin.packages.${pkgs.stdenv.hostPlatform.system}.darwin-rebuild
+      }/bin/darwin-rebuild switch --flake ~/src/dotfiles |& ${pkgs.nix-output-monitor}/bin/nom";
     };
   };
   security.pam.services.sudo_local.touchIdAuth = true;
@@ -54,6 +66,8 @@
       "ghostty"
     ];
     brews = [ ];
-    masApps = { "Xcode" = 497799835; };
+    masApps = {
+      "Xcode" = 497799835;
+    };
   };
 }

@@ -14,18 +14,22 @@ with pkgs;
       black # Python
       isort # Python
       luajitPackages.jsregexp # luasnip
-      nixfmt
+      nixfmt-rfc-style
       prettierd # Multiple language formatter
       shfmt
       stylua # Lua
       yamlfmt
+      gofumpt # stricter gofmt
 
       # LSP
+      bash-language-server
+      docker-compose-language-service
       tree-sitter
       lua-language-server
       lua5_1
       luarocks
       marksman
+      gopls
 
       go_1_24
       (go-tools.override { buildGoModule = buildGo124Module; })
@@ -44,16 +48,19 @@ with pkgs;
       wget
     ];
   };
-} // (let
-  # used to link files to .config/nvim/*
-  nvimDir = config.home.homeDirectory
-    + "/src/dotfiles/home/programs/neovim/nvim";
-  ln = config.lib.file.mkOutOfStoreSymlink;
-in {
-  xdg.configFile = {
-    "nvim/lua".source = ln nvimDir + "/lua";
-    "nvim/ftplugin".source = ln nvimDir + "/ftplugin";
-    "nvim/init.lua".source = ln nvimDir + "/init.lua";
-    "nvim/lazy-lock.json".source = ln nvimDir + "/lazy-lock.json";
-  };
-})
+}
+// (
+  let
+    # used to link files to .config/nvim/*
+    nvimDir = config.home.homeDirectory + "/src/dotfiles/home/programs/neovim/nvim";
+    ln = config.lib.file.mkOutOfStoreSymlink;
+  in
+  {
+    xdg.configFile = {
+      "nvim/lua".source = ln nvimDir + "/lua";
+      "nvim/ftplugin".source = ln nvimDir + "/ftplugin";
+      "nvim/init.lua".source = ln nvimDir + "/init.lua";
+      "nvim/lazy-lock.json".source = ln nvimDir + "/lazy-lock.json";
+    };
+  }
+)
