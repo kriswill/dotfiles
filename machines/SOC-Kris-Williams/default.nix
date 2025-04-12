@@ -69,8 +69,9 @@
       # }
     ];
     brews = [ ];
-    masApps = {
-      "Xcode" = 497799835;
-    };
+    # SLOW!
+    # masApps = {
+    #   "Xcode" = 497799835;
+    # };
   };
 }
