@@ -44,7 +44,7 @@ return {
     --    an lsp (for example, opening `main.rs` is associated with `rust_analyzer`) this
     --    function will be executed to configure the current buffer
     vim.api.nvim_create_autocmd("LspAttach", {
-      group = vim.api.nvim_create_augroup("kickstart-lsp-attach", { clear = true }),
+      group = vim.api.nvim_create_augroup("lsp-attach", { clear = true }),
       callback = function(event)
         -- NOTE: Remember that Lua is a real programming language, and as such it is possible
         -- to define small helper and utility functions so you don't have to repeat yourself.
@@ -197,10 +197,10 @@ return {
     local servers = {
       bashls = {},
       marksman = {},
-      -- clangd = {},
-      -- gopls = {},
-      -- pyright = {},
-      -- rust_analyzer = {},
+      clangd = {},
+      gopls = {},
+      pyright = {},
+      rust_analyzer = {},
       -- ... etc. See `:help lspconfig-all` for a list of all the pre-configured LSPs
       --
       -- Some languages (like typescript) have entire language plugins that can be useful:
@@ -214,15 +214,18 @@ return {
         -- cmd = { ... },
         -- filetypes = { ... },
         -- capabilities = {},
-        -- settings = {
-        --   Lua = {
-        --     completion = {
-        --       callSnippet = 'Replace',
-        --     },
-        --     -- You can toggle below to ignore Lua_LS's noisy `missing-fields` warnings
-        --     -- diagnostics = { disable = { 'missing-fields' } },
-        --   },
-        -- },
+        settings = {
+          Lua = {
+            diagnostics = {
+              globals = { "vim" },
+              -- You can toggle below to ignore Lua_LS's noisy `missing-fields` warnings
+              disable = { "missing-fields" },
+            },
+          },
+          completion = {
+            callSnippet = "Replace",
+          },
+        },
       },
 
       yamlls = {
@@ -238,6 +241,13 @@ return {
         },
       },
     }
+
+    require("neodev").setup({})
+
+    for name, opts in pairs(servers) do
+      opts.capabilities = vim.tbl_deep_extend("force", {}, capabilities, opts.capabilities or {})
+      require("lspconfig")[name].setup(opts)
+    end
 
     -- Ensure the servers and tools above are installed
     --

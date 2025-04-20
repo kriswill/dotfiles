@@ -10,7 +10,7 @@ with pkgs;
     withRuby = false;
 
     extraPackages = [
-      # Formatters
+      ## Formatters  ──────────────────────────────────────────────
       black # Python
       isort # Python
       luajitPackages.jsregexp # luasnip
@@ -21,20 +21,24 @@ with pkgs;
       yamlfmt
       gofumpt # stricter gofmt
 
-      # LSP
-      bash-language-server
-      docker-compose-language-service
-      tree-sitter
-      lua-language-server
+      ## LSP servers  ─────────────────────────────────────────────
+      bash-language-server # Bash
+      docker-compose-language-service # Docker Compose
+      gopls # Go
+      lua-language-server # Lua (lua_ls)
+      marksman # Markdown
+      rust-analyzer # Rust
+      yaml-language-server # YAML (yamlls)
+      nodePackages.typescript-language-server # ts_ls
+      nodePackages.typescript
+      pyright
       lua5_1
       luarocks
-      marksman
-      gopls
 
       go_1_24
       (go-tools.override { buildGoModule = buildGo124Module; })
 
-      # tools
+      ## Tools  ───────────────────────────────────────────────────
       cargo
       cmake
       fswatch # file watcher - replaces libuv.fs_event in neovim v0.10
