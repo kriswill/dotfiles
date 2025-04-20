@@ -82,7 +82,8 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
     darwin = {
-      url = "github:LnL7/nix-darwin";
+      # url = "github:LnL7/nix-darwin";
+      url = "https://flakehub.com/f/nix-darwin/nix-darwin/0.1.*.tar.gz";
       inputs.nixpkgs.follows = "nixpkgs";
     };
     mac-app-util = {
