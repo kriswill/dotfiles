@@ -1,5 +1,5 @@
 {
-  description = "Kris' Nix Configuration";
+  description = "Kris' Apple Nix Configuration";
 
   outputs =
     inputs@{
@@ -12,8 +12,9 @@
     let
       inherit (self) outputs;
       inherit (darwin.lib) darwinSystem;
-
-      # This defines the home-manager config module
+      # All of my macs are Apple ARM
+      system = "aarch64-darwin";
+      pkgs = import nixpkgs { inherit system; };
       mkHomeManager = path: username: {
         home-manager = {
           useUserPackages = true;
@@ -25,10 +26,6 @@
       };
     in
     {
-      lib = builtins.foldl' (lib: overlay: lib.extend overlay) nixpkgs.lib [ (import ./lib) ];
-      # Custom packages and modifications, exported as overlays
-      overlays = import ./overlays { inherit inputs; };
-
       darwinConfigurations = {
         "k" = darwinSystem {
           specialArgs = { inherit self inputs outputs; };
@@ -36,12 +33,7 @@
             ./machines/k
             home-manager.darwinModules.home-manager
             (mkHomeManager ./home "k")
-            {
-              nixpkgs = {
-                hostPlatform = "aarch64-darwin";
-                # overlays = [ outputs.overlays.nixpkgs-unstable ];
-              };
-            }
+            { nixpkgs.hostPlatform = system; }
           ];
         };
         "SOC-Kris-Williams" = darwinSystem {
@@ -50,39 +42,23 @@
             ./machines/SOC-Kris-Williams
             home-manager.darwinModules.home-manager
             (mkHomeManager ./home "k")
-            {
-              nixpkgs = {
-                hostPlatform = "aarch64-darwin";
-              };
-            }
-            {
-              environment.systemPackages = [ inputs.fh.packages.aarch64-darwin.default ];
-            }
+            { nixpkgs.hostPlatform = system; }
           ];
         };
       };
-      darwinPackages = self.darwinConfigurations."k".pkgs;
-      devShells.aarch64-darwin.default = self.darwinPackages.mkShell {
+      devShells.${system}.default = pkgs.mkShell {
         name = "dotfiles";
-        packages = with self.darwinPackages; [
+        packages = with pkgs; [
           deadnix
           statix
         ];
       };
+      formatter.${system} = pkgs.nixfmt-tree;
     };
 
   inputs = {
     nixpkgs.url = "https://flakehub.com/f/NixOS/nixpkgs/0.1.0.tar.gz";
-    nur = {
-      url = "github:nix-community/nur";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-    fh = {
-      url = "https://flakehub.com/f/DeterminateSystems/fh/*.tar.gz";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
     darwin = {
-      # url = "github:LnL7/nix-darwin";
       url = "https://flakehub.com/f/nix-darwin/nix-darwin/0.1.*.tar.gz";
       inputs.nixpkgs.follows = "nixpkgs";
     };
