@@ -1,5 +1,3 @@
-# k - my personal macbook pro M1 max, 64GB RAM
-#
 {
   self,
   inputs,
@@ -8,7 +6,6 @@
   ...
 }:
 {
-
   # Used for backwards compatibility, please read the changelog before changing.
   # $ darwin-rebuild changelog
   system.stateVersion = 5;
@@ -17,16 +14,14 @@
 
   environment = {
     # $ nix-env -qaP | grep wget
-    systemPackages =
-      with pkgs;
-      [
-        iproute2mac
-        home-manager
-      ]
-      ++ [
-        inputs.fh.packages.${pkgs.stdenv.hostPlatform.system}.default
-        # inputs.ghostty.packages.aarch64-darwin.default
-      ];
+    systemPackages = with pkgs; [
+      iproute2mac
+      home-manager
+    ];
+    # ++ [
+    #   inputs.fh.packages.${pkgs.stdenv.hostPlatform.system}.default
+    # inputs.ghostty.packages.aarch64-darwin.default
+    # ];
     shellAliases = {
       drs = "${
         inputs.darwin.packages.${pkgs.stdenv.hostPlatform.system}.darwin-rebuild
