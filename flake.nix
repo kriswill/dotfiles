@@ -15,19 +15,13 @@
       # All of my macs are Apple ARM
       system = "aarch64-darwin";
       pkgs = import nixpkgs { inherit system; };
-      # read a directory and return a list of all filenames inside
-      autoImport =
-        dir: lib.forEach (builtins.attrNames (builtins.readDir dir)) (dirname: dir + /${dirname});
-      lib = nixpkgs.lib.extend (_: _: { inherit autoImport; });
-      mkHomeManager = path: username: {
-        home-manager = {
-          useUserPackages = true;
-          useGlobalPkgs = true;
-          users."${username}" = path;
-          sharedModules = [ inputs.mac-app-util.homeManagerModules.default ];
-          extraSpecialArgs = { inherit inputs username; };
-        };
-      };
+      lib = nixpkgs.lib.extend (
+        _: _:
+        import ./lib {
+          lib = nixpkgs.lib;
+          inherit inputs;
+        }
+      );
     in
     {
       inherit lib;
@@ -44,7 +38,7 @@
           modules = [
             ./hosts/k
             home-manager.darwinModules.home-manager
-            (mkHomeManager ./home "k")
+            (lib.mkHomeManager ./home "k")
             { nixpkgs.hostPlatform = system; }
           ];
         };
@@ -60,7 +54,7 @@
           modules = [
             ./hosts/SOC-Kris-Williams
             home-manager.darwinModules.home-manager
-            (mkHomeManager ./home "k")
+            (lib.mkHomeManager ./home "k")
             { nixpkgs.hostPlatform = system; }
           ];
         };
