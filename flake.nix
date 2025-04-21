@@ -11,66 +11,34 @@
     }:
     let
       inherit (self) outputs;
-      inherit (darwin.lib) darwinSystem;
       # All of my macs are Apple ARM
       system = "aarch64-darwin";
       pkgs = import nixpkgs { inherit system; };
       lib = nixpkgs.lib.extend (
         _: _:
         import ./lib {
-          lib = nixpkgs.lib;
-          inherit inputs;
+          inherit self inputs outputs;
         }
       );
+      inherit (lib) mkDarwin;
     in
     {
       inherit lib;
       darwinConfigurations = {
-        "k" = darwinSystem {
-          specialArgs = {
-            inherit
-              self
-              inputs
-              outputs
-              lib
-              ;
-          };
-          modules = [
-            ./hosts/k
-            home-manager.darwinModules.home-manager
-            (lib.mkHomeManager ./home "k")
-            { nixpkgs.hostPlatform = system; }
-          ];
-        };
-        "SOC-Kris-Williams" = darwinSystem {
-          specialArgs = {
-            inherit
-              self
-              inputs
-              outputs
-              lib
-              ;
-          };
-          modules = [
-            ./hosts/SOC-Kris-Williams
-            home-manager.darwinModules.home-manager
-            (lib.mkHomeManager ./home "k")
-            { nixpkgs.hostPlatform = system; }
-          ];
-        };
+        k = lib.mkDarwin ./hosts/k "k";
+        SOC-Kris-Williams = lib.mkDarwin ./hosts/SOC-Kris-Williams "k";
       };
       devShells.${system}.default = pkgs.mkShell {
         name = "dotfiles";
         packages = with pkgs; [
           deadnix
           statix
+          nixfmt-tree
         ];
       };
       formatter.${system} = pkgs.nixfmt-tree;
       darwinModules = import ./modules/darwin { inherit lib; };
-      darwinProfiles = {
-        default = import ./profiles/darwin;
-      };
+      darwinProfiles.default = import ./profiles/darwin;
     };
 
   inputs = {
