@@ -43,6 +43,7 @@ in
       # nh # https://github.com/viperML/nh
       nix-index # local database of nixpkgs
       nix-output-monitor # better visual output for nix builds
+      nix-tree # analyze disk usage by nix packages
       ripgrep # fast grep replacement
       tldr # simplified man pages
       tree # print directory trees

@@ -1,7 +1,7 @@
 local opt = vim.opt
 
 -- Session Management
-opt.sessionoptions="blank,buffers,curdir,folds,help,tabpages,winsize,winpos,terminal,localoptions"
+opt.sessionoptions = "blank,buffers,curdir,folds,help,tabpages,winsize,winpos,terminal,localoptions"
 
 -- Disable swap file
 opt.swapfile = false
@@ -32,9 +32,9 @@ opt.cursorline = true -- Highlight the line the cursor is on
 opt.termguicolors = true
 opt.background = "dark"
 opt.signcolumn = "no" -- "yes" to always preserve column
-vim.diagnostic.config {
+vim.diagnostic.config({
   float = { border = "rounded" }, -- add border to diagnostic popups
-}
+})
 
 -- Backspace
 opt.backspace = "indent,eol,start"
@@ -52,9 +52,10 @@ opt.iskeyword:append("-")
 -- Disable the mouse while in nvim
 -- opt.mouse = ""
 
--- Display placeholders for invisible characters
+-- -- Display placeholders for invisible characters
 opt.list = true
-opt.listchars = [[trail:·,tab:⇒\ ]]
+-- -- opt.listchars = [[trail:·,tab:⇒\ ]]
+opt.listchars = [[trail:·]]
 
 -- buffer lines to preserve to keep above and below the cursor while scrolling
 opt.scrolloff = 5
