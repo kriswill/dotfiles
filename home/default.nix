@@ -30,9 +30,7 @@ in
     # environment.
     packages = with pkgs; [
       age # encryption tool
-      bat # cat with wings
       comma # https://github.com/nix-community/comma
-      fastfetch # maintained version neofetch
       fd # file finding
       figlet # text to big fancy letters in ASCII
       go # an awesome language
@@ -48,7 +46,6 @@ in
       tldr # simplified man pages
       tree # print directory trees
       yamlfmt # format yaml
-
       # You can also create simple shell scripts directly inside your
       # configuration. For example, this adds a command 'my-hello' to your
       # environment:
