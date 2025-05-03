@@ -1,0 +1,12 @@
+{
+  "Lua.diagnostics.globals": ["vim"],
+  "workspace": {
+    "checkThirdParty": false,
+    "library": [
+      "$VIMRUNTIME/lua",
+      /* nvim plugins */
+      "~/.local/share/nvim/lazy/snacks.nvim/lua",
+    ]
+  }
+}
+
