@@ -33,22 +33,23 @@ return {
   ---@type snacks.Config
   opts = {
     bigfile = { enabled = true },
-    explorer = {
-      enabled = true,
-      layout = {
-        preset = "custom_sidebar",
-        layout = {
-          width = 0.22,
-          position = "right",
-        },
-      },
-    },
+    explorer = { enabled = true },
     image = { enabled = true },
     indent = { enabled = false },
     input = { enabled = true },
     notifier = { enabled = true, timeout = 3000 },
     picker = {
       enabled = true,
+      sources = {
+        explorer = {
+          layout = {
+            preset = "sidebar",
+            layout = {
+              position = "right",
+            },
+          },
+        },
+      },
     },
     quickfile = { enabled = true },
     scope = { enabled = false },
