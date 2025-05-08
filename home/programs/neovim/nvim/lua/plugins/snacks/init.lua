@@ -1,5 +1,6 @@
 local dashboard = require("plugins.snacks.dashboard")
 local keys = require("plugins.snacks.keys")
+local picker = require("plugins.snacks.picker")
 return {
   "folke/snacks.nvim",
   priority = 1000,
@@ -38,19 +39,7 @@ return {
     indent = { enabled = false },
     input = { enabled = true },
     notifier = { enabled = true, timeout = 3000 },
-    picker = {
-      enabled = true,
-      sources = {
-        explorer = {
-          layout = {
-            preset = "sidebar",
-            layout = {
-              position = "right",
-            },
-          },
-        },
-      },
-    },
+    picker = picker,
     quickfile = { enabled = true },
     scope = { enabled = false },
     scroll = { enabled = true },
