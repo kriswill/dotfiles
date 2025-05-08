@@ -91,9 +91,7 @@ return {
         ---@param method vim.lsp.protocol.Method
         ---@param bufnr? integer some lsp support methods only in specific files
         ---@return boolean
-        local function client_supports_method(client, method, bufnr)
-          return client:supports_method(method, bufnr)
-        end
+        local function client_supports_method(client, method, bufnr) return client:supports_method(method, bufnr) end
 
         -- The following two autocommands are used to highlight references of the
         -- word under your cursor when your cursor rests there for a little while.
@@ -131,9 +129,11 @@ return {
         --
         -- This may be unwanted, since they displace some of your code
         if client and client_supports_method(client, vim.lsp.protocol.Methods.textDocument_inlayHint, event.buf) then
-          map("<leader>th", function()
-            vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled({ bufnr = event.buf }))
-          end, "[T]oggle Inlay [H]ints")
+          map(
+            "<leader>th",
+            function() vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled({ bufnr = event.buf })) end,
+            "[T]oggle Inlay [H]ints"
+          )
         end
       end,
     })
@@ -234,7 +234,7 @@ return {
       },
     }
 
-    require("neodev").setup({})
+    -- require("neodev").setup({})
 
     for name, opts in pairs(servers) do
       opts.capabilities = vim.tbl_deep_extend("force", {}, capabilities, opts.capabilities or {})
