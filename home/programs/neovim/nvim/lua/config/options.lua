@@ -53,9 +53,9 @@ opt.iskeyword:append("-")
 -- opt.mouse = ""
 
 -- -- Display placeholders for invisible characters
-opt.list = true
+-- opt.list = true
 -- -- opt.listchars = [[trail:·,tab:⇒\ ]]
-opt.listchars = [[trail:·]]
+-- opt.listchars = [[trail:·]]
 
 -- buffer lines to preserve to keep above and below the cursor while scrolling
 opt.scrolloff = 5
