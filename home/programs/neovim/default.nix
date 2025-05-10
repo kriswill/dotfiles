@@ -40,6 +40,7 @@ with pkgs;
       (go-tools.override { buildGoModule = buildGo124Module; })
 
       ## Tools  ───────────────────────────────────────────────────
+      delve # golang debugger `dlv`
       cargo
       cmake
       fswatch # file watcher - replaces libuv.fs_event in neovim v0.10

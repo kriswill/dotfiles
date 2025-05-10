@@ -31,7 +31,7 @@ opt.smartcase = true
 opt.cursorline = true -- Highlight the line the cursor is on
 opt.termguicolors = true
 opt.background = "dark"
-opt.signcolumn = "no" -- "yes" to always preserve column
+-- opt.signcolumn = "no" -- "yes" to always preserve column
 vim.diagnostic.config({
   float = { border = "rounded" }, -- add border to diagnostic popups
 })
