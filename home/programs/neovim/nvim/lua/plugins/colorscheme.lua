@@ -32,16 +32,17 @@ return {
   },
   {
     "nvim-zh/colorful-winsep.nvim",
-    config = true,
-    -- config = function()
-    --   local colors = require("kanagawa.colors")
-    --   require("colorful-winsep").setup({
-    --     hi = {
-    --       fg = colors.palette.sumiInk2,
-    --       bg = "none",
-    --     },
-    --   })
-    -- end,
+    lazy = false,
+    config = function()
+      local colors = require("kanagawa.colors").setup()
+      _G.kanagawa_colors = colors
+      require("colorful-winsep").setup({
+        hi = {
+          fg = colors.palette.oniViolet,
+          bg = "none",
+        },
+      })
+    end,
     event = { "winleave" },
   },
 }
