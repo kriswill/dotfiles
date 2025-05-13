@@ -13,6 +13,10 @@ in
     syntaxHighlighting = {
       enable = true;
     };
+    history = {
+      size = 100000;
+      save = 10000000;
+    };
 
     shellAliases = {
       ls = "${eza}/bin/eza --icons --hyperlink";
