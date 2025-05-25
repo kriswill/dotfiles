@@ -11,10 +11,10 @@ return {
       },
 
       keybindings = {
-        allow = "<Leader>ea",
-        deny = "<Leader>ed",
-        reload = "<Leader>er",
-        edit = "<Leader>ee",
+        allow = "<Leader>fea",
+        deny = "<Leader>fed",
+        reload = "<Leader>fer",
+        edit = "<Leader>fee",
       },
 
       notifications = {
