@@ -27,9 +27,9 @@
     # inputs.ghostty.packages.aarch64-darwin.default
     # ];
     shellAliases = {
-      drs = "${
+      drs = "sudo ${
         inputs.darwin.packages.${pkgs.stdenv.hostPlatform.system}.darwin-rebuild
-      }/bin/darwin-rebuild switch --flake ~/src/dotfiles |& ${pkgs.nix-output-monitor}/bin/nom";
+      }/bin/darwin-rebuild switch --flake ~/src/dotfiles |& ${lib.getExe pkgs.nix-output-monitor}";
       nds = "NH_NO_CHECKS=1 ${lib.getExe pkgs.nh} darwin switch ~/src/dotfiles";
     };
   };
@@ -43,9 +43,7 @@
   ];
 
   programs.zsh.enable = true;
-  programs.nh = {
-    enable = true;
-  };
+  programs.nh.enable = true;
 
   # Cannot let nix-darwin control nix when using determinate
   nix.enable = lib.mkForce false;
