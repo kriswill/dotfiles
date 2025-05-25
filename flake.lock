@@ -22,12 +22,12 @@
         ]
       },
       "locked": {
-        "lastModified": 1748130652,
-        "narHash": "sha256-lHwMkKdqE2nUw8+DynnmZlVwd4e0tyNp0KjwfExgXz0=",
-        "rev": "e0a7c37735338d5155d70cf46e24b4b0db42a612",
-        "revCount": 2185,
+        "lastModified": 1748149228,
+        "narHash": "sha256-mmonYFesFo42UUS49Hd0bcbVJRWX/aHBCDYUkkvylf4=",
+        "rev": "a9939228f661df370c4094fe85f683e45d761dbe",
+        "revCount": 2189,
         "type": "tarball",
-        "url": "https://api.flakehub.com/f/pinned/nix-darwin/nix-darwin/0.1.2185%2Brev-e0a7c37735338d5155d70cf46e24b4b0db42a612/019704b8-3198-7dff-a30e-e0c69e408545/source.tar.gz"
+        "url": "https://api.flakehub.com/f/pinned/nix-darwin/nix-darwin/0.1.2189%2Brev-a9939228f661df370c4094fe85f683e45d761dbe/019705e5-17dc-7eb0-bdbd-663389b0aa7b/source.tar.gz"
       },
       "original": {
         "type": "tarball",
@@ -69,6 +69,39 @@
       "original": {
         "id": "flake-utils",
         "type": "indirect"
+      }
+    },
+    "fonts": {
+      "flake": false,
+      "locked": {
+        "narHash": "sha256-hSW36y0sytiWVUF//a4Tul2LZoRkCGw/KmHvioZXc3g=",
+        "type": "file",
+        "url": "https://raw.githubusercontent.com/EarthGman/assets/master/fonts.json"
+      },
+      "original": {
+        "type": "file",
+        "url": "https://raw.githubusercontent.com/EarthGman/assets/master/fonts.json"
+      }
+    },
+    "gman-lib": {
+      "inputs": {
+        "fonts": "fonts",
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1747781980,
+        "narHash": "sha256-Pmw46mhDMeU52HpIP9+UGeeiuTSR7mmDCCwc5utYKqo=",
+        "owner": "earthgman",
+        "repo": "nix-library",
+        "rev": "5d764b13296b970a579c9910e68ae88277ebb5c2",
+        "type": "github"
+      },
+      "original": {
+        "owner": "earthgman",
+        "repo": "nix-library",
+        "type": "github"
       }
     },
     "home-manager": {
@@ -134,6 +167,26 @@
         "type": "github"
       }
     },
+    "nh": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1748096601,
+        "narHash": "sha256-ji/9z1pRbosyKVVAIGBazyz6PjWV8bc2Ux2RdQrVDWY=",
+        "owner": "nix-community",
+        "repo": "nh",
+        "rev": "1ea27e73a3dcbc9950258e9054377ee677d12b9e",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nix-community",
+        "repo": "nh",
+        "type": "github"
+      }
+    },
     "nixpkgs": {
       "locked": {
         "lastModified": 1748026106,
@@ -151,9 +204,11 @@
     "root": {
       "inputs": {
         "darwin": "darwin",
+        "gman-lib": "gman-lib",
         "home-manager": "home-manager",
         "mac-app-util": "mac-app-util",
         "minimal-tmux": "minimal-tmux",
+        "nh": "nh",
         "nixpkgs": "nixpkgs"
       }
     },

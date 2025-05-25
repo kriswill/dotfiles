@@ -14,11 +14,6 @@ in
 {
   imports = [ ./programs ];
 
-  nixpkgs = {
-    config = {
-      allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) [ "claude-code" ];
-    };
-  };
   home = {
     inherit username homeDirectory;
     enableNixpkgsReleaseCheck = false;

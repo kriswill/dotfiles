@@ -19,14 +19,15 @@
         import ./lib {
           inherit self inputs outputs;
         }
+        // inputs.gman-lib.lib
       );
       inherit (lib) mkDarwin;
     in
     {
       inherit lib;
       darwinConfigurations = {
-        k = lib.mkDarwin ./hosts/k "k";
-        SOC-Kris-Williams = lib.mkDarwin ./hosts/SOC-Kris-Williams "k";
+        k = mkDarwin ./hosts/k "k";
+        SOC-Kris-Williams = mkDarwin ./hosts/SOC-Kris-Williams "k";
       };
       devShells.${system}.default = pkgs.mkShell {
         name = "dotfiles";
@@ -36,6 +37,7 @@
           nixfmt-tree
         ];
       };
+      overlays = import ./overlays { inherit inputs; };
       formatter.${system} = pkgs.nixfmt-tree;
       darwinModules = import ./modules/darwin { inherit lib; };
       darwinProfiles.default = import ./profiles/darwin;
@@ -45,6 +47,14 @@
     nixpkgs.url = "https://flakehub.com/f/NixOS/nixpkgs/0.1.0.tar.gz";
     darwin = {
       url = "https://flakehub.com/f/nix-darwin/nix-darwin/0.1.*.tar.gz";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+    nh = {
+      url = "github:nix-community/nh";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+    gman-lib = {
+      url = "github:earthgman/nix-library";
       inputs.nixpkgs.follows = "nixpkgs";
     };
     mac-app-util = {

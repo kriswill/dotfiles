@@ -1,6 +1,7 @@
 {
   self,
   inputs,
+  outputs,
   pkgs,
   lib,
   ...
@@ -11,12 +12,15 @@
   system.stateVersion = 5;
   # Set Git commit hash for darwin-version.
   system.configurationRevision = self.rev or self.dirtyRev or null;
+  #
+  system.primaryUser = "k";
 
   environment = {
     # $ nix-env -qaP | grep wget
     systemPackages = with pkgs; [
       iproute2mac
       home-manager
+      nh
     ];
     # ++ [
     #   inputs.fh.packages.${pkgs.stdenv.hostPlatform.system}.default
@@ -26,6 +30,7 @@
       drs = "${
         inputs.darwin.packages.${pkgs.stdenv.hostPlatform.system}.darwin-rebuild
       }/bin/darwin-rebuild switch --flake ~/src/dotfiles |& ${pkgs.nix-output-monitor}/bin/nom";
+      nds = "NH_NO_CHECKS=1 ${lib.getExe pkgs.nh} darwin switch ~/src/dotfiles";
     };
   };
   security.pam.services.sudo_local.touchIdAuth = true;
@@ -38,10 +43,20 @@
   ];
 
   programs.zsh.enable = true;
+  programs.nh = {
+    enable = true;
+  };
 
   # Cannot let nix-darwin control nix when using determinate
   nix.enable = lib.mkForce false;
-
+  nixpkgs = {
+    overlays = builtins.attrValues outputs.overlays;
+    config.allowUnfreePredicate =
+      pkg:
+      builtins.elem (lib.getName pkg) [
+        "claude-code"
+      ];
+  };
   homebrew = {
     enable = true;
     global.brewfile = true;

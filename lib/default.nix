@@ -8,12 +8,13 @@ let
   inherit (inputs.darwin.lib) darwinSystem;
 in
 {
-  # read a directory and return a list of all filenames inside
-  autoImport =
-    dir: lib.forEach (builtins.attrNames (builtins.readDir dir)) (dirname: dir + /${dirname});
+  # # read a directory and return a list of all filenames inside
+  # autoImport =
+  #   dir: lib.forEach (builtins.attrNames (builtins.readDir dir)) (dirname: dir + /${dirname});
 
   mkHomeManager = path: username: {
     home-manager = {
+      backupFileExtension = "backup";
       useUserPackages = true;
       useGlobalPkgs = true;
       users."${username}" = path;
@@ -21,6 +22,7 @@ in
       extraSpecialArgs = { inherit inputs username; };
     };
   };
+
   mkDarwin =
     hostmodule: username:
     darwinSystem {
@@ -35,6 +37,7 @@ in
       modules = [
         hostmodule
         inputs.home-manager.darwinModules.home-manager
+        outputs.darwinModules
         (lib.mkHomeManager ../home username)
         { nixpkgs.hostPlatform = "aarch64-darwin"; }
       ];

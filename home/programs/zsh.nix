@@ -33,7 +33,7 @@ in
       gv = "NVIM_APPNAME=gman nvim";
     };
 
-    initExtra = builtins.readFile ./initExtra.sh;
+    initContent = builtins.readFile ./initExtra.sh;
     # initExtra = ''
     #   # Zsh run-help function
     #   autoload -Uz run-help
