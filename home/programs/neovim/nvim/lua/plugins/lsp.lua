@@ -232,6 +232,8 @@ return {
           },
         },
       },
+
+      nil_ls = {},
     }
 
     -- require("neodev").setup({})
