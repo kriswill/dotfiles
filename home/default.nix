@@ -14,6 +14,11 @@ in
 {
   imports = [ ./programs ];
 
+  nixpkgs = {
+    config = {
+      allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) [ "claude-code" ];
+    };
+  };
   home = {
     inherit username homeDirectory;
     enableNixpkgsReleaseCheck = false;
@@ -30,6 +35,7 @@ in
     # environment.
     packages = with pkgs; [
       age # encryption tool
+      claude-code # anthropic-ai
       comma # https://github.com/nix-community/comma
       fd # file finding
       figlet # text to big fancy letters in ASCII
