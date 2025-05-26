@@ -9,7 +9,7 @@
     ./neovim
     ./ssh.nix
     ./starship.nix
-    ./tmux.nix
+    ./tmux
     ./zsh.nix
   ];
 
@@ -19,6 +19,7 @@
     nix-index.enable = true;
     # obs-studio.enable = true; # not on mac
     lazygit.enable = true;
+    rmpc.enable = true;
 
     hstr = {
       enable = true;

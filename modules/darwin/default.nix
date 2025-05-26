@@ -1,4 +1,7 @@
 { lib, ... }:
+let
+  programs = lib.autoImport ./programs;
+in
 {
-  imports = lib.autoImport ./.;
+  imports = programs;
 }

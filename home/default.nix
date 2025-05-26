@@ -14,6 +14,21 @@ in
 {
   imports = [ ./programs ];
 
+  # media player daemon
+  # services = {
+  #   mpd = {
+  #     enable = true;
+  #     musicDirectory = config.xdg.userDirs.music;
+  #     # playlistDirectory = config.xdg.userDirs.music + "../playlists";
+  #     # extraArgs = [
+  #     #   "--verbose"
+  #     # ];
+  #     # extraConfig = ''
+  #     #   log_level "verbose"
+  #     #   log_file "~/.config/mpd/log"
+  #     # '';
+  #   };
+  # };
   home = {
     inherit username homeDirectory;
     enableNixpkgsReleaseCheck = false;
