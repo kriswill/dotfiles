@@ -67,6 +67,7 @@
       "rwts-pdfwriter"
       "zerotier-one"
       "1password-cli"
+      "karabiner-elements"
       {
         name = "launchcontrol";
         greedy = true;
