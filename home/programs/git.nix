@@ -56,6 +56,7 @@ in
     ignores = [
       "*.direnv"
       "*.envrc"
+      ".DS_Store"
     ];
     #signing = {
     #  key = "121D4302A64B2261";

@@ -17,7 +17,7 @@ CURRENT_VERSION=$(grep -oE 'version = "[0-9]+\.[0-9]+\.[0-9]+"' "$OVERLAY_FILE" 
 echo "Fetching available versions..."
 
 # Fetch all versions from npm
-ALL_VERSIONS=$(curl -s https://registry.npmjs.org/@anthropic-ai/claude-code | jq -r '.versions | keys | reverse | .[]' | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$')
+ALL_VERSIONS=$(curl -s https://registry.npmjs.org/@anthropic-ai/claude-code | jq -r '.versions | keys | .[]' | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | sort -V -r)
 
 if [ -z "$ALL_VERSIONS" ]; then
     echo -e "${RED}Failed to fetch versions from npm${NC}"
@@ -37,7 +37,7 @@ if [ "$CURRENT_VERSION" = "$LATEST_VERSION" ]; then
     # Already on latest, show previous 10 versions
     echo -e "${GREEN}You are on the latest version${NC}"
     echo ""
-    DISPLAY_VERSIONS=$(echo "$ALL_VERSIONS" | head -n11)
+    DISPLAY_VERSIONS=$(echo "$ALL_VERSIONS" | head -n11 | sort -V)
 else
     # Show versions between current and latest
     DISPLAY_VERSIONS=""
@@ -49,7 +49,7 @@ else
             break
         fi
     done
-    DISPLAY_VERSIONS=$(echo -e "$DISPLAY_VERSIONS" | grep -v '^$')
+    DISPLAY_VERSIONS=$(echo -e "$DISPLAY_VERSIONS" | grep -v '^$' | sort -V)
 fi
 
 # Display versions with current version marked
