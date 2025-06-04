@@ -20,7 +20,6 @@
     systemPackages = with pkgs; [
       iproute2mac
       home-manager
-      nh
     ];
     # ++ [
     #   inputs.fh.packages.${pkgs.stdenv.hostPlatform.system}.default
