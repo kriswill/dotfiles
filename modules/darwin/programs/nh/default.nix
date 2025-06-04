@@ -1,8 +1,6 @@
 # This option is missing from nix-darwin config
 {
   lib,
-  inputs,
-  config,
   pkgs,
   ...
 }:
