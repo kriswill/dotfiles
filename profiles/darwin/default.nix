@@ -26,9 +26,9 @@
     # inputs.ghostty.packages.aarch64-darwin.default
     # ];
     shellAliases = {
-      drs = "sudo ${
-        inputs.darwin.packages.${pkgs.stdenv.hostPlatform.system}.darwin-rebuild
-      }/bin/darwin-rebuild switch --flake ~/src/dotfiles |& ${lib.getExe pkgs.nix-output-monitor}";
+      # drs = "sudo ${
+      #   inputs.darwin.packages.${pkgs.stdenv.hostPlatform.system}.darwin-rebuild
+      # }/bin/darwin-rebuild switch --flake ~/src/dotfiles |& ${lib.getExe pkgs.nix-output-monitor}";
       nds = "NH_NO_CHECKS=1 ${lib.getExe pkgs.nh} darwin switch ~/src/dotfiles";
     };
   };
