@@ -10,7 +10,7 @@
     ./ssh.nix
     ./starship.nix
     ./tmux
-    ./zsh.nix
+    ./zsh
   ];
 
   programs = {

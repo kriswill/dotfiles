@@ -58,6 +58,7 @@ in
       nix-index # local database of nixpkgs
       nix-output-monitor # better visual output for nix builds
       nix-tree # analyze disk usage by nix packages
+      nodejs_24
       ripgrep # fast grep replacement
       tldr # simplified man pages
       tree # print directory trees

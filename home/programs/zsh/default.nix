@@ -1,10 +1,6 @@
-{ pkgs, lib, ... }:
+{ pkgs, ... }:
 
 with pkgs;
-let
-  inherit (lib) mkIf;
-  inherit (stdenv) isDarwin;
-in
 {
   programs.zsh = {
     enable = true;
