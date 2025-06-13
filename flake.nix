@@ -19,7 +19,6 @@
         import ./lib {
           inherit self inputs outputs;
         }
-        // inputs.gman-lib.lib
       );
       inherit (lib) mkDarwin;
     in
@@ -51,10 +50,6 @@
     };
     nh = {
       url = "github:nix-community/nh";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-    gman-lib = {
-      url = "github:earthgman/nix-library";
       inputs.nixpkgs.follows = "nixpkgs";
     };
     mac-app-util = {

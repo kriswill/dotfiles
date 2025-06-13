@@ -8,9 +8,15 @@ let
   inherit (inputs.darwin.lib) darwinSystem;
 in
 {
-  # # read a directory and return a list of all filenames inside
-  # autoImport =
-  #   dir: lib.forEach (builtins.attrNames (builtins.readDir dir)) (dirname: dir + /${dirname});
+  # read a directory and return a list of all filenames inside except any default.nix
+  # ripped from: https://github.com/EarthGman/nix-library/blob/main/lib/default.nix#L15
+  autoImport =
+    dir:
+    let
+      fileNames = builtins.attrNames (builtins.readDir dir);
+      strippedFileNames = lib.filter (name: name != "default.nix") fileNames;
+    in
+    lib.forEach (strippedFileNames) (fileName: dir + /${fileName});
 
   mkHomeManager = path: username: {
     home-manager = {

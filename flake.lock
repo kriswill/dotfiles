@@ -71,39 +71,6 @@
         "type": "indirect"
       }
     },
-    "fonts": {
-      "flake": false,
-      "locked": {
-        "narHash": "sha256-hSW36y0sytiWVUF//a4Tul2LZoRkCGw/KmHvioZXc3g=",
-        "type": "file",
-        "url": "https://raw.githubusercontent.com/EarthGman/assets/master/fonts.json"
-      },
-      "original": {
-        "type": "file",
-        "url": "https://raw.githubusercontent.com/EarthGman/assets/master/fonts.json"
-      }
-    },
-    "gman-lib": {
-      "inputs": {
-        "fonts": "fonts",
-        "nixpkgs": [
-          "nixpkgs"
-        ]
-      },
-      "locked": {
-        "lastModified": 1749416403,
-        "narHash": "sha256-kmEbvdbIvGJsZvIXrRrQEhFqGCxFEDjXGK/va3taJXo=",
-        "owner": "earthgman",
-        "repo": "nix-library",
-        "rev": "4a6820ecb2878beb5a94db8af8fe53970bd2c048",
-        "type": "github"
-      },
-      "original": {
-        "owner": "earthgman",
-        "repo": "nix-library",
-        "type": "github"
-      }
-    },
     "home-manager": {
       "inputs": {
         "nixpkgs": [
@@ -204,7 +171,6 @@
     "root": {
       "inputs": {
         "darwin": "darwin",
-        "gman-lib": "gman-lib",
         "home-manager": "home-manager",
         "mac-app-util": "mac-app-util",
         "minimal-tmux": "minimal-tmux",
