@@ -6,18 +6,15 @@
 let
   inherit (outputs) lib;
   inherit (inputs.darwin.lib) darwinSystem;
+  inherit (lib)
+    filter
+    forEach
+    mkEnableOption
+    mkPackageOption
+    optionalString
+    ;
 in
 {
-  # read a directory and return a list of all filenames inside except any default.nix
-  # ripped from: https://github.com/EarthGman/nix-library/blob/main/lib/default.nix#L15
-  autoImport =
-    dir:
-    let
-      fileNames = builtins.attrNames (builtins.readDir dir);
-      strippedFileNames = lib.filter (name: name != "default.nix") fileNames;
-    in
-    lib.forEach (strippedFileNames) (fileName: dir + /${fileName});
-
   mkHomeManager = path: username: {
     home-manager = {
       backupFileExtension = "backup";
@@ -48,4 +45,28 @@ in
         { nixpkgs.hostPlatform = "aarch64-darwin"; }
       ];
     };
+
+  # read a directory and return a list of all filenames inside except any default.nix
+  # ripped from: https://github.com/EarthGman/nix-library/blob/main/lib/default.nix#L15
+  autoImport =
+    dir:
+    let
+      fileNames = builtins.attrNames (builtins.readDir dir);
+      strippedFileNames = filter (name: name != "default.nix") fileNames;
+    in
+    forEach (strippedFileNames) (fileName: dir + /${fileName});
+
+  mkProgramOption =
+    {
+      pkgs,
+      programName,
+      packageName ? programName,
+      description ? null,
+      extraPackageArgs ? { },
+    }:
+    {
+      enable = mkEnableOption (programName + " " + optionalString (description != null) description);
+      package = mkPackageOption pkgs packageName extraPackageArgs;
+    };
+
 }
