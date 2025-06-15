@@ -14,6 +14,7 @@ vim.lsp.enable({
   "gopls",
   "luals",
   "rust_analyzer",
+  "ts_ls",
 })
 
 -- vim.api.nvim_create_autocmd("LspAttach", {
