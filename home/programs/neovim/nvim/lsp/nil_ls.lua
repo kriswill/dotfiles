@@ -18,6 +18,7 @@ return {
       ignored = { "unused_binding", "unused_with" },
       excludedFiles = {},
     },
+    telemetry = { enable = false },
   },
   filetypes = { "nix" },
 }
