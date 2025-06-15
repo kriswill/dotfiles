@@ -15,6 +15,7 @@ vim.lsp.enable({
   "luals",
   "rust_analyzer",
   "ts_ls",
+  "terraform",
 })
 
 -- vim.api.nvim_create_autocmd("LspAttach", {
