@@ -10,6 +10,7 @@ vim.lsp.config("*", {
 })
 vim.lsp.enable({
   "buf_ls",
+  "nil_ls",
   "gopls",
   "luals",
   "rust_analyzer",
