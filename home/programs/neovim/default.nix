@@ -65,6 +65,7 @@ with pkgs;
   {
     xdg.configFile = {
       "nvim/lua".source = ln nvimDir + "/lua";
+      "nvim/lsp".source = ln nvimDir + "/lsp";
       "nvim/ftplugin".source = ln nvimDir + "/ftplugin";
       "nvim/init.lua".source = ln nvimDir + "/init.lua";
       "nvim/lazy-lock.json".source = ln nvimDir + "/lazy-lock.json";
