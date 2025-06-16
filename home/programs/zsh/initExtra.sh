@@ -2,18 +2,18 @@
 
 setopt interactivecomments # allow comments on the command-line
 setopt AUTO_CD
-# enable ctrl-x-e to edit with Neovim
+# enable edit command line
 autoload -U edit-command-line
 zle -N edit-command-line
 # Emacs style
 # bindkey '^xe' edit-command-line
 # bindkey '^x^e' edit-command-line
 # Vi style
+export VISUAL=nvim
 bindkey -M vicmd v edit-command-line
 # add red background to stderr
 autoload -Uz add-zle-hook-widget
-
-eval "$(/opt/homebrew/bin/brew shellenv)"
+set -o vi
 
 function stderred() {
     RED_BG=$'\e[41m'
@@ -30,3 +30,9 @@ function stderred() {
 
 # man pages autocomplete for batman
 compdef batman=man
+
+# has: bash, elvish, fish, powershell, zsh
+eval "$(determinate-nixd completion zsh)"
+
+# allows brew commands
+eval "$(/opt/homebrew/bin/brew shellenv)"

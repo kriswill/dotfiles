@@ -96,8 +96,14 @@ in
     #  /etc/profiles/per-user/k/etc/profile.d/hm-session-vars.sh
     #
     # if you don't want to manage your shell through Home Manager.
-    sessionVariables = {
-      EDITOR = "${lib.getExe pkgs.neovim}";
-    };
+    sessionVariables =
+      let
+        neovim = "${lib.getExe pkgs.neovim}";
+
+      in
+      {
+        EDITOR = neovim;
+        VISUAL = neovim;
+      };
   };
 }
