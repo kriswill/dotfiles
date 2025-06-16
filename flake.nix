@@ -35,6 +35,9 @@
           statix
           nixfmt-tree
         ];
+        shellHook = ''
+          PATH_add "$PWD/bin"
+        '';
       };
       overlays = import ./overlays { inherit inputs; };
       formatter.${system} = pkgs.nixfmt-tree;
