@@ -16,6 +16,7 @@ vim.lsp.enable({
   "nil_ls",
   "rust_analyzer",
   "terraform",
-  "ts_ls",
+  -- "ts_ls",
+  "vtsls", -- vscode wrapper for typescript
   "yaml",
 })

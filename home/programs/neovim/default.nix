@@ -32,7 +32,8 @@ with pkgs;
       marksman # Markdown
       nil
       nodePackages.typescript
-      nodePackages.typescript-language-server # ts_ls
+      # nodePackages.typescript-language-server # ts_ls
+      vtsls # LSP wrapper for typescript extension of vscode
       pyright
       rust-analyzer # Rust
       yaml-language-server # YAML (yamlls)
