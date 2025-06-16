@@ -25,6 +25,7 @@ with pkgs;
       bash-language-server # Bash
       buf # bufls
       docker-compose-language-service # Docker Compose
+      gh-actions-language-server # github actions
       gopls # Go
       lua-language-server # Lua (lua_ls)
       lua5_1
@@ -32,13 +33,11 @@ with pkgs;
       marksman # Markdown
       nil
       nodePackages.typescript
-      # nodePackages.typescript-language-server # ts_ls
-      vtsls # LSP wrapper for typescript extension of vscode
       pyright
       rust-analyzer # Rust
-      yaml-language-server # YAML (yamlls)
-      gh-actions-language-server # github actions
       vscode-langservers-extracted # json, HTML, CSS, ESLint
+      vtsls # LSP wrapper for typescript extension of vscode
+      yaml-language-server # YAML (yamlls)
 
       go_1_24
       (go-tools.override { buildGoModule = buildGo124Module; })
@@ -48,7 +47,6 @@ with pkgs;
       cmake
       delve # golang debugger `dlv`
       fswatch # file watcher - replaces libuv.fs_event in neovim v0.10
-      fzf
       git
       gnumake
       imagemagick
