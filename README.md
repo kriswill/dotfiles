@@ -1,6 +1,6 @@
 # Kris' Dotfiles
 
-This is the configuration I am currently using to setup my Apple laptops.  Some of the other branches are used for NixOS gaming desktops and VMs.
+This is the configuration I currently use to manage my coding computers.  Some of the other branches are used for NixOS gaming desktops and VMs.
 
 ## MacOS
 
