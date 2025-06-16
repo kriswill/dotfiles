@@ -36,6 +36,7 @@ with pkgs;
       pyright
       rust-analyzer # Rust
       yaml-language-server # YAML (yamlls)
+      gh-actions-language-server # github actions
 
       go_1_24
       (go-tools.override { buildGoModule = buildGo124Module; })

@@ -25,6 +25,7 @@ vim.lsp.enable({
   "ts_ls",
   "terraform",
   "yaml",
+  "github",
 })
 
 -- vim.api.nvim_create_autocmd("LspAttach", {

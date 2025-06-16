@@ -1,3 +1,4 @@
+---@type vim.lsp.Config
 return {
   cmd = { "rust-analyzer" },
   root_markers = {
@@ -5,9 +6,7 @@ return {
     "Cargo.toml",
     ".git",
   },
-  filetypes = {
-    "rust",
-  },
+  filetypes = { "rust" },
   capabilities = {
     experimental = {
       serverStatusNotification = true,
