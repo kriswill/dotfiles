@@ -61,8 +61,8 @@ with pkgs;
 }
 // (
   let
-    # used to link files to .config/nvim/*
-    nvimDir = config.home.homeDirectory + "/src/dotfiles/home/programs/neovim/nvim";
+    # used to link files from <repo>/config/nvim to ~/.config/nvim
+    nvimDir = config.home.homeDirectory + "/src/dotfiles/config/nvim";
     ln = config.lib.file.mkOutOfStoreSymlink;
   in
   {
