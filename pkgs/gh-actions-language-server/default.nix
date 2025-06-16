@@ -1,3 +1,9 @@
+# Github Actions Language Server (LSP)
+
+# To test:
+# nix-build -E '(import <nixpkgs> {}).callPackage ./default.nix {}'
+# view files under results
+
 {
   buildNpmPackage,
   fetchFromGitHub,
