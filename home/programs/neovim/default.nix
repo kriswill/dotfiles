@@ -37,6 +37,7 @@ with pkgs;
       rust-analyzer # Rust
       yaml-language-server # YAML (yamlls)
       gh-actions-language-server # github actions
+      vscode-langservers-extracted # json, HTML, CSS, ESLint
 
       go_1_24
       (go-tools.override { buildGoModule = buildGo124Module; })
