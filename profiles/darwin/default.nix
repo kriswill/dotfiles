@@ -15,9 +15,9 @@
   #
   system.primaryUser = "k";
 
-  environment = {
+  environment = with pkgs; {
     # $ nix-env -qaP | grep wget
-    systemPackages = with pkgs; [
+    systemPackages = [
       iproute2mac
       home-manager
     ];
@@ -29,10 +29,17 @@
       # drs = "sudo ${
       #   inputs.darwin.packages.${pkgs.stdenv.hostPlatform.system}.darwin-rebuild
       # }/bin/darwin-rebuild switch --flake ~/src/dotfiles |& ${lib.getExe pkgs.nix-output-monitor}";
-      nds = "NH_NO_CHECKS=1 ${lib.getExe pkgs.nh} darwin switch ~/src/dotfiles";
+      nds = "NH_NO_CHECKS=1 ${lib.getExe nh} darwin switch ~/src/dotfiles";
     };
+    etc."pam.d/sudo_local".text = ''
+      # Allow for touch ID to work for sudo, inside of tmux
+      auth       optional       ${pam-reattach}/lib/pam/pam_reattach.so ignore_ssh
+      auth       sufficient     pam_tid.so
+    '';
   };
+
   security.pam.services.sudo_local.touchIdAuth = true;
+
   # nix repl -f '<nixpkgs>'
   # > nerd-fonts.<tab>
   fonts.packages = with pkgs.nerd-fonts; [
