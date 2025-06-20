@@ -114,26 +114,6 @@
         "type": "github"
       }
     },
-    "minimal-tmux": {
-      "inputs": {
-        "nixpkgs": [
-          "nixpkgs"
-        ]
-      },
-      "locked": {
-        "lastModified": 1748977843,
-        "narHash": "sha256-0gXtFVan+Urb79AjFOjHdjl3Q73m8M3wFSo3ZhjxcBA=",
-        "owner": "niksingh710",
-        "repo": "minimal-tmux-status",
-        "rev": "de2bb049a743e0f05c08531a0461f7f81da0fc72",
-        "type": "github"
-      },
-      "original": {
-        "owner": "niksingh710",
-        "repo": "minimal-tmux-status",
-        "type": "github"
-      }
-    },
     "nh": {
       "inputs": {
         "nixpkgs": [
@@ -173,7 +153,6 @@
         "darwin": "darwin",
         "home-manager": "home-manager",
         "mac-app-util": "mac-app-util",
-        "minimal-tmux": "minimal-tmux",
         "nh": "nh",
         "nixpkgs": "nixpkgs"
       }

@@ -58,7 +58,6 @@
              "key": "├󰧨",
              "keyColor": "blue"
              },
-           */
           {
             "type": "wmtheme",
             "key": "├󰉼",
@@ -69,6 +68,7 @@
             "key": "├󰀻",
             "keyColor": "blue"
           },
+           */
           {
             "type": "terminal",
             "key": "└",

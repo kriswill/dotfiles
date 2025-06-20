@@ -63,9 +63,5 @@
       url = "https://flakehub.com/f/nix-community/home-manager/*.tar.gz";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    minimal-tmux = {
-      url = "github:niksingh710/minimal-tmux-status";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
   };
 }
