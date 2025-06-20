@@ -1,9 +1,11 @@
+-- https://github.com/rebelot/kanagawa.nvim
 return {
   {
     "rebelot/kanagawa.nvim",
     lazy = false,
     config = function()
-      require("kanagawa").setup({
+      local kanagawa = require("kanagawa")
+      kanagawa.setup({
         compile = false,
         transparent = true,
         colors = {
@@ -11,6 +13,7 @@ return {
             all = {
               ui = {
                 bg_gutter = "none",
+                float = { bg = "none" },
               },
             },
           },
@@ -27,7 +30,7 @@ return {
           }
         end,
       })
-      vim.cmd("colorscheme kanagawa")
+      kanagawa.load("wave")
     end,
   },
   {
