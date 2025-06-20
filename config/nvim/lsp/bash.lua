@@ -7,8 +7,7 @@ return {
     "zsh",
     ".zshrc",
   },
-  root_markers = {
-    ".zshrc",
-  },
+  root_markers = { ".zshrc" },
+  ignoredRootPaths = { "~" },
   single_file_support = true,
 }
