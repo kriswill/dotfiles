@@ -25,7 +25,6 @@ with pkgs;
       bash-language-server # Bash
       buf # bufls
       docker-compose-language-service # Docker Compose
-      gh-actions-language-server # github actions
       gopls # Go
       lua-language-server # Lua (lua_ls)
       lua5_1

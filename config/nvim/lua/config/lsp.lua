@@ -8,7 +8,6 @@ end
 vim.lsp.enable({
   "buf_ls",
   "css",
-  "github",
   "gopls",
   "html",
   "json",
@@ -16,7 +15,6 @@ vim.lsp.enable({
   "nil_ls",
   "rust_analyzer",
   "terraform",
-  -- "ts_ls",
   "vtsls", -- vscode wrapper for typescript
   "yaml",
 })
