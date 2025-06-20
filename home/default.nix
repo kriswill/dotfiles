@@ -51,6 +51,7 @@ in
       figlet # text to big fancy letters in ASCII
       go # an awesome language
       jq # json querying
+      just # better make
       keycastr # keystroke visualizer
       localsend # share files with other devices on the local network
       ncdu # analyze disk usage
@@ -104,6 +105,7 @@ in
       {
         EDITOR = neovim;
         VISUAL = neovim;
+        MANPAGER = "${neovim} +Man!";
       };
   };
 }

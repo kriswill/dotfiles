@@ -16,16 +16,16 @@ autoload -Uz add-zle-hook-widget
 set -o vi
 
 function stderred() {
-    RED_BG=$'\e[41m'
-    RESET=$'\e[0m'
+  RED_BG=$'\e[41m'
+  RESET=$'\e[0m'
 
-    function colorize_stderr() {
-        while IFS= read -r line; do
-            printf "%s%s%s\n" "$RED_BG" "$line" "$RESET"
-        done
-    }
+  function colorize_stderr() {
+    while IFS= read -r line; do
+      printf "%s%s%s\n" "$RED_BG" "$line" "$RESET"
+    done
+  }
 
-    exec 2> >(colorize_stderr)
+  exec 2> >(colorize_stderr)
 }
 
 # man pages autocomplete for batman

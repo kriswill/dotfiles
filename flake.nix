@@ -34,6 +34,7 @@
           deadnix
           statix
           nixfmt-tree
+          just
         ];
         shellHook = ''
           PATH_add "$PWD/bin"

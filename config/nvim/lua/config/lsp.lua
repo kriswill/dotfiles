@@ -1,4 +1,4 @@
-vim.lsp.handlers["window/showMessage"] = function(_, result, ctx)
+vim.lsp.handlers["window/showMessage"] = function(_, result)
   if result.type == vim.lsp.protocol.MessageType.Info then
     return -- ignore info messages
   end
@@ -6,6 +6,7 @@ vim.lsp.handlers["window/showMessage"] = function(_, result, ctx)
 end
 
 vim.lsp.enable({
+  "bash",
   "buf_ls",
   "css",
   "gopls",
