@@ -70,7 +70,7 @@
       shellWrapperName = "y";
       enableZshIntegration = true;
       settings = {
-        manager.ratio = [
+        mgr.ratio = [
           1
           3
           4
