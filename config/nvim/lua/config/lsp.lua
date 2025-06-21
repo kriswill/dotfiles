@@ -9,6 +9,7 @@ vim.lsp.enable({
   "bash",
   "buf_ls",
   "css",
+  "dockerfile",
   "gopls",
   "html",
   "json",

@@ -24,6 +24,7 @@ with pkgs;
       ## LSP servers  ─────────────────────────────────────────────
       bash-language-server # Bash
       buf # bufls
+      dockerfile-language-server-nodejs # Dockerfile
       docker-compose-language-service # Docker Compose
       gopls # Go
       lua-language-server # Lua (lua_ls)
