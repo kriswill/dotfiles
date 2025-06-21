@@ -50,16 +50,12 @@
       url = "https://flakehub.com/f/nix-darwin/nix-darwin/0.1.*.tar.gz";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    nh = {
-      url = "github:nix-community/nh";
+    home-manager = {
+      url = "https://flakehub.com/f/nix-community/home-manager/*.tar.gz";
       inputs.nixpkgs.follows = "nixpkgs";
     };
     mac-app-util = {
       url = "github:hraban/mac-app-util";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-    home-manager = {
-      url = "https://flakehub.com/f/nix-community/home-manager/*.tar.gz";
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };

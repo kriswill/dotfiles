@@ -1,5 +1,3 @@
-{ inputs, ... }:
-{
+_: {
   claude-code = import ./claude-code.nix;
-  nh = inputs.nh.overlays.default;
 }
