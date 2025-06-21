@@ -11,12 +11,10 @@ return {
     require("lualine").setup({
       options = {
         theme = "auto",
-        -- theme = "github_dark",
-        -- theme = "catppuccin",
         globalstatus = true,
         icons_enabled = true,
-        -- component_separators = { left = "│", right = "│" },
-        component_separators = { left = "|", right = "|" },
+        component_separators = { left = "│", right = "│" },
+        -- component_separators = { left = "|", right = "|" },
         section_separators = { left = "", right = "" },
         disabled_filetypes = {
           statusline = {
@@ -31,9 +29,11 @@ return {
         },
       },
       sections = {
-        lualine_a = {},
+        lualine_a = {
+          "fancy_mode",
+        },
         lualine_b = {
-          "fancy_branch",
+          -- "fancy_branch",
         },
         lualine_c = {
           {
@@ -49,8 +49,8 @@ return {
           { "fancy_searchcount" },
         },
         lualine_x = {
-          "fancy_lsp_servers",
           "fancy_diff",
+          "fancy_lsp_servers",
           "progress",
         },
         lualine_y = {},
