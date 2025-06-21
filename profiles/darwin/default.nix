@@ -6,13 +6,15 @@
   ...
 }:
 {
-  # Used for backwards compatibility, please read the changelog before changing.
-  # $ darwin-rebuild changelog
-  system.stateVersion = 5;
-  # Set Git commit hash for darwin-version.
-  system.configurationRevision = self.rev or self.dirtyRev or null;
-  #
-  system.primaryUser = "k";
+  system = {
+    # Used for backwards compatibility, please read the changelog before changing.
+    # $ darwin-rebuild changelog
+    stateVersion = 5;
+    # Set Git commit hash for darwin-version.
+    configurationRevision = self.rev or self.dirtyRev or null;
+    #
+    primaryUser = "k";
+  };
 
   environment = with pkgs; {
     # $ nix-env -qaP | grep wget
@@ -47,9 +49,11 @@
     jetbrains-mono
   ];
 
-  programs.fish.enable = true;
-  programs.zsh.enable = true;
-  programs.nh.enable = true;
+  programs = {
+    jfish.enable = true;
+    zsh.enable = true;
+    nh.enable = true;
+  };
 
   # Cannot let nix-darwin control nix when using determinate
   nix.enable = lib.mkForce false;
