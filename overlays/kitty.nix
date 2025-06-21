@@ -1,5 +1,5 @@
-final: prev: {
-  kitty = prev.kitty.overrideAttrs (old: {
+_final: prev: {
+  kitty = prev.kitty.overrideAttrs (_old: {
     preCheck = ''
       # skip failing tests due to darwin sandbox
       substituteInPlace kitty_tests/file_transmission.py \

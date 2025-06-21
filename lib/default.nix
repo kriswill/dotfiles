@@ -54,7 +54,7 @@ in
       fileNames = builtins.attrNames (builtins.readDir dir);
       strippedFileNames = filter (name: name != "default.nix") fileNames;
     in
-    forEach (strippedFileNames) (fileName: dir + /${fileName});
+    forEach strippedFileNames (fileName: dir + /${fileName});
 
   mkProgramOption =
     {

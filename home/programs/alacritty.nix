@@ -1,4 +1,4 @@
-{ pkgs, specialArgs, ... }:
+{ pkgs, ... }:
 
 let
   fontSize = 14;
