@@ -1,4 +1,3 @@
-.envrc
 .direnv
 pkgs/result
 **/.DS_Store
