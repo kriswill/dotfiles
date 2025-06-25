@@ -63,6 +63,7 @@ in
       ripgrep # fast grep replacement
       tldr # simplified man pages
       tree # print directory trees
+      uv # one python tool to rule them all!
       yamlfmt # format yaml
       # You can also create simple shell scripts directly inside your
       # configuration. For example, this adds a command 'my-hello' to your
