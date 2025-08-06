@@ -1,9 +1,8 @@
-_: {
+{
   programs.kitty = {
     enable = true;
     font = {
-      name = "SauceCodePro Nerd Font Mono";
-      # name = "JetBrainsMono Nerd Font Mono";
+      name = "JetBrainsMono Nerd Font Mono";
       size = 16.0;
     };
     settings = {
@@ -27,6 +26,5 @@ _: {
       include theme.conf
     '';
   };
-  #xdg.configFile."kitty/theme.conf".source = ./catppuccin-mocha.conf;
   xdg.configFile."kitty/theme.conf".source = ./kanagawa.conf;
 }

@@ -1,17 +1,17 @@
 { pkgs, ... }:
 
 {
-  home.packages = with pkgs; [ fastfetch ];
+  home.packages = [ pkgs.fastfetch ];
 
   xdg.configFile."fastfetch/config.jsonc".text = # json
     ''
       {
         "$schema": "https://github.com/fastfetch-cli/fastfetch/raw/dev/doc/json_schema.json",
           "logo": {
-            "type": "kitty-direct",
-            "source": "${./apple.png}",
-            "width": 30,
-            "height": 18 
+            "type": "kitty-icat",
+            "source": "${./apple-logo-medium.png}"
+            //"width": 30,
+            //"height": 18
           },
           "modules": [
             "title",
