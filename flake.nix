@@ -22,6 +22,10 @@
     in
     {
       inherit lib;
+      packages.${system} = {
+        kitten = pkgs.callPackage ./pkgs/kitten.nix { };
+        iv = pkgs.callPackage ./pkgs/iv.nix { };
+      };
       darwinConfigurations = {
         k = mkDarwin ./hosts/k "k";
         SOC-Kris-Williams = mkDarwin ./hosts/SOC-Kris-Williams "k";

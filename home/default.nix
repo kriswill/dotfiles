@@ -53,6 +53,7 @@ in
       jq # json querying
       just # better make
       keycastr # keystroke visualizer
+      kitten # kitty utilities (icat, diff, themes, etc.)
       localsend # share files with other devices on the local network
       ncdu # analyze disk usage
       # nh # https://github.com/viperML/nh
