@@ -45,7 +45,14 @@
       };
       overlays = import ./overlays { inherit inputs; };
       formatter.${system} = pkgs.nixfmt-tree;
-      darwinModules = import ./modules/darwin { inherit lib; };
+      darwinModules = rec {
+        kriswill = import ./modules/darwin { inherit lib; };
+        default = kriswill;
+      };
+      homeModules = rec {
+        kriswill = import ./modules/home-manager { inherit lib; };
+        default = kriswill;
+      };
     };
 
   inputs = {
@@ -55,7 +62,7 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
     home-manager = {
-      url = "https://flakehub.com/f/nix-community/home-manager/*.tar.gz";
+      url = "https://flakehub.com/f/nix-community/home-manager/0.1.*.tar.gz";
       inputs.nixpkgs.follows = "nixpkgs";
     };
     mac-app-util = {

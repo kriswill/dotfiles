@@ -15,12 +15,16 @@ let
     ;
 in
 {
-  mkHomeManager = path: username: {
+  mkHomeManager = username: {
     home-manager = {
       backupFileExtension = "backup";
       useUserPackages = true;
       useGlobalPkgs = true;
-      users."${username}" = path;
+      users."${username}" = outputs.homeModules.kriswill // {
+        kriswill.enable = true;
+        home.stateVersion = "24.11";
+        home.homeDirectory = lib.mkForce "/Users/${username}";
+      };
       sharedModules = [ inputs.mac-app-util.homeManagerModules.default ];
       extraSpecialArgs = { inherit inputs username; };
     };
@@ -40,8 +44,8 @@ in
       modules = [
         hostmodule
         inputs.home-manager.darwinModules.home-manager
-        outputs.darwinModules
-        (lib.mkHomeManager ../home username)
+        outputs.darwinModules.kriswill
+        (lib.mkHomeManager username)
         {
           kriswill.enable = true;
           nixpkgs = {
