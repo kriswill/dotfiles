@@ -42,7 +42,13 @@ in
         inputs.home-manager.darwinModules.home-manager
         outputs.darwinModules
         (lib.mkHomeManager ../home username)
-        { nixpkgs.hostPlatform = "aarch64-darwin"; }
+        {
+          kriswill.enable = true;
+          nixpkgs = {
+            hostPlatform = "aarch64-darwin";
+            overlays = builtins.attrValues outputs.overlays;
+          };
+        }
       ];
     };
 

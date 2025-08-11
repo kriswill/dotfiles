@@ -18,7 +18,6 @@
           inherit self inputs outputs;
         }
       );
-      inherit (lib) mkDarwin;
     in
     {
       inherit lib;
@@ -27,17 +26,19 @@
         iv = pkgs.callPackage ./pkgs/iv.nix { };
       };
       darwinConfigurations = {
-        k = mkDarwin ./hosts/k "k";
-        SOC-Kris-Williams = mkDarwin ./hosts/SOC-Kris-Williams "k";
+        k = lib.mkDarwin ./hosts/k "k";
+        SOC-Kris-Williams = lib.mkDarwin ./hosts/SOC-Kris-Williams "k";
       };
       devShells.${system}.default = pkgs.mkShell {
         name = "dotfiles";
-        packages = with pkgs; [
-          deadnix
-          statix
-          nixfmt-tree
-          just
-        ];
+        packages = builtins.attrValues {
+          inherit (pkgs)
+            deadnix
+            statix
+            nixfmt-tree
+            just
+            ;
+        };
         shellHook = ''
           PATH_add "$PWD/bin"
         '';
@@ -45,7 +46,6 @@
       overlays = import ./overlays { inherit inputs; };
       formatter.${system} = pkgs.nixfmt-tree;
       darwinModules = import ./modules/darwin { inherit lib; };
-      darwinProfiles.default = import ./profiles/darwin;
     };
 
   inputs = {
