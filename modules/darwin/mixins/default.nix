@@ -8,6 +8,9 @@
   imports = lib.autoImport ./.;
   options.kriswill.enable = lib.mkEnableOption "Kris' custom darwin modules";
   config = {
+    kriswill = {
+      homebrew.enable = lib.mkDefault true;
+    };
     system = {
       # Used for backwards compatibility, please read the changelog before changing.
       # $ darwin-rebuild changelog
@@ -67,31 +70,6 @@
         builtins.elem (lib.getName pkg) [
           "claude-code"
         ];
-    };
-    homebrew = {
-      enable = true;
-      global.brewfile = true;
-      onActivation = {
-        upgrade = true;
-        cleanup = "zap";
-        autoUpdate = true;
-      };
-      casks = [
-        "rwts-pdfwriter"
-        "zerotier-one"
-        "1password-cli"
-        "karabiner-elements"
-        {
-          name = "launchcontrol";
-          greedy = true;
-        }
-        "ghostty"
-      ];
-      brews = [ ];
-      # SLOW!
-      # masApps = {
-      #   "Xcode" = 497799835;
-      # };
     };
   };
 }
