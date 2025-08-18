@@ -63,7 +63,9 @@
               fswatch # file watcher - replaces libuv.fs_event in neovim v0.10
               git
               gnumake
+              ghostscript # needed by snacks to render PDFs with the `gs` command
               imagemagick
+              mermaid-cli # mmdc
               nodejs
               sqlite
               tree-sitter

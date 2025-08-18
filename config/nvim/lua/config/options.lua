@@ -1,53 +1,55 @@
-local opt = vim.opt
+local o = vim.opt
 
 -- Session Management
-opt.sessionoptions = "blank,buffers,curdir,folds,help,tabpages,winsize,winpos,terminal,localoptions"
+o.sessionoptions = "blank,buffers,curdir,folds,help,tabpages,winsize,winpos,terminal,localoptions"
 
 -- Disable swap file
-opt.swapfile = false
+o.swapfile = false
 
 -- Line Numbers
-opt.relativenumber = true
-opt.number = true
+o.relativenumber = true
+o.number = true
 
 -- Tabs & Indentation
-opt.tabstop = 2 -- spaces shown per tab character
-opt.softtabstop = 2 -- spaces to insert when hitting tab
-opt.shiftwidth = 2
-opt.expandtab = true
-opt.smarttab = true
-opt.smartindent = true
-opt.autoindent = true -- keep indentation from previous line
-opt.breakindent = true
+o.tabstop = 2 -- spaces shown per tab character
+o.softtabstop = 2 -- spaces to insert when hitting tab
+o.shiftwidth = 2
+o.expandtab = true
+o.smarttab = true
+o.smartindent = true
+o.autoindent = true -- keep indentation from previous line
+o.breakindent = true
 
 -- Line Wrapping
-opt.wrap = false
+o.wrap = false
 
 -- Search Settings
-opt.ignorecase = true -- case-insensitive unless \C or one or more CAP letters
-opt.smartcase = true
+o.ignorecase = true -- case-insensitive unless \C or one or more CAP letters
+o.smartcase = true
 
 -- Appearance
-opt.cursorline = true -- Highlight the line the cursor is on
-opt.termguicolors = true
-opt.background = "dark"
+o.cursorline = true -- Highlight the line the cursor is on
+o.termguicolors = true
+o.background = "dark"
+o.winborder = "rounded"
+
 -- opt.signcolumn = "no" -- "yes" to always preserve column
 vim.diagnostic.config({
   float = { border = "rounded" }, -- add border to diagnostic popups
 })
 
 -- Backspace
-opt.backspace = "indent,eol,start"
+o.backspace = "indent,eol,start"
 
 -- Clipboard
-opt.clipboard:append("unnamedplus")
+o.clipboard:append("unnamedplus")
 
 -- Split Windows
-opt.splitright = true
-opt.splitbelow = true
+o.splitright = true
+o.splitbelow = true
 
 -- Consider - as part of keyword
-opt.iskeyword:append("-")
+o.iskeyword:append("-")
 
 -- Disable the mouse while in nvim
 -- opt.mouse = ""
@@ -58,12 +60,12 @@ opt.iskeyword:append("-")
 -- opt.listchars = [[trail:·]]
 
 -- buffer lines to preserve to keep above and below the cursor while scrolling
-opt.scrolloff = 5
+o.scrolloff = 5
 
 -- Folding
-opt.foldlevel = 20
-opt.foldmethod = "expr"
-opt.foldexpr = "nvim_treesitter#foldexpr()" -- Utilize Treesitter folds
+o.foldlevel = 20
+o.foldmethod = "expr"
+o.foldexpr = "nvim_treesitter#foldexpr()" -- Utilize Treesitter folds
 
 -- hide line for commands until you start a command
-opt.cmdheight = 0
+o.cmdheight = 0
