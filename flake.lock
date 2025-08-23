@@ -22,12 +22,12 @@
         ]
       },
       "locked": {
-        "lastModified": 1755751773,
-        "narHash": "sha256-d1H34kko9J5fWrxCVgfa1TkIwdkGt/eDSVopAWenw24=",
-        "rev": "3a0a38a1e7ac2c4b4150ea37a491fdffdc9c92e1",
-        "revCount": 2236,
+        "lastModified": 1755825449,
+        "narHash": "sha256-XkiN4NM9Xdy59h69Pc+Vg4PxkSm9EWl6u7k6D5FZ5cM=",
+        "rev": "8df64f819698c1fee0c2969696f54a843b2231e8",
+        "revCount": 2240,
         "type": "tarball",
-        "url": "https://api.flakehub.com/f/pinned/nix-darwin/nix-darwin/0.1.2236%2Brev-3a0a38a1e7ac2c4b4150ea37a491fdffdc9c92e1/0198cb06-f237-7fd6-bbdb-02c74fd5533c/source.tar.gz"
+        "url": "https://api.flakehub.com/f/pinned/nix-darwin/nix-darwin/0.1.2240%2Brev-8df64f819698c1fee0c2969696f54a843b2231e8/0198cf6c-148f-7280-9b43-cb56fd780d96/source.tar.gz"
       },
       "original": {
         "type": "tarball",
@@ -78,12 +78,12 @@
         ]
       },
       "locked": {
-        "lastModified": 1755755322,
-        "narHash": "sha256-spCxkNihCk3uT3LUrUwzdEAjLA/E0EtEgF3KVI05nlM=",
-        "rev": "282b4c98de97da6667cb03de4f427371734bc39c",
-        "revCount": 5303,
+        "lastModified": 1755914636,
+        "narHash": "sha256-VJ+Gm6YsHlPfUCpmRQxvdiZW7H3YPSrdVOewQHAhZN8=",
+        "rev": "8b55a6ac58b678199e5bba701aaff69e2b3281c0",
+        "revCount": 5308,
         "type": "tarball",
-        "url": "https://api.flakehub.com/f/pinned/nix-community/home-manager/0.1.5303%2Brev-282b4c98de97da6667cb03de4f427371734bc39c/0198cb2d-7790-7fea-984a-3046e231c09b/source.tar.gz"
+        "url": "https://api.flakehub.com/f/pinned/nix-community/home-manager/0.1.5308%2Brev-8b55a6ac58b678199e5bba701aaff69e2b3281c0/0198d4ac-3f28-7f6f-b860-01b1c2eb26a0/source.tar.gz"
       },
       "original": {
         "type": "tarball",
@@ -101,11 +101,11 @@
         "systems": "systems"
       },
       "locked": {
-        "lastModified": 1742156590,
-        "narHash": "sha256-aTM/2CrNN5utdVEQGsOA+kl4UozgH7VPLBQL5OXtBrg=",
+        "lastModified": 1755929511,
+        "narHash": "sha256-CJw0fekEGdN6SnOrOR3ubmyj6wVMrbyQNEYtUuJ/CbE=",
         "owner": "hraban",
         "repo": "mac-app-util",
-        "rev": "341ede93f290df7957047682482c298e47291b4d",
+        "rev": "6ee41d9f6b7e326c681e6d9700f579dbae00fecb",
         "type": "github"
       },
       "original": {
