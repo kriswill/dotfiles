@@ -31,12 +31,17 @@
       #   inputs.fh.packages.${pkgs.stdenv.hostPlatform.system}.default
       # inputs.ghostty.packages.aarch64-darwin.default
       # ];
-      shellAliases = {
-        # drs = "sudo ${
-        #   inputs.darwin.packages.${pkgs.stdenv.hostPlatform.system}.darwin-rebuild
-        # }/bin/darwin-rebuild switch --flake ~/src/dotfiles |& ${lib.getExe pkgs.nix-output-monitor}";
-        nds = "NH_NO_CHECKS=1 ${lib.getExe pkgs.nh} darwin switch ~/src/dotfiles";
-      };
+      shellAliases =
+        let
+          nh = lib.getExe pkgs.nh;
+        in
+        {
+          # drs = "sudo ${
+          #   inputs.darwin.packages.${pkgs.stdenv.hostPlatform.system}.darwin-rebuild
+          # }/bin/darwin-rebuild switch --flake ~/src/dotfiles |& ${lib.getExe pkgs.nix-output-monitor}";
+          nrs = "NH_NO_CHECKS=1 ${nh} darwin switch ~/src/dotfiles";
+          nrt = "NH_NO_CHECKS=1 ${nh} darwin test ~/src/dotfiles";
+        };
       etc."pam.d/sudo_local".text = ''
         # Allow for touch ID to work for sudo, inside of tmux
         auth       optional       ${pkgs.pam-reattach}/lib/pam/pam_reattach.so ignore_ssh
