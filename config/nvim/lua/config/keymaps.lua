@@ -9,13 +9,18 @@ keymap({ "n", "v" }, "<Space>", "<Nop>", { silent = true })
 -- keymap("n", "<leader>wq", ":wq<CR>") -- save and quit
 -- keymap("n", "<leader>qq", ":q!<CR>") -- quit without saving
 -- keymap("n", "<leader>ww", ":w<CR>") -- save
-keymap("n", "gx", ":!open <c-r><c-a><CR>") -- open URL under cursor
+keymap("n", "gx", ":!open <c-r><c-a><CR>", { desc = "open URL under cursor" })
 -- keymap("n", "<C-u>", "<C-u>zz", { desc = "Move up one page, then vertically center buffer" })
 -- keymap("n", "<C-d>", "<C-d>zz", { desc = "Move down one page, then vertically center buffer" })
 
-vim.keymap.set("v", "<", "<gv") -- outdent visual block
-vim.keymap.set("v", ">", ">gv") -- indent visual block
-
+keymap("v", "<", "<gv", { desc = "outdent visual block" })
+keymap("v", ">", ">gv", { desc = "indent visual block" })
+keymap(
+  "n",
+  "<leader>cr",
+  [[:let @+=expand('%')<CR>]],
+  { desc = "Copy relative filepath", noremap = true, silent = true }
+)
 -- Split window management
 -- keymap("n", "<leader>sv", "<C-w>v", { desc = "Split window vertically" })
 -- keymap("n", "<leader>sh", "<C-w>s", { desc = "Split window horizontally" })
@@ -51,9 +56,12 @@ vim.keymap.set("v", ">", ">gv") -- indent visual block
 -- keymap("n", "<leader>xr", ":call VrcQuery()<CR>") -- Run REST query
 --
 -- LSP
-keymap("n", "<leader>cf", function()
-  require("conform").format({ lsp_format = "fallback" })
-end, { desc = "Format current file" })
+keymap(
+  "n",
+  "<leader>cf",
+  function() require("conform").format({ lsp_format = "fallback" }) end,
+  { desc = "Format current file" }
+)
 -- keymap("n", "<leader>gg", "<cmd>lua vim.lsp.buf.hover()<CR>")
 -- keymap("n", "<leader>gd", "<cmd>lua vim.lsp.buf.definition()<CR>")
 -- keymap("n", "<leader>gD", "<cmd>lua vim.lsp.buf.declaration()<CR>")
