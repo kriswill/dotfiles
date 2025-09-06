@@ -53,7 +53,7 @@ local banners = {
 return {
   enabled = true,
   preset = {
-    header = banners.dragon, -- Use the "dragon" banner as the header
+    header = banners.hydra, -- Use the "dragon" banner as the header
     banners = banners, -- Optionally expose all banners
   },
 }
