@@ -56,13 +56,16 @@
     };
 
   inputs = {
-    nixpkgs.url = "https://flakehub.com/f/NixOS/nixpkgs/0.1.0.tar.gz";
+    # nixpkgs.url = "https://flakehub.com/f/NixOS/nixpkgs/0.1.0.tar.gz";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     darwin = {
-      url = "https://flakehub.com/f/nix-darwin/nix-darwin/0.1.*.tar.gz";
+      # url = "https://flakehub.com/f/nix-darwin/nix-darwin/0.1.*.tar.gz";
+      url = "github:lnl7/nix-darwin";
       inputs.nixpkgs.follows = "nixpkgs";
     };
     home-manager = {
-      url = "https://flakehub.com/f/nix-community/home-manager/0.1.*.tar.gz";
+      # url = "https://flakehub.com/f/nix-community/home-manager/0.1.*.tar.gz";
+      url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs";
     };
     mac-app-util = {
