@@ -36,7 +36,7 @@
             inherit (pkgs)
               bash-language-server # Bash
               buf # bufls
-              dockerfile-language-server-nodejs # Dockerfile
+              dockerfile-language-server # Dockerfile
               docker-compose-language-service # Docker Compose
               gopls # Go
               lua-language-server # Lua (lua_ls)

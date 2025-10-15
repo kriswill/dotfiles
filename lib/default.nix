@@ -25,7 +25,7 @@ in
         home.stateVersion = "24.11";
         home.homeDirectory = lib.mkForce "/Users/${username}";
       };
-      sharedModules = [ inputs.mac-app-util.homeManagerModules.default ];
+      # sharedModules = [ inputs.mac-app-util.homeManagerModules.default ];
       extraSpecialArgs = { inherit inputs username; };
     };
   };

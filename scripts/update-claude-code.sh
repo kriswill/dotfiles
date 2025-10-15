@@ -10,9 +10,10 @@ BLUE='\033[0;34m'
 CYAN='\033[0;36m'
 NC='\033[0m' # No Color
 
-# Current version from overlay file
-OVERLAY_FILE="overlays/claude-code.nix"
-CURRENT_VERSION=$(grep -oE 'version = "[0-9]+\.[0-9]+\.[0-9]+"' "$OVERLAY_FILE" | cut -d'"' -f2)
+# Current version from package file
+PACKAGE_FILE="pkgs/claude-code/package.nix"
+LOCK_FILE="pkgs/claude-code/package-lock.json"
+CURRENT_VERSION=$(grep -oE 'version = "[0-9]+\.[0-9]+\.[0-9]+"' "$PACKAGE_FILE" | cut -d'"' -f2)
 
 echo "Fetching available versions..."
 
@@ -110,34 +111,83 @@ SRI_HASH=$(nix hash convert --hash-algo sha256 "$NEW_HASH" 2> /dev/null || echo 
 
 echo "New hash: $SRI_HASH"
 
-# Create backup
-cp "$OVERLAY_FILE" "${OVERLAY_FILE}.bak"
-echo "Created backup: ${OVERLAY_FILE}.bak"
+# Create backups
+cp "$PACKAGE_FILE" "${PACKAGE_FILE}.bak"
+cp "$LOCK_FILE" "${LOCK_FILE}.bak"
+echo "Created backups"
 
-# Update the overlay file
+# Update the package.nix and package-lock.json files
+DUMMY_NPM_HASH="sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+
 if [[ "$OSTYPE" == "darwin"* ]]; then
   # macOS sed requires a backup extension
   sed -i.tmp \
     -e "s/version = \"${CURRENT_VERSION}\"/version = \"${SELECTED_VERSION}\"/" \
     -e "s|hash = \"[^\"]*\"|hash = \"${SRI_HASH}\"|" \
-    "$OVERLAY_FILE"
-  rm "${OVERLAY_FILE}.tmp"
+    -e "s|npmDepsHash = \"[^\"]*\"|npmDepsHash = \"${DUMMY_NPM_HASH}\"|" \
+    "$PACKAGE_FILE"
+  rm "${PACKAGE_FILE}.tmp"
+
+  # Update package-lock.json version
+  sed -i.tmp "s/\"version\": \"${CURRENT_VERSION}\"/\"version\": \"${SELECTED_VERSION}\"/g" "$LOCK_FILE"
+  rm "${LOCK_FILE}.tmp"
 else
   # GNU sed
   sed -i \
     -e "s/version = \"${CURRENT_VERSION}\"/version = \"${SELECTED_VERSION}\"/" \
     -e "s|hash = \"[^\"]*\"|hash = \"${SRI_HASH}\"|" \
-    "$OVERLAY_FILE"
+    -e "s|npmDepsHash = \"[^\"]*\"|npmDepsHash = \"${DUMMY_NPM_HASH}\"|" \
+    "$PACKAGE_FILE"
+
+  # Update package-lock.json version
+  sed -i "s/\"version\": \"${CURRENT_VERSION}\"/\"version\": \"${SELECTED_VERSION}\"/g" "$LOCK_FILE"
 fi
 
-# Remove backup file after successful update
-rm "${OVERLAY_FILE}.bak"
+echo ""
+echo "Calculating npmDepsHash..."
+echo ""
+
+# Try to build the package to get the correct npmDepsHash
+# We'll capture the hash mismatch error
+# Use the darwin configuration to ensure overlays are applied
+NPM_HASH_OUTPUT=$(NIXPKGS_ALLOW_UNFREE=1 nix build --impure --no-link --expr 'with import <nixpkgs> { overlays = [ (import ./overlays/claude-code.nix) ]; config.allowUnfree = true; }; claude-code' 2>&1 || true)
+
+# Extract the correct hash from the error message
+# Look for "got:    sha256-..." pattern
+CORRECT_NPM_HASH=$(echo "$NPM_HASH_OUTPUT" | grep -oE 'got:\s+sha256-[A-Za-z0-9+/=]+' | head -n1 | sed 's/got:\s*//' | tr -d '[:space:]')
+
+if [ -z "$CORRECT_NPM_HASH" ]; then
+  echo -e "${RED}Failed to determine npmDepsHash${NC}"
+  echo "Build output:"
+  echo "$NPM_HASH_OUTPUT"
+  echo ""
+  echo -e "${YELLOW}You may need to manually update npmDepsHash in $PACKAGE_FILE${NC}"
+  echo "Restoring backups..."
+  mv "${PACKAGE_FILE}.bak" "$PACKAGE_FILE"
+  mv "${LOCK_FILE}.bak" "$LOCK_FILE"
+  exit 1
+fi
+
+echo "Calculated npmDepsHash: $CORRECT_NPM_HASH"
+
+# Update the package.nix file with the correct npmDepsHash
+if [[ "$OSTYPE" == "darwin"* ]]; then
+  sed -i.tmp "s|npmDepsHash = \"[^\"]*\"|npmDepsHash = \"${CORRECT_NPM_HASH}\"|" "$PACKAGE_FILE"
+  rm "${PACKAGE_FILE}.tmp"
+else
+  sed -i "s|npmDepsHash = \"[^\"]*\"|npmDepsHash = \"${CORRECT_NPM_HASH}\"|" "$PACKAGE_FILE"
+fi
+
+# Remove backup files after successful update
+rm "${PACKAGE_FILE}.bak"
+rm "${LOCK_FILE}.bak"
 
 echo -e "${GREEN}Updated overlay file successfully!${NC}"
 echo ""
 echo "Changes made:"
 echo "  Version: $CURRENT_VERSION → $SELECTED_VERSION"
-echo "  Hash: updated to $SRI_HASH"
+echo "  Source hash: updated to $SRI_HASH"
+echo "  npmDepsHash: updated to $CORRECT_NPM_HASH"
 echo ""
 echo "To apply the changes, run:"
 echo "  sudo darwin-rebuild switch --flake ~/src/dotfiles |& nom"

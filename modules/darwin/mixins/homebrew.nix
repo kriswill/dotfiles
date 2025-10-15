@@ -16,6 +16,12 @@
         "1password-cli"
         "karabiner-elements"
         {
+          name = "chromium";
+          args = {
+            no_quarantine = true;
+          };
+        }
+        {
           name = "launchcontrol";
           greedy = true;
         }

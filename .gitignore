@@ -4,3 +4,5 @@ pkgs/result
 CLAUDE.md
 .obsidian
 **/result
+.claude
+.claude/settings.local.json
