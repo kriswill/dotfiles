@@ -24,6 +24,7 @@
     };
     home.packages = with pkgs; [
       age # encryption tool
+      aws-azure-login # uses Azure login to get SAML token for AWS account
       claude-code # anthropic-ai
       comma # https://github.com/nix-community/comma
       fd # file finding
