@@ -29,7 +29,6 @@
     {
       inherit lib;
       packages.${system} = {
-        aws-azure-login = pkgs.callPackage ./pkgs/aws-azure-login.nix { };
         claude-code = pkgs.callPackage ./pkgs/claude-code/package.nix { };
         kitten = pkgs.callPackage ./pkgs/kitten.nix { };
         iv = pkgs.callPackage ./pkgs/iv.nix { };
