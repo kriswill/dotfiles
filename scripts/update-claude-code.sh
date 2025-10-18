@@ -70,13 +70,13 @@ echo ""
 echo -n "Select version number (or 'q' to quit): "
 read -r selection
 
-if [[ "$selection" == "q" ]]; then
+if [[ $selection == "q" ]]; then
   echo "Update cancelled."
   exit 0
 fi
 
 # Validate selection
-if ! [[ "$selection" =~ ^[0-9]+$ ]]; then
+if ! [[ $selection =~ ^[0-9]+$ ]]; then
   echo -e "${RED}Invalid selection${NC}"
   exit 1
 fi
@@ -101,7 +101,7 @@ echo -e "${BLUE}Updating from $CURRENT_VERSION to $SELECTED_VERSION${NC}"
 echo "Fetching hash for version $SELECTED_VERSION..."
 NEW_HASH=$(nix-prefetch-url --type sha256 --unpack "https://registry.npmjs.org/@anthropic-ai/claude-code/-/claude-code-${SELECTED_VERSION}.tgz" 2>&1 | tail -n1)
 
-if [ -z "$NEW_HASH" ] || [[ "$NEW_HASH" == *"error"* ]]; then
+if [ -z "$NEW_HASH" ] || [[ $NEW_HASH == *"error"* ]]; then
   echo -e "${RED}Failed to fetch hash for new version${NC}"
   exit 1
 fi
@@ -113,13 +113,12 @@ echo "New hash: $SRI_HASH"
 
 # Create backups
 cp "$PACKAGE_FILE" "${PACKAGE_FILE}.bak"
-cp "$LOCK_FILE" "${LOCK_FILE}.bak"
-echo "Created backups"
+echo "Created backup of package.nix"
 
-# Update the package.nix and package-lock.json files
+# Update the package.nix file with dummy npmDepsHash
 DUMMY_NPM_HASH="sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
 
-if [[ "$OSTYPE" == "darwin"* ]]; then
+if [[ $OSTYPE == "darwin"* ]]; then
   # macOS sed requires a backup extension
   sed -i.tmp \
     -e "s/version = \"${CURRENT_VERSION}\"/version = \"${SELECTED_VERSION}\"/" \
@@ -127,10 +126,6 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
     -e "s|npmDepsHash = \"[^\"]*\"|npmDepsHash = \"${DUMMY_NPM_HASH}\"|" \
     "$PACKAGE_FILE"
   rm "${PACKAGE_FILE}.tmp"
-
-  # Update package-lock.json version
-  sed -i.tmp "s/\"version\": \"${CURRENT_VERSION}\"/\"version\": \"${SELECTED_VERSION}\"/g" "$LOCK_FILE"
-  rm "${LOCK_FILE}.tmp"
 else
   # GNU sed
   sed -i \
@@ -138,10 +133,31 @@ else
     -e "s|hash = \"[^\"]*\"|hash = \"${SRI_HASH}\"|" \
     -e "s|npmDepsHash = \"[^\"]*\"|npmDepsHash = \"${DUMMY_NPM_HASH}\"|" \
     "$PACKAGE_FILE"
-
-  # Update package-lock.json version
-  sed -i "s/\"version\": \"${CURRENT_VERSION}\"/\"version\": \"${SELECTED_VERSION}\"/g" "$LOCK_FILE"
 fi
+
+# Generate fresh package-lock.json from upstream package.json
+# NOTE this is necessary to properly install the optionalDependencies, which include platform-specific image processing tools, which won't
+# function properly if we skip creating the package-lock.json file
+echo ""
+echo "Generating package-lock.json from upstream package.json..."
+TEMP_DIR=$(mktemp -d)
+trap 'rm -rf "$TEMP_DIR"' EXIT
+
+# Store current directory to get back to it
+SCRIPT_DIR=$(pwd)
+
+# Download and extract tarball
+curl -sL "https://registry.npmjs.org/@anthropic-ai/claude-code/-/claude-code-${SELECTED_VERSION}.tgz" | tar -xz -C "$TEMP_DIR"
+
+# Generate package-lock.json
+cd "$TEMP_DIR/package"
+npm install --package-lock-only --ignore-scripts
+
+# Copy generated package-lock.json to repo
+cp package-lock.json "$SCRIPT_DIR/$LOCK_FILE"
+cd "$SCRIPT_DIR"
+
+echo "Generated fresh package-lock.json"
 
 echo ""
 echo "Calculating npmDepsHash..."
@@ -162,32 +178,32 @@ if [ -z "$CORRECT_NPM_HASH" ]; then
   echo "$NPM_HASH_OUTPUT"
   echo ""
   echo -e "${YELLOW}You may need to manually update npmDepsHash in $PACKAGE_FILE${NC}"
-  echo "Restoring backups..."
+  echo "Restoring backup..."
   mv "${PACKAGE_FILE}.bak" "$PACKAGE_FILE"
-  mv "${LOCK_FILE}.bak" "$LOCK_FILE"
+  echo -e "${YELLOW}Note: package-lock.json has been regenerated. You may need to restore it manually if needed.${NC}"
   exit 1
 fi
 
 echo "Calculated npmDepsHash: $CORRECT_NPM_HASH"
 
 # Update the package.nix file with the correct npmDepsHash
-if [[ "$OSTYPE" == "darwin"* ]]; then
+if [[ $OSTYPE == "darwin"* ]]; then
   sed -i.tmp "s|npmDepsHash = \"[^\"]*\"|npmDepsHash = \"${CORRECT_NPM_HASH}\"|" "$PACKAGE_FILE"
   rm "${PACKAGE_FILE}.tmp"
 else
   sed -i "s|npmDepsHash = \"[^\"]*\"|npmDepsHash = \"${CORRECT_NPM_HASH}\"|" "$PACKAGE_FILE"
 fi
 
-# Remove backup files after successful update
+# Remove backup file after successful update
 rm "${PACKAGE_FILE}.bak"
-rm "${LOCK_FILE}.bak"
 
-echo -e "${GREEN}Updated overlay file successfully!${NC}"
+echo -e "${GREEN}Updated package file successfully!${NC}"
 echo ""
 echo "Changes made:"
 echo "  Version: $CURRENT_VERSION → $SELECTED_VERSION"
 echo "  Source hash: updated to $SRI_HASH"
 echo "  npmDepsHash: updated to $CORRECT_NPM_HASH"
+echo "  package-lock.json: regenerated from upstream package.json"
 echo ""
 echo "To apply the changes, run:"
 echo "  sudo darwin-rebuild switch --flake ~/src/dotfiles |& nom"
