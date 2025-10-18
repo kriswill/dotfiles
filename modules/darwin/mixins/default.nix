@@ -51,6 +51,10 @@
 
     security.pam.services.sudo_local.touchIdAuth = true;
 
+    # Disable documentation generation to avoid builtins.toFile warnings
+    # with custom module options
+    documentation.enable = false;
+
     # nix repl -f '<nixpkgs>'
     # > nerd-fonts.<tab>
     fonts.packages = builtins.attrValues {
