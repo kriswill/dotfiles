@@ -46,7 +46,7 @@
               luarocks
               marksman # Markdown
               nil
-              opentofu-ls # terraform
+              tofu-ls # opentofu/terraform
               pyright
               rust-analyzer # Rust
               vscode-langservers-extracted # json, HTML, CSS, ESLint
