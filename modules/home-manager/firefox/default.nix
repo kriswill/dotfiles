@@ -5,7 +5,7 @@
   ...
 }:
 let
-  user_js = config.home.homeDirectory + "/src/dotfiles/home/programs/firefox/user.js";
+  user_js = "${./user.js}";
   inherit (pkgs.nur.repos.rycee) firefox-addons;
 in
 {

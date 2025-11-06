@@ -14,9 +14,11 @@
       pkgs = import nixpkgs {
         inherit system;
         config = {
-          allowUnfreePredicate = pkg: builtins.elem (nixpkgs.lib.getName pkg) [
-            "claude-code"
-          ];
+          allowUnfreePredicate =
+            pkg:
+            builtins.elem (nixpkgs.lib.getName pkg) [
+              "claude-code"
+            ];
         };
       };
       lib = nixpkgs.lib.extend (
@@ -54,11 +56,13 @@
       overlays = import ./overlays { inherit inputs; };
       formatter.${system} = pkgs.nixfmt-tree;
       darwinModules = rec {
-        kriswill = import ./modules/darwin { inherit lib; };
+        kriswill = import ./modules/darwin {
+          inherit lib;
+        };
         default = kriswill;
       };
       homeModules = rec {
-        kriswill = import ./modules/home-manager { inherit lib; };
+        kriswill = ./modules/home-manager;
         default = kriswill;
       };
     };

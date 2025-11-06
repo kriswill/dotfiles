@@ -20,7 +20,8 @@ in
       backupFileExtension = "backup";
       useUserPackages = true;
       useGlobalPkgs = true;
-      users."${username}" = outputs.homeModules.kriswill // {
+      users."${username}" = {
+        imports = [ outputs.homeModules.kriswill ];
         kriswill.enable = true;
         home.stateVersion = "24.11";
         home.homeDirectory = lib.mkForce "/Users/${username}";
