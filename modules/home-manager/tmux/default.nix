@@ -12,7 +12,7 @@
       ln = config.lib.file.mkOutOfStoreSymlink;
     in
     {
-      home.packages = with pkgs; [ tmux ];
+      home.packages = [ pkgs.tmux ];
       xdg.configFile = {
         "tmux/tmux.conf".source = ln configDir + "/tmux.conf";
       };

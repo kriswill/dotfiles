@@ -2,7 +2,6 @@
 {
   options.kriswill.starship.enable = lib.mkEnableOption "kris' starship";
   config = lib.mkIf config.kriswill.starship.enable {
-    # starship - an customizable prompt for any shell
     programs.starship = {
       enable = true;
       settings = {

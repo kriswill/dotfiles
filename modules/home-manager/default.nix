@@ -35,7 +35,6 @@
       kitten # kitty utilities (icat, diff, themes, etc.)
       localsend # share files with other devices on the local network
       ncdu # analyze disk usage
-      # nh # https://github.com/viperML/nh
       nix-index # local database of nixpkgs
       nix-output-monitor # better visual output for nix builds
       nix-tree # analyze disk usage by nix packages
