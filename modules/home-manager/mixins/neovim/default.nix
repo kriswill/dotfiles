@@ -36,21 +36,22 @@
             inherit (pkgs)
               bash-language-server # Bash
               buf # bufls
-              dockerfile-language-server # Dockerfile
               docker-compose-language-service # Docker Compose
+              dockerfile-language-server # Dockerfile
+              go # golang
+              go-tools
               gopls # Go
               lua-language-server # Lua (lua_ls)
               lua5_1
               luarocks
               marksman # Markdown
               nil
+              opentofu-ls # terraform
               pyright
               rust-analyzer # Rust
               vscode-langservers-extracted # json, HTML, CSS, ESLint
               vtsls # LSP wrapper for typescript extension of vscode
               yaml-language-server # YAML (yamlls)
-              go # golang
-              go-tools
               ;
             typescript = pkgs.nodePackages.typescript;
           };
