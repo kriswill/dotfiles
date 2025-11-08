@@ -29,6 +29,7 @@
       fd # file finding
       figlet # text to big fancy letters in ASCII
       go # an awesome language
+      grc # generic text colorizer
       jq # json querying
       just # better make
       keycastr # keystroke visualizer
