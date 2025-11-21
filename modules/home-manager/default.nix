@@ -20,6 +20,7 @@
       git.enable = lib.mkDefault true;
       ssh.enable = lib.mkDefault true;
       starship.enable = lib.mkDefault true;
+      yazi.enable = lib.mkDefault true;
       # vscode.enable = lib.mkDefault false;
     };
     home.packages = with pkgs; [
@@ -113,18 +114,6 @@
         ];
       };
 
-      yazi = {
-        enable = lib.mkDefault true;
-        shellWrapperName = "y";
-        enableZshIntegration = true;
-        settings = {
-          mgr.ratio = [
-            1
-            3
-            4
-          ];
-        };
-      };
     };
   };
 }
