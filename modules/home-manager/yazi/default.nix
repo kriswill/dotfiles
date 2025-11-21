@@ -12,11 +12,12 @@
       shellWrapperName = "y";
       enableZshIntegration = true;
       plugins = with pkgs.yaziPlugins; {
-        inherit git;
+        inherit git piper;
       };
       initLua = ''
         require("git"):setup()
       '';
+
       flavors = {
         kanagawa-dragon = pkgs.fetchFromGitHub {
           owner = "marcosvnmelo";
@@ -34,6 +35,18 @@
           2
           3
         ];
+        plugin = {
+          prepend_previewers = [
+            {
+              name = "*.md";
+              run = "piper -- CLICOLOR_FORCE=1 glow -w=$w -s=dark \"$1\"";
+            }
+            {
+              name = "*.(py|sh|go|ts|css|yaml|yml|toml|html|conf|json|csv)";
+              run = "bat";
+            }
+          ];
+        };
       };
     };
   };

@@ -21,6 +21,7 @@
       ssh.enable = lib.mkDefault true;
       starship.enable = lib.mkDefault true;
       yazi.enable = lib.mkDefault true;
+      glow.enable = lib.mkDefault true;
       # vscode.enable = lib.mkDefault false;
     };
     home.packages = with pkgs; [
