@@ -27,6 +27,7 @@
     home.packages = with pkgs; [
       age # encryption tool
       claude-code # anthropic-ai
+      opencode # better claude-code
       comma # https://github.com/nix-community/comma
       fd # file finding
       figlet # text to big fancy letters in ASCII
