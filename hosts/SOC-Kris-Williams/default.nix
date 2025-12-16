@@ -2,4 +2,5 @@
 # hostname enforced by IT
 #
 {
+  kriswill.alias-en0.enable = true;
 }
