@@ -24,7 +24,7 @@
     environment = {
       # $ nix-env -qaP | grep wget
       systemPackages = [
-        pkgs.iproute2mac
+        pkgs.iproute2mac # ip command (like linux)
         pkgs.home-manager
       ];
       # ++ [
