@@ -1,6 +1,5 @@
-_: {
+{ inputs }: {
   claude-code = import ./claude-code.nix;
   kitten = import ./kitten.nix;
-  opencode = import ./opencode.nix;
-  # nodejs_24 = import ./nodejs_24.nix;
+  opencode = import ./opencode.nix { inherit inputs; };
 }

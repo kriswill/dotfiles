@@ -1,3 +1,4 @@
-_final: prev: {
-  opencode = prev.callPackage ../pkgs/opencode/package.nix { };
+{ inputs }:
+_final: _prev: {
+  opencode = inputs.opencode.packages.aarch64-darwin.default;
 }
