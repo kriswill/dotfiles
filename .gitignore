@@ -1,7 +1,6 @@
 .direnv
 pkgs/result
 **/.DS_Store
-CLAUDE.md
 .obsidian
 **/result
 .claude
