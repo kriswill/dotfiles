@@ -36,3 +36,6 @@ eval "$(determinate-nixd completion zsh)"
 
 # allows brew commands
 eval "$(/opt/homebrew/bin/brew shellenv)"
+
+# bun global packages
+export PATH="$HOME/.bun/bin:$PATH"

@@ -26,6 +26,7 @@
       systemPackages = [
         pkgs.iproute2mac # ip command (like linux)
         pkgs.home-manager
+        pkgs.pstree
       ];
       # ++ [
       #   inputs.fh.packages.${pkgs.stdenv.hostPlatform.system}.default
