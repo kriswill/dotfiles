@@ -23,7 +23,7 @@
               black # Python
               gofumpt # stricter gofmt
               isort # Python
-              nixfmt-rfc-style
+              nixfmt
               prettierd # Multiple language formatter
               shfmt
               stylua # Lua
