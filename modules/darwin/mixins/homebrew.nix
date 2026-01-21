@@ -15,6 +15,7 @@
         "zerotier-one"
         "1password-cli"
         "karabiner-elements"
+        "steipete/tap/codexbar"
         {
           name = "chromium";
           args = {
