@@ -10,12 +10,14 @@
         cleanup = "zap";
         autoUpdate = true;
       };
+      taps = [
+        "steipete/tap"
+      ];
       casks = [
         "rwts-pdfwriter"
         "zerotier-one"
         "1password-cli"
         "karabiner-elements"
-        "steipete/tap/codexbar"
         {
           name = "chromium";
           args = {
@@ -27,6 +29,7 @@
           greedy = true;
         }
         "ghostty"
+        "steipete/tap/codexbar"
       ];
       brews = [ ];
       # SLOW!
