@@ -44,7 +44,7 @@
               lua-language-server # Lua (lua_ls)
               lua5_1
               luarocks
-              marksman # Markdown
+              zk # Markdown LSP (Go-based, replaces marksman which requires .NET/Swift)
               nil
               tofu-ls # opentofu/terraform
               pyright

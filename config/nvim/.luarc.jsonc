@@ -1,12 +1,23 @@
 {
-  "Lua.diagnostics.globals": ["vim"],
-  "workspace": {
-    "checkThirdParty": false,
-    "library": [
-      "$VIMRUNTIME/lua",
-      /* nvim plugins */
-      "~/.local/share/nvim/lazy/snacks.nvim/lua",
-    ]
+  "Lua": {
+    "diagnostics": {
+      "globals": ["vim"]
+    },
+    "runtime": {
+      "version": "LuaJIT"
+    },
+    "workspace": {
+      "checkThirdParty": false,
+      "library": [
+        "$VIMRUNTIME/lua",
+        "$VIMRUNTIME/lua/vim/lsp",
+        "$VIMRUNTIME/lua/vim/treesitter",
+        "$VIMRUNTIME/lua/vim/uri.lua",
+        "$VIMRUNTIME/lua/vim/uv.lua",
+
+        /* nvim plugins */
+        "~/.local/share/nvim/lazy/snacks.nvim/lua"
+      ]
+    }
   }
 }
-

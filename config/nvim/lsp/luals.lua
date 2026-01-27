@@ -12,4 +12,16 @@ return {
     ".git",
   },
   filetypes = { "lua" },
+
+  settings = {
+    Lua = {
+      runtime = { version = "LuaJIT" },
+      diagnostics = { globals = { "vim" } },
+      workspace = {
+        checkThirdParty = false,
+        -- let LuaLS discover all runtime files (plugins + vim runtime) automatically
+        library = vim.api.nvim_get_runtime_file("", true),
+      },
+    },
+  },
 }

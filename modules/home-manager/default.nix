@@ -44,6 +44,7 @@
       nix-tree # analyze disk usage by nix packages
       nodejs_24
       ripgrep # fast grep replacement
+      sqlite
       tldr # simplified man pages
       tree # print directory trees
       uv # one python tool to rule them all!
