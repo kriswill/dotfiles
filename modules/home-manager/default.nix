@@ -4,7 +4,14 @@
   pkgs,
   ...
 }:
-
+let
+  # Custom sqlite with loadable extension support for sqlite-vec and qmd
+  sqliteWithExtensions = pkgs.sqlite.overrideAttrs (old: {
+    env = (old.env or { }) // {
+      NIX_CFLAGS_COMPILE = (old.env.NIX_CFLAGS_COMPILE or "") + " -DSQLITE_ENABLE_LOAD_EXTENSION=1";
+    };
+  });
+in
 {
   imports = lib.autoImport ./.;
   options.kriswill.enable = lib.mkEnableOption "Kris' home module";
@@ -22,6 +29,7 @@
       starship.enable = lib.mkDefault true;
       yazi.enable = lib.mkDefault true;
       glow.enable = lib.mkDefault true;
+      zk.enable = lib.mkDefault true;
       # vscode.enable = lib.mkDefault false;
     };
     home.packages = with pkgs; [
@@ -44,7 +52,8 @@
       nix-tree # analyze disk usage by nix packages
       nodejs_24
       ripgrep # fast grep replacement
-      sqlite
+      sqliteWithExtensions
+      sqlite-vec
       tldr # simplified man pages
       tree # print directory trees
       uv # one python tool to rule them all!
@@ -64,6 +73,7 @@
         EDITOR = neovim;
         VISUAL = neovim;
         MANPAGER = "${neovim} +Man!";
+        BREW_PREFIX = "${sqliteWithExtensions.out}"; # qmd looks for ${BREW_PREFIX}/lib/libsqlite3.dylib
       };
     programs = {
       bat.enable = lib.mkDefault true;
