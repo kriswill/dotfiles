@@ -39,3 +39,6 @@ eval "$(/opt/homebrew/bin/brew shellenv)"
 
 # bun global packages
 export PATH="$HOME/.bun/bin:$PATH"
+
+# local bin directory
+export PATH="$HOME/.local/bin:$PATH"
