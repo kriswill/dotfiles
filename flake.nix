@@ -13,13 +13,6 @@
       system = "aarch64-darwin";
       pkgs = import nixpkgs {
         inherit system;
-        config = {
-          allowUnfreePredicate =
-            pkg:
-            builtins.elem (nixpkgs.lib.getName pkg) [
-              "claude-code"
-            ];
-        };
       };
       lib = nixpkgs.lib.extend (
         _: _:
@@ -31,7 +24,6 @@
     {
       inherit lib;
       packages.${system} = {
-        claude-code = pkgs.callPackage ./pkgs/claude-code/package.nix { };
         kitten = pkgs.callPackage ./pkgs/kitten.nix { };
         iv = pkgs.callPackage ./pkgs/iv.nix { };
       };

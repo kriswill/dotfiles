@@ -24,7 +24,6 @@ Platform: aarch64-darwin (Apple Silicon only). Flake-based with custom modular s
 - `deadnix .` - Find unused Nix code
 
 **Maintenance:**
-- `scripts/update-claude-code.sh` - Update claude-code package version
 - `scripts/update-opencode.sh` - Update opencode package version
 
 ## Code Style - Nix
@@ -99,7 +98,7 @@ Add to `allowUnfreePredicate` in `flake.nix`:
 ```nix
 allowUnfreePredicate = pkg:
   builtins.elem (nixpkgs.lib.getName pkg) [
-    "claude-code"
+    "unfree-package-name"
   ];
 ```
 
@@ -127,9 +126,9 @@ allowUnfreePredicate = pkg:
 ## Naming Conventions
 
 - **Module options:** `kriswill.<feature>.enable` (e.g., `kriswill.neovim.enable`)
-- **Packages:** kebab-case (e.g., `claude-code`, `kitten`, `tofu-ls`)
+- **Packages:** kebab-case (e.g., `kitten`, `iv`, `tofu-ls`)
 - **Nix functions:** camelCase (e.g., `mkDarwin`, `autoImport`, `mkProgramOption`)
-- **Files:** kebab-case for multi-word (e.g., `alias-en0.nix`, `update-claude-code.sh`)
+- **Files:** kebab-case for multi-word (e.g., `alias-en0.nix`, `update-opencode.sh`)
 - **Hosts:** Descriptive names (e.g., `k`, `SOC-Kris-Williams`)
 - **Shell variables:** `UPPER_CASE` for constants, `lower_case` for locals
 

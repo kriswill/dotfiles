@@ -75,11 +75,7 @@
     # Cannot let nix-darwin control nix when using determinate
     nix.enable = lib.mkForce false;
     nixpkgs = {
-      config.allowUnfreePredicate =
-        pkg:
-        builtins.elem (lib.getName pkg) [
-          "claude-code"
-        ];
+      config.allowUnfree = false;
     };
   };
 }

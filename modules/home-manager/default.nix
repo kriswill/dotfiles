@@ -35,7 +35,6 @@ in
     home.packages = with pkgs; [
       age # encryption tool
       bun
-      claude-code # anthropic-ai
       comma # https://github.com/nix-community/comma
       fd # file finding
       figlet # text to big fancy letters in ASCII
