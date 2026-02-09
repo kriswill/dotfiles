@@ -41,13 +41,13 @@ in
       figlet # text to big fancy letters in ASCII
       go # an awesome language
       grc # generic text colorizer
-      gpg # old ass signature verifier
+      gnupg # signature verifier
       jq # json querying
       just # better make
       keycastr # keystroke visualizer
       kitten # kitty utilities (icat, diff, themes, etc.)
       localsend # share files with other devices on the local network
-      mactop
+      # mactop
       ncdu # analyze disk usage
       nix-index # local database of nixpkgs
       nix-output-monitor # better visual output for nix builds

@@ -30,7 +30,6 @@
         cat = "bat";
         ".." = "cd ..;";
         "..." = ".. ..";
-        # lg = "${pkgs.lazygit}/bin/lazygit";
         ff = "${pkgs.fastfetch}/bin/fastfetch";
         gv = "NVIM_APPNAME=gman nvim";
       };

@@ -12,6 +12,7 @@
       };
       taps = [
         "steipete/tap"
+        "marcus/tap"
       ];
       casks = [
         "rwts-pdfwriter"
@@ -31,7 +32,9 @@
         "ghostty"
         "steipete/tap/codexbar"
       ];
-      brews = [ ];
+      brews = [
+        "marcus/tap/td"
+      ];
       # SLOW!
       # masApps = {
       #   "Xcode" = 497799835;

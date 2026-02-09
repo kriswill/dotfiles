@@ -5,3 +5,4 @@ pkgs/result
 **/result
 .claude
 .claude/settings.local.json
+.todos/
