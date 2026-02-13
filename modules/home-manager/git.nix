@@ -43,8 +43,8 @@
             br = "branch";
             co = "checkout";
             st = "status";
-            ls = ''log --pretty=format:"%C(yellow)%h%Cred%d\\ %Creset%s%Cblue\\ [%cn]" --decorate'';
-            ll = ''log --pretty=format:"%C(yellow)%h%Cred%d\\ %Creset%s%Cblue\\ [%cn]" --decorate --numstat'';
+            ls = "!git log --pretty=format:'%C(yellow)%h%Cred%d %Creset%s%Cblue [%cn]%Creset %G?' --color=always --decorate \"$@\" | sed 's/ G$/ 🔒/;s/ N$/ ➖/;s/ [BUEXYR]$/ ⚠️/' | less -RFX";
+            ll = "!git log --pretty=format:'%C(yellow)%h%Cred%d %Creset%s%Cblue [%cn]%Creset %G?' --color=always --decorate --numstat \"$@\" | sed 's/ G$/ 🔒/;s/ N$/ ➖/;s/ [BUEXYR]$/ ⚠️/' | less -RFX";
             cm = "commit -m";
             ca = "commit -am";
             dc = "diff --cached";
