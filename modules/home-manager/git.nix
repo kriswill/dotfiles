@@ -11,16 +11,21 @@
   config = lib.mkIf config.kriswill.git.enable (
     let
       rg = "${pkgs.ripgrep}/bin/rg";
+      email = "115474+kriswill@users.noreply.github.com";
+      sshPubKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBxqhXoAlCKYNwsB1YrszftURThiCI94oeR0W9EDhrLy";
     in
     {
       home.packages = with pkgs; [
-
         diff-so-fancy # git diff with colors
         git-crypt # git files encryption
         tig # diff and commit view
       ];
 
       programs.gh.enable = true;
+
+      xdg.configFile."git/allowed_signers".text = ''
+        ${email} ${sshPubKey}
+      '';
 
       programs.git = {
         enable = true;
@@ -45,7 +50,7 @@
             dc = "diff --cached";
           };
           user = {
-            email = "115474+kriswill@users.noreply.github.com";
+            inherit email;
             name = "Kris Williams";
           };
           core = {
@@ -69,10 +74,12 @@
             "https://gitlab.com/".insteadOf = "gl:";
             "ssh://git@gitlab.com".pushInsteadOf = "gl:";
           };
-          #signing = {
-          #  key = "121D4302A64B2261";
-          #  signByDefault = true;
-          #};
+          user.signingkey = sshPubKey;
+          gpg.format = "ssh";
+          gpg.ssh.program = "/Applications/1Password.app/Contents/MacOS/op-ssh-sign";
+          gpg.ssh.allowedSignersFile = "~/.config/git/allowed_signers";
+          commit.gpgsign = true;
+          tag.gpgsign = true;
         };
       }
       // (pkgs.sxm.git or { });
