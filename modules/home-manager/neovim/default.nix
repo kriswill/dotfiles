@@ -84,7 +84,6 @@
         ln = config.lib.file.mkOutOfStoreSymlink;
       in
       {
-
         "nvim/lua".source = ln nvimDir + "/lua";
         "nvim/lsp".source = ln nvimDir + "/lsp";
         "nvim/ftplugin".source = ln nvimDir + "/ftplugin";

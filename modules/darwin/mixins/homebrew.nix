@@ -15,6 +15,7 @@
         "marcus/tap"
       ];
       casks = [
+        "podman-desktop"
         "rwts-pdfwriter"
         "zerotier-one"
         "1password-cli"
