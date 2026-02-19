@@ -3,4 +3,5 @@
 #
 {
   kriswill.alias-en0.enable = true;
+  kriswill.dnsmasq.enable = true;
 }
