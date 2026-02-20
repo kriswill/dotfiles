@@ -10,6 +10,7 @@
   config = {
     kriswill = {
       homebrew.enable = lib.mkDefault true;
+      ghostty.enable = lib.mkDefault true;
     };
     system = {
       # Used for backwards compatibility, please read the changelog before changing.

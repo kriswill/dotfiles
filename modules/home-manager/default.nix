@@ -22,6 +22,7 @@ in
       # kitty.enable = lib.mkDefault false;
       neovim.enable = lib.mkDefault true;
       tmux.enable = lib.mkDefault true;
+      ghostty.enable = lib.mkDefault true;
       # brave.enable = lib.mkDefault false;
       zsh.enable = lib.mkDefault true;
       git.enable = lib.mkDefault true;

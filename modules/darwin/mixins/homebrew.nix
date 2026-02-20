@@ -30,7 +30,6 @@
           name = "launchcontrol";
           greedy = true;
         }
-        "ghostty"
         "steipete/tap/codexbar"
       ];
       brews = [
