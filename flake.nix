@@ -29,7 +29,7 @@
       };
       darwinConfigurations = {
         k = lib.mkDarwin ./hosts/k "k";
-        mini = lib.mkDarwin ./hosts/k "k";
+        mini = lib.mkDarwin ./hosts/mini "k";
         SOC-Kris-Williams = lib.mkDarwin ./hosts/SOC-Kris-Williams "k";
       };
       devShells.${system}.default = pkgs.mkShell {
