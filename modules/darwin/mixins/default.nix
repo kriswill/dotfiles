@@ -11,6 +11,7 @@
     kriswill = {
       homebrew.enable = lib.mkDefault true;
       ghostty.enable = lib.mkDefault true;
+      macos-defaults.enable = lib.mkDefault true;
     };
     system = {
       # Used for backwards compatibility, please read the changelog before changing.
@@ -72,6 +73,10 @@
       zsh.enable = true;
       nh.enable = true;
     };
+
+    users.users.k.openssh.authorizedKeys.keys = [
+      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBxqhXoAlCKYNwsB1YrszftURThiCI94oeR0W9EDhrLy"
+    ];
 
     # Cannot let nix-darwin control nix when using determinate
     nix.enable = lib.mkForce false;

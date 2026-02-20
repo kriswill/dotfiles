@@ -208,6 +208,7 @@ Located in `lib/default.nix`:
 1. Create file in `modules/darwin/` or `modules/home-manager/`
 2. Follow standard structure: `options` with `kriswill.<feature>.enable` + `config` with `lib.mkIf`
 3. File is auto-discovered via `lib.autoImport` in parent `default.nix`
+4. **Must `git add` new files before `nix build`** — flakes only see git-tracked files
 
 **Adding a Custom Package:**
 
