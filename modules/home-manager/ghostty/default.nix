@@ -14,6 +14,10 @@
       xdg.configFile = {
         "ghostty/config".source = ln configDir + "/config";
       };
+      # Symlink ghostty terminfo to ~/.terminfo so it's discoverable
+      # before TERMINFO_DIRS is set (fixes SSH sessions where the
+      # nix-darwin set-environment script runs before env vars are exported)
+      home.file.".terminfo".source = ln "/Applications/Ghostty.app/Contents/Resources/terminfo";
     }
   );
 }
