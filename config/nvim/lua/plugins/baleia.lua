@@ -1,6 +1,7 @@
 return {
   "m00qek/baleia.nvim",
   version = "*",
+  submodules = false,
   config = function()
     local baleia = require("baleia").setup({})
 
