@@ -17,7 +17,7 @@ in
 {
   mkHomeManager = username: {
     home-manager = {
-      backupFileExtension = "backup";
+      backupFileExtension = "hm.bak";
       useUserPackages = true;
       useGlobalPkgs = true;
       users."${username}" = {

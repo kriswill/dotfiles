@@ -17,6 +17,7 @@ in
   options.kriswill.enable = lib.mkEnableOption "Kris' home module";
   config = lib.mkIf config.kriswill.enable {
     kriswill = {
+      mkalias.enable = lib.mkDefault true;
       fastfetch.enable = lib.mkDefault true;
       # firefox.enable = lib.mkDefault false;
       # kitty.enable = lib.mkDefault false;
@@ -55,6 +56,7 @@ in
       nix-output-monitor # better visual output for nix builds
       nix-tree # analyze disk usage by nix packages
       nodejs_24
+      podman-desktop
       ripgrep # fast grep replacement
       sqliteWithExtensions
       sqlite-vec

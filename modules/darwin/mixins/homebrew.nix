@@ -15,7 +15,6 @@
         "marcus/tap"
       ];
       casks = [
-        "podman-desktop"
         "rwts-pdfwriter"
         "zerotier-one"
         "1password-cli"
@@ -30,7 +29,6 @@
           name = "launchcontrol";
           greedy = true;
         }
-        "steipete/tap/codexbar"
       ];
       brews = [
         "marcus/tap/td"
