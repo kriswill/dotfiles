@@ -7,13 +7,16 @@
   "compose.binary.installComposeSystemWide": true,
   "kubectl.binary.installKubectlSystemWide": true,
   "window.bounds": {
-    "x": 565,
-    "y": 93,
+    "x": 553,
+    "y": 162,
     "width": 1771,
     "height": 1210
   },
   "telemetry.check": true,
   "preferences.zoomLevel": 2,
-  "titleBar.searchBar": {},
+  "titleBar.searchBar": {
+    "remindAt": 1771813064433,
+    "disabled": false
+  },
   "dockerCompatibility.enabled": true
 }

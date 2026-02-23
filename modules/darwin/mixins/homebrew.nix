@@ -32,6 +32,7 @@
       ];
       brews = [
         "marcus/tap/td"
+        "marcus/tap/sidecar"
       ];
       # SLOW!
       # masApps = {
