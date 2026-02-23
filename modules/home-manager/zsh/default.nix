@@ -21,7 +21,7 @@
       };
 
       shellAliases = {
-        ls = "${pkgs.eza}/bin/eza --icons --hyperlink";
+        ls = "${lib.getExe pkgs.eza} --icons --hyperlink";
         ld = "ls -D";
         ll = "ls -lhF";
         la = "ls -lahF";
@@ -30,7 +30,7 @@
         cat = "bat";
         ".." = "cd ..;";
         "..." = ".. ..";
-        ff = "${pkgs.fastfetch}/bin/fastfetch";
+        ff = "${lib.getExe pkgs.fastfetch}";
         gv = "NVIM_APPNAME=gman nvim";
       };
 
