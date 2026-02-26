@@ -26,6 +26,7 @@
       packages.${system} = {
         kitten = pkgs.callPackage ./pkgs/kitten.nix { };
         iv = pkgs.callPackage ./pkgs/iv.nix { };
+        vtsls = pkgs.callPackage ./pkgs/vtsls { };
       };
       darwinConfigurations = {
         k = lib.mkDarwin ./hosts/k "k";
