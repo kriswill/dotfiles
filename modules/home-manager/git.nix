@@ -16,7 +16,6 @@
     in
     {
       home.packages = with pkgs; [
-        diff-so-fancy # git diff with colors
         git-crypt # git files encryption
         tig # diff and commit view
       ];
@@ -26,6 +25,16 @@
       xdg.configFile."git/allowed_signers".text = ''
         ${email} ${sshPubKey}
       '';
+
+      programs.delta = {
+        enable = true;
+        enableGitIntegration = true;
+        options = {
+          navigate = true;
+          side-by-side = true;
+          line-numbers = true;
+        };
+      };
 
       programs.git = {
         enable = true;
@@ -53,13 +62,10 @@
             inherit email;
             name = "Kris Williams";
           };
-          core = {
-            editor = "nvim";
-            pager = "diff-so-fancy | less --tabs=4 -RFX";
-          };
+          core.editor = "nvim";
           init.defaultBranch = "main";
           merge = {
-            conflictStyle = "diff3";
+            conflictStyle = "zdiff3";
             tool = "vim_mergetool";
           };
           mergetool."vim_mergetool" = {
