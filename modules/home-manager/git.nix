@@ -16,6 +16,7 @@
     in
     {
       home.packages = with pkgs; [
+        diffnav # git diff pager with file-tree navigator
         git-crypt # git files encryption
         tig # diff and commit view
       ];
@@ -44,6 +45,38 @@
           ".DS_Store"
         ];
         settings = {
+          user = {
+            inherit email;
+            name = "Kris Williams";
+            signingkey = sshPubKey;
+          };
+          core.editor = "nvim";
+          init.defaultBranch = "main";
+          pull.rebase = false;
+          push.autoSetupRemote = true;
+          pager = {
+            diff = "diffnav";
+            show = "diffnav";
+          };
+          merge = {
+            conflictStyle = "zdiff3";
+            tool = "vim_mergetool";
+          };
+          mergetool."vim_mergetool" = {
+            cmd = ''nvim -f -c "MergetoolStart" "$MERGED" "$BASE" "$LOCAL" "$REMOTE"'';
+            prompt = false;
+          };
+          gpg.format = "ssh";
+          gpg.ssh.program = "/Applications/1Password.app/Contents/MacOS/op-ssh-sign";
+          gpg.ssh.allowedSignersFile = "~/.config/git/allowed_signers";
+          commit.gpgsign = true;
+          tag.gpgsign = true;
+          url = {
+            "https://github.com/".insteadOf = "gh:";
+            "ssh://git@github.com".pushInsteadOf = "gh:";
+            "https://gitlab.com/".insteadOf = "gl:";
+            "ssh://git@gitlab.com".pushInsteadOf = "gl:";
+          };
           alias = {
             amend = "commit --amend -m";
             fixup = "!f(){ git reset --soft HEAD~\${1} && git commit --amend -C HEAD; };f";
@@ -58,34 +91,6 @@
             ca = "commit -am";
             dc = "diff --cached";
           };
-          user = {
-            inherit email;
-            name = "Kris Williams";
-          };
-          core.editor = "nvim";
-          init.defaultBranch = "main";
-          merge = {
-            conflictStyle = "zdiff3";
-            tool = "vim_mergetool";
-          };
-          mergetool."vim_mergetool" = {
-            cmd = ''nvim -f -c "MergetoolStart" "$MERGED" "$BASE" "$LOCAL" "$REMOTE"'';
-            prompt = false;
-          };
-          pull.rebase = false;
-          push.autoSetupRemote = true;
-          url = {
-            "https://github.com/".insteadOf = "gh:";
-            "ssh://git@github.com".pushInsteadOf = "gh:";
-            "https://gitlab.com/".insteadOf = "gl:";
-            "ssh://git@gitlab.com".pushInsteadOf = "gl:";
-          };
-          user.signingkey = sshPubKey;
-          gpg.format = "ssh";
-          gpg.ssh.program = "/Applications/1Password.app/Contents/MacOS/op-ssh-sign";
-          gpg.ssh.allowedSignersFile = "~/.config/git/allowed_signers";
-          commit.gpgsign = true;
-          tag.gpgsign = true;
         };
       }
       // (pkgs.sxm.git or { });
