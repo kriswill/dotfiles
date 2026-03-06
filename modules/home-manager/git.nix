@@ -16,7 +16,6 @@
     in
     {
       home.packages = with pkgs; [
-        diffnav # git diff pager with file-tree navigator
         git-crypt # git files encryption
         tig # diff and commit view
       ];
@@ -26,16 +25,6 @@
       xdg.configFile."git/allowed_signers".text = ''
         ${email} ${sshPubKey}
       '';
-
-      programs.delta = {
-        enable = true;
-        enableGitIntegration = true;
-        options = {
-          navigate = true;
-          side-by-side = true;
-          line-numbers = true;
-        };
-      };
 
       programs.git = {
         enable = true;
@@ -54,10 +43,6 @@
           init.defaultBranch = "main";
           pull.rebase = false;
           push.autoSetupRemote = true;
-          pager = {
-            diff = "diffnav";
-            show = "diffnav";
-          };
           merge = {
             conflictStyle = "zdiff3";
             tool = "vim_mergetool";

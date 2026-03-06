@@ -27,6 +27,7 @@ in
       karabiner.enable = lib.mkDefault true;
       # brave.enable = lib.mkDefault false;
       zsh.enable = lib.mkDefault true;
+      diffnav.enable = lib.mkDefault true;
       git.enable = lib.mkDefault true;
       ssh.enable = lib.mkDefault true;
       starship.enable = lib.mkDefault true;

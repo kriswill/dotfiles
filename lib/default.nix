@@ -15,6 +15,8 @@ let
     ;
 in
 {
+  kanagawa = import ./kanagawa.nix;
+
   mkHomeManager = username: {
     home-manager = {
       backupFileExtension = "hm.bak";
