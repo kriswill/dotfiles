@@ -7,8 +7,8 @@
   "compose.binary.installComposeSystemWide": true,
   "kubectl.binary.installKubectlSystemWide": true,
   "window.bounds": {
-    "x": 667,
-    "y": 137,
+    "x": 636,
+    "y": 74,
     "width": 1771,
     "height": 1210
   },
@@ -18,5 +18,7 @@
     "remindAt": 1771813064433,
     "disabled": false
   },
-  "dockerCompatibility.enabled": true
+  "dockerCompatibility.enabled": true,
+  "terminal.integrated.fontSize": 16,
+  "feedback.dialog": false
 }
