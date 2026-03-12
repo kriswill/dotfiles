@@ -20,13 +20,14 @@ in
       mkalias.enable = lib.mkDefault true;
       fastfetch.enable = lib.mkDefault true;
       # firefox.enable = lib.mkDefault false;
-      # kitty.enable = lib.mkDefault false;
+      kitty.enable = lib.mkDefault true;
       neovim.enable = lib.mkDefault true;
       tmux.enable = lib.mkDefault true;
       ghostty.enable = lib.mkDefault true;
       karabiner.enable = lib.mkDefault true;
       # brave.enable = lib.mkDefault false;
       zsh.enable = lib.mkDefault true;
+      direnv-nom.enable = lib.mkDefault true;
       diffnav.enable = lib.mkDefault true;
       git.enable = lib.mkDefault true;
       ssh.enable = lib.mkDefault true;
@@ -49,7 +50,6 @@ in
       jq # json querying
       just # better make
       keycastr # keystroke visualizer
-      kitten # kitty utilities (icat, diff, themes, etc.)
       localsend # share files with other devices on the local network
       # mactop
       ncdu # analyze disk usage
