@@ -32,6 +32,8 @@
         "..." = ".. ..";
         ff = "${lib.getExe pkgs.fastfetch}";
         gv = "NVIM_APPNAME=gman nvim";
+        claude-yolo = "claude --dangerously-skip-permissions";
+        cyolo = "claude --dangerously-skip-permissions";
       };
 
       initContent = builtins.readFile ./initExtra.sh;
