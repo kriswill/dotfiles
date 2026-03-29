@@ -2,7 +2,7 @@
   stdenv,
   lib,
   fetchFromGitHub,
-  nodejs_22,
+  nodejs_24,
   gitMinimal,
   gitSetupHook,
   pnpm_8,
@@ -13,7 +13,7 @@
   removeReferencesTo,
 }:
 let
-  pnpm' = pnpm_8.override { nodejs = nodejs_22; };
+  pnpm' = pnpm_8.override { nodejs = nodejs_24; };
 in
 stdenv.mkDerivation (finalAttrs: {
   pname = "vtsls";
@@ -28,7 +28,7 @@ stdenv.mkDerivation (finalAttrs: {
   };
 
   nativeBuildInputs = [
-    nodejs_22
+    nodejs_24
     gitMinimal
     gitSetupHook
     pnpmConfigHook
@@ -80,7 +80,7 @@ stdenv.mkDerivation (finalAttrs: {
 
     # Strip build-time nodejs references from vendored bin script shebangs.
     # The --bun flag on the wrapper ensures bun intercepts node shebangs at runtime.
-    find $out/lib/vtsls-language-server -type f -exec remove-references-to -t ${nodejs_22} {} +
+    find $out/lib/vtsls-language-server -type f -exec remove-references-to -t ${nodejs_24} {} +
 
     makeWrapper ${bun}/bin/bun $out/bin/vtsls \
       --add-flags "run --bun $out/lib/vtsls-language-server/packages/server/bin/vtsls.js"
