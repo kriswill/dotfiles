@@ -7,7 +7,10 @@
 {
   options.kriswill.podman-desktop.enable = lib.mkEnableOption "Podman Desktop";
   config = lib.mkIf config.kriswill.podman-desktop.enable {
-    home.packages = [ pkgs.podman-desktop ];
+    home.packages = [
+      pkgs.podman-desktop
+      pkgs.podman
+    ];
 
     xdg.configFile."containers/containers.conf".source = config.lib.file.mkOutOfStoreSymlink (
       config.home.homeDirectory + "/src/dotfiles/config/containers/containers.conf"

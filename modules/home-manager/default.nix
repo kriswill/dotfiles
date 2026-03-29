@@ -60,6 +60,7 @@ in
       ripgrep # fast grep replacement
       sqliteWithExtensions
       sqlite-vec
+      stoat-desktop
       tldr # simplified man pages
       tree # print directory trees
       uv # one python tool to rule them all!
