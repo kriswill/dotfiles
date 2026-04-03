@@ -7,8 +7,8 @@
   "compose.binary.installComposeSystemWide": true,
   "kubectl.binary.installKubectlSystemWide": true,
   "window.bounds": {
-    "x": 292,
-    "y": 90,
+    "x": 341,
+    "y": 89,
     "width": 1771,
     "height": 1210
   },
