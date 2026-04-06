@@ -10,6 +10,7 @@
     home.packages = [
       pkgs.podman-desktop
       pkgs.podman
+      pkgs.k9s
     ];
 
     xdg.configFile."containers/containers.conf".source = config.lib.file.mkOutOfStoreSymlink (

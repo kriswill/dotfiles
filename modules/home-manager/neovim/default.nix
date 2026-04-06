@@ -53,7 +53,7 @@
               vtsls # LSP wrapper for typescript extension of vscode
               yaml-language-server # YAML (yamlls)
               ;
-            typescript = pkgs.nodePackages.typescript;
+            typescript = pkgs.typescript;
           };
           ## Tools  ───────────────────────────────────────────────────
           tools = builtins.attrValues {
