@@ -28,6 +28,7 @@
 
       programs.git = {
         enable = true;
+        signing.format = null;
         ignores = [
           "*.direnv"
           "*.envrc"
