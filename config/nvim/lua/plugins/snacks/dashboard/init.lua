@@ -53,7 +53,27 @@ local banners = {
 return {
   enabled = true,
   preset = {
-    header = banners.hydra, -- Use the "dragon" banner as the header
-    banners = banners, -- Optionally expose all banners
+    header = banners.hydra,
+    banners = banners,
+  },
+  sections = {
+    { section = "header" },
+    { section = "keys", gap = 1, padding = 1 },
+    function()
+      local v = vim.version()
+      local stats = require("lazy.stats").stats()
+      local ms = (math.floor(stats.startuptime * 100 + 0.5) / 100)
+      return {
+        align = "center",
+        text = {
+          { "⚡ Neovim ", hl = "footer" },
+          { "v" .. v.major .. "." .. v.minor .. "." .. v.patch, hl = "special" },
+          { " loaded ", hl = "footer" },
+          { stats.loaded .. "/" .. stats.count, hl = "special" },
+          { " plugins in ", hl = "footer" },
+          { ms .. "ms", hl = "special" },
+        },
+      }
+    end,
   },
 }
