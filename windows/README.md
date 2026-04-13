@@ -112,6 +112,9 @@ profile.
 Because targets are symlinks, edits made in Windows Terminal / PowerShell
 / `.gitconfig` land directly in the repo — just `git add` + commit.
 
+The scoop import currently includes `gh` (GitHub CLI), `lazygit`, and
+`pwsh`. Add more by `scoop install <name>` then re-exporting.
+
 Refresh app lists after installing something new:
 
 ```powershell
