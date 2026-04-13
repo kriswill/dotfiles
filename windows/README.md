@@ -54,6 +54,12 @@ windows/
 `setup.ps1` backs up any existing file to `<path>.bak-<timestamp>` before
 replacing it with a symlink. Safe to re-run.
 
+## Related guides
+
+- [nerdfont-setup.md](./nerdfont-setup.md) — install pwsh 7, the
+  `NerdFonts` PSGallery module, JetBrainsMono Nerd Font, and wire it into
+  Windows Terminal as the default profile + font.
+
 ## Capturing changes back to the repo
 
 Because targets are symlinks, edits made in Windows Terminal / PowerShell
