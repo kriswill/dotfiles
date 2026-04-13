@@ -29,6 +29,13 @@
             "Updated": "2025-11-24T23:00:04.2500043-08:00"
         },
         {
+            "Version": "0.12.1",
+            "Info": "",
+            "Source": "main",
+            "Name": "neovim",
+            "Updated": "2026-04-12T17:44:01.8307756-07:00"
+        },
+        {
             "Version": "7.6.0",
             "Info": "",
             "Source": "main",
