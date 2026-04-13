@@ -1,0 +1,32 @@
+{
+    "apps": [
+        {
+            "Info": "",
+            "Source": "extras",
+            "Updated": "2025-11-24T23:00:04.2500043-08:00",
+            "Name": "lazygit",
+            "Version": "0.56.0"
+        },
+        {
+            "Info": "",
+            "Source": "main",
+            "Updated": "2026-04-12T16:49:15.0726375-07:00",
+            "Name": "pwsh",
+            "Version": "7.6.0"
+        }
+    ],
+    "buckets": [
+        {
+            "Name": "main",
+            "Source": "https://github.com/ScoopInstaller/Main.git",
+            "Updated": "2026-04-12T13:31:36-07:00",
+            "Manifests": 1493
+        },
+        {
+            "Name": "extras",
+            "Source": "https://github.com/ScoopInstaller/Extras",
+            "Updated": "2026-04-12T14:46:08-07:00",
+            "Manifests": 2291
+        }
+    ]
+}
