@@ -35,12 +35,20 @@ windows/
    git clone -b windows https://github.com/kriswill/dotfiles "$HOME\src\dotfiles"
    cd "$HOME\src\dotfiles"
    ```
-4. Enable symlinks without admin: Settings → Privacy & security → For
-   developers → **Developer Mode = On**. (Or run the next step from an
-   elevated shell.)
-5. Run setup:
+4. Allow symlink creation via **one** of:
+   - **Elevated shell** (simplest on a fresh box): right-click Windows
+     Terminal / PowerShell → *Run as administrator*. Works from either
+     Windows PowerShell 5.1 or pwsh 7 — confirmed working on Win11.
+   - **Developer Mode on** (no admin needed per run): Settings → Privacy
+     & security → For developers → **Developer Mode = On**.
+5. Run setup (from the elevated shell, if you went that route):
    ```powershell
    pwsh -ExecutionPolicy Bypass -File .\windows\setup.ps1 -InstallApps
+   ```
+   If pwsh isn't installed yet, the script also runs fine under Windows
+   PowerShell 5.1:
+   ```powershell
+   powershell -ExecutionPolicy Bypass -File .\windows\setup.ps1 -InstallApps
    ```
 
 `setup.ps1` backs up any existing file to `<path>.bak-<timestamp>` before
