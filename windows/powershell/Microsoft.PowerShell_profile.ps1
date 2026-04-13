@@ -6,3 +6,5 @@ if (-not (Get-Module -ListAvailable -Name NerdFonts)) {
     }
 }
 Import-Module NerdFonts -ErrorAction SilentlyContinue
+
+Import-Module KrisTools -ErrorAction SilentlyContinue

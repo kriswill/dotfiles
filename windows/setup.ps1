@@ -78,6 +78,26 @@ foreach ($t in $profileTargets) {
     }
 }
 
+# --- PowerShell custom modules (KrisTools, etc.) ---
+# Link each module dir into the user's per-host Modules path. Both pwsh 7
+# and Windows PowerShell 5.1 auto-discover modules placed there.
+$moduleSource = Join-Path $WindowsDir 'powershell\Modules'
+if (Test-Path $moduleSource) {
+    $moduleTargets = @(
+        "$HOME\Documents\PowerShell\Modules",
+        "$HOME\Documents\WindowsPowerShell\Modules",
+        "$HOME\OneDrive\Documents\PowerShell\Modules",
+        "$HOME\OneDrive\Documents\WindowsPowerShell\Modules"
+    )
+    foreach ($modDir in (Get-ChildItem -Directory $moduleSource)) {
+        foreach ($base in $moduleTargets) {
+            if (Test-Path (Split-Path -Parent $base)) {
+                New-Symlink -LinkPath (Join-Path $base $modDir.Name) -TargetPath $modDir.FullName
+            }
+        }
+    }
+}
+
 # --- Windows Terminal ---
 $wtSource = Join-Path $WindowsDir 'windows-terminal\settings.json'
 $wtTarget = "$env:LOCALAPPDATA\Packages\Microsoft.WindowsTerminal_8wekyb3d8bbwe\LocalState\settings.json"
