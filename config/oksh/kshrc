@@ -30,6 +30,7 @@ HISTFILE=$HOME/.ksh_history
 HISTSIZE=10000
 HISTCONTROL=ignoredups:ignorespace
 export HISTFILE HISTSIZE HISTCONTROL
+export PATH=/etc/profiles/per-user/k/bin:$PATH
 
 # ---------------------------------------------------------------------------
 # environment
@@ -114,19 +115,43 @@ fi
 # ---------------------------------------------------------------------------
 # direnv + nix-direnv hook
 # ---------------------------------------------------------------------------
-# oksh/mksh lack PROMPT_COMMAND, so direnv is driven via PS1 command
-# substitution — oksh re-expands $(...) in PS1 on every prompt, giving us the
-# same "fire on cd / after each command" behavior bash/zsh get from
-# PROMPT_COMMAND. `direnv export bash` emits plain POSIX export/unset lines
-# that oksh evals cleanly. nix-direnv's stdlib at
-# ~/.config/direnv/lib/hm-nix-direnv.sh is auto-sourced by direnv itself, so
-# `use flake` in a .envrc resolves once the hook is live.
+# Two oksh quirks force a non-standard hook shape here:
 #
-# Runs after starship+zoxide so _direnv_hook prepends to (rather than is
-# overwritten by) their PS1 setup.
-if command -v direnv >/dev/null 2>&1; then
+#   1. oksh has no PROMPT_COMMAND, so we drive direnv from PS1 command
+#      substitution — ksh re-expands $(...) in PS1 on every prompt draw,
+#      giving us the same "fire on cd / after each command" trigger that
+#      bash/zsh get from PROMPT_COMMAND. Must run after starship+zoxide so
+#      _direnv_hook *prepends* to (rather than is clobbered by) their PS1.
+#
+#   2. `direnv export bash` / `direnv export zsh` emit variable names using
+#      bash ANSI-C quoting, e.g. `unset $'patches'`, `unset $'shellHook'`,
+#      `export $'out'=...`. These names come from nix's flake dev-env dump.
+#      ibara/oksh does NOT support $'...' quoting — it parses $'patches'
+#      as the `$` parameter (PID, read-only) followed by the literal string
+#      'patches', so `unset $'patches'` becomes `unset $ patches` and
+#      errors with "oksh: unset: $ is read only" on every cd out of a
+#      flake directory.
+#
+#      Fix: use `direnv export json` and translate through jq into POSIX-
+#      safe `unset NAME` / `export NAME='value'` statements, then eval.
+#      jq's @sh handles value quoting and embedded newlines correctly
+#      (shellHook etc.) — something the sed-strip shortcut cannot.
+#
+# nix-direnv's stdlib at ~/.config/direnv/lib/hm-nix-direnv.sh is
+# auto-sourced by direnv itself, so `use flake` in .envrc resolves once
+# the hook is live.
+if command -v direnv >/dev/null 2>&1 && command -v jq >/dev/null 2>&1; then
     _direnv_hook() {
-        eval "$(direnv export bash)"
+        _de_json=$(direnv export json) || { unset _de_json; return; }
+        [ -z "$_de_json" ] && { unset _de_json; return; }
+        eval "$(printf %s "$_de_json" | jq -r '
+            to_entries[]
+            | if .value == null
+              then "unset " + .key
+              else "export " + .key + "=" + (.value | @sh)
+              end
+        ')"
+        unset _de_json
     }
     case "${PS1-}" in
         *'$(_direnv_hook)'*) ;;
