@@ -103,8 +103,10 @@ alias ga='git add'
 # ---------------------------------------------------------------------------
 # prompt — starship first, then zoxide last so its PS1 hook survives
 # ---------------------------------------------------------------------------
-[ -f "$HOME/src/starship-oksh/starship-init-oksh.sh" ] \
-    && . "$HOME/src/starship-oksh/starship-init-oksh.sh"
+# Installed by the home-manager oksh module as a nix derivation; path is
+# stable across rebuilds (symlink → /nix/store/...-starship-init-oksh.sh).
+[ -f "$HOME/.config/oksh/starship-init.sh" ] \
+    && . "$HOME/.config/oksh/starship-init.sh"
 
 # cd -> zoxide (smart directory jumping); must come after starship so
 # zoxide's prompt hook wraps starship's PS1 rather than being overwritten.
