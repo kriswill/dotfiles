@@ -1,0 +1,135 @@
+# ~/.kshrc — oksh configuration
+#
+# NOTE ON SYNTAX HIGHLIGHTING:
+# oksh (pdksh lineage) has no hook for redrawing the input buffer per-keystroke,
+# so inline, fish/zsh-style command-line syntax highlighting (zsh-syntax-highlighting,
+# ble.sh) is NOT achievable in oksh. A search of GitHub confirms this — every
+# published oksh/pdksh rc file relies on:
+#   1. a colored prompt (starship, custom PS1),
+#   2. colored *output* from the tools it invokes (ls/grep/bat/eza), and
+#   3. a syntax-highlighted pager (bat) for viewing files.
+# That is the approximation applied below.
+
+# bail early for non-interactive shells
+case $- in *i*) ;; *) return;; esac
+
+# ---------------------------------------------------------------------------
+# line editor — vi mode
+# ---------------------------------------------------------------------------
+set -o vi
+
+# handy bindings that survive vi insert mode
+bind -m '^L=clear^J'          # Ctrl-L clears the screen
+bind '^I=complete-list'       # Tab completion lists candidates
+bind '^[^I=complete'          # Esc-Tab performs completion
+
+# ---------------------------------------------------------------------------
+# history
+# ---------------------------------------------------------------------------
+HISTFILE=$HOME/.ksh_history
+HISTSIZE=10000
+HISTCONTROL=ignoredups:ignorespace
+export HISTFILE HISTSIZE HISTCONTROL
+
+# ---------------------------------------------------------------------------
+# environment
+# ---------------------------------------------------------------------------
+export EDITOR=nvim
+export VISUAL=$EDITOR
+export PAGER='less -R'
+export LESS='-R -i -M -w -z-4'
+export CLICOLOR=1                       # enable BSD ls colors on macOS
+export LSCOLORS=ExGxFxdaCxDaDahbadacec
+
+# ---------------------------------------------------------------------------
+# aliases — modern-CLI substitutions, conditional on tool availability
+# ---------------------------------------------------------------------------
+
+# ls  -> eza (preferred) or exa
+if command -v eza >/dev/null 2>&1; then
+    alias ls='eza --group-directories-first'
+    alias l='eza -lbF --git --group-directories-first'
+    alias ll='eza -lbhHigUmuSa --git --color-scale --group-directories-first'
+    alias la='eza -lbhHigUmuSa@ --git --color-scale --group-directories-first'
+    alias lt='eza --tree --level=2 --group-directories-first'
+    alias tree='eza --tree --group-directories-first'
+else
+    alias ls='ls -FG'
+    alias ll='ls -lhFG'
+    alias la='ls -lhAFG'
+fi
+
+# cat -> bat (syntax-highlighted viewer)
+if command -v bat >/dev/null 2>&1; then
+    alias cat='bat --paging=never'
+    alias less='bat'
+    export MANPAGER="sh -c 'col -bx | bat -l man -p'"
+    export BAT_THEME=ansi
+fi
+
+# grep -> ripgrep
+if command -v rg >/dev/null 2>&1; then
+    alias grep='rg'
+    alias g='rg'
+fi
+
+# find -> fd
+if command -v fd >/dev/null 2>&1; then
+    alias find='fd'
+fi
+
+# small quality-of-life
+alias ..='cd ..'
+alias ...='cd ../..'
+alias ....='cd ../../..'
+alias h='fc -l | tail -40'
+alias j='jobs -l'
+alias df='df -h'
+alias du='du -h'
+alias mv='mv -i'
+alias cp='cp -i'
+alias rm='rm -i'
+alias reload='. ~/.kshrc'
+
+# git shortcuts
+alias gs='git status -sb'
+alias gd='git diff'
+alias gl='git log --oneline --graph --decorate -20'
+alias gp='git pull --ff-only'
+alias gc='git commit -v'
+alias ga='git add'
+
+# ---------------------------------------------------------------------------
+# prompt — starship first, then zoxide last so its PS1 hook survives
+# ---------------------------------------------------------------------------
+[ -f "$HOME/src/starship-oksh/starship-init-oksh.sh" ] \
+    && . "$HOME/src/starship-oksh/starship-init-oksh.sh"
+
+# cd -> zoxide (smart directory jumping); must come after starship so
+# zoxide's prompt hook wraps starship's PS1 rather than being overwritten.
+if command -v zoxide >/dev/null 2>&1; then
+    eval "$(zoxide init --cmd cd posix --hook prompt)"
+fi
+
+# ---------------------------------------------------------------------------
+# direnv + nix-direnv hook
+# ---------------------------------------------------------------------------
+# oksh/mksh lack PROMPT_COMMAND, so direnv is driven via PS1 command
+# substitution — oksh re-expands $(...) in PS1 on every prompt, giving us the
+# same "fire on cd / after each command" behavior bash/zsh get from
+# PROMPT_COMMAND. `direnv export bash` emits plain POSIX export/unset lines
+# that oksh evals cleanly. nix-direnv's stdlib at
+# ~/.config/direnv/lib/hm-nix-direnv.sh is auto-sourced by direnv itself, so
+# `use flake` in a .envrc resolves once the hook is live.
+#
+# Runs after starship+zoxide so _direnv_hook prepends to (rather than is
+# overwritten by) their PS1 setup.
+if command -v direnv >/dev/null 2>&1; then
+    _direnv_hook() {
+        eval "$(direnv export bash)"
+    }
+    case "${PS1-}" in
+        *'$(_direnv_hook)'*) ;;
+        *) PS1='$(_direnv_hook)'"${PS1-}" ;;
+    esac
+fi

@@ -27,6 +27,7 @@ in
       karabiner.enable = lib.mkDefault true;
       # brave.enable = lib.mkDefault false;
       zsh.enable = lib.mkDefault true;
+      oksh.enable = lib.mkDefault true;
       direnv-nom.enable = lib.mkDefault true;
       diffnav.enable = lib.mkDefault true;
       git.enable = lib.mkDefault true;
@@ -57,7 +58,6 @@ in
       nix-output-monitor # better visual output for nix builds
       nix-tree # analyze disk usage by nix packages
       nodejs_24
-      oksh # OpenBSD korn shell
       ripgrep # fast grep replacement
       sqliteWithExtensions
       sqlite-vec
