@@ -1,0 +1,10 @@
+[filter "lfs"]
+	required = true
+	clean = git-lfs clean -- %f
+	smudge = git-lfs smudge -- %f
+	process = git-lfs filter-process
+[user]
+	name = Kris Williams
+	email = 115474+kriswill@users.noreply.github.com
+[safe]
+	directory = C:/Program Files (x86)/World of Warcraft/_retail_
