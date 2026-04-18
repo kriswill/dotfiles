@@ -15,7 +15,7 @@ in
 
     programs.delta = {
       enable = true;
-      enableGitIntegration = config.programs.git.enable;
+      enableGitIntegration = false;
       options = {
         syntax-theme = "ansi";
         dark = true;

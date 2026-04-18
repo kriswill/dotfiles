@@ -9,8 +9,8 @@
   "window.bounds": {
     "x": 465,
     "y": 60,
-    "width": 1771,
-    "height": 1210
+    "width": 2095,
+    "height": 1380
   },
   "telemetry.check": true,
   "preferences.zoomLevel": 2,
@@ -20,5 +20,9 @@
   },
   "dockerCompatibility.enabled": true,
   "terminal.integrated.fontSize": 16,
-  "feedback.dialog": false
+  "feedback.dialog": false,
+  "statusbarProviders.showProviders": {
+    "remindAt": 1776289361846,
+    "disabled": false
+  }
 }

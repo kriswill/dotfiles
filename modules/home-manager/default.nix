@@ -57,6 +57,7 @@ in
       nix-output-monitor # better visual output for nix builds
       nix-tree # analyze disk usage by nix packages
       nodejs_24
+      oksh # OpenBSD korn shell
       ripgrep # fast grep replacement
       sqliteWithExtensions
       sqlite-vec
