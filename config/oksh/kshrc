@@ -30,7 +30,7 @@ HISTFILE=$HOME/.ksh_history
 HISTSIZE=10000
 HISTCONTROL=ignoredups:ignorespace
 export HISTFILE HISTSIZE HISTCONTROL
-export PATH=/etc/profiles/per-user/k/bin:$PATH
+export PATH=$HOME/.local/bin:/etc/profiles/per-user/k/bin:$PATH
 
 # ---------------------------------------------------------------------------
 # environment
