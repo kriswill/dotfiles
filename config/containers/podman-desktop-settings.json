@@ -7,10 +7,10 @@
   "compose.binary.installComposeSystemWide": true,
   "kubectl.binary.installKubectlSystemWide": true,
   "window.bounds": {
-    "x": 465,
-    "y": 60,
-    "width": 2095,
-    "height": 1380
+    "x": 0,
+    "y": 0,
+    "width": 2048,
+    "height": 1152
   },
   "telemetry.check": true,
   "preferences.zoomLevel": 2,
