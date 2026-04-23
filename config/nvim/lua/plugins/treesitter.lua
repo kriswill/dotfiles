@@ -1,10 +1,8 @@
 return {
-  "nvim-treesitter/nvim-treesitter",
-  build = ":TSUpdate",
-  config = function()
-    local configs = require("nvim-treesitter.configs")
-
-    configs.setup({
+  src = "https://github.com/nvim-treesitter/nvim-treesitter",
+  trigger = "now",
+  setup = function()
+    require("nvim-treesitter.configs").setup({
       ensure_installed = {
         "bash",
         "c",
@@ -36,6 +34,18 @@ return {
           scope_incremental = false,
         },
       },
+    })
+
+    -- Run :TSUpdate after install/update (replaces lazy.nvim's build hook).
+    vim.api.nvim_create_autocmd("User", {
+      pattern = "PackChanged",
+      callback = function(args)
+        local d = args.data or {}
+        local name = d.spec and d.spec.name
+        if name == "nvim-treesitter" and (d.kind == "install" or d.kind == "update") then
+          vim.schedule(function() pcall(vim.cmd, "TSUpdate") end)
+        end
+      end,
     })
   end,
 }

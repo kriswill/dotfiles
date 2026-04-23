@@ -1,22 +1,17 @@
 return {
-  "nvim-lualine/lualine.nvim",
-  dependencies = {
-    "meuter/lualine-so-fancy.nvim",
+  src = "https://github.com/nvim-lualine/lualine.nvim",
+  trigger = "now",
+  deps = {
+    { src = "https://github.com/meuter/lualine-so-fancy.nvim" },
   },
-  enabled = true,
-  lazy = false,
-  event = { "BufReadPost", "BufNewFile", "VeryLazy" },
-  config = function()
-    -- Setup Kanagawa theme colors for lualine
+  setup = function()
     local kanagawa_theme = require("lualine.themes.kanagawa")
-    -- local icons = require("config.icons")
     require("lualine").setup({
       options = {
         theme = kanagawa_theme,
         globalstatus = true,
         icons_enabled = true,
         component_separators = { left = "│", right = "│" },
-        -- component_separators = { left = "|", right = "|" },
         section_separators = { left = "", right = "" },
         refresh = {
           statusline = 100,
@@ -41,18 +36,18 @@ return {
         lualine_c = {
           {
             "filename",
-            path = 1, -- 2 for full path
+            path = 1,
             symbols = {
-              modified = "  ",
-              readonly = "  ",
-              unnamed = "  ",
+              modified = "  ",
+              readonly = "  ",
+              unnamed = "  ",
             },
           },
-          { "fancy_diagnostics", sources = { "nvim_lsp" }, symbols = { error = " ", warn = " ", info = " " } },
+          { "fancy_diagnostics", sources = { "nvim_lsp" }, symbols = { error = " ", warn = " ", info = " " } },
           { "fancy_searchcount" },
         },
         lualine_x = {
-          { "fancy_branch", icon = { "", color = { fg = "#fc5603" } } },
+          { "fancy_branch", icon = { "", color = { fg = "#fc5603" } } },
           "fancy_diff",
           "fancy_lsp_servers",
           "progress",
@@ -64,12 +59,10 @@ return {
         lualine_a = {},
         lualine_b = {},
         lualine_c = { "filename" },
-        -- lualine_x = { "location" },
         lualine_y = {},
         lualine_z = {},
       },
       tabline = {},
-      -- extensions = { "neo-tree", "lazy" },
     })
   end,
 }
