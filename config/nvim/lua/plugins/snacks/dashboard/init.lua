@@ -61,17 +61,15 @@ return {
     { section = "keys", gap = 1, padding = 1 },
     function()
       local v = vim.version()
-      local stats = require("lazy.stats").stats()
-      local ms = (math.floor(stats.startuptime * 100 + 0.5) / 100)
+      local plugs = vim.pack.get()
       return {
         align = "center",
         text = {
           { "⚡ Neovim ", hl = "footer" },
           { "v" .. v.major .. "." .. v.minor .. "." .. v.patch, hl = "special" },
-          { " loaded ", hl = "footer" },
-          { stats.loaded .. "/" .. stats.count, hl = "special" },
-          { " plugins in ", hl = "footer" },
-          { ms .. "ms", hl = "special" },
+          { " with ", hl = "footer" },
+          { tostring(#plugs), hl = "special" },
+          { " plugins", hl = "footer" },
         },
       }
     end,
