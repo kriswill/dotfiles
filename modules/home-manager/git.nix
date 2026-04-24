@@ -29,10 +29,15 @@
       programs.git = {
         enable = true;
         signing.format = null;
+        lfs.enable = true;
         ignores = [
           "*.direnv"
           "*.envrc"
           ".DS_Store"
+          ".idea/"
+          ".claude"
+          "CLAUDE.md"
+          ".mcp.json"
         ];
         settings = {
           user = {
