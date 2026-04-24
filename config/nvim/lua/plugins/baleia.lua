@@ -7,7 +7,7 @@ return {
       baleia.once(vim.api.nvim_get_current_buf())
     end, {})
     vim.api.nvim_create_autocmd("BufWinEnter", {
-      pattern = { "*.log", "*conform*.log" },
+      pattern = { "*.log" },
       callback = function() baleia.automatically(vim.api.nvim_get_current_buf()) end,
     })
   end,

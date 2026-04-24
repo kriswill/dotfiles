@@ -24,8 +24,10 @@
               black # Python
               gofumpt # stricter gofmt
               isort # Python
+              libxml2 # provides xmllint for XML
               nixfmt
               prettierd # Multiple language formatter
+              rustfmt # Rust
               shfmt
               stylua # Lua
               yamlfmt
