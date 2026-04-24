@@ -10,6 +10,7 @@ vim.lsp.enable({
   "buf_ls",
   "css",
   "dockerfile",
+  "efm", -- umbrella for CLI linters (markdownlint/shellcheck/hadolint/yamllint/gitlint)
   "gopls",
   "html",
   "json",
