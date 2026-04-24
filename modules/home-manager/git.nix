@@ -63,6 +63,10 @@
             "https://gitlab.com/".insteadOf = "gl:";
             "ssh://git@gitlab.com".pushInsteadOf = "gl:";
           };
+          filter."normalize-podman-settings" = {
+            clean = ''${pkgs.jq}/bin/jq 'del(."window.bounds", ."titleBar.searchBar".remindAt, ."statusbarProviders.showProviders".remindAt)' '';
+            smudge = "cat";
+          };
           alias = {
             amend = "commit --amend -m";
             fixup = "!f(){ git reset --soft HEAD~\${1} && git commit --amend -C HEAD; };f";

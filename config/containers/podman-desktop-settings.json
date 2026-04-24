@@ -6,23 +6,15 @@
   "welcome.version": "initial",
   "compose.binary.installComposeSystemWide": true,
   "kubectl.binary.installKubectlSystemWide": true,
-  "window.bounds": {
-    "x": 0,
-    "y": 0,
-    "width": 2048,
-    "height": 1152
-  },
   "telemetry.check": true,
   "preferences.zoomLevel": 2,
   "titleBar.searchBar": {
-    "remindAt": 1771813064433,
     "disabled": false
   },
   "dockerCompatibility.enabled": true,
   "terminal.integrated.fontSize": 16,
   "feedback.dialog": false,
   "statusbarProviders.showProviders": {
-    "remindAt": 1776289361846,
     "disabled": false
   }
 }
