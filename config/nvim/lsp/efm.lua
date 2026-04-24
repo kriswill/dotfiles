@@ -4,6 +4,7 @@
 local markdownlint = require("efmls-configs.linters.markdownlint")
 local hadolint = require("efmls-configs.linters.hadolint")
 local gitlint = require("efmls-configs.linters.gitlint")
+local shellcheck = require("efmls-configs.linters.shellcheck")
 
 -- The plugin's yamllint module omits lintFormats and
 -- lintIgnoreExitCode. Without the format, efm can't parse output;
@@ -19,12 +20,14 @@ local yamllint = vim.tbl_extend("force", require("efmls-configs.linters.yamllint
   lintIgnoreExitCode = true,
 })
 
--- shellcheck intentionally omitted: bash-language-server invokes
--- shellcheck internally when the binary is on PATH (it is, via
--- extraPackages). Routing it through efm as well produces duplicate
--- SC#### diagnostics on every save.
+-- bash-language-server's built-in shellcheck is disabled in
+-- lsp/bash.lua (settings.bashIde.shellcheckPath = ""), so efm is the
+-- single source of SC#### diagnostics here.
 local languages = {
   markdown = { markdownlint },
+  sh = { shellcheck },
+  bash = { shellcheck },
+  zsh = { shellcheck },
   dockerfile = { hadolint },
   yaml = { yamllint },
   gitcommit = { gitlint },
