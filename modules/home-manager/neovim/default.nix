@@ -21,16 +21,17 @@
           ## Formatters  ──────────────────────────────────────────────
           formatters = builtins.attrValues {
             inherit (pkgs)
+              biome # JS / TS / JSON (replaces prettier_d for these)
               black # Python
               gofumpt # stricter gofmt
               isort # Python
               libxml2 # provides xmllint for XML
               nixfmt
-              prettierd # Multiple language formatter
+              prettierd # HTML / markdown via efm
               rustfmt # Rust
               shfmt
               stylua # Lua
-              yamlfmt
+              yamlfmt # YAML
               ;
             jsregexp = pkgs.luajitPackages.jsregexp; # luasnip
           };

@@ -32,9 +32,27 @@ local nixfmt = require("efmls-configs.formatters.nixfmt")
 local black = require("efmls-configs.formatters.black")
 local isort = require("efmls-configs.formatters.isort")
 local rustfmt = require("efmls-configs.formatters.rustfmt")
-local shfmt = require("efmls-configs.formatters.shfmt")
 
--- efmls-configs doesn't ship an xmllint module. Define it inline.
+-- biome for js/ts. Narrow rootMarkers to actual biome config files so
+-- a project with only a package.json (no biome.json) isn't treated as
+-- biome-managed. Without a root, biome falls back to efm's CWD.
+local biome = vim.tbl_extend("force", require("efmls-configs.formatters.biome"), {
+  rootMarkers = { "biome.json", "biome.jsonc", "rome.json" },
+})
+
+-- shfmt respects .editorconfig; tell efm to anchor workspace root on
+-- it so shfmt picks up project-specific shell indent rules.
+local shfmt = vim.tbl_extend("force", require("efmls-configs.formatters.shfmt"), {
+  rootMarkers = { ".editorconfig" },
+})
+
+-- efmls-configs doesn't ship yamlfmt or xmllint modules. Define inline.
+-- yamlfmt reads .yamlfmt from the project root (CWD walk-up).
+local yamlfmt = {
+  formatCommand = "yamlfmt -",
+  formatStdin = true,
+  rootMarkers = { ".yamlfmt", ".yamlfmt.yaml", ".yamlfmt.yml" },
+}
 local xmllint = {
   formatCommand = "xmllint --format -",
   formatStdin = true,
@@ -48,16 +66,16 @@ local languages = {
   sh = { shellcheck, shfmt },
   bash = { shellcheck, shfmt },
   zsh = { shellcheck, shfmt },
-  yaml = { yamllint, prettier_d },
+  yaml = { yamllint, yamlfmt },
   -- Lint only
   dockerfile = { hadolint },
   gitcommit = { gitlint },
   -- Format only
   html = { prettier_d },
-  javascript = { prettier_d },
-  javascriptreact = { prettier_d },
-  typescript = { prettier_d },
-  typescriptreact = { prettier_d },
+  javascript = { biome },
+  javascriptreact = { biome },
+  typescript = { biome },
+  typescriptreact = { biome },
   lua = { stylua },
   nix = { nixfmt },
   python = { isort, black },
