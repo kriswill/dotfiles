@@ -7,7 +7,8 @@ return {
       delay = 300,
       icons = {
         rules = false,
-        breadcrumb = " ",
+        -- Nerd-font glyph reference:  = U+F101
+        breadcrumb = "\u{F101} ",
         separator = "󱦰  ",
         group = "󰹍 ",
       },

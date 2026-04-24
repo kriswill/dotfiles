@@ -37,17 +37,20 @@ return {
           {
             "filename",
             path = 1,
+            -- Nerd-font glyph reference:  = U+F0F6,  = U+F023,  = U+F10C
             symbols = {
-              modified = "  ",
-              readonly = "  ",
-              unnamed = "  ",
+              modified = " \u{F0F6} ",
+              readonly = " \u{F023} ",
+              unnamed = " \u{F10C} ",
             },
           },
-          { "fancy_diagnostics", sources = { "nvim_lsp" }, symbols = { error = " ", warn = " ", info = " " } },
+          -- Nerd-font glyph reference:  = U+F057,  = U+F071,  = U+F06A
+          { "fancy_diagnostics", sources = { "nvim_lsp" }, symbols = { error = "\u{F057} ", warn = "\u{F071} ", info = "\u{F06A} " } },
           { "fancy_searchcount" },
         },
         lualine_x = {
-          { "fancy_branch", icon = { "", color = { fg = "#fc5603" } } },
+          -- Nerd-font glyph reference:  = U+F418
+          { "fancy_branch", icon = { "\u{F418}", color = { fg = "#fc5603" } } },
           "fancy_diff",
           "fancy_lsp_servers",
           "progress",
