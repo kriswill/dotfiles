@@ -1,8 +1,9 @@
 return {
-  "alexghergh/nvim-tmux-navigation",
-  config = function()
+  src = "https://github.com/alexghergh/nvim-tmux-navigation",
+  trigger = "now",
+  setup = function()
     require("nvim-tmux-navigation").setup({
-      disable_when_zoomed = true, -- defaults to false
+      disable_when_zoomed = true,
       keybindings = {
         left = "<C-h>",
         down = "<C-j>",
@@ -12,7 +13,6 @@ return {
         next = "<C-Space>",
       },
     })
-    -- Terminal mode window navigation
     vim.keymap.set("t", "<C-h>", [[<C-\><C-n><C-w>h]], { desc = "Move to left window from terminal" })
     vim.keymap.set("t", "<C-j>", [[<C-\><C-n><C-w>j]], { desc = "Move to window below from terminal" })
     vim.keymap.set("t", "<C-k>", [[<C-\><C-n><C-w>k]], { desc = "Move to window above from terminal" })

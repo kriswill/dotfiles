@@ -1,3 +1,4 @@
 return {
-  "Mohammed-Taher/AdvancedNewFile.nvim",
+  src = "https://github.com/Mohammed-Taher/AdvancedNewFile.nvim",
+  trigger = "now",
 }
