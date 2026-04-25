@@ -25,7 +25,7 @@ local order = {
   "advanced-new-file",
   "colorful-winsep",
   "mini-splitjoin",
-  "conform",
+  "efmls-configs-nvim",
   "which-key",
   "lazydev-nvim",
   "debug",

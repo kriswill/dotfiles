@@ -21,14 +21,17 @@
           ## Formatters  ──────────────────────────────────────────────
           formatters = builtins.attrValues {
             inherit (pkgs)
+              biome # JS / TS / JSON (replaces prettier_d for these)
               black # Python
               gofumpt # stricter gofmt
               isort # Python
+              libxml2 # provides xmllint for XML
               nixfmt
-              prettierd # Multiple language formatter
+              prettierd # HTML / markdown via efm
+              rustfmt # Rust
               shfmt
               stylua # Lua
-              yamlfmt
+              yamlfmt # YAML
               ;
             jsregexp = pkgs.luajitPackages.jsregexp; # luasnip
           };
@@ -39,6 +42,7 @@
               buf # bufls
               docker-compose-language-service # Docker Compose
               dockerfile-language-server # Dockerfile
+              efm-langserver # generic LSP that wraps CLI linters (see linters)
               go # golang
               go-tools
               gopls # Go
@@ -55,6 +59,16 @@
               yaml-language-server # YAML (yamlls)
               ;
             typescript = pkgs.typescript;
+          };
+          ## Linters (invoked by efm-langserver)  ─────────────────────
+          linters = builtins.attrValues {
+            inherit (pkgs)
+              gitlint # gitcommit
+              hadolint # Dockerfile
+              rumdl # markdown
+              shellcheck # sh / bash / zsh
+              yamllint # yaml
+              ;
           };
           ## Tools  ───────────────────────────────────────────────────
           tools = builtins.attrValues {
@@ -75,7 +89,7 @@
               ;
           };
         in
-        formatters ++ lsp-servers ++ tools;
+        formatters ++ lsp-servers ++ linters ++ tools;
     };
 
     xdg.configFile =

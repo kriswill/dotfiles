@@ -59,7 +59,9 @@ keymap(
 keymap(
   "n",
   "<leader>cf",
-  function() require("conform").format({ lsp_format = "fallback" }) end,
+  function()
+    vim.lsp.buf.format({ async = false, filter = function(c) return c.name == "efm" end })
+  end,
   { desc = "Format current file" }
 )
 -- keymap("n", "<leader>gg", "<cmd>lua vim.lsp.buf.hover()<CR>")

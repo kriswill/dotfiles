@@ -5,9 +5,15 @@ return {
     "sh",
     "bash",
     "zsh",
-    ".zshrc",
   },
   root_markers = { ".zshrc" },
   ignoredRootPaths = { "~" },
   single_file_support = true,
+  settings = {
+    -- Disable bashls' built-in shellcheck; efm-langserver handles it
+    -- so the same SC#### diagnostic doesn't show up twice.
+    bashIde = {
+      shellcheckPath = "",
+    },
+  },
 }

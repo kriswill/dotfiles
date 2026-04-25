@@ -75,7 +75,11 @@ in
     ];
     home.sessionVariables =
       let
-        neovim = "${lib.getExe pkgs.neovim}";
+        # Use home-manager's wrapped nvim so EDITOR-invoked callers (yazi,
+        # git commit, crontab, etc.) inherit programs.neovim.extraPackages
+        # on PATH. pkgs.neovim is the generic nixpkgs wrapper without our
+        # extraPackages — it runs nvim fine but LSP servers can't spawn.
+        neovim = lib.getExe config.programs.neovim.finalPackage;
       in
       {
         EDITOR = neovim;
