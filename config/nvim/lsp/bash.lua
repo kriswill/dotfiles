@@ -5,7 +5,6 @@ return {
     "sh",
     "bash",
     "zsh",
-    ".zshrc",
   },
   root_markers = { ".zshrc" },
   ignoredRootPaths = { "~" },

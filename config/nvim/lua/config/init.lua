@@ -4,6 +4,7 @@ if vim.loader then
 end
 require("config.util")
 require("config.options")
+require("config.filetypes")
 require("config.keymaps")
 require("config.transparency")
 require("config.pack")
