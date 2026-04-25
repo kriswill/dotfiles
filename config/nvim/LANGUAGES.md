@@ -53,7 +53,7 @@ that project root so its own config discovery kicks in.
 | javascript      | —                             | biome (`biome`)                     | `biome.json`, `biome.jsonc`, `rome.json`                |
 | javascriptreact | —                             | biome (`biome`)                     | `biome.json`, `biome.jsonc`, `rome.json`                |
 | lua             | —                             | stylua (`stylua`)                   | `.stylua.toml`, `stylua.toml`                           |
-| markdown        | markdownlint (`markdownlint`) | prettier_d (`prettierd`)            | `.prettierrc*`, `prettier.config.*`                     |
+| markdown        | rumdl (`rumdl`)               | rumdl (`rumdl`)                     | `rumdl.toml`, `.rumdl.toml`                             |
 | nix             | —                             | nixfmt (`nixfmt`)                   | —                                                       |
 | python          | —                             | isort → black (`isort`, `black`)    | `.isort.cfg`, `pyproject.toml`, `setup.cfg`, `setup.py` |
 | rust            | —                             | rustfmt (`rustfmt`)                 | `rustfmt.toml`                                          |

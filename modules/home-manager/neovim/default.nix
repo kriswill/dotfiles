@@ -65,7 +65,7 @@
             inherit (pkgs)
               gitlint # gitcommit
               hadolint # Dockerfile
-              markdownlint-cli # markdown
+              rumdl # markdown
               shellcheck # sh / bash / zsh
               yamllint # yaml
               ;

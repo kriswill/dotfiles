@@ -26,7 +26,7 @@ Context and implementation notes for the migration from the third-party
 
 ## Architecture
 
-```
+```text
 config/nvim/
 ├── init.lua                     # require("config")
 ├── lua/config/
@@ -114,10 +114,12 @@ legacy `master` branch.
 - Parser install: `require("nvim-treesitter").install({...})` (async).
   No-op for already-installed parsers.
 - Highlight + indent: enabled per-filetype via a `FileType` autocmd:
+
   ```lua
   pcall(vim.treesitter.start, args.buf)
   vim.bo[args.buf].indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
   ```
+
 - Textobjects: `nvim-treesitter-textobjects.select.select_textobject(query, group)`
   and `.swap.swap_next/previous`, wired as explicit `vim.keymap.set` calls.
   The old `keymaps = {...}` table form inside `configs.setup` is gone.
@@ -146,7 +148,7 @@ which is outside the Nix store).
 The snacks dashboard footer used `require("lazy.stats")` for the
 "loaded N/M plugins in Xms" line. Rewritten to use `vim.pack.get()`:
 
-```
+```text
 ⚡ Neovim v0.12.1 with 29 plugins
 ```
 

@@ -7,7 +7,6 @@
 -- LSPs (vtsls, rust-analyzer, gopls, lua-ls) do not.
 
 -- Linters
-local markdownlint = require("efmls-configs.linters.markdownlint")
 local shellcheck = require("efmls-configs.linters.shellcheck")
 local hadolint = require("efmls-configs.linters.hadolint")
 local gitlint = require("efmls-configs.linters.gitlint")
@@ -58,11 +57,25 @@ local xmllint = {
   formatStdin = true,
 }
 
+-- rumdl handles both markdown lint and format via stdin.
+local rumdl_lint = {
+  lintCommand = "rumdl check --stdin --stdin-filename ${INPUT} --color never",
+  lintStdin = true,
+  lintFormats = { "%f:%l:%c: %m" },
+  lintIgnoreExitCode = true,
+  rootMarkers = { "rumdl.toml", ".rumdl.toml" },
+}
+local rumdl_fmt = {
+  formatCommand = "rumdl fmt --stdin --stdin-filename ${INPUT} --color never --silent",
+  formatStdin = true,
+  rootMarkers = { "rumdl.toml", ".rumdl.toml" },
+}
+
 -- Language mappings. Order within each list matters: python runs
 -- isort then black; shell runs shellcheck lint + shfmt format; etc.
 local languages = {
   -- Lint + format
-  markdown = { markdownlint, prettier_d },
+  markdown = { rumdl_lint, rumdl_fmt },
   sh = { shellcheck, shfmt },
   bash = { shellcheck, shfmt },
   zsh = { shellcheck, shfmt },
