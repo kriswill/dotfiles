@@ -46,13 +46,13 @@ config/nvim/
 Thin helpers around `vim.pack.add`. Each plugin's spec file is returned
 as a Lua table and dispatched to one of:
 
-| Trigger              | Behaviour                                                     |
-| -------------------- | ------------------------------------------------------------- |
-| `"now"`              | `vim.pack.add(...)`, run `setup()` immediately.               |
-| `"later"`            | Add at startup, defer `setup()` to a one-shot `UIEnter` autocmd. |
-| `{ ft = ... }`       | `vim.pack.add(..., { load = false })`. `setup()` runs on first matching `FileType`. Also triggers immediately if a buffer of that filetype is already open (argv file). |
-| `{ cmd = ... }`      | Stub user commands; first invocation loads the plugin and re-runs the command. |
-| `{ keys = ... }`     | Stub keymaps; first press loads the plugin and re-feeds the key. |
+| Trigger          | Behaviour                                                                                                                                                               |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `"now"`          | `vim.pack.add(...)`, run `setup()` immediately.                                                                                                                         |
+| `"later"`        | Add at startup, defer `setup()` to a one-shot `UIEnter` autocmd.                                                                                                        |
+| `{ ft = ... }`   | `vim.pack.add(..., { load = false })`. `setup()` runs on first matching `FileType`. Also triggers immediately if a buffer of that filetype is already open (argv file). |
+| `{ cmd = ... }`  | Stub user commands; first invocation loads the plugin and re-runs the command.                                                                                          |
+| `{ keys = ... }` | Stub keymaps; first press loads the plugin and re-feeds the key.                                                                                                        |
 
 ### Plugin spec shape
 
@@ -81,23 +81,23 @@ treesitter-textobjects.
 
 ## Plugin inventory
 
-| Plugin                      | Trigger              | Notes |
-| --------------------------- | -------------------- | ----- |
-| kanagawa                    | `now`                | loaded first so colours are ready |
-| snacks.nvim                 | `now`                | was `priority = 1000` under lazy — just place it early |
-| nvim-highlight-colors       | `now`                | |
-| lualine + lualine-so-fancy  | `now`                | dep added in spec |
-| oil.nvim + mini.icons       | `now`                | dep added in spec |
-| blink.cmp + friendly-snippets | `now`              | `version = vim.version.range("1.*")` |
-| nvim-treesitter             | `now`                | main branch (see below) |
-| nvim-treesitter-textobjects | `now`                | main branch |
-| nvim-treesitter-context     | `later`              | deferred to UIEnter |
-| gitsigns, schemastore, fidget, vim-sleuth | `now`  | split out of old `lua/plugins/init.lua` |
-| baleia                      | `now`                | plan had `version = "*"`; vim.pack rejects globs — unpinned |
-| direnv.nvim, tmux-navigation, AdvancedNewFile, colorful-winsep, mini.splitjoin, conform | `now` | |
-| which-key                   | `later`              | |
-| lazydev                     | `{ ft = "lua" }`     | |
-| nvim-dap + dap-ui + dap-go + nvim-nio | `{ keys = ... }` | stub keymaps; first press loads |
+| Plugin                                                                                  | Trigger          | Notes                                                       |
+| --------------------------------------------------------------------------------------- | ---------------- | ----------------------------------------------------------- |
+| kanagawa                                                                                | `now`            | loaded first so colours are ready                           |
+| snacks.nvim                                                                             | `now`            | was `priority = 1000` under lazy — just place it early      |
+| nvim-highlight-colors                                                                   | `now`            |                                                             |
+| lualine + lualine-so-fancy                                                              | `now`            | dep added in spec                                           |
+| oil.nvim + mini.icons                                                                   | `now`            | dep added in spec                                           |
+| blink.cmp + friendly-snippets                                                           | `now`            | `version = vim.version.range("1.*")`                        |
+| nvim-treesitter                                                                         | `now`            | main branch (see below)                                     |
+| nvim-treesitter-textobjects                                                             | `now`            | main branch                                                 |
+| nvim-treesitter-context                                                                 | `later`          | deferred to UIEnter                                         |
+| gitsigns, schemastore, fidget, vim-sleuth                                               | `now`            | split out of old `lua/plugins/init.lua`                     |
+| baleia                                                                                  | `now`            | plan had `version = "*"`; vim.pack rejects globs — unpinned |
+| direnv.nvim, tmux-navigation, AdvancedNewFile, colorful-winsep, mini.splitjoin, conform | `now`            |                                                             |
+| which-key                                                                               | `later`          |                                                             |
+| lazydev                                                                                 | `{ ft = "lua" }` |                                                             |
+| nvim-dap + dap-ui + dap-go + nvim-nio                                                   | `{ keys = ... }` | stub keymaps; first press loads                             |
 
 Removed: `lazy-lock.json` (no replacement), `config/lazy.lua`,
 `plugins/init.lua` (grouped entries moved to individual files),
@@ -121,7 +121,7 @@ legacy `master` branch.
 - Textobjects: `nvim-treesitter-textobjects.select.select_textobject(query, group)`
   and `.swap.swap_next/previous`, wired as explicit `vim.keymap.set` calls.
   The old `keymaps = {...}` table form inside `configs.setup` is gone.
-- Plugin README: *"This plugin does not support lazy-loading"* — so
+- Plugin README: _"This plugin does not support lazy-loading"_ — so
   `trigger = "now"` stays.
 - `:TSUpdate` is still provided by the plugin; the `PackChanged` hook
   runs it after install/update of `nvim-treesitter`.
