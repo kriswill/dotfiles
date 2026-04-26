@@ -17,7 +17,6 @@ in
   options.kriswill.enable = lib.mkEnableOption "Kris' home module";
   config = lib.mkIf config.kriswill.enable {
     kriswill = {
-      copyApps.enable = lib.mkDefault true;
       fastfetch.enable = lib.mkDefault true;
       # firefox.enable = lib.mkDefault false;
       kitty.enable = lib.mkDefault true;
@@ -141,5 +140,24 @@ in
       };
 
     };
+
+    # Transitional cleanup for the parked symlink-based GUI app exposure
+    # attempt (see attempt/mkalias-realbundle-symlinks). Removes bare
+    # ~/Applications/<App>.app symlinks pointing into /nix/store, plus the
+    # manifest. Self-deletes once the manifest is gone — safe to remove this
+    # block after every host has activated once. Can be deleted alongside
+    # this comment in a future cleanup pass.
+    home.activation.cleanupLegacyAppBundleSymlinks = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+      manifest="''${XDG_STATE_HOME:-$HOME/.local/state}/home-manager-app-bundles.list"
+      if [ -f "$manifest" ]; then
+        while IFS= read -r app_name; do
+          target="$HOME/Applications/$app_name"
+          if [ -L "$target" ] && readlink "$target" | grep -q '^/nix/store/'; then
+            rm -f "$target"
+          fi
+        done < "$manifest"
+        rm -f "$manifest"
+      fi
+    '';
   };
 }

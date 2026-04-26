@@ -25,7 +25,7 @@ in
       users."${username}" = {
         imports = [ outputs.homeModules.kriswill ];
         kriswill.enable = true;
-        home.stateVersion = "24.11";
+        home.stateVersion = "26.05";
         home.homeDirectory = lib.mkForce "/Users/${username}";
       };
       # sharedModules = [ inputs.mac-app-util.homeManagerModules.default ];
