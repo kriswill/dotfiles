@@ -1,4 +1,3 @@
--- https://github.com/rebelot/kanagawa.nvim
 return {
   src = "https://github.com/rebelot/kanagawa.nvim",
   trigger = "now",
