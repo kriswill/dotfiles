@@ -17,11 +17,12 @@ in
   options.kriswill.enable = lib.mkEnableOption "Kris' home module";
   config = lib.mkIf config.kriswill.enable {
     kriswill = {
-      mkalias.enable = lib.mkDefault true;
+      copyApps.enable = lib.mkDefault true;
       fastfetch.enable = lib.mkDefault true;
       # firefox.enable = lib.mkDefault false;
       kitty.enable = lib.mkDefault true;
       neovim.enable = lib.mkDefault true;
+      neovide.enable = lib.mkDefault true;
       tmux.enable = lib.mkDefault true;
       ghostty.enable = lib.mkDefault true;
       karabiner.enable = lib.mkDefault true;
