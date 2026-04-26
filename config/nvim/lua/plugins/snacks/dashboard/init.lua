@@ -51,7 +51,7 @@ local banners = {
 }
 
 return {
-  enabled = true,
+  enabled = vim.g.neovide == nil,
   preset = {
     header = banners.hydra,
     banners = banners,
