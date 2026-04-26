@@ -20,6 +20,16 @@ return {
           },
         },
       },
+      cmdline = {
+        enabled = true,
+        keymap = { preset = "cmdline" },
+        sources = { "cmdline", "buffer" },
+        completion = {
+          menu = { auto_show = true },
+          list = { selection = { preselect = true, auto_insert = true } },
+          ghost_text = { enabled = true },
+        },
+      },
     })
   end,
 }
