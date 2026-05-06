@@ -85,7 +85,6 @@ in
         EDITOR = neovim;
         VISUAL = neovim;
         MANPAGER = "${neovim} +Man!";
-        BREW_PREFIX = "${sqliteWithExtensions.out}"; # qmd looks for ${BREW_PREFIX}/lib/libsqlite3.dylib
       };
     programs = {
       bat.enable = lib.mkDefault true;
@@ -157,6 +156,22 @@ in
           fi
         done < "$manifest"
         rm -f "$manifest"
+      fi
+    '';
+
+    # qmd (bun-installed, outside nix) hardcodes two Homebrew paths in
+    # its setCustomSQLite() call and ignores env vars. Point the
+    # Apple-Silicon path at our extension-enabled nix sqlite so qmd can
+    # dlopen it. Skip if a real Homebrew sqlite is already installed.
+    home.activation.linkSqliteForQmd = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+      brew_lib=/opt/homebrew/opt/sqlite/lib
+      link=$brew_lib/libsqlite3.dylib
+      target=${sqliteWithExtensions.out}/lib/libsqlite3.dylib
+      if [ -e "$link" ] && [ ! -L "$link" ]; then
+        echo "qmd-sqlite-link: $link is a real file (Homebrew install?), leaving alone" >&2
+      else
+        $DRY_RUN_CMD mkdir -p "$brew_lib"
+        $DRY_RUN_CMD ln -sfn "$target" "$link"
       fi
     '';
   };
