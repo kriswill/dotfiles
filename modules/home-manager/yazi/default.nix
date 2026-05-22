@@ -46,7 +46,7 @@
           prepend_previewers = [
             {
               url = "*.md";
-              run = "piper -- CLICOLOR_FORCE=1 glow -w=$w -s=dark \"$1\"";
+              run = ''piper -- CLICOLOR_FORCE=1 glow -w=$w -s="${config.kriswill.glow.stylePath}" "$1"'';
             }
             {
               url = "*.(py|sh|go|ts|css|yaml|yml|toml|html|conf|json|csv)";
