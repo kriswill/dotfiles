@@ -19,12 +19,32 @@
       '';
 
       flavors = {
-        kanagawa-dragon = pkgs.fetchFromGitHub {
-          owner = "marcosvnmelo";
-          repo = "kanagawa-dragon.yazi";
-          rev = "49055274ff53772a13a8c092188e4f6d148d1694";
-          hash = "sha256-gkzJytN0TVgz94xIY3K08JsOYG/ny63Oj2eyGWiWH4s=";
-        };
+        kanagawa-dragon =
+          let
+            src = pkgs.fetchFromGitHub {
+              owner = "marcosvnmelo";
+              repo = "kanagawa-dragon.yazi";
+              rev = "49055274ff53772a13a8c092188e4f6d148d1694";
+              hash = "sha256-gkzJytN0TVgz94xIY3K08JsOYG/ny63Oj2eyGWiWH4s=";
+            };
+          in
+          pkgs.runCommand "kanagawa-dragon-yazi-v26" { } ''
+            cp -r ${src} $out
+            chmod -R u+w $out
+            sed -i \
+              -e 's/\bname =/url =/g' \
+              -e 's/^\[manager\]$/[mgr]/' \
+              -e '/^tab_width = /d' \
+              -e '/^tab_active = /d' \
+              -e '/^tab_inactive = /d' \
+              $out/flavor.toml
+            cat >> $out/flavor.toml <<'EOF'
+
+            [tabs]
+            active = { reversed = true }
+            inactive = {}
+            EOF
+          '';
       };
       theme = {
         flavor.dark = "kanagawa-dragon";
@@ -38,23 +58,23 @@
         plugin = {
           prepend_fetchers = [
             {
-              id = "git";
-              name = "*";
+              group = "git";
+              url = "*";
               run = "git";
             }
             {
-              id = "git";
-              name = "*/";
+              group = "git";
+              url = "*/";
               run = "git";
             }
           ];
           prepend_previewers = [
             {
-              name = "*.md";
+              url = "*.md";
               run = "piper -- CLICOLOR_FORCE=1 glow -w=$w -s=dark \"$1\"";
             }
             {
-              name = "*.(py|sh|go|ts|css|yaml|yml|toml|html|conf|json|csv)";
+              url = "*.(py|sh|go|ts|css|yaml|yml|toml|html|conf|json|csv)";
               run = "bat";
             }
           ];
