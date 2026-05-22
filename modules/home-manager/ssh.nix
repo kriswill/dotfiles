@@ -20,7 +20,7 @@
       programs.ssh = {
         enable = true;
         includes = [ "${config.home.homeDirectory}/.ssh/config.d/*" ];
-        matchBlocks."*".forwardAgent = true;
+        settings."*".ForwardAgent = true;
         extraConfig = if isDarwin then darwin-extra-config else linux-extra-config;
         enableDefaultConfig = false;
       };
