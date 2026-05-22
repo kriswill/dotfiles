@@ -11,8 +11,14 @@
       enable = lib.mkDefault true;
       shellWrapperName = "y";
       enableZshIntegration = true;
-      plugins = with pkgs.yaziPlugins; {
-        inherit git piper;
+      plugins = {
+        inherit (pkgs.yaziPlugins) git;
+        faster-piper = pkgs.fetchFromGitHub {
+          owner = "alberti42";
+          repo = "faster-piper.yazi";
+          rev = "8b794bfa3bc9c780e3f03b6f5a0ccde7744e54bb";
+          hash = "sha256-m6ZiwA36lcdZORK3KIz4Xq3bs7mmtC6j62B/+BuDGAQ=";
+        };
       };
       initLua = ''
         require("git"):setup()
@@ -46,7 +52,7 @@
           prepend_previewers = [
             {
               url = "*.md";
-              run = ''piper -- CLICOLOR_FORCE=1 glow -w=$w -s="${config.kriswill.glow.stylePath}" "$1"'';
+              run = ''faster-piper -- CLICOLOR_FORCE=1 glow -w=$w -s="${config.kriswill.glow.stylePath}" "$1"'';
             }
             {
               url = "*.(py|sh|go|ts|css|yaml|yml|toml|html|conf|json|csv)";
