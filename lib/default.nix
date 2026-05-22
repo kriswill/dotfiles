@@ -27,6 +27,11 @@ in
         kriswill.enable = true;
         home.stateVersion = "26.05";
         home.homeDirectory = lib.mkForce "/Users/${username}";
+        manual = {
+          html.enable = false;
+          json.enable = false;
+          manpages.enable = false;
+        };
       };
       # sharedModules = [ inputs.mac-app-util.homeManagerModules.default ];
       extraSpecialArgs = { inherit inputs username; };
