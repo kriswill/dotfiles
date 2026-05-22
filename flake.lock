@@ -20,6 +20,22 @@
         "type": "github"
       }
     },
+    "faster-piper-yazi": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1770057785,
+        "narHash": "sha256-m6ZiwA36lcdZORK3KIz4Xq3bs7mmtC6j62B/+BuDGAQ=",
+        "owner": "alberti42",
+        "repo": "faster-piper.yazi",
+        "rev": "8b794bfa3bc9c780e3f03b6f5a0ccde7744e54bb",
+        "type": "github"
+      },
+      "original": {
+        "owner": "alberti42",
+        "repo": "faster-piper.yazi",
+        "type": "github"
+      }
+    },
     "home-manager": {
       "inputs": {
         "nixpkgs": [
@@ -59,6 +75,7 @@
     "root": {
       "inputs": {
         "darwin": "darwin",
+        "faster-piper-yazi": "faster-piper-yazi",
         "home-manager": "home-manager",
         "nixpkgs": "nixpkgs"
       }

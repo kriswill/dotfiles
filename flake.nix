@@ -70,5 +70,9 @@
       url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    faster-piper-yazi = {
+      url = "github:alberti42/faster-piper.yazi";
+      flake = false;
+    };
   };
 }

@@ -2,6 +2,7 @@
   lib,
   config,
   pkgs,
+  inputs,
   ...
 }:
 {
@@ -13,12 +14,7 @@
       enableZshIntegration = true;
       plugins = {
         inherit (pkgs.yaziPlugins) git;
-        faster-piper = pkgs.fetchFromGitHub {
-          owner = "alberti42";
-          repo = "faster-piper.yazi";
-          rev = "8b794bfa3bc9c780e3f03b6f5a0ccde7744e54bb";
-          hash = "sha256-m6ZiwA36lcdZORK3KIz4Xq3bs7mmtC6j62B/+BuDGAQ=";
-        };
+        faster-piper = inputs.faster-piper-yazi;
       };
       initLua = ''
         require("git"):setup()
