@@ -1,8 +1,9 @@
 -- Override of yazi's built-in `font` previewer.
 -- Mirrors the preset, except: transparent background (PNG, `xc:none`) with
--- light glyphs, so the preview blends into the terminal background. The
--- preset's `64` pointsize is also written as the string `"64"` (Command:arg
--- takes strings), and the second `err` local is renamed, to type-check clean.
+-- glyphs colored to contrast the terminal background (via `rt.term.light`),
+-- so the preview blends in on both light and dark terminals. The preset's
+-- `64` pointsize is also written as the string `"64"` (Command:arg takes
+-- strings), and the second `err` local is renamed, to type-check clean.
 
 local TEXT = "ABCDEFGHIJKLM\nNOPQRSTUVWXYZ\nabcdefghijklm\nnopqrstuvwxyz\n1234567890\n!$&*()[]{}"
 
@@ -38,6 +39,11 @@ function M:preload(job)
 		return true
 	end
 
+	-- yazi exposes no general "foreground" theme field, so key the glyph
+	-- color off the terminal's light/dark mode: near-black on light
+	-- terminals, kanagawa fujiWhite on dark ones.
+	local fill = rt.term.light and "#181616" or "#c5c9c5"
+
 	local status, err = Command("magick"):arg({
 		"-size",
 		"800x560",
@@ -49,7 +55,7 @@ function M:preload(job)
 		"64",
 		"xc:none",
 		"-fill",
-		"#dcd7ba",
+		fill,
 		"-annotate",
 		"+0+0",
 		TEXT,
