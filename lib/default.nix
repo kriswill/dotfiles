@@ -1,14 +1,8 @@
-{
-  self,
-  outputs,
-  inputs,
-}:
+# Pure helpers merged onto nixpkgs lib (see modules/lib.nix). Kept outside
+# ./modules so import-tree does not treat it as a flake-parts module.
+{ lib }:
 let
-  inherit (outputs) lib;
-  inherit (inputs.darwin.lib) darwinSystem;
   inherit (lib)
-    filter
-    forEach
     mkEnableOption
     mkPackageOption
     optionalString
@@ -16,63 +10,6 @@ let
 in
 {
   kanagawa = import ./kanagawa.nix;
-
-  mkHomeManager = username: {
-    home-manager = {
-      backupFileExtension = "hm.bak";
-      useUserPackages = true;
-      useGlobalPkgs = true;
-      users."${username}" = {
-        imports = [ outputs.homeModules.kriswill ];
-        kriswill.enable = true;
-        home.stateVersion = "26.05";
-        home.homeDirectory = lib.mkForce "/Users/${username}";
-        manual = {
-          html.enable = false;
-          json.enable = false;
-          manpages.enable = false;
-        };
-      };
-      # sharedModules = [ inputs.mac-app-util.homeManagerModules.default ];
-      extraSpecialArgs = { inherit inputs username; };
-    };
-  };
-
-  mkDarwin =
-    hostmodule: username:
-    darwinSystem {
-      specialArgs = {
-        inherit
-          self
-          inputs
-          outputs
-          lib
-          ;
-      };
-      modules = [
-        hostmodule
-        inputs.home-manager.darwinModules.home-manager
-        outputs.darwinModules.kriswill
-        (lib.mkHomeManager username)
-        {
-          kriswill.enable = true;
-          nixpkgs = {
-            hostPlatform = "aarch64-darwin";
-            overlays = builtins.attrValues outputs.overlays;
-          };
-        }
-      ];
-    };
-
-  # read a directory and return a list of all filenames inside except any default.nix
-  # ripped from: https://github.com/EarthGman/nix-library/blob/main/lib/default.nix#L15
-  autoImport =
-    dir:
-    let
-      fileNames = builtins.attrNames (builtins.readDir dir);
-      strippedFileNames = filter (name: name != "default.nix") fileNames;
-    in
-    forEach strippedFileNames (fileName: dir + /${fileName});
 
   mkProgramOption =
     {
@@ -86,5 +23,4 @@ in
       enable = mkEnableOption (programName + " " + optionalString (description != null) description);
       package = mkPackageOption pkgs packageName extraPackageArgs;
     };
-
 }

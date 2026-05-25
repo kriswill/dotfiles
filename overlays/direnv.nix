@@ -5,5 +5,7 @@ _final: prev: {
   # (0% CPU, no children, stuck in a pipe read), adding many minutes to any
   # rebuild whenever cache.nixos.org doesn't yet have a prebuilt direnv for our
   # nixpkgs rev. Skip checks locally — upstream + Hydra already run them.
-  direnv = prev.direnv.overrideAttrs (_: { doCheck = false; });
+  direnv = prev.direnv.overrideAttrs (_: {
+    doCheck = false;
+  });
 }

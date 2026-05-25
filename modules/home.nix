@@ -1,0 +1,37 @@
+# Wires home-manager into nix-darwin as a darwin module (so every host picks it
+# up via `builtins.attrValues config.flake.modules.darwin`). The user's
+# home-manager configuration imports every `flake.modules.homeManager.*` module
+# accumulated across the tree.
+{ config, inputs, ... }:
+{
+  flake.modules.darwin.home-manager =
+    { lib, ... }:
+    {
+      imports = [ inputs.home-manager.darwinModules.home-manager ];
+      home-manager = {
+        useGlobalPkgs = true;
+        useUserPackages = true;
+        backupFileExtension = "hm.bak";
+        # NB: do not pass `lib` here. home-manager derives the user-eval lib
+        # from the darwin system's lib (which `modules/darwin.nix` already sets
+        # to the extended lib carrying `kanagawa`/`mkProgramOption`) and adds its
+        # own `hm` extensions on top. Overriding it would drop `lib.hm.*`.
+        extraSpecialArgs = {
+          inherit inputs;
+          username = "k";
+        };
+        users.k = {
+          imports = builtins.attrValues config.flake.modules.homeManager;
+          kriswill.enable = true;
+          home.username = "k";
+          home.stateVersion = "26.05";
+          home.homeDirectory = lib.mkForce "/Users/k";
+          manual = {
+            html.enable = false;
+            json.enable = false;
+            manpages.enable = false;
+          };
+        };
+      };
+    };
+}
