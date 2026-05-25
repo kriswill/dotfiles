@@ -1,40 +1,35 @@
 #!/usr/bin/env bun
-// render-yazi-palette — regenerate the kanagawa-dragon palette documentation
-// image from the theme's own source files.
+// render-yazi-palette — regenerate the kanagawa palette documentation image
+// from the theme's nix-generated flavor files.
 //
-// Reads:
-//   modules/home-manager/yazi/_themes/kanagawa-dragon/flavor.toml   (UI theme)
-//   modules/home-manager/yazi/_themes/kanagawa-dragon/tmtheme.xml    (syntax)
-// Writes:
-//   modules/home-manager/yazi/_themes/kanagawa-dragon/palette.png
+// The flavor is now produced entirely by nix (flavor.toml via pkgs.formats.toml,
+// tmtheme.xml via lib.generators.toPlist), so this script builds the
+// `yazi-kanagawa-flavor` package and reads `flavor.toml` / `tmtheme.xml` from
+// its store output — the exact files yazi consumes.
 //
-// Both color sets are extracted from the files themselves — names come from
-// the `## Color palette` comment block in flavor.toml and the per-scope
-// `name`s in tmtheme.xml — so the image stays correct as the theme changes.
+// Color *names* come from `lib/kanagawa.nix` (the shared name→hex palette,
+// read with `nix eval`); usage comes from the flavor.toml tables and tmtheme
+// scopes — so the image stays correct as the theme changes.
 //
-// Deps: bun, ImageMagick (`magick`), and a SauceCodePro Nerd Font in the Nix
-// store. Run from anywhere: `bun scripts/render-yazi-palette.ts`.
+// Writes: modules/home-manager/yazi/_themes/kanagawa/palette.png
+//
+// Deps: bun, nix, ImageMagick (`magick`), and a SauceCodePro Nerd Font in the
+// Nix store. Run from anywhere: `bun scripts/render-yazi-palette.ts`.
 
 import { spawnSync } from "bun";
 import { join } from "node:path";
 
-const THEME_DIR = join(
-  import.meta.dir,
-  "..",
-  "modules/home-manager/yazi/_themes/kanagawa-dragon",
+const REPO = join(import.meta.dir, "..");
+const PALETTE_NIX = join(REPO, "lib/kanagawa.nix");
+const OUT = join(
+  REPO,
+  "modules/home-manager/yazi/_themes/kanagawa/palette.png",
 );
-const FLAVOR = join(THEME_DIR, "flavor.toml");
-const TMTHEME = join(THEME_DIR, "tmtheme.xml");
-const OUT = join(THEME_DIR, "palette.png");
 
 const BG = "#16161d";
 const PANEL = "#181616";
 const FG = "#c5c9c5";
 const MUTED = "#a6a69c";
-
-// Kanagawa names for hexes used in flavor.toml but absent from its palette
-// comment block (so the image can still label them).
-const ALIASES: Record<string, string> = { "#8ea4a2": "dragonAqua" };
 
 // --- shell helpers ----------------------------------------------------------
 
@@ -59,6 +54,36 @@ function montage(args: string[]): void {
 
 function identifyWidth(path: string): number {
   return Number(sh(`magick identify -format '%w' ${JSON.stringify(path)}`));
+}
+
+// Build the flavor derivation and return its store path ($out holds
+// flavor.toml + tmtheme.xml). Errors out loudly — an empty result here would
+// otherwise produce a blank image.
+function buildFlavor(): string {
+  const out = sh(
+    `nix build ${JSON.stringify(REPO)}#yazi-kanagawa-flavor --no-link --print-out-paths`,
+  );
+  const path = out.split("\n").filter(Boolean).pop();
+  if (!path) {
+    throw new Error(
+      "nix build .#yazi-kanagawa-flavor produced no output path — is the flake evaluable?",
+    );
+  }
+  return path;
+}
+
+// hex(lowercase) → kanagawa color name, from the shared palette. On the rare
+// hex shared by several names, the alphabetically-first wins (dragon* sorts
+// ahead of lotus*, which suits this dark flavor).
+function loadNames(): Map<string, string> {
+  const json = sh(`nix eval --json --file ${JSON.stringify(PALETTE_NIX)}`);
+  if (!json) throw new Error(`nix eval failed for ${PALETTE_NIX}`);
+  const map = new Map<string, string>();
+  for (const [name, hex] of Object.entries(JSON.parse(json) as Record<string, string>)) {
+    const h = hex.toLowerCase();
+    if (!map.has(h)) map.set(h, name);
+  }
+  return map;
 }
 
 function findFont(style: "Regular" | "Bold"): string {
@@ -201,31 +226,14 @@ function header(text: string, width: number, sub = ""): string {
 
 // --- parse flavor.toml -------------------------------------------------------
 
-interface PaletteColor {
-  name: string;
-  hex: string;
-  note: string;
-}
+async function loadFlavor(
+  flavorPath: string,
+  names: Map<string, string>,
+): Promise<Swatch[]> {
+  const lines = (await Bun.file(flavorPath).text()).split("\n");
 
-async function loadFlavor() {
-  const text = await Bun.file(FLAVOR).text();
-  const lines = text.split("\n");
-
-  // Names + notes from the `## Color palette` comment block.
-  const ordered: PaletteColor[] = [];
-  const byHex = new Map<string, PaletteColor>();
-  for (const line of lines) {
-    const m = line.match(/^#\s*(\w+)\s+"(#[0-9a-fA-F]{6})"\s*(.*)$/);
-    if (m) {
-      const c = { name: m[1], hex: m[2].toLowerCase(), note: m[3].trim() };
-      if (!byHex.has(c.hex)) {
-        ordered.push(c);
-        byHex.set(c.hex, c);
-      }
-    }
-  }
-
-  // Usage: where each hex appears in the actual theme tables.
+  // Usage: where each hex appears, kept in first-seen order so swatches group
+  // by table. Labels are the dotted table path (e.g. `mgr.cwd`).
   const usage = new Map<string, string[]>();
   const add = (hex: string, where: string) => {
     hex = hex.toLowerCase();
@@ -233,47 +241,55 @@ async function loadFlavor() {
     if (!arr.includes(where)) arr.push(where);
     usage.set(hex, arr);
   };
+
+  // A `[[filetype.rules]]` block spreads its fg/bg and its discriminator
+  // (mime/is/url) across separate lines, so accumulate per block and flush on
+  // the next header / EOF.
   let section = "";
+  let ruleHexes: string[] = [];
+  let ruleDisc = "";
+  const flushRule = () => {
+    for (const h of ruleHexes) {
+      add(h, `filetype.rules${ruleDisc ? `:${truncate(ruleDisc, 16)}` : ""}`);
+    }
+    ruleHexes = [];
+    ruleDisc = "";
+  };
+
   for (const raw of lines) {
     const line = raw.trim();
-    if (line.startsWith("#") || !line) continue;
-    const sec = line.match(/^\[(\w+)\]/);
-    if (sec) {
-      section = sec[1];
+    if (!line || line.startsWith("#")) continue;
+
+    const header = line.match(/^\[\[?\s*([\w.]+)\s*\]\]?/);
+    if (header) {
+      flushRule();
+      section = header[1];
       continue;
     }
-    const hexes = [...line.matchAll(/(#[0-9a-fA-F]{3,8})/g)].map((x) => x[1]);
-    if (!hexes.length) continue;
-    const kv = line.match(/^(\w+)\s*=/);
-    let where: string;
-    if (kv) {
-      where = `${section}.${kv[1]}`;
-    } else {
-      // filetype rule rows: { mime = "...", fg = "..." }
-      const d = line.match(/(mime|url|is)\s*=\s*"([^"]+)"/);
-      where = d ? `${section}:${truncate(d[2], 16)}` : section;
-    }
-    for (const h of hexes) add(h, where);
-  }
 
-  // Colors used but not named in the comment block.
-  for (const hex of usage.keys()) {
-    if (!byHex.has(hex)) {
-      const c = { name: ALIASES[hex] ?? "(unnamed)", hex, note: "" };
-      ordered.push(c);
-      byHex.set(hex, c);
-    }
-  }
+    const hexes = [...line.matchAll(/#[0-9a-fA-F]{3,8}/g)].map((m) => m[0]);
 
-  const swatches: Swatch[] = ordered.map((c) => {
-    const used = usage.get(c.hex) ?? [];
-    const sub = [c.note, used.slice(0, 3).join(", ")]
-      .filter(Boolean)
-      .join(" · ");
-    const extra = used.length > 3 ? ` +${used.length - 3}` : "";
-    return { bg: c.hex, name: c.name, hex: c.hex, sub: sub + extra };
-  });
-  return swatches;
+    if (section === "filetype.rules") {
+      ruleHexes.push(...hexes);
+      // Prefer the most specific discriminator in the block (mime/is over url).
+      const d = line.match(/^(mime|is|url)\s*=\s*"([^"]+)"/);
+      if (d && (!ruleDisc || d[1] !== "url")) ruleDisc = d[2];
+      continue;
+    }
+
+    for (const h of hexes) add(h, section);
+  }
+  flushRule();
+
+  // One swatch per used hex, named from the shared palette.
+  return [...usage.entries()].map(([hex, used]) => ({
+    bg: hex,
+    name: names.get(hex) ?? "(unnamed)",
+    hex,
+    sub:
+      used.slice(0, 3).join(", ") +
+      (used.length > 3 ? ` +${used.length - 3}` : ""),
+  }));
 }
 
 // --- parse tmtheme.xml (minimal plist) --------------------------------------
@@ -333,8 +349,10 @@ function parsePlist(xml: string): PVal {
   return value();
 }
 
-async function loadTmtheme(): Promise<{ global: Swatch[]; syntax: Swatch[] }> {
-  const xml = await Bun.file(TMTHEME).text();
+async function loadTmtheme(
+  tmthemePath: string,
+): Promise<{ global: Swatch[]; syntax: Swatch[] }> {
+  const xml = await Bun.file(tmthemePath).text();
   const root = parsePlist(xml) as { [k: string]: PVal };
   const entries = root.settings as { [k: string]: PVal }[];
 
@@ -381,8 +399,10 @@ async function loadTmtheme(): Promise<{ global: Swatch[]; syntax: Swatch[] }> {
 
 // --- assemble ----------------------------------------------------------------
 
-const flavor = await loadFlavor();
-const { global, syntax } = await loadTmtheme();
+const store = buildFlavor();
+const names = loadNames();
+const flavor = await loadFlavor(join(store, "flavor.toml"), names);
+const { global, syntax } = await loadTmtheme(join(store, "tmtheme.xml"));
 
 const flavorGrid = renderGrid(flavor);
 const W = identifyWidth(flavorGrid);
@@ -405,7 +425,7 @@ const title = (() => {
     "42",
     "-annotate",
     "+28-12",
-    "yazi theme — kanagawa-dragon",
+    "yazi theme — kanagawa",
     "-font",
     FREG,
     "-fill",
@@ -414,7 +434,7 @@ const title = (() => {
     "18",
     "-annotate",
     "+30+26",
-    "_themes/kanagawa-dragon · regenerate with scripts/render-yazi-palette.ts",
+    "_themes/kanagawa · regenerate with scripts/render-yazi-palette.ts",
     path,
   ]);
   return path;

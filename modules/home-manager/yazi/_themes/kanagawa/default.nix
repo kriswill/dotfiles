@@ -1,13 +1,13 @@
-# Kanagawa-Dragon flavor for Yazi, generated from the shared palette.
+# Kanagawa flavor for Yazi, generated from the shared palette.
 #
 # Both files yazi expects in a `<name>.yazi/` flavor dir — `flavor.toml`
 # (the UI theme) and `tmtheme.xml` (the syntect tmTheme used for syntax/diff
 # previews) — are produced here from `lib.kanagawa` so every color has a
-# single source of truth (lib/kanagawa.nix). The dragon palette uses the
-# `dragon*` entries; a few non-dragon accents (waveRed, carpYellow, …) match
-# upstream rebelot/kanagawa.nvim.
+# single source of truth (lib/kanagawa.nix). Colors are largely drawn from the
+# `dragon*` entries plus accents (waveRed, carpYellow, …) matching upstream
+# rebelot/kanagawa.nvim, with local adjustments.
 #
-# Attribution: ported from the MIT-licensed
+# Attribution: originally ported from the MIT-licensed
 # https://github.com/marcosvnmelo/kanagawa-dragon.yazi
 { lib, pkgs, ... }:
 let
@@ -491,13 +491,13 @@ let
     ];
     uuid = "592FC036-6BB7-4676-A2F5-2894D48C8E33";
     colorSpaceName = "sRGB";
-    semanticClass = "theme.dark.kanagawa-dragon";
+    semanticClass = "theme.dark.kanagawa";
   };
 
   tomlFile = (pkgs.formats.toml { }).generate "flavor.toml" flavorAttrs;
   xmlFile = pkgs.writeText "tmtheme.xml" (lib.generators.toPlist { escape = true; } tmthemeAttrs);
 in
-pkgs.runCommand "yazi-kanagawa-dragon-flavor" { } ''
+pkgs.runCommand "yazi-kanagawa-flavor" { } ''
   mkdir -p $out
   cp ${tomlFile} $out/flavor.toml
   cp ${xmlFile}  $out/tmtheme.xml

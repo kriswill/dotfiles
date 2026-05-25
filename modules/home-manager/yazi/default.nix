@@ -35,10 +35,10 @@
           '';
 
           flavors = {
-            kanagawa-dragon = import ./_themes/kanagawa-dragon { inherit lib pkgs; };
+            kanagawa = import ./_themes/kanagawa { inherit lib pkgs; };
           };
           theme = {
-            flavor.dark = "kanagawa-dragon";
+            flavor.dark = "kanagawa";
           };
           settings = {
             mgr.ratio = [
