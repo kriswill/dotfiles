@@ -10,6 +10,9 @@
     {
       options.kriswill.yazi.enable = lib.mkEnableOption "yazi";
       config = lib.mkIf config.kriswill.yazi.enable {
+        # `magick` (ImageMagick 7) is required by the font previewer.
+        home.packages = [ pkgs.imagemagick ];
+
         programs.yazi = {
           enable = lib.mkDefault true;
           shellWrapperName = "y";
@@ -17,6 +20,10 @@
           plugins = {
             inherit (pkgs.yaziPlugins) git;
             faster-piper = inputs.faster-piper-yazi;
+            # Font previewer with light glyphs on a transparent background.
+            # Wired via explicit preloader + previewer rules below — yazi
+            # won't let a user plugin named `font` override the preset.
+            font-dark = ./font-dark.yazi;
           };
           initLua = ''
             require("git"):setup()
@@ -47,7 +54,30 @@
                   run = "git";
                 }
               ];
+              # Font previews are rendered by the *preloader* (it writes the
+              # cached image) and merely displayed by the previewer. Override
+              # both, else the built-in `font` preloader caches a white image
+              # first and `font-dark`'s peek short-circuits on the existing
+              # cache. Mirror the preset's two font mime rules.
+              prepend_preloaders = [
+                {
+                  mime = "font/*";
+                  run = "font-dark";
+                }
+                {
+                  mime = "application/ms-opentype";
+                  run = "font-dark";
+                }
+              ];
               prepend_previewers = [
+                {
+                  mime = "font/*";
+                  run = "font-dark";
+                }
+                {
+                  mime = "application/ms-opentype";
+                  run = "font-dark";
+                }
                 {
                   url = "*.md";
                   run = ''faster-piper -- CLICOLOR_FORCE=1 glow -w=$w -s="${config.kriswill.glow.stylePath}" "$1"'';
