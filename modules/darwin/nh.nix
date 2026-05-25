@@ -1,5 +1,4 @@
 # This option is missing from nix-darwin config
-{ ... }:
 {
   flake.modules.darwin.nh =
     {

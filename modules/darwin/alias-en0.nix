@@ -1,4 +1,3 @@
-{ ... }:
 {
   flake.modules.darwin.alias-en0 =
     { lib, config, ... }:

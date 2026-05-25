@@ -1,7 +1,6 @@
 # Core home-manager configuration (was modules/home-manager/default.nix).
 # Declares the home-manager-side `kriswill.enable` master toggle, flips the
 # per-feature defaults, and carries the shared package set / inline programs.
-{ ... }:
 {
   flake.modules.homeManager.core =
     {

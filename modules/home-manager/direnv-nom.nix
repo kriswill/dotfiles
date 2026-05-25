@@ -5,7 +5,6 @@
 # as hm-nix-direnv.sh, so zz-nom-wrapper.sh loads after it and can redefine
 # _nix(). Only print-dev-env is wrapped (it triggers the actual build); other
 # subcommands like build and flake archive pass through unchanged.
-{ ... }:
 {
   flake.modules.homeManager.direnv-nom =
     {

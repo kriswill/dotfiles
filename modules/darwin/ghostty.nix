@@ -1,4 +1,3 @@
-{ ... }:
 {
   flake.modules.darwin.ghostty =
     { lib, config, ... }:

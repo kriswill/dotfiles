@@ -1,5 +1,4 @@
 # Development shell and formatter.
-{ ... }:
 {
   perSystem =
     { pkgs, ... }:

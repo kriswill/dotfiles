@@ -1,4 +1,3 @@
-{ ... }:
 {
   flake.modules.darwin.macos-defaults =
     { lib, config, ... }:

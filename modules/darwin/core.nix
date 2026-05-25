@@ -2,7 +2,6 @@
 # Declares the darwin-side `kriswill.enable` master toggle and the always-on
 # system baseline. Sibling darwin features are now separate flake-parts modules
 # auto-imported by import-tree, so the old `lib.autoImport` is gone.
-{ ... }:
 {
   flake.modules.darwin.core =
     {

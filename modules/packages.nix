@@ -1,5 +1,4 @@
 # Custom package outputs (also surfaced into nix-darwin via ./overlays.nix).
-{ ... }:
 {
   perSystem =
     { pkgs, ... }:

@@ -1,4 +1,3 @@
-{ ... }:
 {
   flake.modules.darwin.homebrew =
     { lib, config, ... }:
