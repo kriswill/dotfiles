@@ -1,24 +1,28 @@
+{ ... }:
 {
-  config,
-  lib,
-  pkgs,
-  ...
-}:
-{
-  options.kriswill.podman-desktop.enable = lib.mkEnableOption "Podman Desktop";
-  config = lib.mkIf config.kriswill.podman-desktop.enable {
-    home.packages = [
-      pkgs.podman-desktop
-      pkgs.podman
-      pkgs.k9s
-    ];
+  flake.modules.homeManager.podman-desktop =
+    {
+      config,
+      lib,
+      pkgs,
+      ...
+    }:
+    {
+      options.kriswill.podman-desktop.enable = lib.mkEnableOption "Podman Desktop";
+      config = lib.mkIf config.kriswill.podman-desktop.enable {
+        home.packages = [
+          pkgs.podman-desktop
+          pkgs.podman
+          pkgs.k9s
+        ];
 
-    xdg.configFile."containers/containers.conf".source = config.lib.file.mkOutOfStoreSymlink (
-      config.home.homeDirectory + "/src/dotfiles/config/containers/containers.conf"
-    );
+        xdg.configFile."containers/containers.conf".source = config.lib.file.mkOutOfStoreSymlink (
+          config.home.homeDirectory + "/src/dotfiles/config/containers/containers.conf"
+        );
 
-    xdg.dataFile."containers/podman-desktop/configuration/settings.json".source =
-      config.lib.file.mkOutOfStoreSymlink
-        (config.home.homeDirectory + "/src/dotfiles/config/containers/podman-desktop-settings.json");
-  };
+        xdg.dataFile."containers/podman-desktop/configuration/settings.json".source =
+          config.lib.file.mkOutOfStoreSymlink
+            (config.home.homeDirectory + "/src/dotfiles/config/containers/podman-desktop-settings.json");
+      };
+    };
 }
