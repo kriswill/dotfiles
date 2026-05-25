@@ -20,6 +20,11 @@
           plugins = {
             inherit (pkgs.yaziPlugins) git;
             faster-piper = inputs.faster-piper-yazi;
+            # LuaCATS type stubs for the yazi Lua API (ya, rt, fs, Command,
+            # Err, …). Pure `---@meta` annotations; never referenced by a
+            # previewer/preloader/fetcher, so yazi never executes it. Lands at
+            # ~/.config/yazi/plugins/types.yazi for lua_ls (.luarc.json there).
+            types = inputs.yazi-plugins + "/types.yazi";
             # Font previewer with light glyphs on a transparent background.
             # Wired via explicit preloader + previewer rules below — yazi
             # won't let a user plugin named `font` override the preset.

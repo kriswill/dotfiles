@@ -19,5 +19,9 @@
       url = "github:alberti42/faster-piper.yazi";
       flake = false;
     };
+    yazi-plugins = {
+      url = "github:yazi-rs/plugins";
+      flake = false;
+    };
   };
 }
