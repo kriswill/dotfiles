@@ -35,7 +35,7 @@
           '';
 
           flavors = {
-            kanagawa-dragon = import ./_themes/kanagawa-dragon { inherit lib; };
+            kanagawa-dragon = import ./_themes/kanagawa-dragon { inherit lib pkgs; };
           };
           theme = {
             flavor.dark = "kanagawa-dragon";
