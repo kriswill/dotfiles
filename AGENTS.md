@@ -3,7 +3,7 @@
 ## Overview
 
 Nix-based dotfiles for macOS (nix-darwin + home-manager). Primary configs: Neovim (Lua), Tmux, Zsh, CLI tools.
-Platform: aarch64-darwin (Apple Silicon only). Flake-based with custom modular structure using `lib.autoImport`.
+Platform: aarch64-darwin (Apple Silicon only). Flake-based, using flake-parts + `import-tree` (the Dendritic pattern): every `.nix` file under `modules/` is auto-discovered as a flake-parts module.
 
 ## MANDATORY: Use td for Task Management
 
@@ -39,12 +39,12 @@ Use td usage -q after first read.
 
 ## Code Style - Nix
 
-- **Module pattern:** `options` with `kriswill.<feature>.enable` + `config` with `lib.mkIf`. See `modules/darwin/core/programs/nh/default.nix` for reference.
+- **Module pattern:** wrap in `flake.modules.{darwin,homeManager}.<name> = { ... }: { options … config … }`; `options` with `kriswill.<feature>.enable` + `config` with `lib.mkIf`. See `modules/darwin/nh.nix` for reference.
 - **Imports:** Use `inherit` for cleaner destructuring
 - **Package lists:** Use `builtins.attrValues { inherit (pkgs) ...; }` pattern
 - **Options:** `lib.mkEnableOption`, `lib.mkProgramOption` (custom), `lib.mkDefault`
 - **Symlinks:** Use `config.lib.file.mkOutOfStoreSymlink` (see neovim module)
-- **Unfree packages:** Add to `allowUnfreePredicate` in `flake.nix`
+- **Unfree packages:** Repo sets `nixpkgs.config.allowUnfree = false` in `modules/darwin/core.nix`; to permit a specific unfree package add a `nixpkgs.config.allowUnfreePredicate` there
 
 ## Code Style - Lua (Neovim)
 
@@ -72,47 +72,49 @@ Use td usage -q after first read.
 
 - **Module options:** `kriswill.<feature>.enable` (e.g., `kriswill.neovim.enable`)
 - **Packages:** kebab-case (e.g., `kitten`, `iv`, `tofu-ls`)
-- **Nix functions:** camelCase (e.g., `mkDarwin`, `autoImport`, `mkProgramOption`)
+- **Nix functions:** camelCase (e.g., `mkProgramOption`, `kanagawa`)
 - **Files:** kebab-case for multi-word (e.g., `alias-en0.nix`, `update-opencode.sh`)
 - **Hosts:** Descriptive names (e.g., `k`, `SOC-Kris-Williams`)
 
 ## File Organization
 
 ```
-├── modules/
-│   ├── darwin/          # nix-darwin system modules (uses lib.autoImport)
-│   │   ├── core/        # Essential system configuration
-│   │   └── mixins/      # Optional features (homebrew, aliases)
-│   └── home-manager/    # User-level tool configs (neovim, tmux, zsh, git, etc.)
+├── modules/             # Every .nix here is auto-imported as a flake-parts module
+│   ├── flake-parts.nix  # systems list + flake-parts plumbing
+│   ├── darwin.nix       # realises `configurations.darwin.<host>` → darwinConfigurations
+│   ├── home.nix         # wires home-manager into nix-darwin
+│   ├── lib.nix, packages.nix, overlays.nix, dev.nix
+│   ├── darwin/          # nix-darwin system feature modules (core, homebrew, ghostty, …)
+│   ├── home-manager/    # User-level tool configs (neovim, tmux, zsh, git, …)
+│   └── hosts/           # Per-host config (k, mini, SOC-Kris-Williams)
 ├── config/              # Actual config files (symlinked to XDG locations)
 │   ├── nvim/            # Neovim Lua configuration
 │   └── tmux/            # Tmux configuration
 ├── pkgs/                # Custom package definitions (*.nix files or subdirectories)
 ├── overlays/            # Nixpkgs overlays (makes custom packages available)
-├── hosts/               # Host-specific configurations
-├── lib/                 # Custom library functions (autoImport, mkDarwin, etc.)
+├── lib/                 # Pure lib helpers (mkProgramOption, kanagawa) — outside modules/ so import-tree skips them
 └── scripts/             # Helper scripts for package updates
 ```
 
 ## Custom Library Functions
 
-Located in `lib/default.nix`: `autoImport` (directory-based module loading), `mkDarwin`, `mkHomeManager`, `mkProgramOption`. See file for API details.
+Pure helpers live in `lib/default.nix`: `mkProgramOption` and `kanagawa`. They're merged onto `nixpkgs.lib` in `modules/lib.nix` (exposed as `config.kriswill.lib`) and handed to the darwin/home-manager evaluations via specialArgs, so modules reach them as `lib.mkProgramOption` / `lib.kanagawa`. Module auto-discovery and the old `mkDarwin`/`mkHomeManager`/`autoImport` builders are gone — flake-parts + `import-tree ./modules` (wired in `flake.nix`) handles discovery, and `modules/{darwin,home}.nix` realise the configurations.
 
 ## Common Patterns
 
 **Adding a New Module:**
 
-1. Create file in `modules/darwin/` or `modules/home-manager/`
-2. Follow module pattern (see Code Style - Nix above)
-3. File is auto-discovered via `lib.autoImport` in parent `default.nix`
+1. Create a `.nix` file in `modules/darwin/` or `modules/home-manager/` (a bare `<name>.nix`; only use a directory when bundling adjacent config files)
+2. Define `flake.modules.darwin.<name>` or `flake.modules.homeManager.<name>` following the module pattern (see Code Style - Nix above)
+3. File is auto-discovered by `import-tree` — no manual import needed (prefix a path component with `_` to exclude it, e.g. `yazi/_themes/`)
 4. **Must `git add` new files before `nix build`** — flakes only see git-tracked files
 
 **Adding a Custom Package:**
 
-1. Create `pkgs/<name>/package.nix`
-2. Add to `packages.${system}` in `flake.nix`
-3. Create overlay in `overlays/<name>.nix`
-4. If unfree: add to `allowUnfreePredicate` in `flake.nix`
+1. Create `pkgs/<name>.nix` (or `pkgs/<name>/package.nix`)
+2. Add `<name> = pkgs.callPackage ../pkgs/<name>.nix { };` to `perSystem.packages` in `modules/packages.nix`
+3. To make it available to hosts, create `overlays/<name>.nix` and register it in `modules/overlays.nix` (`flake.overlays.<name>`)
+4. If unfree: add a `nixpkgs.config.allowUnfreePredicate` entry in `modules/darwin/core.nix`
 
 **Symlinked Configs:**
 
