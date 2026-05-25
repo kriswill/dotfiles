@@ -62,3 +62,9 @@ keymaps
 autocmds
 LSP
 camelCase
+Neovide
+MCP
+debounces/!
+UI
+lualine
+glyphs

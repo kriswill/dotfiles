@@ -2,7 +2,7 @@
 
 ## Overview
 
-Nix-based dotfiles for macOS (nix-darwin + home-manager). Primary configs: Neovim (Lua), Tmux, Zsh, CLI tools.
+Nix-based dotfiles for MacOS (nix-darwin + home-manager). Primary configs: Neovim (Lua), Tmux, Zsh, CLI tools.
 Platform: aarch64-darwin (Apple Silicon only). Flake-based, using flake-parts + `import-tree` (the Dendritic pattern): every `.nix` file under `modules/` is auto-discovered as a flake-parts module.
 
 ## Build & Commands

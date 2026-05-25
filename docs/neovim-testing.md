@@ -25,7 +25,7 @@ exactly the config you're editing, with every `programs.neovim.extraPackages`
 entry (LSP servers, formatters) on `PATH`.
 
 The Neovide bundle lives at `~/Applications/Home Manager Apps/Neovide.app`,
-materialised as a real `.app` directory by home-manager's
+materialized as a real `.app` directory by home-manager's
 `targets.darwin.copyApps` (default-on at `home.stateVersion = "26.05"`, set
 in `lib/default.nix`). That detail matters because real bundle directories
 are what GUI-automation tools enumerate — Finder-alias stubs are not.
