@@ -1,0 +1,10 @@
+# rumdl config — markdown lint/format, run via efm-langserver in Neovim.
+# efm anchors on this file (config/nvim/lsp/efm.lua rootMarkers).
+
+[global]
+# MD013 (line-length, default 80). Our markdown is prose — agent docs,
+# READMEs, notes — not width-constrained code. The only auto-fix rumdl
+# offers for MD013 is reflow, which rewraps paragraphs across headings
+# and creates more problems than it solves. Disable the rule project-wide
+# so `rumdl fmt` never attempts to wrap prose; long lines are left as-is.
+disable = ["MD013"]

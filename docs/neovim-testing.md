@@ -42,7 +42,7 @@ Recipe:
 
 1. **Grant access** — once per session:
 
-   ```
+   ```text
    mcp__computer-use__request_access(applications: ["Neovide"])
    ```
 
@@ -52,7 +52,7 @@ Recipe:
 
 2. **Open the buffer**:
 
-   ```
+   ```text
    mcp__computer-use__open_application(
      name: "Neovide",
      path: "/Users/k/src/dotfiles/config/nvim/init.lua"
