@@ -7,6 +7,9 @@ pkgs/result
 .claude/settings.local.json
 .todos/
 
+# Compiled Neovim spellfile (regenerated from the tracked .add)
+config/nvim/spell/*.spl
+
 # Sidecar worktree state files
 .sidecar/
 .sidecar-agent
