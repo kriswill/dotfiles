@@ -1,9 +1,9 @@
 -- Override of yazi's built-in `font` previewer.
--- Mirrors the preset, except: transparent background (PNG, `xc:none`) with
--- glyphs colored to contrast the terminal background (via `rt.term.light`),
--- so the preview blends in on both light and dark terminals. The preset's
--- `64` pointsize is also written as the string `"64"` (Command:arg takes
--- strings), and the second `err` local is renamed, to type-check clean.
+-- Mirrors the preset, except: transparent background (PNG, `xc:none`) and
+-- glyphs colored from the active flavor's foreground (`th.mgr.border_style`),
+-- so the preview blends into the themed UI. The preset's `64` pointsize is
+-- also written as the string `"64"` (Command:arg takes strings), and the
+-- second `err` local is renamed, to type-check clean.
 
 local TEXT = "ABCDEFGHIJKLM\nNOPQRSTUVWXYZ\nabcdefghijklm\nnopqrstuvwxyz\n1234567890\n!$&*()[]{}"
 
@@ -39,10 +39,11 @@ function M:preload(job)
 		return true
 	end
 
-	-- yazi exposes no general "foreground" theme field, so key the glyph
-	-- color off the terminal's light/dark mode: near-black on light
-	-- terminals, kanagawa fujiWhite on dark ones.
-	local fill = rt.term.light and "#181616" or "#c5c9c5"
+	-- Glyph color follows the active flavor's foreground. yazi exposes no
+	-- flat palette, so read it off a component that carries the default fg
+	-- (mgr.border_style); `:raw()` serializes the Style to a table whose
+	-- `fg` is a "#RRGGBB" string. Fall back to fujiWhite if it's ever unset.
+	local fill = th.mgr.border_style:raw().fg or "#c5c9c5"
 
 	local status, err = Command("magick"):arg({
 		"-size",
