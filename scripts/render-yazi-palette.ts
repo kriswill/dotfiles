@@ -11,7 +11,7 @@
 // read with `nix eval`); usage comes from the flavor.toml tables and tmtheme
 // scopes — so the image stays correct as the theme changes.
 //
-// Writes: modules/home-manager/yazi/_themes/kanagawa/palette.png
+// Writes: modules/home-manager/yazi/_palette/kanagawa-<flavor>.png (one each)
 //
 // Deps: bun, nix, ImageMagick (`magick`), and a SauceCodePro Nerd Font in the
 // Nix store. Run from anywhere: `bun scripts/render-yazi-palette.ts`.
@@ -20,11 +20,10 @@ import { spawnSync } from "bun";
 import { join } from "node:path";
 
 const REPO = join(import.meta.dir, "..");
-const PALETTE_NIX = join(REPO, "lib/kanagawa.nix");
-const OUT = join(
-  REPO,
-  "modules/home-manager/yazi/_themes/kanagawa/palette.png",
-);
+const PALETTE_NIX = join(REPO, "lib/kanagawa/palette.nix");
+// One doc image per flavor, under an import-tree-excluded `_palette/` dir.
+const OUT_DIR = join(REPO, "modules/home-manager/yazi/_palette");
+const FLAVORS = ["kris", "wave", "dragon", "lotus"] as const;
 
 const BG = "#16161d";
 const PANEL = "#181616";
@@ -56,17 +55,17 @@ function identifyWidth(path: string): number {
   return Number(sh(`magick identify -format '%w' ${JSON.stringify(path)}`));
 }
 
-// Build the flavor derivation and return its store path ($out holds
-// flavor.toml + tmtheme.xml). Errors out loudly — an empty result here would
-// otherwise produce a blank image.
-function buildFlavor(): string {
+// Build a flavor derivation and return its store path ($out holds flavor.toml
+// + tmtheme.xml). Errors out loudly — an empty result here would otherwise
+// produce a blank image.
+function buildFlavor(variant: string): string {
   const out = sh(
-    `nix build ${JSON.stringify(REPO)}#yazi-kanagawa-flavor --no-link --print-out-paths`,
+    `nix build ${JSON.stringify(REPO)}#yazi-kanagawa-${variant} --no-link --print-out-paths`,
   );
   const path = out.split("\n").filter(Boolean).pop();
   if (!path) {
     throw new Error(
-      "nix build .#yazi-kanagawa-flavor produced no output path — is the flake evaluable?",
+      `nix build .#yazi-kanagawa-${variant} produced no output path — is the flake evaluable?`,
     );
   }
   return path;
@@ -399,21 +398,11 @@ async function loadTmtheme(
 
 // --- assemble ----------------------------------------------------------------
 
-const store = buildFlavor();
-const names = loadNames();
-const flavor = await loadFlavor(join(store, "flavor.toml"), names);
-const { global, syntax } = await loadTmtheme(join(store, "tmtheme.xml"));
-
-const flavorGrid = renderGrid(flavor);
-const W = identifyWidth(flavorGrid);
-const globalGrid = renderGrid(global);
-const syntaxGrid = renderGrid(syntax);
-
-const title = (() => {
-  const path = join(TMP, "title.png");
+function titleCard(variant: string, width: number): string {
+  const path = join(TMP, `title-${variant}.png`);
   magick([
     "-size",
-    `${W}x110`,
+    `${width}x110`,
     `xc:${BG}`,
     "-font",
     FBOLD,
@@ -425,7 +414,7 @@ const title = (() => {
     "42",
     "-annotate",
     "+28-12",
-    "yazi theme — kanagawa",
+    `yazi theme — kanagawa-${variant}`,
     "-font",
     FREG,
     "-fill",
@@ -434,40 +423,53 @@ const title = (() => {
     "18",
     "-annotate",
     "+30+26",
-    "_themes/kanagawa · regenerate with scripts/render-yazi-palette.ts",
+    "regenerate with scripts/render-yazi-palette.ts",
     path,
   ]);
   return path;
-})();
+}
 
-const pieces = [
-  title,
-  header(`UI theme · flavor.toml (${flavor.length} colors)`, W),
-  flavorGrid,
-  header(
-    `Syntax · tmtheme.xml — editor (${global.length})`,
-    W,
-    "background, foreground, caret, selection & friends",
-  ),
-  globalGrid,
-  header(`Syntax · tmtheme.xml — scopes (${syntax.length} unique colors)`, W),
-  syntaxGrid,
-];
+async function renderFlavor(variant: string, names: Map<string, string>) {
+  const store = buildFlavor(variant);
+  const flavor = await loadFlavor(join(store, "flavor.toml"), names);
+  const { global, syntax } = await loadTmtheme(join(store, "tmtheme.xml"));
 
-magick([
-  "-background",
-  BG,
-  ...pieces,
-  "-append",
-  "-bordercolor",
-  BG,
-  "-border",
-  "16",
-  OUT,
-]);
+  const flavorGrid = renderGrid(flavor);
+  const W = identifyWidth(flavorGrid);
+  const pieces = [
+    titleCard(variant, W),
+    header(`UI theme · flavor.toml (${flavor.length} colors)`, W),
+    flavorGrid,
+    header(
+      `Syntax · tmtheme.xml — editor (${global.length})`,
+      W,
+      "background, foreground, caret, selection & friends",
+    ),
+    renderGrid(global),
+    header(`Syntax · tmtheme.xml — scopes (${syntax.length} unique colors)`, W),
+    renderGrid(syntax),
+  ];
 
-const dims = sh(`magick identify -format '%wx%h' ${JSON.stringify(OUT)}`);
-console.log(`wrote ${OUT} (${dims})`);
-console.log(
-  `  flavor: ${flavor.length} · tmtheme editor: ${global.length} · scopes: ${syntax.length}`,
-);
+  const out = join(OUT_DIR, `kanagawa-${variant}.png`);
+  magick([
+    "-background",
+    BG,
+    ...pieces,
+    "-append",
+    "-bordercolor",
+    BG,
+    "-border",
+    "16",
+    out,
+  ]);
+  const dims = sh(`magick identify -format '%wx%h' ${JSON.stringify(out)}`);
+  console.log(
+    `wrote ${out} (${dims}) — flavor: ${flavor.length} · editor: ${global.length} · scopes: ${syntax.length}`,
+  );
+}
+
+sh(`mkdir -p ${JSON.stringify(OUT_DIR)}`);
+const names = loadNames();
+for (const variant of FLAVORS) {
+  await renderFlavor(variant, names);
+}
