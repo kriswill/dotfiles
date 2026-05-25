@@ -5,17 +5,6 @@
 Nix-based dotfiles for macOS (nix-darwin + home-manager). Primary configs: Neovim (Lua), Tmux, Zsh, CLI tools.
 Platform: aarch64-darwin (Apple Silicon only). Flake-based, using flake-parts + `import-tree` (the Dendritic pattern): every `.nix` file under `modules/` is auto-discovered as a flake-parts module.
 
-## MANDATORY: Use td for Task Management
-
-Run td usage --new-session at conversation start (or after /clear). This tells you what to work on next.
-
-Sessions are automatic (based on terminal/agent context). Optional:
-
-- td session "name" to label the current session
-- td session --new to force a new session in the same context
-
-Use td usage -q after first read.
-
 ## Build & Commands
 
 **Primary Commands:**
@@ -78,7 +67,7 @@ Use td usage -q after first read.
 
 ## File Organization
 
-```
+```text
 ├── modules/             # Every .nix here is auto-imported as a flake-parts module
 │   ├── flake-parts.nix  # systems list + flake-parts plumbing
 │   ├── darwin.nix       # realises `configurations.darwin.<host>` → darwinConfigurations
