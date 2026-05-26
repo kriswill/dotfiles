@@ -1,16 +1,22 @@
 -- Kanagawa theme switcher.
 --
--- Presents a which-key menu of the installed flavors and persists the choice to
+-- Presents a which-key menu of the dark flavors and persists the choice to
 -- yazi's state dir (~/.local/state/yazi/theme.toml, an out-of-store symlink the
 -- nix config points $XDG_CONFIG_HOME/yazi/theme.toml at). yazi reads
 -- theme.toml's [flavor] only at startup and offers no live flavor reload, so the
 -- selection takes effect on the next launch — hence the notify.
+--
+-- Only the dark flavors are offered here: the choice fills theme.toml's `dark`
+-- slot, while the `light` slot is pinned to the light Lotus flavor. yazi detects
+-- the terminal's color mode at startup and picks the matching slot, so Lotus is
+-- never presented as a manual option — it only activates on a light terminal.
+-- (A "light" flavor can't repaint a dark terminal: yazi paints widget bgs only,
+-- so the file-list body shows the terminal background regardless.)
 
 local THEMES = {
 	{ on = "k", flavor = "kanagawa-kris", desc = "Kanagawa Kris" },
 	{ on = "w", flavor = "kanagawa-wave", desc = "Kanagawa Wave" },
 	{ on = "d", flavor = "kanagawa-dragon", desc = "Kanagawa Dragon" },
-	{ on = "l", flavor = "kanagawa-lotus", desc = "Kanagawa Lotus (light)" },
 }
 
 -- Resolve ~/.local/state/yazi, honoring XDG_STATE_HOME. os.getenv is pure (no
@@ -37,7 +43,9 @@ return {
 
 		local flavor = THEMES[idx].flavor
 		local dir = state_dir()
-		local body = string.format('[flavor]\ndark = "%s"\nlight = "%s"\n', flavor, flavor)
+		-- Chosen flavor drives the dark slot; light stays pinned to Lotus so yazi
+		-- auto-selects it only when the terminal is in light mode.
+		local body = string.format('[flavor]\ndark = "%s"\nlight = "kanagawa-lotus"\n', flavor)
 
 		-- Ensure the state dir exists (it normally does, seeded by activation).
 		fs.create("dir_all", Url(dir))
@@ -55,7 +63,7 @@ return {
 
 		ya.notify({
 			title = "Theme",
-			content = "Set " .. flavor .. ". Restart yazi to apply.",
+			content = "Set dark flavor to " .. flavor .. ". Restart yazi to apply.",
 			timeout = 5,
 			level = "info",
 		})

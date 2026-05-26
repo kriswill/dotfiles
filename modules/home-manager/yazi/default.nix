@@ -11,11 +11,12 @@
       stateDir = "${config.xdg.stateHome}/yazi";
       # Default flavor for a fresh machine; the theme-switcher plugin overwrites
       # this file at runtime, and it's only seeded when absent (below), so a
-      # rebuild never clobbers a saved selection.
+      # rebuild never clobbers a saved selection. yazi picks the slot matching the
+      # terminal's color mode at startup, so `light` is the light-terminal fallback.
       defaultThemeToml = pkgs.writeText "yazi-theme-default.toml" ''
         [flavor]
         dark = "kanagawa-kris"
-        light = "kanagawa-kris"
+        light = "kanagawa-lotus"
       '';
     in
     {
