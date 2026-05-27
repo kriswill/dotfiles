@@ -25,6 +25,9 @@
           kriswill.enable = true;
           home.username = "k";
           home.stateVersion = "26.05";
+          # HM master lags nixpkgs-unstable by a release cycle; silence the
+          # mismatch warning until upstream bumps release.json.
+          home.enableNixpkgsReleaseCheck = false;
           home.homeDirectory = lib.mkForce "/Users/k";
           manual = {
             html.enable = false;
