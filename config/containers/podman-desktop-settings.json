@@ -2,7 +2,7 @@
   "telemetry.enabled": false,
   "preferences.appearance": "dark",
   "preferences.navigationBarLayout": "icon",
-  "releaseNotesBanner.show": "1.23.1",
+  "releaseNotesBanner.show": "1.26.2",
   "welcome.version": "initial",
   "compose.binary.installComposeSystemWide": true,
   "kubectl.binary.installKubectlSystemWide": true,
