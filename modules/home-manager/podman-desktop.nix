@@ -12,6 +12,10 @@
         home.packages = [
           pkgs.podman-desktop
           pkgs.podman
+          # vfkit is the helper binary podman drives for the "applehv" machine
+          # provider (see config/containers/containers.conf). Pin it explicitly so a
+          # nixpkgs bump can't drop it off PATH and break `podman machine start`.
+          pkgs.vfkit
           pkgs.k9s
         ];
 
