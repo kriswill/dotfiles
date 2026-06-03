@@ -15,7 +15,7 @@
 # Single source of truth for profiles (default + the valid set).
 _CCW_DEFAULT_PROFILE=me
 _CCW_VALID_PROFILES=(me work)
-_ccw_is_profile() { emulate -L zsh; [[ -n "$1" && " ${_CCW_VALID_PROFILES[*]} " == *" $1 "* ]]; }
+_ccw_is_profile() { emulate -L zsh; [[ -n "$1" ]] && (( ${_CCW_VALID_PROFILES[(Ie)$1]} )); }  # exact array membership
 
 _ccw_builtin_rules() { printf '%s\t%s\n' "$HOME/src/perforce" work; }
 _ccw_map_file()      { printf '%s\n' "${XDG_STATE_HOME:-$HOME/.local/state}/claude/profile-map.tsv"; }
