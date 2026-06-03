@@ -77,7 +77,8 @@ claude() {
     *)       profile="$(_ccw_resolve "$(_ccw_abspath "$PWD")")" ;;
   esac
   profile="${profile:-me}"
-  tok="$(_ccw_token "$profile")"
+  # don't inject a token while (re)minting one or logging in — it would shadow the flow
+  if [[ "$1" == setup-token || "$1" == login ]]; then tok=""; else tok="$(_ccw_token "$profile")"; fi
   if [[ -n "$tok" ]]; then
     CLAUDE_CONFIG_DIR="$HOME/.claude-$profile" CLAUDE_CODE_OAUTH_TOKEN="$tok" command claude "$@"
   else
