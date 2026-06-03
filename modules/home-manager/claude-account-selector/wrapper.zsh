@@ -52,7 +52,9 @@ claude() {
     pin)
       shift; profile="$1"; shift
       _ccw_is_profile "$profile" || { print -u2 "claude pin: profile must be one of: ${_CCW_VALID_PROFILES[*]}"; return 2; }
-      tgt="$(_ccw_abspath "${1:-$PWD}")"; mapf="$(_ccw_map_file)"; mkdir -p "${mapf:h}"
+      tgt="$(_ccw_abspath "${1:-$PWD}")"
+      [[ "$tgt" == *$'\t'* || "$tgt" == *$'\n'* ]] && { print -u2 "claude pin: path contains a tab/newline (unsupported)"; return 2; }
+      mapf="$(_ccw_map_file)"; mkdir -p "${mapf:h}"
       [[ -f "$mapf" ]] && { awk -F'\t' -v p="$tgt" '$1!=p' "$mapf" > "$mapf.tmp" && mv "$mapf.tmp" "$mapf"; }
       printf '%s\t%s\n' "$tgt" "$profile" >> "$mapf"
       print -r -- "pinned   $tgt → $profile"; return 0 ;;
