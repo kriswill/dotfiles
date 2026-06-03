@@ -44,6 +44,14 @@ _ccw_resolve() {                       # $1 = abs path → winning profile ("" i
 
 _ccw_token() { security find-generic-password -s "claude-token-$1" -a "$USER" -w 2>/dev/null; }
 
+# Remove the row whose first (tab-separated) field equals $2 from map file $1.
+# Uses ENVIRON (not `awk -v`) so backslashes in the path aren't escape-processed.
+_ccw_map_remove() {
+  emulate -L zsh
+  [[ -f "$1" ]] || return 0
+  CCW_KEY="$2" awk -F'\t' '$1 != ENVIRON["CCW_KEY"]' "$1" > "$1.tmp" && mv "$1.tmp" "$1"
+}
+
 claude() {
   emulate -L zsh
   local mapf tgt profile tok verb="$1"
@@ -55,14 +63,14 @@ claude() {
       tgt="$(_ccw_abspath "${1:-$PWD}")"
       [[ "$tgt" == *$'\t'* || "$tgt" == *$'\n'* ]] && { print -u2 "claude pin: path contains a tab/newline (unsupported)"; return 2; }
       mapf="$(_ccw_map_file)"; mkdir -p "${mapf:h}"
-      [[ -f "$mapf" ]] && { awk -F'\t' -v p="$tgt" '$1!=p' "$mapf" > "$mapf.tmp" && mv "$mapf.tmp" "$mapf"; }
+      _ccw_map_remove "$mapf" "$tgt"
       printf '%s\t%s\n' "$tgt" "$profile" >> "$mapf"
       print -r -- "pinned   $tgt → $profile"; return 0 ;;
     unpin)
       shift; tgt="$(_ccw_abspath "${1:-$PWD}")"; mapf="$(_ccw_map_file)"
       [[ -f "$mapf" ]] || { print -r -- "no pins"; return 0; }
-      if awk -F'\t' -v p="$tgt" '$1==p{f=1} END{exit !f}' "$mapf"; then
-        awk -F'\t' -v p="$tgt" '$1!=p' "$mapf" > "$mapf.tmp" && mv "$mapf.tmp" "$mapf"
+      if CCW_KEY="$tgt" awk -F'\t' '$1==ENVIRON["CCW_KEY"]{f=1} END{exit !f}' "$mapf"; then
+        _ccw_map_remove "$mapf" "$tgt"
         print -r -- "unpinned $tgt"
       else print -r -- "no pin at $tgt"; fi
       return 0 ;;
