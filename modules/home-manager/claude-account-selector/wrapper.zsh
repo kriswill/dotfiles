@@ -12,6 +12,11 @@
 # NOTE: never name a local `path` here — it is zsh's special $PATH array.
 # ---------------------------------------------------------------------------
 
+# Single source of truth for profiles (default + the valid set).
+_CCW_DEFAULT_PROFILE=me
+_CCW_VALID_PROFILES=(me work)
+_ccw_is_profile() { emulate -L zsh; [[ -n "$1" && " ${_CCW_VALID_PROFILES[*]} " == *" $1 "* ]]; }
+
 _ccw_builtin_rules() { printf '%s\t%s\n' "$HOME/src/perforce" work; }
 _ccw_map_file()      { printf '%s\n' "${XDG_STATE_HOME:-$HOME/.local/state}/claude/profile-map.tsv"; }
 
@@ -44,7 +49,7 @@ claude() {
   case "$verb" in
     pin)
       shift; profile="$1"; shift
-      [[ "$profile" == me || "$profile" == work ]] || { print -u2 "claude pin: profile must be me|work"; return 2; }
+      _ccw_is_profile "$profile" || { print -u2 "claude pin: profile must be one of: ${_CCW_VALID_PROFILES[*]}"; return 2; }
       tgt="$(_ccw_abspath "${1:-$PWD}")"; mapf="$(_ccw_map_file)"; mkdir -p "${mapf:h}"
       [[ -f "$mapf" ]] && { awk -F'\t' -v p="$tgt" '$1!=p' "$mapf" > "$mapf.tmp" && mv "$mapf.tmp" "$mapf"; }
       printf '%s\t%s\n' "$tgt" "$profile" >> "$mapf"
@@ -58,7 +63,7 @@ claude() {
       else print -r -- "no pin at $tgt"; fi
       return 0 ;;
     which)
-      shift; tgt="$(_ccw_abspath "${1:-$PWD}")"; profile="$(_ccw_resolve "$tgt")"; profile="${profile:-me}"
+      shift; tgt="$(_ccw_abspath "${1:-$PWD}")"; profile="$(_ccw_resolve "$tgt")"; profile="${profile:-$_CCW_DEFAULT_PROFILE}"
       print -r -- "$tgt → $profile   (CLAUDE_CONFIG_DIR=$HOME/.claude-$profile)"; return 0 ;;
     pins)
       print -r -- "# built-in"; _ccw_builtin_rules
@@ -76,7 +81,7 @@ claude() {
     me|work) profile="$verb"; shift ;;
     *)       profile="$(_ccw_resolve "$(_ccw_abspath "$PWD")")" ;;
   esac
-  profile="${profile:-me}"
+  profile="${profile:-$_CCW_DEFAULT_PROFILE}"
   # don't inject a token while (re)minting one or logging in — it would shadow the flow
   if [[ "$1" == setup-token || "$1" == login ]]; then tok=""; else tok="$(_ccw_token "$profile")"; fi
   if [[ -n "$tok" ]]; then
