@@ -67,6 +67,11 @@ claude() {
   esac
 
   # launch
+  # An explicit CLAUDE_CONFIG_DIR from the caller wins — pass through untouched, so
+  # e.g. `CLAUDE_CONFIG_DIR=~/.claude-work claude setup-token` targets that dir.
+  if [[ -n "$CLAUDE_CONFIG_DIR" ]]; then
+    command claude "$@"; return
+  fi
   case "$verb" in
     me|work) profile="$verb"; shift ;;
     *)       profile="$(_ccw_resolve "$(_ccw_abspath "$PWD")")" ;;

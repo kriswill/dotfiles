@@ -102,6 +102,9 @@ home-manager.users.<user>.kriswill.claude-account-selector.enable = true;
 
 - `claude setup-token` may be blocked by Enterprise org policy. If the work token can't be
   minted, only the work profile loses simultaneous use; config/history isolation still holds.
+- An explicit `CLAUDE_CONFIG_DIR` in the environment is respected and bypasses profile
+  resolution entirely (this is what makes the one-time-setup commands above target the dir
+  you name rather than the `$PWD`-resolved profile).
 - The injected token is visible in the process environment to your own session (as with any
   env-based token). Fine for a single-user laptop.
 - zsh gotcha (already handled in `wrapper.zsh`): never declare a `local path` — `path` is the
