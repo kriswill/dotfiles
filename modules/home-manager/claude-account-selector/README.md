@@ -41,6 +41,23 @@ command claude …             # bypass the wrapper entirely (use the raw binary
 Any non-keyword first argument (e.g. `--dangerously-skip-permissions`, `mcp`, `-p`) is
 passed straight through to the real CLI, so existing aliases like `cyolo` still work.
 
+### Reserved first words
+
+`me`, `work`, `pin`, `unpin`, `which`, and `pins` are interpreted by the wrapper only when
+they appear as the **first** argument. A leading `me`/`work` is consumed as a profile
+selector — so `claude work on the bug` launches the real CLI with `on the bug` under the
+*work* profile, **not** the prompt `work on the bug`. To pass such text verbatim, give it as
+a flag value (`claude -p "work on the bug"`) or bypass the wrapper (`command claude …`).
+
+### Subcommands are profile-scoped
+
+Stateful subcommands (`claude mcp …`, `claude config …`, `claude update`, `claude doctor`, …)
+run against the **resolved profile's** config dir, so their effect is cwd-dependent:
+`claude mcp add` under `~/src/perforce/...` edits `~/.claude-work`; the same command elsewhere
+edits `~/.claude-me`. This is intentional (profiles are isolated), but it means servers/config
+in your original `~/.claude` aren't visible under a profile unless you seeded that profile
+from it (see setup). Use `command claude …` to operate on the original `~/.claude`.
+
 ## How a profile is chosen
 
 Resolution order:
