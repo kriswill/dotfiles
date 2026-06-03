@@ -68,7 +68,8 @@ Resolution order:
 
 The rule table is the union of:
 
-- **Built-in default:** anything under `~/src/perforce` → `work` (defined in `wrapper.zsh`).
+- **Module rules:** the `rules` nix option (default: `~/src/perforce → work`) — declarative
+  and version-controlled. See [Configuration](#configuration-nix-options).
 - **Your pins:** `$XDG_STATE_HOME/claude/profile-map.tsv` (defaults to
   `~/.local/state/claude/profile-map.tsv`).
 
@@ -81,6 +82,36 @@ via `claude pin` / `claude unpin`.
 /Users/k/src/clientX            work
 /Users/k/src/perforce/cto/oss   me
 ```
+
+## Configuration (nix options)
+
+All inputs are nix options under `kriswill.claude-account-selector`. The module passes them
+to the wrapper as shell variable assignments prepended to it — `wrapper.zsh` stays a plain
+zsh file with built-in fallbacks, so it also runs standalone (e.g. under test).
+
+| Option | Type | Default | Purpose |
+|---|---|---|---|
+| `enable` | bool | `false` | Install the `claude` wrapper (see [Enable / disable](#enable--disable)). |
+| `defaultProfile` | str | `"me"` | Profile used when no rule matches. |
+| `profiles` | list of str | `[ "me" "work" ]` | Accepted profile names → `~/.claude-<name>` and keychain `claude-token-<name>`. |
+| `rules` | attrs (path → profile) | `{ "<home>/src/perforce" = "work"; }` | Built-in path-prefix rules; longest match wins. `{ }` for none. |
+
+```nix
+home-manager.users.<user>.kriswill.claude-account-selector = {
+  enable = true;
+  defaultProfile = "me";
+  profiles = [ "me" "work" "oss" ];
+  rules = {
+    "${config.home.homeDirectory}/src/perforce" = "work";
+    "${config.home.homeDirectory}/clients"      = "work";
+    "${config.home.homeDirectory}/oss"          = "oss";
+  };
+};
+```
+
+Rule prefixes are matched against the realpath of the launch directory, so use absolute
+paths (the default uses `config.home.homeDirectory`). Runtime `claude pin` entries are merged
+on top of these and, being more specific, win by longest-prefix.
 
 ## One-time setup
 

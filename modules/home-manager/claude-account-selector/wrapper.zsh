@@ -12,12 +12,19 @@
 # NOTE: never name a local `path` here — it is zsh's special $PATH array.
 # ---------------------------------------------------------------------------
 
-# Single source of truth for profiles (default + the valid set).
-_CCW_DEFAULT_PROFILE=me
-_CCW_VALID_PROFILES=(me work)
+# Inputs — the nix module assigns these (as global shell variables) ahead of this
+# file; the fallbacks keep the wrapper working standalone (e.g. under test):
+#   _CCW_DEFAULT_PROFILE  scalar  profile used when no rule matches
+#   _CCW_VALID_PROFILES   array   accepted profile names
+#   _CCW_RULES            assoc   path-prefix -> profile (longest match wins)
+: ${_CCW_DEFAULT_PROFILE:=me}
+(( ${+_CCW_VALID_PROFILES} )) || _CCW_VALID_PROFILES=(me work)
+(( ${+_CCW_RULES} ))          || typeset -gA _CCW_RULES=("$HOME/src/perforce" work)
+
 _ccw_is_profile() { emulate -L zsh; [[ -n "$1" ]] && (( ${_CCW_VALID_PROFILES[(Ie)$1]} )); }  # exact array membership
 
-_ccw_builtin_rules() { printf '%s\t%s\n' "$HOME/src/perforce" work; }
+# Emit the configured rules as TSV (prefix<TAB>profile), one per line.
+_ccw_builtin_rules() { emulate -L zsh; local k; for k in "${(@k)_CCW_RULES}"; do printf '%s\t%s\n' "$k" "${_CCW_RULES[$k]}"; done; }
 _ccw_map_file()      { printf '%s\n' "${XDG_STATE_HOME:-$HOME/.local/state}/claude/profile-map.tsv"; }
 
 _ccw_abspath() {                       # absolutize + normalize (default: cwd)
