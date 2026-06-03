@@ -11,6 +11,10 @@
             upgrade = true;
             cleanup = "zap";
             autoUpdate = true;
+            # Homebrew >= 5.1 refuses `brew bundle --cleanup` non-interactively
+            # without a force flag; authorize the (zap) cleanup so activation
+            # doesn't prompt/abort. See `brew bundle install --help`.
+            extraFlags = [ "--force-cleanup" ];
           };
           taps = [
             "steipete/tap"
