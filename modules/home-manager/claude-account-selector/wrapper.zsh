@@ -32,7 +32,9 @@ _ccw_resolve() {                       # $1 = abs path → winning profile ("" i
   local target="$1" prefix profile best_len=-1 best=""
   local mapf; mapf="$(_ccw_map_file)"
   while IFS=$'\t' read -r prefix profile; do
+    prefix="${prefix%$'\r'}"; profile="${profile%$'\r'}"   # tolerate CRLF-edited maps
     [[ -z "$prefix" || "$prefix" == \#* ]] && continue
+    _ccw_is_profile "$profile" || continue                 # ignore rules with an unknown profile
     prefix="${prefix:A}"
     [[ "$target" == "$prefix" || "$target" == "$prefix"/* ]] || continue
     (( ${#prefix} >= best_len )) && { best_len=${#prefix}; best="$profile"; }   # user pins (read last) win ties
