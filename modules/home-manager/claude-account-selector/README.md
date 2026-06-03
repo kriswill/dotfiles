@@ -90,10 +90,12 @@ profile).
 
 ## Enable / disable
 
-Enabled by default via the `kriswill.enable` cascade in `core.nix`. To turn it off:
+**Opt-in — disabled by default**, so a `darwin-rebuild switch` never silently redirects your
+existing `claude`. Complete the one-time setup above *first*, then enable it in your host
+module (e.g. `modules/hosts/<host>.nix`):
 
 ```nix
-kriswill.claude-account-selector.enable = false;
+home-manager.users.<user>.kriswill.claude-account-selector.enable = true;
 ```
 
 ## Notes & caveats

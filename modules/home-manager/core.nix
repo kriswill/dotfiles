@@ -32,7 +32,6 @@
           # brave.enable = lib.mkDefault false;
           zsh.enable = lib.mkDefault true;
           oksh.enable = lib.mkDefault true;
-          claude-account-selector.enable = lib.mkDefault true;
           direnv-nom.enable = lib.mkDefault true;
           diffnav.enable = lib.mkDefault true;
           git.enable = lib.mkDefault true;
