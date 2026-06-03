@@ -68,19 +68,19 @@ Resolution order:
 
 The rule table is the union of:
 
-- **Module rules:** the `rules` nix option (default: `~/src/perforce → work`) — declarative
+- **Module rules:** the `rules` nix option (default: `~/src/work → work`) — declarative
   and version-controlled. See [Configuration](#configuration-nix-options).
 - **Your pins:** `$XDG_STATE_HOME/claude/profile-map.tsv` (defaults to
   `~/.local/state/claude/profile-map.tsv`).
 
 Longest matching prefix wins, so a more-specific pin overrides a broader rule — e.g. with
-the built-in `~/src/perforce → work`, a pin of `~/src/perforce/cto/oss → me` makes just that
-subtree use `me`. The TSV is plain `path<TAB>profile`, one rule per line; edit it by hand or
-via `claude pin` / `claude unpin`.
+a rule `~/src/work → work`, a pin of `~/src/work/oss → me` makes just that subtree use `me`.
+The TSV is plain `path<TAB>profile`, one rule per line; edit it by hand or via
+`claude pin` / `claude unpin`.
 
 ```text
-/Users/k/src/clientX            work
-/Users/k/src/perforce/cto/oss   me
+/Users/k/src/clientX     work
+/Users/k/src/work/oss    me
 ```
 
 ## Configuration (nix options)
@@ -94,24 +94,30 @@ zsh file with built-in fallbacks, so it also runs standalone (e.g. under test).
 | `enable` | bool | `false` | Install the `claude` wrapper (see [Enable / disable](#enable--disable)). |
 | `defaultProfile` | str | `"me"` | Profile used when no rule matches. |
 | `profiles` | list of str | `[ "me" "work" ]` | Accepted profile names → `~/.claude-<name>` and keychain `claude-token-<name>`. |
-| `rules` | attrs (path → profile) | `{ "<home>/src/perforce" = "work"; }` | Built-in path-prefix rules; longest match wins. `{ }` for none. |
+| `rules` | attrs (path → profile) | `{ "<home>/src/work" = "work"; }` | Built-in path-prefix rules; longest match wins. `{ }` for none. |
 
 ```nix
-home-manager.users.<user>.kriswill.claude-account-selector = {
-  enable = true;
-  defaultProfile = "me";
-  profiles = [ "me" "work" "oss" ];
-  rules = {
-    "${config.home.homeDirectory}/src/perforce" = "work";
-    "${config.home.homeDirectory}/clients"      = "work";
-    "${config.home.homeDirectory}/oss"          = "oss";
+# In a darwin host module, wrap users.<name> in a function so `config` is the
+# home-manager config (needed for config.home.homeDirectory):
+home-manager.users.k = { config, ... }: {
+  kriswill.claude-account-selector = {
+    enable = true;
+    defaultProfile = "me";
+    profiles = [ "me" "work" "oss" ];
+    rules = {
+      "${config.home.homeDirectory}/src/work" = "work";
+      "${config.home.homeDirectory}/clients"  = "work";
+      "${config.home.homeDirectory}/oss"      = "oss";
+    };
   };
 };
 ```
 
 Rule prefixes are matched against the realpath of the launch directory, so use absolute
-paths (the default uses `config.home.homeDirectory`). Runtime `claude pin` entries are merged
-on top of these and, being more specific, win by longest-prefix.
+paths. `config.home.homeDirectory` only resolves inside the home-manager config scope, so
+wrap `users.<name>` in a `{ config, ... }:` function as above (or use literal absolute
+paths). Runtime `claude pin` entries are merged on top and, being more specific, win by
+longest-prefix.
 
 ## One-time setup
 
