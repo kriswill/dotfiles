@@ -60,14 +60,14 @@ claude() {
     pin)
       shift; profile="$1"; shift
       _ccw_is_profile "$profile" || { print -u2 "claude pin: profile must be one of: ${_CCW_VALID_PROFILES[*]}"; return 2; }
-      tgt="$(_ccw_abspath "${1:-$PWD}")"
+      tgt="$(_ccw_abspath "$1")"
       [[ "$tgt" == *$'\t'* || "$tgt" == *$'\n'* ]] && { print -u2 "claude pin: path contains a tab/newline (unsupported)"; return 2; }
       mapf="$(_ccw_map_file)"; mkdir -p "${mapf:h}"
       _ccw_map_remove "$mapf" "$tgt"
       printf '%s\t%s\n' "$tgt" "$profile" >> "$mapf"
       print -r -- "pinned   $tgt → $profile"; return 0 ;;
     unpin)
-      shift; tgt="$(_ccw_abspath "${1:-$PWD}")"; mapf="$(_ccw_map_file)"
+      shift; tgt="$(_ccw_abspath "$1")"; mapf="$(_ccw_map_file)"
       [[ -f "$mapf" ]] || { print -r -- "no pins"; return 0; }
       if CCW_KEY="$tgt" awk -F'\t' '$1==ENVIRON["CCW_KEY"]{f=1} END{exit !f}' "$mapf"; then
         _ccw_map_remove "$mapf" "$tgt"
@@ -75,7 +75,7 @@ claude() {
       else print -r -- "no pin at $tgt"; fi
       return 0 ;;
     which)
-      shift; tgt="$(_ccw_abspath "${1:-$PWD}")"; profile="$(_ccw_resolve "$tgt")"; profile="${profile:-$_CCW_DEFAULT_PROFILE}"
+      shift; tgt="$(_ccw_abspath "$1")"; profile="$(_ccw_resolve "$tgt")"; profile="${profile:-$_CCW_DEFAULT_PROFILE}"
       print -r -- "$tgt → $profile   (CLAUDE_CONFIG_DIR=$HOME/.claude-$profile)"; return 0 ;;
     pins)
       print -r -- "# built-in"; _ccw_builtin_rules
@@ -91,7 +91,7 @@ claude() {
   fi
   case "$verb" in
     me|work) profile="$verb"; shift ;;
-    *)       profile="$(_ccw_resolve "$(_ccw_abspath "$PWD")")" ;;
+    *)       profile="$(_ccw_resolve "$(_ccw_abspath)")" ;;
   esac
   profile="${profile:-$_CCW_DEFAULT_PROFILE}"
   # don't inject a token while (re)minting one or logging in — it would shadow the flow
