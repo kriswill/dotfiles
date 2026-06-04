@@ -61,9 +61,26 @@ _ccw_map_remove() {
   CCW_KEY="$2" awk -F'\t' '$1 != ENVIRON["CCW_KEY"]' "$1" > "$1.tmp" && mv "$1.tmp" "$1"
 }
 
+# Exec the real binary $1 under profile $2's config dir + keychain token, passing
+# the remaining args through. This is the env the profile-aware wrappers inject;
+# factored out so claude() and ccglass() (which spawns the real claude binary
+# directly, dodging the function) stay in lock-step. The setup-token/login guard
+# is claude-specific but harmless elsewhere (ccglass's first arg is a provider).
+_ccw_exec_with_profile() {
+  emulate -L zsh
+  local bin="$1" profile="$2"; shift 2
+  local tok
+  if [[ "$1" == setup-token || "$1" == login ]]; then tok=""; else tok="$(_ccw_token "$profile")"; fi
+  if [[ -n "$tok" ]]; then
+    CLAUDE_CONFIG_DIR="$HOME/.claude-$profile" CLAUDE_CODE_OAUTH_TOKEN="$tok" command "$bin" "$@"
+  else
+    CLAUDE_CONFIG_DIR="$HOME/.claude-$profile" command "$bin" "$@"
+  fi
+}
+
 claude() {
   emulate -L zsh
-  local mapf tgt profile tok verb="$1"
+  local mapf tgt profile verb="$1"
 
   case "$verb" in
     pin)
@@ -103,11 +120,23 @@ claude() {
     *)       profile="$(_ccw_resolve "$(_ccw_abspath)")" ;;
   esac
   profile="${profile:-$_CCW_DEFAULT_PROFILE}"
-  # don't inject a token while (re)minting one or logging in — it would shadow the flow
-  if [[ "$1" == setup-token || "$1" == login ]]; then tok=""; else tok="$(_ccw_token "$profile")"; fi
-  if [[ -n "$tok" ]]; then
-    CLAUDE_CONFIG_DIR="$HOME/.claude-$profile" CLAUDE_CODE_OAUTH_TOKEN="$tok" command claude "$@"
-  else
-    CLAUDE_CONFIG_DIR="$HOME/.claude-$profile" command claude "$@"
-  fi
+  # the helper injects CLAUDE_CONFIG_DIR + the keychain token (and skips the token
+  # while (re)minting one or logging in, since it would shadow the flow)
+  _ccw_exec_with_profile claude "$profile" "$@"
+}
+
+# ccglass — the LLM-traffic inspector (https://github.com/jianshuo/ccglass) starts
+# a logging reverse-proxy and spawns the real `claude` binary directly via Node
+# (no shell), so the claude() function above never runs for it and the child would
+# otherwise land in the default ~/.claude scope. Resolve the profile here and
+# export the same env; ccglass passes its environment straight through to the
+# child, so claude lands in the right account and its traffic flows via the proxy.
+#   ccglass [args…]   profile = longest-prefix match of $PWD (same rules as claude)
+# An explicit CLAUDE_CONFIG_DIR from the caller wins — pass through untouched.
+ccglass() {
+  emulate -L zsh
+  local profile
+  if [[ -n "$CLAUDE_CONFIG_DIR" ]]; then command ccglass "$@"; return; fi
+  profile="$(_ccw_resolve "$(_ccw_abspath)")"; profile="${profile:-$_CCW_DEFAULT_PROFILE}"
+  _ccw_exec_with_profile ccglass "$profile" "$@"
 }

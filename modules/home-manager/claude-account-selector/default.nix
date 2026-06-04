@@ -56,10 +56,67 @@
             augmented at runtime by `claude pin`. Set to `{ }` for no built-in mapping.
           '';
         };
+
+        desktopProfile = lib.mkOption {
+          type = lib.types.nullOr lib.types.str;
+          default = null;
+          example = "me";
+          description = ''
+            Pin the GUI Claude **desktop app** (and its embedded Claude Code) to
+            `~/.claude-<desktopProfile>`.
+
+            GUI apps launched from Dock/Spotlight/Finder inherit the macOS launchd
+            "Aqua" session environment, not your shell env — so the per-`$PWD` wrapper
+            never runs for them and they otherwise fall back to the default `~/.claude`.
+            When set, a per-user LaunchAgent runs `launchctl setenv CLAUDE_CONFIG_DIR
+            ~/.claude-<desktopProfile>` at login so the desktop app picks it up.
+
+            Because that value also leaks into every GUI-launched terminal (where the
+            wrapper would treat it as an explicit override and skip `$PWD` resolution),
+            a one-line scrub is prepended to the zsh init: interactive shells that merely
+            *inherited* this exact value drop it, restoring per-`$PWD` switching. An
+            explicit `CLAUDE_CONFIG_DIR=… claude` (set after init) still wins.
+
+            Trade-off: the desktop app gets a single fixed profile — it cannot replicate
+            the wrapper's per-directory me/work routing (there is no `$PWD` at GUI launch).
+            `null` (default) leaves the desktop app on the unsegregated `~/.claude`.
+          '';
+        };
       };
 
-      config = lib.mkIf cfg.enable {
-        programs.zsh.initContent = lib.mkAfter (inputs + builtins.readFile ./wrapper.zsh);
-      };
+      config = lib.mkIf cfg.enable (
+        lib.mkMerge [
+          {
+            programs.zsh.initContent = lib.mkAfter (
+              inputs
+              # Scrub a GUI-session desktop pin (see desktopProfile) so interactive shells
+              # re-resolve by $PWD instead of inheriting it. Runs before wrapper.zsh, which
+              # treats any non-empty CLAUDE_CONFIG_DIR as an explicit override. An explicit
+              # `CLAUDE_CONFIG_DIR=… claude` (set after init) is unaffected and still wins.
+              + lib.optionalString (cfg.desktopProfile != null) ''
+                [[ "$CLAUDE_CONFIG_DIR" == "$HOME/.claude-${cfg.desktopProfile}" ]] && unset CLAUDE_CONFIG_DIR
+              ''
+              + builtins.readFile ./wrapper.zsh
+            );
+          }
+
+          # Pin the GUI desktop app to ~/.claude-<desktopProfile> by injecting
+          # CLAUDE_CONFIG_DIR into the macOS login (Aqua) session at login.
+          (lib.mkIf (cfg.desktopProfile != null) {
+            launchd.agents.claude-config-dir = {
+              enable = true;
+              config = {
+                ProgramArguments = [
+                  "/bin/launchctl"
+                  "setenv"
+                  "CLAUDE_CONFIG_DIR"
+                  "${config.home.homeDirectory}/.claude-${cfg.desktopProfile}"
+                ];
+                RunAtLoad = true;
+              };
+            };
+          })
+        ]
+      );
     };
 }

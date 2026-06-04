@@ -6,7 +6,9 @@ account can coexist on one machine, even in two terminals at the same time.
 
 It defines a `claude` shell function that shadows the real `claude` binary, picks a profile,
 sets `CLAUDE_CONFIG_DIR` (isolated config/history/MCP/plugins per profile) and, if available,
-`CLAUDE_CODE_OAUTH_TOKEN` (isolated login), then execs the real CLI.
+`CLAUDE_CODE_OAUTH_TOKEN` (isolated login), then execs the real CLI. A matching `ccglass`
+function does the same for the [ccglass](https://github.com/jianshuo/ccglass) traffic
+inspector (see [Inspecting traffic with ccglass](#inspecting-traffic-with-ccglass)).
 
 ## Why
 
@@ -58,6 +60,84 @@ edits `~/.claude-me`. This is intentional (profiles are isolated), but it means 
 in your original `~/.claude` aren't visible under a profile unless you seeded that profile
 from it (see setup). Use `command claude …` to operate on the original `~/.claude`.
 
+## Desktop app (GUI)
+
+The wrapper only covers the **terminal** `claude` binary. The Claude **desktop app** (and
+the Claude Code it embeds) is launched from Dock/Spotlight/Finder, which inherits the macOS
+launchd *Aqua* session environment — **not** your shell env. So the per-`$PWD` wrapper never
+runs for it, and it falls back to the unsegregated `~/.claude`. Neither
+`environment.variables` (shell-only) nor `launchd.daemons` (system/root domain) reaches it.
+
+Set `desktopProfile` to pin it. The module then installs a per-user **LaunchAgent** that runs
+`launchctl setenv CLAUDE_CONFIG_DIR ~/.claude-<desktopProfile>` at login, in the Aqua domain
+the desktop app inherits:
+
+```nix
+kriswill.claude-account-selector = {
+  enable = true;
+  defaultProfile = "me";
+  profiles = [ "me" "work" ];
+  desktopProfile = "me";   # GUI desktop app → ~/.claude-me
+};
+```
+
+### The terminal-leak scrub
+
+A session-wide `launchctl setenv` also leaks into every **GUI-launched terminal** (Ghostty,
+and any tmux server it spawns). Those shells would then start with `CLAUDE_CONFIG_DIR` already
+set, and the wrapper treats any non-empty value as an explicit override — silently disabling
+per-`$PWD` switching for *all* terminal `claude`.
+
+To prevent that, when `desktopProfile` is set the module prepends a one-line scrub to the zsh
+init: an interactive shell that merely **inherited** this exact value drops it, so the wrapper
+resolves by `$PWD` as usual. An explicit `CLAUDE_CONFIG_DIR=… claude` (set *after* init, per
+command) is unaffected and still wins.
+
+### Activation & verification
+
+```sh
+nrs                                                  # nh darwin switch ~/src/dotfiles
+launchctl setenv CLAUDE_CONFIG_DIR ~/.claude-me      # apply now (or just log out/in)
+launchctl getenv  CLAUDE_CONFIG_DIR                  # → /Users/<you>/.claude-me
+# Cmd-Q and relaunch the Claude desktop app so its next session inherits the env.
+# In a fresh Ghostty window, `echo $CLAUDE_CONFIG_DIR` should be EMPTY (scrub working).
+```
+
+**Trade-off:** the desktop app gets a single fixed profile — there is no `$PWD` at GUI launch,
+so it cannot do the per-directory me/work routing the terminal wrapper does. Pin it to the
+account the desktop app is mostly for. Leave `desktopProfile` unset to keep the app on the
+default `~/.claude`.
+
+## Inspecting traffic with ccglass
+
+[ccglass](https://github.com/jianshuo/ccglass) is a local logging reverse-proxy that shows
+exactly what Claude Code sends to the model. It starts a proxy, points the client at it via
+`ANTHROPIC_BASE_URL`, captures every request/response, and forwards to the real upstream.
+
+The catch: ccglass spawns the **real `claude` binary directly** (Node `child_process`, no
+shell), so the `claude` function above never runs for it — the child would launch in the
+default `~/.claude` scope, ignoring your per-directory profile. To fix this the module also
+defines a `ccglass` function that resolves the profile (same rules as `claude`) and exports
+`CLAUDE_CONFIG_DIR` + the keychain `CLAUDE_CODE_OAUTH_TOKEN`; ccglass passes its environment
+straight through to the child, so `claude` lands in the right account *and* its traffic flows
+through the proxy.
+
+```sh
+ccglass claude              # inspect; profile chosen by $PWD, then watch the dashboard URL
+ccglass kimi                # any claude-based ccglass provider works the same way
+command ccglass …           # bypass the function (raw binary, default ~/.claude scope)
+```
+
+An explicit `CLAUDE_CONFIG_DIR` in the environment is respected and passed through untouched,
+exactly like the `claude` wrapper. Notes:
+
+- Auth headers pass through the proxy verbatim, so the OAuth token reaches Anthropic
+  unchanged; ccglass masks `authorization`/`x-api-key` in saved logs by default
+  (`--no-redact` to keep them).
+- Using the keychain token (rather than the logged-in creds alone) is the robust path here:
+  with `ANTHROPIC_BASE_URL` pointed at the localhost proxy, forcing token auth avoids any
+  chance of Claude Code treating the custom base URL as a bring-your-own-key provider.
+
 ## How a profile is chosen
 
 Resolution order:
@@ -95,6 +175,7 @@ zsh file with built-in fallbacks, so it also runs standalone (e.g. under test).
 | `defaultProfile` | str | `"me"` | Profile used when no rule matches. |
 | `profiles` | list of str | `[ "me" "work" ]` | Accepted profile names → `~/.claude-<name>` and keychain `claude-token-<name>`. |
 | `rules` | attrs (path → profile) | `{ "<home>/src/work" = "work"; }` | Built-in path-prefix rules; longest match wins. `{ }` for none. |
+| `desktopProfile` | str or null | `null` | Pin the GUI Claude **desktop app** to `~/.claude-<name>` via a login LaunchAgent. See [Desktop app (GUI)](#desktop-app-gui). |
 
 ```nix
 # In a darwin host module, wrap users.<name> in a function so `config` is the

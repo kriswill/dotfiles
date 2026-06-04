@@ -25,6 +25,9 @@
         rules = {
           "${config.home.homeDirectory}/src/perforce" = "work";
         };
+        # Pin the GUI Claude desktop app to ~/.claude-me (GUI apps can't do the
+        # per-$PWD switching the shell wrapper does). See the module README.
+        desktopProfile = "me";
       };
     };
 
