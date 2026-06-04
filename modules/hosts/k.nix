@@ -24,7 +24,6 @@
         ];
         rules = {
           "${config.home.homeDirectory}/src/perforce" = "work";
-          "${config.home.homeDirectory}/clients" = "work";
         };
       };
     };

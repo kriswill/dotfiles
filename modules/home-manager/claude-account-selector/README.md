@@ -128,7 +128,15 @@ The module only installs the wrapper. Create the profiles and stash a token for 
 cp -a ~/.claude       ~/.claude-work
 cp -a ~/.claude.json  ~/.claude-work/.claude.json   # account/state lives inside the config dir
 
-# 2. Mint + stash a long-lived token per account (order matters: do whichever account
+# 2. Repair absolute ~/.claude/ paths baked into the copy so they point at the
+#    NEW config dir (see "Repairing copied config-dir references" below). The
+#    `cp -a` above carries verbatim e.g. a SessionStart hook command like
+#    "/Users/you/.claude/hooks/...", which would otherwise 404 every session.
+sel=~/src/dotfiles/modules/home-manager/claude-account-selector
+"$sel/fix-config-dir-refs.zsh"          ~/.claude-work   # dry-run: preview changes
+"$sel/fix-config-dir-refs.zsh" --apply  ~/.claude-work   # write (backs up each file)
+
+# 3. Mint + stash a long-lived token per account (order matters: do whichever account
 #    is currently logged in first, since /login rewrites the shared macOS Keychain item).
 CLAUDE_CONFIG_DIR=~/.claude-work claude setup-token
 security add-generic-password -U -s claude-token-work -a "$USER" -w '<paste-token>'
@@ -141,6 +149,47 @@ security add-generic-password -U -s claude-token-me   -a "$USER" -w '<paste-toke
 If a token isn't present for a profile, the wrapper still works — it just falls back to the
 shared interactive Keychain login (you lose only the simultaneous-use property for that
 profile).
+
+## Repairing copied config-dir references
+
+`fix-config-dir-refs.zsh` (in this directory) rewrites stale `~/.claude/` paths inside a
+profile config dir so they point at that profile's own dir. You need it because `cp -a`
+copies config files **verbatim**: an absolute path baked into the source — e.g. a
+`SessionStart` hook registered in `settings.json` as
+`"/Users/you/.claude/hooks/context-mode-cache-heal.mjs"` — still points at the original
+`~/.claude` after the copy. Under a profile that file may not exist, so Claude Code logs a
+`SessionStart:startup hook error … No such file or directory` every launch. Worse, the
+plugins that write such hooks only re-register when *no* matching hook is present, so they
+never self-correct the stale base path — it persists until you fix it.
+
+```sh
+# Preview (default) — no writes. Target defaults to $CLAUDE_CONFIG_DIR if omitted.
+./fix-config-dir-refs.zsh ~/.claude-work
+
+# Apply — backs up each changed file to <file>.bak-<timestamp> first.
+./fix-config-dir-refs.zsh --apply ~/.claude-work
+
+# Options:
+#   --from DIR     original dir whose refs to rewrite   (default: ~/.claude)
+#   --no-backup    skip the .bak-<ts> copy when applying
+#   -h, --help
+```
+
+Behaviour and safety:
+
+- **Scope:** only `settings.json` and `settings.local.json` are scanned — the files holding
+  hook/`statusLine` command paths. Both absolute (`/Users/you/.claude/…`) and `~`-form
+  (`~/.claude/…`) references are rewritten.
+- **`.claude.json` is intentionally skipped.** Its `projects` map is keyed by real working
+  directories, one of which may legitimately live under `~/.claude` (e.g. a session launched
+  from `~/.claude/hooks`); a blanket rewrite would corrupt that state. Fix any genuine path
+  there by hand.
+- Matches are **anchored on a trailing `/`**, so a sibling profile dir (`~/.claude-work/`,
+  `~/.claude-me/`) is never caught by a rewrite targeting `~/.claude/`.
+- Each rewrite is **JSON-validated**; if it would produce invalid JSON the file is left
+  unchanged. The script is **idempotent** — re-running finds nothing to change.
+
+Run it any time you re-seed a profile from `~/.claude`, not just at first setup.
 
 ## Enable / disable
 
