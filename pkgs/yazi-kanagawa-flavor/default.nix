@@ -1,39 +1,48 @@
-# Kanagawa-Dragon flavor for Yazi, generated from the shared palette.
+# Reusable builder for a Yazi Kanagawa flavor. Produces the two files yazi
+# expects in a `<name>.yazi/` flavor dir — `flavor.toml` (the UI theme) and
+# `tmtheme.xml` (the syntect tmTheme used for syntax/diff previews) — from a
+# semantic `theme` table (see lib/kanagawa/themes/*). Every color has a single
+# source of truth (lib/kanagawa), so the four flavors share one layout and
+# differ only by their palette.
 #
-# Both files yazi expects in a `<name>.yazi/` flavor dir — `flavor.toml`
-# (the UI theme) and `tmtheme.xml` (the syntect tmTheme used for syntax/diff
-# previews) — are produced here from `lib.kanagawa` so every color has a
-# single source of truth (lib/kanagawa.nix). The dragon palette uses the
-# `dragon*` entries; a few non-dragon accents (waveRed, carpYellow, …) match
-# upstream rebelot/kanagawa.nvim.
-#
-# Attribution: ported from the MIT-licensed
+# Attribution: layout originally ported from the MIT-licensed
 # https://github.com/marcosvnmelo/kanagawa-dragon.yazi
-{ lib, pkgs, ... }:
+{
+  lib,
+  pkgs,
+  name, # flavor dir name, e.g. "kanagawa-kris"
+  title, # tmTheme display name, e.g. "Kanagawa Kris"
+  uuid, # stable tmTheme uuid (distinct per flavor)
+  appearance ? "dark", # "dark" | "light" — tmTheme semanticClass only
+  theme, # { editor, syn, diff, chrome } from lib.kanagawa.themes.<flavor>
+}:
 let
-  k = lib.kanagawa;
+  c = theme.chrome;
+  s = theme.syn;
+  e = theme.editor;
+  d = theme.diff;
 
   flavorAttrs = {
     mgr = {
       marker_copied = {
-        fg = k.dragonGreen2;
-        bg = k.dragonGreen2;
+        fg = c.green;
+        bg = c.green;
       };
       marker_cut = {
-        fg = k.waveRed;
-        bg = k.waveRed;
+        fg = c.red;
+        bg = c.red;
       };
       marker_marked = {
-        fg = k.dragonPink;
-        bg = k.dragonPink;
+        fg = c.pink;
+        bg = c.pink;
       };
       marker_selected = {
-        fg = k.waveRed;
-        bg = k.waveRed;
+        fg = c.red;
+        bg = c.red;
       };
 
       cwd = {
-        fg = k.carpYellow;
+        fg = c.yellow;
       };
       hovered = {
         reversed = true;
@@ -43,54 +52,54 @@ let
       };
 
       find_keyword = {
-        fg = k.waveRed;
-        bg = k.dragonBlack3;
+        fg = c.red;
+        bg = c.on_accent;
       };
       find_position = { };
 
       count_copied = {
-        fg = k.dragonBlack3;
-        bg = k.dragonGreen2;
+        fg = c.on_accent;
+        bg = c.green;
       };
       count_cut = {
-        fg = k.dragonBlack3;
-        bg = k.waveRed;
+        fg = c.on_accent;
+        bg = c.red;
       };
       count_selected = {
-        fg = k.dragonBlack3;
-        bg = k.carpYellow;
+        fg = c.on_accent;
+        bg = c.yellow;
       };
 
       border_symbol = "│";
       border_style = {
-        fg = k.dragonWhite;
+        inherit (c) fg;
       };
     };
 
     mode = {
       normal_main = {
-        fg = k.dragonBlack3;
-        bg = k.dragonBlue2;
+        fg = c.on_accent;
+        bg = c.accent;
       };
       normal_alt = {
-        fg = k.dragonBlue2;
-        bg = k.dragonBlack0;
+        fg = c.accent;
+        bg = c.bg_deep;
       };
       select_main = {
-        fg = k.dragonBlack3;
-        bg = k.dragonPink;
+        fg = c.on_accent;
+        bg = c.pink;
       };
       select_alt = {
-        fg = k.dragonPink;
-        bg = k.dragonBlack0;
+        fg = c.pink;
+        bg = c.bg_deep;
       };
       unset_main = {
-        fg = k.dragonBlack3;
-        bg = k.carpYellow;
+        fg = c.on_accent;
+        bg = c.yellow;
       };
       unset_alt = {
-        fg = k.carpYellow;
-        bg = k.dragonBlack0;
+        fg = c.yellow;
+        bg = c.bg_deep;
       };
     };
 
@@ -104,47 +113,47 @@ let
         close = "";
       };
       overall = {
-        fg = k.springBlue;
-        bg = k.sumiInk0;
+        fg = c.blue;
+        bg = c.status_bg;
       };
 
       progress_label = {
-        fg = k.dragonBlue2;
-        bg = k.dragonBlack0;
+        fg = c.accent;
+        bg = c.bg_deep;
         bold = true;
       };
       progress_normal = {
-        fg = k.dragonBlack0;
-        bg = k.dragonBlack3;
+        fg = c.bg_deep;
+        bg = c.on_accent;
       };
       progress_error = {
-        fg = k.dragonBlack0;
-        bg = k.dragonBlack3;
+        fg = c.bg_deep;
+        bg = c.on_accent;
       };
 
       perm_type = {
-        fg = k.dragonGreen2;
+        fg = c.green;
       };
       perm_read = {
-        fg = k.carpYellow;
+        fg = c.yellow;
       };
       perm_write = {
-        fg = k.peachRed;
+        fg = c.peach;
       };
       perm_exec = {
-        fg = k.waveAqua2;
+        fg = c.teal;
       };
       perm_sep = {
-        fg = k.dragonPink;
+        fg = c.pink;
       };
     };
 
     pick = {
       border = {
-        fg = k.dragonAqua;
+        fg = c.border;
       };
       active = {
-        fg = k.dragonPink;
+        fg = c.pink;
         bold = true;
       };
       inactive = { };
@@ -152,7 +161,7 @@ let
 
     input = {
       border = {
-        fg = k.dragonAqua;
+        fg = c.border;
       };
       title = { };
       value = { };
@@ -163,7 +172,7 @@ let
 
     completion = {
       border = {
-        fg = k.dragonAqua;
+        fg = c.border;
       };
       active = {
         reversed = true;
@@ -173,11 +182,11 @@ let
 
     tasks = {
       border = {
-        fg = k.dragonAqua;
+        fg = c.border;
       };
       title = { };
       hovered = {
-        fg = k.dragonPink;
+        fg = c.pink;
       };
     };
 
@@ -185,28 +194,28 @@ let
       cols = 2;
       separator = " - ";
       separator_style = {
-        fg = k.dragonGray;
+        fg = c.gray;
       };
       mask = {
-        bg = k.sumiInk0;
+        bg = c.status_bg;
       };
       rest = {
-        fg = k.dragonGray;
+        fg = c.gray;
       };
       cand = {
-        fg = k.dragonBlue2;
+        fg = c.accent;
       };
       desc = {
-        fg = k.sumiInk6;
+        fg = c.faint;
       };
     };
 
     help = {
       on = {
-        fg = k.waveAqua2;
+        fg = c.teal;
       };
       run = {
-        fg = k.dragonPink;
+        fg = c.pink;
       };
       desc = { };
       hovered = {
@@ -214,20 +223,20 @@ let
         bold = true;
       };
       footer = {
-        fg = k.dragonBlack3;
-        bg = k.dragonWhite;
+        fg = c.on_accent;
+        bg = c.fg;
       };
     };
 
     notify = {
       title_info = {
-        fg = k.dragonGreen2;
+        fg = c.green;
       };
       title_warn = {
-        fg = k.carpYellow;
+        fg = c.yellow;
       };
       title_error = {
-        fg = k.peachRed;
+        fg = c.peach;
       };
     };
 
@@ -236,43 +245,43 @@ let
       # images
       {
         mime = "image/*";
-        fg = k.carpYellow;
+        fg = c.yellow;
       }
       # media
       {
         mime = "{audio,video}/*";
-        fg = k.dragonPink;
+        fg = c.pink;
       }
       # archives
       {
         mime = "application/{zip,rar,7z*,tar,gzip,xz,zstd,bzip*,lzma,compress,archive,cpio,arj,xar,ms-cab*}";
-        fg = k.waveRed;
+        fg = c.red;
       }
       # documents
       {
         mime = "application/{pdf,doc,rtf,vnd.*}";
-        fg = k.waveAqua1;
+        fg = c.docs;
       }
       # broken links
       {
         url = "*";
         is = "orphan";
-        fg = k.dragonRed;
+        fg = c.orphan;
       }
       # executables
       {
         url = "*";
         is = "exec";
-        fg = k.autumnGreen;
+        fg = c.exec;
       }
       # fallback
       {
         url = "*";
-        fg = k.dragonWhite;
+        inherit (c) fg;
       }
       {
         url = "*/";
-        fg = k.dragonBlue2;
+        fg = c.accent;
       }
     ];
 
@@ -284,220 +293,220 @@ let
     };
   };
 
-  # tmTheme (syntect) — global colors plus per-scope rules. The first
-  # `settings` entry holds the editor-wide colors; the rest are scoped.
-  #
-  # Syntax token colors mirror the kanagawa.nvim **wave** `syn` table (the
-  # theme the user's neovim loads), so yazi's syntect previews match neovim's
-  # treesitter highlighting rather than the upstream dragon tmtheme's choices.
+  # tmTheme (syntect) — global editor colors plus per-scope rules. The first
+  # `settings` entry holds the editor-wide colors; the rest are scoped. Syntax
+  # token colors come from the flavor's `syn` table so yazi's syntect previews
+  # match the matching kanagawa.nvim variant.
   tmthemeAttrs = {
-    name = "Kanagawa Dragon";
+    name = title;
     settings = [
       {
         settings = {
-          background = k.sumiInk3;
-          caret = k.oldWhite;
-          foreground = k.fujiWhite; # wave ui.fg
-          invisibles = k.sumiInk6;
-          lineHighlight = k.waveBlue2;
-          selection = k.waveBlue2;
-          findHighlight = k.waveBlue2;
-          selectionBorder = k.dragonBlack2; # closest palette match to #222218
-          gutterForeground = k.sumiInk6;
+          inherit (e)
+            background
+            caret
+            foreground
+            invisibles
+            lineHighlight
+            selection
+            findHighlight
+            selectionBorder
+            gutterForeground
+            ;
         };
       }
       {
         name = "Comment";
         scope = "comment";
-        settings.foreground = k.fujiGray; # wave syn.comment
+        settings.foreground = s.comment;
       }
       {
         name = "String";
         scope = "string";
-        settings.foreground = k.springGreen; # wave syn.string
+        settings.foreground = s.string;
       }
       {
         name = "Number";
         scope = "constant.numeric";
-        settings.foreground = k.sakuraPink; # wave syn.number
+        settings.foreground = s.number;
       }
       {
         name = "Built-in constant";
         scope = "constant.language";
-        settings.foreground = k.surimiOrange; # wave syn.constant
+        settings.foreground = s.constant;
       }
       {
         name = "User-defined constant";
         scope = "constant.character, constant.other";
-        settings.foreground = k.surimiOrange; # wave syn.constant
+        settings.foreground = s.constant;
       }
       {
         name = "Variable";
         scope = "variable";
-        settings.foreground = k.fujiWhite; # wave syn.variable = fg
+        settings.foreground = s.variable;
       }
       {
         name = "Ruby's @variable";
         scope = "variable.other.readwrite.instance";
-        settings.foreground = k.fujiWhite;
+        settings.foreground = s.variable;
       }
       {
         name = "String interpolation";
         scope = "constant.character.escaped, constant.character.escape, string source, string source.ruby";
-        settings.foreground = k.springBlue; # wave syn.special1
+        settings.foreground = s.special1;
       }
       {
         name = "Keyword";
         scope = "keyword";
-        settings.foreground = k.oniViolet; # wave syn.keyword
+        settings.foreground = s.keyword;
       }
       {
         name = "Operator";
         scope = "keyword.operator";
-        settings.foreground = k.boatYellow2; # wave syn.operator
+        settings.foreground = s.operator;
       }
       {
         name = "Storage";
         scope = "storage";
-        settings.foreground = k.oniViolet; # wave syn.keyword
+        settings.foreground = s.keyword;
       }
       {
         name = "Storage type";
         scope = "storage.type";
-        settings.foreground = k.waveAqua2; # wave syn.type
+        settings.foreground = s.type;
       }
       {
         name = "Class name";
         scope = "entity.name.class";
-        settings.foreground = k.waveAqua2; # wave syn.type
+        settings.foreground = s.type;
       }
       {
         name = "Inherited class";
         scope = "entity.other.inherited-class";
-        settings.foreground = k.waveAqua2;
+        settings.foreground = s.type;
       }
       {
         name = "Function name";
         scope = "entity.name.function";
-        settings.foreground = k.crystalBlue; # wave syn.fun
+        settings.foreground = s.fun;
       }
       {
         name = "Function argument";
         scope = "variable.parameter";
-        settings.foreground = k.oniViolet2; # wave syn.parameter
+        settings.foreground = s.parameter;
       }
       {
         name = "Tag name";
         scope = "entity.name.tag";
-        settings.foreground = k.springBlue; # wave syn.special1
+        settings.foreground = s.special1;
       }
       {
         name = "Tag attribute";
         scope = "entity.other.attribute-name";
-        settings.foreground = k.carpYellow; # wave syn.identifier
+        settings.foreground = s.identifier;
       }
       {
         name = "Library function";
         scope = "support.function";
-        settings.foreground = k.crystalBlue; # wave syn.fun
+        settings.foreground = s.fun;
       }
       {
         name = "Library constant";
         scope = "support.constant";
-        settings.foreground = k.surimiOrange; # wave syn.constant
+        settings.foreground = s.constant;
       }
       {
         name = "Library class/type";
         scope = "support.type, support.class";
-        settings.foreground = k.waveAqua2; # wave syn.type
+        settings.foreground = s.type;
       }
       {
         name = "Library variable";
         scope = "support.other.variable";
-        settings.foreground = k.fujiWhite; # wave syn.variable = fg
+        settings.foreground = s.variable;
       }
       {
         name = "Invalid";
         scope = "invalid";
-        settings.foreground = k.peachRed; # wave syn.special3
+        settings.foreground = s.special3;
       }
       {
         name = "Invalid deprecated";
         scope = "invalid.deprecated";
-        settings.foreground = k.katanaGray; # wave syn.deprecated
+        settings.foreground = s.deprecated;
       }
       {
         name = "JSON key";
         scope = "meta.structure.dictionary.json string.quoted.double.json";
-        settings.foreground = k.carpYellow; # wave syn.identifier (@property)
+        settings.foreground = s.identifier;
       }
       {
         name = "diff.header";
         scope = "meta.diff, meta.diff.header";
-        settings.foreground = k.springBlue; # wave syn.special1
+        settings.foreground = s.special1;
       }
       {
         name = "diff.deleted";
         scope = "markup.deleted";
-        settings.background = k.winterRed; # wave diff.delete
+        settings.background = d.delete;
       }
       {
         name = "diff.inserted";
         scope = "markup.inserted";
-        settings.background = k.winterGreen; # wave diff.add
+        settings.background = d.add;
       }
       {
         name = "diff.changed";
         scope = "markup.changed";
-        settings.background = k.winterBlue; # wave diff.change
+        settings.background = d.change;
       }
       {
         scope = "constant.numeric.line-number.find-in-files - match";
-        settings.foreground = k.sumiInk6;
+        settings.foreground = e.gutterForeground;
       }
       {
         scope = "entity.name.filename";
-        settings.foreground = k.oldWhite;
+        settings.foreground = e.caret;
       }
       {
         scope = "message.error";
-        settings.foreground = k.peachRed; # wave syn.special3
+        settings.foreground = s.special3;
       }
       {
         name = "JSON Punctuation";
         scope = "punctuation.definition.string.begin.json - meta.structure.dictionary.value.json, punctuation.definition.string.end.json - meta.structure.dictionary.value.json";
-        settings.foreground = k.springViolet2; # wave syn.punct
+        settings.foreground = s.punct;
       }
       {
         name = "JSON Structure";
         scope = "meta.structure.dictionary.json string.quoted.double.json";
-        settings.foreground = k.carpYellow; # wave syn.identifier (@property)
+        settings.foreground = s.identifier;
       }
       {
         name = "JSON value string";
         scope = "meta.structure.dictionary.value.json string.quoted.double.json";
-        settings.foreground = k.springGreen; # wave syn.string
+        settings.foreground = s.string;
       }
       {
         name = "Escape Characters";
         scope = "constant.character.escape";
-        settings.foreground = k.springBlue; # wave syn.special1
+        settings.foreground = s.special1;
       }
       {
         name = "Regular Expressions";
         scope = "string.regexp";
-        settings.foreground = k.boatYellow2; # wave syn.regex
+        settings.foreground = s.regex;
       }
     ];
-    uuid = "592FC036-6BB7-4676-A2F5-2894D48C8E33";
+    inherit uuid;
     colorSpaceName = "sRGB";
-    semanticClass = "theme.dark.kanagawa-dragon";
+    semanticClass = "theme.${appearance}.${name}";
   };
 
   tomlFile = (pkgs.formats.toml { }).generate "flavor.toml" flavorAttrs;
   xmlFile = pkgs.writeText "tmtheme.xml" (lib.generators.toPlist { escape = true; } tmthemeAttrs);
 in
-pkgs.runCommand "yazi-kanagawa-dragon-flavor" { } ''
+pkgs.runCommand "yazi-${name}-flavor" { } ''
   mkdir -p $out
   cp ${tomlFile} $out/flavor.toml
   cp ${xmlFile}  $out/tmtheme.xml

@@ -9,7 +9,7 @@ let
     ;
 in
 {
-  kanagawa = import ./kanagawa.nix;
+  kanagawa = import ./kanagawa;
 
   mkProgramOption =
     {
