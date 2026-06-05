@@ -3,9 +3,11 @@ pkgs/result
 **/.DS_Store
 .obsidian
 **/result
-# Ignore local Claude state (settings.local.json, worktrees) but track shared skills
+# Ignore local Claude state (settings.local.json, worktrees). Skills live in
+# .agents/skills (harness-neutral); .claude/skills is a tracked symlink to them
+# so Claude Code still discovers them.
 .claude/*
-!.claude/skills/
+!.claude/skills
 .todos/
 
 # Compiled Neovim spellfile (regenerated from the tracked .add)
