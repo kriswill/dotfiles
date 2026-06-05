@@ -1,0 +1,20 @@
+{
+  "skill_name": "derivation-to-flake",
+  "notes": "Run each prompt against a throwaway git worktree of this repo (git worktree add --detach) so the main tree stays clean. Grade with scripts/verify.ts <name> — it is effectively the rubric (standalone build + root build + flake check + no stale refs).",
+  "evals": [
+    {
+      "id": 1,
+      "name": "extract-iv-clean",
+      "prompt": "Extract the `iv` package out of pkgs/ into its own in-repo flake under flakes/iv, and rewire the root flake so it consumes that sub-flake instead of the in-tree pkgs/iv.nix. Keep all three systems (aarch64-darwin, aarch64-linux, x86_64-linux) building, and remove the old in-tree copy.",
+      "expected_output": "flakes/iv/{flake.nix,package.nix,flake.lock} created (flake-parts, 3 systems, packages.<sys>.{iv,default}); root flake.nix has inputs.iv = ./flakes/iv with nixpkgs/flake-parts follows; modules/packages.nix re-exports iv from the input; pkgs/iv.nix removed; nix flake check green; no stale pkgs/iv references.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "extract-kitten-for-future-repo",
+      "prompt": "I eventually want to move my `kitten` derivation to its own github repo. As a first step, turn it into a standalone flake inside this repo (under flakes/) that the root flake still consumes, so later I can just point the input at github. kitten is darwin-only.",
+      "expected_output": "flakes/kitten/ standalone flake (flake-parts) exposing packages.aarch64-darwin.{kitten,default}; root consumes it via a relative-path input with follows; pkgs/kitten.nix removed; the sub-flake builds standalone and the root still builds kitten; README/notes explain the later github URL swap.",
+      "files": []
+    }
+  ]
+}
