@@ -5,10 +5,10 @@ description: Update or fix the ccglass Nix derivation for a new upstream release
 
 # patch-ccglass
 
-Maintains [`pkgs/ccglass`](pkgs/ccglass) — a `ccglass` derivation built into a single
+Maintains [`flakes/ccglass`](flakes/ccglass) — a `ccglass` derivation built into a single
 standalone binary with `bun build --compile`. Because a compiled binary can't do the
 script-relative disk reads upstream relies on, the package carries a **maintained fork**
-([`pkgs/ccglass/fork.patch`](pkgs/ccglass/fork.patch)). On every upstream release that patch
+([`flakes/ccglass/fork.patch`](flakes/ccglass/fork.patch)). On every upstream release that patch
 must be re-checked, and the build re-verified.
 
 The whole workflow is driven by **[`driver.ts`](.claude/skills/patch-ccglass/driver.ts)** (bun + TypeScript). Paths below are
@@ -17,7 +17,7 @@ x86_64-linux** (`bun build --compile` emits a native binary per system); `verify
 current system.
 
 > Background on the three fork edits and the wiring is in
-> [`pkgs/ccglass/README.md`](pkgs/ccglass/README.md). This skill is the *update procedure*.
+> [`flakes/ccglass/README.md`](flakes/ccglass/README.md). This skill is the *update procedure*.
 
 ## Prerequisites
 
@@ -56,7 +56,7 @@ Pass an explicit tag to target a specific release: `… prepare v1.2.0`.
 bun .claude/skills/patch-ccglass/driver.ts verify
 ```
 
-`verify` runs `nix build .#packages.<current-system>.ccglass` (out-link under `$TMPDIR`, not the repo)
+`verify` runs `nix build ./flakes/ccglass#packages.<current-system>.ccglass` (out-link under `$TMPDIR`, not the repo)
 and then asserts all three patched behaviors:
 - `ccglass --version` → prints the version (Edit A: didn't crash reading `../package.json`).
 - `ccglass __mcp__` over stdio → `initialize` + `tools/list` return the 4 tools (Edits B/C).
@@ -92,10 +92,10 @@ regenerate and re-verify:
 Then:
 
 ```bash
-bun .claude/skills/patch-ccglass/driver.ts regen-patch <CLONE>   # writes pkgs/ccglass/fork.patch
+bun .claude/skills/patch-ccglass/driver.ts regen-patch <CLONE>   # writes flakes/ccglass/fork.patch
 ```
 
-…and update `version` in [`pkgs/ccglass/package.nix`](pkgs/ccglass/package.nix) (and the
+…and update `version` in [`flakes/ccglass/package.nix`](flakes/ccglass/package.nix) (and the
 hardcoded `VERSION` in the patch) to the new version, then re-run `verify`.
 
 ## Troubleshooting (errors actually hit)
@@ -103,7 +103,7 @@ hardcoded `VERSION` in the patch) to the new version, then re-run `verify`.
 - **`build failed … hash mismatch`** — happens after a version/tag bump (the pinned `src.hash` /
   `npmDepsHash` no longer match). `verify` parses the error and prints the exact lines to paste, e.g.
   `set src.hash = "sha256-…";` and `set npmDepsHash = "sha256-…";`. Update
-  [`pkgs/ccglass/package.nix`](pkgs/ccglass/package.nix) and re-run `verify`. (Set them to
+  [`flakes/ccglass/package.nix`](flakes/ccglass/package.nix) and re-run `verify`. (Set them to
   `lib.fakeHash` first if starting fresh; src mismatch surfaces before the npm-deps one.)
 - **`fork.patch does NOT apply`** — upstream moved the lines. Re-author (above). `prepare`'s hazard
   scan tells you whether the targets still exist or changed shape.

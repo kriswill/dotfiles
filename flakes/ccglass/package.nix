@@ -53,6 +53,6 @@ buildNpmPackage (finalAttrs: {
     mainProgram = "ccglass";
     # Pure-JS deps + `bun build --compile` → builds a native binary on darwin and linux.
     platforms = lib.platforms.darwin ++ lib.platforms.linux;
-    maintainers = with lib.maintainers; [ kriswill ];
+    maintainers = [ { github = "kriswill"; } ];
   };
 })

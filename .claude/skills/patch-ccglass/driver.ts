@@ -1,11 +1,11 @@
 #!/usr/bin/env bun
-// patch-ccglass driver — maintenance harness for the pkgs/ccglass derivation.
+// patch-ccglass driver — maintenance harness for the flakes/ccglass derivation.
 //
 //   bun driver.ts latest-tag          print the newest upstream git tag
 //   bun driver.ts prepare [TAG]       clone TAG (default: latest), scan for bun-compile
 //                                     hazards, and check whether fork.patch still applies
-//   bun driver.ts regen-patch <CLONE> write `git -C <CLONE> diff` to pkgs/ccglass/fork.patch
-//   bun driver.ts verify              nix build the flake output + run version/MCP/dashboard checks
+//   bun driver.ts regen-patch <CLONE> write `git -C <CLONE> diff` to flakes/ccglass/fork.patch
+//   bun driver.ts verify              nix build the sub-flake + run version/MCP/dashboard checks
 //   bun driver.ts all [TAG]           prepare, then verify (only if the patch applies)
 //
 // Exposed for aarch64-darwin, aarch64-linux, x86_64-linux; `verify` auto-detects the current system.
@@ -18,7 +18,8 @@ const OWNER = "jianshuo";
 const REPO = "ccglass";
 const REPO_URL = `https://github.com/${OWNER}/${REPO}`;
 const ROOT = resolve(import.meta.dir, "../../.."); // repo root from .claude/skills/patch-ccglass/
-const FORK_PATCH = join(ROOT, "pkgs/ccglass/fork.patch");
+const FLAKE_DIR = join(ROOT, "flakes/ccglass"); // the standalone ccglass sub-flake
+const FORK_PATCH = join(FLAKE_DIR, "fork.patch");
 const WORK = join(tmpdir(), "patch-ccglass");
 const SELF = ".claude/skills/patch-ccglass/driver.ts";
 
@@ -75,7 +76,7 @@ async function prepare(tagArg?: string): Promise<{ clone: string; tag: string; a
   await scan("MCP subprocess spawn (must use the __mcp__ sentinel)", String.raw`process\.execPath|mcp\.js`);
   await scan("other import.meta/__dirname reads (review for new hazards)", String.raw`fileURLToPath\(import\.meta\.url\)|import\.meta\.dir`);
 
-  hdr("does pkgs/ccglass/fork.patch still apply?");
+  hdr("does flakes/ccglass/fork.patch still apply?");
   const applies = await patchApplies(clone);
   if (applies) {
     ok(`fork.patch applies cleanly to ${tag}`);
@@ -93,7 +94,7 @@ async function prepare(tagArg?: string): Promise<{ clone: string; tag: string; a
         "  2) re-apply the 3 edits by hand against the new source",
         `  3) bun ${SELF} regen-patch ${clone}`,
         `  4) set the hardcoded VERSION in fork.patch to "${v}"`,
-        `  5) bump 'version' in pkgs/ccglass/package.nix to "${v}"`,
+        `  5) bump 'version' in flakes/ccglass/package.nix to "${v}"`,
         `  6) bun ${SELF} verify   # fill the two hashes when it reports a mismatch`,
       ].join("\n"),
     );
@@ -197,10 +198,10 @@ async function checkDashboard(bin: string): Promise<boolean> {
 
 async function verify() {
   const system = (await $`nix eval --impure --raw --expr builtins.currentSystem`.text()).trim();
-  const attr = `.#packages.${system}.ccglass`;
+  const attr = `${FLAKE_DIR}#packages.${system}.ccglass`;
   hdr(`nix build ${attr}`);
   const outLink = join(WORK, "result");
-  const build = await $`nix build ${attr} --out-link ${outLink}`.cwd(ROOT).nothrow().quiet();
+  const build = await $`nix build ${attr} --out-link ${outLink}`.nothrow().quiet();
   if (build.exitCode !== 0) {
     const log = build.stdout.toString() + build.stderr.toString();
     err("build failed");
@@ -208,7 +209,7 @@ async function verify() {
       ...log.matchAll(/hash mismatch in fixed-output derivation '([^']+)':\s*\n\s*specified: (\S+)\s*\n\s*got:\s*(\S+)/g),
     ];
     if (mism.length) {
-      hdr("hash mismatch — update pkgs/ccglass/package.nix, then re-run verify:");
+      hdr("hash mismatch — update flakes/ccglass/package.nix, then re-run verify:");
       for (const [, drv, spec, got] of mism) {
         const field = drv.includes("npm-deps") ? "npmDepsHash" : "src.hash";
         console.log(`  set ${field} = "${got}";   (was ${spec})`);
