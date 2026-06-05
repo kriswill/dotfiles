@@ -6,6 +6,7 @@
       packages = {
         kitten = pkgs.callPackage ../pkgs/kitten.nix { };
         iv = pkgs.callPackage ../pkgs/iv.nix { };
+        ccglass = pkgs.callPackage ../pkgs/ccglass/package.nix { };
       };
     };
 }

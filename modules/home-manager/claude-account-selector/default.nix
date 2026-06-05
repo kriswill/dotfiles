@@ -1,6 +1,11 @@
 {
   flake.modules.homeManager.claude-account-selector =
-    { lib, config, ... }:
+    {
+      lib,
+      config,
+      pkgs,
+      ...
+    }:
     let
       cfg = config.kriswill.claude-account-selector;
       # Pure-zsh "inputs" prepended to wrapper.zsh: well-known variable assignments,
@@ -87,6 +92,10 @@
       config = lib.mkIf cfg.enable (
         lib.mkMerge [
           {
+            # ccglass (the LLM-traffic inspector the ccglass() wrapper invokes via
+            # `command ccglass`) — provided by Nix instead of a global `bun -g i ccglass`.
+            home.packages = [ pkgs.ccglass ];
+
             programs.zsh.initContent = lib.mkAfter (
               inputs
               # Scrub a GUI-session desktop pin (see desktopProfile) so interactive shells

@@ -4,5 +4,6 @@
   flake.overlays = {
     kitten = import ../overlays/kitten.nix;
     direnv = import ../overlays/direnv.nix;
+    ccglass = import ../overlays/ccglass.nix;
   };
 }
