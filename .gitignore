@@ -3,8 +3,9 @@ pkgs/result
 **/.DS_Store
 .obsidian
 **/result
-.claude
-.claude/settings.local.json
+# Ignore local Claude state (settings.local.json, worktrees) but track shared skills
+.claude/*
+!.claude/skills/
 .todos/
 
 # Compiled Neovim spellfile (regenerated from the tracked .add)

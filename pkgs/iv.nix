@@ -49,6 +49,6 @@ buildGoModule rec {
     description = "A command-line image viewer using terminal graphics";
     homepage = "https://github.com/kenshaw/iv";
     license = lib.licenses.mit;
-    maintainers = with lib.maintainers; [ kriswill ];
+    maintainers = [ { github = "kriswill"; } ];
   };
 }

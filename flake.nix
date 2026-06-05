@@ -23,5 +23,12 @@
       url = "github:yazi-rs/plugins";
       flake = false;
     };
+    # ccglass lives in its own flake (./flakes/ccglass) — a relative-path input, so one
+    # git tree serves both and extracting it to a separate repo later is just a URL swap.
+    ccglass = {
+      url = "./flakes/ccglass";
+      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.flake-parts.follows = "flake-parts";
+    };
   };
 }
