@@ -80,6 +80,7 @@ Platform: aarch64-darwin (Apple Silicon only). Flake-based, using flake-parts + 
 │   ├── nvim/            # Neovim Lua configuration
 │   └── tmux/            # Tmux configuration
 ├── pkgs/                # Custom package definitions (*.nix files or subdirectories)
+├── flakes/              # Self-contained sub-flakes consumed by the root via relative-path inputs (e.g. flakes/ccglass)
 ├── overlays/            # Nixpkgs overlays (makes custom packages available)
 ├── lib/                 # Pure lib helpers (mkProgramOption, kanagawa) — outside modules/ so import-tree skips them
 └── scripts/             # Helper scripts for package updates
@@ -104,6 +105,17 @@ Pure helpers live in `lib/default.nix`: `mkProgramOption` and `kanagawa`. They'r
 2. Add `<name> = pkgs.callPackage ../pkgs/<name>.nix { };` to `perSystem.packages` in `modules/packages.nix`
 3. To make it available to hosts, create `overlays/<name>.nix` and register it in `modules/overlays.nix` (`flake.overlays.<name>`)
 4. If unfree: add a `nixpkgs.config.allowUnfreePredicate` entry in `modules/darwin/core.nix`
+
+**Adding a Custom Package as a Sub-flake (extraction pattern):**
+
+For a package that warrants its own flake — forked/patched source, standalone-buildable, or destined to become a separate repo — put it under `flakes/<name>/` instead of `pkgs/`:
+
+1. Create `flakes/<name>/{flake.nix,package.nix,…}`. `flake.nix` uses flake-parts and exposes `packages.<system>.<name>` (+ `default`). **`git add` it** — sub-flake files must be git-tracked to be seen.
+2. Add a relative-path input in `flake.nix`: `inputs.<name>.url = "./flakes/<name>";` with `inputs.<name>.inputs.{nixpkgs,flake-parts}.follows` to dedupe nixpkgs.
+3. Re-export in `modules/packages.nix`: `<name> = inputs.<name>.packages.${system}.<name>;` (plus a `flake.packages` block for systems outside the root `systems` list).
+4. If a host needs it on `pkgs`, add an **inline** overlay in `modules/overlays.nix` (which receives `inputs`): `<name> = _final: prev: { <name> = inputs.<name>.packages.${prev.stdenv.hostPlatform.system}.<name>; };`.
+
+Later extraction to a separate repo is just swapping the input URL `"./flakes/<name>"` → `"github:owner/<name>"`. See `flakes/ccglass/` for a worked example.
 
 **Symlinked Configs:**
 

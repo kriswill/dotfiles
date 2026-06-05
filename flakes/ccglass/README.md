@@ -11,6 +11,7 @@ executable** with `bun build --compile`, so nothing depends on a global `bun -g 
 
 | File | Purpose |
 | --- | --- |
+| [`flake.nix`](flake.nix) | Standalone flake (flake-parts) exposing the `ccglass` package per system. |
 | [`package.nix`](package.nix) | The derivation: `buildNpmPackage` for reproducible deps + `bun build --compile`. |
 | [`fork.patch`](fork.patch) | Source patch required to survive compilation (see below). |
 
@@ -22,7 +23,7 @@ executable** with `bun build --compile`, so nothing depends on a global `bun -g 
 2. `fork.patch` is applied (`patches = [ ./fork.patch ]`).
 3. A custom `buildPhase` runs `bun build --compile ./bin/ccglass.js --outfile ccglass`, bundling
    the JS module graph + the three deps (`@modelcontextprotocol/sdk`, `cross-spawn`, `zod`) and the
-   bun runtime into one ~64 MB Mach-O arm64 binary.
+   bun runtime into one ~64 MB native binary (Mach-O on darwin, ELF on linux).
 4. A custom `installPhase` installs only that binary to `$out/bin/ccglass`.
 
 ## Why the fork (`fork.patch`)
@@ -40,34 +41,62 @@ reads). The patch makes three behaviors survive compilation:
 This is a **maintained fork** — the patch is pinned to upstream's source shape and must be
 re-checked on every version bump.
 
-## How it's wired into the flake
+## Flake outputs
 
-- **Package output** — registered in [`modules/packages.nix`](../../modules/packages.nix):
-  `ccglass = pkgs.callPackage ../pkgs/ccglass/package.nix { };`
-  → build with `nix build .#packages.aarch64-darwin.ccglass`.
-- **Overlay** — [`overlays/ccglass.nix`](../../overlays/ccglass.nix), registered in
-  [`modules/overlays.nix`](../../modules/overlays.nix), so `pkgs.ccglass` is available to hosts.
-- **Consumed by** the `claude-account-selector` home-manager module
-  ([`default.nix`](../../modules/home-manager/claude-account-selector/default.nix)), which adds
-  `pkgs.ccglass` to `home.packages`. Its `wrapper.zsh` invokes `command ccglass`, which now resolves
-  to the Nix store binary instead of `~/.bun/bin/ccglass`.
+This directory is a **standalone flake** (`flake.nix`, flake-parts). For `aarch64-darwin`,
+`aarch64-linux`, and `x86_64-linux` it exposes:
+
+- `packages.<system>.ccglass` — the compiled binary.
+- `packages.<system>.default` — alias of `ccglass`.
+
+Build it on its own:
+
+```sh
+nix build .#ccglass        # or .#packages.<system>.ccglass
+./result/bin/ccglass --version
+```
+
+## Consuming it from another flake
+
+The parent dotfiles flake references this sub-flake by **relative path**, so one git tree
+serves both — and extracting it to its own repo later is just a URL swap to `github:…`:
+
+```nix
+# parent flake.nix
+inputs.ccglass.url = "./flakes/ccglass";
+inputs.ccglass.inputs.nixpkgs.follows = "nixpkgs";
+inputs.ccglass.inputs.flake-parts.follows = "flake-parts";
+```
+
+The parent then uses `inputs.ccglass.packages.${system}.ccglass` in an overlay (so
+`pkgs.ccglass` is available to home-manager) and re-exports it as a package output. Sub-flake
+files must be **git-tracked** for the parent to see them.
+
+Two consequences of the relative-path + `follows` setup:
+
+- The parent builds ccglass against the **parent's** nixpkgs (via `follows`); this sub-flake's own
+  `flake.lock` only governs standalone `nix build` in this directory.
+- The input has no pinned rev, so the parent picks up edits here **automatically** on the next
+  evaluation — `nix flake update ccglass` is a no-op until the input is swapped to a `github:` URL.
 
 ## Updating to a new ccglass version
 
+The parent repo's `patch-ccglass` skill automates this end to end. Manually:
+
 1. Bump `version` in [`package.nix`](package.nix).
-2. Set `src.hash` and `npmDepsHash` to `lib.fakeHash`, run
-   `nix build .#packages.aarch64-darwin.ccglass`, and copy the real `got:` hashes from the two
-   build errors (src first, then npm-deps).
-3. Re-confirm the patch still applies — fetch the new tag and
-   `git apply --check -p1 pkgs/ccglass/fork.patch`. If it fails, re-apply the three edits above by
-   hand against the new source and regenerate (`git diff > fork.patch`). Also bump the hardcoded
-   `VERSION` string in the patch.
-4. Re-run the regression checks below, then `darwin-rebuild switch --flake .`.
+2. Set `src.hash` and `npmDepsHash` to `lib.fakeHash`, run `nix build .#ccglass`, and copy the
+   real `got:` hashes from the two build errors (src first, then npm-deps).
+3. Re-confirm the patch still applies — fetch the new tag and `git apply --check -p1 fork.patch`.
+   If it fails, re-apply the three edits above by hand against the new source and regenerate
+   (`git diff > fork.patch`). Also bump the hardcoded `VERSION` string in the patch.
+4. Re-run the regression checks below, then `darwin-rebuild switch --flake .` in the parent repo —
+   the relative-path input picks these edits up automatically. (Only after a future `github:` swap
+   does advancing the pin require `nix flake update ccglass` first.)
 
 ## Verifying a build
 
 ```sh
-nix build .#packages.aarch64-darwin.ccglass
+nix build .#ccglass
 
 # Edit A — must not crash on launch:
 ./result/bin/ccglass --version            # -> 1.0.0
