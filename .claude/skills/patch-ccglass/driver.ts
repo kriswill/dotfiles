@@ -8,7 +8,7 @@
 //   bun driver.ts verify              nix build the flake output + run version/MCP/dashboard checks
 //   bun driver.ts all [TAG]           prepare, then verify (only if the patch applies)
 //
-// Darwin/aarch64 only (ccglass is built with `bun build --compile` → Mach-O arm64).
+// Exposed for aarch64-darwin, aarch64-linux, x86_64-linux; `verify` auto-detects the current system.
 import { $ } from "bun";
 import { resolve, join } from "node:path";
 import { mkdtempSync, rmSync, mkdirSync } from "node:fs";
@@ -17,7 +17,6 @@ import { tmpdir } from "node:os";
 const OWNER = "jianshuo";
 const REPO = "ccglass";
 const REPO_URL = `https://github.com/${OWNER}/${REPO}`;
-const FLAKE_ATTR = ".#packages.aarch64-darwin.ccglass";
 const ROOT = resolve(import.meta.dir, "../../.."); // repo root from .claude/skills/patch-ccglass/
 const FORK_PATCH = join(ROOT, "pkgs/ccglass/fork.patch");
 const WORK = join(tmpdir(), "patch-ccglass");
@@ -197,9 +196,11 @@ async function checkDashboard(bin: string): Promise<boolean> {
 }
 
 async function verify() {
-  hdr(`nix build ${FLAKE_ATTR}`);
+  const system = (await $`nix eval --impure --raw --expr builtins.currentSystem`.text()).trim();
+  const attr = `.#packages.${system}.ccglass`;
+  hdr(`nix build ${attr}`);
   const outLink = join(WORK, "result");
-  const build = await $`nix build ${FLAKE_ATTR} --out-link ${outLink}`.cwd(ROOT).nothrow().quiet();
+  const build = await $`nix build ${attr} --out-link ${outLink}`.cwd(ROOT).nothrow().quiet();
   if (build.exitCode !== 0) {
     const log = build.stdout.toString() + build.stderr.toString();
     err("build failed");

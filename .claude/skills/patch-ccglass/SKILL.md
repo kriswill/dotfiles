@@ -12,7 +12,9 @@ script-relative disk reads upstream relies on, the package carries a **maintaine
 must be re-checked, and the build re-verified.
 
 The whole workflow is driven by **[`driver.ts`](.claude/skills/patch-ccglass/driver.ts)** (bun + TypeScript). Paths below are
-relative to the repo root. **aarch64-darwin only** (the output is a Mach-O arm64 binary).
+relative to the repo root. The package is exposed for **aarch64-darwin, aarch64-linux, and
+x86_64-linux** (`bun build --compile` emits a native binary per system); `verify` auto-detects the
+current system.
 
 > Background on the three fork edits and the wiring is in
 > [`pkgs/ccglass/README.md`](pkgs/ccglass/README.md). This skill is the *update procedure*.
@@ -54,7 +56,7 @@ Pass an explicit tag to target a specific release: `… prepare v1.2.0`.
 bun .claude/skills/patch-ccglass/driver.ts verify
 ```
 
-`verify` runs `nix build .#packages.aarch64-darwin.ccglass` (out-link under `$TMPDIR`, not the repo)
+`verify` runs `nix build .#packages.<current-system>.ccglass` (out-link under `$TMPDIR`, not the repo)
 and then asserts all three patched behaviors:
 - `ccglass --version` → prints the version (Edit A: didn't crash reading `../package.json`).
 - `ccglass __mcp__` over stdio → `initialize` + `tools/list` return the 4 tools (Edits B/C).
