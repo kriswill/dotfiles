@@ -5,17 +5,25 @@ directory you launch from — so a personal Claude Max account and a corporate E
 account can coexist on one machine, even in two terminals at the same time.
 
 It defines a `claude` shell function that shadows the real `claude` binary, picks a profile,
-sets `CLAUDE_CONFIG_DIR` (isolated config/history/MCP/plugins per profile) and, if available,
-`CLAUDE_CODE_OAUTH_TOKEN` (isolated login), then execs the real CLI. A matching `ccglass`
-function does the same for the [ccglass](https://github.com/jianshuo/ccglass) traffic
-inspector (see [Inspecting traffic with ccglass](#inspecting-traffic-with-ccglass)).
+sets `CLAUDE_CONFIG_DIR` (isolated config/history/MCP/plugins per profile), and prefers that
+profile's own interactive login — falling back to its Keychain token (`CLAUDE_CODE_OAUTH_TOKEN`)
+only when the profile isn't signed in — then execs the real CLI. A matching `ccglass` function
+does the same for the [ccglass](https://github.com/jianshuo/ccglass) traffic inspector (see
+[Inspecting traffic with ccglass](#inspecting-traffic-with-ccglass)).
 
 ## Why
 
-Claude Code isolates everything *except* the login when you change `CLAUDE_CONFIG_DIR`.
-On macOS the OAuth credential lives in a single shared Keychain item, so without a
-per-profile token the two accounts fight over one login. This module pairs each profile
-config dir with its own Keychain-stored token to give true simultaneous use.
+Older Claude Code stored the OAuth login in a single shared macOS Keychain item, so two
+profiles fought over one login even with separate `CLAUDE_CONFIG_DIR`s — a per-profile
+Keychain token was the only way to get true simultaneous use. **Claude Code now isolates the
+login per `CLAUDE_CONFIG_DIR`** (verified on 2.1.165): each profile dir keeps its own
+interactive login, and both accounts can be signed in at once with no token at all.
+
+So the wrapper **prefers each profile's interactive login** and keeps the Keychain token only
+as a *fallback* — for a profile with no interactive login yet (fresh dir, expired session, or
+an Enterprise account where interactive login isn't available). It detects the login with
+`claude auth status --json` (the token blanked for the probe) and injects the token only when
+that reports the profile is *not* signed in via `claude.ai`.
 
 ## Profiles
 
@@ -118,9 +126,9 @@ The catch: ccglass spawns the **real `claude` binary directly** (Node `child_pro
 shell), so the `claude` function above never runs for it — the child would launch in the
 default `~/.claude` scope, ignoring your per-directory profile. To fix this the module also
 defines a `ccglass` function that resolves the profile (same rules as `claude`) and exports
-`CLAUDE_CONFIG_DIR` + the keychain `CLAUDE_CODE_OAUTH_TOKEN`; ccglass passes its environment
-straight through to the child, so `claude` lands in the right account *and* its traffic flows
-through the proxy.
+`CLAUDE_CONFIG_DIR` (plus the keychain token as a fallback — same prefer-interactive-login
+logic as `claude`); ccglass passes its environment straight through to the child, so `claude`
+lands in the right account *and* its traffic flows through the proxy.
 
 ```sh
 ccglass claude              # inspect; profile chosen by $PWD, then watch the dashboard URL
@@ -131,12 +139,14 @@ command ccglass …           # bypass the function (raw binary, default ~/.clau
 An explicit `CLAUDE_CONFIG_DIR` in the environment is respected and passed through untouched,
 exactly like the `claude` wrapper. Notes:
 
-- Auth headers pass through the proxy verbatim, so the OAuth token reaches Anthropic
+- Auth headers pass through the proxy verbatim, so the OAuth credentials reach Anthropic
   unchanged; ccglass masks `authorization`/`x-api-key` in saved logs by default
   (`--no-redact` to keep them).
-- Using the keychain token (rather than the logged-in creds alone) is the robust path here:
-  with `ANTHROPIC_BASE_URL` pointed at the localhost proxy, forcing token auth avoids any
-  chance of Claude Code treating the custom base URL as a bring-your-own-key provider.
+- `ccglass` uses the same prefer-interactive-login-then-token logic as `claude`. If a Claude
+  Code version ever treats the proxy's `ANTHROPIC_BASE_URL` as a bring-your-own-key provider
+  under interactive login, force the token instead with an explicit
+  `CLAUDE_CODE_OAUTH_TOKEN=… ccglass …` (an exported token passes straight through), or
+  re-scope the helper's prefer-login probe to `claude` only.
 
 ## How a profile is chosen
 
@@ -217,19 +227,22 @@ sel=~/src/dotfiles/modules/home-manager/claude-account-selector
 "$sel/fix-config-dir-refs.zsh"          ~/.claude-work   # dry-run: preview changes
 "$sel/fix-config-dir-refs.zsh" --apply  ~/.claude-work   # write (backs up each file)
 
-# 3. Mint + stash a long-lived token per account (order matters: do whichever account
-#    is currently logged in first, since /login rewrites the shared macOS Keychain item).
+# 3. Sign in to each profile interactively — this is the primary login now that Claude Code
+#    isolates it per config dir (each /login sticks to its own dir, no token needed):
+CLAUDE_CONFIG_DIR=~/.claude-work claude   # /login as the work account
+CLAUDE_CONFIG_DIR=~/.claude-me   claude   # /login as the me account
+
+# 4. (Optional) Mint + stash a long-lived Keychain token per account as the *fallback* used
+#    when a profile isn't interactively signed in (expired session, Enterprise, fresh dir):
 CLAUDE_CONFIG_DIR=~/.claude-work claude setup-token
 security add-generic-password -U -s claude-token-work -a "$USER" -w '<paste-token>'
-
-CLAUDE_CONFIG_DIR=~/.claude-me claude               # /login as the other account
-CLAUDE_CONFIG_DIR=~/.claude-me claude setup-token
+CLAUDE_CONFIG_DIR=~/.claude-me   claude setup-token
 security add-generic-password -U -s claude-token-me   -a "$USER" -w '<paste-token>'
 ```
 
-If a token isn't present for a profile, the wrapper still works — it just falls back to the
-shared interactive Keychain login (you lose only the simultaneous-use property for that
-profile).
+The wrapper prefers each profile's interactive login; the Keychain token is only the fallback
+for a profile that isn't signed in. If a profile has neither, `claude` simply prompts you to
+log in — and that login then sticks, scoped to its own config dir.
 
 ## Repairing copied config-dir references
 
@@ -284,12 +297,15 @@ home-manager.users.<user>.kriswill.claude-account-selector.enable = true;
 
 ## Notes & caveats
 
-- `claude setup-token` may be blocked by Enterprise org policy. If the work token can't be
-  minted, only the work profile loses simultaneous use; config/history isolation still holds.
+- `claude setup-token` may be blocked by Enterprise org policy. That only costs the work
+  profile its *fallback* token — with per-dir interactive logins, simultaneous use still works;
+  config/history isolation always holds.
+- Each non-auth launch runs a quick `claude auth status` probe (~0.2s, offline) to decide
+  whether to prefer the interactive login, adding a small startup cost.
 - An explicit `CLAUDE_CONFIG_DIR` in the environment is respected and bypasses profile
   resolution entirely (this is what makes the one-time-setup commands above target the dir
   you name rather than the `$PWD`-resolved profile).
-- The injected token is visible in the process environment to your own session (as with any
-  env-based token). Fine for a single-user laptop.
+- When the fallback token is injected, it's visible in the process environment to your own
+  session (as with any env-based token). Fine for a single-user laptop.
 - zsh gotcha (already handled in `wrapper.zsh`): never declare a `local path` — `path` is the
   special array bound to `$PATH`; shadowing it empties `$PATH` inside the function.

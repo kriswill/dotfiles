@@ -53,6 +53,19 @@ _ccw_resolve() {                       # $1 = abs path → winning profile ("" i
 
 _ccw_token() { security find-generic-password -s "claude-token-$1" -a "$USER" -w 2>/dev/null; }
 
+# True if the profile config dir $1 already has a working interactive OAuth login
+# (`authMethod "claude.ai"`). Blanks CLAUDE_CODE_OAUTH_TOKEN for the probe (empty is
+# treated as unset) so it reflects the stored login, not any inherited/injected
+# token. Patterns tolerate JSON whitespace. ~0.2s, offline (reads stored creds).
+# stdin is detached (</dev/null) so the probe can never consume a launch's piped
+# input — e.g. `echo … | claude -p` must reach the real CLI, not this probe.
+_ccw_logged_in() {
+  emulate -L zsh
+  local out
+  out="$(CLAUDE_CODE_OAUTH_TOKEN='' CLAUDE_CONFIG_DIR="$1" command claude auth status --json </dev/null 2>/dev/null)"
+  [[ "$out" =~ '"loggedIn"[[:space:]]*:[[:space:]]*true' ]] && [[ "$out" =~ '"authMethod"[[:space:]]*:[[:space:]]*"claude\.ai"' ]]
+}
+
 # Remove the row whose first (tab-separated) field equals $2 from map file $1.
 # Uses ENVIRON (not `awk -v`) so backslashes in the path aren't escape-processed.
 _ccw_map_remove() {
@@ -61,20 +74,28 @@ _ccw_map_remove() {
   CCW_KEY="$2" awk -F'\t' '$1 != ENVIRON["CCW_KEY"]' "$1" > "$1.tmp" && mv "$1.tmp" "$1"
 }
 
-# Exec the real binary $1 under profile $2's config dir + keychain token, passing
-# the remaining args through. This is the env the profile-aware wrappers inject;
-# factored out so claude() and ccglass() (which spawns the real claude binary
-# directly, dodging the function) stay in lock-step. The setup-token/login guard
-# is claude-specific but harmless elsewhere (ccglass's first arg is a provider).
+# Exec the real binary $1 under profile $2's config dir, passing the remaining args
+# through. Auth source, in order of preference:
+#   1. an existing interactive OAuth login in the profile's config dir (modern Claude
+#      Code isolates the login per CLAUDE_CONFIG_DIR — see README), used as-is; or
+#   2. the profile's keychain token as a fallback, injected via CLAUDE_CODE_OAUTH_TOKEN.
+# During auth flows (setup-token / login / `auth …`) no token is injected — it would
+# shadow the flow. Factored out so claude() and ccglass() (which spawns the real
+# claude binary directly, dodging the function) stay in lock-step; the prefer-login
+# probe keys off `claude auth status`, so it's meaningful for ccglass too (its first
+# arg is a provider, never an auth verb).
 _ccw_exec_with_profile() {
   emulate -L zsh
   local bin="$1" profile="$2"; shift 2
-  local tok
-  if [[ "$1" == setup-token || "$1" == login ]]; then tok=""; else tok="$(_ccw_token "$profile")"; fi
+  local cfg="$HOME/.claude-$profile" tok=""
+  case "$1" in
+    setup-token|login|auth) ;;                                  # auth flow → no token
+    *) _ccw_logged_in "$cfg" || tok="$(_ccw_token "$profile")" ;;  # else prefer login, fall back to token
+  esac
   if [[ -n "$tok" ]]; then
-    CLAUDE_CONFIG_DIR="$HOME/.claude-$profile" CLAUDE_CODE_OAUTH_TOKEN="$tok" command "$bin" "$@"
+    CLAUDE_CONFIG_DIR="$cfg" CLAUDE_CODE_OAUTH_TOKEN="$tok" command "$bin" "$@"
   else
-    CLAUDE_CONFIG_DIR="$HOME/.claude-$profile" command "$bin" "$@"
+    CLAUDE_CONFIG_DIR="$cfg" command "$bin" "$@"
   fi
 }
 
@@ -120,8 +141,8 @@ claude() {
     *)       profile="$(_ccw_resolve "$(_ccw_abspath)")" ;;
   esac
   profile="${profile:-$_CCW_DEFAULT_PROFILE}"
-  # the helper injects CLAUDE_CONFIG_DIR + the keychain token (and skips the token
-  # while (re)minting one or logging in, since it would shadow the flow)
+  # the helper sets CLAUDE_CONFIG_DIR, then prefers the profile's interactive login
+  # and falls back to the keychain token (skipping the token during auth flows)
   _ccw_exec_with_profile claude "$profile" "$@"
 }
 
