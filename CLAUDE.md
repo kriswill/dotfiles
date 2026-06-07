@@ -8,11 +8,21 @@ A NixOS flake that defines the system configuration for the host `nebula` (AMD C
 
 ## Where this lives
 
-This repo is the source of truth and lives at `/home/k/src/dotfiles`, tracked with git. `/etc/nixos` is a symlink to this directory, so tools that expect the flake at the conventional path (e.g. `nixos-rebuild`) resolve here automatically. Make all edits and git operations in `/home/k/src/dotfiles`; don't write through `/etc/nixos` separately.
+The nebula host config is the **`nebula-snowglobe`** branch of the personal dotfiles repo, cloned to `/home/k/src/github/kriswill/dotfiles` (origin: `github.com/kriswill/dotfiles`). It's a *bare/orphan* branch — independent history from `main` (which holds the cross-host dotfiles). The repo follows a host-then-path layout (`~/src/github/<owner>/<repo>`) mirroring the same convention used on the user's Mac.
+
+Two symlinks point at that checkout for convenience:
+
+```
+/etc/nixos -> /home/k/src/dotfiles -> github/kriswill/dotfiles  (on branch nebula-snowglobe)
+```
+
+Make all edits and git operations in the real checkout (`/home/k/src/github/kriswill/dotfiles`); the symlinks just make the flake reachable at the conventional `~/src/dotfiles` / `/etc/nixos` paths.
+
+**Rebuild gotcha:** nix's `--flake <path>` does *not* follow a path that is itself a symlink, so `--flake /etc/nixos#nebula` and `--flake ~/src/dotfiles#nebula` both fail with "not a flake (not a directory)". `cd` into the dir first so `.` resolves via the (canonicalized) cwd — that's why the commands below use `.#nebula` after entering the dir. Passing the real path `~/src/github/kriswill/dotfiles#nebula` also works.
 
 ## Common commands
 
-Run from the repo (`/home/k/src/dotfiles`, equivalently `/etc/nixos` via the symlink):
+Run after `cd /etc/nixos` (or `cd ~/src/dotfiles`) so `.` resolves to the real checkout:
 
 ```sh
 # Rebuild and switch the running system
