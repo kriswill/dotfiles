@@ -1,7 +1,7 @@
 {
   pkgs,
-  lib,
-  config,
+  # lib,
+  # config,
   ...
 }:
 {
@@ -52,7 +52,7 @@
   programs.kanshi = {
     enable = true;
     systemd.enable = true;
-  	};
+  };
 
   programs.nix-ld = {
     enable = true;
