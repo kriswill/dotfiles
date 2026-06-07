@@ -21,6 +21,12 @@
   # Don't trust cache server
   substituters."nix-store.homelab.earthgman.dev".enable = false;
 
+  # Dual-boot: let GRUB probe other disks for Windows/other OSes and add them to
+  # the menu. Required because Windows lives on a separate disk/ESP that the
+  # bootloader won't surface otherwise. (This is why nebula stays on snowglobe's
+  # GRUB rather than systemd-boot, which only lists entries on its own ESP.)
+  boot.loader.grub.useOSProber = true;
+
   environment.etc = {
     "ssh/ssh_host_ed25519_key.pub".source = ./ssh_host_ed25519_key.pub;
     "ssh/ssh_host_rsa_key.pub".source = ./ssh_host_rsa_key.pub;

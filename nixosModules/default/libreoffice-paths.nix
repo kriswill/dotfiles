@@ -101,6 +101,11 @@ in
   system.activationScripts.libreofficePaths = {
     deps = [ "users" ]; # run after user k exists
     text = ''
+      # NixOS concatenates all system.activationScripts into ONE script run in a
+      # single shell. A bare `exit` would abort the whole activation (skipping
+      # every later snippet -> broken boot) and `set -u` would leak into them, so
+      # confine both to a subshell.
+      (
       set -u
       regmod="${regmod}"
 
@@ -142,6 +147,7 @@ in
         ${pkgs.coreutils}/bin/rm -f "$regmod.xdgtmp"
         echo "libreoffice-paths: WARNING failed to seed, left $regmod unchanged" >&2
       fi
+      )
     '';
   };
 }
