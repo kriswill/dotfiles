@@ -111,7 +111,10 @@ input {
 // https://niri-wm.github.io/niri/Configuration:-Layout
 layout {
     // Set gaps around windows in logical pixels.
-    gaps 8
+    gaps 5
+    tab-indicator {
+        off
+    }
 
     // When to center a column when changing focus, options are:
     // - "never", default behavior, focusing an off-screen column will keep at the left
@@ -138,7 +141,7 @@ layout {
     // preset-window-heights { }
 
     // You can change the default width of the new windows.
-    default-column-width { proportion 0.5; }
+    default-column-width { proportion 1.0; }
     // If you leave the brackets empty, the windows themselves will decide their initial width.
     // default-column-width {}
 
@@ -348,6 +351,19 @@ window-rule {
 window-rule {
     geometry-corner-radius 6
     clip-to-geometry true
+}
+
+// World of Warcraft: open fullscreen with no borders/focus-ring.
+// Matches the Wine window by title (the Wine app-id is generic).
+window-rule {
+    match title="^World of Warcraft$"
+    open-fullscreen true
+    border { off; }
+    focus-ring { off; }
+    // Override the global rounded-corners rule above so WoW fills the screen
+    // square edge-to-edge.
+    geometry-corner-radius 0
+    clip-to-geometry false
 }
 
 binds {
