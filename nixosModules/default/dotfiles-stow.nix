@@ -20,6 +20,9 @@ in
   system.activationScripts.stowDotfiles = {
     deps = [ "users" ]; # run after user k exists
     text = ''
+      # Activation snippets share one shell, so `exit`/`set -u` must be confined to
+      # a subshell or they'd abort/alter the rest of boot-time activation.
+      (
       set -u
       if [ ! -d "${stowDir}" ]; then
         echo "stow: ${stowDir} not present yet, skipping" >&2
@@ -42,6 +45,7 @@ in
           echo "stow: WARNING conflict/error on $pkg, skipped" >&2
         fi
       done
+      )
     '';
   };
 }
