@@ -10,6 +10,11 @@ gtk-custom-css = ./corners.css
 # accent tint. Pairs with the window background override in corners.css.
 window-theme = ghostty
 
+# No titlebar/decorations — tmux owns the chrome (status bar etc.) and niri
+# handles window management. Title is still reported to the compositor (see
+# tmux set-titles) so other surfaces can show what's active.
+window-decoration = none
+
 # Theme (kanagawabones), copied from the dotfiles `main` branch.
 palette = 0=#2d2c2c
 palette = 1=#c4746e
