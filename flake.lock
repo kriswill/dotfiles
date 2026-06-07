@@ -1,0 +1,310 @@
+{
+  "nodes": {
+    "crane": {
+      "locked": {
+        "lastModified": 1757183466,
+        "narHash": "sha256-kTdCCMuRE+/HNHES5JYsbRHmgtr+l9mOtf5dpcMppVc=",
+        "owner": "ipetkov",
+        "repo": "crane",
+        "rev": "d599ae4847e7f87603e7082d73ca673aa93c916d",
+        "type": "github"
+      },
+      "original": {
+        "owner": "ipetkov",
+        "repo": "crane",
+        "type": "github"
+      }
+    },
+    "disko": {
+      "inputs": {
+        "nixpkgs": [
+          "snowglobe-lib",
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1780048612,
+        "narHash": "sha256-Md/eOK5OjmvvHc2H52pLZe4zpP4XyfiS5vHqfRCz2HU=",
+        "owner": "nix-community",
+        "repo": "disko",
+        "rev": "caa775cf67bfdc47f940edd96c975b5016df9059",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nix-community",
+        "repo": "disko",
+        "type": "github"
+      }
+    },
+    "flux": {
+      "inputs": {
+        "mcman": "mcman",
+        "nixpkgs": [
+          "snowglobe-lib",
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1767316901,
+        "narHash": "sha256-tllrks9CW9WWWa0w9Brc25uieYixR8pAMUJODith/yU=",
+        "owner": "iogamaster",
+        "repo": "flux",
+        "rev": "b12173e0b75c10c8f590a9d3a3ad23681f14d038",
+        "type": "github"
+      },
+      "original": {
+        "owner": "iogamaster",
+        "repo": "flux",
+        "type": "github"
+      }
+    },
+    "import-tree": {
+      "locked": {
+        "lastModified": 1778781969,
+        "narHash": "sha256-Jjuz5CmSkur8KvLDoGa+vylEp+RkQtv4mt/qcMznpH0=",
+        "owner": "vic",
+        "repo": "import-tree",
+        "rev": "d321337efd0f23a9eb14a42adb7b2c29313ab274",
+        "type": "github"
+      },
+      "original": {
+        "owner": "vic",
+        "repo": "import-tree",
+        "type": "github"
+      }
+    },
+    "jovian-nixos": {
+      "inputs": {
+        "nix-github-actions": "nix-github-actions",
+        "nixpkgs": [
+          "snowglobe-lib",
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1780037506,
+        "narHash": "sha256-z7lnxUsYex11x73HiRCzRZDYF2OGqnB0QqouMYcHSX4=",
+        "owner": "Jovian-Experiments",
+        "repo": "Jovian-NixOS",
+        "rev": "aee8bab39b309b038c14f216538e6141f28808c6",
+        "type": "github"
+      },
+      "original": {
+        "owner": "Jovian-Experiments",
+        "repo": "Jovian-NixOS",
+        "type": "github"
+      }
+    },
+    "mcman": {
+      "inputs": {
+        "crane": "crane",
+        "nixpkgs": "nixpkgs"
+      },
+      "locked": {
+        "lastModified": 1766962671,
+        "narHash": "sha256-n1+76Xuk30JKy4raeU5okeaYZjzDQkS+bBLjX8NGZIg=",
+        "owner": "deniz-blue",
+        "repo": "mcman",
+        "rev": "0e3bef55234406eb0634b80f9cac9a284254768a",
+        "type": "github"
+      },
+      "original": {
+        "owner": "deniz-blue",
+        "repo": "mcman",
+        "type": "github"
+      }
+    },
+    "nix-github-actions": {
+      "inputs": {
+        "nixpkgs": [
+          "snowglobe-lib",
+          "jovian-nixos",
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1729697500,
+        "narHash": "sha256-VFTWrbzDlZyFHHb1AlKRiD/qqCJIripXKiCSFS8fAOY=",
+        "owner": "zhaofengli",
+        "repo": "nix-github-actions",
+        "rev": "e418aeb728b6aa5ca8c5c71974e7159c2df1d8cf",
+        "type": "github"
+      },
+      "original": {
+        "owner": "zhaofengli",
+        "ref": "matrix-name",
+        "repo": "nix-github-actions",
+        "type": "github"
+      }
+    },
+    "nix-index-database": {
+      "inputs": {
+        "nixpkgs": [
+          "snowglobe-lib",
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1780210899,
+        "narHash": "sha256-4axz3OBPTKa6LIkXV8n0lc63MQU+et2CB5DGobEAi6k=",
+        "owner": "nix-community",
+        "repo": "nix-index-database",
+        "rev": "97df9dc0b7c924344b793a15c1e8e4522ebb854e",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nix-community",
+        "repo": "nix-index-database",
+        "type": "github"
+      }
+    },
+    "nix-post-build-hook-queue": {
+      "inputs": {
+        "nixpkgs": [
+          "snowglobe-lib",
+          "nixpkgs"
+        ],
+        "treefmt": [
+          "snowglobe-lib"
+        ]
+      },
+      "locked": {
+        "lastModified": 1780059713,
+        "narHash": "sha256-NwFn9X2GtCARslAGjeRaVTLXXSmxPJLmZumUgBG/RkE=",
+        "owner": "newam",
+        "repo": "nix-post-build-hook-queue",
+        "rev": "c6ac3de08660fce0d242b6afa678f1dcb18d3ad1",
+        "type": "github"
+      },
+      "original": {
+        "owner": "newam",
+        "repo": "nix-post-build-hook-queue",
+        "type": "github"
+      }
+    },
+    "nixos-hardware": {
+      "locked": {
+        "lastModified": 1761824787,
+        "narHash": "sha256-cH0vVt83ZBafqJzwOl7IHTXo6KA1c1J+8qvMjfARMqI=",
+        "rev": "e07b1618c3009195ffbd4749e9b5618511260557",
+        "revCount": 2470,
+        "type": "tarball",
+        "url": "https://api.flakehub.com/f/pinned/NixOS/nixos-hardware/0.1.2470%2Brev-e07b1618c3009195ffbd4749e9b5618511260557/019a3500-fe98-71d0-908c-81c78f5f82cf/source.tar.gz?rev=e07b1618c3009195ffbd4749e9b5618511260557&revCount=2470"
+      },
+      "original": {
+        "type": "tarball",
+        "url": "https://flakehub.com/f/NixOS/nixos-hardware/%2A.tar.gz"
+      }
+    },
+    "nixpkgs": {
+      "locked": {
+        "lastModified": 1757347588,
+        "narHash": "sha256-tLdkkC6XnsY9EOZW9TlpesTclELy8W7lL2ClL+nma8o=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "b599843bad24621dcaa5ab60dac98f9b0eb1cabe",
+        "type": "github"
+      },
+      "original": {
+        "id": "nixpkgs",
+        "ref": "nixos-unstable",
+        "type": "indirect"
+      }
+    },
+    "nixpkgs-stable": {
+      "locked": {
+        "lastModified": 1779971959,
+        "narHash": "sha256-R5nauXyqyfRUFiZycFFZdkF7wl6eaUpPLst35+2nJQY=",
+        "owner": "nixos",
+        "repo": "nixpkgs",
+        "rev": "ec942ba042dad5ef097e2ef3a3effc034241f011",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nixos",
+        "ref": "nixos-26.05",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
+    "nixpkgs_2": {
+      "locked": {
+        "lastModified": 1779560665,
+        "narHash": "sha256-tpyBcxPpcQb8ukyNF7DoCwfSY3VPsxHoYwj00Cayv5o=",
+        "owner": "nixos",
+        "repo": "nixpkgs",
+        "rev": "64c08a7ca051951c8eae34e3e3cb1e202fe36786",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nixos",
+        "ref": "nixos-unstable",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
+    "root": {
+      "inputs": {
+        "import-tree": [
+          "snowglobe-lib",
+          "import-tree"
+        ],
+        "nixpkgs": [
+          "snowglobe-lib",
+          "nixpkgs"
+        ],
+        "snowglobe-lib": "snowglobe-lib"
+      }
+    },
+    "snowglobe-lib": {
+      "inputs": {
+        "disko": "disko",
+        "flux": "flux",
+        "import-tree": "import-tree",
+        "jovian-nixos": "jovian-nixos",
+        "nix-index-database": "nix-index-database",
+        "nix-post-build-hook-queue": "nix-post-build-hook-queue",
+        "nixos-hardware": "nixos-hardware",
+        "nixpkgs": "nixpkgs_2",
+        "nixpkgs-stable": "nixpkgs-stable",
+        "sops-nix": "sops-nix"
+      },
+      "locked": {
+        "lastModified": 1780771607,
+        "narHash": "sha256-kFlccMHHGQtJZpcllCtsp4ddnhxgd9f0xrQLvVdWUK0=",
+        "ref": "refs/heads/main",
+        "rev": "584091a779d3b940d2f2581e7bc0e38516d41f68",
+        "revCount": 1626,
+        "type": "git",
+        "url": "https://codeberg.org/earthgman/snowglobe-lib"
+      },
+      "original": {
+        "type": "git",
+        "url": "https://codeberg.org/earthgman/snowglobe-lib"
+      }
+    },
+    "sops-nix": {
+      "inputs": {
+        "nixpkgs": [
+          "snowglobe-lib",
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1777944972,
+        "narHash": "sha256-VfGRo1qTBKOe3s2gOv8LSoA6Fk19PvBlwQ1ECN0Evn8=",
+        "owner": "Mic92",
+        "repo": "sops-nix",
+        "rev": "c591bf665727040c6cc5cb409079acb22dcce33c",
+        "type": "github"
+      },
+      "original": {
+        "owner": "Mic92",
+        "repo": "sops-nix",
+        "type": "github"
+      }
+    }
+  },
+  "root": "root",
+  "version": 7
+}

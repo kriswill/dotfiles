@@ -1,0 +1,67 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## What this is
+
+A NixOS flake that defines the system configuration for the host `nebula` (AMD CPU, NVIDIA GPU, UEFI). It is built on top of [`snowglobe-lib`](https://codeberg.org/earthgman/snowglobe-lib), which provides the host builder (`slib.mkNixosHost`), the `snowglobe-lib.*` module options (profiles, desktop, etc.), and the `import-tree` auto-importer. Most of the actual functionality comes from `snowglobe-lib`; this repo is mostly host-specific glue.
+
+## Where this lives
+
+This repo is the source of truth and lives at `/home/k/src/dotfiles`, tracked with git. `/etc/nixos` is a symlink to this directory, so tools that expect the flake at the conventional path (e.g. `nixos-rebuild`) resolve here automatically. Make all edits and git operations in `/home/k/src/dotfiles`; don't write through `/etc/nixos` separately.
+
+## Common commands
+
+Run from the repo (`/home/k/src/dotfiles`, equivalently `/etc/nixos` via the symlink):
+
+```sh
+# Rebuild and switch the running system
+sudo nixos-rebuild switch --flake .#nebula
+
+# Build for next boot without activating
+sudo nixos-rebuild boot --flake .#nebula
+
+# Dry build (no activation, no GC root) — quickest way to typecheck a change
+nixos-rebuild build --flake .#nebula
+
+# Update flake inputs (nixpkgs is pinned via snowglobe-lib/nixpkgs)
+nix flake update
+
+# Evaluate the flake / surface evaluation errors
+nix flake check
+```
+
+Secrets are sops-nix encrypted with the `nebula` age key (see `.sops.yaml`). Edit with `sops nixosConfigurations/nebula/secrets.yaml`.
+
+## Architecture
+
+The flake's `outputs` are wired so that almost everything flows through `snowglobe-lib`:
+
+- **`flake.nix`** — pins `snowglobe-lib` and follows its `nixpkgs` and `import-tree` inputs (do not add a second `nixpkgs` input without `inputs.nixpkgs.follows = "nixpkgs"` to avoid duplicating the store). Exposes `nixosConfigurations`, `nixosModules.default`, `overlays`, and per-system `packages`.
+- **`nixosConfigurations/default.nix`** — declares hosts via `slib.mkNixosHost`. Each host gets a `configDir` (e.g. `./nebula`) which `mkNixosHost` recursively imports, plus `modules = [ outputs.nixosModules.default ]` so every host pulls in the shared module set.
+- **`nixosModules/default/`** — the shared module tree. `flake.nix` wraps this directory with `import-tree`, so **any `.nix` file added under here is auto-imported** — there's no central `imports = [ ... ]` list to update. `keyring.nix` is special: the installer reads it to look up SSH/age/openpgp keys by short name (e.g. `config.keyring.ssh.k`).
+- **`nixosConfigurations/nebula/`** — host-specific config. `configuration.nix` is where the host's `snowglobe-lib.profiles.*` (`hacker-mode`, `gaming`, `office`, `harden`, `nix-tools`, `hardware-tools`) and `snowglobe-lib.desktop.niri` are toggled. `disko.nix` declares partitioning (single-disk, ext4 root, vfat ESP). `hardware-configuration.nix` is generated — don't hand-edit. `users/k/` defines the primary user; its password is sops-managed.
+- **`overlays/default.nix`** — exposes overlays. The `my-packages` overlay re-imports `packages/` so custom derivations land in `pkgs`. `mkNixosHost` and the packages output both apply all overlays via `builtins.attrValues outputs.overlays`.
+- **`packages/default.nix`** — where custom `pkgs.callPackage` derivations go (currently `helium`, the browser, and `dots-adopt`, the dotfiles capture helper).
+
+When adding shared functionality, drop a new file under `nixosModules/default/` (it will be auto-imported). When adding host-specific config, edit files under `nixosConfigurations/nebula/`. New custom packages go in `packages/` and become available as `pkgs.<name>` via the overlay.
+
+## Dotfiles (GNU Stow)
+
+User-level configs under `~/.config` that aren't nix-managed (niri, ghostty, kanshi, …) are tracked here via [GNU Stow](https://www.gnu.org/software/stow/), kept separate from the NixOS modules:
+
+- **`home/`** — the stow tree. Each top-level dir is one stow *package* whose contents mirror `$HOME`, e.g. `home/niri/.config/niri/config.kdl` → `~/.config/niri/config.kdl`. This dir is invisible to flake evaluation (`import-tree` only scans `nixosModules/default/`).
+- **`nixosModules/default/dotfiles-stow.nix`** — auto-imported activation module. On every `nixos-rebuild switch` it runs `stow --no-folding --restow` for **every** package under `home/` (auto-discovered) as user `k`, so symlinks are (re)created idempotently. It operates on the live repo path (`/home/k/src/dotfiles/home`), never a `/nix/store` copy, so links stay stable and editable. A conflict on one package logs a warning and is skipped — it never fails the rebuild. The module also puts `stow` and `dots-adopt` on `PATH`.
+- **`--no-folding`** is deliberate: `~/.config/<app>` stays a real directory with only the tracked files symlinked, so app-generated siblings don't leak into the repo.
+
+To **capture a new config** into the repo (move it in + replace the original with a symlink + stage it):
+
+```sh
+dots-adopt <pkg> <relpath-under-$HOME>      # e.g. dots-adopt waybar .config/waybar/config
+```
+
+To **pull live edits** of an already-tracked file back into the repo (overwrites the repo copy with the on-disk one), use stow's own adopt:
+
+```sh
+stow -d ~/src/dotfiles/home -t ~ --no-folding --adopt <pkg>
+```

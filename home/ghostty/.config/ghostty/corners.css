@@ -1,0 +1,6 @@
+/* Flatten ghostty's libadwaita CSD corners so niri owns the rounding.
+   niri's geometry-corner-radius + clip-to-geometry (config.kdl) is the
+   single source of truth for the corner radius. */
+window {
+  border-radius: 0;
+}

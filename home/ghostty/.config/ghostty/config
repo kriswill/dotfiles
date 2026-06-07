@@ -1,0 +1,4 @@
+# Let niri own window corner rounding (geometry-corner-radius + clip-to-geometry
+# in ~/.config/niri/config.kdl). This flattens ghostty's own libadwaita CSD
+# corners so there's a single source of truth for the radius.
+gtk-custom-css = ./corners.css

@@ -1,0 +1,7 @@
+profile home {
+  # Left monitor: PG348Q, portrait (rotated counter-clockwise)
+  output "DP-1" mode 3440x1440@59.973 transform 90 scale 1.5 position 0,0
+
+  # Right monitor: PG34WCDM OLED, landscape, vertically centered against the left
+  output "DP-2" mode 3440x1440@239.984 scale 1.3 position 960,667
+}
