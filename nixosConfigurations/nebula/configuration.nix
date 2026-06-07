@@ -40,6 +40,7 @@
   environment.systemPackages = [
     pkgs.helium
     pkgs.gh # GitHub CLI
+    pkgs.cliphist # clipboard history (used with fuzzel --dmenu)
   ];
 
   programs.firefox.enable = false;

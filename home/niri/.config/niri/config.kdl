@@ -270,6 +270,9 @@ layout {
 // This line starts waybar, a commonly used bar for Wayland compositors.
 spawn-at-startup "waybar"
 
+// Record clipboard history (queried via fuzzel; see binds below).
+spawn-at-startup "wl-paste" "--watch" "cliphist" "store"
+
 // To run a shell command (with variables, pipes, etc.), use spawn-sh-at-startup:
 // spawn-sh-at-startup "qs -c ~/source/qs/MyAwesomeShell"
 
@@ -370,6 +373,11 @@ binds {
     // it fully detached (setsid + redirected stdio) so it survives. See git history.
     Mod+B hotkey-overlay-title="Open a Browser: helium" { spawn-sh "setsid helium </dev/null >/dev/null 2>&1 &"; }
     Super+Alt+L hotkey-overlay-title="Lock the Screen: swaylock" { spawn "swaylock"; }
+
+    // Clipboard history (cliphist) browsed through fuzzel as a dmenu.
+    Mod+P hotkey-overlay-title="Clipboard: pick & copy" { spawn-sh "cliphist list | fuzzel --dmenu | cliphist decode | wl-copy"; }
+    Mod+Ctrl+P hotkey-overlay-title="Clipboard: delete an entry" { spawn-sh "cliphist list | fuzzel --dmenu | cliphist delete"; }
+    Mod+Ctrl+Shift+P hotkey-overlay-title="Clipboard: wipe all history" { spawn-sh "{ echo No; echo Yes; } | fuzzel --dmenu --prompt 'Wipe clipboard history? ' | grep -qx Yes && cliphist wipe"; }
 
     // Re-train DP-2's DisplayPort link when the right monitor comes up blank at 240Hz.
     Mod+Shift+D hotkey-overlay-title="Fix blank right monitor (re-train DP-2)" { spawn-sh "niri msg output DP-2 off; sleep 1; niri msg output DP-2 on"; }
