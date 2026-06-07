@@ -365,6 +365,10 @@ binds {
     // Suggested binds for running programs: terminal, app launcher, screen locker.
     Mod+Return hotkey-overlay-title="Open a Terminal: ghostty" { spawn "ghostty"; }
     Mod+D hotkey-overlay-title="Run an Application: fuzzel" { spawn "fuzzel"; }
+    // helium is a bubblewrapped AppImage with --die-with-parent; niri's plain spawn
+    // reparents it and trips that flag, killing it before the window appears. Launch
+    // it fully detached (setsid + redirected stdio) so it survives. See git history.
+    Mod+B hotkey-overlay-title="Open a Browser: helium" { spawn-sh "setsid helium </dev/null >/dev/null 2>&1 &"; }
     Super+Alt+L hotkey-overlay-title="Lock the Screen: swaylock" { spawn "swaylock"; }
 
     // Re-train DP-2's DisplayPort link when the right monitor comes up blank at 240Hz.
