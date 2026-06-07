@@ -6,13 +6,19 @@ let
     "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBxqhXoAlCKYNwsB1YrszftURThiCI94oeR0W9EDhrLy kris@1password";
 in
 {
-  # Trusted keys for pam_ssh_agent_auth. Must NOT be user-writable, so we ship it
-  # via /etc (a root-owned symlink into the nix store) rather than ~/.ssh.
-  environment.etc."ssh/sudo_authorized_keys".text = sudoSshKey + "\n";
+  # Trusted keys for pam_ssh_agent_auth. The module does a strict StrictModes check on
+  # the *real* path of this file and refuses if any parent dir is group/other-writable.
+  # An `environment.etc` entry is a symlink into /nix/store (group-writable, mode 1775),
+  # which fails that check — so we materialize a real root-owned file via tmpfiles whose
+  # realpath stays entirely under root-owned /etc.
+  systemd.tmpfiles.rules = [
+    "d /etc/sudo-ssh-keys 0755 root root -"
+    "f+ /etc/sudo-ssh-keys/k 0444 root root - ${sudoSshKey}"
+  ];
 
   security.pam.sshAgentAuth = {
     enable = true;
-    authorizedKeysFiles = [ "/etc/ssh/sudo_authorized_keys" ];
+    authorizedKeysFiles = [ "/etc/sudo-ssh-keys/k" ];
   };
 
   # Add the ssh-agent auth step to the *sudo* PAM stack only (installed as
