@@ -68,6 +68,6 @@
 
   programs.discord = {
   	enable = true;
-	package = pkgs.discord;
+	# package = pkgs.discord;
   	};
 }
