@@ -1,0 +1,17 @@
+[user]
+	name = Kris Williams
+	email = 115474+kriswill@users.noreply.github.com
+	signingkey = ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBxqhXoAlCKYNwsB1YrszftURThiCI94oeR0W9EDhrLy
+
+# Sign commits/tags with the SSH key held in 1Password. The agent socket is
+# exposed by `programs._1password-gui` (enabled in nebula/configuration.nix);
+# op-ssh-sign lives at the stable system-profile path so it survives rebuilds.
+[gpg]
+	format = ssh
+[gpg "ssh"]
+	program = /run/current-system/sw/bin/op-ssh-sign
+	allowedSignersFile = ~/.config/git/allowed_signers
+[commit]
+	gpgsign = true
+[tag]
+	gpgsign = true
