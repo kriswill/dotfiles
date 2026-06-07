@@ -1,4 +1,37 @@
+# vim:ft=ghostty
+
 # Let niri own window corner rounding (geometry-corner-radius + clip-to-geometry
 # in ~/.config/niri/config.kdl). This flattens ghostty's own libadwaita CSD
 # corners so there's a single source of truth for the radius.
 gtk-custom-css = ./corners.css
+
+# Derive the libadwaita window theme from ghostty's own colors instead of the
+# system accent, so the (transparent) focused window doesn't pick up a blue
+# accent tint. Pairs with the window background override in corners.css.
+window-theme = ghostty
+
+# Theme (kanagawabones), copied from the dotfiles `main` branch.
+palette = 0=#2d2c2c
+palette = 1=#c4746e
+palette = 2=#8a9a7b
+palette = 3=#c4b28a
+palette = 4=#8ba4b0
+palette = 5=#a292a3
+palette = 6=#8ea4a2
+palette = 7=#c8c093
+palette = 8=#a6a69c
+palette = 9=#e46876
+palette = 10=#87a987
+palette = 11=#e6c384
+palette = 12=#7fb4ca
+palette = 13=#938aa9
+palette = 14=#7aa89f
+palette = 15=#c5c9c5
+
+# Neutral almost-black (was #181616 warm / #101014 cool-navy)
+background = #0e0e0e
+foreground = #c5c9c5
+cursor-color = #c8c093
+selection-background = #2d4f67
+selection-foreground = #c8c093
+background-opacity = 0.92

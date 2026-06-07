@@ -4,3 +4,12 @@
 window {
   border-radius: 0;
 }
+
+/* Pin the libadwaita window surface to a neutral near-black for BOTH the
+   active and :backdrop (unfocused) states. Without this, libadwaita's
+   default window-bg differs by focus, and with background-opacity < 1 that
+   surface bleeds through the terminal — giving a navy tint only when focused. */
+window,
+window:backdrop {
+  background-color: #0e0e0e;
+}
