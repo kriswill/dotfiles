@@ -41,6 +41,7 @@
     pkgs.helium
     pkgs.gh # GitHub CLI
     pkgs.cliphist # clipboard history (used with fuzzel --dmenu)
+    pkgs.kdePackages.breeze-icons
   ];
 
   programs.firefox.enable = false;
