@@ -273,6 +273,10 @@ layout {
 // This line starts waybar, a commonly used bar for Wayland compositors.
 spawn-at-startup "waybar"
 
+// Paint the desktop wallpaper (niri itself draws no background). swaybg is
+// provided via environment.systemPackages in the nebula configuration.
+spawn-at-startup "swaybg" "-i" "/home/k/.config/niri/wallpaper.jpg" "-m" "fill"
+
 // Record clipboard history (queried via fuzzel; see binds below).
 spawn-at-startup "wl-paste" "--watch" "cliphist" "store"
 
