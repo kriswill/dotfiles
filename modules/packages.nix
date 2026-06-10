@@ -9,6 +9,8 @@
         iv = pkgs.callPackage ../pkgs/iv.nix { };
         # ccglass is built by its own flake (./flakes/ccglass); re-export it here.
         ccglass = inputs.ccglass.packages.${system}.ccglass;
+        # apple-container is built by its own flake (./flakes/apple-container).
+        apple-container = inputs.apple-container.packages.${system}.apple-container;
       };
     };
 

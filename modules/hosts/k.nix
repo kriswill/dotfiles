@@ -14,6 +14,7 @@
     # flake-parts config and has no `home`.
     home-manager.users.k = { config, ... }: {
       kriswill.podman-desktop.enable = true;
+      kriswill.apple-container.enable = true;
 
       kriswill.claude-account-selector = {
         enable = true;

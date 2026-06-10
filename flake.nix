@@ -30,5 +30,12 @@
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.flake-parts.follows = "flake-parts";
     };
+    # apple-container — Apple's native macOS container CLI, repackaged from its signed
+    # .pkg. Same relative-path sub-flake pattern as ccglass.
+    apple-container = {
+      url = "./flakes/apple-container";
+      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.flake-parts.follows = "flake-parts";
+    };
   };
 }
