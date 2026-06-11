@@ -4,16 +4,17 @@
   fetchurl,
   xar,
   cpio,
-  gzip,
   makeWrapper,
-  version ? "1.0.0",
-  hash ? "sha256-E/RfJtqUw1Sty+/h6PdjHn8SbpPF1N1qWlOKpmtPR50=",
 }:
 
-# Apple ships `container` as a flat, signed `.pkg`. We extract the already-signed
-# Mach-O binaries rather than building the Swift source — the source build needs the
-# macOS SDK plus Virtualization entitlements and re-signing, none of which Nix can do
-# cleanly. `dontFixup` keeps Apple's code signature (and its entitlements) intact.
+let
+  version = "1.0.0";
+  hash = "sha256-E/RfJtqUw1Sty+/h6PdjHn8SbpPF1N1qWlOKpmtPR50=";
+in
+
+# Apple ships `container` as a flat, signed `.pkg`; we install the already-signed
+# Mach-O binaries instead of building the Swift source, and `dontFixup` keeps Apple's
+# code signature and entitlements intact. Full rationale: README.md ("How it works").
 stdenv.mkDerivation {
   pname = "apple-container";
   inherit version;
@@ -26,7 +27,6 @@ stdenv.mkDerivation {
   nativeBuildInputs = [
     xar
     cpio
-    gzip
     makeWrapper
   ];
 
@@ -43,18 +43,13 @@ stdenv.mkDerivation {
   installPhase = ''
     runHook preInstall
     mkdir -p $out/bin $out/libexec
-    cp -a bin/container bin/container-apiserver $out/bin/
-    cp -a libexec/container $out/libexec/
+    mv bin/container bin/container-apiserver $out/bin/
+    mv libexec/container $out/libexec/
 
-    # `container` finds its plugins under <install-root>/libexec/container/plugins,
-    # where install-root = grandparent of its OWN executable path. Per upstream
-    # InstallRoot.swift that path is _NSGetExecutablePath WITHOUT symlink resolution,
-    # so when invoked via the Nix profile (~/.../bin/container) the install-root
-    # resolves to the profile dir — which links bin/ but NOT libexec/ — and
-    # `container system start` dies with "cannot find any plugins". Wrapping makes the
-    # CLI exec from $out, so install-root = $out (which has libexec/). The install root
-    # is read-only (plugins are only ever read); all writable state lives under
-    # CONTAINER_APP_ROOT (~/Library/Application Support/com.apple.container).
+    # `container` loads plugins from <install-root>/libexec, where install-root is
+    # derived from its own, non-symlink-resolved executable path — exec'd via the Nix
+    # profile it would find no plugins. The wrapper makes the CLI exec from $out.
+    # Full rationale: README.md ("Why `container` is wrapped").
     mv $out/bin/container $out/bin/.container-wrapped
     makeWrapper $out/bin/.container-wrapped $out/bin/container
 
