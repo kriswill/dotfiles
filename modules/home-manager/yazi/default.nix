@@ -85,7 +85,8 @@
                 }
                 {
                   url = "*.md";
-                  run = ''faster-piper -- CLICOLOR_FORCE=1 glow -w=$w -s="${config.kriswill.glow.stylePath}" "$1"'';
+                  # glow + its kanagawa style are stow-managed (home/glow/)
+                  run = ''faster-piper -- CLICOLOR_FORCE=1 glow -w=$w -s="${config.home.homeDirectory}/Library/Preferences/glow/kanagawa-dragon.json" "$1"'';
                 }
                 {
                   url = "*.(py|sh|go|ts|css|yaml|yml|toml|html|conf|json|csv)";
