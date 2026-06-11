@@ -9,6 +9,7 @@
       enable = true;
       alias-en0.enable = true;
       dnsmasq.enable = true;
+      apple-container.enable = true;
     };
 
     nixpkgs.hostPlatform = "aarch64-darwin";
