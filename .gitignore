@@ -9,7 +9,7 @@ pkgs/result
 .todos/
 
 # Compiled Neovim spellfile (regenerated from the tracked .add)
-config/nvim/spell/*.spl
+home/nvim/.config/nvim/spell/*.spl
 
 # Sidecar worktree state files
 .sidecar/
