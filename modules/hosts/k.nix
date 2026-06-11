@@ -7,6 +7,7 @@
     kriswill = {
       enable = true;
       dnsmasq.enable = true;
+      apple-container.enable = true;
     };
 
     # Wrap users.k in a function so the inner `config` is this user's home-manager

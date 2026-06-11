@@ -1,5 +1,24 @@
 {
   "nodes": {
+    "apple-container": {
+      "inputs": {
+        "flake-parts": [
+          "flake-parts"
+        ],
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "path": "./flakes/apple-container",
+        "type": "path"
+      },
+      "original": {
+        "path": "./flakes/apple-container",
+        "type": "path"
+      },
+      "parent": []
+    },
     "ccglass": {
       "inputs": {
         "flake-parts": [
@@ -141,6 +160,7 @@
     },
     "root": {
       "inputs": {
+        "apple-container": "apple-container",
         "ccglass": "ccglass",
         "darwin": "darwin",
         "faster-piper-yazi": "faster-piper-yazi",

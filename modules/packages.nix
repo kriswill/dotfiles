@@ -2,13 +2,24 @@
 { inputs, ... }:
 {
   perSystem =
-    { pkgs, system, ... }:
+    {
+      lib,
+      pkgs,
+      system,
+      ...
+    }:
     {
       packages = {
         kitten = pkgs.callPackage ../pkgs/kitten.nix { };
         iv = pkgs.callPackage ../pkgs/iv.nix { };
         # ccglass is built by its own flake (./flakes/ccglass); re-export it here.
         ccglass = inputs.ccglass.packages.${system}.ccglass;
+      }
+      # apple-container is built by its own flake (./flakes/apple-container) and is
+      # Apple-Silicon-only; guard so adding another system to the root `systems` list
+      # doesn't break eval on this line.
+      // lib.optionalAttrs (system == "aarch64-darwin") {
+        apple-container = inputs.apple-container.packages.${system}.apple-container;
       };
     };
 
