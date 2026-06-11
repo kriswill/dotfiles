@@ -11,10 +11,5 @@
     ccglass = _final: prev: {
       ccglass = inputs.ccglass.packages.${prev.stdenv.hostPlatform.system}.ccglass;
     };
-    # apple-container likewise comes from its own flake (./flakes/apple-container).
-    apple-container = _final: prev: {
-      apple-container =
-        inputs.apple-container.packages.${prev.stdenv.hostPlatform.system}.apple-container;
-    };
   };
 }

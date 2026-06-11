@@ -20,5 +20,10 @@
             default = config.packages.apple-container;
           };
         };
+
+      flake.darwinModules = rec {
+        apple-container = import ./darwin-module.nix inputs.self;
+        default = apple-container;
+      };
     };
 }

@@ -41,6 +41,32 @@ tooling: run `container system start` once (it registers a launchd service for t
 apiserver and downloads the default Linux kernel on first start). After a version bump the
 store path changes, so re-point the service with `container system stop && container system start`.
 
+## nix-darwin module
+
+The flake also exports `darwinModules.apple-container` (alias: `default`), defined in
+`darwin-module.nix`. It installs the package and adds two activation-time guards:
+
+- **Foreign-install check** (`system.checks`): refuses to activate over a manual `.pkg`
+  or Homebrew install of `container`; a stale pkgutil receipt (binaries already removed)
+  only warns. Exercised by `darwin-rebuild check` too.
+- **Runtime drift check** (`postActivation`): when the apiserver's launchd plist points
+  at an older store path, stops the old runtime (best-effort, in the primary user's
+  launchd domain) and reminds you to run `container system start`. Abnormal states warn
+  rather than silently skipping.
+
+```nix
+{
+  inputs.apple-container.url = "./flakes/apple-container"; # or a repo URL after extraction
+
+  # in the nix-darwin configuration:
+  modules = [ inputs.apple-container.darwinModules.apple-container ];
+}
+```
+
+Options: `kriswill.apple-container.enable` (default `false`) and
+`kriswill.apple-container.package` (defaults to this flake's package for the host
+system — no overlay needed). The module requires `system.primaryUser` to be set.
+
 ## Bumping the version
 
 Update `version` (and `hash`) in `package.nix`. The hash is the SRI form of the release
