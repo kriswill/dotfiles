@@ -1,0 +1,7 @@
+# Kris' starship prompt (ported from the home-manager starship module on the
+# dotfiles `main` branch). Read from ~/.config/starship.toml by default.
+[aws]
+disabled = true
+
+[gcloud]
+disabled = true

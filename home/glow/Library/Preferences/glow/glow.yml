@@ -6,3 +6,5 @@ mouse: true
 pager: true
 # word-wrap at width
 width: 0
+# kanagawa style, deployed alongside this file by the stow tree (home/glow)
+style: "/Users/k/Library/Preferences/glow/kanagawa-dragon.json"
