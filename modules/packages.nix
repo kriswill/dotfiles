@@ -12,6 +12,7 @@
       packages = {
         kitten = pkgs.callPackage ../pkgs/kitten.nix { };
         iv = pkgs.callPackage ../pkgs/iv.nix { };
+        dots-adopt = pkgs.callPackage ../pkgs/dots-adopt.nix { };
         # ccglass is built by its own flake (./flakes/ccglass); re-export it here.
         ccglass = inputs.ccglass.packages.${system}.ccglass;
       }

@@ -17,6 +17,11 @@
           homebrew.enable = lib.mkDefault true;
           ghostty.enable = lib.mkDefault true;
           macos-defaults.enable = lib.mkDefault true;
+          dotfiles-stow.enable = lib.mkDefault true;
+          tmux.enable = lib.mkDefault true;
+          zsh.enable = lib.mkDefault true;
+          neovim.enable = lib.mkDefault true;
+          fastfetch.enable = lib.mkDefault true;
         };
         system = {
           # Used for backwards compatibility, please read the changelog before changing.

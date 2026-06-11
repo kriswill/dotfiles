@@ -5,6 +5,7 @@
   flake.overlays = {
     kitten = import ../overlays/kitten.nix;
     direnv = import ../overlays/direnv.nix;
+    dots-adopt = import ../overlays/dots-adopt.nix;
     # ccglass comes from its own flake (./flakes/ccglass), not an in-tree package.
     # Overlays are pure final/prev functions, so we close over `inputs` here rather
     # than importing a separate file. The system is read off prev at eval time.
