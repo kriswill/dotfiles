@@ -17,6 +17,12 @@
           homebrew.enable = lib.mkDefault true;
           ghostty.enable = lib.mkDefault true;
           macos-defaults.enable = lib.mkDefault true;
+          dotfiles-stow.enable = lib.mkDefault true;
+          tmux.enable = lib.mkDefault true;
+          zsh.enable = lib.mkDefault true;
+          neovim.enable = lib.mkDefault true;
+          fastfetch.enable = lib.mkDefault true;
+          oksh.enable = lib.mkDefault true;
         };
         system = {
           # Used for backwards compatibility, please read the changelog before changing.
@@ -34,6 +40,9 @@
             pkgs.iproute2mac # ip command (like linux)
             pkgs.home-manager
             pkgs.pstree
+            # markdown reader; config is stow-managed (home/glow/), and the
+            # yazi previewer invokes it by bare name
+            pkgs.glow
           ];
           shellAliases =
             let

@@ -21,24 +21,18 @@
       options.kriswill.enable = lib.mkEnableOption "Kris' home module";
       config = lib.mkIf config.kriswill.enable {
         kriswill = {
-          fastfetch.enable = lib.mkDefault true;
+          # fastfetch/neovim/tmux/zsh/oksh + starship/ghostty/karabiner/glow
+          # moved to system-level darwin modules + the stow tree
+          # (modules/darwin/dotfiles-stow.nix).
           # firefox.enable = lib.mkDefault false;
           kitty.enable = lib.mkDefault true;
-          neovim.enable = lib.mkDefault true;
           neovide.enable = lib.mkDefault true;
-          tmux.enable = lib.mkDefault true;
-          ghostty.enable = lib.mkDefault true;
-          karabiner.enable = lib.mkDefault true;
           # brave.enable = lib.mkDefault false;
-          zsh.enable = lib.mkDefault true;
-          oksh.enable = lib.mkDefault true;
           direnv-nom.enable = lib.mkDefault true;
           diffnav.enable = lib.mkDefault true;
           git.enable = lib.mkDefault true;
           ssh.enable = lib.mkDefault true;
-          starship.enable = lib.mkDefault true;
           yazi.enable = lib.mkDefault true;
-          glow.enable = lib.mkDefault true;
           zk.enable = lib.mkDefault true;
           # vscode.enable = lib.mkDefault false;
         };
@@ -77,19 +71,9 @@
             echo "Hello, ${config.home.username}!"
           '')
         ];
-        home.sessionVariables =
-          let
-            # Use home-manager's wrapped nvim so EDITOR-invoked callers (yazi,
-            # git commit, crontab, etc.) inherit programs.neovim.extraPackages
-            # on PATH. pkgs.neovim is the generic nixpkgs wrapper without our
-            # extraPackages — it runs nvim fine but LSP servers can't spawn.
-            neovim = lib.getExe config.programs.neovim.finalPackage;
-          in
-          {
-            EDITOR = neovim;
-            VISUAL = neovim;
-            MANPAGER = "${neovim} +Man!";
-          };
+        # EDITOR/VISUAL/MANPAGER now come from modules/darwin/neovim.nix — the
+        # global PATH carries nvim and all its LSP/formatter tools, so the old
+        # wrapped-finalPackage indirection is gone.
         programs = {
           bat.enable = lib.mkDefault true;
           jq.enable = lib.mkDefault true;

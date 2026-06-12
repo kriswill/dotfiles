@@ -103,8 +103,8 @@ alias ga='git add'
 # ---------------------------------------------------------------------------
 # prompt — starship first, then zoxide last so its PS1 hook survives
 # ---------------------------------------------------------------------------
-# Installed by the home-manager oksh module as a nix derivation; path is
-# stable across rebuilds (symlink → /nix/store/...-starship-init-oksh.sh).
+# Deployed by the stow tree (home/oksh) alongside this file; symlink points
+# at the live repo copy, editable without a rebuild.
 [ -f "$HOME/.config/oksh/starship-init.sh" ] \
     && . "$HOME/.config/oksh/starship-init.sh"
 

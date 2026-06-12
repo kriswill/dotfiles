@@ -96,7 +96,11 @@
             # `command ccglass`) — provided by Nix instead of a global `bun -g i ccglass`.
             home.packages = [ pkgs.ccglass ];
 
-            programs.zsh.initContent = lib.mkAfter (
+            # The HM zsh module is gone (zsh config is stow-managed now), so ship
+            # the snippet as a file the stowed ~/.config/zsh/.zshrc sources when
+            # present. Coexists with the stow links in ~/.config/zsh because
+            # stow --no-folding keeps the dir real.
+            xdg.configFile."zsh/claude-account-selector.zsh".text =
               inputs
               # Scrub a GUI-session desktop pin (see desktopProfile) so interactive shells
               # re-resolve by $PWD instead of inheriting it. Runs before wrapper.zsh, which
@@ -105,8 +109,7 @@
               + lib.optionalString (cfg.desktopProfile != null) ''
                 [[ "$CLAUDE_CONFIG_DIR" == "$HOME/.claude-${cfg.desktopProfile}" ]] && unset CLAUDE_CONFIG_DIR
               ''
-              + builtins.readFile ./wrapper.zsh
-            );
+              + builtins.readFile ./wrapper.zsh;
           }
 
           # Pin the GUI desktop app to ~/.claude-<desktopProfile> by injecting
