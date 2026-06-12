@@ -3,7 +3,6 @@
     {
       lib,
       config,
-      pkgs,
       ...
     }:
     let
@@ -13,8 +12,8 @@
       options.kriswill.diffnav.enable = lib.mkEnableOption "diffnav git diff pager";
 
       config = lib.mkIf config.kriswill.diffnav.enable {
-        home.packages = [ pkgs.diffnav ];
-
+        # diffnav itself moved to the nix-darwin per-user profile (gated on
+        # kriswill.diffnav.enable) — see modules/darwin/user-packages.nix.
         programs.delta = {
           enable = true;
           enableGitIntegration = false;

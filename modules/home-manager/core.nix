@@ -36,40 +36,16 @@
           zk.enable = lib.mkDefault true;
           # vscode.enable = lib.mkDefault false;
         };
+        # Packages that also live in environment.systemPackages (so they were
+        # tagged "home,system", not pure "home") stay declared here. The pure
+        # "home" packages were migrated to the nix-darwin per-user profile —
+        # see modules/darwin/user-packages.nix. jq/nix-index aren't here either:
+        # programs.jq / programs.nix-index below already install them.
         home.packages = with pkgs; [
-          age # encryption tool
-          bun
-          btop
-          comma # https://github.com/nix-community/comma
-          fd # file finding
-          figlet # text to big fancy letters in ASCII
           go # an awesome language
-          grc # generic text colorizer
-          gnupg # signature verifier
-          jq # json querying
-          just # better make
-          keycastr # keystroke visualizer
-          localsend # share files with other devices on the local network
-          # mactop
-          ncdu # analyze disk usage
-          nix-index # local database of nixpkgs
-          nix-output-monitor # better visual output for nix builds
-          nix-tree # analyze disk usage by nix packages
           nodejs_24
-          ripgrep # fast grep replacement
           sqliteWithExtensions
-          sqlite-vec
-          # stoat-desktop
-          tldr # simplified man pages
-          tree # print directory trees
-          uv # one python tool to rule them all!
           yamlfmt # format yaml
-          # You can also create simple shell scripts directly inside your
-          # configuration. For example, this adds a command 'my-hello' to your
-          # environment:
-          (writeShellScriptBin "my-hello" ''
-            echo "Hello, ${config.home.username}!"
-          '')
         ];
         # EDITOR/VISUAL/MANPAGER now come from modules/darwin/neovim.nix — the
         # global PATH carries nvim and all its LSP/formatter tools, so the old

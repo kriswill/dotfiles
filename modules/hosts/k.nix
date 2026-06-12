@@ -2,7 +2,27 @@
 { config, ... }:
 {
   configurations.darwin.k.module = {
-    imports = builtins.attrValues config.flake.modules.darwin;
+    imports = (builtins.attrValues config.flake.modules.darwin) ++ [
+      (
+        { pkgs, ... }:
+        {
+          # Host-specific user-level packages (always-on baseline lives in
+          # modules/darwin/user-packages.nix).
+          users.users.k.packages = builtins.attrValues {
+            inherit (pkgs)
+              git-crypt # transparent git file encryption
+              tig # text-mode git diff/commit viewer
+              diffnav # git diff pager (config: home-manager/diffnav.nix)
+              neovide # neovim GUI
+              podman-desktop # config: home-manager/podman-desktop.nix
+              podman
+              vfkit # Virtualization.framework helper podman drives for applehv
+              k9s # kubernetes TUI
+              ;
+          };
+        }
+      )
+    ];
 
     kriswill = {
       enable = true;

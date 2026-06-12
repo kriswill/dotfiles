@@ -17,11 +17,8 @@
           sshPubKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBxqhXoAlCKYNwsB1YrszftURThiCI94oeR0W9EDhrLy";
         in
         {
-          home.packages = with pkgs; [
-            git-crypt # git files encryption
-            tig # diff and commit view
-          ];
-
+          # git-crypt + tig moved to the nix-darwin per-user profile (gated on
+          # kriswill.git.enable) — see modules/darwin/user-packages.nix.
           programs.gh.enable = true;
 
           xdg.configFile."git/allowed_signers".text = ''

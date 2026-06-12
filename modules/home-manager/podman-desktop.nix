@@ -3,22 +3,16 @@
     {
       config,
       lib,
-      pkgs,
       ...
     }:
     {
       options.kriswill.podman-desktop.enable = lib.mkEnableOption "Podman Desktop";
       config = lib.mkIf config.kriswill.podman-desktop.enable {
-        home.packages = [
-          pkgs.podman-desktop
-          pkgs.podman
-          # vfkit is the helper binary podman drives for the "applehv" machine
-          # provider (see config/containers/containers.conf). Pin it explicitly so a
-          # nixpkgs bump can't drop it off PATH and break `podman machine start`.
-          pkgs.vfkit
-          pkgs.k9s
-        ];
-
+        # podman-desktop / podman / vfkit / k9s moved to the nix-darwin per-user
+        # profile, gated on this toggle — see modules/darwin/user-packages.nix.
+        # (vfkit is the helper podman drives for the "applehv" machine provider;
+        # it's pinned explicitly there so a nixpkgs bump can't break
+        # `podman machine start`.)
         xdg.configFile."containers/containers.conf".source = config.lib.file.mkOutOfStoreSymlink (
           config.home.homeDirectory + "/src/dotfiles/config/containers/containers.conf"
         );
