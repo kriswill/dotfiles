@@ -58,6 +58,18 @@ alias lg='lazygit'
 ## man-page completion for bat-extras' `batman`.
 compdef batman=man
 
+## yazi — `y` wraps yazi so quitting (q) cd's the shell into yazi's last
+## directory; quit with Q to skip the cd. Restored from the pre-Dec-2024
+## home-manager zsh config.
+function y() {
+  local tmp cwd
+  tmp="$(mktemp -t yazi-cwd.XXXXXX)"
+  yazi "$@" --cwd-file="$tmp"
+  IFS='' read -r -d '' cwd <"$tmp"
+  [ -n "$cwd" ] && [ "$cwd" != "$PWD" ] && builtin cd -- "$cwd"
+  rm -f -- "$tmp"
+}
+
 ## Red background on stderr. Defined but not enabled by default — run `stderred`
 ## to turn it on in the current shell.
 function stderred() {
