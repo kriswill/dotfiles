@@ -42,10 +42,18 @@ alias t="ls -T -I '.git'"
 alias cat='bat'
 alias ..='cd ..'
 alias ...='cd ../..'
+alias ....='cd ../../..'
+alias man='batman'
 alias ff='fastfetch'
 alias gv='NVIM_APPNAME=gman nvim'
 alias claude-yolo='claude --dangerously-skip-permissions'
 alias cyolo='claude --dangerously-skip-permissions'
+
+## Git (gco/gba chain off g the same way the ls family chains off ls).
+alias g='git'
+alias gco='g checkout'
+alias gba='g branch -a'
+alias lg='lazygit'
 
 ## man-page completion for bat-extras' `batman`.
 compdef batman=man
