@@ -10,8 +10,13 @@ anything that stops being true, and record real gotchas in **Learned behaviours
 
 ```
 $ hyprctl version
-Hyprland 0.55.2  (built from v0.55.2-b, 2026-05-16)
+Hyprland 0.55.0  (built from branch unknown @ f719bd6, dirty; Tag v0.55.0; 2026-06-13)
 ```
+
+(The flake build self-reports `0.55.0` even though it's a recent dirty build —
+don't read the version string as "older than 0.55.2"; it's whatever the pinned
+`inputs.hyprland` resolves to. Re-check with `hyprctl version` after a
+`nix flake update`.)
 
 Installed via the official flake (`inputs.hyprland = github:hyprwm/Hyprland`,
 see `flake.nix`), with the `hyprland-packages` / `hyprland-extras` overlays in
@@ -24,7 +29,7 @@ see `flake.nix`), with the `hyprland-packages` / `hyprland-extras` overlays in
 every config you find online — dotfile repos, the Arch wiki, old answers, and
 three-quarters of the live wiki's own examples that haven't been migrated —
 uses the **legacy `.conf` form**. This manual is **Lua-first** (that is what
-0.55.2 runs and what `hyprland.lua` here is written in) and gives a
+0.55.0 runs and what `hyprland.lua` here is written in) and gives a
 [legacy → Lua translation map](#legacy-conf--lua-translation) so you can port
 any `.conf` snippet you find.
 
@@ -208,11 +213,24 @@ legacy dispatcher names:
 | `hl.dsp.exit()` | `exit` | quit Hyprland |
 
 The `hl.dsp` namespace mirrors the dispatcher set but isn't exhaustively
-documented here. For any dispatcher without a known Lua wrapper, the **legacy
-catalog below is authoritative** and is always reachable at runtime via
-`hyprctl dispatch <name> <args>` (hyprctl uses the legacy names regardless of
-config language). Verify exact Lua spelling against
+documented here. Verify exact Lua spelling against
 <https://wiki.hypr.land/Configuring/Basics/Dispatchers/>.
+
+> **`hyprctl dispatch` is Lua now, not legacy names (0.55, verified 2026-06-13).**
+> In 0.55 `hyprctl dispatch <args>` is a shorthand for `hl.dispatch(<args>)` —
+> it evaluates the args as **Lua**, and `hl.dispatch` expects a *dispatcher
+> object*, not strings. The old `hyprctl dispatch setfloating title:foo` form
+> now errors (`')' expected near 'title'` / `expected a dispatcher`). Use the
+> Lua form, quoting the whole expression so the shell passes it intact:
+> ```sh
+> hyprctl dispatch 'hl.dsp.focus({ window = "title:World of Warcraft" })'
+> hyprctl dispatch 'hl.dsp.window.float({ action = "toggle" })'
+> hyprctl dispatch 'hl.dsp.window.fullscreen()'
+> ```
+> The `hl.dsp.window.*` dispatchers act on the **focused** window, so focus the
+> target first with `hl.dsp.focus({ window = "<selector>" })`. The legacy
+> catalog below still documents what dispatchers *exist* and their args, but you
+> can no longer invoke them by legacy name through hyprctl.
 
 **Full legacy dispatcher catalog** (name → args):
 
@@ -523,8 +541,60 @@ Bind flag letters → opts: `l`→`locked`, `e`→`repeating`, `r`→`release`,
 
 Real findings on nebula — append as you discover more; correct/remove stale ones.
 
+- **XWayland apps look jaggy/blurry on fractional-scaled monitors (2026-06-13).**
+  Both monitors here run fractional scale (`scale = "auto"` → DP-3 1.33, DP-1
+  1.60). XWayland can't do per-monitor fractional scaling, so by default
+  Hyprland renders an X11 client's buffer at **integer scale 1** then
+  **bitmap-upscales it by the monitor scale** — every glyph/icon softens.
+  *Confirmed by measurement:* Steam's window was `857px` logical but `grim`
+  captured it at `1142px` (= 857 × 1.33) — a non-integer upscale. Native-Wayland
+  apps (Firefox, ghostty) are unaffected; only X11 apps blur. **Fix applied:**
+  `hl.config({ xwayland = { force_zero_scaling = true } })` — X11 buffers then
+  render 1:1 (crisp). Trade-off: X apps now think the display is scale-1 and
+  appear small, so compensate **per-app** (we set
+  `hl.env("STEAM_FORCE_DESKTOPUI_SCALING", "1.33")` for Steam; Battle.net runs
+  through Steam/Proton so it inherits). Do **not** set `GDK_DPI_SCALE` /
+  `QT_SCALE_FACTOR` globally to compensate — they double-apply on native-Wayland
+  apps. `force_zero_scaling` applies live on `hyprctl reload` (existing X windows
+  reflow), but **the Steam UI-scaling env only takes effect on a Steam restart**.
+  Verify with `hyprctl getoption xwayland:force_zero_scaling` (`set: true`).
+  Alternative fix if you don't want fractional scale at all: pin the monitor to
+  `scale = 1` (crisp everywhere, but the whole desktop on that output gets
+  smaller).
+
+- **Proton fullscreen games on a fractional-scaled monitor → set the monitor to
+  scale 1; don't use gamescope (2026-06-13).** The whole saga (WoW via Battle.net
+  under Steam/Proton): on a fractionally-scaled monitor XWayland games can't get a
+  sane resolution. Symptoms in order of discovery:
+  1. *Tiling.* The game opens windowed and dwindle tiles it (observed
+     `1261×1036`). A `float`+`fullscreen` window rule fixes the *window* size but
+     not the in-game resolution.
+  2. *Bogus in-game resolution.* The game is shown the odd *logical* size, not
+     native `3440×1440`; WoW saved a garbage `gxFullscreenResolution "1440x1381"`
+     into `Config.wtf` and its resolution list was unusable.
+  3. *gamescope is a trap here.* Wrapping the launch in `gamescope -W 3440 -H 1440
+     -f -- %command%` (Steam Launch Options on the Battle.net non-Steam shortcut)
+     DOES give the game a clean nested `3440×1440` — the lobby/menus render right
+     — but **gamescope nested under Hyprland on this NVIDIA card (RTX 5080, driver
+     595) had bad frame pacing**: constant judder without `--adaptive-sync`, and
+     with `--adaptive-sync`+VRR it produced partial-update corruption (cursor
+     trails, only the damaged region around the mouse refreshing). Not worth it.
+  **The actual fix: pin the gaming monitor to native `scale = 1`** (see Monitors
+  section — both monitors are now described explicitly in `hl.monitor`). At scale
+  1 the game sees a true `3440×1440`, runs as a plain fullscreen XWayland window,
+  Hyprland direct-scanout + native VRR (`misc.vrr=2`) handle smoothness, and no
+  gamescope/Config.wtf hacks are needed. Cost: the desktop on that monitor is
+  smaller (~110 PPI on 34", normal density). General rule: **don't fractionally
+  scale a monitor you game on** — keep it at scale 1 and scale other outputs.
+  Gotchas worth keeping: `%command%` must be exact in Steam Launch Options (a
+  missing trailing `%` makes Steam append the options as literal args instead of
+  wrapping — and **non-Steam shortcuts only expand `%command%`, nothing else**);
+  WoW's `Config.wtf` (`…/compatdata/3082075026/pfx/…/_retail_/WTF/Config.wtf`)
+  rewrites on exit, so edit it only while WoW is fully closed; WoW `gxApi` is
+  `D3D12` (vkd3d) — switch to `D3D11` if you hit shader-compilation hitching.
+
 - **`.conf` shadows `.lua` (2026-06-13).** With both
-  `~/.config/hypr/hyprland.conf` and `hyprland.lua` present, Hyprland 0.55.2
+  `~/.config/hypr/hyprland.conf` and `hyprland.lua` present, Hyprland 0.55.0
   loads the `.conf` and **silently ignores the `.lua`**. Observed: the 13 KB
   `hyprland.lua` (rounding 10, border 2, ~40 binds) was inert while a 6-bind
   stub `.conf` was live — `hyprctl binds | grep -c bind` returned 6, and
@@ -539,12 +609,11 @@ Real findings on nebula — append as you discover more; correct/remove stale on
 - **0.55 = Lua, but the internet is `.conf`.** Treat every online example as
   legacy syntax and translate (table above). Don't paste `bind = …` lines into
   `hyprland.lua`.
-- **Hyprland config is NOT yet in the stow tree (2026-06-13).** `home/` has no
-  `hypr` package; `~/.config/hypr/{hyprland.lua,hyprland.conf}` are plain
-  unmanaged files. To track them in this repo, adopt into stow once you've
-  settled on the Lua file:
-  `dots-adopt hypr .config/hypr/hyprland.lua` (see CLAUDE.md → Dotfiles). Don't
-  adopt the throwaway stub `.conf`.
+- **Hyprland config IS in the stow tree now (updated 2026-06-13).** The `hypr`
+  stow package exists: `~/.config/hypr/hyprland.lua` and `.luarc.json` are
+  symlinks into `home/hyprland/.config/hypr/`. Edit the files under
+  `home/hyprland/…` in the repo (the symlinks make edits live immediately);
+  `hyprctl reload` to apply. Don't track the throwaway stub `.conf`.
 - **LSP type defs come from Hyprland itself (2026-06-13).** No need to hand-write
   `hl.*` annotations — Hyprland installs `share/hypr/stubs/hl.meta.lua`, reachable
   at the stable `/run/current-system/sw/share/hypr/stubs`. A `.luarc.json` in
@@ -558,10 +627,26 @@ Real findings on nebula — append as you discover more; correct/remove stale on
 - **Two compositors are enabled.** `configuration.nix` has both
   `desktop.niri.enable` and `desktop.hyprland.enable = true`, with
   `displayManager.defaultSession = "hyprland-uwsm"`. Both sessions are
-  selectable at login; Hyprland runs under **uwsm**. Displays elsewhere are
-  driven by kanshi under niri — Hyprland does its own monitor config via
-  `hl.monitor{}`, so monitor layout must be set in *both* places if you switch
-  between sessions.
+  selectable at login; Hyprland runs under **uwsm**.
+- **kanshi silently overrides `hl.monitor` under Hyprland (2026-06-13).** kanshi
+  is a *systemd user service* (`/etc/systemd/user/kanshi.service`, enabled —
+  NixOS-managed) that drives displays for niri. It starts on the shared
+  graphical-session, so it **also runs under Hyprland** and reapplies its
+  `~/.config/kanshi/config` (a stow package; matches monitors by make/model/serial)
+  via the **wlr-output-management** protocol — which *wins over* `hl.monitor`.
+  Symptom: `hl.monitor`/`hyprctl eval`/reload all return `ok` but the scale never
+  changes (we chased a phantom "scale won't apply" for a while). Two more traps
+  found while debugging: kanshi's fractional scales get **rounded** by wlroots
+  (config `1.5`/`1.4` → actual `1.6`/`1.33`, because they must divide the
+  resolution to integers); and in 0.55 Lua mode **`hyprctl keyword` is dead**
+  (`"keyword can't work with non-legacy parsers. Use eval."`) — use
+  `hyprctl eval 'hl.monitor({...})'` to test monitor changes live.
+  **Resolution chosen:** Hyprland owns the layout in its own session — an
+  `hl.on("hyprland.start", …)` hook runs `systemctl --user stop kanshi.service`,
+  and **both** monitors are described in full in `hl.monitor` (matched by
+  `desc:`). The service stays enabled so niri still gets kanshi. If you ever
+  switch which compositor owns displays, remember kanshi is the cross-session
+  authority unless explicitly stopped.
 
 ## Sources
 
@@ -571,5 +656,5 @@ Real findings on nebula — append as you discover more; correct/remove stale on
 - Upstream example Lua config —
   <https://github.com/hyprwm/Hyprland/blob/main/example/hyprland.lua>
   (mirrored at `~/.config/hypr/hyprland.lua`)
-- Verified locally against `hyprctl version` (0.55.2), `hyprctl binds`,
+- Verified locally against `hyprctl version` (0.55.0), `hyprctl binds`,
   `hyprctl getoption`, and the on-disk configs, 2026-06-13.

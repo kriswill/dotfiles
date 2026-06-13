@@ -14,11 +14,37 @@
 ------------------
 
 -- See https://wiki.hypr.land/Configuring/Basics/Monitors/
+--
+-- Hyprland owns the monitor layout in this session — kanshi (the systemd user
+-- service that drives displays under niri) is stopped on Hyprland start (see
+-- AUTOSTART) because it overrides hl.monitor via wlr-output-management. Both
+-- monitors are therefore described in full here, matched by stable description
+-- (DP-* connector numbers aren't stable across boots). Mirrors the kanshi `home`
+-- profile, except the OLED is forced to native scale 1 (see below).
+
+-- Left: ROG PG348Q, portrait (rotated 90° CCW = transform 1). scale 1.5 doesn't
+-- divide 3440x1440 cleanly, so wlroots rounds it to 1.6 — set 1.6 explicitly.
+-- Logical footprint when rotated: 1440/1.6 x 3440/1.6 = 900 x 2150.
 hl.monitor({
-	output = "",
-	mode = "preferred",
-	position = "auto",
-	scale = "auto",
+	output = "desc:Ancor Communications Inc ROG PG348Q #ASNtlPMnEjHd",
+	mode = "3440x1440@59.973",
+	transform = 1,
+	scale = 1.6,
+	position = "0x0",
+})
+
+-- Right: PG34WCDM gaming OLED (240Hz, G-Sync), NATIVE scale 1. XWayland/Proton
+-- games can't handle fractional scaling and get broken in-game resolutions; at
+-- scale 1 the game sees a true 3440x1440 display, Hyprland can direct-scanout the
+-- fullscreen window, and VRR (misc.vrr=2) works natively — no gamescope needed.
+-- 3440x1440 on a 34" panel is ~110 PPI, a normal desktop density. Positioned to
+-- the right of the portrait monitor (x=900) and vertically centred against it
+-- ((2150-1440)/2 = 355).
+hl.monitor({
+	output = "desc:ASUSTek COMPUTER INC PG34WCDM RCLMRS022510",
+	mode = "3440x1440@239.984",
+	scale = 1,
+	position = "900x355",
 })
 
 ---------------------
@@ -45,6 +71,14 @@ local menu = "hyprlauncher"
 --   hl.exec_cmd("waybar & hyprpaper & firefox")
 -- end)
 
+hl.on("hyprland.start", function()
+	-- kanshi is a systemd user service that manages displays under niri, but it
+	-- also runs under Hyprland and overrides hl.monitor via wlr-output-management.
+	-- Stop it here so the monitor config above is authoritative in this session.
+	-- (Service stays enabled, so niri still gets kanshi.)
+	hl.exec_cmd("systemctl --user stop kanshi.service")
+end)
+
 -------------------------------
 ---- ENVIRONMENT VARIABLES ----
 -------------------------------
@@ -53,6 +87,22 @@ local menu = "hyprlauncher"
 
 hl.env("XCURSOR_SIZE", "24")
 hl.env("HYPRCURSOR_SIZE", "24")
+
+-- XWayland apps can't do per-monitor fractional scaling. With force_zero_scaling
+-- (below) they render 1:1 (crisp) instead of being bitmap-upscaled (blurry), but
+-- then look tiny on a fractional monitor. Compensate per-app: Steam reads this and
+-- scales its own UI back up to match DP-3's 1.33x. (Other X11 apps that look small
+-- may need GDK_DPI_SCALE / QT_SCALE_FACTOR; don't set those globally — they'd
+-- double-apply on native-Wayland apps.)
+hl.env("STEAM_FORCE_DESKTOPUI_SCALING", "1.33")
+
+----------------------
+----- XWAYLAND -----
+----------------------
+
+-- Render X11 client buffers at scale 1 (no fractional bitmap upscale = no jaggy
+-- text). See env note above re: per-app size compensation.
+hl.config({ xwayland = { force_zero_scaling = true } })
 
 -----------------------
 ----- PERMISSIONS -----
@@ -201,6 +251,13 @@ hl.config({
 	misc = {
 		force_default_wallpaper = -1, -- Set to 0 or 1 to disable the anime mascot wallpapers
 		disable_hyprland_logo = false, -- If true disables the random hyprland logo / anime girl background. :(
+		-- VRR for the G-Sync OLED (DP-3, ASUS PG34WCDM). 2 = fullscreen-only:
+		-- the display only goes adaptive-sync while a fullscreen window (e.g. the
+		-- gamescope game window) is focused, which avoids OLED brightness flicker
+		-- on the near-static desktop. Pairs with gamescope's `--adaptive-sync`
+		-- (in the Steam launch option) so the game's variable framerate drives the
+		-- panel's refresh end-to-end — the fix for nested-gamescope judder.
+		vrr = 2,
 	},
 })
 
@@ -363,6 +420,21 @@ hl.window_rule({
 
 	move = "20 monitor_h-120",
 	float = true,
+})
+
+-- World of Warcraft (Battle.net under Steam/Proton) runs as a normal XWayland
+-- fullscreen window now that DP-3 is at native scale 1 (see monitor config) — no
+-- gamescope. float + fullscreen keeps it out of the dwindle tiling flow so it
+-- gets the whole monitor at native 3440x1440; Hyprland direct-scanout + VRR
+-- (misc.vrr=2) handle smoothness. Match on TITLE, not class: WoW and the
+-- Battle.net launcher share class "steam_app_3862034770"; only the title
+-- distinguishes them, so a class rule would wrongly grab the launcher too.
+hl.window_rule({
+	name = "wow-fullscreen",
+	match = { title = "World of Warcraft" },
+
+	float = true,
+	fullscreen = true,
 })
 
 -- # This config is a STUB! This should never be generated.
