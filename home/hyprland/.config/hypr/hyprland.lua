@@ -77,6 +77,12 @@ hl.on("hyprland.start", function()
 	-- Stop it here so the monitor config above is authoritative in this session.
 	-- (Service stays enabled, so niri still gets kanshi.)
 	hl.exec_cmd("systemctl --user stop kanshi.service")
+
+	-- Desktop wallpaper via hyprpaper (Hyprland's own wallpaper daemon). Image
+	-- and fill behaviour are configured in ~/.config/hypr/hyprpaper.conf, which
+	-- points at the same repo-tracked wallpaper niri uses (symlinked into
+	-- ~/.config/niri), so both sessions stay in sync. Replace any stale instance.
+	hl.exec_cmd("pkill -x hyprpaper; hyprpaper")
 end)
 
 -------------------------------
