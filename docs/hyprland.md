@@ -505,13 +505,16 @@ value differs from your file and shows `set: false`, your file isn't being read.
 - **hypridle** — idle daemon (`~/.config/hypr/hypridle.conf`; lock/dpms/sleep
   timeouts). Enable as a user service.
 - **hyprlock** — GPU screen locker; needs a config or it refuses to lock.
-- **hyprpaper** — wallpaper daemon. *On nebula:* config at
-  `~/.config/hypr/hyprpaper.conf` (preload + `wallpaper = ,<path>`, which fills by
-  default like `swaybg -m fill`), launched from `hyprland.lua`'s `hyprland.start`
+- **hyprpaper** — wallpaper daemon (0.8.4 on nebula). *On nebula:* config at
+  `~/.config/hypr/hyprpaper.conf`, launched from `hyprland.lua`'s `hyprland.start`
   hook (`pkill -x hyprpaper; hyprpaper`). Points at the **same** repo-tracked
   image niri uses (`~/.config/niri/wallpaper.jpg`, a symlink into the dotfiles
   tree) so both sessions share one source. Package added in
-  `nixosConfigurations/nebula/configuration.nix`.
+  `nixosConfigurations/nebula/configuration.nix`. **Config syntax (0.8.x):** a
+  `wallpaper { monitor = ; path = …; fit_mode = cover }` block — empty `monitor`
+  is the all-outputs fallback, `fit_mode = cover` (the default) fills like
+  `swaybg -m fill` (other modes: `contain`, `tile`, `fill`). See the gotcha below
+  about the old flat syntax.
 - **xdg-desktop-portal-hyprland (xdph)** — screenshare + global shortcuts
   portal (the `hyprland-extras` overlay here provides it). Has **no file
   picker** — pair with `xdg-desktop-portal-gtk`.
@@ -546,6 +549,30 @@ Bind flag letters → opts: `l`→`locked`, `e`→`repeating`, `r`→`release`,
 ## Learned behaviours & workarounds
 
 Real findings on nebula — append as you discover more; correct/remove stale ones.
+
+- **hyprpaper 0.8.x silently ignores the old flat config syntax → Hyprland's
+  default anime-mascot wallpaper shows through (2026-06-13).** Our config used
+  the pre-0.8 directives `preload = <path>` / `wallpaper = ,<path>`. On hyprpaper
+  **0.8.4** (rewritten on hyprtoolkit) those keywords no longer exist: the daemon
+  `openat`s and reads the file fine (confirmed via `strace`) but registers **no
+  target**, logging `Monitor DP-1 has no target: no wp will be created` for every
+  output and never preloading the image. With nothing painted, Hyprland's built-in
+  `force_default_wallpaper` mascot was what we saw. No error is printed — `preload`
+  isn't even a recognized keyword anymore (`strings $(which hyprpaper)` shows only
+  `wallpaper`/`splash`, plus new `fit_mode`/`order`/`monitor`/`path` tokens).
+  **Fix:** the 0.8.x block form —
+  ```
+  wallpaper {
+      monitor =            # empty = fallback for all outputs
+      path = ~/.config/niri/wallpaper.jpg
+      fit_mode = cover     # default; fills+crops like swaybg -m fill
+  }
+  ```
+  Verify live with `hyprctl hyprpaper listactive` (lists each output → path) and a
+  `grim` screenshot; a working start logs **zero** `no wp will be created` lines.
+  `ipc`/`splash` still parse; `path` (not `source` — `source` includes another
+  config file). It's a stow-symlinked file, so just `pkill -x hyprpaper; hyprpaper`
+  to re-apply, no rebuild.
 
 - **Ghostty `background-opacity` shows nothing through unless its GTK window
   surface is also transparent (2026-06-13).** Ghostty had `background-opacity =
