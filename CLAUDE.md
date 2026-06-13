@@ -6,6 +6,34 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 A NixOS flake that defines the system configuration for the host `nebula` (AMD CPU, NVIDIA GPU, UEFI). It is built on top of [`snowglobe-lib`](https://codeberg.org/earthgman/snowglobe-lib), which provides the host builder (`slib.mkNixosHost`), the `snowglobe-lib.*` module options (profiles, desktop, etc.), and the `import-tree` auto-importer. Most of the actual functionality comes from `snowglobe-lib`; this repo is mostly host-specific glue.
 
+## Manuals (`docs/`)
+
+`docs/` holds task-focused reference manuals — researched, verified against this
+machine, and written for *your* (Claude's) reuse, not as user-facing docs.
+**Consult the relevant manual before working on its topic**, and keep it
+current as part of doing the work.
+
+| Manual | Covers |
+|---|---|
+| [`docs/hyprland.md`](docs/hyprland.md) | Hyprland config (0.55 Lua API + legacy `.conf` translation), binds, rules, layouts, NVIDIA, and nebula-specific gotchas |
+| [`docs/hdr-niri-june-2026.md`](docs/hdr-niri-june-2026.md) | HDR status under niri on the OLED monitor |
+| [`docs/bootloader-issues-jun-06.md`](docs/bootloader-issues-jun-06.md) | boot-failure investigation notes |
+| [`docs/libreoffice.md`](docs/libreoffice.md) | LibreOffice notes |
+
+**Maintaining them:**
+
+- Each manual leads with the **exact version/state it was verified against** and
+  ends with **dated sources**. When you touch a topic, re-verify the facts that
+  matter (`hyprctl version`, `hyprctl getoption`, what's actually installed) and
+  update the manual — *correct or delete stale claims rather than appending
+  contradictions.*
+- Every manual gets a **"Learned behaviours & workarounds"** section. When you
+  hit a non-obvious gotcha, a footgun, or a fix that took digging, record it
+  there (dated, with how it was observed) so the next session starts ahead.
+- Prefer **machine-verified** statements over wiki/upstream claims when they
+  disagree — note the disagreement. Cite official docs in the Sources list.
+- New manual → add a row to the table above so it's discoverable.
+
 ## Where this lives
 
 The nebula host config is the **`nebula-snowglobe`** branch of the personal dotfiles repo, cloned to `/home/k/src/github/kriswill/dotfiles` (origin: `github.com/kriswill/dotfiles`). It's a *bare/orphan* branch — independent history from `main` (which holds the cross-host dotfiles). The repo follows a host-then-path layout (`~/src/github/<owner>/<repo>`) mirroring the same convention used on the user's Mac.
