@@ -27,6 +27,12 @@
   # GRUB rather than systemd-boot, which only lists entries on its own ESP.)
   boot.loader.grub.useOSProber = true;
 
+  # Run the GRUB menu at the panel's native mode and hand that framebuffer
+  # straight to the kernel (gfxpayloadEfi defaults to "text" on UEFI, which
+  # otherwise drops resolution at boot). "auto" follows the EDID-preferred mode.
+  boot.loader.grub.gfxmodeEfi = "3440x1440x32";
+  boot.loader.grub.gfxpayloadEfi = "keep";
+
   environment.etc = {
     "ssh/ssh_host_ed25519_key.pub".source = ./ssh_host_ed25519_key.pub;
     "ssh/ssh_host_rsa_key.pub".source = ./ssh_host_rsa_key.pub;
