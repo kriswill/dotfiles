@@ -54,9 +54,9 @@
           ;
         typescript = pkgs.typescript;
         # LSP wrapper for the vscode typescript extension. Upstream builds
-        # against nodejs_22 and drags it into the closure; rebuild against the
-        # system node (24+, current LTS) so only one node version is present.
-        vtsls = pkgs.vtsls.override { nodejs_22 = pkgs.nodejs_24; };
+        # against nodejs-slim_22 and drags it into the closure; rebuild against
+        # the system node (24+, current LTS) so only one node version is present.
+        vtsls = pkgs.vtsls.override { nodejs-slim_22 = pkgs.nodejs-slim_24; };
       };
       ## Linters (invoked by efm-langserver)  ─────────────────────
       linters = builtins.attrValues {
