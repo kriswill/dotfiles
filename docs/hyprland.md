@@ -417,6 +417,51 @@ General toolkit env (from the wiki, set as needed): `GDK_BACKEND=wayland,x11,*`,
 env vars in `/etc/environment` (leaks into Xorg sessions). `MOZ_ENABLE_WAYLAND`
 is obsolete — Firefox defaults to Wayland.
 
+## Editor LSP (lua-language-server / neovim)
+
+Hyprland ships **complete `lua-language-server` type stubs** for the whole `hl.*`
+API. Found in the package output at `share/hypr/stubs/hl.meta.lua` (a 1700-line
+`---@meta` file; it even declares the `hl` global as `---@type HL.API`, so no
+`diagnostics.globals` entry is needed). A **version-stable** path to the same
+file exists at:
+
+```
+/run/current-system/sw/share/hypr/stubs/
+```
+
+— this tracks whatever Hyprland the running system installed, so it updates
+automatically on `nixos-rebuild`.
+
+To make any editor's `lua-language-server` see the types, drop a **`.luarc.json`**
+in the config dir pointing `workspace.library` at that stub directory. nebula's
+is tracked in the stow tree at `home/hyprland/.config/hypr/.luarc.json` →
+`~/.config/hypr/.luarc.json`:
+
+```json
+{
+  "$schema": "https://raw.githubusercontent.com/LuaLS/vscode-lua/master/setting/schema.json",
+  "runtime.version": "Lua 5.4",
+  "workspace.library": ["/run/current-system/sw/share/hypr/stubs"],
+  "workspace.checkThirdParty": false
+}
+```
+
+neovim's `lsp/luals.lua` lists `.luarc.json` as a `root_marker`, so editing any
+`.lua` under `~/.config/hypr/` makes lua_ls adopt this dir as the workspace root
+and load the stubs — completion, hover, and type-checking on `hl.*` then work.
+
+Verify from the CLI without opening the editor:
+
+```sh
+cd ~/.config/hypr && lua-language-server --check "$PWD" --checklevel=Warning --logpath=/tmp/luals
+```
+
+A clean run reports no "undefined global `hl`". One *expected* warning remains:
+`decoration.shadow.color = 0xee1a1a1a` trips `assign-type-mismatch` because the
+stub types `color` as `string`, even though Hyprland (and the upstream example
+config) accept the `0xAARRGGBB` integer form. That's an over-strict stub, not a
+config bug — leave it.
+
 ## hyprctl (runtime control)
 
 `hyprctl [-j] <command>` (`-j` = JSON; `--batch "a ; b"` to chain).
@@ -500,6 +545,12 @@ Real findings on nebula — append as you discover more; correct/remove stale on
   settled on the Lua file:
   `dots-adopt hypr .config/hypr/hyprland.lua` (see CLAUDE.md → Dotfiles). Don't
   adopt the throwaway stub `.conf`.
+- **LSP type defs come from Hyprland itself (2026-06-13).** No need to hand-write
+  `hl.*` annotations — Hyprland installs `share/hypr/stubs/hl.meta.lua`, reachable
+  at the stable `/run/current-system/sw/share/hypr/stubs`. A `.luarc.json` in
+  `~/.config/hypr/` (tracked in stow) pointing `workspace.library` there is all
+  lua_ls needs; the stub declares `hl` as a global so no `diagnostics.globals`.
+  See *Editor LSP* section.
 - **NVIDIA is snowglobe-owned.** Driver/KMS/open-modules/`NIXOS_OZONE_WL` come
   from `gpu-vendors = ["nvidia"]` in `nixosConfigurations/default.nix`. The 5080
   *requires* the open modules. Don't add hand-rolled NVIDIA env/modprobe in
