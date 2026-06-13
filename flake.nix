@@ -16,6 +16,12 @@
     #   url = "github:NixOS/nixpkgs/nixos-unstable";
     # };
 
+    hyprland = {
+      url = "github:hyprwm/Hyprland";
+      inputs.nixpkgs.follows = "nixpkgs";
+      # inputs.pre-commit-hooks = "";
+    };
+
     import-tree.follows = "snowglobe-lib/import-tree";
   };
 
@@ -28,7 +34,8 @@
     }@inputs:
     let
       lib = nixpkgs.lib;
-      outputs = self.outputs;
+      flake = self;
+      outputs = flake.outputs;
       import-tree = inputs.import-tree;
     in
     {
@@ -43,7 +50,7 @@
       ];
 
       # expose your overlays
-      overlays = import ./overlays { inherit inputs; };
+      overlays = import ./overlays { inherit flake; };
 
       # your custom derivations
       packages =

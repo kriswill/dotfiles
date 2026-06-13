@@ -1,7 +1,12 @@
 # overlays are functions which modify the existing nix package set used by your flake.
 # you can use them to add, remove, or modify packages.
-{ inputs }:
+{ flake }:
+let
+  inputs = flake.inputs;
+in
 {
+  hyprland = inputs.hyprland.overlays.default;
+
   # add your custom packages
   my-packages =
     final: prev:
