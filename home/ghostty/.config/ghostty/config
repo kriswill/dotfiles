@@ -47,4 +47,4 @@ selection-foreground = #c8c093
 background-opacity = 0.92
 
 # 150% of ghostty's default 12pt.
-font-size = 18
+font-size = 14
