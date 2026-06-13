@@ -5,7 +5,16 @@ let
   inputs = flake.inputs;
 in
 {
-  hyprland = inputs.hyprland.overlays.default;
+  # Hyprland's `default` overlay (hyprland + hyprland-extras) assumes the
+  # hypr* build deps (hyprland-guiutils, aquamarine, hyprcursor, hyprgraphics,
+  # hyprlang, hyprutils, hyprwire, …) already exist in nixpkgs. They don't in
+  # the snowglobe-pinned nixpkgs, so `callPackage ./default.nix` fails with a
+  # missing `hyprland-guiutils` argument. `hyprland-packages` is the same
+  # hyprland build but with all those dependency overlays applied; pair it with
+  # `hyprland-extras` to also get the xdg-desktop-portal-hyprland (xdph) that
+  # `default` would have provided.
+  hyprland-packages = inputs.hyprland.overlays.hyprland-packages;
+  hyprland-extras = inputs.hyprland.overlays.hyprland-extras;
 
   # add your custom packages
   my-packages =
