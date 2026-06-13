@@ -505,7 +505,13 @@ value differs from your file and shows `set: false`, your file isn't being read.
 - **hypridle** — idle daemon (`~/.config/hypr/hypridle.conf`; lock/dpms/sleep
   timeouts). Enable as a user service.
 - **hyprlock** — GPU screen locker; needs a config or it refuses to lock.
-- **hyprpaper** — IPC wallpaper utility.
+- **hyprpaper** — wallpaper daemon. *On nebula:* config at
+  `~/.config/hypr/hyprpaper.conf` (preload + `wallpaper = ,<path>`, which fills by
+  default like `swaybg -m fill`), launched from `hyprland.lua`'s `hyprland.start`
+  hook (`pkill -x hyprpaper; hyprpaper`). Points at the **same** repo-tracked
+  image niri uses (`~/.config/niri/wallpaper.jpg`, a symlink into the dotfiles
+  tree) so both sessions share one source. Package added in
+  `nixosConfigurations/nebula/configuration.nix`.
 - **xdg-desktop-portal-hyprland (xdph)** — screenshare + global shortcuts
   portal (the `hyprland-extras` overlay here provides it). Has **no file
   picker** — pair with `xdg-desktop-portal-gtk`.
@@ -540,6 +546,20 @@ Bind flag letters → opts: `l`→`locked`, `e`→`repeating`, `r`→`release`,
 ## Learned behaviours & workarounds
 
 Real findings on nebula — append as you discover more; correct/remove stale ones.
+
+- **Ghostty `background-opacity` shows nothing through unless its GTK window
+  surface is also transparent (2026-06-13).** Ghostty had `background-opacity =
+  0.92` but rendered fully opaque under Hyprland. Cause: `gtk-custom-css`
+  (`~/.config/ghostty/corners.css`) pinned `window, window:backdrop {
+  background-color: #0e0e0e; }` — an *opaque* libadwaita surface. Ghostty's
+  per-cell alpha then composites against *that* surface, not the compositor, so
+  the desktop never shows and Hyprland's `decoration:blur` has nothing to blur.
+  The opaque colour had been added to kill a focus-dependent navy tint (libadwaita's
+  default window-bg differs between active/`:backdrop`). **Fix:** set both states to
+  `background-color: transparent;` — that removes the libadwaita default tint *and*
+  lets ghostty's `background` (#0e0e0e) composite at the configured opacity straight
+  onto the compositor (which then blurs it). Apply with ghostty reload-config
+  (`Ctrl+Shift+,`) or a new window; it's a stow-symlinked file, so no rebuild.
 
 - **XWayland apps look jaggy/blurry on fractional-scaled monitors (2026-06-13).**
   Both monitors here run fractional scale (`scale = "auto"` → DP-3 1.33, DP-1

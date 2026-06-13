@@ -53,6 +53,7 @@
     pkgs.cliphist # clipboard history (used with fuzzel --dmenu)
     pkgs.kdePackages.breeze-icons
     pkgs.swaybg # paints the niri desktop wallpaper (spawned in niri config)
+    pkgs.hyprpaper # paints the Hyprland desktop wallpaper (spawned in hyprland.lua)
   ];
 
   programs.firefox.enable = false;
