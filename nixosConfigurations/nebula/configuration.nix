@@ -9,6 +9,7 @@
   services.xserver.xkb.layout = "us";
   time.timeZone = "America/Los_Angeles";
   snowglobe-lib.desktop.niri.enable = true;
+  snowglobe-lib.desktop.hyprland.enable = true;
 
   # custom profiles
   snowglobe-lib.profiles.hardware-tools.enable = true;
@@ -18,6 +19,9 @@
   snowglobe-lib.profiles.nix-tools.enable = true;
   snowglobe-lib.profiles.harden.enable = true;
 
+  services = {
+    displayManager.defaultSession = "hyprland-uwsm";
+  };
   # Don't trust cache server
   substituters."nix-store.homelab.earthgman.dev".enable = false;
 
