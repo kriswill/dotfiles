@@ -41,6 +41,10 @@ alias ff='fastfetch'
 alias gv='NVIM_APPNAME=gman nvim'
 alias claude-yolo='claude --dangerously-skip-permissions'
 alias cyolo='claude --dangerously-skip-permissions'
+## nh rebuilds (NixOS port of main's darwin nrs/nrt). Target the real checkout,
+## not the ~/src/dotfiles symlink, which nix's flake resolution won't follow.
+alias nrs='NH_NO_CHECKS=1 nh os switch ~/src/github/kriswill/dotfiles'
+alias nrt='NH_NO_CHECKS=1 nh os test ~/src/github/kriswill/dotfiles'
 
 ## man-page completion for bat-extras' `batman`.
 compdef batman=man
