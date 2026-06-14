@@ -22,14 +22,13 @@
 -- (DP-* connector numbers aren't stable across boots). Mirrors the kanshi `home`
 -- profile, except the OLED is forced to native scale 1 (see below).
 
--- Left: ROG PG348Q, portrait (rotated 90° CCW = transform 1). scale 1.5 doesn't
--- divide 3440x1440 cleanly, so wlroots rounds it to 1.6 — set 1.6 explicitly.
--- Logical footprint when rotated: 1440/1.6 x 3440/1.6 = 900 x 2150.
+-- Left: ROG PG348Q, portrait (rotated 90° CCW = transform 1), NATIVE scale 1.
+-- Logical footprint when rotated: 1440 x 3440.
 hl.monitor({
 	output = "desc:Ancor Communications Inc ROG PG348Q #ASNtlPMnEjHd",
 	mode = "3440x1440@59.973",
 	transform = 1,
-	scale = 1.6,
+	scale = 1,
 	position = "0x0",
 })
 
@@ -38,8 +37,8 @@ hl.monitor({
 -- scale 1 the game sees a true 3440x1440 display, Hyprland can direct-scanout the
 -- fullscreen window, and VRR (misc.vrr=2) works natively — no gamescope needed.
 -- 3440x1440 on a 34" panel is ~110 PPI, a normal desktop density. Positioned to
--- the right of the portrait monitor (x=900) and vertically centred against it
--- ((2150-1440)/2 = 355).
+-- the right of the portrait monitor (x=1440) and vertically centred against it
+-- ((3440-1440)/2 = 1000).
 --
 -- HDR: bitdepth 10 + cm "auto" (verified 2026-06-13, Hyprland 0.55). "auto" keeps
 -- the SDR desktop in proper SDR (preset reports "wide" — 10-bit wide-gamut SDR) and
@@ -54,7 +53,7 @@ hl.monitor({
 	output = "desc:ASUSTek COMPUTER INC PG34WCDM RCLMRS022510",
 	mode = "3440x1440@239.984",
 	scale = 1,
-	position = "900x355",
+	position = "1440x1000",
 	bitdepth = 10,
 	cm = "auto",
 })
