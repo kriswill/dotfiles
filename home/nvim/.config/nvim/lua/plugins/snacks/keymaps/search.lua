@@ -29,7 +29,7 @@ return {
   { "<leader>sl", function() Snacks.picker.loclist() end, desc = "Location List" },
   { "<leader>sm", function() Snacks.picker.marks() end, desc = "Marks" },
   { "<leader>sM", function() Snacks.picker.man() end, desc = "Man Pages" },
-  { "<leader>sp", function() Snacks.picker.lazy() end, desc = "Search for Plugin Spec" },
+  { "<leader>sp", function() require("plugins.snacks.picker.plugins").open() end, desc = "Plugins (vim.pack)" },
   { "<leader>sq", function() Snacks.picker.qflist() end, desc = "Quickfix List" },
   { "<leader>sR", function() Snacks.picker.resume() end, desc = "Resume" },
   { "<leader>su", function() Snacks.picker.undo() end, desc = "Undo History" },
