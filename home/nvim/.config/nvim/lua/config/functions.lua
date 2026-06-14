@@ -5,7 +5,7 @@ vim.api.nvim_create_user_command("ReloadConfig", function()
     end
   end
 
-  dofile("~/.config/nvim/init.lua")
+  dofile(vim.fn.stdpath("config") .. "/init.lua")
   vim.notify("Nvim configuration reloaded!", vim.log.levels.INFO)
 end, {})
 
