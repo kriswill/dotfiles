@@ -40,11 +40,23 @@ hl.monitor({
 -- 3440x1440 on a 34" panel is ~110 PPI, a normal desktop density. Positioned to
 -- the right of the portrait monitor (x=900) and vertically centred against it
 -- ((2150-1440)/2 = 355).
+--
+-- HDR: bitdepth 10 + cm "auto" (verified 2026-06-13, Hyprland 0.55). "auto" keeps
+-- the SDR desktop in proper SDR (preset reports "wide" — 10-bit wide-gamut SDR) and
+-- only flips the output to the full HDR/PQ pipeline (preset "hdr") when a client
+-- presents HDR content. cm "hdr" (force whole desktop HDR) looked washed out for
+-- everyday SDR content even with sdrbrightness/sdrsaturation tuning, so "auto" is
+-- the right default for a mixed desktop+gaming OLED. NOTE: a client must speak the
+-- wp_color_management_v1 protocol to trigger HDR — plain XWayland (how the WoW rule
+-- below runs today) does NOT, so HDR games need PROTON_ENABLE_WAYLAND=1 DXVK_HDR=1
+-- (native Wayland) or gamescope --hdr-enabled. See docs/hdr-hyprland-june-2026.md.
 hl.monitor({
 	output = "desc:ASUSTek COMPUTER INC PG34WCDM RCLMRS022510",
 	mode = "3440x1440@239.984",
 	scale = 1,
 	position = "900x355",
+	bitdepth = 10,
+	cm = "auto",
 })
 
 ---------------------
