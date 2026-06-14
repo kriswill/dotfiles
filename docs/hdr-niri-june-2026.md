@@ -1,5 +1,11 @@
 # HDR on nebula: status as of June 2026
 
+> **Historical / niri-only.** The active session is now Hyprland 0.55, which
+> *does* support HDR — see [`hdr-hyprland-june-2026.md`](hdr-hyprland-june-2026.md).
+> This doc remains accurate **only for the niri session**: niri still has no
+> color-management protocol, so the "compositor is the blocker" conclusion below
+> applies to niri, not to the machine as a whole.
+
 Findings from investigating how to get HDR working on the OLED monitor
 (ASUS PG34WCDM) under niri, researched 2026-06-12.
 

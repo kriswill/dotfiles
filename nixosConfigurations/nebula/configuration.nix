@@ -1,7 +1,7 @@
 {
   pkgs,
   # lib,
-  # config,
+  config,
   ...
 }:
 {
@@ -18,6 +18,28 @@
   snowglobe-lib.profiles.hacker-mode.enable = true;
   snowglobe-lib.profiles.nix-tools.enable = true;
   snowglobe-lib.profiles.harden.enable = true;
+
+  # The gaming profile enables programs.gamescope, but nixpkgs builds gamescope
+  # with the FROG Vulkan WSI layer OFF by default (enableWsi ? false). Without
+  # that layer a Vulkan/DXVK client inside `gamescope --hdr-enabled` can't signal
+  # HDR, so HDR never engages (and SDR content gets mapped into the HDR container,
+  # causing the color shifts seen on the OLED). Turning this on builds the layer
+  # and drops VkLayer_FROG_gamescope_wsi.{x86_64,i686}.json onto the system Vulkan
+  # implicit-layer path, where Steam's pressure-vessel imports it. See
+  # docs/hdr-hyprland-june-2026.md. NOTE: driver 595.45.04 is just below 595.58.03
+  # (native HDR-WSI on NVIDIA); the layer is required regardless, but if HDR still
+  # comes out washed/SDR, bumping the NVIDIA driver is the next lever.
+  programs.gamescope.enableWsi = true;
+
+  # snowglobe defaults the NVIDIA driver to nvidiaPackages.beta (595.45.04 — older
+  # than production and PRE native HDR-WSI). Native HDR-WSI on NVIDIA landed in
+  # 595.58.03, so override to the production branch (595.80) to get HDR working for
+  # gamescope/Proton. Chosen over `latest` (610.43.02) deliberately: 610 is a
+  # new-feature branch with confirmed RTX 5080 regressions (Wayland explicit-sync
+  # memory leak; DRM color-pipeline HDR fails on Blackwell over DP). Keep
+  # hardware.nvidia.open = true — REQUIRED for Blackwell (no proprietary module).
+  # See docs/hdr-hyprland-june-2026.md.
+  hardware.nvidia.package = config.boot.kernelPackages.nvidiaPackages.production;
 
   services = {
     displayManager.defaultSession = "hyprland-uwsm";
@@ -53,6 +75,8 @@
     pkgs.cliphist # clipboard history (used with fuzzel --dmenu)
     pkgs.kdePackages.breeze-icons
     pkgs.swaybg # paints the niri desktop wallpaper (spawned in niri config)
+    pkgs.hyprpaper # paints the Hyprland desktop wallpaper (spawned in hyprland.lua)
+    pkgs.rose-pine-hyprcursor # native hyprcursor theme (BreezeX shape, Rose Pine palette); selected via HYPRCURSOR_THEME in hyprland.lua
   ];
 
   programs.firefox.enable = false;
