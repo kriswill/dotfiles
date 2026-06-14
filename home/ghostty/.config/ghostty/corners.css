@@ -5,11 +5,16 @@ window {
   border-radius: 0;
 }
 
-/* Pin the libadwaita window surface to a neutral near-black for BOTH the
-   active and :backdrop (unfocused) states. Without this, libadwaita's
-   default window-bg differs by focus, and with background-opacity < 1 that
-   surface bleeds through the terminal — giving a navy tint only when focused. */
+/* Make the libadwaita window surface transparent for BOTH the active and
+   :backdrop (unfocused) states. Two reasons:
+   1. With background-opacity < 1, an *opaque* window-bg here would composite
+      under the terminal cells, so ghostty's alpha reveals this surface instead
+      of the Hyprland desktop — defeating transparency entirely.
+   2. libadwaita's default window-bg differs by focus, which previously bled a
+      navy tint only when focused. `transparent` neutralises that too: ghostty's
+      own `background` (#0e0e0e) is the only colour, composited at the
+      configured opacity straight onto the compositor (which then blurs it). */
 window,
 window:backdrop {
-  background-color: #0e0e0e;
+  background-color: transparent;
 }
