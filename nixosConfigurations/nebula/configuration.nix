@@ -70,17 +70,18 @@
   };
 
   environment.systemPackages = [
-    pkgs.helium
-    pkgs.wowup # WowUp-CF (WoW addon manager); WoW path wired in packages/default.nix
-    pkgs.gh # GitHub CLI
-    pkgs.diffnav # git diff pager with a file tree (git pager.diff/show); wraps delta
-    pkgs.delta # diff renderer diffnav shells out to (styled via [delta] in git config)
-    pkgs.difftastic # structural diff tool for `git difftool` / lazygit dir-diff
     pkgs.cliphist # clipboard history (used with fuzzel --dmenu)
-    pkgs.kdePackages.breeze-icons
-    pkgs.swaybg # paints the niri desktop wallpaper (spawned in niri config)
+    pkgs.delta # diff renderer diffnav shells out to (styled via [delta] in git config)
+    pkgs.diffnav # git diff pager with a file tree (git pager.diff/show); wraps delta
+    pkgs.difftastic # structural diff tool for `git difftool` / lazygit dir-diff
+    pkgs.fd # fast file finder
+    pkgs.gh # GitHub CLI
+    pkgs.helium
     pkgs.hyprpaper # paints the Hyprland desktop wallpaper (spawned in hyprland.lua)
+    pkgs.kdePackages.breeze-icons
     pkgs.rose-pine-hyprcursor # native hyprcursor theme (BreezeX shape, Rose Pine palette); selected via HYPRCURSOR_THEME in hyprland.lua
+    pkgs.swaybg # paints the niri desktop wallpaper (spawned in niri config)
+    pkgs.wowup # WowUp-CF (WoW addon manager); WoW path wired in packages/default.nix
   ];
 
   programs.firefox.enable = false;
