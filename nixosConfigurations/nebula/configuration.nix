@@ -1,7 +1,7 @@
 {
   pkgs,
   # lib,
-  # config,
+  config,
   ...
 }:
 {
@@ -30,6 +30,16 @@
   # (native HDR-WSI on NVIDIA); the layer is required regardless, but if HDR still
   # comes out washed/SDR, bumping the NVIDIA driver is the next lever.
   programs.gamescope.enableWsi = true;
+
+  # snowglobe defaults the NVIDIA driver to nvidiaPackages.beta (595.45.04 — older
+  # than production and PRE native HDR-WSI). Native HDR-WSI on NVIDIA landed in
+  # 595.58.03, so override to the production branch (595.80) to get HDR working for
+  # gamescope/Proton. Chosen over `latest` (610.43.02) deliberately: 610 is a
+  # new-feature branch with confirmed RTX 5080 regressions (Wayland explicit-sync
+  # memory leak; DRM color-pipeline HDR fails on Blackwell over DP). Keep
+  # hardware.nvidia.open = true — REQUIRED for Blackwell (no proprietary module).
+  # See docs/hdr-hyprland-june-2026.md.
+  hardware.nvidia.package = config.boot.kernelPackages.nvidiaPackages.production;
 
   services = {
     displayManager.defaultSession = "hyprland-uwsm";
