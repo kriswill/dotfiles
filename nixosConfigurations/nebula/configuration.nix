@@ -89,6 +89,20 @@
   # laptops) as a user service. nebula is a desktop with no battery, so the
   # service just exits 1 on every login — turn it off.
   programs.batsignal.enable = false;
+
+  # snowglobe's desktop module defaults the polkit auth agent to polkit-gnome
+  # (services.polkit-gnome.enable = setDefault true in desktop.nix), regardless
+  # of compositor. Under Hyprland the native choice is hyprpolkitagent — the
+  # Hyprland project's own Qt/QML agent, themed to match the session and the one
+  # snowglobe's own `welcome` utility recommends. Override the soft default off
+  # and run hyprpolkitagent instead. systemd.packages installs the shipped user
+  # unit (PartOf/WantedBy graphical-session.target, ConditionEnvironment=
+  # WAYLAND_DISPLAY) but does NOT process its [Install] section, so the wantedBy
+  # is set explicitly to actually start it with the graphical session (uwsm).
+  services.polkit-gnome.enable = false;
+  systemd.packages = [ pkgs.hyprpolkitagent ];
+  systemd.user.services.hyprpolkitagent.wantedBy = [ "graphical-session.target" ];
+
   programs.ghostty.enable = true;
   programs.alacritty.enable = false;
 
