@@ -162,7 +162,7 @@ appeared "on reboot" and was deterministic and bootloader-independent.
 
 ### Bug 1 — activation `exit 0` (the real culprit)
 
-`nixosModules/default/libreoffice-paths.nix` used `set -u` and `exit 0` at the top
+`modules/nixos/libreoffice-paths.nix` used `set -u` and `exit 0` at the top
 level of its activation snippet. Fix: wrap the body in a subshell so `exit`/`set -u`
 are confined to that snippet and can't abort or alter the rest of activation:
 
@@ -177,7 +177,7 @@ text = ''
 '';
 ```
 
-`nixosModules/default/dotfiles-stow.nix` had the same pattern (its `exit 0` only
+`modules/nixos/dotfiles-stow.nix` had the same pattern (its `exit 0` only
 fires if the stow dir is missing — a *latent* version of the bug); it was wrapped
 the same way. Verified with `bash -n` on the generated `activate` and a rebuild.
 
@@ -200,7 +200,7 @@ systemd-boot only surfaces entries on its own ESP, so it would not list that
 Windows install; GRUB with **os-prober** scans all disks and adds it. Enabled via:
 
 ```nix
-# nixosConfigurations/nebula/configuration.nix
+# modules/hosts/_nebula/configuration.nix
 boot.loader.grub.useOSProber = true;
 ```
 

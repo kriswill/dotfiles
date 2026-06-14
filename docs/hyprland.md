@@ -20,7 +20,7 @@ don't read the version string as "older than 0.55.2"; it's whatever the pinned
 
 Installed via the official flake (`inputs.hyprland = github:hyprwm/Hyprland`,
 see `flake.nix`), with the `hyprland-packages` / `hyprland-extras` overlays in
-`overlays/default.nix`.
+`modules/overlays.nix`.
 
 **0.55 is the cutover release.** As of 0.55 the configuration language is
 **Lua** (`~/.config/hypr/hyprland.lua`, using an `hl.*` API). The old
@@ -401,7 +401,7 @@ hl.animation({ leaf = "workspaces",enabled = true, speed = 1.94, bezier = "almos
 ## Environment variables & NVIDIA (RTX 5080)
 
 **On nebula the NVIDIA plumbing is handled by snowglobe-lib**, not by hand:
-`gpu-vendors = [ "nvidia" ]` in `nixosConfigurations/default.nix` pulls in the
+`gpu-vendors = [ "nvidia" ]` in `modules/hosts/nebula.nix` pulls in the
 driver, KMS, and `NIXOS_OZONE_WL=1` (verified set in-session). The RTX 5080 is
 a 50-series card, so the **open kernel modules are mandatory** — snowglobe’s
 NVIDIA module enables `hardware.nvidia.open` and modeset by default on recent
@@ -510,7 +510,7 @@ value differs from your file and shows `set: false`, your file isn't being read.
   hook (`pkill -x hyprpaper; hyprpaper`). Points at the **same** repo-tracked
   image niri uses (`~/.config/niri/wallpaper.jpg`, a symlink into the dotfiles
   tree) so both sessions share one source. Package added in
-  `nixosConfigurations/nebula/configuration.nix`. **Config syntax (0.8.x):** a
+  `modules/hosts/_nebula/configuration.nix`. **Config syntax (0.8.x):** a
   `wallpaper { monitor = ; path = …; fit_mode = cover }` block — empty `monitor`
   is the all-outputs fallback, `fit_mode = cover` (the default) fills like
   `swaybg -m fill` (other modes: `contain`, `tile`, `fill`). See the gotcha below
@@ -552,7 +552,7 @@ nebula uses **`rose-pine-hyprcursor`** — a native *hyprcursor*-format theme
 (the BreezeX cursor shape recolored in the muted Rose Pine palette), not an
 Xcursor theme. Wired up in two places:
 
-- `pkgs.rose-pine-hyprcursor` in `nixosConfigurations/nebula/configuration.nix`
+- `pkgs.rose-pine-hyprcursor` in `modules/hosts/_nebula/configuration.nix`
   (`environment.systemPackages`) installs it to
   `/run/current-system/sw/share/icons/rose-pine-hyprcursor/` (which is on
   `XCURSOR_PATH` / the hyprcursor search path).
@@ -697,7 +697,7 @@ Real findings on nebula — append as you discover more; correct/remove stale on
   lua_ls needs; the stub declares `hl` as a global so no `diagnostics.globals`.
   See *Editor LSP* section.
 - **NVIDIA is snowglobe-owned.** Driver/KMS/open-modules/`NIXOS_OZONE_WL` come
-  from `gpu-vendors = ["nvidia"]` in `nixosConfigurations/default.nix`. The 5080
+  from `gpu-vendors = ["nvidia"]` in `modules/hosts/nebula.nix`. The 5080
   *requires* the open modules. Don't add hand-rolled NVIDIA env/modprobe in
   Hyprland or a stray nix module — fix it in the snowglobe NVIDIA path.
 - **Two compositors are enabled.** `configuration.nix` has both

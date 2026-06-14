@@ -1,12 +1,12 @@
 # LibreOffice on nebula — dark theme & XDG paths
 
 Two LibreOffice problems were fixed on this host, each with a small auto-imported
-NixOS module under `nixosModules/default/`:
+NixOS module under `modules/nixos/`:
 
 | Module / package | Problem it solves |
 |------------------|-------------------|
-| `nixosModules/default/gtk-dark.nix` (+ `home/gtk/`) | LibreOffice (and other GTK apps) ignored the selected dark theme and rendered light. |
-| `nixosModules/default/libreoffice-paths.nix` | LibreOffice wrote generated data (backups, templates, gallery, …) *inside* `~/.config` instead of the XDG `~/.local` trees. |
+| `modules/nixos/gtk-dark.nix` (+ `home/gtk/`) | LibreOffice (and other GTK apps) ignored the selected dark theme and rendered light. |
+| `modules/nixos/libreoffice-paths.nix` | LibreOffice wrote generated data (backups, templates, gallery, …) *inside* `~/.config` instead of the XDG `~/.local` trees. |
 
 Both are user-layer fixes — **no `libreoffice` package override, no overlay, no
 recompile**.
@@ -36,7 +36,7 @@ Select Adwaita's dark variant explicitly — it is compiled into GTK itself, so 
 always works — via a session variable:
 
 ```nix
-# nixosModules/default/gtk-dark.nix
+# modules/nixos/gtk-dark.nix
 { environment.sessionVariables.GTK_THEME = "Adwaita:dark"; }
 ```
 
