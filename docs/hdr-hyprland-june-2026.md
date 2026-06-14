@@ -136,12 +136,65 @@ in-game HDR toggle must also be on):
    `cm = "auto"` config is unaffected. The only remaining game-HDR option is the
    gamescope route (Route 2) — not pursued, to avoid reintroducing nested judder.
 
-2. **gamescope (battle-tested, but reintroduces nesting):**
+2. **gamescope (the route pursued for WoW).** Steam launch options:
    ```
-   gamescope -W 3440 -H 1440 -r 240 --hdr-enabled --adaptive-sync -f -- %command%
+   DXVK_HDR=1 ENABLE_GAMESCOPE_WSI=1 gamescope -W 3440 -H 1440 -r 240 --hdr-enabled --adaptive-sync -f -- %command%
    ```
-   plus `DXVK_HDR=1`. Reliable HDR, but this is the nested setup the monitor
-   comment moved *away* from (judder). `gamescope` is installed.
+   This needs three things that were each initially broken on nebula — see below.
+
+   **(a) A second Steam entry sharing the same prefix (so no WoW re-download).**
+   Added a non-Steam shortcut to `…/Battle.net/Battle.net Launcher.exe` named
+   "WoW (HDR)" with the gamescope launch options. A new shortcut gets its own
+   `compatdata/<id>` prefix; to reuse the existing 122 GB install, launch the new
+   shortcut once (creates a fresh ~400 MB prefix), then replace that fresh dir
+   with a symlink to the real one:
+   ```sh
+   cd ~/.local/share/Steam/steamapps/compatdata
+   mv <newid> <newid>.fresh-bak && ln -s 3082075026 <newid>   # 3082075026 = WoW/Bnet prefix
+   ```
+   (Find `<newid>` = newest dir by mtime after the one-shot launch. Never run both
+   Battle.net entries at once — shared prefix, wineserver collision.)
+
+   **(b) WoW must run DirectX 11, and it keeps reverting to DX12.** `DXVK_HDR=1`
+   only affects DXVK (DX11); DX12 routes through vkd3d-proton and the flag is a
+   no-op. WoW's in-menu API change needs a *client restart* to apply, so a
+   mid-session switch is overwritten with the running value (D3D12) on exit —
+   looks like it "reverts." Fix: edit `Config.wtf` while WoW is **closed**, set
+   `SET gxApi "D3D11"`; WoW then starts in DX11 and writes D3D11 back on clean
+   exit (sticks without locking the file). Path:
+   `…/World of Warcraft/_retail_/WTF/Config.wtf`. **Bonus: switching DX12→DX11 also
+   fixed the in-game judder** — the stutter was the vkd3d path, NOT the
+   scanout/VRR theory (gamescope nested still can't direct-scanout on NVIDIA —
+   `directScanoutBlockedBy: ["SW"]` persists even with `cm=srgb` — but DX11 plays
+   smooth anyway).
+
+   **(c) The gamescope FROG WSI layer must exist — nixpkgs disables it by default.**
+   The layer (`libVkLayer_FROG_gamescope_wsi`) is what lets a Vulkan/DXVK client
+   signal HDR to gamescope. nixpkgs `gamescope` builds with `enableWsi ? false`,
+   and the layer ships as a *separate* package `pkgs.gamescope-wsi`. The NixOS
+   module wires it via `hardware.graphics.extraPackages` when
+   `programs.gamescope.enableWsi = true`. Without it, `--hdr-enabled` has no HDR
+   client → gamescope outputs SDR mapped into the HDR container → washed-out
+   **color shifts** (observed) and DP-3 stuck at `preset=wide`. **Fix applied in
+   `configuration.nix`:** `programs.gamescope.enableWsi = true;` (drops
+   `VkLayer_FROG_gamescope_wsi.x86_64.json` into `/run/opengl-driver/share/vulkan/
+   implicit_layer.d/`, which Steam's pressure-vessel imports). Verify after switch:
+   `ls /run/opengl-driver/share/vulkan/implicit_layer.d/ | grep -i frog`.
+
+   **(d) NVIDIA driver ≥ 595.58.03 for native HDR-WSI.** snowglobe defaults to
+   `nvidiaPackages.beta` (595.45.04 — *older* than production, pre-HDR-WSI).
+   Overrode in `configuration.nix` to `nvidiaPackages.production` (595.80). Keep
+   `hardware.nvidia.open = true` — REQUIRED on Blackwell (RTX 5080), no proprietary
+   module exists. Avoided `latest` (610.43.02): new-feature branch with confirmed
+   5080 Wayland memory leak + Blackwell DP HDR atomic-test failures. Driver swap
+   needs a **reboot** (`nixos-rebuild boot` + reboot), then restart Steam.
+
+   **STATUS: pending end-to-end verification after the reboot of (c)+(d).** Both
+   changes build clean. To confirm HDR actually engages: in the running game,
+   Proton log should show `[Gamescope WSI] …VkHdrMetadataEXT…`, and DP-3
+   `colorManagementPreset` should flip `wide → hdr`. Open risk: *nested* gamescope
+   HDR on NVIDIA is a documented washed-out/flaky combo; if it still looks wrong
+   after (c)+(d), the fallback is a gamescope-owns-DRM session (not nested).
 
 To confirm a game actually went HDR: while it's running fullscreen,
 `hyprctl monitors` for DP-3 should show `colorManagementPreset=hdr`. HDR video
