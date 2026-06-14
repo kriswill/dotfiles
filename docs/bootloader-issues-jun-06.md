@@ -200,7 +200,7 @@ systemd-boot only surfaces entries on its own ESP, so it would not list that
 Windows install; GRUB with **os-prober** scans all disks and adds it. Enabled via:
 
 ```nix
-# modules/hosts/_nebula/configuration.nix
+# modules/hosts/nebula/configuration.nix
 boot.loader.grub.useOSProber = true;
 ```
 
