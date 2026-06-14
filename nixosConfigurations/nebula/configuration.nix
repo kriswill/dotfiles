@@ -71,6 +71,7 @@
 
   environment.systemPackages = [
     pkgs.helium
+    pkgs.wowup # WowUp-CF (WoW addon manager); WoW path wired in packages/default.nix
     pkgs.gh # GitHub CLI
     pkgs.diffnav # git diff pager with a file tree (git pager.diff/show); wraps delta
     pkgs.delta # diff renderer diffnav shells out to (styled via [delta] in git config)
