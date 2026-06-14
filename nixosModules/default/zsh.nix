@@ -1,6 +1,3 @@
-# The interactive config itself — aliases, vi-mode, and the prompt
-# — lives in the stow tree at home/zsh/.config/zsh/.zshrc, symlinked to
-# ~/.config/zsh/.zshrc by dotfiles-stow.nix.
 { pkgs, lib, ... }:
 let
   home = "/home/k";
@@ -8,9 +5,6 @@ let
 in
 {
   programs.zsh = {
-    # /etc/zshenv is read first for every shell, so setting ZDOTDIR here puts it
-    # in effect before zsh looks for the user .zshrc (and before compinit picks
-    # where to drop .zcompdump). Both then land in ~/.config/zsh, not $HOME.
     shellInit = ''
       export ZDOTDIR="$HOME/.config/zsh"
     '';
@@ -20,8 +14,14 @@ in
     histSize = 100000;
     histFile = "$HOME/.local/state/zsh/history";
 
-    # Drop the default `prompt suse`; starship is set in ~/.config/zsh/.zshrc.
     promptInit = lib.mkForce "";
+
+    interactiveShellInit = ''
+      if id -nG 2>/dev/null | grep -qw wheel; then
+        nrs() { NH_NO_CHECKS=1 nh os switch "$(readlink -f /etc/nixos)" "$@"; }
+        nrt() { NH_NO_CHECKS=1 nh os test "$(readlink -f /etc/nixos)" "$@"; }
+      fi
+    '';
   };
 
   # zsh / less won't create these parent dirs themselves — do it declaratively
@@ -32,8 +32,6 @@ in
     "d ${home}/.local/state/less 0700 ${user} users - -"
   ];
 
-  # Tools the user's zsh config invokes. eza/bat/fzf/fastfetch/direnv already
-  # come from snowglobe-lib, so only the additions live here.
   environment.systemPackages = builtins.attrValues {
     inherit (pkgs)
       starship # prompt
@@ -43,6 +41,5 @@ in
     inherit (pkgs.bat-extras) batman; # man-page colorizer (compdef batman=man)
   };
 
-  # Keep `less` history (used by bat / man pagers) out of $HOME as well.
   environment.sessionVariables.LESSHISTFILE = "${home}/.local/state/less/history";
 }

@@ -1,21 +1,17 @@
-# ~/.config/zsh/.zshrc — Kris' interactive zsh config (ZDOTDIR = ~/.config/zsh).
-#
-# Ported from the cross-host home-manager zsh module (dotfiles `main` branch).
-# nebula runs no home-manager: the NixOS module (nixosModules/default/zsh.nix)
-# enables zsh, installs the supporting tools, and points ZDOTDIR here. This file
-# is the editable, stow-managed user rc; it runs last, after /etc/zshrc, so it
-# gets the final word on aliases and the prompt.
-
 ## History — keep more than the system default. HISTFILE is set to
 ## ~/.local/state/zsh/history by the NixOS module (XDG state, not $HOME).
 HISTSIZE=100000
+# shellcheck disable=SC2034 # SAVEHIST is a zsh parameter; shellcheck only knows bash
 SAVEHIST=10000000
 
-## Options
+## hstr — fuzzy history picker on Ctrl-R.
+export HSTR_CONFIG=hicolor
+bindkey -s "\C-r" "\C-a hstr -- \C-j"
+setopt histignorespace
+
 setopt interactivecomments # allow comments on the command line
 setopt AUTO_CD             # bare `dir/` cd's into it
 
-## Editor — used by edit-command-line below (EDITOR=nvim is set system-wide).
 export VISUAL=nvim
 
 ## Vi-mode + edit-command-line: press `v` in command mode to edit the current
@@ -25,8 +21,6 @@ autoload -U edit-command-line
 zle -N edit-command-line
 bindkey -M vicmd v edit-command-line
 
-## Aliases. ls -> eza; the ls-family aliases chain off it (zsh re-expands the
-## first word, so e.g. `ll` -> `ls -lhF` -> `eza --icons --hyperlink -lhF`).
 alias ls='eza --icons --hyperlink'
 alias ld='ls -D'
 alias ll='ls -lhF'
@@ -38,13 +32,6 @@ alias cat='bat'
 alias ..='cd ..'
 alias ...='cd ../..'
 alias ff='fastfetch'
-alias gv='NVIM_APPNAME=gman nvim'
-alias claude-yolo='claude --dangerously-skip-permissions'
-alias cyolo='claude --dangerously-skip-permissions'
-## nh rebuilds (NixOS port of main's darwin nrs/nrt). Target the real checkout,
-## not the ~/src/dotfiles symlink, which nix's flake resolution won't follow.
-alias nrs='NH_NO_CHECKS=1 nh os switch ~/src/github/kriswill/dotfiles'
-alias nrt='NH_NO_CHECKS=1 nh os test ~/src/github/kriswill/dotfiles'
 
 ## man-page completion for bat-extras' `batman`.
 compdef batman=man
@@ -61,17 +48,11 @@ function stderred() {
 	exec 2> >(colorize_stderr)
 }
 
-## PATH: bun globals and user-local bins.
 export PATH="$HOME/.bun/bin:$HOME/.local/bin:$PATH"
 
 ## Prompt — starship (replaces the NixOS default `prompt suse`, which zsh.nix
 ## disables so this wins cleanly).
 eval "$(starship init zsh)"
 
-## Smart cd — zoxide, jump with `j <dir>` (mirrors the main-branch setup).
+## Smart cd — zoxide, jump with `j <dir>`
 eval "$(zoxide init zsh --cmd j)"
-
-## hstr — fuzzy history picker on Ctrl-R.
-export HSTR_CONFIG=hicolor
-setopt histignorespace
-bindkey -s "\C-r" "\C-a hstr -- \C-j"
