@@ -81,6 +81,10 @@
 
   programs.firefox.enable = false;
   programs.chromium.enable = false;
+  # snowglobe's desktop module enables batsignal (a low-battery notifier for
+  # laptops) as a user service. nebula is a desktop with no battery, so the
+  # service just exits 1 on every login — turn it off.
+  programs.batsignal.enable = false;
   programs.ghostty.enable = true;
   programs.alacritty.enable = false;
 
