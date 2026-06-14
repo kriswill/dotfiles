@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Battle.net
+Comment=Battle.net launcher (runs through Steam Proton, prefix 3082075026)
+Exec=steam steam://rungameid/12158196836049354752
+Icon=/home/k/Downloads/wow-icon.png
+Terminal=false
+Categories=Game;
+StartupNotify=true
+StartupWMClass=steam_app_2830800795
