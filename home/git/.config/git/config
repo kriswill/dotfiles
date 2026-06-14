@@ -55,3 +55,15 @@
 	gpgsign = true
 [tag]
 	gpgsign = true
+# Use the GitHub CLI as the credential helper for HTTPS pushes/fetches. The
+# empty `helper =` first resets any inherited helpers; `!gh auth git-credential`
+# resolves `gh` from PATH (the stable /run/current-system/sw/bin) rather than an
+# absolute /nix/store path, so it survives gh upgrades. `gh auth setup-git`
+# would otherwise write this (with a store path) into ~/.gitconfig, which shadows
+# this file — keep it here so it stays tracked and XDG remains authoritative.
+[credential "https://github.com"]
+	helper =
+	helper = !gh auth git-credential
+[credential "https://gist.github.com"]
+	helper =
+	helper = !gh auth git-credential
