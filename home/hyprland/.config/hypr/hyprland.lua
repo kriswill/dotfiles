@@ -185,7 +185,7 @@ hl.config({
 			enabled = true,
 			range = 4,
 			render_power = 3,
-			color = 0xee1a1a1a,
+			color = "rgba(1a1a1aee)",
 		},
 
 		blur = {
@@ -329,7 +329,8 @@ local mainMod = "SUPER" -- Sets "Windows" key as main modifier
 
 -- Example binds, see https://wiki.hypr.land/Configuring/Basics/Binds/ for more
 hl.bind(mainMod .. " + Return", hl.dsp.exec_cmd(terminal))
-local closeWindowBind = hl.bind(mainMod .. " + W", hl.dsp.window.close())
+--[[ local closeWindowBind = ]]
+hl.bind(mainMod .. " + W", hl.dsp.window.close())
 -- closeWindowBind:set_enabled(false)
 hl.bind(
 	mainMod .. " + M",
@@ -406,7 +407,8 @@ hl.bind("XF86AudioPrev", hl.dsp.exec_cmd("playerctl previous"), { locked = true 
 
 -- Example window rules that are useful
 
-local suppressMaximizeRule = hl.window_rule({
+-- local suppressMaximizeRule =
+hl.window_rule({
 	-- Ignore maximize requests from all apps. You'll probably like this.
 	name = "suppress-maximize-events",
 	match = { class = ".*" },
@@ -475,4 +477,3 @@ hl.window_rule({
 -- bind = $mainMod, E, exec, $fileManager
 -- bind = $mainMod, V, togglefloating,
 -- bind = $mainMod, R, exec, $menu
-
