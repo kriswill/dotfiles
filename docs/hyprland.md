@@ -546,6 +546,35 @@ Bind flag letters → opts: `l`→`locked`, `e`→`repeating`, `r`→`release`,
 `o`→`long_press`, `d`→`description`. Rule names → snake_case: `noblur`→`no_blur`,
 `bordercolor`→`border_color`, `idleinhibit`→`idle_inhibit`, etc.
 
+## Cursor theme
+
+nebula uses **`rose-pine-hyprcursor`** — a native *hyprcursor*-format theme
+(the BreezeX cursor shape recolored in the muted Rose Pine palette), not an
+Xcursor theme. Wired up in two places:
+
+- `pkgs.rose-pine-hyprcursor` in `nixosConfigurations/nebula/configuration.nix`
+  (`environment.systemPackages`) installs it to
+  `/run/current-system/sw/share/icons/rose-pine-hyprcursor/` (which is on
+  `XCURSOR_PATH` / the hyprcursor search path).
+- `hl.env("HYPRCURSOR_THEME", "rose-pine-hyprcursor")` + `HYPRCURSOR_SIZE=24`
+  in `hyprland.lua`. Hyprland renders the **compositor** cursor from this across
+  the whole desktop, including over XWayland windows.
+
+Caveats / how it was verified (2026-06-13):
+- The theme is **hyprcursor-only** — it ships no Xcursor `cursors/` dir, so
+  apps that draw a *client-side* cursor (most GTK apps) fall back to
+  `XCURSOR_THEME` / `gtk-cursor-theme-name` (still `Adwaita` in
+  `home/gtk/.config/gtk-*/settings.ini`). The compositor cursor is Rose Pine
+  everywhere; only client-drawn cursors differ.
+- Apply live without relog: `hyprctl setcursor rose-pine-hyprcursor 24`
+  (returns `ok` when the theme is found) followed by `hyprctl reload`. The
+  `hl.env` line only takes effect for clients spawned *after* a Hyprland
+  restart; `setcursor` changes the running compositor cursor immediately.
+- `bibata-cursors` (the other obvious "nice cursor" pick) is **Xcursor-only**
+  in nixpkgs — no `manifest.hl` — so it is *not* a hyprcursor theme.
+  `rose-pine-hyprcursor` is the only native hyprcursor theme packaged in
+  nixpkgs as of this date.
+
 ## Learned behaviours & workarounds
 
 Real findings on nebula — append as you discover more; correct/remove stale ones.

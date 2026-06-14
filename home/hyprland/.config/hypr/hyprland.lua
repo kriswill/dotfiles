@@ -102,8 +102,16 @@ end)
 
 -- See https://wiki.hypr.land/Configuring/Advanced-and-Cool/Environment-variables/
 
-hl.env("XCURSOR_SIZE", "24")
-hl.env("HYPRCURSOR_SIZE", "24")
+-- Cursor: rose-pine-hyprcursor (native hyprcursor format — BreezeX cursor shape
+-- recolored in the muted Rose Pine palette). Installed system-wide via
+-- pkgs.rose-pine-hyprcursor in nixosConfigurations/nebula/configuration.nix.
+-- Hyprland renders the compositor cursor from HYPRCURSOR_THEME across the whole
+-- desktop (including over XWayland windows). The theme is hyprcursor-only and
+-- ships no Xcursor variant, so XCURSOR_THEME is left for client-side-cursor apps
+-- (GTK uses gtk-cursor-theme-name in ~/.config/gtk-*/settings.ini instead).
+hl.env("HYPRCURSOR_THEME", "rose-pine-hyprcursor")
+hl.env("HYPRCURSOR_SIZE", "48")
+hl.env("XCURSOR_SIZE", "48")
 
 -- XWayland apps can't do per-monitor fractional scaling. With force_zero_scaling
 -- (below) they render 1:1 (crisp) instead of being bitmap-upscaled (blurry), but
