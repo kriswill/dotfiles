@@ -189,12 +189,38 @@ in-game HDR toggle must also be on):
    5080 Wayland memory leak + Blackwell DP HDR atomic-test failures. Driver swap
    needs a **reboot** (`nixos-rebuild boot` + reboot), then restart Steam.
 
-   **STATUS: pending end-to-end verification after the reboot of (c)+(d).** Both
-   changes build clean. To confirm HDR actually engages: in the running game,
-   Proton log should show `[Gamescope WSI] …VkHdrMetadataEXT…`, and DP-3
-   `colorManagementPreset` should flip `wide → hdr`. Open risk: *nested* gamescope
-   HDR on NVIDIA is a documented washed-out/flaky combo; if it still looks wrong
-   after (c)+(d), the fallback is a gamescope-owns-DRM session (not nested).
+   **OUTCOME 2026-06-13 (after reboot onto 595.80 + WSI layer): infra all works,
+   but the result is washed out — nested gamescope HDR is a dead end on this box.**
+   Verified working: driver 595.80, FROG layer in `/run/opengl-driver/.../implicit_layer.d/`
+   (both arches), `libVkLayer_FROG_gamescope_wsi_x86_64.so` loaded into `WoW.exe`,
+   gamescope log `server hdr output enabled: true` + `hdr formats exposed to client: true`,
+   and `xdg_backend: cv_hdr_enabled: true` (gamescope detected Hyprland's HDR and
+   tried to output HDR to it). **BUT** two unfixable problems:
+
+   1. **WoW has no native HDR** (see Learned behaviours below) — so this only ever
+      uses gamescope `--hdr-itm-enabled` synthetic inverse-tone-mapping. WoW's own
+      swapchain stays SDR (`R8G8B8A8_UNORM` / `SRGB_NONLINEAR`).
+   2. **Nested double color-management on NVIDIA washes it out.** With `cm=auto`,
+      Hyprland kept DP-3 at `preset=wide` even though gamescope was emitting PQ →
+      PQ shown through SDR = washed. Forcing DP-3 `cm=hdr` (via `hyprctl eval`) got
+      `preset=hdr` and deepened blacks, but whites stayed muted / colors off:
+      gamescope-ITM→PQ *then* Hyprland-CM→panel is two CM stages in series, and
+      NVIDIA's Wayland color management is incomplete. ITM/gamut tuning
+      (`--hdr-itm-sdr-nits`, `--sdr-gamut-wideness`) improved but did not fix it.
+      OLED full-field luminance also caps perceived white brightness.
+
+   **DECISION: WoW runs smooth native SDR** (the non-gamescope entry; DX11 fix means
+   it's smooth — see (b)). DP-3 reverted to `cm=auto`. **Kept** `enableWsi = true` +
+   595.80 — they're correct and benefit *genuinely* HDR titles and the gamescope
+   session below. The "WoW (HDR)" Steam shortcut + its prefix symlink are left in
+   place but unused (delete if desired; the fresh-prefix backup is
+   `compatdata/<id>.fresh-bak`).
+
+   **The one untested path that SHOULD give correct HDR: a gamescope-owns-DRM
+   session** (gamescope on the bare display, no Hyprland in the color path — kills
+   the double-CM). Already half-enabled: `programs.steam.gamescopeSession.enable =
+   true` → a "Steam (gamescope)" entry at the login screen. Not tried this session;
+   it's the right place to test real-HDR games or revisit WoW synthetic HDR.
 
 To confirm a game actually went HDR: while it's running fullscreen,
 `hyprctl monitors` for DP-3 should show `colorManagementPreset=hdr`. HDR video
@@ -216,6 +242,27 @@ also works via `mpv --target-colorspace-hint=yes`.
   modeset; they settle once the swapchain reconfigures to `XB30` (2026-06-13).
 - **10-bit caveats** (from `hyprland.md`): window border gradients aren't true
   10-bit, and some apps can't screen-capture while the output is 10-bit.
+- **WoW retail has NO native HDR — on any platform** (confirmed via Blizzard
+  forums, Feb 2025: not implemented, not planned). The "HDR" Windows users see is
+  OS-injected Auto HDR / NVIDIA RTX HDR, not the game. There is no in-game HDR
+  toggle and no `Config.wtf` cvar (`gxHDR` etc. don't exist), and it's *not* gated
+  on exclusive fullscreen (WoW removed that on all platforms in patch 8.0.1, 2018 —
+  Windows also only has Windowed / Fullscreen-Windowed). `DXVK_HDR=1` only
+  *advertises* HDR; WoW never requests an HDR swapchain, so it's a no-op. DX11 vs
+  DX12 is irrelevant for HDR (ray-traced shadows are the DX12-only feature, not
+  HDR). The only way to get HDR-on-panel for WoW on Linux is gamescope
+  `--hdr-itm-enabled` synthetic ITM — and that washes out under nested Hyprland on
+  NVIDIA (see gamescope route above). (2026-06-13)
+- **gamescope `--hdr-enabled` HDR does NOT pass through cleanly when nested under
+  Hyprland on NVIDIA.** gamescope's `xdg_backend` reports `cv_hdr_enabled: true`
+  and emits PQ, but Hyprland `cm=auto` leaves the output at `preset=wide` →
+  washed. Forcing `cm=hdr` engages HDR (deeper blacks) but the gamescope-ITM-PQ →
+  Hyprland-CM double pass leaves whites muted / colors off. The reliable HDR path
+  is gamescope owning DRM directly (dedicated session), not nesting. (2026-06-13)
+- **WoW graphics-API (`gxApi`) reverts to D3D12** because an in-menu change needs a
+  client restart; mid-session it's overwritten with the running value on exit. Set
+  `SET gxApi "D3D11"` in `Config.wtf` while WoW is *closed* and it sticks. DX11
+  (DXVK) also played noticeably smoother than DX12 (vkd3d) here. (2026-06-13)
 
 ## Sources
 
