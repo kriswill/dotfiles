@@ -9,7 +9,11 @@ keymap({ "n", "v" }, "<Space>", "<Nop>", { silent = true })
 -- keymap("n", "<leader>wq", ":wq<CR>") -- save and quit
 -- keymap("n", "<leader>qq", ":q!<CR>") -- quit without saving
 -- keymap("n", "<leader>ww", ":w<CR>") -- save
-keymap("n", "gx", ":!open <c-r><c-a><CR>", { desc = "open URL under cursor" })
+-- Cross-platform open: vim.ui.open picks the right opener per OS
+-- (macOS `open`, Linux `xdg-open` → default browser, WSL `wslview`, …)
+keymap("n", "gx", function()
+  vim.ui.open(vim.fn.expand("<cfile>"))
+end, { desc = "open URL/file under cursor" })
 -- keymap("n", "<C-u>", "<C-u>zz", { desc = "Move up one page, then vertically center buffer" })
 -- keymap("n", "<C-d>", "<C-d>zz", { desc = "Move down one page, then vertically center buffer" })
 
