@@ -1,6 +1,12 @@
 {
   description = "my NixOS configurations";
 
+  # Dendritic layout: flake-parts wraps `import-tree ./modules`, so every `.nix`
+  # file under `modules/` is a flake-parts module (auto-discovered). import-tree
+  # skips any path containing `/_`, so host-specific plain NixOS modules live in
+  # `modules/hosts/_nebula/` and are pulled in by explicit `imports`. Outputs are
+  # exposed through flake-parts (`flake.nixosConfigurations`, `flake.overlays`,
+  # `flake.modules.nixos.*`, per-system `packages`).
   inputs = {
     snowglobe-lib = {
       # url = "git+https://codeberg.org/earthgman/snowglobe-lib";
@@ -16,6 +22,11 @@
     #   url = "github:NixOS/nixpkgs/nixos-unstable";
     # };
 
+    flake-parts = {
+      url = "github:hercules-ci/flake-parts";
+      inputs.nixpkgs-lib.follows = "nixpkgs";
+    };
+
     hyprland = {
       url = "github:hyprwm/Hyprland";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -25,52 +36,5 @@
     import-tree.follows = "snowglobe-lib/import-tree";
   };
 
-  outputs =
-    {
-      self,
-      nixpkgs,
-      snowglobe-lib,
-      ...
-    }@inputs:
-    let
-      lib = nixpkgs.lib;
-      flake = self;
-      outputs = flake.outputs;
-      import-tree = inputs.import-tree;
-    in
-    {
-      # expose hosts configured under this flake
-      nixosConfigurations = import ./nixosConfigurations { inherit lib inputs outputs; };
-
-      # expose your custom modules.
-      nixosModules.default = import-tree [
-        ./nixosModules/default
-        # apply your nixpkgs overlays
-        { nixpkgs.overlays = builtins.attrValues outputs.overlays; }
-      ];
-
-      # expose your overlays
-      overlays = import ./overlays { inherit flake; };
-
-      # your custom derivations
-      packages =
-        let
-          supported-systems = [
-            # add more system targets if you need.
-            "x86_64-linux"
-          ];
-        in
-        # generate a package attribute set for each supported architecture
-        lib.genAttrs supported-systems (
-          system:
-          import ./packages {
-            pkgs = import nixpkgs {
-              config.allowUnfree = true;
-              inherit system;
-              # give your packages access to your overlays
-              overlays = builtins.attrValues outputs.overlays; # transform the set of overlays to a list
-            };
-          }
-        );
-    };
+  outputs = inputs: inputs.flake-parts.lib.mkFlake { inherit inputs; } (inputs.import-tree ./modules);
 }
