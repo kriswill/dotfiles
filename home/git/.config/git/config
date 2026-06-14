@@ -11,6 +11,46 @@
 [gpg "ssh"]
 	program = /run/current-system/sw/bin/op-ssh-sign
 	allowedSignersFile = ~/.config/git/allowed_signers
+[diff]
+	tool = difftastic
+[difftool]
+	prompt = false
+[difftool "difftastic"]
+	cmd = difft "$LOCAL" "$REMOTE"
+# diffnav (a delta-based TUI with a GitHub-style file tree) pages `git diff` and
+# `git show`. `git difftool` still launches difftastic (above) for per-file
+# dir-diffs, since diffnav only renders a unified diff piped on stdin.
+[pager]
+	diff = diffnav
+	show = diffnav
+	difftool = true
+# Styling for delta, which diffnav drives. Kanagawa palette, mirrored from the
+# main branch's modules/home-manager/diffnav.nix.
+[delta]
+	syntax-theme = ansi
+	dark = true
+	tabs = 2
+	file-style = omit
+	file-decoration-style = none
+	line-numbers = true
+	line-numbers-left-format = "{nm:>4} "
+	line-numbers-right-format = "│ {np:>4} "
+	line-numbers-left-style = "#54546D dim"
+	line-numbers-right-style = "#2A2A37 dim"
+	line-numbers-zero-style = "#54546D dim"
+	line-numbers-plus-style = "#54546D dim"
+	line-numbers-minus-style = "#54546D dim"
+	plus-style = "syntax #222B26"
+	plus-emph-style = "syntax #2B3328"
+	minus-style = "syntax #2B2024"
+	minus-emph-style = "syntax #3A242B"
+	hunk-header-style = "#727169"
+	hunk-header-file-style = "#727169 dim"
+	hunk-header-line-number-style = "#223249"
+	hunk-header-decoration-style = "#2A2A37 ol ul"
+	wrap-left-symbol = " "
+	wrap-right-symbol = " "
+	wrap-right-prefix-symbol = " "
 [commit]
 	gpgsign = true
 [tag]

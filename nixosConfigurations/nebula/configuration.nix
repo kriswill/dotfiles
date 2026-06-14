@@ -72,6 +72,9 @@
   environment.systemPackages = [
     pkgs.helium
     pkgs.gh # GitHub CLI
+    pkgs.diffnav # git diff pager with a file tree (git pager.diff/show); wraps delta
+    pkgs.delta # diff renderer diffnav shells out to (styled via [delta] in git config)
+    pkgs.difftastic # structural diff tool for `git difftool` / lazygit dir-diff
     pkgs.cliphist # clipboard history (used with fuzzel --dmenu)
     pkgs.kdePackages.breeze-icons
     pkgs.swaybg # paints the niri desktop wallpaper (spawned in niri config)
