@@ -2,11 +2,12 @@
   description = "my NixOS configurations";
 
   # Dendritic layout: flake-parts wraps `import-tree ./modules`, so every `.nix`
-  # file under `modules/` is a flake-parts module (auto-discovered). import-tree
-  # skips any path containing `/_`, so host-specific plain NixOS modules live in
-  # `modules/hosts/_nebula/` and are pulled in by explicit `imports`. Outputs are
-  # exposed through flake-parts (`flake.nixosConfigurations`, `flake.overlays`,
-  # `flake.modules.nixos.*`, per-system `packages`).
+  # file under `modules/` is a flake-parts module (auto-discovered). Host-specific
+  # config lives as first-class files under `modules/hosts/nebula/`, each merging
+  # into the host's `configurations.nixos.nebula.module` — so no path needs to be
+  # excluded from the scan. Outputs are exposed through flake-parts
+  # (`flake.nixosConfigurations`, `flake.overlays`, `flake.modules.nixos.*`,
+  # per-system `packages`).
   inputs = {
     snowglobe-lib = {
       # url = "git+https://codeberg.org/earthgman/snowglobe-lib";

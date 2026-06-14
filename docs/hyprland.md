@@ -510,7 +510,7 @@ value differs from your file and shows `set: false`, your file isn't being read.
   hook (`pkill -x hyprpaper; hyprpaper`). Points at the **same** repo-tracked
   image niri uses (`~/.config/niri/wallpaper.jpg`, a symlink into the dotfiles
   tree) so both sessions share one source. Package added in
-  `modules/hosts/_nebula/configuration.nix`. **Config syntax (0.8.x):** a
+  `modules/hosts/nebula/configuration.nix`. **Config syntax (0.8.x):** a
   `wallpaper { monitor = ; path = …; fit_mode = cover }` block — empty `monitor`
   is the all-outputs fallback, `fit_mode = cover` (the default) fills like
   `swaybg -m fill` (other modes: `contain`, `tile`, `fill`). See the gotcha below
@@ -552,7 +552,7 @@ nebula uses **`rose-pine-hyprcursor`** — a native *hyprcursor*-format theme
 (the BreezeX cursor shape recolored in the muted Rose Pine palette), not an
 Xcursor theme. Wired up in two places:
 
-- `pkgs.rose-pine-hyprcursor` in `modules/hosts/_nebula/configuration.nix`
+- `pkgs.rose-pine-hyprcursor` in `modules/hosts/nebula/configuration.nix`
   (`environment.systemPackages`) installs it to
   `/run/current-system/sw/share/icons/rose-pine-hyprcursor/` (which is on
   `XCURSOR_PATH` / the hyprcursor search path).
