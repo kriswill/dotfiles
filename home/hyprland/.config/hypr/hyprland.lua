@@ -65,7 +65,7 @@ hl.monitor({
 -- Set programs that you use
 local terminal = "ghostty"
 local fileManager = "dolphin"
-local menu = "hyprlauncher"
+local menu = "fuzzel"
 
 -------------------
 ---- AUTOSTART ----
@@ -469,7 +469,7 @@ hl.window_rule({
 
 -- $terminal = ghostty
 -- $fileManager = dolphin
--- $menu = hyprlauncher
+-- $menu = fuzzel
 --
 -- bind = $mainMod, Q, exec, $terminal
 -- bind = $mainMod, C, killactive,
