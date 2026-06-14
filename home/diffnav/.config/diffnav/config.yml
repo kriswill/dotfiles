@@ -1,0 +1,3 @@
+ui:
+  # Drop the DIFFNAV ASCII banner at the top; reclaim the rows for the diff.
+  hideHeader: true
