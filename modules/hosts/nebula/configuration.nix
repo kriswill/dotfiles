@@ -47,7 +47,7 @@
         displayManager.defaultSession = "hyprland-uwsm";
       };
       # Don't trust cache server
-      substituters."nix-store.homelab.earthgman.dev".enable = false;
+      substituters."nix-store.earthgman.dev".enable = false;
 
       # Dual-boot: let GRUB probe other disks for Windows/other OSes and add them to
       # the menu. Required because Windows lives on a separate disk/ESP that the

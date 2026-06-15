@@ -15,7 +15,5 @@
       brightness_down_key = "null";
       brightness_up_key = "null";
     };
-  }
-
-  ;
+  };
 }
