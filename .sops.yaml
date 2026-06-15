@@ -1,7 +1,7 @@
 keys:
   - &nebula age1gduheq5k8trpxduq56qt3yy6g0mveshx4h06nshccejvv6yxp4vq77m3qf
 creation_rules:
-  - path_regex: nixosConfigurations/nebula/secrets.yaml
+  - path_regex: modules/hosts/nebula/secrets.yaml
     key_groups:
       - age:
           - *nebula
