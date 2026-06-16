@@ -1,69 +1,13 @@
 {
   configurations.nixos.nebula.module =
-    { config, pkgs, ... }:
-    let
-      # Wrapper that defaults the flatpak CLI to the per-user installation. Built
-      # into the nix store and exposed via user k's profile
-      # (/etc/profiles/per-user/k/bin), which sits ahead of /run/current-system/sw/bin
-      # on PATH, so it shadows the system flatpak. flatpak hardcodes --system as the
-      # default with no config to change it, so inject --user for scope-aware
-      # subcommands; respect an explicit --user/-u/--system/--installation, and pass
-      # non-scoped subcommands (run/ps/help/--version/build*) through untouched.
-      # Calls the system's own flatpak by store path (no recursion, same version).
-      flatpakUserDefault = pkgs.writeShellScriptBin "flatpak" ''
-        set -euo pipefail
-        real=${config.services.flatpak.package}/bin/flatpak
-
-        # Respect an explicit scope if the caller already chose one.
-        for arg in "$@"; do
-          case "$arg" in
-            -u | --user | --system | --installation | --installation=*)
-              exec "$real" "$@"
-              ;;
-          esac
-        done
-
-        # First non-option argument is the subcommand.
-        cmd=""
-        for arg in "$@"; do
-          case "$arg" in
-            -*) ;;
-            *)
-              cmd="$arg"
-              break
-              ;;
-          esac
-        done
-
-        case "$cmd" in
-          install | uninstall | update | list | info | search | remotes | remote-add \
-            | remote-modify | remote-delete | remote-ls | remote-info | mask | pin \
-            | override | make-current | repair | config | create-usb)
-            out=()
-            inserted=0
-            for arg in "$@"; do
-              out+=("$arg")
-              if [ "$inserted" -eq 0 ] && [ "$arg" = "$cmd" ]; then
-                out+=(--user)
-                inserted=1
-              fi
-            done
-            exec "$real" "''${out[@]}"
-            ;;
-          *)
-            exec "$real" "$@"
-            ;;
-        esac
-      '';
-    in
+    { pkgs, ... }:
     {
       # Mask snowglobe's system flatpak-repo (becomes a symlink to /dev/null).
       systemd.services.flatpak-repo.enable = false;
 
-      # Default the flatpak CLI to the per-user installation (wrapper above).
-      users.users.k.packages = [ flatpakUserDefault ];
-
       # Per-user equivalent: register Flathub in ~/.local/share/flatpak at login.
+      # (The CLI is defaulted to --user by pkgs.flatpak-user, wired into user k's
+      # packages in users/k.)
       systemd.user.services.flatpak-repo = {
         description = "Register the Flathub remote in the per-user flatpak installation";
         wantedBy = [ "default.target" ];
