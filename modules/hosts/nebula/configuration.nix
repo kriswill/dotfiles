@@ -61,6 +61,20 @@
       boot.loader.grub.gfxmodeEfi = "3440x1440x32";
       boot.loader.grub.gfxpayloadEfi = "keep";
 
+      # Make the systemd-initrd emergency shell usable on-console. The harden
+      # profile locks the root account, so when stage-1 drops to emergency mode
+      # ("Cannot open access to console, the root account is locked") there is no
+      # way to log in and debug — the only recovery is booting external media and
+      # nixos-enter. This bit us on 2026-06-16: a nix-collect-garbage deleted older
+      # generations whose closures GRUB still listed, so selecting one made
+      # initrd-find-nixos-closure fail (resolve-in-root on a GC'd init= path, under
+      # `set -e`) → emergency → locked shell. emergencyAccess = true grants
+      # passwordless root in the initrd rescue/emergency shell only. Security note:
+      # nebula's root fs is unencrypted ext4 (see disko.nix), so anyone with
+      # physical access already has full data access — this does not widen the
+      # threat model, it just makes recovery debuggable without a USB stick.
+      boot.initrd.systemd.emergencyAccess = true;
+
       environment.etc = {
         "ssh/ssh_host_ed25519_key.pub".source = ./ssh_host_ed25519_key.pub;
         "ssh/ssh_host_rsa_key.pub".source = ./ssh_host_rsa_key.pub;
