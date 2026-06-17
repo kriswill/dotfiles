@@ -346,12 +346,14 @@ hl.window_rule({ name="ng", match={ float=false, workspace="w[tv1]" }, border_si
 
 ### Layer rules (`hl.layer_rule`)
 
-Match by `namespace` (see `hyprctl layers`). Rules: `blur`, `blurpopups`,
-`ignorezero`/`ignorealpha a`, `noanim`, `dimaround`, `order n`,
-`abovelock [interactable]`, `noscreenshare`.
+Match by `namespace` (see `hyprctl layers`). Multi-word rule keywords are
+**snake_case** in the Lua API (the `.conf` names without underscores are
+rejected — `hl.layer_rule: unknown field 'blurpopups'`, verified 0.55,
+2026-06-16): `blur`, `blur_popups`, `ignore_zero`/`ignore_alpha a`, `no_anim`,
+`dim_around`, `order n`, `above_lock [interactable]`, `no_screenshare`.
 
 ```lua
-hl.layer_rule({ name="blur-bar", match={ namespace = "waybar" }, blur = true, ignorezero = true })
+hl.layer_rule({ name="blur-bar", match={ namespace = "waybar" }, blur = true, ignore_zero = true })
 ```
 
 ## Layouts

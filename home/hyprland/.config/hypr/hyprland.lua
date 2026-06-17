@@ -94,6 +94,12 @@ hl.on("hyprland.start", function()
 	-- points at the same repo-tracked wallpaper niri uses (symlinked into
 	-- ~/.config/niri), so both sessions stay in sync. Replace any stale instance.
 	hl.exec_cmd("pkill -x hyprpaper; hyprpaper")
+
+	-- Noctalia shell (bar, launcher, control centre, lock screen, notifications).
+	-- Installed for k via modules/hosts/nebula/users/k/noctalia.nix. --daemon
+	-- backgrounds the shell so this returns immediately; keybinds below drive it
+	-- with `noctalia msg`. Replace any stale instance left by a session restart.
+	hl.exec_cmd("pkill -x noctalia; noctalia --daemon")
 end)
 
 -------------------------------
@@ -339,6 +345,13 @@ hl.bind(
 hl.bind(mainMod .. " + E", hl.dsp.exec_cmd(fileManager))
 hl.bind(mainMod .. " + V", hl.dsp.window.float({ action = "toggle" }))
 hl.bind(mainMod .. " + space", hl.dsp.exec_cmd(menu))
+
+-- Noctalia shell panels, driven over IPC (`noctalia msg`). fuzzel stays on
+-- SUPER+space above; these add Noctalia's own launcher, control centre, and
+-- lock. See docs.noctalia.dev v5 IPC reference.
+hl.bind(mainMod .. " + D", hl.dsp.exec_cmd("noctalia msg panel-toggle launcher"))
+hl.bind(mainMod .. " + N", hl.dsp.exec_cmd("noctalia msg panel-toggle control-center"))
+hl.bind(mainMod .. " + L", hl.dsp.exec_cmd("noctalia msg session lock"))
 hl.bind(mainMod .. " + P", hl.dsp.window.pseudo())
 hl.bind(mainMod .. " + J", hl.dsp.layout("togglesplit")) -- dwindle only
 hl.bind(mainMod .. " + F", hl.dsp.window.fullscreen()) -- real fullscreen (mode 0)
@@ -441,6 +454,17 @@ hl.window_rule({
 --     no_anim = true,
 -- })
 -- overlayLayerRule:set_enabled(false)
+
+-- Noctalia: blur the shell's bar/panel background surfaces so their
+-- translucency reads against the wallpaper. Recommended by docs.noctalia.dev;
+-- pair `ignorealpha` with Noctalia's own background-opacity settings.
+hl.layer_rule({
+	name = "noctalia-blur",
+	match = { namespace = "noctalia-background-.*$" },
+	blur = true,
+	blur_popups = true,
+	ignore_alpha = 0.5,
+})
 
 -- Hyprland-run windowrule
 hl.window_rule({

@@ -226,11 +226,11 @@
         "xdph": "xdph"
       },
       "locked": {
-        "lastModified": 1781367500,
-        "narHash": "sha256-+u579d4Ule0MgB0i+hi6y0hyRm6GlSDesjYGdDPWqj0=",
+        "lastModified": 1781627558,
+        "narHash": "sha256-qqFd1ufiH/oBB2RCmt7dg5Kyca7grJguIJrNPsD91zk=",
         "owner": "hyprwm",
         "repo": "Hyprland",
-        "rev": "f719bd67949aa92ad5a9b5dc0659cda8804ee39c",
+        "rev": "5b47c782c9f83539a6c642d83844cdc9130a2873",
         "type": "github"
       },
       "original": {
@@ -655,6 +655,26 @@
         "type": "github"
       }
     },
+    "noctalia": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1781635108,
+        "narHash": "sha256-tz9DNl36TxZeML9uZyHesirsGAQ5TH+r/e9AIMZvHFU=",
+        "owner": "noctalia-dev",
+        "repo": "noctalia-shell",
+        "rev": "28a38bfbf51508887987ae0d984f3a20c6b84806",
+        "type": "github"
+      },
+      "original": {
+        "owner": "noctalia-dev",
+        "repo": "noctalia-shell",
+        "type": "github"
+      }
+    },
     "pre-commit-hooks": {
       "inputs": {
         "flake-compat": "flake-compat",
@@ -690,6 +710,7 @@
           "snowglobe-lib",
           "nixpkgs"
         ],
+        "noctalia": "noctalia",
         "snowglobe-lib": "snowglobe-lib"
       }
     },
@@ -707,11 +728,11 @@
         "sops-nix": "sops-nix"
       },
       "locked": {
-        "lastModified": 1781306611,
-        "narHash": "sha256-M27SOgbJILZYFkw+sxF5iwPSijd7MRXvClncMI2sGXE=",
+        "lastModified": 1781574897,
+        "narHash": "sha256-Gvx1YjSO9y8fidzLtLQazqEnGowfArewu3p9zSlMVOA=",
         "ref": "unstable",
-        "rev": "6efb8da274d9211fad44b2b929fd3903aeed8dc2",
-        "revCount": 1641,
+        "rev": "ee61903aa08b6b28e0c5954c07845066763cc271",
+        "revCount": 1646,
         "type": "git",
         "url": "https://codeberg.org/earthgman/snowglobe-lib"
       },
