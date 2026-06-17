@@ -503,3 +503,6 @@ hl.window_rule({
 -- bind = $mainMod, E, exec, $fileManager
 -- bind = $mainMod, V, togglefloating,
 -- bind = $mainMod, R, exec, $menu
+
+-- For Noctalia Color templates
+require("noctalia")
