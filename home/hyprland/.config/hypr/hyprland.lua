@@ -32,13 +32,25 @@ hl.monitor({
 	position = "0x0",
 })
 
--- Right: PG34WCDM gaming OLED (240Hz, G-Sync), NATIVE scale 1. XWayland/Proton
+-- Right: PG34WCDM gaming OLED (G-Sync), NATIVE scale 1. XWayland/Proton
 -- games can't handle fractional scaling and get broken in-game resolutions; at
 -- scale 1 the game sees a true 3440x1440 display, Hyprland can direct-scanout the
 -- fullscreen window, and VRR (misc.vrr=2) works natively — no gamescope needed.
 -- 3440x1440 on a 34" panel is ~110 PPI, a normal desktop density. Positioned to
 -- the right of the portrait monitor (x=1440) and vertically centred against it
 -- ((3440-1440)/2 = 1000).
+--
+-- REFRESH RATE — 143.97Hz, NOT the panel's native 240Hz (changed 2026-06-16).
+-- The PG34WCDM is a DP 1.4 panel (HBR3, ~25.9 Gbit/s usable; the RTX 5080 can't go
+-- faster because the *monitor* caps the link). 3440x1440@240 needs ~28-36 Gbit/s
+-- so it REQUIRES DSC — and DSC does not negotiate under the current NVIDIA driver
+-- (595.80, open modules), so @240 trains no link at all: the OLED shows "no
+-- DisplayPort signal" while Hyprland still reports the output enabled+dpms-on.
+-- That was the "blank OLED at login" bug — the saved config asked for an
+-- untrainable mode. 143.97Hz @ 10-bit ≈ 21.4 Gbit/s fits HBR3 WITHOUT DSC, so it
+-- trains reliably and is the highest refresh that still keeps 10-bit/HDR. (No-DSC
+-- ceilings: ~180Hz @ 8-bit, ~143Hz @ 10-bit, 120Hz comfortably @ 10-bit. True
+-- 240Hz is only possible if DSC starts working.) Verified live 2026-06-16.
 --
 -- HDR: bitdepth 10 + cm "auto" (verified 2026-06-13, Hyprland 0.55). "auto" keeps
 -- the SDR desktop in proper SDR (preset reports "wide" — 10-bit wide-gamut SDR) and
@@ -51,7 +63,7 @@ hl.monitor({
 -- (native Wayland) or gamescope --hdr-enabled. See docs/hdr-hyprland-june-2026.md.
 hl.monitor({
 	output = "desc:ASUSTek COMPUTER INC PG34WCDM RCLMRS022510",
-	mode = "3440x1440@239.984",
+	mode = "3440x1440@143.97",
 	scale = 1,
 	position = "1440x1000",
 	bitdepth = 10,

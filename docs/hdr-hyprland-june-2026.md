@@ -10,10 +10,19 @@ historical (it applies only to the niri session).
 | Component | Value |
 |---|---|
 | Compositor | Hyprland 0.55.0 (`f719bd6`) |
-| OLED monitor | ASUS PG34WCDM, connector **DP-3**, `desc:ASUSTek COMPUTER INC PG34WCDM RCLMRS022510`, 3440x1440@240 |
+| OLED monitor | ASUS PG34WCDM, connector **DP-3**, `desc:ASUSTek COMPUTER INC PG34WCDM RCLMRS022510`, 3440x1440 **@143.97** (NOT @240 — see note) |
 | Second monitor | ASUS ROG PG348Q, **DP-1**, portrait, SDR (left untouched) |
 | GPU / driver | NVIDIA RTX 5080 / 595.45.04 |
 | Color mgmt | `render:cm_enabled = true` — Hyprland advertises `wp_color_management_v1` to clients (no experimental flag needed in 0.55) |
+
+> **Refresh rate is capped at 143.97Hz, not the panel's native 240Hz (2026-06-16).**
+> 3440x1440@240 needs DSC to fit the DP 1.4 link, and DSC does not negotiate under
+> the NVIDIA driver here — @240 trains no link and the OLED shows "no DisplayPort
+> signal" while Hyprland reports the output on. @143.97 10-bit fits HBR3 without DSC
+> and keeps full HDR. The `@239.984` in the example `hl.monitor`/`hl.eval` snippets
+> below is **stale** — substitute `3440x1440@143.97` (and the live position is now
+> `1440x1000`, not `900x355`). See the "OLED blanks at login" entry in
+> `docs/hyprland.md` for the full diagnosis.
 
 Unlike niri (no color-management protocol at all), **Hyprland supports HDR.**
 

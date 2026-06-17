@@ -575,6 +575,34 @@ Caveats / how it was verified (2026-06-13):
 
 Real findings on nebula — append as you discover more; correct/remove stale ones.
 
+- **OLED (DP-3, PG34WCDM) blanks at login at 240Hz — DSC won't negotiate; capped
+  to 143.97Hz (2026-06-16).** Symptom: on Hyprland login the OLED showed nothing;
+  its own OSD read **"no DisplayPort signal"** while `hyprctl monitors` still
+  reported DP-3 `disabled: false`, `dpmsStatus: 1`, and even composited Noctalia's
+  wallpaper+bar layers onto it (visible in `hyprctl layers`). So the *compositor*
+  thought the output was live; the *physical DP link never trained*. Ruled out (none
+  fixed it): the HDR/10-bit pipeline (forced `bitdepth=8`/`cm="srgb"` — still black),
+  DPMS off/on cycle, full output disable→re-enable modeset, Noctalia gamma-control
+  (killed Noctalia → gamma ramp resets to identity — still black), Noctalia surfaces
+  (killed — still black). **Root cause: bandwidth.** The PG34WCDM is a **DP 1.4**
+  panel (HBR3, ~25.9 Gbit/s usable; the RTX 5080 can't go faster because the
+  *monitor* caps the link). 3440x1440@240 needs ~28-36 Gbit/s → **requires DSC**, and
+  DSC does not negotiate under the NVIDIA driver here (595.80, open modules), so @240
+  trains no link → "no signal". Proven by stepping modes live with
+  `hyprctl eval 'hl.monitor({...})'`: @60 and @120 and @143.97 all lit up instantly;
+  @240 gave "no signal" even warm. **Fix:** pin DP-3 to `mode = "3440x1440@143.97"`
+  in `hyprland.lua` — @143.97 10-bit ≈ 21.4 Gbit/s fits HBR3 *without* DSC and is the
+  highest refresh that still keeps 10-bit/HDR. No-DSC ceilings at this resolution:
+  ~180Hz @ 8-bit, ~143Hz @ 10-bit, 120Hz comfortably @ 10-bit. **True 240Hz is only
+  recoverable if DSC starts working.** Two debugging traps worth keeping: (1)
+  **`hl.monitor` MERGES fields** — after testing with `disabled = true`, later
+  `hl.monitor` evals that omit `disabled` leave it `true` (the output stays disabled
+  though every eval returns `ok`); always pass `disabled = false` explicitly when
+  re-enabling. (2) Disabling an output makes Noctalia log
+  `[wallpaper] removing instance for output N (disconnected)` and it does **not**
+  always recreate its wallpaper/bar on the re-enabled output — restart Noctalia
+  (`pkill -x noctalia; noctalia --daemon`) after an output disable/re-enable.
+
 - **hyprpaper removed in favour of Noctalia for wallpaper (2026-06-16).** Noctalia
   now paints the Hyprland desktop wallpaper, so hyprpaper is gone. Historical note
   if it's ever reintroduced: hyprpaper **0.8.x** dropped the old flat `preload =`/
