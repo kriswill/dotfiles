@@ -93,7 +93,6 @@
         pkgs.fd # fast file finder
         pkgs.gh # GitHub CLI
         pkgs.helium
-        pkgs.hyprpaper # paints the Hyprland desktop wallpaper (spawned in hyprland.lua)
         pkgs.kdePackages.breeze-icons
         pkgs.rose-pine-hyprcursor # native hyprcursor theme (BreezeX shape, Rose Pine palette); selected via HYPRCURSOR_THEME in hyprland.lua
         pkgs.swaybg # paints the niri desktop wallpaper (spawned in niri config)

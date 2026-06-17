@@ -89,11 +89,8 @@ hl.on("hyprland.start", function()
 	-- (Service stays enabled, so niri still gets kanshi.)
 	hl.exec_cmd("systemctl --user stop kanshi.service")
 
-	-- Desktop wallpaper via hyprpaper (Hyprland's own wallpaper daemon). Image
-	-- and fill behaviour are configured in ~/.config/hypr/hyprpaper.conf, which
-	-- points at the same repo-tracked wallpaper niri uses (symlinked into
-	-- ~/.config/niri), so both sessions stay in sync. Replace any stale instance.
-	hl.exec_cmd("pkill -x hyprpaper; hyprpaper")
+	-- Desktop wallpaper is painted by the Noctalia shell (started below), so no
+	-- separate wallpaper daemon (hyprpaper) runs in this session.
 
 	-- Noctalia shell (bar, launcher, control centre, lock screen, notifications).
 	-- Installed for k via modules/hosts/nebula/users/k/noctalia.nix. --daemon
