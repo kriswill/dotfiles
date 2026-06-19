@@ -18,6 +18,7 @@ current as part of doing the work.
 | Manual | Covers |
 |---|---|
 | [`docs/hyprland.md`](docs/hyprland.md) | Hyprland config (0.55 Lua API + legacy `.conf` translation), binds, rules, layouts, NVIDIA, and nebula-specific gotchas |
+| [`docs/noctalia.md`](docs/noctalia.md) | **Noctalia shell v5** (the desktop shell: bar/launcher/control-center/lock/wallpaper) — version, CLI + `noctalia msg` IPC, `settings.toml` config, theming/templates, widgets/panels, Nix install, and the nebula/Hyprland wiring |
 | [`docs/hdr-hyprland-june-2026.md`](docs/hdr-hyprland-june-2026.md) | **HDR under Hyprland (current session)** — `cm`/`bitdepth` monitor config, how to tell if HDR is active, live tuning, getting Proton games into HDR |
 | [`docs/hdr-niri-june-2026.md`](docs/hdr-niri-june-2026.md) | HDR under niri (historical — niri has no color-management protocol; superseded by the Hyprland doc for the current session) |
 | [`docs/bootloader-issues-jun-06.md`](docs/bootloader-issues-jun-06.md) | boot-failure investigation notes |
