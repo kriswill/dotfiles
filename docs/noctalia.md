@@ -529,29 +529,36 @@ In `home/hyprland/.config/hypr/hyprland.lua`:
   fix the match if blur isn't applying. (Pair blur with each surface's
   `background_opacity`.)
 
-## Recommended cleanup (noctalia.nix dependency list)
+## noctalia.nix dependency cleanup (applied 2026-06-19)
 
-`modules/hosts/nebula/users/k/noctalia.nix` carries some **v4-era runtime tools
-that v5 no longer needs**:
+`modules/hosts/nebula/users/k/noctalia.nix` used to carry five **v4-era runtime
+tools that v5 doesn't reference** (confirmed by `strings` on the binary). All
+five were removed from the Noctalia user-package list — it now declares only the
+`noctalia` package plus the surfaced services:
 
-- **`matugen` — remove.** v5 vendors Material Color Utilities; matugen is absent
-  from the binary and closure. *Confident.*
-- **`cava` — remove.** Absent from the binary; the audio visualiser is native
-  PipeWire. (`cava` survives only as a *theme template* for the cava app, which
-  doesn't need cava installed.) *Confident.*
-- **`cliphist`, `wl-clipboard`, `brightnessctl` — probably removable.** v5 has
-  native clipboard history, Wayland clipboard, and backlight/ddcutil brightness;
-  none of these binaries are referenced. *Test before removing* (the exact
-  protocol paths weren't upstream-confirmed).
-- **`ddcutil` — consider ADDING** *only if* external-monitor (DDC/CI) brightness
-  is wanted and `[brightness].enable_ddcutil = true`. The v5 binary references
-  `ddcutil`; it's currently absent from `noctalia.nix`. (nebula's monitors are
-  desktop DP outputs, so this is the one genuinely useful add.)
-- Keep `wpctl` available (WirePlumber) — it's what the audio control shells out
-  to. (Provided by the PipeWire/WirePlumber stack, not this package list.)
+- **`matugen` — removed.** v5 vendors Material Color Utilities; matugen is absent
+  from the binary and closure. Only `noctalia.nix` declared it → gone entirely.
+- **`cava` — removed.** Absent from the binary; the audio visualiser is native
+  PipeWire/`wpctl`. (`cava` survives only as a *theme template* for the cava app,
+  which doesn't need the cava binary.) Only `noctalia.nix` declared it → gone.
+- **`cliphist`, `wl-clipboard`, `brightnessctl` — removed from `noctalia.nix`,
+  still present system-wide.** v5 has native clipboard history + brightness, so
+  Noctalia doesn't need them — but the **niri/Hyprland keybinds do** (cliphist
+  clipboard pipeline, `XF86MonBrightness*` binds). They remain in the system
+  profile via `configuration.nix` `environment.systemPackages` (cliphist) and
+  snowglobe's desktop module (wl-clipboard, brightnessctl), so dropping them from
+  k's user packages is a **no-op** for those binds. Verified: after the rebuild,
+  `wl-copy`/`wl-paste`/`brightnessctl`/`cliphist` are still in
+  `/run/current-system/sw/bin`.
 
-This is documented, not yet applied — trimming changes the runtime closure, so
-do it deliberately and rebuild-test.
+**Not done — optional follow-up:** add `pkgs.ddcutil` *only if* you want Noctalia
+to drive **external-monitor (DDC/CI) brightness** (`[brightness].enable_ddcutil =
+true`). nebula's monitors are desktop DP outputs with no kernel backlight, so the
+brightness slider does nothing without DDC. This also needs the `i2c-dev` module
+and k in the `i2c` group — a feature addition, not cleanup, so left out.
+
+`wpctl` (WirePlumber, what audio control shells out to) is provided by the
+PipeWire stack, not this list — untouched.
 
 ## Learned behaviours & workarounds
 

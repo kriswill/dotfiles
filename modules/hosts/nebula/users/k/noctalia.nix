@@ -6,12 +6,17 @@
 # `noctalia` binary from the `noctalia` flake input (pinned in flake.nix,
 # following our nixpkgs). See docs/noctalia.md. v5.0.0, verified 2026-06-19.
 #
-# NOTE (see docs/noctalia.md "Recommended cleanup"): on v5 the matugen and cava
-# packages below are vestigial v4 deps — v5 vendors Material Color Utilities for
-# palette generation and uses PipeWire/wpctl for the audio visualiser; neither
-# `matugen` nor `cava` is referenced by the v5 binary. Likewise cliphist /
-# wl-clipboard / brightnessctl have native v5 equivalents. Left in place for now;
-# safe to trim after confirming behaviour.
+# v5 needs no extra runtime tools in this user package list. The old v4 helpers
+# (matugen, cava, cliphist, wl-clipboard, brightnessctl) were dropped on
+# 2026-06-19 (see docs/noctalia.md "Recommended cleanup") because the v5 binary
+# doesn't reference them: it vendors Material Color Utilities (palette generation,
+# no matugen), uses PipeWire/wpctl for the audio visualiser (no cava), and has
+# native clipboard history and backlight/ddcutil brightness. cliphist +
+# wl-clipboard + brightnessctl stay available system-wide (configuration.nix
+# systemPackages + snowglobe's desktop module) for the niri/Hyprland keybinds
+# that use them, so dropping them here is a no-op for those. To drive EXTERNAL
+# monitor brightness from Noctalia, add pkgs.ddcutil and set
+# [brightness].enable_ddcutil = true (also needs i2c-dev + the i2c group).
 #
 # This installs it for `k` and enables the system services the shell's widgets
 # read. The Hyprland-side wiring (autostart + recommended blur layerrule +
@@ -36,15 +41,6 @@
 
       users.users.k.packages = [
         inputs.noctalia.packages.${pkgs.stdenv.hostPlatform.system}.default
-
-        # Runtime tools Noctalia shells out to. cliphist is also installed
-        # system-wide; listing it here is harmless (nix dedups) and keeps the
-        # shell's dependencies self-documented.
-        pkgs.brightnessctl # screen/keyboard brightness slider
-        pkgs.cliphist # clipboard history panel
-        pkgs.wl-clipboard # wl-copy/wl-paste, used by the clipboard panel
-        pkgs.matugen # Material-You palette generation from wallpaper
-        pkgs.cava # audio visualiser widget
       ];
     };
 }
