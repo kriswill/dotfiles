@@ -551,14 +551,44 @@ five were removed from the Noctalia user-package list — it now declares only t
   `wl-copy`/`wl-paste`/`brightnessctl`/`cliphist` are still in
   `/run/current-system/sw/bin`.
 
-**Not done — optional follow-up:** add `pkgs.ddcutil` *only if* you want Noctalia
-to drive **external-monitor (DDC/CI) brightness** (`[brightness].enable_ddcutil =
-true`). nebula's monitors are desktop DP outputs with no kernel backlight, so the
-brightness slider does nothing without DDC. This also needs the `i2c-dev` module
-and k in the `i2c` group — a feature addition, not cleanup, so left out.
-
 `wpctl` (WirePlumber, what audio control shells out to) is provided by the
 PipeWire stack, not this list — untouched.
+
+## External-monitor brightness via DDC/CI (enabled 2026-06-19)
+
+nebula's monitors are DP outputs with **no kernel backlight** (`/sys/class/
+backlight` is empty), so brightness only works over **DDC/CI** on the I²C bus.
+Now wired up:
+
+- `noctalia.nix` adds **`pkgs.ddcutil`**, **`hardware.i2c.enable = true`** (loads
+  `i2c-dev` declaratively, creates the `i2c` group + udev rules), and
+  **`users.users.k.extraGroups = [ "i2c" ]`**.
+- `~/.local/state/noctalia/settings.toml` sets **`[brightness] enable_ddcutil =
+  true`** (validated + `config-reload`ed; appears in `noctalia config export
+  merged`).
+
+**Access note:** k already held a per-session **logind ACL** on `/dev/i2c-*`
+(`getfacl` → `user:k:rw-`), so DDC worked even before the `i2c` group; the group
+is the durable fallback (effective after next login).
+
+**DDC/CI verified working on the NVIDIA buses** (the one real risk) — `ddcutil
+detect` finds both monitors and brightness (VCP `0x10`) reads/writes:
+
+| Display | I²C bus | Monitor | VCP | Brightness 0x10 |
+|---|---|---|---|---|
+| DP-1 | `/dev/i2c-6` | ASUS ROG PG348Q | 2.2 | 50/100 |
+| DP-3 | `/dev/i2c-8` | ASUS PG34WCDM | 2.2 | 87/100 |
+
+(`ddcutil`'s `-EIO for unsupported features` line is a generic caveat about
+*other* VCP features, not brightness.)
+
+**The Control Center brightness slider is confirmed working (2026-06-19).**
+nebula's bar has no `brightness` widget, so the slider lives in the **Control
+Center** (`SUPER+N`); dragging it changes both monitors over DDC. The
+`XF86MonBrightness*` hardware keys are
+still bound to `brightnessctl` in `hyprland.lua` — a **no-op on DP** (no
+backlight); rebind them to `noctalia msg brightness-up|-down [step]` if you want
+the hardware keys to drive DDC too.
 
 ## Learned behaviours & workarounds
 

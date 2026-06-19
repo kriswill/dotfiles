@@ -14,9 +14,16 @@
 # native clipboard history and backlight/ddcutil brightness. cliphist +
 # wl-clipboard + brightnessctl stay available system-wide (configuration.nix
 # systemPackages + snowglobe's desktop module) for the niri/Hyprland keybinds
-# that use them, so dropping them here is a no-op for those. To drive EXTERNAL
-# monitor brightness from Noctalia, add pkgs.ddcutil and set
-# [brightness].enable_ddcutil = true (also needs i2c-dev + the i2c group).
+# that use them, so dropping them here is a no-op for those.
+#
+# EXTERNAL monitor brightness (2026-06-19): nebula's DP monitors have no kernel
+# backlight, so brightness only works over DDC/CI on the I2C bus. We add
+# pkgs.ddcutil + `hardware.i2c.enable` (loads i2c-dev declaratively, creates the
+# i2c group + udev rules) and put k in the i2c group; then set
+# [brightness].enable_ddcutil = true in settings.toml. (k already had per-session
+# ACL access to /dev/i2c-*, so the group is the durable fallback.) Whether DDC/CI
+# actually works over the NVIDIA i2c buses is the real unknown — test with
+# `ddcutil detect`.
 #
 # This installs it for `k` and enables the system services the shell's widgets
 # read. The Hyprland-side wiring (autostart + recommended blur layerrule +
@@ -39,8 +46,18 @@
       services.power-profiles-daemon.enable = true;
       hardware.bluetooth.enable = true;
 
+      # DDC/CI for external-monitor brightness (Noctalia's ddcutil backend).
+      # Loads the i2c-dev module, creates the i2c group, and installs the udev
+      # rules that group-own /dev/i2c-*. Pair with [brightness].enable_ddcutil.
+      hardware.i2c.enable = true;
+      users.users.k.extraGroups = [ "i2c" ];
+
       users.users.k.packages = [
         inputs.noctalia.packages.${pkgs.stdenv.hostPlatform.system}.default
+
+        # External-monitor brightness over DDC/CI (no kernel backlight on DP).
+        # Used by Noctalia when [brightness].enable_ddcutil = true.
+        pkgs.ddcutil
       ];
     };
 }
