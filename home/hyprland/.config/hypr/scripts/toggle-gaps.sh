@@ -40,12 +40,24 @@ ws=$(hyprctl -j monitors | jq -r '
 cur=$(hyprctl -j workspacerules | jq -r --arg w "$ws" '([.[] | select(.workspaceString == $w).gapsOut[0]][0]) // 20')
 
 set_screen_corners() {
-	# $1 = true|false. Only touch Noctalia if the setting actually changes and
-	# the tools are present, so the gaps toggle still works without Noctalia.
-	command -v toml-set >/dev/null 2>&1 || return 0
+	# $1 = true|false. Set Noctalia's screen-corner overlay and reload it live.
+	# No-op (so the gaps toggle still works) if tomato/Noctalia aren't present.
+	#
+	# tomato edits TOML preserving comments/formatting, but writes IN PLACE
+	# (truncate+rewrite). Noctalia watches settings.toml and an in-place edit it
+	# catches mid-write triggers a destructive partial re-save (clobbers the file
+	# to a single table). So edit a same-directory temp COPY and atomically `mv`
+	# it over the original — the watcher only ever sees a complete file. Then
+	# `config-reload` applies it live, non-destructively. (See docs/noctalia.md.)
+	command -v tomato >/dev/null 2>&1 || return 0
 	[ -f "$settings" ] || return 0
-	toml-set "$settings" shell.screen_corners.enabled "$1"
-	command -v noctalia >/dev/null 2>&1 && noctalia msg config-reload >/dev/null 2>&1 || true
+	tmp=$(mktemp -p "$(dirname "$settings")" .settings.toml.XXXXXX) || return 0
+	if cp "$settings" "$tmp" && tomato set shell.screen_corners.enabled "$1" "$tmp" >/dev/null 2>&1; then
+		mv -f "$tmp" "$settings"
+		command -v noctalia >/dev/null 2>&1 && noctalia msg config-reload >/dev/null 2>&1 || true
+	else
+		rm -f "$tmp"
+	fi
 }
 
 if [ "$cur" = "0" ]; then

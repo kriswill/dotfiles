@@ -21,6 +21,7 @@
       final: _prev:
       import ../packages {
         pkgs = final;
+        inherit inputs;
       };
 
     # snowglobe-lib hardcodes `alacritty.terminfo` into environment.systemPackages

@@ -603,11 +603,13 @@ the hardware keys to drive DDC too.
   *unchanged* file is safe (file stays intact); a plain `cp` of identical content +
   restart is safe; an in-place value change + reload/restart truncates to 42 lines.
   **Fix: never edit the live file in place.** Write a complete new file in the
-  *same directory* and `os.replace()`/`mv -f` it over the target (atomic rename →
-  the watcher only ever sees a finished inode). With an atomic write,
-  `noctalia msg config-reload` then applies the change **live and non-destructively**
-  — no restart needed. This is exactly why `pkgs.toml-set` (packages/toml-set.nix)
-  writes atomically, and why the Hyprland gaps toggle uses it. **Always keep a
+  *same directory* and `mv -f` it over the target (atomic rename → the watcher
+  only ever sees a finished inode). With an atomic swap, `noctalia msg
+  config-reload` then applies the change **live and non-destructively** — no
+  restart needed. The Hyprland gaps toggle edits with **`tomato`** (`pkgs.tomato`,
+  packages/tomato.nix — Rust `toml_edit`, comment/format-preserving), but because
+  `tomato set` writes IN PLACE, the toggle script copies settings.toml to a
+  same-dir temp, runs `tomato` on the copy, then `mv -f`s it in. **Always keep a
   backup before touching settings.toml** (it's not in the dotfiles repo; it lives
   in `~/.local/state/noctalia/`).
 - **`[shell.screen_corners]` is GLOBAL, no per-monitor option (2026-06-19).** It

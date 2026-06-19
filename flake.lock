@@ -711,7 +711,8 @@
           "nixpkgs"
         ],
         "noctalia": "noctalia",
-        "snowglobe-lib": "snowglobe-lib"
+        "snowglobe-lib": "snowglobe-lib",
+        "tomato": "tomato"
       }
     },
     "snowglobe-lib": {
@@ -775,6 +776,22 @@
       "original": {
         "owner": "nix-systems",
         "repo": "default-linux",
+        "type": "github"
+      }
+    },
+    "tomato": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1779745352,
+        "narHash": "sha256-EWI+in532Kq6Z6RwsZNs31xYxteVOOw90umPYQguADM=",
+        "owner": "ceejbot",
+        "repo": "tomato",
+        "rev": "b3ebb384009604b5d9f33841ed9e8d14ae282616",
+        "type": "github"
+      },
+      "original": {
+        "owner": "ceejbot",
+        "repo": "tomato",
         "type": "github"
       }
     },

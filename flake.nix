@@ -35,6 +35,14 @@
       url = "github:noctalia-dev/noctalia-shell";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    # tomato — Rust CLI to get/set TOML values preserving comments + formatting
+    # (built on toml_edit). Not a flake; built via rustPlatform in packages/tomato.nix
+    # and exposed as pkgs.tomato. Used by the Hyprland gaps-toggle to flip Noctalia's
+    # [shell.screen_corners].enabled.
+    tomato = {
+      url = "github:ceejbot/tomato";
+      flake = false;
+    };
     import-tree.follows = "snowglobe-lib/import-tree";
   };
 
