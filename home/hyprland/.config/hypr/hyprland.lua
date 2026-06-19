@@ -366,6 +366,12 @@ hl.bind(mainMod .. " + J", hl.dsp.layout("togglesplit")) -- dwindle only
 hl.bind(mainMod .. " + F", hl.dsp.window.fullscreen()) -- real fullscreen (mode 0)
 hl.bind(mainMod .. " + SHIFT + F", hl.dsp.window.fullscreen({ mode = 1 })) -- maximize (mode 1)
 
+-- Toggle zero gaps + square (un-rounded) corners on the CURRENT MONITOR only.
+-- Logic lives in scripts/toggle-gaps.sh (gaps/rounding are global options in
+-- Hyprland, so per-monitor scoping is done via a workspace rule on the focused
+-- monitor's active workspace — see the script header for the full rationale).
+hl.bind(mainMod .. " + G", hl.dsp.exec_cmd(os.getenv("HOME") .. "/.config/hypr/scripts/toggle-gaps.sh"))
+
 -- Move focus with mainMod + arrow keys
 hl.bind(mainMod .. " + left", hl.dsp.focus({ direction = "left" }))
 hl.bind(mainMod .. " + right", hl.dsp.focus({ direction = "right" }))

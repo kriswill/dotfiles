@@ -58,6 +58,13 @@
         # External-monitor brightness over DDC/CI (no kernel backlight on DP).
         # Used by Noctalia when [brightness].enable_ddcutil = true.
         pkgs.ddcutil
+
+        # Format-preserving TOML editor (AST round-trip via tomlkit). The
+        # Hyprland "toggle gaps" keybind (home/hyprland/.config/hypr/scripts/
+        # toggle-gaps.sh) uses it to flip [shell.screen_corners].enabled in
+        # settings.toml in lockstep with the gaps toggle, then `noctalia msg
+        # config-reload`. See packages/toml-set.nix.
+        pkgs.toml-set
       ];
     };
 }

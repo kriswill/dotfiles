@@ -592,6 +592,33 @@ the hardware keys to drive DDC too.
 
 ## Learned behaviours & workarounds
 
+- **Editing `settings.toml` IN PLACE while Noctalia runs corrupts it — write
+  ATOMICALLY (2026-06-19, cost ~an hour).** Symptom: after an in-place edit
+  (`sed -i`, or a tool that opens/truncates/rewrites the existing inode) followed
+  by `noctalia msg config-reload` *or* a restart, `settings.toml` was destructively
+  rewritten down to a **single `[lockscreen_widgets]` table** — the other 16
+  sections (`[shell]`, `[theme]`, `[bar]`, …) vanished. Noctalia watches the file;
+  when it sees the change it kicks off a save that (in v5.0.0) clobbers the whole
+  file with one subsystem's data. Proven by isolation: `config-reload` on an
+  *unchanged* file is safe (file stays intact); a plain `cp` of identical content +
+  restart is safe; an in-place value change + reload/restart truncates to 42 lines.
+  **Fix: never edit the live file in place.** Write a complete new file in the
+  *same directory* and `os.replace()`/`mv -f` it over the target (atomic rename →
+  the watcher only ever sees a finished inode). With an atomic write,
+  `noctalia msg config-reload` then applies the change **live and non-destructively**
+  — no restart needed. This is exactly why `pkgs.toml-set` (packages/toml-set.nix)
+  writes atomically, and why the Hyprland gaps toggle uses it. **Always keep a
+  backup before touching settings.toml** (it's not in the dotfiles repo; it lives
+  in `~/.local/state/noctalia/`).
+- **`[shell.screen_corners]` is GLOBAL, no per-monitor option (2026-06-19).** It
+  paints a rounded-corner black overlay on every output's screen edges (keys:
+  `enabled`, and a corner-radius `size`). There's **no IPC command** to toggle it
+  (`noctalia msg` has none for corners) — the only lever is `enabled` in
+  settings.toml + `config-reload`. The Hyprland "toggle gaps" keybind ties it to
+  the gaps state (gaps off → corners off so windows go truly edge-to-edge; gaps on
+  → corners on); because it's global, that flips corners on *all* monitors, not
+  just the toggled one. See docs/hyprland.md and home/hyprland/.config/hypr/
+  scripts/toggle-gaps.sh.
 - **v5 ≠ Quickshell (2026-06-19).** The biggest trap. v4 was Quickshell/QML; v5
   is native C++/Wayland/GLES. Don't apply v4 advice (`qs -c noctalia-shell`, QML
   plugins, JSON `settings.json` with `schemaVersion`, `~/.config/noctalia/
