@@ -366,11 +366,56 @@ hl.bind(mainMod .. " + J", hl.dsp.layout("togglesplit")) -- dwindle only
 hl.bind(mainMod .. " + F", hl.dsp.window.fullscreen()) -- real fullscreen (mode 0)
 hl.bind(mainMod .. " + SHIFT + F", hl.dsp.window.fullscreen({ mode = 1 })) -- maximize (mode 1)
 
--- Toggle zero gaps + square (un-rounded) corners on the CURRENT MONITOR only.
--- Logic lives in scripts/toggle-gaps.sh (gaps/rounding are global options in
--- Hyprland, so per-monitor scoping is done via a workspace rule on the focused
--- monitor's active workspace — see the script header for the full rationale).
-hl.bind(mainMod .. " + G", hl.dsp.exec_cmd(os.getenv("HOME") .. "/.config/hypr/scripts/toggle-gaps.sh"))
+-- Toggle zero gaps + square (un-rounded) corners on the CURRENT MONITOR only,
+-- plus Noctalia's rounded screen-corner overlay to match (gaps off -> corners
+-- off so windows go truly edge-to-edge; gaps on -> corners on).
+--
+-- Gaps (general.gaps_in/out) and decoration.rounding are GLOBAL in Hyprland, so
+-- per-monitor scoping is done with a workspace rule on the workspace currently
+-- DISPLAYED on the focused monitor: its special/scratchpad workspace if one is
+-- open (so scratchpads aren't missed), else its active workspace. This is all
+-- native hl.* API — no hyprctl shell-out. State lives in a Lua table; it resets
+-- on config reload, which also drops the runtime workspace rules, so the two
+-- stay in sync. (The restore values 5/20 mirror the LOOK AND FEEL block above —
+-- keep them in sync if those defaults change.)
+--
+-- The Noctalia side is a separate process with no Lua API, so it necessarily
+-- goes through hl.exec_cmd: `tomato` flips [shell.screen_corners].enabled while
+-- preserving formatting, written to a same-dir temp then atomically `mv`d in (an
+-- in-place edit races Noctalia's file watcher into a destructive re-save), then
+-- `noctalia msg config-reload` applies it live. See docs/noctalia.md.
+local gaplessWorkspaces = {} -- workspace name -> true while its gaps are zeroed
+
+local function setNoctaliaScreenCorners(enabled)
+	hl.exec_cmd(
+		[==[s="$HOME/.local/state/noctalia/settings.toml"; command -v tomato >/dev/null 2>&1 || exit 0; [ -f "$s" ] || exit 0; t=$(mktemp -p "$(dirname "$s")" .settings.toml.XXXXXX) || exit 0; if cp "$s" "$t" && tomato set shell.screen_corners.enabled ]==]
+			.. tostring(enabled)
+			.. [==[ "$t"; then mv -f "$t" "$s"; command -v noctalia >/dev/null 2>&1 && noctalia msg config-reload >/dev/null 2>&1; else rm -f "$t"; fi]==]
+	)
+end
+
+local function toggleGaps()
+	local mon = hl.get_active_monitor()
+	if not mon then
+		return
+	end
+	local ws = mon.active_special_workspace or mon.active_workspace
+	if not ws then
+		return
+	end
+	local name = ws.name
+	if gaplessWorkspaces[name] then
+		gaplessWorkspaces[name] = nil
+		hl.workspace_rule({ workspace = name, gaps_in = 5, gaps_out = 20, no_rounding = false })
+		setNoctaliaScreenCorners(true)
+	else
+		gaplessWorkspaces[name] = true
+		hl.workspace_rule({ workspace = name, gaps_in = 0, gaps_out = 0, no_rounding = true })
+		setNoctaliaScreenCorners(false)
+	end
+end
+
+hl.bind(mainMod .. " + G", toggleGaps)
 
 -- Move focus with mainMod + arrow keys
 hl.bind(mainMod .. " + left", hl.dsp.focus({ direction = "left" }))

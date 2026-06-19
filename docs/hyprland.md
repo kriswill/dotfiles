@@ -584,38 +584,42 @@ Caveats / how it was verified (2026-06-13):
 Real findings on nebula — append as you discover more; correct/remove stale ones.
 
 - **Per-monitor "no gaps + no corners" toggle = workspace rule on the DISPLAYED
-  workspace (SUPER+G → `scripts/toggle-gaps.sh`, added 2026-06-19).** Gaps
-  (`general.gaps_in/out`) and `decoration.rounding` are *global* options — there
-  is no per-monitor variant. But each monitor shows exactly one workspace at a
-  time, so scoping to "the current monitor" == applying a rule to the workspace
-  **currently displayed on the focused monitor**. The toggle is a stateless
-  script: it reads that workspace's current `gapsOut` (`hyprctl -j
-  workspacerules`) and `hyprctl eval`s an `hl.workspace_rule` flipping
-  `gaps_in/gaps_out` between `0` and the defaults `5/20` and `no_rounding`
-  between `true`/`false`. The rule reflows existing windows live (layout
-  preserved, windows expand into the freed space, corners go square). Stateless
-  beats a `/tmp` flag — it reads true state, survives reboots, and self-heals.
-  **The critical gotcha (cost an hour): do NOT use `hyprctl activeworkspace` to
-  pick the target.** When a special/scratchpad workspace is open on the monitor
-  (e.g. `special:magic`, id -98), `activeworkspace` still reports the *regular*
-  workspace underneath it — so the toggle silently hits the wrong (often empty)
-  workspace and "nothing happens" even though the bind fired and the script ran.
-  Instead read the focused monitor and prefer its `specialWorkspace.name` when
-  `specialWorkspace.id != 0`, else `activeWorkspace.name`:
-  ```sh
-  ws=$(hyprctl -j monitors | jq -r '.[]|select(.focused)
-        | if .specialWorkspace.id != 0 then .specialWorkspace.name else .activeWorkspace.name end')
+  workspace, done in NATIVE Lua (SUPER+G, added 2026-06-19; rewritten from a
+  shell script to pure Lua same day).** Gaps (`general.gaps_in/out`) and
+  `decoration.rounding` are *global* options — no per-monitor variant. But each
+  monitor shows exactly one workspace at a time, so "the current monitor" ==
+  applying a rule to the workspace **currently displayed on the focused
+  monitor**. The bind is a Lua function (`hl.bind(key, function() … end)` — binds
+  accept a function, not just an `hl.dsp.*` dispatcher), and the whole
+  Hyprland-side logic uses the native `hl.*` API — **no `hyprctl` shell-out**:
+  ```lua
+  local mon = hl.get_active_monitor()
+  local ws  = mon.active_special_workspace or mon.active_workspace  -- see gotcha
+  hl.workspace_rule({ workspace = ws.name, gaps_in = 0, gaps_out = 0, no_rounding = true })
   ```
+  The rule reflows existing windows live (layout preserved, windows expand into
+  the freed space, corners go square). State is a Lua table (`name -> bool`) in
+  the config closure; it resets on config reload, which also drops runtime
+  workspace rules, so the two stay in sync. **The critical gotcha (cost an
+  hour): do NOT target `hl.get_active_workspace()` / `hyprctl activeworkspace`.**
+  When a special/scratchpad workspace is open on the monitor (e.g.
+  `special:magic`, id -98), that returns the *regular* workspace underneath it —
+  so the toggle silently hits the wrong (often empty) workspace and "nothing
+  happens" even though the bind fired. Prefer the monitor's
+  `active_special_workspace`, fall back to `active_workspace`.
   `hl.workspace_rule({ workspace = "special:magic", … })` works and shows up in
-  `hyprctl workspacerules` keyed by that name. Other gotchas: (1) `hyprctl
-  keyword` is dead in Lua mode, so changes must go through `hyprctl eval`; (2)
-  the workspace-rule fields are `no_rounding`/`no_border`, **not**
-  `rounding`/`border` (those error). Logic lives in a standalone script
-  (`home/hyprland/.config/hypr/scripts/toggle-gaps.sh`) rather than inline Lua —
-  far less quoting fragility (see the `]]` long-string trap below). Debugging
-  tip: the script logs nothing by default, but the fastest way to tell "bind
-  didn't fire" from "bind fired, wrong target" is a temp `echo … >>/tmp/x.log`
-  as the script's first line plus a throwaway control bind on another key.
+  `hyprctl workspacerules` keyed by that name. Useful native query API (all on
+  the global `hl`, returning `HL.Monitor`/`HL.Workspace` objects with `.name`,
+  `.id`, `.special`, `.active_workspace`, `.active_special_workspace`, `.focused`):
+  `get_active_monitor`, `get_monitors`, `get_active_workspace(mon?)`,
+  `get_active_special_workspace(mon?)`, `get_workspaces`, `get_active_window`,
+  `get_windows`. Other gotchas: (1) the workspace-rule fields are
+  `no_rounding`/`no_border`, **not** `rounding`/`border` (those error); (2)
+  `hyprctl eval '<lua>'` runs arbitrary Lua in the live VM but only prints `ok`,
+  not the return value — route a result out via `hl.exec_cmd("… >/tmp/x")` to
+  inspect it. The Noctalia screen-corner half can't be native (separate app) so
+  it stays an `hl.exec_cmd` running `tomato` + `noctalia msg config-reload` (see
+  noctalia.md).
 - **`]]` inside a Lua `[[ … ]]` long string closes it early — use `[==[ … ]==]`
   for shell snippets containing `]]` (2026-06-19).** The SUPER+G toggle's `jq`
   filter contains `gapsOut[0]][0]`; the `]]` prematurely terminated the `[[`

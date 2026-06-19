@@ -619,8 +619,9 @@ the hardware keys to drive DDC too.
   settings.toml + `config-reload`. The Hyprland "toggle gaps" keybind ties it to
   the gaps state (gaps off → corners off so windows go truly edge-to-edge; gaps on
   → corners on); because it's global, that flips corners on *all* monitors, not
-  just the toggled one. See docs/hyprland.md and home/hyprland/.config/hypr/
-  scripts/toggle-gaps.sh.
+  just the toggled one. The toggle lives in native Lua in
+  home/hyprland/.config/hypr/hyprland.lua (the `setNoctaliaScreenCorners` helper
+  is the only part that shells out, via `hl.exec_cmd`); see docs/hyprland.md.
 - **v5 ≠ Quickshell (2026-06-19).** The biggest trap. v4 was Quickshell/QML; v5
   is native C++/Wayland/GLES. Don't apply v4 advice (`qs -c noctalia-shell`, QML
   plugins, JSON `settings.json` with `schemaVersion`, `~/.config/noctalia/
