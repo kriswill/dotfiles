@@ -48,3 +48,4 @@ background-opacity = 0.92
 
 # 150% of ghostty's default 12pt.
 font-size = 14
+theme = noctalia
