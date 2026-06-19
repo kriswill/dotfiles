@@ -56,7 +56,8 @@ hyprctl binds | grep -c bind     # count active binds — match against each fil
 - Auto-reload: saving the active config reloads it live. Force with
   `hyprctl reload`.
 - Split config: `require("mycolors")` (Lua) or `source = ~/.config/hypr/x.conf`
-  (legacy) to include other files.
+  (legacy) to include other files. **nebula's config is split this way** — see the
+  modular-layout note in *Learned behaviours* below.
 
 ## The Lua API (`hl.*`)
 
@@ -749,11 +750,51 @@ Real findings on nebula — append as you discover more; correct/remove stale on
 - **0.55 = Lua, but the internet is `.conf`.** Treat every online example as
   legacy syntax and translate (table above). Don't paste `bind = …` lines into
   `hyprland.lua`.
-- **Hyprland config IS in the stow tree now (updated 2026-06-13).** The `hypr`
-  stow package exists: `~/.config/hypr/hyprland.lua` and `.luarc.json` are
-  symlinks into `home/hyprland/.config/hypr/`. Edit the files under
-  `home/hyprland/…` in the repo (the symlinks make edits live immediately);
+- **Hyprland config is a SPLIT, stow-tracked Lua tree (split 2026-06-19; in the
+  stow tree since 2026-06-13).** The `hypr` stow package holds
+  `home/hyprland/.config/hypr/`, symlinked file-by-file into `~/.config/hypr/`.
+  Edit the module files in the repo (the symlinks make edits live immediately);
   `hyprctl reload` to apply. Don't track the throwaway stub `.conf`.
+  **Modular layout:** `hyprland.lua` is now a thin entry point that `require()`s
+  one module per concept — `monitors`, `programs` (a returned
+  `{ terminal, fileManager, menu }` table consumed by `keybindings`), `autostart`,
+  `environment`, `look-and-feel`, `animations`, `input`, `keybindings`,
+  `window-rules` — then `require("noctalia")` **last** (the Noctalia-generated
+  `noctalia.lua` re-sets the border colors via `hl.config`, so it must load after
+  `look-and-feel` to win). That last require is **gated** — `local enableNoctalia`
+  plus `package.searchpath("noctalia", package.path)` — so an absent `noctalia.lua`
+  (fresh setup / shell disabled / never run) is skipped cleanly instead of erroring
+  the whole config. Hyprland's Lua env is the full stdlib (`io`, `os`, `package`)
+  with `package.path = ~/.config/hypr/?.lua;…`, so `package.searchpath` resolves a
+  module exactly like `require` (path if present, nil if not) and
+  `package.loaded.<name>` is the live "already required this session?" flag. Flip
+  `enableNoctalia = false` to opt out of the color template entirely. `.stylua.toml` here pins **2-space** indentation; it
+  deliberately omits `sort_requires`, which would alphabetise the loader and break
+  the noctalia-last rule. Gotchas when adding/splitting modules:
+  - `require()` resolves against `~/.config/hypr/`, so a **new** module file must be
+    symlinked there or `require` fails. `stow` links it on the next
+    `nixos-rebuild switch`; to make it live now, hand-link in the **canonical** form
+    `ln -s ../../src/github/kriswill/dotfiles/home/hyprland/.config/hypr/<f> ~/.config/hypr/<f>`
+    (the `../../src/dotfiles/…` path is the *foreign* form stow disowns — see the
+    stow-foreign-link memory).
+  - Saving the entry-point `hyprland.lua` **auto-reloads it immediately** — if a
+    newly-`require`d module isn't linked yet, the live reload errors and the session
+    drops to a near-empty config (observed: live bind count fell to 3) until you link
+    the modules and `hyprctl reload`. **Link the modules first, then touch the entry
+    point.** Worse, that failed reload can **drop the OLED's (DP-3) DP link → black
+    screen** even though `hyprctl monitors` afterwards reports it `disabled:false`,
+    `dpmsStatus:1` — the compositor thinks it's live but the link never re-trained
+    (same class of failure as the 240Hz blank below). Recovery without a relog:
+    **bounce DP-3's mode** to force a real modeset, e.g.
+    `hyprctl eval 'hl.monitor({ output="desc:ASUSTek COMPUTER INC PG34WCDM RCLMRS022510", mode="3440x1440@120.00", scale=1, position="1440x1000", bitdepth=10, cm="auto" })'`
+    then the same with `mode="3440x1440@143.97"`. Each `hyprctl eval` blocks until the
+    modeset commits, so the two-step bounce reliably re-trains (a *same-mode* re-apply
+    can short-circuit and do nothing). Verified 2026-06-19.
+  - Locals do **not** cross `require` boundaries — each module runs in its own Lua
+    scope. Share values via a returned table (as `programs.lua` does), not bare
+    `local`s. `mainMod` and the gaps-toggle closures (`gaplessWorkspaces`,
+    `setNoctaliaScreenCorners`, `toggleGaps`) all live in `keybindings.lua` because
+    they close over each other.
 - **LSP type defs come from Hyprland itself (2026-06-13).** No need to hand-write
   `hl.*` annotations — Hyprland installs `share/hypr/stubs/hl.meta.lua`, reachable
   at the stable `/run/current-system/sw/share/hypr/stubs`. A `.luarc.json` in
