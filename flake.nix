@@ -12,15 +12,11 @@
     snowglobe-lib = {
       # url = "git+https://codeberg.org/earthgman/snowglobe-lib";
       url = "git+https://codeberg.org/earthgman/snowglobe-lib?ref=unstable";
-      # Be sure to also uncomment this if you use your own nixpkgs input to avoid duplicate nixpkgs repos in the store.
-      # inputs.nixpkgs.follows = "nixpkgs";
+      # We own nixpkgs (below); make snowglobe follow it so there's a single
+      # nixpkgs in the store and we control the rev (e.g. to pull kernel 7.1).
+      inputs.nixpkgs.follows = "nixpkgs";
     };
-    nixpkgs.follows = "snowglobe-lib/nixpkgs";
-    # comment above and uncomment below to pin your own nixpkgs revision in the flake.lock.
-    # Could cause instabilities, use at your own risk.
-    # nixpkgs = {
-    #   url = "github:NixOS/nixpkgs/nixos-unstable";
-    # };
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     flake-parts = {
       url = "github:hercules-ci/flake-parts";
       inputs.nixpkgs-lib.follows = "nixpkgs";

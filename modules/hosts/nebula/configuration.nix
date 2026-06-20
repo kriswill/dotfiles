@@ -21,6 +21,10 @@
       snowglobe-lib.profiles.hacker-mode.enable = true;
       snowglobe-lib.profiles.nix-tools.enable = true;
       snowglobe-lib.profiles.harden.enable = true;
+      # corefreq's out-of-tree module doesn't build on kernel 7.1 (CPPC struct
+      # field reference_perf → reference). Disable until upstream catches up.
+      # ponytail: re-enable when corefreq builds against 7.1.
+      programs.corefreq.enable = false;
 
       hardware.nvidia.package = config.boot.kernelPackages.nvidiaPackages.production;
 
