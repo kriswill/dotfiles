@@ -80,7 +80,6 @@
         pkgs.wowup # WowUp-CF (WoW addon manager); WoW path wired in packages/default.nix
       ];
 
-      programs.helium.enable = true; # Helium browser (upstream module)
       programs.firefox.enable = false;
       programs.chromium.enable = false;
       programs.batsignal.enable = false;
