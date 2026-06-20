@@ -2,18 +2,18 @@
   "$schema": "https://github.com/fastfetch-cli/fastfetch/raw/dev/doc/json_schema.json",
   "logo": {
     "type": "kitty-icat",
-    // Image lives in the stow tree at home/fastfetch/.config/fastfetch/logo.png,
+    // Image lives in the stow tree at home/fastfetch/.config/fastfetch/Nebula.png,
     // symlinked here by dotfiles-stow.nix. Swap the file to change the logo.
-    "source": "~/.config/fastfetch/logo.png"
-    //"width": 30,
-    //"height": 18
+    "source": "~/.config/fastfetch/Nebula.png",
+    "width": 27,
+    "height": 20
   },
   "modules": [
     "title",
     "separator",
     {
       "type": "os",
-      "key": " OS",
+      "key": " OS",
       "keyColor": "yellow",
       "format": "{2}"
     },
@@ -23,12 +23,12 @@
       "keyColor": "yellow",
       "format": "{6}{?6} {?}{10} {8}"
     },
+    {
+      "type": "kernel",
+      "key": "├󰌽",
+      "keyColor": "yellow"
+    },
     /*
-       {
-       "type": "kernel",
-       "key": "├",
-       "keyColor": "yellow"
-       },
        {
        "type": "packages",
        "key": "├󰏖",
@@ -37,14 +37,14 @@
      */
     {
       "type": "shell",
-      "key": "└",
+      "key": "└󰆅",
       "keyColor": "yellow"
     },
     "break",
 
     {
       "type": "wm",
-      "key": " DE/WM",
+      "key": "󰍹 DE/WM",
       "keyColor": "blue"
     },
     /*
@@ -66,7 +66,7 @@
      */
     {
       "type": "terminal",
-      "key": "└",
+      "key": "└󰊠",
       "keyColor": "blue"
     },
     /*
@@ -85,7 +85,7 @@
     },
     {
       "type": "cpu",
-      "key": "├",
+      "key": "├󰻠",
       "keyColor": "green"
     },
     {
@@ -95,7 +95,7 @@
     },
     {
       "type": "disk",
-      "key": "├",
+      "key": "├󰋊",
       "keyColor": "green"
     },
     {
