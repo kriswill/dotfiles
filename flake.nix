@@ -30,7 +30,6 @@
       inputs.nixpkgs.follows = "nixpkgs";
       # inputs.pre-commit-hooks = "";
     };
-    # Noctalia shell (Wayland desktop shell + launcher)
     noctalia = {
       url = "github:noctalia-dev/noctalia-shell";
       inputs.nixpkgs.follows = "nixpkgs";

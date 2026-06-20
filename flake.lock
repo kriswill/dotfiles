@@ -226,11 +226,11 @@
         "xdph": "xdph"
       },
       "locked": {
-        "lastModified": 1781627558,
-        "narHash": "sha256-qqFd1ufiH/oBB2RCmt7dg5Kyca7grJguIJrNPsD91zk=",
+        "lastModified": 1781888691,
+        "narHash": "sha256-TmrOChAzMwvktV2xM9glJRSsZWyOqBFeCyfbEoZiwUc=",
         "owner": "hyprwm",
         "repo": "Hyprland",
-        "rev": "5b47c782c9f83539a6c642d83844cdc9130a2873",
+        "rev": "d486a5fe69c9800e75aed76ae4beb3183ac8886d",
         "type": "github"
       },
       "original": {
@@ -662,11 +662,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1781635108,
-        "narHash": "sha256-tz9DNl36TxZeML9uZyHesirsGAQ5TH+r/e9AIMZvHFU=",
+        "lastModified": 1781914872,
+        "narHash": "sha256-S2vKE2KjR2Aw6UBwOCxIeua40sjQ1PcU8gJk4jgXp68=",
         "owner": "noctalia-dev",
         "repo": "noctalia-shell",
-        "rev": "28a38bfbf51508887987ae0d984f3a20c6b84806",
+        "rev": "a7af75821ed8aa9e199b0d8044362dc882c78fbc",
         "type": "github"
       },
       "original": {
@@ -729,11 +729,11 @@
         "sops-nix": "sops-nix"
       },
       "locked": {
-        "lastModified": 1781574897,
-        "narHash": "sha256-Gvx1YjSO9y8fidzLtLQazqEnGowfArewu3p9zSlMVOA=",
+        "lastModified": 1781916971,
+        "narHash": "sha256-QOYVZKoB71owTfpNPhjK2AmUKPQ2pKnNmw3hHix2PTg=",
         "ref": "unstable",
-        "rev": "ee61903aa08b6b28e0c5954c07845066763cc271",
-        "revCount": 1646,
+        "rev": "e92eb4b1f51c7698409eede27a9e169e8923208a",
+        "revCount": 1650,
         "type": "git",
         "url": "https://codeberg.org/earthgman/snowglobe-lib"
       },
