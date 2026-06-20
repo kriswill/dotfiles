@@ -31,10 +31,10 @@ repo never points at the live file and the live file never points at the repo.
 
 Currently snapshotted here:
 
-| Subdir | App | Live location | Sync CLI |
-|---|---|---|---|
-| `noctalia/` | Noctalia shell | `~/.local/state/noctalia/settings.toml` | `noctalia-config` |
-| `helium/` | Helium browser | `~/.config/net.imput.helium/` | `helium-config` |
+| Subdir | App | Live location | Sync CLI | At rest |
+|---|---|---|---|---|
+| `noctalia/` | Noctalia shell | `~/.local/state/noctalia/settings.toml` | `noctalia-config` | plaintext |
+| `helium/` | Helium browser | `~/.config/net.imput.helium/` | `helium-config` | **age-encrypted (`*.age`)** |
 
 ## How the snapshots are captured
 
@@ -59,14 +59,23 @@ three verbs:
 
 Key safety properties, by design:
 
-- **Allowlist only.** `helium-config` captures just `Default/Bookmarks`,
-  `Default/Preferences`, and `Local State` — never `Login Data`, `Cookies`,
-  `History`, `Web Data`, IndexedDB, etc. **Secrets and bulk state never enter the
-  repo.** Add new files to the allowlist in `packages/<app>-config.nix`.
+- **Encryption at rest (helium only).** `helium-config` armored-age-encrypts every
+  snapshot file to `config/helium/<rel>.age` (recipient `age1gduheq5…` ==
+  `keyring.age.nebula`), so the **PUBLIC** repo holds only opaque ciphertext — no
+  visited domains, no Google account identity (`gaia_*`/`user_name` in `Local State`),
+  no cookies/logins. `capture` encrypts with the public key (no unlock needed);
+  `restore`/`diff` decrypt by pulling the age identity from 1Password via `op read`
+  into memory (never off the unencrypted disk). `noctalia-config` is **not** encrypted
+  (its `settings.toml` carries no PII).
+- **Allowlist only.** `helium-config` captures only the files in its `files=(…)`
+  allowlist (`Preferences`, `Local State`, `Bookmarks`, and — encrypted —
+  `Cookies` + `Login Data`); `History`, `Web Data`, IndexedDB, etc. are never copied.
+  Add new files to the allowlist in `packages/helium-config.sh`.
 - **Churn filtering.** The JSON snapshots are `jq`-filtered to drop high-churn /
   footgun keys (window geometry, `exit_type: Crashed`, timestamps, metrics) and
   key-sorted for stable diffs. Real settings are preserved. The filter lists live
-  at the top of `packages/<app>-config.nix`.
+  at the top of `packages/helium-config.sh` (this also keeps capture's compare-skip
+  from re-encrypting on trivial churn).
 
 ## How to maintain it
 
@@ -80,9 +89,14 @@ Key safety properties, by design:
    filter near the top of the relevant `packages/<app>-config.nix`, rebuild
    (`nixos-rebuild switch`), re-`capture`, re-check `diff`.
 3. **New file worth tracking** (e.g. a `Bookmarks` file once it exists): add its
-   relative path to the `files=(...)` allowlist in `packages/<app>-config.nix`
+   relative path to the `files=(...)` allowlist in `packages/helium-config.sh`
    with the right transform (`raw` for verbatim, `prefs`/`localstate` for the
-   JSON filters), then `capture`.
+   JSON filters), then `capture`. For helium the new entry is stored encrypted
+   automatically (the encryption layer is transform-agnostic). **Caveat:** adding
+   live-credential files (`Cookies`, `Login Data`) means a repo-compromise *and*
+   key-compromise = credential compromise, and those SQLite files are bound to the
+   machine's `os_crypt` key (so they only restore on the same machine) — capture
+   them with the app quit for a consistent copy.
 4. **Adding a brand-new app** to this folder:
    - write `packages/<app>-config.nix` (model it on `packages/helium-config.nix`
      or `packages/noctalia-config.nix`),

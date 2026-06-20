@@ -43,8 +43,8 @@ it must be root-owned and not world-writable, and it is.
 - **Live on the running system (2026-06-20):** the policy file
   (`/etc/chromium/policies/managed/helium.json`, root-owned symlink dated Jun 20
   10:49), `programs.helium.enable` (→ `true`), and `helium-config` on `k`'s PATH
-  are all **active on the running system**, and the snapshot is committed
-  (`config/helium/`). **Reusable rule:** the policy is read only at Helium startup
+  are all **active on the running system**, and the snapshot is committed as
+  age-encrypted blobs (`config/helium/**.age`). **Reusable rule:** the policy is read only at Helium startup
   — a freshly-switched policy needs a full Helium restart to take effect. (This
   manual file itself was authored alongside but is not necessarily committed in the
   same commit as the work it describes — see "git + file flake gotcha".)
@@ -303,8 +303,9 @@ snapshot allowlist:
 
 | Category | Files (examples) | In repo snapshot? |
 |---|---|---|
-| Settings (snapshotted) | `Default/Preferences`, `Local State`, `Default/Bookmarks(+.bak)` | **Yes** (allowlist) |
-| Secrets / bulk state | `Login Data`, `Login Data For Account`, `Cookies`, `Web Data`, `Affiliation Database`, `History`, `Top Sites`, `Favicons` | **Never** |
+| Settings (snapshotted) | `Default/Preferences`, `Local State`, `Default/Bookmarks(+.bak)` | **Yes** (allowlist, **encrypted**) |
+| Credentials (now snapshotted, encrypted) | `Login Data`, `Cookies` | **Yes** (allowlist, **encrypted** — see the encryption note + caveat below) |
+| Bulk state | `Login Data For Account`, `Web Data`, `Affiliation Database`, `History`, `Top Sites`, `Favicons` | **Never** |
 | Host-bound | `Default/Secure Preferences` (super_mac HMAC over machine id) | **Excluded** |
 
 ### The stale `~/.config/chromium` profile (out of scope)
@@ -352,31 +353,37 @@ only `./modules`). Cross-ref `config/README.md`.
 
 | Command | Effect |
 |---|---|
-| `helium-config capture` | live profile → repo snapshot (`config/helium/...`); allowlist only, jq-filtered, `0644`; prints a `git diff` hint, does NOT commit |
-| `helium-config restore` | snapshot → live, atomic (`mv -f`), re-hardened to `0600`, backs up the live file to `.bak`; **refuses while Helium runs unless `FORCE=1`** (detected via `pgrep -x helium`) |
-| `helium-config diff` | snapshot vs jq-filtered live; exit 1 on drift, prints `(in sync)` (exit 0) when clean |
+| `helium-config capture` | live profile → repo snapshot (`config/helium/<rel>.age`); allowlist only, jq-filtered, **armored-age-encrypted** (compare-skip: only re-encrypts when the decrypted plaintext changed), `0644`; prints a `git diff` hint, does NOT commit |
+| `helium-config restore` | snapshot → live: **decrypts** the `.age` blob, atomic (`mv -f`), re-hardened to `0600`, backs up the live file to `.bak`; **refuses while Helium runs unless `FORCE=1`** (detected via `pgrep -x helium`) |
+| `helium-config diff` | **decrypted** snapshot vs jq-filtered live; explicit `exit "$rc"` (1 on drift), prints `(in sync)` (exit 0) when clean |
 
 ```sh
-helium-config capture                            # after settings edits
-git -C ~/src/dotfiles diff -- config/helium      # review
+helium-config capture                            # after settings edits (1Password unlocked)
+git -C ~/src/dotfiles diff -- config/helium      # review (opaque .age blobs)
 git -C ~/src/dotfiles commit -- config/helium
 # fresh machine / undo (quit Helium first):
 helium-config restore
 ```
 
 Env overrides: `HELIUM_PROFILE` (default `$HOME/.config/net.imput.helium`),
-`DOTFILES` (default `$HOME/src/dotfiles`). Snapshot dir is `$DOTFILES/config/helium`.
+`DOTFILES` (default `$HOME/src/dotfiles`; snapshot dir is `$DOTFILES/config/helium`),
+plus the encryption knobs `HELIUM_AGE_RECIPIENT`, `HELIUM_AGE_OP_REF`,
+`HELIUM_AGE_IDENTITY` (see *Encryption* below).
 
-- **Allowlist only (4 entries).** `Default/Bookmarks|raw`,
-  `Default/Bookmarks.bak|raw`, `Default/Preferences|prefs`, `Local State|localstate`.
-  Absent files are skipped (`skip (absent): <rel>`). **Secrets/bulk state never
-  enter the repo** — no `Login Data`, `Cookies`, `History`, `Web Data`, IndexedDB.
-  `Default/Secure Preferences` is **excluded** (host-bound super_mac HMAC).
-  The committed snapshot is verified credential-free:
-  `password_manager.password_hash_data_list` is ABSENT and
-  `os_crypt.encrypted_key` is absent (`os_crypt` holds only desktop-portal state
-  `{portal: {prev_desktop: Hyprland, prev_init_success: false}}` — no key
-  material) (verified 2026-06-20).
+- **Allowlist (6 entries), all stored encrypted.** `Default/Bookmarks|raw`,
+  `Default/Bookmarks.bak|raw`, `Default/Preferences|prefs`, `Local State|localstate`,
+  `Default/Cookies|raw`, `Default/Login Data|raw`. Absent files are skipped
+  (`skip (absent): <rel>`). `Default/Secure Preferences` is still **excluded**
+  (host-bound super_mac HMAC); `History`, `Web Data`, `Login Data For Account`,
+  IndexedDB are still **never** captured. Because every entry is age-encrypted at
+  rest (see *Encryption* below), even the PII-bearing files are safe to commit to the
+  PUBLIC repo: `Preferences` (the `translate_site_blocklist_with_time` top-level key
+  is a map of visited domains; `signin`/`autofill`/`ntp`), `Local State`
+  (`profile.info_cache.Default.{gaia_name,gaia_id,gaia_given_name,user_name,hosted_domain}`
+  — the real Google identity), and now `Cookies`/`Login Data`. **The repo is no longer
+  credential-free** — `Cookies`/`Login Data` hold live session/login material (encrypted
+  by Chromium's `os_crypt`, then again by age). See the *Encryption* caveats (added
+  2026-06-20).
 - **jq churn filters + key-sort (`-S`)** for stable diffs:
   - `Preferences`: `del(.profile.exit_type, .profile.last_engagement_time,
     .profile.last_active_time, .browser.window_placement, .session, .sessions,
@@ -387,12 +394,14 @@ Env overrides: `HELIUM_PROFILE` (default `$HOME/.config/net.imput.helium`),
 - **Perms: `0644` in the tree, `0600` on restore.** git records only the exec
   bit, so a checked-out snapshot is `0644`; restore re-hardens to `0600` (the
   perms Chromium-profile files must carry).
-- **Current snapshot state:** `config/helium/Default/Preferences` (~105KB
-  pretty-printed) + `config/helium/Local State` are committed. NO
-  `Default/Bookmarks` yet — Chromium only writes it once a bookmark exists, so
-  the Bookmarks allowlist entries are pre-provisioned but inert. `diff` currently
-  reports drift (the live profile evolved since the snapshot) — re-`capture` to
-  re-sync (verified 2026-06-20).
+- **Current snapshot state:** committed as armored ciphertext —
+  `config/helium/Default/Preferences.age` + `config/helium/Local State.age` (and,
+  once present in the live profile, `Default/Cookies.age` + `Default/Login Data.age`).
+  NO `Default/Bookmarks` yet — Chromium only writes it once a bookmark exists, so the
+  Bookmarks allowlist entries are pre-provisioned but inert (they encrypt to
+  `Bookmarks.age` automatically when they appear). The pre-encryption plaintext
+  `Preferences`/`Local State` were removed from the repo *and scrubbed from git
+  history* (see *Encryption* → history scrub).
 - **No reload IPC (unlike noctalia).** Helium reads these files only at startup,
   so `restore` is meant for a quit browser / fresh machine; the `FORCE=1` path
   during a running browser is last-writer-wins.
@@ -400,12 +409,63 @@ Env overrides: `HELIUM_PROFILE` (default `$HOME/.config/net.imput.helium`),
   process-name match; `procps` is in `runtimeInputs`). All ~40 Helium child procs
   report `comm=helium`, so the guard fires reliably while the browser runs (tested
   2026-06-20). A renamed binary would defeat it — keep the process name `helium`.
-- **`diff`'s exit-1-on-drift is incidental, not deliberate.** Under `set -euo
-  pipefail` the branch exits 1 only because its final statement `[ "$rc" = 0 ] &&
-  echo "(in sync)"` evaluates false when `rc=1`; there is no explicit `exit "$rc"`.
-  **Do not append commands after that test** in `helium-config.sh` or you'll
-  silently break the documented exit code (or harden it with an explicit
-  `exit "$rc"`).
+- **`diff`'s exit code is now explicit (hardened 2026-06-20).** The verb ends with
+  `if [ "$rc" = 0 ]; then echo "(in sync)"; fi` followed by `exit "$rc"`, so drift →
+  exit 1 / clean → exit 0 is guaranteed regardless of what follows. (Previously it
+  relied on the final `[ "$rc" = 0 ] && echo …` test incidentally exiting 1 under
+  `set -e` — fragile against appended commands. That footgun no longer applies.)
+
+### Encryption (age blob, op-gated)
+
+Every snapshot file is stored as an **armored `age` blob** at
+`config/helium/<rel>.age`. The repo is **PUBLIC**, so this is what keeps the browsing
+PII (visited-domain map keys, the Google identity in `Local State`, cookies, logins)
+from leaking. Verified state (2026-06-20): `age` 1.3.1, `op` (1Password CLI) at
+`/run/wrappers/bin/op`, recipient `age1gduheq5…` == `keyring.age.nebula` / `.sops.yaml`.
+
+- **Why a full-file blob, not sops or gpg.** sops encrypts JSON *values* but leaves
+  *keys* in cleartext — and PII here lives in keys (`translate_site_blocklist_with_time`
+  is keyed by visited domain), so sops would still publish them. gpg has no registered
+  key (`keyring.openpgp = {}`) and more ceremony for no gain. A full-file age blob hides
+  keys, values, and structure, and handles the binary SQLite (`Cookies`/`Login Data`)
+  uniformly.
+- **Asymmetric by design.** `capture` encrypts with the **public** recipient → it needs
+  no secret and runs unattended. `restore`/`diff` (and capture's compare-skip) need the
+  private identity.
+- **Identity resolution order** (`load_identity`, resolved once per run, cached in
+  memory): `HELIUM_AGE_IDENTITY` (explicit file, for testing) → **`op read
+  "$HELIUM_AGE_OP_REF"`** (default ref `op://Private/nebula sops-age key/…`, pulled
+  through the 1Password agent into memory) → `~/.config/sops/age/keys.txt` (transitional
+  on-disk fallback, **slated for removal** — nebula's root fs is unencrypted ext4, so an
+  at-rest key file is an exfiltration vector). The key is fed to `age` over a `/dev/fd`
+  pipe via the `printf` builtin — never written to disk, never in an argv (same hygiene
+  as `cbissue`).
+- **Compare-skip keeps git history stable.** `age` uses a fresh nonce per run, so naively
+  re-encrypting unchanged plaintext would dirty git every `capture`. So `capture` filters
+  the live file into a `$TMPDIR` scratch, decrypts the existing `.age`, and **only
+  re-encrypts when the plaintext actually changed** (`cmp -s`). Best-effort: if the
+  identity can't be resolved (1Password locked, no key) it warns and re-encrypts anyway
+  (encryption only needs the public recipient).
+- **No plaintext in the repo, ever.** Filtered plaintext goes to a `$TMPDIR` scratch file
+  shredded by an `EXIT` trap; only the `.age` ciphertext (via a `.age.tmp.$$` →
+  atomic `mv`) ever lands under `config/helium/`.
+- **Fresh-machine recovery.** With no on-disk key, `restore`/`diff` work purely via
+  `op read` once 1Password is unlocked. This requires the age key to already live in
+  1Password at `$HELIUM_AGE_OP_REF` (it does). Editing the *system* sops secrets without
+  the on-disk key likewise becomes
+  `SOPS_AGE_KEY="$(op read 'op://Private/nebula sops-age key/…')" sops modules/hosts/nebula/secrets.yaml`.
+- **`Cookies`/`Login Data` caveats.** They are live credentials — repo-compromise **and**
+  age-key-compromise = credential compromise (an escalation from the old credential-free
+  posture, accepted deliberately). They are SQLite encrypted by Chromium's machine-bound
+  `os_crypt` key, so a `restore` only decrypts the secrets **on the same machine**; and
+  they use WAL, so capture them with Helium **quit** for a consistent copy (capture warns
+  if Helium is running).
+- **History scrub.** The pre-encryption plaintext `Preferences`/`Local State` (committed
+  in `3092346`, pushed to the PUBLIC repo) was purged from git history with
+  `git filter-repo --invert-paths` + a `--force-with-lease` push. The branch is an
+  orphan (independent history — `main` unaffected); the snapshot at that point was
+  credential-free, so no credential rotation was needed. GitHub may retain cached blobs
+  until GC.
 
 ### Extending the snapshot
 
@@ -413,8 +473,10 @@ Mirror of `config/README.md` → *How to maintain it* (keep the two in sync):
 
 1. **Track a new file** — add a `"relpath|transform"` entry to the `files=(…)`
    array in `packages/helium-config.sh` (transforms: `raw` = byte-copy, `prefs` /
-   `localstate` = the per-file jq churn filters). Then `git add`, rebuild, and
-   `helium-config capture`.
+   `localstate` = the per-file jq churn filters). It is encrypted automatically (the
+   encryption layer is transform-agnostic). Then `git add`, rebuild, and
+   `helium-config capture`. **Caveat:** adding live-credential files escalates the
+   threat model and binds them to this machine's `os_crypt` — see *Encryption* above.
 2. **Silence a noisy diff** — a volatile key is leaking through; add it to the
    relevant `del(…)` filter (`prefs_filter` for `Preferences`, the `Local State`
    filter for that file) in `packages/helium-config.sh`, then rebuild +
@@ -440,11 +502,11 @@ the work it documents is already committed.
 |---|---|
 | `modules/nixos/helium/default.nix` | `programs.helium.enable = true` (merges into the `helium` deferredModule) |
 | `modules/nixos/helium/policies.nix` | writes `/etc/chromium/policies/managed/helium.json` via `environment.etc` (merges into the same module) |
-| `packages/helium-config.nix` | `writeShellApplication` (`name = "helium-config"`, `runtimeInputs = [ coreutils jq diffutils procps ]`, `text = builtins.readFile ./helium-config.sh`) |
-| `packages/helium-config.sh` | the actual bash — **extracted out of Nix** so it lints/runs standalone (no Nix interpolation) |
-| `packages/default.nix` | registers `helium-config = pkgs.callPackage ./helium-config.nix { };` |
+| `packages/helium-config.nix` | `writeShellApplication` (`name = "helium-config"`, `runtimeInputs = [ coreutils jq diffutils procps age ]`, `text = builtins.readFile ./helium-config.sh`) — `op` resolves from ambient PATH, not pinned |
+| `packages/helium-config.sh` | the actual bash — **extracted out of Nix** so it lints/runs standalone (no Nix interpolation); holds the age encrypt/decrypt + `op read` identity logic |
+| `packages/default.nix` | registers `helium-config = pkgs.callPackage ./helium-config.nix { };` (`age` auto-supplied by `callPackage`) |
 | `modules/hosts/nebula/users/k/helium.nix` | puts `helium-config` on `k`'s PATH (`users.users.k.packages = [ pkgs.helium-config ]`, wrapped as `configurations.nixos.nebula.module`) |
-| `config/helium/` | the committed snapshot (outside `home/` and `modules/`) |
+| `config/helium/` | the committed snapshot, **age-encrypted `*.age` blobs** (outside `home/` and `modules/`) |
 | `config/README.md` | documents the snapshot mechanism (shared with noctalia) |
 
 The tooling is **built and active** for `k`:
@@ -453,6 +515,12 @@ installed binary body matches the committed `helium-config.sh` (verified 2026-06
 
 ## Changelog
 
+- **2026-06-20 — snapshot encryption (age blob, op-gated)**: every snapshot file is
+  now armored-age-encrypted at rest (`config/helium/**.age`), recipient `age1gduheq5…`;
+  `restore`/`diff` decrypt via `op read` (1Password) into memory; capture compare-skips
+  to keep git stable; `Cookies`/`Login Data` added to the allowlist (encrypted); the
+  pre-encryption plaintext was scrubbed from git history (`filter-repo` + force-push);
+  `diff` exit code hardened. Details: *Tracking user settings → Encryption*.
 - **2026-06-20 — managed policy baseline** (`ab15ed6`): the declarative privacy
   baseline + DuckDuckGo search + Dark Reader/1Password forcelist, committed and
   applied via `nixos-rebuild switch`. Details: *Managed policies (declarative)*.
@@ -504,11 +572,36 @@ installed binary body matches the committed `helium-config.sh` (verified 2026-06
 - **Snapshot JSON is jq pretty-printed + key-sorted (2026-06-20).** The repo copy
   (~105KB) is LARGER than the compact live `Preferences` (~71KB) — reformatting
   plus `jq -S`, not data inflation.
-- **Audit the snapshot by jq value, not `grep` (2026-06-20).** `grep -E
-  'password|cookie|token|secret'` over `config/helium` hits only benign extension
-  manifest metadata and Chromium pref *keys*. The real secret check is
-  `os_crypt.encrypted_key` (absent) and `password_manager.password_hash_data_list`
-  (absent) — `os_crypt` here is just desktop-portal state.
+- **Audit the snapshot by jq value, not `grep` (2026-06-20).** *(Pre-encryption,
+  historical.)* When the snapshot was plaintext, `grep -E 'password|cookie|token|secret'`
+  over `config/helium` hit only benign extension manifest metadata and pref *keys*; the
+  real secret check was `os_crypt.encrypted_key` / `password_manager.password_hash_data_list`
+  (both absent). **Now the snapshot is age-encrypted, so grep/jq see only ciphertext** —
+  audit instead by confirming every tracked file is `*.age` (`git ls-files config/helium`)
+  and that `grep -rEi 'gaia|hosted_domain|user_name'` over the tree returns nothing.
+- **sops can't encrypt JSON *keys* — that forced a full-file age blob (2026-06-20).**
+  The decisive constraint: `translate_site_blocklist_with_time` is a **top-level** object
+  *keyed* by visited domain (not under `.translate`), and sops only encrypts values. A
+  value-level scheme would still publish those domains. Whole-file age encryption was the
+  only option that hides keys too (and it covers the binary `Cookies`/`Login Data`
+  uniformly).
+- **age's fresh nonce dirties git unless you compare plaintext (2026-06-20).**
+  Re-encrypting unchanged input yields different ciphertext every run, so `capture`
+  decrypts the existing `.age` and `cmp -s`-compares the *plaintext*, only re-encrypting
+  on a real change. Otherwise every `capture` would show a spurious whole-file diff.
+- **Never write filtered plaintext into the repo tree (2026-06-20).** The old `capture`
+  wrote `apply` output to `config/helium/<rel>.tmp.$$` (plaintext PII, one stray
+  `git add -A` from being committed). The encrypted version stages plaintext only in
+  `$TMPDIR` with an `EXIT` trap, and pipes the key to `age` over `/dev/fd` via `printf` —
+  no key/plaintext on the unencrypted disk.
+- **`op read` is the canonical decrypt key source; the on-disk age key is being removed
+  (2026-06-20).** `~/.config/sops/age/keys.txt` == `keyring.age.nebula` == the
+  ssh-to-age form of the host key. Removing k's copy is safe for `nixos-rebuild` (root
+  decrypts via `/root/.config/sops/age/keys.txt` / `sshKeyPaths=/etc/ssh/ssh_host_ed25519_key`,
+  never k's home), but means user-level decrypt (helium-config, and `sops` editing) must
+  go through `op read` / `SOPS_AGE_KEY`. Honest scope: root-owned key material still sits
+  on the unencrypted disk for unattended boot — this defends the browsing-PII snapshot
+  against *k-level* malware, not physical/root compromise.
 
 ## Sources
 
@@ -526,6 +619,15 @@ installed binary body matches the committed `helium-config.sh` (verified 2026-06
 - Chrome Web Store CRX update endpoint —
   <https://clients2.google.com/service/update2/crx> (the `update_url` used by
   `ExtensionInstallForcelist`).
+- `age` file encryption — <https://age-encryption.org> (X25519/ChaCha20-Poly1305;
+  `-r`/`-R` recipients incl. SSH keys, `-i` identities, `-a` armor). The repo recipient
+  `age1gduheq5…` is `keyring.age.nebula` / `.sops.yaml`.
+- 1Password CLI `op read` — pulls the age identity from
+  `op://Private/nebula sops-age key/…` into memory (gated by the desktop app unlock);
+  same `op` precedent as `packages/cbissue.sh`.
+- `git filter-repo` — <https://github.com/newren/git-filter-repo> (used for the
+  history scrub of the pre-encryption plaintext; absent locally, run via
+  `nix run nixpkgs#git-filter-repo`).
 - Pinned `helium` flake input — resolves via the snowglobe-lib/nixpkgs input
   (`packages/helium/default.nix:133` in that source tree); pin recorded in
   `flake.lock` (bump via `nix flake update`).

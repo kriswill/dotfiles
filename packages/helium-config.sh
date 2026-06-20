@@ -3,18 +3,41 @@
 # via builtins.readFile into writeShellApplication (which prepends the shebang and
 # the runtimeInputs PATH, and runs shellcheck at build time). No Nix interpolation
 # lives here — keep it plain bash so it can be linted/run standalone.
+#
+# Snapshot files are stored ENCRYPTED at rest. Each allowlisted file is captured,
+# jq-churn-filtered (for the JSON ones), then armored-age-encrypted to
+# config/helium/<rel>.age. The repo (PUBLIC on GitHub) therefore holds only opaque
+# ciphertext — no browsing PII (visited domains, the Google account identity in
+# Local State, cookies, saved logins) leaks. Encryption needs only the PUBLIC age
+# recipient, so `capture` runs unattended; decryption (restore/diff and capture's
+# compare-skip) pulls the age identity from 1Password via `op read` into memory,
+# never off nebula's unencrypted disk.
 set -euo pipefail
 
 prof="${HELIUM_PROFILE:-$HOME/.config/net.imput.helium}"
 repo="${DOTFILES:-$HOME/src/dotfiles}"
 snap="$repo/config/helium"
 
+# Public age recipient (== keyring.age.nebula / .sops.yaml). Encrypting needs only
+# this, so `capture` works without unlocking 1Password.
+recipient="${HELIUM_AGE_RECIPIENT:-age1gduheq5k8trpxduq56qt3yy6g0mveshx4h06nshccejvv6yxp4vq77m3qf}"
+# Decryption identity reference in 1Password (pulled via `op read` into memory).
+# Override with HELIUM_AGE_OP_REF; empty disables the op route.
+age_op_ref="${HELIUM_AGE_OP_REF:-op://Private/nebula sops-age key/vc55ix7uexvletq4awkmh26mg4}"
+
+# Snapshot path for an allowlist relpath — always the encrypted (.age) form.
+enc_path() { printf '%s/%s.age\n' "$snap" "$1"; }
+
 # Allowlist: "relpath-under-profile|transform". transform ∈ raw|prefs|localstate.
+# Every entry is stored encrypted; raw = byte-copy (also used for the binary SQLite
+# Cookies/Login Data), prefs/localstate = the per-file jq churn filters.
 files=(
   "Default/Bookmarks|raw"
   "Default/Bookmarks.bak|raw"
   "Default/Preferences|prefs"
   "Local State|localstate"
+  "Default/Cookies|raw"
+  "Default/Login Data|raw"
 )
 
 # Drop volatile/footgun keys; extend as churn is observed. del() on an absent
@@ -33,24 +56,83 @@ apply() {
   esac
 }
 
+# Age identity, resolved ONCE per invocation and cached in memory (one `op read`,
+# so at most one 1Password prompt even across many files). Resolution order:
+# explicit env override -> 1Password (op read) -> on-disk key (transitional, slated
+# for removal). The key is never written to disk: decrypt feeds it to age over a
+# /dev/fd pipe via the `printf` shell builtin (never on disk, never in argv).
+_ident=""
+_ident_tried=0
+load_identity() {
+  [ "$_ident_tried" = 1 ] && { [ -n "$_ident" ]; return; }
+  _ident_tried=1
+  if [ -n "${HELIUM_AGE_IDENTITY:-}" ] && [ -f "${HELIUM_AGE_IDENTITY}" ]; then
+    _ident="$(cat "${HELIUM_AGE_IDENTITY}")"; return 0
+  fi
+  if [ -n "$age_op_ref" ] && command -v op >/dev/null 2>&1; then
+    if _ident="$(op read "$age_op_ref" 2>/dev/null)" && [ -n "$_ident" ]; then
+      return 0
+    fi
+  fi
+  if [ -f "$HOME/.config/sops/age/keys.txt" ]; then
+    _ident="$(cat "$HOME/.config/sops/age/keys.txt")"; return 0
+  fi
+  return 1
+}
+
+# decrypt <ciphertext-path> -> plaintext on stdout. Nonzero if no identity resolved.
+decrypt() {
+  if ! load_identity; then
+    echo "helium-config: no age identity — unlock 1Password, or set HELIUM_AGE_IDENTITY/HELIUM_AGE_OP_REF" >&2
+    return 1
+  fi
+  age -d -i <(printf '%s\n' "$_ident") "$1"
+}
+
 case "${1:-}" in
   capture)
-    any=0
+    tmpfiles=()
+    trap 'rm -f "${tmpfiles[@]}"' EXIT        # shred TMPDIR plaintext even on set -e abort
+    if pgrep -x helium >/dev/null 2>&1; then
+      echo "note: Helium is running — Cookies/Login Data (SQLite) may capture mid-write; quit it for a consistent snapshot." >&2
+    fi
+    present=0; wrote=0
     for entry in "${files[@]}"; do
       rel="${entry%|*}"; xf="${entry#*|}"
-      src="$prof/$rel"; dst="$snap/$rel"
+      src="$prof/$rel"; dst="$(enc_path "$rel")"
       [ -f "$src" ] || { echo "skip (absent): $rel" >&2; continue; }
+      present=$((present + 1))
       mkdir -p "$(dirname "$dst")"
-      if ! apply "$xf" "$src" > "$dst.tmp.$$"; then
-        rm -f "$dst.tmp.$$"; echo "ERROR: $rel is not valid JSON" >&2; exit 1
+      # filtered plaintext -> TMPDIR scratch (NEVER inside the repo tree)
+      new_plain="$(mktemp "${TMPDIR:-/tmp}/helium-cap.XXXXXX")"; tmpfiles+=("$new_plain")
+      if ! apply "$xf" "$src" > "$new_plain"; then
+        echo "ERROR: $rel is not valid JSON" >&2; exit 1
       fi
-      mv -f "$dst.tmp.$$" "$dst"
+      # compare-skip: age's fresh nonce makes ciphertext nondeterministic, so only
+      # re-encrypt when the decrypted plaintext actually changed (keeps git stable).
+      if [ -f "$dst" ]; then
+        old_plain="$(mktemp "${TMPDIR:-/tmp}/helium-old.XXXXXX")"; tmpfiles+=("$old_plain")
+        if decrypt "$dst" > "$old_plain" 2>/dev/null; then
+          if cmp -s "$new_plain" "$old_plain"; then echo "unchanged: $rel" >&2; continue; fi
+        else
+          echo "warn: cannot decrypt existing $rel.age — re-encrypting" >&2
+        fi
+      fi
+      enc_tmp="$dst.tmp.$$"
+      if ! age -a -r "$recipient" -o "$enc_tmp" "$new_plain"; then
+        rm -f "$enc_tmp"; echo "ERROR: age encryption failed for $rel" >&2; exit 1
+      fi
+      mv -f "$enc_tmp" "$dst"
       chmod 644 "$dst"            # repo copy; live perms re-hardened on restore
       echo "captured: $rel"
-      any=1
+      wrote=$((wrote + 1))
     done
-    [ "$any" = 1 ] || echo "nothing captured (no allowlisted files present)" >&2
-    echo "review: git -C $repo diff -- config/helium"
+    if [ "$present" = 0 ]; then
+      echo "nothing captured (no allowlisted files present)" >&2
+    elif [ "$wrote" = 0 ]; then
+      echo "all $present file(s) already in sync — nothing to commit" >&2
+    fi
+    echo "review: git -C $repo diff -- config/helium   # armored .age ciphertext"
     ;;
   restore)
     # A live save racing this restore is last-writer-wins. Refuse while Helium
@@ -63,12 +145,14 @@ case "${1:-}" in
     any=0
     for entry in "${files[@]}"; do
       rel="${entry%|*}"
-      src="$snap/$rel"; dst="$prof/$rel"
+      src="$(enc_path "$rel")"; dst="$prof/$rel"
       [ -f "$src" ] || continue
       mkdir -p "$(dirname "$dst")"
       [ -f "$dst" ] && cp -f "$dst" "$dst.bak"   # same-dir backup of live
       tmp="$(dirname "$dst")/.$(basename "$dst").new.$$"
-      cp -f "$src" "$tmp"
+      if ! decrypt "$src" > "$tmp"; then
+        rm -f "$tmp"; echo "ERROR: cannot decrypt $rel.age" >&2; exit 1
+      fi
       chmod 600 "$tmp"                            # git records only the exec bit
       mv -f "$tmp" "$dst"                         # atomic rename (Chromium's pattern)
       echo "restored: $rel"
@@ -81,18 +165,21 @@ case "${1:-}" in
     rc=0
     for entry in "${files[@]}"; do
       rel="${entry%|*}"; xf="${entry#*|}"
-      src="$snap/$rel"; live="$prof/$rel"
+      src="$(enc_path "$rel")"; live="$prof/$rel"
       [ -f "$src" ] || continue
       [ -f "$live" ] || { echo "## $rel: live missing"; rc=1; continue; }
-      if ! diff -u "$src" <(apply "$xf" "$live"); then rc=1; fi
+      # $src is decrypted to its already-filtered plaintext; apply() runs only on
+      # the live side. Do NOT re-filter the snapshot (it was apply()-ed at capture).
+      if ! diff -u <(decrypt "$src") <(apply "$xf" "$live"); then rc=1; fi
     done
-    [ "$rc" = 0 ] && echo "(in sync)"
+    if [ "$rc" = 0 ]; then echo "(in sync)"; fi
+    exit "$rc"                  # explicit (hardens the old implicit exit-code footgun)
     ;;
   *)
     echo "usage: helium-config {capture|restore|diff}" >&2
-    echo "  capture  live -> repo snapshot (config/helium/...)" >&2
-    echo "  restore  repo snapshot -> live (atomic, 0600; quit Helium first)" >&2
-    echo "  diff     show snapshot vs filtered live" >&2
+    echo "  capture  live -> repo snapshot (encrypted config/helium/*.age)" >&2
+    echo "  restore  repo snapshot -> live (decrypt, atomic, 0600; quit Helium first)" >&2
+    echo "  diff     show snapshot (decrypted) vs filtered live" >&2
     exit 2
     ;;
 esac
