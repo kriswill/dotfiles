@@ -22,8 +22,9 @@ snap="$repo/config/helium"
 # this, so `capture` works without unlocking 1Password.
 recipient="${HELIUM_AGE_RECIPIENT:-age1gduheq5k8trpxduq56qt3yy6g0mveshx4h06nshccejvv6yxp4vq77m3qf}"
 # Decryption identity reference in 1Password (pulled via `op read` into memory).
-# Override with HELIUM_AGE_OP_REF; empty disables the op route.
-age_op_ref="${HELIUM_AGE_OP_REF:-op://Private/nebula sops-age key/vc55ix7uexvletq4awkmh26mg4}"
+# Override with HELIUM_AGE_OP_REF; empty disables the op route (no-colon ${VAR-…}
+# so an explicit empty value really disables it instead of falling back).
+age_op_ref="${HELIUM_AGE_OP_REF-op://Private/nebula sops-age key/vc55ix7uexvletq4awkmh26mg4}"
 
 # Snapshot path for an allowlist relpath — always the encrypted (.age) form.
 enc_path() { printf '%s/%s.age\n' "$snap" "$1"; }
@@ -96,7 +97,7 @@ case "${1:-}" in
     if pgrep -x helium >/dev/null 2>&1; then
       echo "note: Helium is running — Cookies/Login Data (SQLite) may capture mid-write; quit it for a consistent snapshot." >&2
     fi
-    present=0; wrote=0
+    present=0; wrote=0; skipped=0
     for entry in "${files[@]}"; do
       rel="${entry%|*}"; xf="${entry#*|}"
       src="$prof/$rel"; dst="$(enc_path "$rel")"
@@ -110,12 +111,16 @@ case "${1:-}" in
       fi
       # compare-skip: age's fresh nonce makes ciphertext nondeterministic, so only
       # re-encrypt when the decrypted plaintext actually changed (keeps git stable).
+      # If we can't decrypt the existing snapshot to compare (e.g. 1Password locked),
+      # DON'T re-encrypt — a fresh nonce over identical content would churn git on
+      # every unattended run. Leave it untouched and tell the user to unlock + re-run.
       if [ -f "$dst" ]; then
         old_plain="$(mktemp "${TMPDIR:-/tmp}/helium-old.XXXXXX")"; tmpfiles+=("$old_plain")
         if decrypt "$dst" > "$old_plain" 2>/dev/null; then
           if cmp -s "$new_plain" "$old_plain"; then echo "unchanged: $rel" >&2; continue; fi
         else
-          echo "warn: cannot decrypt existing $rel.age — re-encrypting" >&2
+          echo "warn: cannot decrypt existing $rel.age to compare — left as-is (unlock 1Password to update)" >&2
+          skipped=$((skipped + 1)); continue
         fi
       fi
       enc_tmp="$dst.tmp.$$"
@@ -129,8 +134,11 @@ case "${1:-}" in
     done
     if [ "$present" = 0 ]; then
       echo "nothing captured (no allowlisted files present)" >&2
-    elif [ "$wrote" = 0 ]; then
+    elif [ "$wrote" = 0 ] && [ "$skipped" = 0 ]; then
       echo "all $present file(s) already in sync — nothing to commit" >&2
+    fi
+    if [ "$skipped" != 0 ]; then
+      echo "note: $skipped file(s) left unchanged (couldn't decrypt to compare) — unlock 1Password and re-run to update them" >&2
     fi
     echo "review: git -C $repo diff -- config/helium   # armored .age ciphertext"
     ;;
@@ -163,14 +171,22 @@ case "${1:-}" in
     ;;
   diff)
     rc=0
+    dec="$(mktemp "${TMPDIR:-/tmp}/helium-diff.XXXXXX")"
+    trap 'rm -f "$dec"' EXIT
     for entry in "${files[@]}"; do
       rel="${entry%|*}"; xf="${entry#*|}"
       src="$(enc_path "$rel")"; live="$prof/$rel"
       [ -f "$src" ] || continue
       [ -f "$live" ] || { echo "## $rel: live missing"; rc=1; continue; }
-      # $src is decrypted to its already-filtered plaintext; apply() runs only on
-      # the live side. Do NOT re-filter the snapshot (it was apply()-ed at capture).
-      if ! diff -u <(decrypt "$src") <(apply "$xf" "$live"); then rc=1; fi
+      # Decrypt to a real file first so a decrypt failure is detectable — inside a
+      # <(…) process substitution age's exit status is lost and diff would report
+      # the whole live file as differing, masking "couldn't decrypt" as "out of sync".
+      if ! decrypt "$src" > "$dec" 2>/dev/null; then
+        echo "## $rel: cannot decrypt snapshot — unlock 1Password (or set HELIUM_AGE_*)" >&2; rc=1; continue
+      fi
+      # $dec is the already-filtered plaintext; apply() runs only on the live side.
+      # Do NOT re-filter the snapshot (it was apply()-ed at capture).
+      if ! diff -u "$dec" <(apply "$xf" "$live"); then rc=1; fi
     done
     if [ "$rc" = 0 ]; then echo "(in sync)"; fi
     exit "$rc"                  # explicit (hardens the old implicit exit-code footgun)
