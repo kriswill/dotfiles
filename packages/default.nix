@@ -11,6 +11,9 @@
   # the flake input (not a flake itself); built via rustPlatform here.
   tomato = pkgs.callPackage ./tomato.nix { tomato-src = inputs.tomato; };
   flatpak-user = pkgs.callPackage ./flatpak-user.nix { };
+  # pass-xdg — drop-in `pass` that defaults PASSWORD_STORE_DIR to
+  # $XDG_DATA_HOME/password-store (~/.local/share/password-store).
+  pass-xdg = pkgs.callPackage ./pass-xdg.nix { };
   # noctalia-config — snapshot/restore Noctalia's settings.toml into the dotfiles
   # repo (config/noctalia/settings.toml) without symlinking the live file, which
   # noctalia's atomic-rename saves would break. See docs/noctalia.md.

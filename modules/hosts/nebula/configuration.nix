@@ -22,30 +22,11 @@
       snowglobe-lib.profiles.nix-tools.enable = true;
       snowglobe-lib.profiles.harden.enable = true;
 
-      # The gaming profile enables programs.gamescope, but nixpkgs builds gamescope
-      # with the FROG Vulkan WSI layer OFF by default (enableWsi ? false). Without
-      # that layer a Vulkan/DXVK client inside `gamescope --hdr-enabled` can't signal
-      # HDR, so HDR never engages (and SDR content gets mapped into the HDR container,
-      # causing the color shifts seen on the OLED). Turning this on builds the layer
-      # and drops VkLayer_FROG_gamescope_wsi.{x86_64,i686}.json onto the system Vulkan
-      # implicit-layer path, where Steam's pressure-vessel imports it. See
-      # docs/hdr-hyprland-june-2026.md. NOTE: driver 595.45.04 is just below 595.58.03
-      # (native HDR-WSI on NVIDIA); the layer is required regardless, but if HDR still
-      # comes out washed/SDR, bumping the NVIDIA driver is the next lever.
-      programs.gamescope.enableWsi = true;
-
-      # snowglobe defaults the NVIDIA driver to nvidiaPackages.beta (595.45.04 — older
-      # than production and PRE native HDR-WSI). Native HDR-WSI on NVIDIA landed in
-      # 595.58.03, so override to the production branch (595.80) to get HDR working for
-      # gamescope/Proton. Chosen over `latest` (610.43.02) deliberately: 610 is a
-      # new-feature branch with confirmed RTX 5080 regressions (Wayland explicit-sync
-      # memory leak; DRM color-pipeline HDR fails on Blackwell over DP). Keep
-      # hardware.nvidia.open = true — REQUIRED for Blackwell (no proprietary module).
-      # See docs/hdr-hyprland-june-2026.md.
       hardware.nvidia.package = config.boot.kernelPackages.nvidiaPackages.production;
 
       services = {
         displayManager.defaultSession = "hyprland-uwsm";
+        polkit-gnome.enable = false;
       };
       # Don't trust cache server
       substituters."nix-store.earthgman.dev".enable = false;
@@ -102,21 +83,11 @@
       programs.helium.enable = true; # Helium browser (upstream module)
       programs.firefox.enable = false;
       programs.chromium.enable = false;
-      # snowglobe's desktop module enables batsignal (a low-battery notifier for
-      # laptops) as a user service. nebula is a desktop with no battery, so the
-      # service just exits 1 on every login — turn it off.
       programs.batsignal.enable = false;
+      programs.gamescope.enableWsi = true;
 
-      # snowglobe's desktop module defaults the polkit auth agent to polkit-gnome
-      # (services.polkit-gnome.enable = setDefault true in desktop.nix), regardless
-      # of compositor. Under Hyprland the native choice is hyprpolkitagent — the
-      # Hyprland project's own Qt/QML agent, themed to match the session and the one
-      # snowglobe's own `welcome` utility recommends. Override the soft default off
-      # and run hyprpolkitagent instead. systemd.packages installs the shipped user
-      # unit (PartOf/WantedBy graphical-session.target, ConditionEnvironment=
-      # WAYLAND_DISPLAY) but does NOT process its [Install] section, so the wantedBy
-      # is set explicitly to actually start it with the graphical session (uwsm).
-      services.polkit-gnome.enable = false;
+      programs.gnupg.agent.enable = true;
+
       systemd.packages = [ pkgs.hyprpolkitagent ];
       systemd.user.services.hyprpolkitagent.wantedBy = [ "graphical-session.target" ];
 
