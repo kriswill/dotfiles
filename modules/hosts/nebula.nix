@@ -26,7 +26,7 @@
       imports = builtins.attrValues config.flake.modules.nixos;
 
       # Previously applied via the `nixosModules.default` import-tree wrapper;
-      # re-applied here so helium/wowup/hyprland resolve through our overlays.
+      # re-applied here so wowup/hyprland resolve through our overlays.
       nixpkgs.overlays = builtins.attrValues config.flake.overlays;
 
       # mkNixosHost only sets `sops.defaultSopsFile` when given a `configDir`,

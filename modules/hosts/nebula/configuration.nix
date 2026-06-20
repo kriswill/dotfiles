@@ -93,13 +93,13 @@
         pkgs.difftastic # structural diff tool for `git difftool` / lazygit dir-diff
         pkgs.fd # fast file finder
         pkgs.gh # GitHub CLI
-        pkgs.helium
         pkgs.kdePackages.breeze-icons
         pkgs.rose-pine-hyprcursor # native hyprcursor theme (BreezeX shape, Rose Pine palette); selected via HYPRCURSOR_THEME in hyprland.lua
         pkgs.swaybg # paints the niri desktop wallpaper (spawned in niri config)
         pkgs.wowup # WowUp-CF (WoW addon manager); WoW path wired in packages/default.nix
       ];
 
+      programs.helium.enable = true; # Helium browser (upstream module)
       programs.firefox.enable = false;
       programs.chromium.enable = false;
       # snowglobe's desktop module enables batsignal (a low-battery notifier for

@@ -2,7 +2,6 @@
 { pkgs, inputs, ... }:
 {
   # my-package = pkgs.callPackage ./my-package.nix { };
-  helium = pkgs.callPackage ./helium.nix { };
   dots-adopt = pkgs.callPackage ./dots-adopt.nix { };
   # cbissue — open Codeberg (Forgejo) issues from the CLI; token via 1Password.
   cbissue = pkgs.callPackage ./cbissue.nix { };
