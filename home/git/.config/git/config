@@ -67,3 +67,7 @@
 [credential "https://gist.github.com"]
 	helper =
 	helper = !gh auth git-credential
+[credential "https://codeberg.org"]
+	username = kriswill
+	helper = 
+	helper = "!f() { test \"$1\" = get && printf \"password=%s\\n\" \"$(op read \"op://Private/3htxxhinni5u5mzz5oguowunii/zfptfg4lpdernsrst4kgaxicge\")\"; }; f"
