@@ -729,11 +729,11 @@
         "sops-nix": "sops-nix"
       },
       "locked": {
-        "lastModified": 1781916971,
-        "narHash": "sha256-QOYVZKoB71owTfpNPhjK2AmUKPQ2pKnNmw3hHix2PTg=",
+        "lastModified": 1781929348,
+        "narHash": "sha256-PsT6hGPC6y8mwY4OXG+zpY1Ejjn0u+bajr8NWdjTY2g=",
         "ref": "unstable",
-        "rev": "e92eb4b1f51c7698409eede27a9e169e8923208a",
-        "revCount": 1650,
+        "rev": "38e3a18cb4889c35256b95785c475891b13fa897",
+        "revCount": 1657,
         "type": "git",
         "url": "https://codeberg.org/earthgman/snowglobe-lib"
       },
