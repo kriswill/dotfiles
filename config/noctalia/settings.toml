@@ -1,0 +1,181 @@
+[bar]
+order = [ "bar" ]
+
+    [bar.bar]
+    background_opacity = 0.60999998636543751
+    border = "primary"
+    center = [ "media" ]
+    enabled = true
+    end = [ "tray", "notifications", "clipboard", "network", "volume", "control-center", "group:g1" ]
+    margin_edge = 0
+    margin_ends = 0
+    padding = 26
+    position = "bottom"
+    radius = 15
+    shadow = false
+    widget_spacing = 23
+
+        [[bar.bar.capsule_group]]
+        fill = "on_tertiary"
+        id = "g1"
+        members = [ "clock", "session" ]
+        opacity = 1.0
+        padding = 6.0
+
+[brightness]
+enable_ddcutil = true
+
+[desktop_widgets]
+enabled = false
+schema_version = 2
+widget_order = [ "desktop-widget-0000000000000001", "desktop-widget-0000000000000002" ]
+
+    [desktop_widgets.grid]
+    cell_size = 8
+    major_interval = 4
+    visible = true
+
+    [desktop_widgets.widget.desktop-widget-0000000000000001]
+    box_height = 0.0
+    box_width = 0.0
+    cx = 1682.0
+    cy = 1042.0
+    output = "DP-3"
+    rotation = 0.0
+    type = "fancy_audio_visualizer"
+
+        [desktop_widgets.widget.desktop-widget-0000000000000001.settings]
+        background = false
+
+    [desktop_widgets.widget.desktop-widget-0000000000000002]
+    box_height = 72.0
+    box_width = 232.0
+    cx = 2760.0
+    cy = 1412.0
+    output = "DP-3"
+    rotation = 0.0
+    type = "audio_visualizer"
+
+        [desktop_widgets.widget.desktop-widget-0000000000000002.settings]
+        aspect_ratio = 2.5
+        bands = 32
+        show_when_idle = true
+
+[dock]
+active_monitor_only = true
+background_opacity = 0.30999999307096004
+cross_axis_padding = 11
+launcher_icon = "grip-vertical"
+launcher_position = "start"
+main_axis_padding = 20
+radius = 15
+reserve_space = false
+shadow = false
+show_dots = true
+
+[location]
+address = "San Mateo, CA 94401"
+
+[lockscreen]
+allow_empty_password = true
+
+[lockscreen_widgets]
+enabled = false
+schema_version = 2
+widget_order = [ "lockscreen-login-box@DP-3", "lockscreen-login-box@DP-1" ]
+
+    [lockscreen_widgets.grid]
+    cell_size = 16
+    major_interval = 4
+    visible = true
+
+    [lockscreen_widgets.widget."lockscreen-login-box@DP-1"]
+    box_height = 0.0
+    box_width = 0.0
+    cx = 720.0
+    cy = 3317.0
+    output = "DP-1"
+    rotation = 0.0
+    type = "login_box"
+
+        [lockscreen_widgets.widget."lockscreen-login-box@DP-1".settings]
+        background_color = "surface_variant"
+        background_opacity = 0.88
+        background_radius = 12.0
+        input_opacity = 1.0
+        input_radius = 6.0
+        show_login_button = true
+
+    [lockscreen_widgets.widget."lockscreen-login-box@DP-3"]
+    box_height = 0.0
+    box_width = 0.0
+    cx = 1720.0
+    cy = 1317.0
+    output = "DP-3"
+    rotation = 0.0
+    type = "login_box"
+
+        [lockscreen_widgets.widget."lockscreen-login-box@DP-3".settings]
+        background_color = "surface_variant"
+        background_opacity = 0.88
+        background_radius = 12.0
+        input_opacity = 1.0
+        input_radius = 6.0
+        show_login_button = true
+
+[notification]
+position = "bottom_right"
+
+[shell]
+app_icon_colorize = true
+corner_radius_scale = 0.5000000074505806
+screen_time_enabled = true
+settings_show_advanced = true
+ui_scale = 1.4000000134110451
+
+    [shell.animation]
+    speed = 1.8000000268220901
+
+    [shell.screen_corners]
+    enabled = true
+
+    [shell.screenshot]
+    directory = "/home/k/Pictures/Screenshots"
+
+[theme]
+builtin = "Rosé Pine"
+community_palette = "Oxocarbon"
+mode = "dark"
+source = "wallpaper"
+wallpaper_scheme = "m3-rainbow"
+
+    [theme.templates]
+    builtin_ids = [ "hyprland" ]
+
+[wallpaper.default]
+path = "/home/k/Pictures/Wallpapers/nebula-1.jpg"
+
+[wallpaper.last]
+path = "/home/k/Pictures/Wallpapers/nebula-1.jpg"
+
+[wallpaper.monitors.DP-1]
+path = "/home/k/Pictures/Wallpapers/nebula-1.jpg"
+
+[wallpaper.monitors.DP-3]
+path = "/home/k/Pictures/Wallpapers/nebula-1.jpg"
+
+[weather]
+unit = "imperial"
+
+[widget.clock]
+capsule = true
+capsule_opacity = 0.0
+scale = 1.3
+
+[widget.cpu]
+capsule = true
+capsule_opacity = 0.98999999999999999
+capsule_padding = 10.0
+capsule_radius = 8
+display = "graph"
+scale = 1.3

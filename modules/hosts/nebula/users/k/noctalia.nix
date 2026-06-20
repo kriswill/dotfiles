@@ -66,6 +66,16 @@
         # config-reload`. Built from the `tomato` flake input; see
         # packages/tomato.nix.
         pkgs.tomato
+
+        # noctalia-config — snapshot/restore settings.toml into the dotfiles repo
+        # (config/noctalia/settings.toml) without symlinking the live file.
+        # noctalia rewrites settings.toml via atomic rename, which breaks a stow
+        # symlink on the first GUI save; and a dir-symlink would put the whole
+        # state dir (clipboard secrets, nested plugin .git) in the repo and let
+        # routine git ops clobber the live config. So we sync explicitly:
+        # `noctalia-config capture` after GUI edits, `restore` on a fresh machine.
+        # See packages/noctalia-config.nix and docs/noctalia.md.
+        pkgs.noctalia-config
       ];
     };
 }

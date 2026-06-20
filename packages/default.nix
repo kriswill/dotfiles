@@ -11,6 +11,10 @@
   # the flake input (not a flake itself); built via rustPlatform here.
   tomato = pkgs.callPackage ./tomato.nix { tomato-src = inputs.tomato; };
   flatpak-user = pkgs.callPackage ./flatpak-user.nix { };
+  # noctalia-config — snapshot/restore Noctalia's settings.toml into the dotfiles
+  # repo (config/noctalia/settings.toml) without symlinking the live file, which
+  # noctalia's atomic-rename saves would break. See docs/noctalia.md.
+  noctalia-config = pkgs.callPackage ./noctalia-config.nix { };
   wowup = pkgs.callPackage ./wowup.nix {
     # WoW lives inside the Steam/Proton prefix shared with Battle.net (compatdata
     # 3082075026). Point this at the dir containing `_retail_`; change it here if

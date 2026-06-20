@@ -192,6 +192,37 @@ config-home that participates in the alphabetical merge.
 > `notification_history.json`, `recently_used.json`, `screen_time.json`,
 > `usage_counts.json`, `.setup-complete`.
 
+### Tracking `settings.toml` in the dotfiles repo
+
+The live file `~/.local/state/noctalia/settings.toml` is **app-owned and stays a
+real file — never a stow symlink.** Noctalia saves it by atomic rename (same-dir
+temp + `mv -f`), which replaces a per-file symlink with a real file on the first
+GUI save; a *directory* symlink avoids that but then the repo's tracked file
+*is* the live file, so routine `git reset --hard` / `git checkout` /
+`git clean -xfd` silently revert, corrupt, or delete the running config, and the
+whole state dir (clipboard secrets, nested plugin `.git`) ends up in the repo. A
+bake-off across five adversarial lenses scored the directory-symlink approach at
+2 critical + ~6 high data-loss vectors vs. one narrow, opt-in case for the
+snapshot model below (2026-06-19; see Learned behaviours).
+
+So we keep live and repo physically separate and sync explicitly with
+**`noctalia-config`** (`packages/noctalia-config.nix`, on `k`'s PATH):
+
+| Command | Effect |
+|---|---|
+| `noctalia-config capture` | copy live `settings.toml` → repo snapshot `config/noctalia/settings.toml`. Run after GUI edits you want version-controlled. |
+| `noctalia-config restore` | atomic-swap the snapshot back into the live dir (same-dir temp + `mv -f`), re-`chmod 600`, then `noctalia msg config-reload`. For a fresh machine. **Refuses while noctalia runs** (a racing GUI save can be lost) unless `FORCE=1`. |
+| `noctalia-config diff` | unified diff of snapshot vs live. |
+
+- The snapshot lives at repo `config/noctalia/settings.toml` — **outside** both
+  `home/` (so the stow activation never symlinks it back onto the live file) and
+  `modules/` (so import-tree ignores it).
+- Only `settings.toml` is tracked; the rest of the state dir (clipboard,
+  plugins, json) is **not** in the repo.
+- `git` records only the exec bit, so the snapshot is `0644` in the tree;
+  `restore` re-applies `0600`. **A live GUI edit isn't version-controlled until
+  you run `capture`.**
+
 **The canonical, fully-commented config with all defaults ships as
 `example.toml` in the repo** (≈440 lines) — the best reference for exact keys and
 defaults. The docs site sometimes lags it.
@@ -610,8 +641,27 @@ the hardware keys to drive DDC too.
   packages/tomato.nix — Rust `toml_edit`, comment/format-preserving), but because
   `tomato set` writes IN PLACE, the toggle script copies settings.toml to a
   same-dir temp, runs `tomato` on the copy, then `mv -f`s it in. **Always keep a
-  backup before touching settings.toml** (it's not in the dotfiles repo; it lives
-  in `~/.local/state/noctalia/`).
+  backup before touching settings.toml.** The live file is app-owned at
+  `~/.local/state/noctalia/settings.toml` (a real file, never a stow symlink); a
+  *snapshot* is version-controlled at repo `config/noctalia/settings.toml` via
+  `noctalia-config` — see "Tracking `settings.toml` in the dotfiles repo".
+- **Track `settings.toml` by snapshot, not symlink — chosen by bake-off
+  (2026-06-19).** Because noctalia saves via atomic rename, a per-file stow
+  symlink is replaced by a real file on the first GUI save (tracking silently
+  goes stale). The obvious fix — a *directory* symlink so the rename lands inside
+  the repo — was tested against a faithful sandbox (real data shapes, the real
+  `stow --no-folding --restow` automation) plus five adversarial verifier lenses
+  (crash/concurrency over 350+ race iterations, routine git ops, the stow
+  automation, perms/secrets, fresh-machine recovery). The dir-symlink approach
+  failed hard: the repo file *is* the live file, so `git reset --hard` /
+  `git checkout` / `git restore` silently revert the running config (noctalia
+  hot-reloads the revert), `git clean -xfd` permanently deletes live clipboard +
+  plugins, the 0600 file's secrets and nested plugin `.git` repos sit in the
+  tree behind a fragile whitelist `.gitignore`, and `stow --no-folding` conflicts
+  on the package every rebuild. Score: 2 critical + ~6 high data-loss vectors vs.
+  the snapshot model's single narrow, opt-in lost-update (a `restore` racing a
+  live save). Hence `noctalia-config` (capture/restore/diff) keeping live and
+  repo physically separate. Don't "improve" this back into a symlink.
 - **`[shell.screen_corners]` is GLOBAL, no per-monitor option (2026-06-19).** It
   paints a rounded-corner black overlay on every output's screen edges (keys:
   `enabled`, and a corner-radius `size`). There's **no IPC command** to toggle it
