@@ -18,6 +18,11 @@
   # repo (config/noctalia/settings.toml) without symlinking the live file, which
   # noctalia's atomic-rename saves would break. See docs/noctalia.md.
   noctalia-config = pkgs.callPackage ./noctalia-config.nix { };
+  # helium-config — snapshot/restore Helium's user settings (bookmarks,
+  # preferences) into the dotfiles repo (config/helium/...) without symlinking
+  # the live profile, which Helium's atomic-rename saves would break. Allowlist
+  # only; secrets/state never enter the repo. See packages/helium-config.nix.
+  helium-config = pkgs.callPackage ./helium-config.nix { };
   wowup = pkgs.callPackage ./wowup.nix {
     # WoW lives inside the Steam/Proton prefix shared with Battle.net (compatdata
     # 3082075026). Point this at the dir containing `_retail_`; change it here if
