@@ -12,6 +12,7 @@
       time.timeZone = "America/Los_Angeles";
       snowglobe-lib.desktop.niri.enable = true;
       snowglobe-lib.desktop.hyprland.enable = true;
+      snowglobe-lib.libvirtd-qemu.enable = true;
 
       # custom profiles
       snowglobe-lib.profiles.hardware-tools.enable = true;
