@@ -128,6 +128,7 @@ position = "bottom_right"
 
 [shell]
 app_icon_colorize = true
+avatar_path = "/home/k/Downloads/ChatGPT Image Jun 20, 2026, 04_26_05 PM.png"
 corner_radius_scale = 0.5000000074505806
 screen_time_enabled = true
 settings_show_advanced = true
@@ -137,14 +138,14 @@ ui_scale = 1.4000000134110451
     speed = 1.8000000268220901
 
     [shell.screen_corners]
-    enabled = true
+    enabled = false
 
     [shell.screenshot]
     directory = "/home/k/Pictures/Screenshots"
 
 [theme]
 builtin = "Rosé Pine"
-community_palette = "Oxocarbon"
+community_palette = "Murata"
 mode = "dark"
 source = "wallpaper"
 wallpaper_scheme = "m3-rainbow"
@@ -152,17 +153,30 @@ wallpaper_scheme = "m3-rainbow"
     [theme.templates]
     builtin_ids = [ "hyprland" ]
 
-[wallpaper.default]
-path = "/home/k/Pictures/Wallpapers/nebula-1.jpg"
+[wallpaper]
+per_monitor_directories = true
+transition_on_startup = true
 
-[wallpaper.last]
-path = "/home/k/Pictures/Wallpapers/nebula-1.jpg"
+    [wallpaper.automation]
+    enabled = true
 
-[wallpaper.monitors.DP-1]
-path = "/home/k/Pictures/Wallpapers/nebula-1.jpg"
+    [wallpaper.default]
+    path = "/home/k/Pictures/Wallpapers/vertical-wide/nebula-photo-vertical-1440x3440.png"
 
-[wallpaper.monitors.DP-3]
-path = "/home/k/Pictures/Wallpapers/nebula-1.jpg"
+    [wallpaper.last]
+    path = "/home/k/Pictures/Wallpapers/horizontal-wide/nebula-1.jpg"
+
+    [wallpaper.monitor.DP-1]
+    directory = "/home/k/Pictures/Wallpapers/vertical-wide"
+
+    [wallpaper.monitor.DP-3]
+    directory = "/home/k/Pictures/Wallpapers/horizontal-wide"
+
+    [wallpaper.monitors.DP-1]
+    path = "/home/k/Pictures/Wallpapers/vertical-wide/nebula-photo-vertical-1440x3440.png"
+
+    [wallpaper.monitors.DP-3]
+    path = "/home/k/Pictures/Wallpapers/horizontal-wide/nebula-1.jpg"
 
 [weather]
 unit = "imperial"

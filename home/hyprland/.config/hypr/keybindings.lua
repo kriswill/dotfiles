@@ -26,6 +26,21 @@ hl.bind(mainMod .. " + D", hl.dsp.exec_cmd(menu))
 hl.bind(mainMod .. " + space", hl.dsp.exec_cmd("noctalia msg panel-toggle launcher"))
 hl.bind(mainMod .. " + N", hl.dsp.exec_cmd("noctalia msg panel-toggle control-center"))
 hl.bind(mainMod .. " + L", hl.dsp.exec_cmd("noctalia msg session lock"))
+
+-- SUPER+SHIFT+W: re-apply each monitor's wallpaper from the version-controlled
+-- snapshot (config/noctalia/settings.toml). Fixes the recurring case where a
+-- monitor drops its DisplayPort signal (the OLED DP-3 @ high refresh — see
+-- docs/hdr-hyprland-june-2026.md), Noctalia re-detects it and falls back to the
+-- global [wallpaper.default] (a PORTRAIT image), leaving the landscape monitor
+-- with a stretched/wrong wallpaper. Reads the intended per-monitor paths with
+-- `tomato get` and pushes them back via `noctalia msg wallpaper-set` (persisted).
+-- Update the target by running `noctalia-config capture` after fixing wallpapers.
+hl.bind(
+  mainMod .. " + SHIFT + W",
+  hl.dsp.exec_cmd(
+    [==[s="$HOME/src/dotfiles/config/noctalia/settings.toml"; command -v tomato >/dev/null 2>&1 || exit 0; command -v noctalia >/dev/null 2>&1 || exit 0; [ -f "$s" ] || exit 0; for c in $(grep -oE 'wallpaper\.monitors\.[A-Za-z0-9-]+' "$s" | sed 's/.*\.//' | sort -u); do p=$(tomato get "wallpaper.monitors.$c.path" "$s"); [ -n "$p" ] && noctalia msg wallpaper-set "$c" "$p"; done]==]
+  )
+)
 hl.bind(mainMod .. " + P", hl.dsp.window.pseudo())
 hl.bind(mainMod .. " + J", hl.dsp.layout("togglesplit")) -- dwindle only
 hl.bind(mainMod .. " + F", hl.dsp.window.fullscreen()) -- real fullscreen (mode 0)
