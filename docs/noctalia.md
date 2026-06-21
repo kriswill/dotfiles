@@ -623,6 +623,15 @@ the hardware keys to drive DDC too.
 
 ## Learned behaviours & workarounds
 
+- **Time/date format strings are Rust `chrono` strftime, NOT Qt tokens
+  (2026-06-20).** `[widget.clock].format` (and `[shell].time_format`/`date_format`)
+  are passed straight to chrono — proven by `{:%H:%M}` literals in the binary.
+  An unrecognized string is printed **verbatim**, so a wrong convention fails
+  silently: setting `format = "h:mm AP"` (Qt) made the bar clock literally read
+  `h:mm AP`. Use strftime: 12-hour AM/PM = `"%-I:%M %p"` (`%-I` = hour 1–12 no
+  leading zero, `%I` = zero-padded, `%p` = `AM/PM`, `%P` = `am/pm`). Edit it the
+  same atomic way as everything else (`tomato set widget.clock.format '"%-I:%M %p"'`
+  on a same-dir copy → `mv -f` → `noctalia msg config-reload`).
 - **Editing `settings.toml` IN PLACE while Noctalia runs corrupts it — write
   ATOMICALLY (2026-06-19, cost ~an hour).** Symptom: after an in-place edit
   (`sed -i`, or a tool that opens/truncates/rewrites the existing inode) followed
