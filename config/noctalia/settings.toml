@@ -164,7 +164,7 @@ transition_on_startup = true
     path = "/home/k/Pictures/Wallpapers/vertical-wide/nebula-photo-vertical-1440x3440.png"
 
     [wallpaper.last]
-    path = "/home/k/Pictures/Wallpapers/horizontal-wide/nebula-1.jpg"
+    path = "/home/k/Pictures/Wallpapers/horizontal-wide/ChatGPT Image Jun 20, 2026, 06_44_50 PM (2).png"
 
     [wallpaper.monitor.DP-1]
     directory = "/home/k/Pictures/Wallpapers/vertical-wide"
@@ -173,10 +173,10 @@ transition_on_startup = true
     directory = "/home/k/Pictures/Wallpapers/horizontal-wide"
 
     [wallpaper.monitors.DP-1]
-    path = "/home/k/Pictures/Wallpapers/vertical-wide/nebula-photo-vertical-1440x3440.png"
+    path = "/home/k/Pictures/Wallpapers/vertical-wide/ChatGPT Image Jun 20, 2026, 06_44_50 PM (1).png"
 
     [wallpaper.monitors.DP-3]
-    path = "/home/k/Pictures/Wallpapers/horizontal-wide/nebula-1.jpg"
+    path = "/home/k/Pictures/Wallpapers/horizontal-wide/ChatGPT Image Jun 20, 2026, 06_44_50 PM (2).png"
 
 [weather]
 unit = "imperial"

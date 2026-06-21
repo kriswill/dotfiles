@@ -27,18 +27,21 @@ hl.bind(mainMod .. " + space", hl.dsp.exec_cmd("noctalia msg panel-toggle launch
 hl.bind(mainMod .. " + N", hl.dsp.exec_cmd("noctalia msg panel-toggle control-center"))
 hl.bind(mainMod .. " + L", hl.dsp.exec_cmd("noctalia msg session lock"))
 
--- SUPER+SHIFT+W: re-apply each monitor's wallpaper from the version-controlled
--- snapshot (config/noctalia/settings.toml). Fixes the recurring case where a
--- monitor drops its DisplayPort signal (the OLED DP-3 @ high refresh — see
--- docs/hdr-hyprland-june-2026.md), Noctalia re-detects it and falls back to the
--- global [wallpaper.default] (a PORTRAIT image), leaving the landscape monitor
--- with a stretched/wrong wallpaper. Reads the intended per-monitor paths with
--- `tomato get` and pushes them back via `noctalia msg wallpaper-set` (persisted).
--- Update the target by running `noctalia-config capture` after fixing wallpapers.
+-- SUPER+SHIFT+W: re-apply each monitor's wallpaper from its own configured
+-- directory. Fixes the recurring case where a monitor drops its DisplayPort
+-- signal (the OLED DP-3 @ high refresh — see docs/hdr-hyprland-june-2026.md),
+-- Noctalia re-detects it and falls back to the global [wallpaper.default] (a
+-- PORTRAIT image), leaving the landscape monitor with a stretched/wrong paper.
+--
+-- Directory-based (not filename-based) so it keeps working when you swap the
+-- image files: each monitor has [wallpaper.monitor.<conn>].directory pointing at
+-- the right-orientation folder (vertical-wide / horizontal-wide). For each such
+-- monitor, set it to the first image in that folder (deterministic; one file per
+-- folder is the intended layout). Reads connectors + dirs from the live config.
 hl.bind(
   mainMod .. " + SHIFT + W",
   hl.dsp.exec_cmd(
-    [==[s="$HOME/src/dotfiles/config/noctalia/settings.toml"; command -v tomato >/dev/null 2>&1 || exit 0; command -v noctalia >/dev/null 2>&1 || exit 0; [ -f "$s" ] || exit 0; for c in $(grep -oE 'wallpaper\.monitors\.[A-Za-z0-9-]+' "$s" | sed 's/.*\.//' | sort -u); do p=$(tomato get "wallpaper.monitors.$c.path" "$s"); [ -n "$p" ] && noctalia msg wallpaper-set "$c" "$p"; done]==]
+    [==[s="$HOME/.local/state/noctalia/settings.toml"; command -v noctalia >/dev/null 2>&1 || exit 0; command -v tomato >/dev/null 2>&1 || exit 0; [ -f "$s" ] || exit 0; for c in $(grep -oE 'wallpaper\.monitor\.[A-Za-z0-9-]+' "$s" | sed 's/.*\.//' | sort -u); do d=$(tomato get "wallpaper.monitor.$c.directory" "$s"); [ -d "$d" ] || continue; f=$(find "$d" -maxdepth 1 -type f \( -iname '*.png' -o -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.webp' \) | sort | head -1); [ -n "$f" ] && noctalia msg wallpaper-set "$c" "$f"; done]==]
   )
 )
 hl.bind(mainMod .. " + P", hl.dsp.window.pseudo())
