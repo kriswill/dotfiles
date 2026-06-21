@@ -108,6 +108,19 @@ hl.bind(mainMod .. " + mouse_up", hl.dsp.focus({ workspace = "e-1" }))
 hl.bind(mainMod .. " + mouse:272", hl.dsp.window.drag(), { mouse = true })
 hl.bind(mainMod .. " + mouse:273", hl.dsp.window.resize(), { mouse = true })
 
+-- Screenshots (mirrors the niri layout: region / window / monitor)
+-- region + monitor go through noctalia (native screencopy, saves + notifies);
+-- window has no native verb, so grab the active window's geometry and copy it.
+hl.bind("Print", hl.dsp.exec_cmd("noctalia msg screenshot-region"))
+hl.bind(
+  "ALT + Print",
+  hl.dsp.exec_cmd(
+    [[grim -g "$(hyprctl activewindow -j | jq -r '"\(.at[0]),\(.at[1]) \(.size[0])x\(.size[1])"')" - | wl-copy]]
+  )
+)
+hl.bind("CTRL + Print", hl.dsp.exec_cmd("noctalia msg screenshot-fullscreen"))
+hl.bind("CTRL + SHIFT + Print", hl.dsp.exec_cmd("noctalia msg screenshot-fullscreen pick"))
+
 -- Laptop multimedia keys for volume and LCD brightness
 hl.bind(
   "XF86AudioRaiseVolume",
