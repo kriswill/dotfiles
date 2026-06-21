@@ -12,7 +12,9 @@ hl.config({
 
     col = {
       active_border = { colors = { "rgba(33ccffee)", "rgba(00ff99ee)" }, angle = 45 },
-      inactive_border = "rgba(595959aa)",
+      -- NOTE: noctalia.lua loads after this and overrides inactive_border; the real
+      -- value lives in noctalia-overrides.lua (tuned to vanish against ghostty's bg).
+      inactive_border = "rgba(0e0e0eff)",
     },
 
     -- Set to true to enable resizing windows by clicking and dragging on borders and gaps

@@ -44,3 +44,6 @@ local enableNoctalia = true
 if enableNoctalia and package.searchpath("noctalia", package.path) then
   require("noctalia")
 end
+
+-- Our tweaks on top of noctalia's generated theme — must load LAST so they win.
+require("noctalia-overrides")
