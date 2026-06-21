@@ -1,6 +1,11 @@
 {
   "$schema": "https://github.com/fastfetch-cli/fastfetch/raw/dev/doc/json_schema.json",
   "logo": {
+    // kitty-icat (shells out to `kitten icat`) is the only protocol that
+    // renders in ghostty+tmux: native "kitty" sends a malformed payload here,
+    // "kitty-direct"/"sixel" silently fall back to ASCII inside tmux. It also
+    // requires tmux's TERM != "screen" (fastfetch blocks images when TERM is
+    // exactly "screen") — set via `default-terminal "tmux-256color"` in tmux.conf.
     "type": "kitty-icat",
     // Image lives in the stow tree at home/fastfetch/.config/fastfetch/Nebula.png,
     // symlinked here by dotfiles-stow.nix. Swap the file to change the logo.
