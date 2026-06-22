@@ -28,4 +28,13 @@ hl.on("hyprland.start", function()
   -- backgrounds the shell so this returns immediately; keybinds below drive it
   -- with `noctalia msg`. Replace any stale instance left by a session restart.
   hl.exec_cmd("pkill -x noctalia; noctalia --daemon")
+
+  -- 1Password, started minimized to tray with --silent. It HAS to be running for
+  -- the SSH agent at ~/.1password/agent.sock to exist — that agent serves git
+  -- commit signing (op-ssh-sign), ssh, and sudo (see sudo-1password.nix). When the
+  -- app is running-but-locked, those uses pop 1Password's unlock prompt on demand;
+  -- when it's NOT running the socket is a dead leftover and they fail outright with
+  -- "could not connect to socket". So keep it alive from session start. (Requires
+  -- "Use the SSH agent" + "Integrate with 1Password CLI" enabled in its settings.)
+  hl.exec_cmd("1password --silent")
 end)
