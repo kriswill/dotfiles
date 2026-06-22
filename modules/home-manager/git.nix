@@ -33,6 +33,7 @@
               "*.direnv"
               ".DS_Store"
               ".idea/"
+              ".claude/settings.local.json"
             ];
             settings = {
               user = {
