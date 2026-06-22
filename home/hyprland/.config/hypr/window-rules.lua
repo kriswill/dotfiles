@@ -85,10 +85,17 @@ hl.window_rule({
 -- (misc.vrr=2) handle smoothness. Match on TITLE, not class: WoW and the
 -- Battle.net launcher share class "steam_app_3862034770"; only the title
 -- distinguishes them, so a class rule would wrongly grab the launcher too.
+-- Workspace 9 lives on the right OLED (DP-3) and WoW always opens there.
+hl.workspace_rule({
+  workspace = "9",
+  monitor = "desc:ASUSTek COMPUTER INC PG34WCDM RCLMRS022510",
+})
+
 hl.window_rule({
   name = "wow-fullscreen",
   match = { title = "World of Warcraft" },
 
+  workspace = "9 silent", -- pinned to ws9 (right OLED via the workspace rule above)
   float = true,
   fullscreen = true,
 })
