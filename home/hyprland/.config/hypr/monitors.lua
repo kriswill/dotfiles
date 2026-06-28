@@ -4,12 +4,9 @@
 
 -- See https://wiki.hypr.land/Configuring/Basics/Monitors/
 --
--- Hyprland owns the monitor layout in this session — kanshi (the systemd user
--- service that drives displays under niri) is stopped on Hyprland start (see
--- autostart.lua) because it overrides hl.monitor via wlr-output-management. Both
--- monitors are therefore described in full here, matched by stable description
--- (DP-* connector numbers aren't stable across boots). Mirrors the kanshi `home`
--- profile, except the OLED is forced to native scale 1 (see below).
+-- Hyprland owns the monitor layout in this session. Both monitors are described
+-- in full here, matched by stable description (DP-* connector numbers aren't
+-- stable across boots). The OLED is forced to native scale 1 (see below).
 
 -- Left: ROG PG348Q, portrait (rotated 90° CCW = transform 1), NATIVE scale 1.
 -- Logical footprint when rotated: 1440 x 3440.

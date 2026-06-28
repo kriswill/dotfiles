@@ -10,8 +10,9 @@
       i18n.defaultLocale = "en_US.UTF-8";
       services.xserver.xkb.layout = "us";
       time.timeZone = "America/Los_Angeles";
-      snowglobe-lib.desktop.niri.enable = true;
-      snowglobe-lib.desktop.hyprland.enable = true;
+      # Hyprland (the host's only desktop) is configured in ./hyprland.nix,
+      # which also asserts the shared snowglobe desktop layer that niri used to
+      # pull in.
       snowglobe-lib.libvirtd-qemu.enable = true;
 
       # custom profiles
@@ -81,7 +82,6 @@
         pkgs.gimp # raster image editor
         pkgs.kdePackages.breeze-icons
         pkgs.rose-pine-hyprcursor # native hyprcursor theme (BreezeX shape, Rose Pine palette); selected via HYPRCURSOR_THEME in hyprland.lua
-        pkgs.swaybg # paints the niri desktop wallpaper (spawned in niri config)
         pkgs.wowup # WowUp-CF (WoW addon manager); WoW path wired in packages/default.nix
       ];
 
@@ -100,10 +100,6 @@
 
       programs._1password.enable = true;
       programs._1password-gui.enable = true;
-      programs.kanshi = {
-        enable = true;
-        systemd.enable = true;
-      };
 
       programs.nix-ld = {
         enable = true;

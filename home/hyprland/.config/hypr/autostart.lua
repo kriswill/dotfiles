@@ -14,12 +14,6 @@
 -- end)
 
 hl.on("hyprland.start", function()
-  -- kanshi is a systemd user service that manages displays under niri, but it
-  -- also runs under Hyprland and overrides hl.monitor via wlr-output-management.
-  -- Stop it here so the monitor config above is authoritative in this session.
-  -- (Service stays enabled, so niri still gets kanshi.)
-  hl.exec_cmd("systemctl --user stop kanshi.service")
-
   -- Desktop wallpaper is painted by the Noctalia shell (started below), so no
   -- separate wallpaper daemon (hyprpaper) runs in this session.
 

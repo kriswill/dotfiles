@@ -1,9 +1,0 @@
-profile home {
-  # Outputs matched by make/model/serial — DP connector numbers aren't stable across boots
-
-  # Left monitor: PG348Q, portrait (rotated counter-clockwise)
-  output "Ancor Communications Inc ROG PG348Q #ASNtlPMnEjHd" mode 3440x1440@59.973 transform 90 scale 1.5 position 0,0
-
-  # Right monitor: PG34WCDM OLED, landscape, vertically centered against the left
-  output "ASUSTek COMPUTER INC PG34WCDM RCLMRS022510" mode 3440x1440@239.984 scale 1.4 position 960,667
-}

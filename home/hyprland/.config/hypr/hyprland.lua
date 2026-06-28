@@ -42,7 +42,7 @@ require("window-rules")
 local enableNoctalia = true
 
 if enableNoctalia and package.searchpath("noctalia", package.path) then
-  require("noctalia")
+  require("noctalia").apply_theme()
 end
 
 -- Our tweaks on top of noctalia's generated theme — must load LAST so they win.
