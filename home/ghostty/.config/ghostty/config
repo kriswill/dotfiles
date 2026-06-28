@@ -1,7 +1,7 @@
 # vim:ft=ghostty
 
-# Let niri own window corner rounding (geometry-corner-radius + clip-to-geometry
-# in ~/.config/niri/config.kdl). This flattens ghostty's own libadwaita CSD
+# Let Hyprland own window corner rounding (decoration.rounding in
+# home/hyprland look-and-feel.lua). This flattens ghostty's own libadwaita CSD
 # corners so there's a single source of truth for the radius.
 gtk-custom-css = ./corners.css
 
@@ -15,7 +15,7 @@ window-theme = ghostty
 # confirmation is just friction.
 confirm-close-surface = false
 
-# No titlebar/decorations — tmux owns the chrome (status bar etc.) and niri
+# No titlebar/decorations — tmux owns the chrome (status bar etc.) and Hyprland
 # handles window management. Title is still reported to the compositor (see
 # tmux set-titles) so other surfaces can show what's active.
 window-decoration = none

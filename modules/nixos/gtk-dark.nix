@@ -2,7 +2,7 @@
   flake.modules.nixos.gtk-dark =
     # Force GTK apps to use Adwaita's dark variant.
     #
-    # niri has no settings daemon / running xdg-desktop-portal to broadcast a
+    # A bare wlroots/Hyprland session has no settings daemon broadcasting a
     # `color-scheme = prefer-dark` preference, so GTK apps (LibreOffice's gtk3 VCL
     # plugin included) default to light and override any in-app "Dark" theme back to
     # light. The `gtk-application-prefer-dark-theme` hint alone is ignored here

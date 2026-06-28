@@ -514,8 +514,14 @@ value differs from your file and shows `set: false`, your file isn't being read.
 ## Ecosystem (separate hypr* tools)
 
 - **hypridle** — idle daemon (`~/.config/hypr/hypridle.conf`; lock/dpms/sleep
-  timeouts). Enable as a user service.
+  timeouts). **Not installed on nebula (2026-06-27):** Noctalia handles
+  idle/lock; see *Learned behaviours*. nixpkgs' `programs.hyprlock` module
+  auto-enables `services.hypridle`, so the two arrive/leave together.
 - **hyprlock** — GPU screen locker; needs a config or it refuses to lock.
+  **Not installed on nebula (2026-06-27):** we lock via Noctalia
+  (`noctalia msg session lock`). Removed because it was force-enabled by
+  snowglobe's hyprland module and kept breaking the build; see *Learned
+  behaviours*.
 - **hyprpaper** — wallpaper daemon. **No longer used on nebula (removed
   2026-06-16):** the Noctalia shell paints the Hyprland desktop wallpaper, so
   hyprpaper (package + `hyprpaper.conf` + the `hyprland.start` launch) was
@@ -805,29 +811,40 @@ Real findings on nebula — append as you discover more; correct/remove stale on
   from `gpu-vendors = ["nvidia"]` in `modules/hosts/nebula.nix`. The 5080
   *requires* the open modules. Don't add hand-rolled NVIDIA env/modprobe in
   Hyprland or a stray nix module — fix it in the snowglobe NVIDIA path.
-- **Two compositors are enabled.** `configuration.nix` has both
-  `desktop.niri.enable` and `desktop.hyprland.enable = true`, with
-  `displayManager.defaultSession = "hyprland-uwsm"`. Both sessions are
-  selectable at login; Hyprland runs under **uwsm**.
-- **kanshi silently overrides `hl.monitor` under Hyprland (2026-06-13).** kanshi
-  is a *systemd user service* (`/etc/systemd/user/kanshi.service`, enabled —
-  NixOS-managed) that drives displays for niri. It starts on the shared
-  graphical-session, so it **also runs under Hyprland** and reapplies its
-  `~/.config/kanshi/config` (a stow package; matches monitors by make/model/serial)
-  via the **wlr-output-management** protocol — which *wins over* `hl.monitor`.
-  Symptom: `hl.monitor`/`hyprctl eval`/reload all return `ok` but the scale never
-  changes (we chased a phantom "scale won't apply" for a while). Two more traps
-  found while debugging: kanshi's fractional scales get **rounded** by wlroots
-  (config `1.5`/`1.4` → actual `1.6`/`1.33`, because they must divide the
-  resolution to integers); and in 0.55 Lua mode **`hyprctl keyword` is dead**
-  (`"keyword can't work with non-legacy parsers. Use eval."`) — use
-  `hyprctl eval 'hl.monitor({...})'` to test monitor changes live.
-  **Resolution chosen:** Hyprland owns the layout in its own session — an
-  `hl.on("hyprland.start", …)` hook runs `systemctl --user stop kanshi.service`,
-  and **both** monitors are described in full in `hl.monitor` (matched by
-  `desc:`). The service stays enabled so niri still gets kanshi. If you ever
-  switch which compositor owns displays, remember kanshi is the cross-session
-  authority unless explicitly stopped.
+- **Hyprland is the only desktop, wired directly (NOT via
+  `snowglobe-lib.desktop.hyprland`), in `modules/hosts/nebula/hyprland.nix`
+  (2026-06-27).** niri was removed the same day. That snowglobe hyprland module's
+  only unique contribution we wanted is `programs.hyprland` + uwsm; it *also*
+  force-enables `programs.hyprlock` (→ `services.hypridle`), `kitty`, `dolphin`,
+  and `hyprlauncher` — none used here (ghostty terminal, fuzzel/Noctalia
+  launcher, **Noctalia lock**). The trigger to rip it out: hyprlock comes from
+  **nixpkgs**, but the `hyprland-packages` overlay (`modules/overlays.nix`)
+  replaces `hyprutils` globally with the hyprland flake's newer one — so every
+  `nix flake update` that bumped the flake ahead of nixpkgs' hyprlock broke the
+  build with `Seat.cpp: cannot convert CSharedPointer<CCWlSeat> to bool`.
+  `hyprland.nix` therefore also asserts the **shared snowglobe desktop layer**
+  (`snowglobe-lib.system.hasDesktop` + `snowglobe-lib.desktop.{enable,
+  installWaylandDeps}`) that the niri module used to provide — that's what gates
+  `desktop.nix` (xdg portals, pipewire, bluetooth, grim/slurp/wl-clipboard,
+  swaync, fonts, the **ly** greeter, `hardware.graphics`, `NIXOS_OZONE_WL`, …) —
+  plus `programs.fuzzel.enable` (the launcher, formerly a niri-module default).
+  The session is `hyprland-uwsm` (`displayManager.defaultSession`); Hyprland runs
+  under **uwsm**.
+- **kanshi was removed with niri (2026-06-27); Hyprland owns monitors via
+  `hl.monitor`.** *Historical gotcha, kept because it cost real time:* kanshi was
+  a systemd user service that drove displays under niri, and because it started
+  on the shared graphical-session it **also ran under Hyprland** and reapplied
+  `~/.config/kanshi/config` via **wlr-output-management**, which *wins over*
+  `hl.monitor` — symptom was `hl.monitor`/`hyprctl eval`/reload all returning
+  `ok` while the scale never changed. We worked around it with a
+  `systemctl --user stop kanshi.service` hook on `hyprland.start`; with niri (and
+  thus kanshi) now gone, that hook was deleted and both monitors are described in
+  full in `monitors.lua` (matched by `desc:`). Two traps still worth remembering
+  if any wlr-output-management tool ever returns: fractional scales get
+  **rounded** by wlroots (must divide the resolution to integers), and in 0.55
+  Lua mode **`hyprctl keyword` is dead** (`"keyword can't work with non-legacy
+  parsers. Use eval."`) — use `hyprctl eval 'hl.monitor({...})'` to test monitor
+  changes live.
 
 ## Sources
 

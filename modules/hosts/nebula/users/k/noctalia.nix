@@ -13,7 +13,7 @@
 # no matugen), uses PipeWire/wpctl for the audio visualiser (no cava), and has
 # native clipboard history and backlight/ddcutil brightness. cliphist +
 # wl-clipboard + brightnessctl stay available system-wide (configuration.nix
-# systemPackages + snowglobe's desktop module) for the niri/Hyprland keybinds
+# systemPackages + snowglobe's desktop module) for the Hyprland keybinds
 # that use them, so dropping them here is a no-op for those.
 #
 # EXTERNAL monitor brightness (2026-06-19): nebula's DP monitors have no kernel

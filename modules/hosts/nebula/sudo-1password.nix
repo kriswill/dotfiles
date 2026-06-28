@@ -33,7 +33,7 @@
       # In a TTY this path won't have a live agent, so sudo just falls back to a password.
       environment.sessionVariables.SSH_AUTH_SOCK = "\${HOME}/.1password/agent.sock";
 
-      # gnome-keyring (pulled in by the niri desktop) ships gcr-ssh-agent, which otherwise
+      # gnome-keyring (pulled in by the desktop session) ships gcr-ssh-agent, which otherwise
       # claims SSH_AUTH_SOCK (=/run/user/$UID/gcr/ssh) and shadows the 1Password agent.
       # Disable just its ssh-agent so the 1Password socket above wins; keyring secrets/
       # pkcs11 stay enabled.

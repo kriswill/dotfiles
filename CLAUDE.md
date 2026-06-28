@@ -97,9 +97,9 @@ When adding shared functionality, drop a `{ flake.modules.nixos.<name> = …; }`
 
 ## Dotfiles (GNU Stow)
 
-User-level configs under `~/.config` that aren't nix-managed (niri, ghostty, kanshi, …) are tracked here via [GNU Stow](https://www.gnu.org/software/stow/), kept separate from the NixOS modules:
+User-level configs under `~/.config` that aren't nix-managed (hyprland, ghostty, nvim, …) are tracked here via [GNU Stow](https://www.gnu.org/software/stow/), kept separate from the NixOS modules:
 
-- **`home/`** — the stow tree. Each top-level dir is one stow *package* whose contents mirror `$HOME`, e.g. `home/niri/.config/niri/config.kdl` → `~/.config/niri/config.kdl`. This dir is invisible to flake evaluation (`import-tree` only scans `modules/`).
+- **`home/`** — the stow tree. Each top-level dir is one stow *package* whose contents mirror `$HOME`, e.g. `home/hyprland/.config/hypr/hyprland.lua` → `~/.config/hypr/hyprland.lua`. This dir is invisible to flake evaluation (`import-tree` only scans `modules/`).
 - **`modules/nixos/dotfiles-stow.nix`** — auto-imported activation module. On every `nixos-rebuild switch` it runs `stow --no-folding --restow` for **every** package under `home/` (auto-discovered) as user `k`, so symlinks are (re)created idempotently. It operates on the live repo path (`/home/k/src/dotfiles/home`), never a `/nix/store` copy, so links stay stable and editable. A conflict on one package logs a warning and is skipped — it never fails the rebuild. The module also puts `stow` and `dots-adopt` on `PATH`.
 - **`--no-folding`** is deliberate: `~/.config/<app>` stays a real directory with only the tracked files symlinked, so app-generated siblings don't leak into the repo.
 

@@ -1,7 +1,8 @@
 {
   configurations.nixos.nebula.module = {
-    # ly (the TUI login greeter) is enabled by snowglobe-lib's niri desktop
-    # module (services.displayManager.ly.enable). Its config.ini is built from
+    # ly (the TUI login greeter) is enabled by snowglobe-lib's shared desktop
+    # module (services.displayManager.ly.enable), which is switched on by
+    # snowglobe-lib.desktop.enable in hyprland.nix. Its config.ini is built from
     # `defaultConfig // services.displayManager.ly.settings`, so anything set
     # here overrides ly's defaults.
     #
