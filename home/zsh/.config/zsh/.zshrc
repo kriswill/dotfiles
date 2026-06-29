@@ -59,13 +59,12 @@ alias lg='lazygit'
 compdef batman=man
 
 ## yazi — `y` wraps yazi so quitting (q) cd's the shell into yazi's last
-## directory; quit with Q to skip the cd. Restored from the pre-Dec-2024
-## home-manager zsh config.
+## directory; quit with Q to skip the cd.
 function y() {
   local tmp cwd
   tmp="$(mktemp -t yazi-cwd.XXXXXX)"
   yazi "$@" --cwd-file="$tmp"
-  IFS='' read -r -d '' cwd <"$tmp"
+  IFS='' read -r -d '' cwd < "$tmp"
   [ -n "$cwd" ] && [ "$cwd" != "$PWD" ] && builtin cd -- "$cwd"
   rm -f -- "$tmp"
 }
@@ -85,11 +84,11 @@ function stderred() {
 ## Darwin-specific (guarded so this file stays portable across hosts).
 ## determinate-nixd's `completion zsh` takes ~300ms per shell to emit the same
 ## static script, so cache it and refresh only when the binary changes.
-if command -v determinate-nixd >/dev/null; then
+if command -v determinate-nixd > /dev/null; then
   _dnd_bin="$(command -v determinate-nixd)"
   _dnd_cache="$ZDOTDIR/.determinate-nixd-completion.zsh"
-  if [[ ! -f "$_dnd_cache" || "$_dnd_bin" -nt "$_dnd_cache" ]]; then
-    "$_dnd_bin" completion zsh >"$_dnd_cache"
+  if [[ ! -f $_dnd_cache || $_dnd_bin -nt $_dnd_cache ]]; then
+    "$_dnd_bin" completion zsh > "$_dnd_cache"
   fi
   source "$_dnd_cache"
   unset _dnd_bin _dnd_cache
@@ -99,7 +98,6 @@ fi
 ## PATH: bun globals and user-local bins.
 export PATH="$HOME/.bun/bin:$HOME/.local/bin:$PATH"
 
-## Integrations formerly injected by home-manager's programs.zsh.
 ## Prompt — starship (nix-darwin's default `prompt suse` is disabled in
 ## modules/darwin/zsh.nix so this wins cleanly).
 eval "$(starship init zsh)"
@@ -110,8 +108,13 @@ eval "$(zoxide init zsh --cmd j)"
 ## direnv — per-directory envs.
 eval "$(direnv hook zsh)"
 
-## fzf keybindings + completion (binds Ctrl-R; hstr below must come AFTER so
-## its Ctrl-R wins, matching the old home-manager init order).
+## fd/tree come from the user package set (modules/darwin/user-packages.nix).
+export FZF_DEFAULT_COMMAND="fd --type f"
+export FZF_DEFAULT_OPTS="--height 40% --prompt ⟫"
+export FZF_ALT_C_COMMAND="fd --type d"
+export FZF_ALT_C_OPTS="--preview 'tree -C {} | head -200'"
+
+## fzf keybindings + completion (binds Ctrl-R; hstr below must come AFTER so its Ctrl-R wins).
 source <(fzf --zsh)
 
 ## hstr — fuzzy history picker on Ctrl-R.

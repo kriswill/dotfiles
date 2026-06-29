@@ -24,6 +24,17 @@
           fastfetch.enable = lib.mkDefault true;
           oksh.enable = lib.mkDefault true;
           yazi.enable = lib.mkDefault true;
+          # Ported from the old home-manager/core.nix (now system-level modules
+          # + the stow tree). git/ssh/kitty/direnv config lives under home/;
+          # see the matching modules/darwin/<feature>.nix.
+          git.enable = lib.mkDefault true;
+          ssh.enable = lib.mkDefault true;
+          zk.enable = lib.mkDefault true;
+          diffnav.enable = lib.mkDefault true;
+          kitty.enable = lib.mkDefault true;
+          neovide.enable = lib.mkDefault true;
+          direnv.enable = lib.mkDefault true;
+          direnv-nom.enable = lib.mkDefault true;
         };
         system = {
           # Used for backwards compatibility, please read the changelog before changing.

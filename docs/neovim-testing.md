@@ -18,11 +18,12 @@ For pure-logic checks (LSP attaches, autocmds fire, options resolve), use
 
 ## How Neovide reaches your wrapped nvim
 
-Neovide is the GUI driver. It spawns home-manager's wrapped `nvim` —
-`NEOVIDE_NEOVIM_BIN` is set in `modules/home-manager/neovide/default.nix`
-to `lib.getExe config.programs.neovim.finalPackage` — so what you see is
-exactly the config you're editing, with every `programs.neovim.extraPackages`
-entry (LSP servers, formatters) on `PATH`.
+Neovide is the GUI driver. It spawns `nvim` found on `PATH` — no
+`NEOVIDE_NEOVIM_BIN` override is used. `nvim` and all its LSP servers and
+formatters are installed globally by `modules/darwin/neovim.nix`, so what you
+see is exactly the config you're editing, with every tool on `PATH`. (The
+neovide package and its enable toggle live in `modules/hosts/*.nix` and
+`modules/darwin/neovide.nix`; the old home-manager neovide module is gone.)
 
 The Neovide bundle lives at `~/Applications/Home Manager Apps/Neovide.app`,
 materialized as a real `.app` directory by home-manager's

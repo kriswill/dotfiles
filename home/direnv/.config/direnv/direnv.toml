@@ -1,0 +1,5 @@
+# direnv config — stow-managed (home/direnv/.config/direnv/direnv.toml),
+# symlinked to ~/.config/direnv/direnv.toml by modules/darwin/dotfiles-stow.nix.
+# warn_timeout = "0s" silences direnv's "taking a while" warning during the nom-
+# wrapped `use flake` builds (see modules/darwin/direnv-nom.nix).
+warn_timeout = "0s"

@@ -1,0 +1,96 @@
+# Kris' git config — stow-managed (home/git/.config/git/config), symlinked to
+# ~/.config/git/config by modules/darwin/dotfiles-stow.nix. Edit live; no
+# rebuild needed. Ported from the old home-manager programs.git module.
+#
+# Helper commands are referenced by bare name (gh, git-lfs, rg, jq) instead of
+# /nix/store paths: this is a static file (not regenerated on rebuild), so a
+# pinned store path would go stale on the next package bump. All four are on
+# PATH via modules/darwin/{git,user-packages}.nix.
+#
+# [pager] points at diffnav (modules/darwin/diffnav.nix). [credential] comes
+# from the old programs.gh; [filter "lfs"] from programs.git.lfs.
+
+[alias]
+	amend = "commit --amend -m"
+	br = "branch"
+	ca = "commit -am"
+	cm = "commit -m"
+	co = "checkout"
+	dc = "diff --cached"
+	fixup = "!f(){ git reset --soft HEAD~${1} && git commit --amend -C HEAD; };f"
+	ll = "!git log --pretty=format:'%C(yellow)%h%Cred%d %Creset%s%Cblue [%cn]%Creset %G?' --color=always --decorate --numstat \"$@\" | sed 's/ G$/ 🔒/;s/ N$/ ➖/;s/ [UE]$/ 🔑/;s/ [BXYR]$/ ⚠️/' | less -RFX"
+	loc = "!f(){ git ls-files | rg \"\\.${1}\" | xargs wc -l; };f"
+	ls = "!git log --pretty=format:'%C(yellow)%h%Cred%d %Creset%s%Cblue [%cn]%Creset %G?' --color=always --decorate \"$@\" | sed 's/ G$/ 🔒/;s/ N$/ ➖/;s/ [UE]$/ 🔑/;s/ [BXYR]$/ ⚠️/' | less -RFX"
+	st = "status"
+
+[commit]
+	gpgsign = true
+
+[core]
+	editor = "nvim"
+
+[credential "https://gist.github.com"]
+	helper = ""
+	helper = "!gh auth git-credential"
+
+[credential "https://github.com"]
+	helper = ""
+	helper = "!gh auth git-credential"
+
+[filter "lfs"]
+	clean = "git-lfs clean -- %f"
+	process = "git-lfs filter-process"
+	required = true
+	smudge = "git-lfs smudge -- %f"
+
+[filter "normalize-podman-settings"]
+	clean = "jq 'del(.\"window.bounds\", .\"titleBar.searchBar\".remindAt, .\"statusbarProviders.showProviders\".remindAt)' "
+	smudge = "cat"
+
+[gpg]
+	format = "ssh"
+
+[gpg "ssh"]
+	allowedSignersFile = "~/.config/git/allowed_signers"
+	program = "/Applications/1Password.app/Contents/MacOS/op-ssh-sign"
+
+[init]
+	defaultBranch = "main"
+
+[merge]
+	conflictStyle = "zdiff3"
+	tool = "vim_mergetool"
+
+[mergetool "vim_mergetool"]
+	cmd = "nvim -f -c \"MergetoolStart\" \"$MERGED\" \"$BASE\" \"$LOCAL\" \"$REMOTE\""
+	prompt = false
+
+[pager]
+	diff = "diffnav"
+	show = "diffnav"
+
+[pull]
+	rebase = false
+
+[push]
+	autoSetupRemote = true
+
+[tag]
+	gpgsign = true
+
+[url "https://github.com/"]
+	insteadOf = "gh:"
+
+[url "https://gitlab.com/"]
+	insteadOf = "gl:"
+
+[url "ssh://git@github.com"]
+	pushInsteadOf = "gh:"
+
+[url "ssh://git@gitlab.com"]
+	pushInsteadOf = "gl:"
+
+[user]
+	email = "115474+kriswill@users.noreply.github.com"
+	name = "Kris Williams"
+	signingkey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBxqhXoAlCKYNwsB1YrszftURThiCI94oeR0W9EDhrLy"

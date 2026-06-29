@@ -22,7 +22,11 @@
         };
         users.k = {
           imports = builtins.attrValues config.flake.modules.homeManager;
-          kriswill.enable = true;
+          # The old master `kriswill.enable` home toggle (and the core module it
+          # drove) was retired once every feature it carried moved to a
+          # system-level darwin module + the stow tree. The remaining
+          # home-manager modules (brave/firefox/vscode/podman-desktop/
+          # claude-account-selector) are enabled à la carte per host.
           home.username = "k";
           home.stateVersion = "26.05";
           # HM master lags nixpkgs-unstable by a release cycle; silence the
