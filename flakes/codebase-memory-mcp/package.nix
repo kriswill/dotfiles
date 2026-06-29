@@ -10,7 +10,7 @@
 # Upstream's own flake (axelbdt/codebase-memory-mcp.nix) is flake-utils-based and
 # pins a bare commit; this is the same derivation factored into a callPackage
 # function so the flake-parts sub-flake (./flake.nix) can build it. Upstream tags
-# every release, so we pin by tag — bump `version` and regenerate `hash` to update.
+# every release, so we pin by tag — run the adjacent ./update to bump version + hash.
 stdenv.mkDerivation (finalAttrs: {
   pname = "codebase-memory-mcp";
   version = "0.8.1";
