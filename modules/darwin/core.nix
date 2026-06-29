@@ -50,7 +50,6 @@
           # $ nix-env -qaP | grep wget
           systemPackages = [
             pkgs.iproute2mac # ip command (like linux)
-            pkgs.home-manager
             pkgs.pstree
             # markdown reader; config is stow-managed (home/glow/), and the
             # yazi previewer invokes it by bare name
