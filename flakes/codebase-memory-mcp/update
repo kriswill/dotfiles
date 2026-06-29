@@ -12,9 +12,15 @@
 // owner/repo/version/hash are read straight from package.nix (single source of
 // truth). Tags come from the GitHub API (via `gh` if available, else fetch),
 // are semver-compared, and on a bump the source SRI hash is re-prefetched with
-// nix and written back in place. Does not build, stage, or commit.
+// nix and written back in place. If package.nix also pins an embedded frontend's
+// vendored npm deps (an `npmDepsHash` for a buildNpmPackage sub-derivation), that
+// hash is refreshed too — the target tag's lockfile is run through
+// `prefetch-npm-deps` (buildNpmPackage's own hashing tool). Does not build,
+// stage, or commit.
 import { $ } from "bun";
 import { existsSync } from "node:fs";
+import { mkdir, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createInterface } from "node:readline/promises";
 
@@ -46,6 +52,13 @@ const current = field("version") ?? die("could not parse `version` from package.
 // package.nix builds `tag = "<prefix>${finalAttrs.version}"`; recover the prefix.
 const tagPrefix = nix.match(/tag\s*=\s*"([^$"]*)\$\{finalAttrs\.version\}"/)?.[1] ?? "v";
 
+// Optional embedded-frontend npm deps. Present only when package.nix builds a
+// buildNpmPackage sub-derivation (e.g. the graph-ui web UI): an `npmDepsHash`
+// plus a `sourceRoot = "${src.name}/<subdir>"` naming the lockfile's directory.
+// Both must be present together, or we skip the npm refresh.
+const npmDepsHash = field("npmDepsHash") ?? null;
+const npmSubdir = nix.match(/sourceRoot\s*=\s*"\$\{src\.name\}\/([^"]+)"/)?.[1] ?? null;
+
 type Tag = { name: string; version: string; pre: string | null };
 
 async function fetchTagNames(): Promise<string[]> {
@@ -71,6 +84,39 @@ async function fetchTagNames(): Promise<string[]> {
 function parseTag(name: string): Tag | null {
   const m = name.match(/^v?(\d+)\.(\d+)\.(\d+)(?:-(.+))?$/);
   return m ? { name, version: `${+m[1]}.${+m[2]}.${+m[3]}`, pre: m[4] ?? null } : null;
+}
+
+// Recompute the vendored-npm-deps SRI hash for the embedded frontend at `tag`.
+// Fetches that tag's <subdir>/package-lock.json and runs it through
+// prefetch-npm-deps (buildNpmPackage's hashing tool). This downloads the full
+// dependency closure, so it is the slow part of a bump. Prefers a
+// prefetch-npm-deps already on PATH; otherwise reaches for it via `nix run`.
+async function npmDepsHashForTag(tag: string, subdir: string): Promise<string> {
+  const lockUrl = `https://raw.githubusercontent.com/${owner}/${repo}/${tag}/${subdir}/package-lock.json`;
+  const headers: Record<string, string> = { "User-Agent": "update-codebase-memory-mcp" };
+  const token = process.env.GITHUB_TOKEN || process.env.GH_TOKEN;
+  if (token) headers.Authorization = `Bearer ${token}`;
+  const res = await fetch(lockUrl, { headers });
+  if (!res.ok) die(`could not fetch ${subdir}/package-lock.json @ ${tag}: GitHub ${res.status} ${res.statusText}`);
+
+  const tmp = join(tmpdir(), `cbm-update-lock-${process.pid}`);
+  await mkdir(tmp, { recursive: true });
+  const lockPath = join(tmp, "package-lock.json");
+  await Bun.write(lockPath, await res.text());
+  try {
+    const runner = Bun.which("prefetch-npm-deps")
+      ? $`prefetch-npm-deps ${lockPath}`
+      : $`nix run nixpkgs#prefetch-npm-deps -- ${lockPath}`;
+    const out = (await runner.text())
+      .split("\n")
+      .map((s) => s.trim())
+      .filter(Boolean)
+      .pop();
+    if (!out?.startsWith("sha256-")) die(`unexpected hash from prefetch-npm-deps: ${out}`);
+    return out;
+  } finally {
+    await rm(tmp, { recursive: true, force: true });
+  }
 }
 
 // compare dotted numeric versions: >0 if a>b
@@ -140,16 +186,33 @@ try {
 }
 if (!sri.startsWith("sha256-")) die(`unexpected hash from nix: ${sri}`);
 
+// Refresh the embedded frontend's vendored-npm-deps hash, if package.nix pins one.
+let npmSri: string | null = null;
+if (npmDepsHash) {
+  if (!npmSubdir) die("package.nix pins npmDepsHash but no frontend sourceRoot was parseable — refresh it by hand");
+  info(`${c.dim}prefetching npm deps from ${npmSubdir}/package-lock.json @ ${wantTag} (downloads the full closure)…${c.x}`);
+  npmSri = await npmDepsHashForTag(wantTag, npmSubdir);
+}
+
 const oldHash = field("hash") ?? die("could not parse current `hash` from package.nix");
-const updated = nix
+let updated = nix
   .replace(/(\bversion\s*=\s*")[^"]+(")/, `$1${latest.version}$2`)
   .replace(/(\bhash\s*=\s*")sha256-[^"]+(")/, `$1${sri}$2`);
+if (npmSri) {
+  updated = updated.replace(/(\bnpmDepsHash\s*=\s*")sha256-[^"]+(")/, `$1${npmSri}$2`);
+}
 if (updated === nix) die("nothing written — version/hash patterns did not match package.nix");
 await Bun.write(PKG, updated);
 
 ok(`bumped ${current} → ${latest.version}`);
 info(`  ${c.dim}hash ${oldHash}${c.x}`);
 info(`  ${c.dim}  -> ${sri}${c.x}`);
+if (npmSri && npmSri !== npmDepsHash) {
+  info(`  ${c.dim}npmDepsHash ${npmDepsHash}${c.x}`);
+  info(`  ${c.dim}         -> ${npmSri}${c.x}`);
+} else if (npmSri) {
+  info(`  ${c.dim}npmDepsHash unchanged (${npmSri})${c.x}`);
+}
 info("");
 info(`${c.b}next${c.x} (from repo root):`);
 info("  git add flakes/codebase-memory-mcp/package.nix");

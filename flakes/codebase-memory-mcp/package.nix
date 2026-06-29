@@ -2,6 +2,7 @@
   lib,
   stdenv,
   fetchFromGitHub,
+  buildNpmPackage,
   gnumake,
   git,
   zlib,
@@ -11,16 +12,46 @@
 # pins a bare commit; this is the same derivation factored into a callPackage
 # function so the flake-parts sub-flake (./flake.nix) can build it. Upstream tags
 # every release, so we pin by tag — run the adjacent ./update to bump version + hash.
-stdenv.mkDerivation (finalAttrs: {
-  pname = "codebase-memory-mcp";
+#
+# We build the `cbm-with-ui` target, not the plain `cbm`: it links the graph-ui
+# web visualizer (an embedded HTTP server reachable via `--ui=true`, default port
+# 9749) into the binary. The Makefile's `frontend` target normally runs
+# `npm ci && npm run build`, which needs network and so can't run in the Nix
+# sandbox. Instead we build graph-ui/dist offline in a separate buildNpmPackage
+# derivation, neutralize the `frontend` target, and drop the prebuilt dist in
+# place so the `embed` step (pure shell + cc) can turn it into linkable objects.
+let
   version = "0.8.1";
 
   src = fetchFromGitHub {
     owner = "DeusData";
     repo = "codebase-memory-mcp";
-    tag = "v${finalAttrs.version}";
+    tag = "v${version}";
     hash = "sha256-H0l8H2JhPT1Rs0p+CJC1a1qYtnZNgLGe6n7PmM+WvE4=";
   };
+
+  # graph-ui — the Vite/React/Three.js 3D graph visualizer. Built offline so its
+  # dist/ can be embedded into the binary. npmDepsHash pins the vendored npm
+  # dependency closure (from graph-ui/package-lock.json); bump it alongside the
+  # src hash whenever upstream changes the frontend's lockfile.
+  graph-ui = buildNpmPackage {
+    pname = "codebase-memory-mcp-graph-ui";
+    inherit version src;
+    sourceRoot = "${src.name}/graph-ui";
+    npmDepsHash = "sha256-feoZNsZfrPgoLdjlnnh3w3vTxR6AwPdUkPubaR93TAk=";
+
+    # `npm run build` = `tsc -b && vite build` → dist/. Override the default
+    # npm-install step (this isn't an installable npm package, just static assets).
+    installPhase = ''
+      runHook preInstall
+      cp -r dist $out
+      runHook postInstall
+    '';
+  };
+in
+stdenv.mkDerivation (finalAttrs: {
+  pname = "codebase-memory-mcp";
+  inherit version src;
 
   nativeBuildInputs = [
     gnumake
@@ -29,17 +60,33 @@ stdenv.mkDerivation (finalAttrs: {
 
   buildInputs = [ zlib ] ++ lib.optionals stdenv.isLinux [ zlib.static ];
 
-  # Without git/CI present the build defaults CBM_VERSION to "dev" (src/main.c,
-  # src/cli/cli.c). Inject the real release via CFLAGS_EXTRA so `--version` and the
-  # tool's self-update check report the pinned tag; the escaped quotes survive make's
-  # recipe shell so the compiler sees a string literal.
+  # Neutralize the npm-driven `frontend` Makefile target — the Nix sandbox has no
+  # network, so we supply graph-ui's prebuilt dist instead (see buildPhase). The
+  # `embed` step still runs on that dist (pure shell + cc) and `cbm-with-ui` links
+  # the generated objects in.
+  postPatch = ''
+    substituteInPlace Makefile.cbm \
+      --replace-fail 'cd graph-ui && npm ci && npm run build' 'true'
+  '';
+
+  # Drop the prebuilt frontend into graph-ui/dist before building. Without git/CI
+  # present the build defaults CBM_VERSION to "dev" (src/main.c, src/cli/cli.c);
+  # inject the real release via CFLAGS_EXTRA so `--version` and the tool's
+  # self-update check report the pinned tag (the escaped quotes survive make's
+  # recipe shell so the compiler sees a string literal).
   buildPhase = ''
-    make -j''${NIX_BUILD_CORES:-1} -f Makefile.cbm cbm \
+    runHook preBuild
+    mkdir -p graph-ui/dist
+    cp -r ${graph-ui}/. graph-ui/dist/
+    make -j''${NIX_BUILD_CORES:-1} -f Makefile.cbm cbm-with-ui \
       CFLAGS_EXTRA='-DCBM_VERSION=\"${finalAttrs.version}\"'
+    runHook postBuild
   '';
 
   installPhase = ''
+    runHook preInstall
     install -Dm755 build/c/codebase-memory-mcp $out/bin/codebase-memory-mcp
+    runHook postInstall
   '';
 
   meta = {
