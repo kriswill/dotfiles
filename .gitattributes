@@ -1,4 +1,4 @@
-config/containers/podman-desktop-settings.json filter=normalize-podman-settings
+home/podman-desktop/.local/share/containers/podman-desktop/configuration/settings.json filter=normalize-podman-settings
 
 # Shell scripts can contain literal ANSI/control bytes (\033, \x1f, etc.)
 # that trip git's binary heuristic — force textual diff handling.

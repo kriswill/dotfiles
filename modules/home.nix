@@ -21,7 +21,11 @@
           username = "k";
         };
         users.k = {
-          imports = builtins.attrValues config.flake.modules.homeManager;
+          # `or { }` keeps this resolving once every feature module has moved to
+          # the darwin side (flake-parts' lazyAttrsOf drops the homeManager class
+          # entirely when nothing populates it); it also tolerates re-adding HM
+          # modules later.
+          imports = builtins.attrValues (config.flake.modules.homeManager or { });
           # The old master `kriswill.enable` home toggle (and the core module it
           # drove) was retired once every feature it carried moved to a
           # system-level darwin module + the stow tree. The remaining

@@ -188,27 +188,23 @@ zsh file with built-in fallbacks, so it also runs standalone (e.g. under test).
 | `desktopProfile` | str or null | `null` | Pin the GUI Claude **desktop app** to `~/.claude-<name>` via a login LaunchAgent. See [Desktop app (GUI)](#desktop-app-gui). |
 
 ```nix
-# In a darwin host module, wrap users.<name> in a function so `config` is the
-# home-manager config (needed for config.home.homeDirectory):
-home-manager.users.k = { config, ... }: {
-  kriswill.claude-account-selector = {
-    enable = true;
-    defaultProfile = "me";
-    profiles = [ "me" "work" "oss" ];
-    rules = {
-      "${config.home.homeDirectory}/src/work" = "work";
-      "${config.home.homeDirectory}/clients"  = "work";
-      "${config.home.homeDirectory}/oss"      = "oss";
-    };
+# In a darwin host module, set the option directly under `kriswill`
+# (this is a darwin module now; the wrapper itself is system-level):
+kriswill.claude-account-selector = {
+  enable = true;
+  defaultProfile = "me";
+  profiles = [ "me" "work" "oss" ];
+  rules = {
+    "/Users/k/src/work" = "work";
+    "/Users/k/clients"  = "work";
+    "/Users/k/oss"      = "oss";
   };
 };
 ```
 
-Rule prefixes are matched against the realpath of the launch directory, so use absolute
-paths. `config.home.homeDirectory` only resolves inside the home-manager config scope, so
-wrap `users.<name>` in a `{ config, ... }:` function as above (or use literal absolute
-paths). Runtime `claude pin` entries are merged on top and, being more specific, win by
-longest-prefix.
+Rule prefixes are matched against the realpath of the launch directory, so use literal
+absolute paths. Runtime `claude pin` entries are merged on top and, being more specific,
+win by longest-prefix.
 
 ## One-time setup
 
@@ -223,7 +219,7 @@ cp -a ~/.claude.json  ~/.claude-work/.claude.json   # account/state lives inside
 #    NEW config dir (see "Repairing copied config-dir references" below). The
 #    `cp -a` above carries verbatim e.g. a SessionStart hook command like
 #    "/Users/you/.claude/hooks/...", which would otherwise 404 every session.
-sel=~/src/dotfiles/modules/home-manager/claude-account-selector
+sel=~/src/dotfiles/modules/darwin/claude-account-selector
 "$sel/fix-config-dir-refs.zsh"          ~/.claude-work   # dry-run: preview changes
 "$sel/fix-config-dir-refs.zsh" --apply  ~/.claude-work   # write (backs up each file)
 
@@ -292,7 +288,7 @@ existing `claude`. Complete the one-time setup above *first*, then enable it in 
 module (e.g. `modules/hosts/<host>.nix`):
 
 ```nix
-home-manager.users.<user>.kriswill.claude-account-selector.enable = true;
+kriswill.claude-account-selector.enable = true;
 ```
 
 ## Notes & caveats
