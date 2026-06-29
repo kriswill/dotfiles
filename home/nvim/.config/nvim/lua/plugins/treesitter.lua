@@ -3,15 +3,16 @@
 -- Parsers to install. Includes injection-only and help parsers.
 local parsers = {
   "bash", "c", "cpp", "go", "html", "javascript", "latex", "lua",
-  "markdown", "markdown_inline", "nix", "scss", "svelte", "typst",
-  "vim", "vimdoc", "vue",
+  "markdown", "markdown_inline", "nix", "scss", "svelte", "tsx",
+  "typescript", "typst", "vim", "vimdoc", "vue",
 }
 
 -- Filetypes where we enable highlight + indent. (help uses vimdoc parser
 -- auto-resolved by Neovim; markdown_inline is injection-only.)
 local highlight_fts = {
   "bash", "c", "cpp", "go", "html", "javascript", "latex", "lua",
-  "markdown", "nix", "scss", "svelte", "typst", "vim", "vue", "help",
+  "markdown", "nix", "scss", "svelte", "typescript", "typescriptreact",
+  "typst", "vim", "vue", "help",
 }
 
 return {
