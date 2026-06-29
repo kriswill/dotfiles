@@ -53,6 +53,14 @@ stdenv.mkDerivation (finalAttrs: {
   pname = "codebase-memory-mcp";
   inherit version src;
 
+  # Teach the C definition-extractor about Nix's AST so .nix files contribute
+  # symbols (bindings -> Variables named by attrpath, named lambdas -> Functions)
+  # instead of just a file-level Module node. Upstream wires the Nix language spec
+  # but its generic name-resolution can't name Nix's shapes; see the patch header.
+  # Only touches internal/cbm/ — the graph-ui sub-derivation (own sourceRoot) is
+  # unaffected. Re-validate against extract_defs.c/lang_specs.c on each version bump.
+  patches = [ ./nix-symbols.patch ];
+
   nativeBuildInputs = [
     gnumake
     git
