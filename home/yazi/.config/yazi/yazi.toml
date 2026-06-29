@@ -1,0 +1,53 @@
+# Yazi settings — stow-managed (home/yazi/.config/yazi/yazi.toml), symlinked
+# into ~ by modules/darwin/dotfiles-stow.nix. Edit live; no rebuild needed.
+#
+# Plugins are referenced here by bare name (e.g. `git`, `font-dark`,
+# `faster-piper`); yazi resolves each to plugins/<name>.yazi. The third-party
+# plugins (git, faster-piper) and the flavor are linked into
+# ~/.config/yazi/{plugins,flavors} from the /nix/store by
+# modules/darwin/yazi/default.nix during activation; `font-dark` lives in this
+# stow tree under plugins/font-dark.yazi/.
+
+[mgr]
+ratio = [1, 2, 3]
+
+# Show git status in the file list, via the `git` plugin's fetcher.
+[[plugin.prepend_fetchers]]
+group = "git"
+run = "git"
+url = "*"
+
+[[plugin.prepend_fetchers]]
+group = "git"
+run = "git"
+url = "*/"
+
+# Font previews are rendered by the *preloader* (it writes the cached image)
+# and merely displayed by the previewer. Override both, else the built-in
+# `font` preloader caches a white image first and `font-dark`'s peek
+# short-circuits on the existing cache. Mirror the preset's two font mime rules.
+[[plugin.prepend_preloaders]]
+mime = "font/*"
+run = "font-dark"
+
+[[plugin.prepend_preloaders]]
+mime = "application/ms-opentype"
+run = "font-dark"
+
+[[plugin.prepend_previewers]]
+mime = "font/*"
+run = "font-dark"
+
+[[plugin.prepend_previewers]]
+mime = "application/ms-opentype"
+run = "font-dark"
+
+# Markdown via glow (+ its kanagawa style, stow-managed under home/glow/),
+# piped through faster-piper. glow and bat are on the system PATH.
+[[plugin.prepend_previewers]]
+run = 'faster-piper -- CLICOLOR_FORCE=1 glow -w=$w -s="/Users/k/Library/Preferences/glow/kanagawa-dragon.json" "$1"'
+url = "*.md"
+
+[[plugin.prepend_previewers]]
+run = "bat"
+url = "*.(py|sh|go|ts|css|yaml|yml|toml|html|conf|json|csv)"

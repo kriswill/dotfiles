@@ -1,0 +1,5 @@
+# Yazi theme — stow-managed. The `kanagawa-dragon` flavor it names is generated
+# from the shared lib.kanagawa palette and linked into
+# ~/.config/yazi/flavors/kanagawa-dragon.yazi by modules/darwin/yazi.
+[flavor]
+dark = "kanagawa-dragon"

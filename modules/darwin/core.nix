@@ -23,6 +23,7 @@
           neovim.enable = lib.mkDefault true;
           fastfetch.enable = lib.mkDefault true;
           oksh.enable = lib.mkDefault true;
+          yazi.enable = lib.mkDefault true;
         };
         system = {
           # Used for backwards compatibility, please read the changelog before changing.

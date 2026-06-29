@@ -21,7 +21,7 @@
       options.kriswill.enable = lib.mkEnableOption "Kris' home module";
       config = lib.mkIf config.kriswill.enable {
         kriswill = {
-          # fastfetch/neovim/tmux/zsh/oksh + starship/ghostty/karabiner/glow
+          # fastfetch/neovim/tmux/zsh/oksh/yazi + starship/ghostty/karabiner/glow
           # moved to system-level darwin modules + the stow tree
           # (modules/darwin/dotfiles-stow.nix).
           # firefox.enable = lib.mkDefault false;
@@ -32,7 +32,6 @@
           diffnav.enable = lib.mkDefault true;
           git.enable = lib.mkDefault true;
           ssh.enable = lib.mkDefault true;
-          yazi.enable = lib.mkDefault true;
           zk.enable = lib.mkDefault true;
           # vscode.enable = lib.mkDefault false;
         };
