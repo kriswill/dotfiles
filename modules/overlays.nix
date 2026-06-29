@@ -12,5 +12,10 @@
     ccglass = _final: prev: {
       ccglass = inputs.ccglass.packages.${prev.stdenv.hostPlatform.system}.ccglass;
     };
+    # codebase-memory-mcp likewise comes from its own flake (./flakes/codebase-memory-mcp).
+    codebase-memory-mcp = _final: prev: {
+      codebase-memory-mcp =
+        inputs.codebase-memory-mcp.packages.${prev.stdenv.hostPlatform.system}.codebase-memory-mcp;
+    };
   };
 }

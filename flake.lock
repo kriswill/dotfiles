@@ -38,6 +38,25 @@
       },
       "parent": []
     },
+    "codebase-memory-mcp": {
+      "inputs": {
+        "flake-parts": [
+          "flake-parts"
+        ],
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "path": "./flakes/codebase-memory-mcp",
+        "type": "path"
+      },
+      "original": {
+        "path": "./flakes/codebase-memory-mcp",
+        "type": "path"
+      },
+      "parent": []
+    },
     "darwin": {
       "inputs": {
         "nixpkgs": [
@@ -142,6 +161,7 @@
       "inputs": {
         "apple-container": "apple-container",
         "ccglass": "ccglass",
+        "codebase-memory-mcp": "codebase-memory-mcp",
         "darwin": "darwin",
         "faster-piper-yazi": "faster-piper-yazi",
         "flake-parts": "flake-parts",

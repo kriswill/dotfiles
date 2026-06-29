@@ -33,5 +33,12 @@
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.flake-parts.follows = "flake-parts";
     };
+    # codebase-memory-mcp — C MCP server for codebase memory/graph indexing, built
+    # from upstream's Makefile. Same relative-path sub-flake pattern as ccglass.
+    codebase-memory-mcp = {
+      url = "./flakes/codebase-memory-mcp";
+      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.flake-parts.follows = "flake-parts";
+    };
   };
 }

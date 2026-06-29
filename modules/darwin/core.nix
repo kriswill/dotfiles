@@ -54,6 +54,8 @@
             # markdown reader; config is stow-managed (home/glow/), and the
             # yazi previewer invokes it by bare name
             pkgs.glow
+            # MCP server for codebase memory/graph indexing (flakes/codebase-memory-mcp)
+            pkgs.codebase-memory-mcp
           ];
           shellAliases =
             let
