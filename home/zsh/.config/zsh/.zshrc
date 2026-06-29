@@ -89,8 +89,14 @@ if command -v determinate-nixd > /dev/null; then
 fi
 [ -x /opt/homebrew/bin/brew ] && eval "$(/opt/homebrew/bin/brew shellenv)"
 
-## PATH: bun globals and user-local bins.
-export PATH="$HOME/.bun/bin:$HOME/.local/bin:$PATH"
+## PATH: bun globals and user-local bins, plus the persistent system-profile path
+## as a fallback. nix-darwin's set-environment puts /run/current-system/sw/bin on
+## PATH, but that symlink lives in volatile /run and is only recreated by the
+## activate-system daemon once the FileVault-encrypted /nix volume mounts at login
+## — so a terminal opened in that brief post-login window can't find
+## starship/zoxide/direnv/etc. /nix/var/nix/profiles/system/sw/bin is the same
+## store path and resolves the moment /nix is mounted, independent of /run.
+export PATH="$HOME/.bun/bin:$HOME/.local/bin:$PATH:/nix/var/nix/profiles/system/sw/bin"
 
 ## Prompt — starship (nix-darwin's default `prompt suse` is disabled in
 ## modules/darwin/zsh.nix so this wins cleanly).
