@@ -82,6 +82,7 @@
         pkgs.gimp # raster image editor
         pkgs.kdePackages.breeze-icons
         pkgs.rose-pine-hyprcursor # native hyprcursor theme (BreezeX shape, Rose Pine palette); selected via HYPRCURSOR_THEME in hyprland.lua
+        pkgs.umu-launcher # standalone Proton runner; launches Battle.net.desktop in GE-Proton without opening the Steam client
         pkgs.wowup # WowUp-CF (WoW addon manager); WoW path wired in packages/default.nix
       ];
 

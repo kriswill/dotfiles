@@ -1,8 +1,8 @@
 [Desktop Entry]
 Type=Application
 Name=Battle.net
-Comment=Battle.net launcher (runs through Steam Proton, prefix 3082075026)
-Exec=steam steam://rungameid/12158196836049354752
+Comment=Battle.net launcher (GE-Proton via umu-run, no Steam client; prefix 3082075026)
+Exec=env GAMEID=umu-battlenet PROTONPATH=/home/k/.local/share/Steam/compatibilitytools.d/GE-Proton10-34 WINEPREFIX=/home/k/.local/share/Steam/steamapps/compatdata/3082075026/pfx umu-run "/home/k/.local/share/Steam/steamapps/compatdata/3082075026/pfx/drive_c/Program Files (x86)/Battle.net/Battle.net.exe"
 Icon=/home/k/Downloads/wow-icon.png
 Terminal=false
 Categories=Game;
