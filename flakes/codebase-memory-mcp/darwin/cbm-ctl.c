@@ -317,29 +317,212 @@ static int cmd_commit(int argc, char **argv) {
     return rc == 0 ? 0 : 1;
 }
 
+/* ── status rendering (colored, YAML-like) ──────────────────────────── */
+
+static int g_color = 0;
+
+#define COL(c) (g_color ? (c) : "")
+#define A_RESET "\033[0m"
+#define A_BOLD "\033[1m"
+#define A_DIM "\033[2m"
+#define A_RED "\033[31m"
+#define A_GREEN "\033[32m"
+#define A_YELLOW "\033[33m"
+#define A_BLUE "\033[34m"
+#define A_CYAN "\033[36m"
+
+/* A YAML-style "<indent>key: value" line: cyan key, value column at indent+13. */
+static void field(int indent, const char *key, const char *valcol, const char *val) {
+    int pad = 12 - (int)strlen(key);
+    if (pad < 1) {
+        pad = 1;
+    }
+    printf("%*s%s%s%s:%*s%s%s%s\n", indent, "", COL(A_CYAN), key, COL(A_RESET), pad, "",
+           COL(valcol), val, COL(A_RESET));
+}
+
+static void section(const char *name) {
+    printf("  %s%s%s%s:\n", COL(A_BOLD), COL(A_BLUE), name, COL(A_RESET));
+}
+
+/* In a `launchctl list` plist dump, find the text after `"key" = `. */
+static const char *plist_after(const char *buf, const char *key) {
+    char needle[160];
+    int len = snprintf(needle, sizeof needle, "\"%s\" = ", key);
+    const char *p = strstr(buf, needle);
+    return p ? p + len : NULL;
+}
+static int plist_num(const char *buf, const char *key, long *out) {
+    const char *p = plist_after(buf, key);
+    if (!p) {
+        return -1;
+    }
+    *out = strtol(p, NULL, 10);
+    return 0;
+}
+static int plist_str(const char *buf, const char *key, char *out, size_t n) {
+    const char *p = plist_after(buf, key);
+    if (!p || *p != '"') {
+        return -1;
+    }
+    p++;
+    size_t i = 0;
+    while (*p && *p != '"' && i + 1 < n) {
+        out[i++] = *p++;
+    }
+    out[i] = '\0';
+    return 0;
+}
+
+/* Extract "key":"string" / "key":number from a flat JSON object substring. */
+static int json_str(const char *obj, const char *key, char *out, size_t n) {
+    char needle[160];
+    snprintf(needle, sizeof needle, "\"%s\":\"", key);
+    const char *p = strstr(obj, needle);
+    if (!p) {
+        return -1;
+    }
+    p += strlen(needle);
+    size_t i = 0;
+    while (*p && *p != '"' && i + 1 < n) {
+        if (*p == '\\' && p[1]) {
+            p++;
+        }
+        out[i++] = *p++;
+    }
+    out[i] = '\0';
+    return 0;
+}
+static int json_num(const char *obj, const char *key, long *out) {
+    char needle[160];
+    snprintf(needle, sizeof needle, "\"%s\":", key);
+    const char *p = strstr(obj, needle);
+    if (!p) {
+        return -1;
+    }
+    *out = strtol(p + strlen(needle), NULL, 10);
+    return 0;
+}
+
+static void human_size(long bytes, char *out, size_t n) {
+    double b = (double)bytes;
+    const char *u[] = {"B", "KiB", "MiB", "GiB", "TiB"};
+    size_t i = 0;
+    while (b >= 1024.0 && i < 4) {
+        b /= 1024.0;
+        i++;
+    }
+    snprintf(out, n, "%.1f %s", b, u[i]);
+}
+
 static int cmd_status(void) {
+    g_color = isatty(STDOUT_FILENO) && getenv("NO_COLOR") == NULL;
     const char *port = getenv("CBM_PORT");
     if (!port || !*port) {
         port = PORT_DEFAULT;
     }
-    printf("== launchd agent (%s) ==\n", LABEL);
-    (void)fflush(stdout);
-    char *ll[] = {(char *)LAUNCHCTL, "list", (char *)LABEL, NULL};
-    (void)run(ll);
+    const char *home = getenv("HOME");
+    char buf[1200];
 
-    printf("\n== listener on port %s ==\n", port);
-    (void)fflush(stdout);
-    char iarg[64];
-    snprintf(iarg, sizeof iarg, "-iTCP:%s", port);
-    char *ls[] = {(char *)LSOF, "-nP", iarg, "-sTCP:LISTEN", NULL};
-    if (run(ls) != 0) {
-        printf("(no listener)\n");
+    printf("%s%scodebase-memory-mcp%s\n", COL(A_BOLD), COL(A_BLUE), COL(A_RESET));
+
+    /* ── daemon: parsed from `launchctl list <LABEL>` ── */
+    section("daemon");
+    char plist[8192];
+    char *ll[] = {(char *)LAUNCHCTL, "list", (char *)LABEL, NULL};
+    bool loaded = (capture(ll, plist, sizeof plist) == 0);
+    long pid = -1;
+    long lastexit = -1;
+    char program[1024] = "";
+    if (loaded) {
+        (void)plist_num(plist, "PID", &pid);
+        (void)plist_num(plist, "LastExitStatus", &lastexit);
+        (void)plist_str(plist, "Program", program, sizeof program);
+    }
+    bool running = loaded && pid > 0;
+    field(4, "status", running ? A_GREEN : A_RED,
+          !loaded ? "not loaded" : (running ? "running" : "stopped"));
+    if (running) {
+        snprintf(buf, sizeof buf, "%ld", pid);
+        field(4, "pid", A_YELLOW, buf);
     }
 
-    printf("\n== indexed projects ==\n");
-    (void)fflush(stdout);
+    char iarg[64];
+    snprintf(iarg, sizeof iarg, "-iTCP:%s", port);
+    char lpid[64] = "";
+    char *ls[] = {(char *)LSOF, "-nP", iarg, "-sTCP:LISTEN", "-t", NULL};
+    bool listening = (capture(ls, lpid, sizeof lpid) == 0 && lpid[0] != '\0');
+    snprintf(buf, sizeof buf, "%s  %s", port, listening ? "listening" : "not listening");
+    field(4, "port", listening ? A_GREEN : A_YELLOW, buf);
+
+    if (loaded && lastexit >= 0) {
+        snprintf(buf, sizeof buf, "%ld", lastexit);
+        field(4, "last exit", lastexit == 0 ? A_GREEN : A_YELLOW, buf);
+    }
+    if (program[0]) {
+        field(4, "program", A_DIM, program);
+    }
+    if (home) {
+        snprintf(buf, sizeof buf, "%s/Library/Logs/%s.{out,err}.log", home, LABEL);
+        field(4, "logs", A_DIM, buf);
+    }
+
+    /* ── projects: parsed from `cli list_projects` JSON ── */
+    section("projects");
+    char json[16384];
     char *lp[] = {(char *)CBM_BIN, "cli", "list_projects", NULL};
-    (void)run(lp);
+    if (capture(lp, json, sizeof json) != 0) {
+        printf("    %s(unavailable)%s\n", COL(A_DIM), COL(A_RESET));
+        return 0;
+    }
+    const char *p = strchr(json, '[');           /* skips any leading log line */
+    const char *end = p ? strchr(p, ']') : NULL; /* flat objects → first ] ends array */
+    int count = 0;
+    while (p && end) {
+        const char *ob = strchr(p, '{');
+        if (!ob || ob > end) {
+            break;
+        }
+        const char *oe = strchr(ob, '}');
+        if (!oe || oe > end) {
+            break;
+        }
+        char obj[2048];
+        size_t len = (size_t)(oe - ob + 1);
+        if (len >= sizeof obj) {
+            len = sizeof obj - 1;
+        }
+        memcpy(obj, ob, len);
+        obj[len] = '\0';
+
+        char name[512] = "";
+        char path[1024] = "";
+        char human[64];
+        long nodes = 0;
+        long edges = 0;
+        long size = 0;
+        (void)json_str(obj, "name", name, sizeof name);
+        (void)json_str(obj, "root_path", path, sizeof path);
+        (void)json_num(obj, "nodes", &nodes);
+        (void)json_num(obj, "edges", &edges);
+        (void)json_num(obj, "size_bytes", &size);
+        human_size(size, human, sizeof human);
+
+        printf("    %s%s%s:\n", COL(A_GREEN), name[0] ? name : "(unknown)", COL(A_RESET));
+        if (path[0]) {
+            field(6, "path", A_DIM, path);
+        }
+        snprintf(buf, sizeof buf, "%ld", nodes);
+        field(6, "nodes", A_YELLOW, buf);
+        snprintf(buf, sizeof buf, "%ld", edges);
+        field(6, "edges", A_YELLOW, buf);
+        field(6, "size", A_YELLOW, human);
+        count++;
+        p = oe + 1;
+    }
+    if (count == 0) {
+        printf("    %s(none indexed)%s\n", COL(A_DIM), COL(A_RESET));
+    }
     return 0;
 }
 
