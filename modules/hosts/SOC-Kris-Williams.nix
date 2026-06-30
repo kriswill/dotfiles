@@ -31,6 +31,7 @@
       dnsmasq.enable = true;
       apple-container.enable = true;
       podman-desktop.enable = true;
+      codebase-memory.enable = true;
     };
 
     nixpkgs.hostPlatform = "aarch64-darwin";

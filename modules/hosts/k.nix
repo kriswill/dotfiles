@@ -29,6 +29,7 @@
       dnsmasq.enable = true;
       apple-container.enable = true;
       podman-desktop.enable = true;
+      codebase-memory.enable = true;
 
       claude-account-selector = {
         enable = true;
