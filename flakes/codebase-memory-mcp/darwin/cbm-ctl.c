@@ -47,8 +47,8 @@
 
 /* nix-darwin registers `launchd.user.agents.<name>` under the label
  * org.nixos.<name> (e.g. the repo's org.nixos.claude-config-dir). This must
- * match the agent name in darwin-module.nix and its StandardOut/ErrorPath. */
-#define LABEL "org.nixos.com.kriswill.codebase-memory"
+ * match the agent name in darwin/module.nix and its StandardOut/ErrorPath. */
+#define LABEL "org.nixos.codebase-memory-mcp"
 #define PORT_DEFAULT "9749"
 #define LOCK_TTL_SECS (30 * 60)
 #define LOCK_WAIT_SECS 120

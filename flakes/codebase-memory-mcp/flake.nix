@@ -22,7 +22,7 @@
             codebase-memory-mcp = pkgs.callPackage ./package.nix { };
             default = config.packages.codebase-memory-mcp;
             # cbm-daemon (launchd wrapper) + cbm-ctl (control CLI), C, no PATH deps.
-            cbm-tools = pkgs.callPackage ./tools/package.nix {
+            cbm-tools = pkgs.callPackage ./darwin/package.nix {
               inherit (config.packages) codebase-memory-mcp;
             };
           };
@@ -32,7 +32,7 @@
       # the cbm-tools binaries on PATH. Re-exported into the dotfiles Dendritic
       # module set by modules/darwin/codebase-memory-mcp.nix.
       flake.darwinModules = rec {
-        codebase-memory-mcp = import ./darwin-module.nix inputs.self;
+        codebase-memory-mcp = import ./darwin/module.nix inputs.self;
         default = codebase-memory-mcp;
       };
     };

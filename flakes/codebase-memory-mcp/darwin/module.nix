@@ -52,12 +52,12 @@ in
       cbmTools # cbm-ctl + cbm-daemon
     ];
 
-    # nix-darwin registers this as launchd label `org.nixos.com.kriswill.codebase-memory`
+    # nix-darwin registers this as launchd label `org.nixos.codebase-memory-mcp`
     # (the org.nixos. prefix is nix-darwin's convention — see org.nixos.claude-config-dir).
     # cbm-ctl targets that exact label, and the log filenames below match it.
     # KeepAlive supervises; ProcessType=Background + LowPriorityIO + Nice keep the
     # watcher's reindexing off concurrent clients.
-    launchd.user.agents."com.kriswill.codebase-memory".serviceConfig = {
+    launchd.user.agents."codebase-memory-mcp".serviceConfig = {
       ProgramArguments = [ "${cbmTools}/bin/cbm-daemon" ];
       RunAtLoad = true;
       KeepAlive = true;
@@ -65,8 +65,8 @@ in
       LowPriorityIO = true;
       Nice = 5;
       ThrottleInterval = 10;
-      StandardOutPath = "${homeDir}/Library/Logs/org.nixos.com.kriswill.codebase-memory.out.log";
-      StandardErrorPath = "${homeDir}/Library/Logs/org.nixos.com.kriswill.codebase-memory.err.log";
+      StandardOutPath = "${homeDir}/Library/Logs/org.nixos.codebase-memory-mcp.out.log";
+      StandardErrorPath = "${homeDir}/Library/Logs/org.nixos.codebase-memory-mcp.err.log";
       EnvironmentVariables = {
         CBM_BIN = lib.getExe cfg.package;
         CBM_PORT = toString cfg.port;

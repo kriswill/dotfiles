@@ -13,7 +13,15 @@ stdenv.mkDerivation {
   pname = "cbm-tools";
   inherit (codebase-memory-mcp) version;
 
-  src = ./.;
+  # Just the C sources — this dir also holds module.nix, which must not pull the
+  # nix-darwin module into the compile sandbox or trigger rebuilds on its edits.
+  src = lib.fileset.toSource {
+    root = ./.;
+    fileset = lib.fileset.unions [
+      ./cbm-ctl.c
+      ./cbm-daemon.c
+    ];
+  };
 
   dontConfigure = true;
 
