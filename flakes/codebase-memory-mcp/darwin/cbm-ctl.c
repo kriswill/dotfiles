@@ -569,15 +569,31 @@ static int cmd_logs(void) {
     return 127;
 }
 
+/* One usage row: cyan command, dim args, description aligned at column 24. */
+static void usage_row(const char *cmd, const char *args, const char *desc) {
+    int vis = (int)strlen(cmd) + ((args && args[0]) ? 1 + (int)strlen(args) : 0);
+    int pad = 24 - vis;
+    if (pad < 2) {
+        pad = 2;
+    }
+    if (args && args[0]) {
+        fprintf(stderr, "  %s%s%s %s%s%s%*s%s\n", COL(A_CYAN), cmd, COL(A_RESET), COL(A_DIM), args,
+                COL(A_RESET), pad, "", desc);
+    } else {
+        fprintf(stderr, "  %s%s%s%*s%s\n", COL(A_CYAN), cmd, COL(A_RESET), pad, "", desc);
+    }
+}
+
 static void usage(void) {
-    fprintf(stderr,
-            "usage: %s <command>\n"
-            "  status              launchd state, port listener, indexed projects\n"
-            "  flush  [path]       persist the index artifact for a repo\n"
-            "  commit [-m msg] [path]  flush, then git add/commit .codebase-memory\n"
-            "  start | stop | restart  control the launchd user agent\n"
-            "  logs                tail -F the daemon logs\n",
-            prog);
+    g_color = isatty(STDERR_FILENO) && getenv("NO_COLOR") == NULL;
+    fprintf(stderr, "%s%scbm-ctl%s %s— control the codebase-memory-mcp daemon%s\n\n", COL(A_BOLD),
+            COL(A_BLUE), COL(A_RESET), COL(A_DIM), COL(A_RESET));
+    fprintf(stderr, "%susage:%s cbm-ctl <command>\n\n", COL(A_DIM), COL(A_RESET));
+    usage_row("status", "", "launchd state, port listener, indexed projects");
+    usage_row("flush", "[path]", "persist the index artifact for a repo");
+    usage_row("commit", "[-m msg] [path]", "flush, then git add/commit .codebase-memory");
+    usage_row("start | stop | restart", "", "control the launchd user agent");
+    usage_row("logs", "", "tail -F the daemon logs");
 }
 
 int main(int argc, char **argv) {
