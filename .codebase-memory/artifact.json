@@ -1,11 +1,11 @@
 {
     "schema_version": 1,
-    "commit": "8ce23aaccbd9dfa2edf8831701c0570c9fbf0fe2",
-    "indexed_at": "2026-06-30T22:31:56Z",
+    "commit": "bd098eb6288898401fcab0f659fd6f25ea1bcfe3",
+    "indexed_at": "2026-06-30T22:48:19Z",
     "project": "Users-k-src-dotfiles",
-    "nodes": 1517,
-    "edges": 2405,
+    "nodes": 1537,
+    "edges": 2455,
     "original_size": 4325376,
-    "compressed_size": 615890,
+    "compressed_size": 637021,
     "compression_level": 3
 }
