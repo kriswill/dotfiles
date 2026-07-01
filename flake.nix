@@ -19,25 +19,16 @@
       url = "github:yazi-rs/plugins";
       flake = false;
     };
-    # ccglass lives in its own flake (./flakes/ccglass) — a relative-path input, so one
-    # git tree serves both and extracting it to a separate repo later is just a URL swap.
     ccglass = {
       url = "./flakes/ccglass";
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.flake-parts.follows = "flake-parts";
     };
-    # apple-container — Apple's native macOS container CLI, repackaged from its signed
-    # .pkg. Same relative-path sub-flake pattern as ccglass.
     apple-container = {
       url = "./flakes/apple-container";
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.flake-parts.follows = "flake-parts";
     };
-    # codebase-memory-mcp — C MCP server for codebase memory/graph indexing. Our
-    # `nix` fork tracks upstream (DeusData) and carries the Nix work directly in the
-    # source: the flake-topology passes (flake.lock + `nix flake show`), Nix symbol
-    # extraction, the cbm-with-ui build + nix wrapper, and the darwin module. This
-    # replaces the former in-repo sub-flake (patches against a pinned release tag).
     codebase-memory-mcp = {
       url = "github:kriswill/codebase-memory-mcp/nix";
       inputs.nixpkgs.follows = "nixpkgs";
