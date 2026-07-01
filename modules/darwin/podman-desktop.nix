@@ -18,6 +18,14 @@
     }:
     {
       options.kriswill.podman-desktop.enable = lib.mkEnableOption "Podman Desktop";
-      config = lib.mkIf config.kriswill.podman-desktop.enable { };
+      config = lib.mkIf config.kriswill.podman-desktop.enable {
+        # Expose /libexec in the system + per-user profiles (default pathsToLink
+        # is bin/share/info only; this list-merges). podman's bundled machine
+        # helpers live at $out/libexec/podman/{vfkit,gvproxy} (pkgs/podman.nix),
+        # and podman's default helper search is "$BINDIR/../libexec/podman".
+        # When podman runs via the profile symlink, $BINDIR is the profile bin,
+        # so the helpers are only discoverable if the profile links libexec.
+        environment.pathsToLink = [ "/libexec" ];
+      };
     };
 }

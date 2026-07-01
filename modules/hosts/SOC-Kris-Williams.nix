@@ -16,9 +16,7 @@
               diffnav # git diff pager (config: home-manager/diffnav.nix)
               neovide # neovim GUI
               podman-desktop # config: home/podman-desktop stow tree
-              podman
-              vfkit # Virtualization.framework helper podman drives for applehv
-              gvproxy # user-mode networking helper for `podman machine` (applehv)
+              podman # bundles its vfkit + gvproxy machine helpers (pkgs/podman.nix)
               k9s # kubernetes TUI
               ;
           };

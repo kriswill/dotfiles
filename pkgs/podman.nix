@@ -9,6 +9,8 @@
   lib,
   stdenvNoCC,
   fetchzip,
+  vfkit,
+  gvproxy,
 }:
 stdenvNoCC.mkDerivation (finalAttrs: {
   pname = "podman";
@@ -36,6 +38,21 @@ stdenvNoCC.mkDerivation (finalAttrs: {
     for page in docs/*.1; do
       install -Dm444 "$page" "$out/share/man/man1/$(basename "$page")"
     done
+
+    # Bundle the machine helpers podman drives for the applehv provider. On
+    # darwin the compiled-in default helper_binaries_dir lists
+    # "$BINDIR/../libexec/podman" first, where $BINDIR = dir of the invoked
+    # podman binary (os.Executable(), which on darwin is NOT symlink-resolved).
+    # Dropping vfkit + gvproxy here therefore lets `podman machine` locate them
+    # with no containers.conf helper_binaries_dir override — both when podman is
+    # run by its store path ($out/libexec/podman) and via the profile symlink
+    # (/etc/profiles/per-user/<u>/libexec/podman), the latter requiring
+    # environment.pathsToLink to include "/libexec" (see podman-desktop.nix).
+    # Symlinks (not copies) keep the runtime deps clean and never touch the
+    # helpers' own adhoc Mach-O signatures.
+    mkdir -p $out/libexec/podman
+    ln -s ${vfkit}/bin/vfkit     $out/libexec/podman/vfkit
+    ln -s ${gvproxy}/bin/gvproxy $out/libexec/podman/gvproxy
 
     runHook postInstall
   '';
