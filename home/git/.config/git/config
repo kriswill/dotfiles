@@ -4,13 +4,23 @@
 	signingkey = ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBxqhXoAlCKYNwsB1YrszftURThiCI94oeR0W9EDhrLy
 
 # Sign commits/tags with the SSH key held in 1Password. The agent socket is
-# exposed by `programs._1password-gui` (enabled in nebula/configuration.nix);
-# op-ssh-sign lives at the stable system-profile path so it survives rebuilds.
+# exposed per-OS (NixOS: `programs._1password-gui`; macOS: the 1Password.app
+# bundle). `op-ssh-sign` lives at a different absolute path on each OS, so the
+# program is selected below by home-dir prefix rather than hardcoded — this file
+# is shared across machines, so a single path would break signing on the other.
 [gpg]
 	format = ssh
 [gpg "ssh"]
-	program = /run/current-system/sw/bin/op-ssh-sign
 	allowedSignersFile = ~/.config/git/allowed_signers
+# Every repo lives under the home dir, whose prefix differs by OS (/home on
+# Linux, /Users on macOS), so git's gitdir condition is a reliable OS
+# discriminator. gitdir resolves symlinks, so nebula's /etc/nixos -> /home/k/...
+# rebuild path also matches the Linux branch. Relative include paths resolve
+# next to this file (~/.config/git/), where stow links the .inc siblings.
+[includeIf "gitdir:/home/"]
+	path = signing-linux.inc
+[includeIf "gitdir:/Users/"]
+	path = signing-macos.inc
 [diff]
 	tool = difftastic
 [difftool]
