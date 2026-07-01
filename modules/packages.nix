@@ -15,7 +15,7 @@
         dots-adopt = pkgs.callPackage ../pkgs/dots-adopt.nix { };
         # ccglass is built by its own flake (./flakes/ccglass); re-export it here.
         ccglass = inputs.ccglass.packages.${system}.ccglass;
-        # codebase-memory-mcp is built by its own flake (./flakes/codebase-memory-mcp).
+        # codebase-memory-mcp comes from our kriswill/codebase-memory-mcp `nix` fork.
         codebase-memory-mcp = inputs.codebase-memory-mcp.packages.${system}.codebase-memory-mcp;
       }
       # apple-container is built by its own flake (./flakes/apple-container) and is

@@ -33,12 +33,14 @@
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.flake-parts.follows = "flake-parts";
     };
-    # codebase-memory-mcp — C MCP server for codebase memory/graph indexing, built
-    # from upstream's Makefile. Same relative-path sub-flake pattern as ccglass.
+    # codebase-memory-mcp — C MCP server for codebase memory/graph indexing. Our
+    # `nix` fork tracks upstream (DeusData) and carries the Nix work directly in the
+    # source: the flake-topology passes (flake.lock + `nix flake show`), Nix symbol
+    # extraction, the cbm-with-ui build + nix wrapper, and the darwin module. This
+    # replaces the former in-repo sub-flake (patches against a pinned release tag).
     codebase-memory-mcp = {
-      url = "./flakes/codebase-memory-mcp";
+      url = "github:kriswill/codebase-memory-mcp/nix";
       inputs.nixpkgs.follows = "nixpkgs";
-      inputs.flake-parts.follows = "flake-parts";
     };
   };
 }
