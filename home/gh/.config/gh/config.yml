@@ -1,0 +1,8 @@
+# GitHub CLI config — stow-managed (home/gh/.config/gh/config.yml), symlinked to
+# ~/.config/gh/config.yml by modules/nixos/dotfiles-stow.nix. Auth lives in
+# the sibling hosts.yml, which gh writes at runtime (not tracked here);
+# --no-folding keeps ~/.config/gh a real dir so both coexist.
+aliases: {}
+editor: ''
+git_protocol: https
+version: '1'
