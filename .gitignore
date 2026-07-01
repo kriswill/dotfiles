@@ -19,3 +19,4 @@ home/nvim/.config/nvim/spell/*.spl
 .sidecar-start.sh
 .sidecar-base
 .td-root
+/.codebase-memory
