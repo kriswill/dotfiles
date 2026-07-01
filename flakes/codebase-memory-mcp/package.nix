@@ -4,7 +4,10 @@
   fetchFromGitHub,
   buildNpmPackage,
   gnumake,
+  makeWrapper,
   git,
+  nix,
+  coreutils,
   zlib,
 }:
 # codebase-memory-mcp is a C MCP server built with a plain Makefile (Makefile.cbm).
@@ -59,11 +62,17 @@ stdenv.mkDerivation (finalAttrs: {
   # but its generic name-resolution can't name Nix's shapes; see the patch header.
   # Only touches internal/cbm/ — the graph-ui sub-derivation (own sourceRoot) is
   # unaffected. Re-validate against extract_defs.c/lang_specs.c on each version bump.
-  patches = [ ./nix-symbols.patch ];
+  patches = [
+    ./custom/nix-symbols.patch
+    # flake-topology: pass_flakelock (flake.lock → Flake nodes + DEPENDS_ON/FOLLOWS/
+    # MOUNTS via the already-vendored yyjson) and pass_nix_eval. See custom/ patches.
+    ./custom/flake-topology.patch
+  ];
 
   nativeBuildInputs = [
     gnumake
     git
+    makeWrapper
   ];
 
   buildInputs = [ zlib ] ++ lib.optionals stdenv.isLinux [ zlib.static ];
@@ -95,6 +104,22 @@ stdenv.mkDerivation (finalAttrs: {
     runHook preInstall
     install -Dm755 build/c/codebase-memory-mcp $out/bin/codebase-memory-mcp
     runHook postInstall
+  '';
+
+  # The flake-topology indexing passes (pass_flakelock / pass_nix_eval) shell out
+  # to `nix` — and `git`, which `nix flake` needs for path inputs, plus `coreutils`
+  # for the `timeout` that bounds pass_nix_eval's evaluation. Guarantee all three on
+  # the indexer's runtime PATH so that capability is first-class, not dependent on the
+  # ambient environment. Far lighter than linking libnixexpr (a PATH dep vs. pulling
+  # the Nix C++ runtime + Boehm GC into a C binary). Only the indexer binary is
+  # wrapped; darwin/cbm-daemon execs it, so PATH propagates.
+  postInstall = ''
+    wrapProgram $out/bin/codebase-memory-mcp \
+      --prefix PATH : ${lib.makeBinPath [
+        nix
+        git
+        coreutils
+      ]}
   '';
 
   meta = {
