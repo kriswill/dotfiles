@@ -29,7 +29,6 @@
       dnsmasq.enable = true;
       apple-container.enable = true;
       podman-desktop.enable = true;
-      codebase-memory.enable = true;
 
       claude-account-selector = {
         enable = true;
@@ -46,6 +45,9 @@
         desktopProfile = "me";
       };
     };
+
+    # codebase-memory-mcp launchd daemon (module: modules/darwin/codebase-memory-mcp.nix).
+    services.codebase-memory-mcp.enable = true;
 
     nixpkgs.hostPlatform = "aarch64-darwin";
     nixpkgs.overlays = builtins.attrValues config.flake.overlays;
