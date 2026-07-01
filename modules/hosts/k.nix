@@ -17,6 +17,7 @@
               podman-desktop # config: home/podman-desktop stow tree
               podman
               vfkit # Virtualization.framework helper podman drives for applehv
+              gvproxy # user-mode networking helper for `podman machine` (applehv)
               k9s # kubernetes TUI
               ;
           };
