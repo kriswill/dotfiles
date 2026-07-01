@@ -52,7 +52,17 @@
 
 [gpg "ssh"]
 	allowedSignersFile = "~/.config/git/allowed_signers"
-	program = "/Applications/1Password.app/Contents/MacOS/op-ssh-sign"
+
+# op-ssh-sign lives at a different absolute path per OS (macOS: the 1Password.app
+# bundle; NixOS: the system-profile path). This config is shared across machines,
+# so select the program by home-dir prefix rather than hardcoding one — every
+# repo lives under $HOME, whose prefix differs by OS (/Users vs /home), and
+# gitdir resolves symlinks so a symlinked path still matches. Relative include
+# paths resolve next to this file (~/.config/git/), where stow links the siblings.
+[includeIf "gitdir:/Users/"]
+	path = "signing-macos.inc"
+[includeIf "gitdir:/home/"]
+	path = "signing-linux.inc"
 
 [init]
 	defaultBranch = "main"
