@@ -33,7 +33,9 @@
           inherit okf;
         };
         shellHook = ''
-          PATH_add "$PWD/bin"
+          # plain export: works under both direnv (use flake) and nix develop
+          # (PATH_add is a direnv-only function)
+          export PATH="$PWD/bin:$PATH"
         '';
       };
     };
