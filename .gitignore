@@ -20,3 +20,6 @@ home/nvim/.config/nvim/spell/*.spl
 .sidecar-base
 .td-root
 /.codebase-memory
+
+# Generated OKF bundle graph (bun scripts/okf/okf.ts viz)
+knowledge/viz.html

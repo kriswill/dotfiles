@@ -2,6 +2,12 @@
 
 This is the configuration I currently use to manage my coding computers. Some of the other branches are used for NixOS gaming desktops and VMs.
 
+Repo knowledge lives in two places: [`AGENTS.md`](AGENTS.md) (conventions and
+working instructions) and [`knowledge/`](knowledge/index.md) (an
+[OKF](https://github.com/GoogleCloudPlatform/knowledge-catalog/tree/main/okf)
+bundle of patterns, decision records, playbooks, and a component catalog —
+start at its [index](knowledge/index.md)).
+
 ## MacOS
 
 1. Install Homebrew:
