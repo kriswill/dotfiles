@@ -1,0 +1,9 @@
+{
+  "name": "okf-tools",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "postprocessing": "^6.38.3",
+    "three": "~0.183.0"
+  }
+}

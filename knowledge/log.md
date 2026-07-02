@@ -2,6 +2,11 @@
 
 ## 2026-07-02
 
+- **Update** — `okf viz` rebuilt as a 3D orbit view in the style of
+  codebase-memory-mcp's graph-ui: Three.js instanced glow spheres + bloom,
+  frozen generation-time layout (`scripts/okf/layout3d.ts`), viewer app in
+  `scripts/okf/viz-app/` bundled by bun into the single offline page.
+
 - **Update** — `okf viz` now embeds every referenced source file
   (syntax-highlighted at generation time); `resource:` paths and repo-file
   links in the detail panel open an in-panel code preview with metadata and

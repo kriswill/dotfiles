@@ -1,16 +1,24 @@
-// Render the knowledge/ bundle as a self-contained interactive graph
-// (knowledge/viz.html, gitignored — regenerate any time). Nodes are concepts
-// colored by `type`, edges are markdown cross-links between concepts; the
-// detail panel shows frontmatter, the rendered body, and computed backlinks.
-// No external assets: hand-rolled force layout + minimal markdown renderer.
+// Render the knowledge/ bundle as a self-contained interactive 3D graph
+// (knowledge/viz.html, gitignored — regenerate any time), in the style of
+// codebase-memory-mcp's graph-ui: Three.js instanced glow spheres + bloom,
+// additive edge lines, orbit camera. The force layout runs HERE at generation
+// time (layout3d.ts) so the viewer renders frozen positions — nothing ever
+// simulates or jiggles at runtime. The viewer app (viz-app/) is bundled by
+// Bun.build with three + postprocessing and inlined, so the output is still
+// one offline file:// page.
 
 import { existsSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { extname, join } from "node:path";
 import { bundleRoot, extractLinks, gitISO, isExternal, parseDoc, repoRoot, resolveLink, walkMd, RESERVED } from "./lib";
+import { layout3d } from "./layout3d";
 
 const bundle = bundleRoot();
 
-interface Node { id: string; type: string; title: string; desc: string; fm: Record<string, unknown>; body: string; }
+interface Node {
+  id: string; type: string; title: string; desc: string;
+  fm: Record<string, unknown>; body: string;
+  x?: number; y?: number; z?: number;
+}
 
 const nodes: Node[] = [];
 const edges: { s: string; t: string }[] = [];
@@ -141,6 +149,28 @@ for (const n of nodes) {
   }
 }
 
+// --- Frozen 3D layout ---------------------------------------------------------
+const positions = layout3d(nodes.map((n) => n.id), dedupedEdges);
+for (const n of nodes) Object.assign(n, positions.get(n.id));
+
+// --- Bundle the viewer app ------------------------------------------------------
+if (!existsSync(join(import.meta.dir, "node_modules", "three"))) {
+  console.log("viz: installing viewer dependencies (bun install)…");
+  const r = Bun.spawnSync(["bun", "install"], { cwd: import.meta.dir, stdout: "inherit", stderr: "inherit" });
+  if (r.exitCode !== 0) process.exit(r.exitCode ?? 1);
+}
+const build = await Bun.build({
+  entrypoints: [join(import.meta.dir, "viz-app", "main.ts")],
+  target: "browser",
+  format: "esm",
+  minify: true,
+});
+if (!build.success) {
+  for (const log of build.logs) console.error(String(log));
+  process.exit(1);
+}
+const appJs = (await build.outputs[0].text()).replace(/<\/script/gi, "<\\/script");
+
 const data = JSON.stringify({ nodes, edges: dedupedEdges, files }).replace(/<\//g, "<\\/");
 
 const html = `<!doctype html>
@@ -153,7 +183,7 @@ const html = `<!doctype html>
   :root {
     --surface-1: #fcfcfb; --page: #f9f9f7;
     --ink-1: #0b0b0b; --ink-2: #52514e; --ink-muted: #898781;
-    --grid: #e1e0d9; --baseline: #c3c2b7; --ring: rgba(11,11,11,0.10);
+    --grid: #e1e0d9; --baseline: #c3c2b7;
     --link: #256abf;
     --tok-c: #898781; --tok-s: #0b7a4e; --tok-k: #4a3aa7; --tok-n: #9a5b00;
     --s1:#2a78d6; --s2:#1baf7a; --s3:#eda100; --s4:#008300;
@@ -163,7 +193,7 @@ const html = `<!doctype html>
     :root {
       --surface-1: #1a1a19; --page: #0d0d0d;
       --ink-1: #ffffff; --ink-2: #c3c2b7; --ink-muted: #898781;
-      --grid: #2c2c2a; --baseline: #383835; --ring: rgba(255,255,255,0.10);
+      --grid: #2c2c2a; --baseline: #383835;
       --link: #6da7ec;
       --tok-c: #898781; --tok-s: #2fbe8b; --tok-k: #9085e9; --tok-n: #d99a1f;
       --s1:#3987e5; --s2:#199e70; --s3:#c98500; --s4:#008300;
@@ -204,9 +234,7 @@ const html = `<!doctype html>
             text-decoration: none; font-size: 13px; white-space: nowrap;
             overflow: hidden; text-overflow: ellipsis; }
   #list a:hover { background: var(--page); color: var(--ink-1); }
-  #stage { position: relative; }
-  canvas { display: block; width: 100%; height: 100%; cursor: grab; }
-  canvas.dragging { cursor: grabbing; }
+  #stage { position: relative; overflow: hidden; }
   #tip {
     position: absolute; pointer-events: none; display: none; max-width: 320px;
     background: var(--surface-1); border: 1px solid var(--grid); border-radius: 8px;
@@ -266,396 +294,17 @@ const html = `<!doctype html>
   <div id="list"></div>
 </aside>
 <main id="stage">
-  <canvas id="c"></canvas>
   <div id="tip"></div>
   <section id="panel" aria-live="polite"></section>
 </main>
 <script id="data" type="application/json">${data}</script>
-<script>
-const DATA = JSON.parse(document.getElementById('data').textContent);
-const FILES = DATA.files || {};
-const css = k => getComputedStyle(document.documentElement).getPropertyValue(k).trim();
-// Fixed slot order (never cycled); overflow types fold into muted "Other".
-const TYPE_ORDER = ['Darwin Module','Nix Package','Playbook','Pattern','Decision','Host','Sub-flake','Flake-parts Module'];
-let SLOT = {}, OTHER = '#898781';
-function paint() {
-  SLOT = {};
-  TYPE_ORDER.forEach((t, i) => SLOT[t] = css('--s' + (i + 1)));
-}
-paint();
-matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { paint(); buildLegend(); });
-const colorOf = t => SLOT[t] ?? OTHER;
-
-const nodes = DATA.nodes.map(n => ({...n, x: 0, y: 0, vx: 0, vy: 0}));
-const byId = Object.fromEntries(nodes.map(n => [n.id, n]));
-const edges = DATA.edges.filter(e => byId[e.s] && byId[e.t]);
-const inLinks = {};
-edges.forEach(e => (inLinks[e.t] = inLinks[e.t] || []).push(e.s));
-const deg = {};
-edges.forEach(e => { deg[e.s] = (deg[e.s]||0)+1; deg[e.t] = (deg[e.t]||0)+1; });
-
-// deterministic initial layout: golden-angle spiral
-nodes.forEach((n, i) => {
-  const a = i * 2.39996, r = 26 * Math.sqrt(i + 1);
-  n.x = Math.cos(a) * r; n.y = Math.sin(a) * r;
-});
-
-const canvas = document.getElementById('c'), ctx = canvas.getContext('2d');
-let W = 0, H = 0, dpr = devicePixelRatio || 1;
-let scale = 1, ox = 0, oy = 0;   // view transform
-function resize() {
-  W = canvas.clientWidth; H = canvas.clientHeight;
-  canvas.width = W * dpr; canvas.height = H * dpr;
-  ox = ox || W / 2; oy = oy || H / 2;
-}
-addEventListener('resize', () => { resize(); draw(); });
-resize();
-
-let hidden = new Set();       // types toggled off
-let match = null;             // search matcher or null
-let selected = null, hover = null;
-const visible = n => !hidden.has(n.type) && (!match || match(n));
-
-let alpha = 1;
-const ALPHA_MIN = 0.012;         // below this the layout is settled: stop ticking
-function tick() {
-  if (alpha < ALPHA_MIN) return;
-  const vis = nodes.filter(visible);
-  for (let i = 0; i < vis.length; i++) for (let j = i + 1; j < vis.length; j++) {
-    const a = vis[i], b = vis[j];
-    let dx = a.x - b.x, dy = a.y - b.y, d2 = dx*dx + dy*dy || 1;
-    if (d2 < 260 * 260) {
-      const f = 1400 / d2;
-      dx *= f; dy *= f; a.vx += dx; a.vy += dy; b.vx -= dx; b.vy -= dy;
-    }
-  }
-  for (const e of edges) {
-    const a = byId[e.s], b = byId[e.t];
-    if (!visible(a) || !visible(b)) continue;
-    const dx = b.x - a.x, dy = b.y - a.y, d = Math.sqrt(dx*dx + dy*dy) || 1;
-    const f = (d - 90) * 0.008;
-    a.vx += dx / d * f; a.vy += dy / d * f; b.vx -= dx / d * f; b.vy -= dy / d * f;
-  }
-  for (const n of vis) {
-    n.vx -= n.x * 0.003; n.vy -= n.y * 0.003;      // centering
-    n.x += n.vx * alpha; n.y += n.vy * alpha;
-    n.vx *= 0.6; n.vy *= 0.6;
-  }
-  alpha *= 0.985;                // decay to a full stop (no floor — a floor = endless jiggle)
-}
-
-function radius(n) { return 6 + Math.min(6, (deg[n.id] || 0) * 0.7); }
-
-function draw() {
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  ctx.clearRect(0, 0, W, H);
-  ctx.translate(ox, oy); ctx.scale(scale, scale);
-  ctx.lineWidth = 1 / scale;
-  ctx.strokeStyle = css('--baseline');
-  for (const e of edges) {
-    const a = byId[e.s], b = byId[e.t];
-    if (!visible(a) || !visible(b)) continue;
-    ctx.globalAlpha = selected && (e.s === selected.id || e.t === selected.id) ? 0.9 : 0.35;
-    ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
-  }
-  ctx.globalAlpha = 1;
-  for (const n of nodes) {
-    if (!visible(n)) continue;
-    const r = radius(n);
-    ctx.beginPath(); ctx.arc(n.x, n.y, r, 0, 7);
-    ctx.fillStyle = colorOf(n.type); ctx.fill();
-    ctx.lineWidth = 2 / scale;                       // 2px surface ring spacer
-    ctx.strokeStyle = css('--surface-1'); ctx.stroke();
-    if (n === selected || n === hover) {
-      ctx.lineWidth = 2 / scale; ctx.strokeStyle = css('--ink-1');
-      ctx.beginPath(); ctx.arc(n.x, n.y, r + 2.5 / scale, 0, 7); ctx.stroke();
-    }
-  }
-  if (scale > 0.75) {                                // labels: ink, never series color
-    ctx.fillStyle = css('--ink-2');
-    ctx.font = (11 / scale) + 'px system-ui, sans-serif';
-    ctx.textAlign = 'center';
-    for (const n of nodes) if (visible(n)) ctx.fillText(n.title, n.x, n.y + radius(n) + 12 / scale);
-  }
-}
-
-for (let i = 0; i < 150; i++) tick();   // pre-settle before first paint
-function frame() { tick(); draw(); requestAnimationFrame(frame); }
-requestAnimationFrame(frame);
-const reheat = () => { alpha = Math.max(alpha, 0.5); };
-
-// --- interaction ------------------------------------------------------------
-const toWorld = (px, py) => [(px - ox) / scale, (py - oy) / scale];
-function nodeAt(px, py) {
-  const [x, y] = toWorld(px, py);
-  let best = null, bd = 12 / scale + 6;              // generous hit target
-  for (const n of nodes) {
-    if (!visible(n)) continue;
-    const d = Math.hypot(n.x - x, n.y - y);
-    if (d < Math.max(radius(n) + 4, bd) && (!best || d < bd)) { best = n; bd = d; }
-  }
-  return best;
-}
-let drag = null, panning = false, px0 = 0, py0 = 0;
-canvas.addEventListener('pointerdown', e => {
-  const n = nodeAt(e.offsetX, e.offsetY);
-  if (n) { drag = n; } else { panning = true; }
-  px0 = e.offsetX; py0 = e.offsetY;
-  canvas.classList.add('dragging');
-  canvas.setPointerCapture(e.pointerId);
-});
-canvas.addEventListener('pointermove', e => {
-  if (drag) {
-    const [x, y] = toWorld(e.offsetX, e.offsetY);
-    drag.x = x; drag.y = y; drag.vx = drag.vy = 0; reheat();
-  } else if (panning) {
-    ox += e.offsetX - px0; oy += e.offsetY - py0; px0 = e.offsetX; py0 = e.offsetY;
-  } else {
-    const n = nodeAt(e.offsetX, e.offsetY);
-    hover = n;
-    const tip = document.getElementById('tip');
-    if (n) {
-      tip.style.display = 'block';
-      tip.style.left = Math.min(e.offsetX + 14, W - 330) + 'px';
-      tip.style.top = (e.offsetY + 14) + 'px';
-      tip.innerHTML = '<b>' + esc(n.title) + '</b><span class="t">' + esc(n.type) +
-                      '</span><div class="d">' + esc(n.desc) + '</div>';
-    } else tip.style.display = 'none';
-  }
-});
-canvas.addEventListener('pointerup', e => {
-  if (drag && Math.hypot(e.offsetX - px0, e.offsetY - py0) < 4) select(drag);
-  if (panning && Math.hypot(e.offsetX - px0, e.offsetY - py0) < 4) select(null);
-  drag = null; panning = false; canvas.classList.remove('dragging');
-});
-canvas.addEventListener('wheel', e => {
-  e.preventDefault();
-  const k = Math.exp(-e.deltaY * 0.0015), s = Math.min(4, Math.max(0.2, scale * k));
-  ox = e.offsetX - (e.offsetX - ox) * (s / scale);
-  oy = e.offsetY - (e.offsetY - oy) * (s / scale);
-  scale = s;
-}, { passive: false });
-
-// --- legend / list / search --------------------------------------------------
-const typeCounts = {};
-nodes.forEach(n => typeCounts[n.type] = (typeCounts[n.type] || 0) + 1);
-const allTypes = [...TYPE_ORDER.filter(t => typeCounts[t]),
-                  ...Object.keys(typeCounts).filter(t => !TYPE_ORDER.includes(t)).sort()];
-function buildLegend() {
-  document.getElementById('legend').innerHTML = allTypes.map(t =>
-    '<div class="leg' + (hidden.has(t) ? ' off' : '') + '" data-t="' + esc(t) + '">' +
-    '<span class="dot" style="background:' + colorOf(t) + '"></span>' + esc(t) +
-    '<span class="n">' + typeCounts[t] + '</span></div>').join('');
-}
-buildLegend();
-document.getElementById('counts').textContent =
-  nodes.length + ' concepts · ' + edges.length + ' links';
-document.getElementById('legend').addEventListener('click', e => {
-  const el = e.target.closest('.leg'); if (!el) return;
-  const t = el.dataset.t;
-  hidden.has(t) ? hidden.delete(t) : hidden.add(t);
-  buildLegend(); buildList(); reheat();
-});
-function buildList() {
-  const vis = nodes.filter(visible).sort((a, b) => a.title.localeCompare(b.title));
-  document.getElementById('list').innerHTML = vis.map(n =>
-    '<a href="#" data-id="' + esc(n.id) + '">' + esc(n.title) + '</a>').join('');
-}
-buildList();
-document.getElementById('list').addEventListener('click', e => {
-  const a = e.target.closest('a'); if (!a) return;
-  e.preventDefault(); select(byId[a.dataset.id], true);
-});
-document.getElementById('q').addEventListener('input', e => {
-  const q = e.target.value.trim().toLowerCase();
-  match = q ? (n => (n.title + ' ' + n.id + ' ' + n.desc + ' ' + n.type).toLowerCase().includes(q)) : null;
-  buildList(); reheat();
-});
-
-// --- detail panel -------------------------------------------------------------
-function esc(s) { return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
-function resolveMd(fromId, target) {
-  if (/^[a-z][a-z0-9+.-]*:/.test(target) || target.startsWith('#')) return null;
-  const base = fromId.split('/').slice(0, -1);
-  for (const part of target.split('#')[0].split('/')) {
-    if (part === '' || part === '.') continue;
-    if (part === '..') base.pop(); else base.push(part);
-  }
-  const p = base.join('/');
-  return p.endsWith('.md') && byId[p.slice(0, -3)] ? p.slice(0, -3) : null;
-}
-function resolveRepoFile(fromId, target) {
-  if (/^[a-z][a-z0-9+.-]*:/.test(target) || target.startsWith('#')) return null;
-  const base = ('knowledge/' + fromId).split('/').slice(0, -1);
-  for (const part of target.split('#')[0].split('/')) {
-    if (part === '' || part === '.') continue;
-    if (part === '..') base.pop(); else base.push(part);
-  }
-  const p = base.join('/');
-  return FILES[p] ? p : null;
-}
-// Wrap bare repo-path mentions (repo-root-relative, optional ./) in file links
-// when the file is embedded. Skips text already inside an anchor.
-function autolinkPaths(html) {
-  let inA = 0;
-  return html.split(/(<[^>]*>)/).map(seg => {
-    if (seg.startsWith('<')) {
-      if (/^<a[\\s>]/i.test(seg)) inA++;
-      else if (/^<\\/a>/i.test(seg)) inA = Math.max(0, inA - 1);
-      return seg;
-    }
-    if (inA) return seg;
-    return seg.replace(/(^|[\\s(])((?:\\.\\/)?(?:[\\w.-]+\\/)+[\\w.-]+\\.[A-Za-z0-9]{1,6})/g, (m, pre, p) => {
-      const rel = p.replace(/^\\.\\//, '');
-      return FILES[rel] ? pre + '<a href="#" data-file="' + rel + '">' + p + '</a>' : m;
-    });
-  }).join('');
-}
-function mdToHtml(md, fromId) {
-  const out = []; let inFence = false, fence = [], list = null, para = [];
-  const flushList = () => {
-    if (list) { out.push('<' + list.type + '><li>' + list.items.join('</li><li>') + '</li></' + list.type + '>'); list = null; }
-  };
-  const flushPara = () => { if (para.length) { out.push('<p>' + para.join(' ') + '</p>'); para = []; } };
-  const inlineRaw = s => esc(s)
-    .replace(/\\\`([^\\\`]+)\\\`/g, '<code>$1</code>')
-    .replace(/\\*\\*([^*]+)\\*\\*/g, '<b>$1</b>')
-    .replace(/(?<![\\w*])\\*(\\S(?:[^*\\n]*\\S)?)\\*(?![\\w*])/g, '<em>$1</em>')
-    .replace(/(?<!!)\\[([^\\]]*)\\]\\(([^)\\s]+)\\)/g, (m, txt, href) => {
-      const nid = resolveMd(fromId, href);
-      if (nid) return '<a href="#" data-node="' + esc(nid) + '">' + txt + '</a>';
-      const fp = resolveRepoFile(fromId, href);
-      if (fp) return '<a href="#" data-file="' + esc(fp) + '">' + txt + '</a>';
-      if (/^https?:/.test(href)) return '<a href="' + esc(href) + '" target="_blank" rel="noopener">' + txt + '</a>';
-      return '<a title="' + esc(href) + '">' + txt + '</a>';
-    });
-  const inline = s => autolinkPaths(inlineRaw(s));
-  for (const line of md.split('\\n')) {
-    if (/^(\\\`\\\`\\\`|~~~)/.test(line)) {
-      flushPara();
-      if (inFence) { out.push('<pre><code>' + esc(fence.join('\\n')) + '</code></pre>'); fence = []; }
-      inFence = !inFence; continue;
-    }
-    if (inFence) { fence.push(line); continue; }
-    const h = line.match(/^(#{1,4})\\s+(.*)/);
-    if (h) { flushList(); flushPara(); out.push('<h3>' + inline(h[2]) + '</h3>'); continue; }
-    const ul = line.match(/^\\s*[-*]\\s+(.*)/);
-    const ol = ul ? null : line.match(/^\\s*\\d+[.)]\\s+(.*)/);
-    if (ul || ol) {
-      flushPara();
-      const type = ul ? 'ul' : 'ol';
-      if (list && list.type !== type) flushList();
-      list = list || { type, items: [] };
-      list.items.push(inline((ul || ol)[1]));
-      continue;
-    }
-    if (list && /^\\s{2,}\\S/.test(line)) {   // hard-wrapped continuation of the current item
-      list.items[list.items.length - 1] += ' ' + inline(line.trim());
-      continue;
-    }
-    if (!line.trim()) { flushList(); flushPara(); continue; }
-    flushList(); para.push(inline(line));
-  }
-  flushList();
-  flushPara();
-  if (inFence) out.push('<pre><code>' + esc(fence.join('\\n')) + '</code></pre>');
-  return out.join('');
-}
-function select(n, center) {
-  selected = n;
-  const panel = document.getElementById('panel');
-  if (!n) { panel.classList.remove('open'); return; }
-  if (center) { ox = W / 2 - n.x * scale; oy = H / 2 - n.y * scale; }
-  const fmRows = Object.entries(n.fm).map(([k, v]) => {
-    let val = esc(Array.isArray(v) ? v.join(', ') : v);
-    if (k === 'resource' && FILES[v]) val = '<a href="#" data-file="' + esc(v) + '">' + val + '</a>';
-    else if (k === 'description') val = autolinkPaths(val);
-    return '<tr><td>' + esc(k) + '</td><td>' + val + '</td></tr>';
-  }).join('');
-  const out = edges.filter(e => e.s === n.id).map(e => e.t);
-  const inn = inLinks[n.id] || [];
-  const linkList = ids => ids.map(i =>
-    '<a href="#" data-node="' + esc(i) + '">' + esc(byId[i].title) + '</a>').join(' · ') || '<span style="color:var(--ink-muted)">none</span>';
-  panel.style.width = panelWidth();
-  panel.innerHTML =
-    '<div class="resizer"></div>' +
-    '<button class="close" aria-label="Close">×</button>' +
-    '<h2>' + esc(n.title) + '</h2>' +
-    '<span class="chip"><span class="dot" style="background:' + colorOf(n.type) + '"></span>' + esc(n.type) + '</span>' +
-    '<table class="fm">' + fmRows + '</table>' +
-    '<div id="body-md">' + mdToHtml(n.body, n.id) + '</div>' +
-    '<div class="backlinks"><h4>Links to</h4>' + linkList(out) + '</div>' +
-    '<div class="backlinks"><h4>Cited by</h4>' + linkList(inn) + '</div>';
-  panel.classList.add('open');
-}
-function selectFile(path) {
-  const f = FILES[path]; if (!f) return;
-  const panel = document.getElementById('panel');
-  const back = selected
-    ? '<a href="#" class="back" data-node="' + esc(selected.id) + '">← ' + esc(selected.title) + '</a>'
-    : '';
-  const meta = [
-    ['path', esc(path)], ['language', esc(f.lang)], ['lines', f.lines],
-    ['size', (f.size / 1024).toFixed(1) + ' KB'], ['last commit', esc(f.date)],
-  ].map(([k, v]) => '<tr><td>' + k + '</td><td>' + v + '</td></tr>').join('');
-  const refs = f.refs.filter(i => byId[i]).map(i =>
-    '<a href="#" data-node="' + esc(i) + '">' + esc(byId[i].title) + '</a>').join(' · ') ||
-    '<span style="color:var(--ink-muted)">none</span>';
-  panel.style.width = panelWidth();
-  panel.innerHTML =
-    '<div class="resizer"></div>' +
-    '<button class="close" aria-label="Close">×</button>' + back +
-    '<h2>' + esc(path.split('/').pop()) + '</h2>' +
-    '<span class="chip"><span class="dot" style="background:var(--ink-muted)"></span>' + esc(f.lang) + '</span>' +
-    '<table class="fm">' + meta + '</table>' +
-    '<div class="backlinks" style="border-top:0;margin-top:0;padding-top:0"><h4>Referenced by</h4>' + refs + '</div>' +
-    '<pre class="src">' + f.html + '</pre>';
-  panel.classList.add('open');
-  panel.scrollTop = 0;
-}
-document.getElementById('panel').addEventListener('click', e => {
-  if (e.target.closest('.close')) { select(null); return; }
-  const af = e.target.closest('a[data-file]');
-  if (af) { e.preventDefault(); selectFile(af.dataset.file); return; }
-  const a = e.target.closest('a[data-node]');
-  if (a) { e.preventDefault(); select(byId[a.dataset.node], true); }
-});
-
-// --- panel resize (drag the left edge; width persists) -----------------------
-let panelW = +localStorage.getItem('okfVizPanelW') || 0;
-function panelWidth() {
-  const max = document.getElementById('stage').clientWidth * 0.92;
-  return panelW ? Math.min(panelW, max) + 'px' : 'min(460px, 85%)';
-}
-{
-  const panel = document.getElementById('panel');
-  let resizing = false;
-  panel.addEventListener('pointerdown', e => {
-    const r = e.target.closest('.resizer');
-    if (!r) return;
-    e.preventDefault();
-    resizing = true;
-    r.classList.add('active');
-    panel.setPointerCapture(e.pointerId);
-  });
-  panel.addEventListener('pointermove', e => {
-    if (!resizing) return;
-    const stage = document.getElementById('stage').getBoundingClientRect();
-    panelW = Math.round(Math.min(Math.max(300, stage.right - e.clientX), stage.width * 0.92));
-    panel.style.width = panelW + 'px';
-  });
-  panel.addEventListener('pointerup', e => {
-    if (!resizing) return;
-    resizing = false;
-    panel.querySelector('.resizer')?.classList.remove('active');
-    if (panelW) localStorage.setItem('okfVizPanelW', panelW);
-  });
-}
-</script>
+<script type="module">${appJs}</script>
 </body>
 </html>
 `;
 
 const out = join(bundle, "viz.html");
 writeFileSync(out, html);
-console.log(`viz: ${nodes.length} nodes, ${dedupedEdges.length} edges -> ${out}`);
+console.log(
+  `viz: ${nodes.length} nodes, ${dedupedEdges.length} edges, ${Object.keys(files).length} files -> ${out} (${(html.length / 1024).toFixed(0)} KB)`,
+);

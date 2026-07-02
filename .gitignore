@@ -23,3 +23,4 @@ home/nvim/.config/nvim/spell/*.spl
 
 # Generated OKF bundle graph (bun scripts/okf/okf.ts viz)
 knowledge/viz.html
+scripts/okf/node_modules/
