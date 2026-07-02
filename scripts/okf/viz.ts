@@ -221,6 +221,9 @@ const html = `<!doctype html>
     padding: 18px; overflow-y: auto; display: none; z-index: 2;
   }
   #panel.open { display: block; }
+  .resizer { position: absolute; left: 0; top: 0; bottom: 0; width: 6px;
+             cursor: col-resize; touch-action: none; }
+  .resizer:hover, .resizer.active { background: var(--grid); }
   #panel .close { float: right; cursor: pointer; color: var(--ink-muted);
                   font-size: 18px; border: 0; background: none; }
   #panel h2 { font-size: 17px; margin: 0 0 4px; }
@@ -232,8 +235,9 @@ const html = `<!doctype html>
   table.fm td:first-child { color: var(--ink-muted); white-space: nowrap; width: 1%; }
   #body-md { font-size: 13.5px; color: var(--ink-2); }
   #body-md h3 { color: var(--ink-1); font-size: 14px; margin: 14px 0 6px; }
-  #body-md p, #body-md ul, #body-md pre { margin: 0 0 8px; }
-  #body-md ul { padding-left: 20px; }
+  #body-md p, #body-md ul, #body-md ol, #body-md pre { margin: 0 0 8px; }
+  #body-md ul, #body-md ol { padding-left: 20px; }
+  #body-md li { margin-bottom: 3px; }
   #body-md code { font: 12px ui-monospace, Menlo, monospace; background: var(--page);
                   border: 1px solid var(--grid); border-radius: 4px; padding: 0 4px; }
   #body-md pre { background: var(--page); border: 1px solid var(--grid); border-radius: 6px;
@@ -509,11 +513,14 @@ function autolinkPaths(html) {
 }
 function mdToHtml(md, fromId) {
   const out = []; let inFence = false, fence = [], list = null, para = [];
-  const flushList = () => { if (list) { out.push('<ul>' + list.join('') + '</ul>'); list = null; } };
+  const flushList = () => {
+    if (list) { out.push('<' + list.type + '><li>' + list.items.join('</li><li>') + '</li></' + list.type + '>'); list = null; }
+  };
   const flushPara = () => { if (para.length) { out.push('<p>' + para.join(' ') + '</p>'); para = []; } };
   const inlineRaw = s => esc(s)
     .replace(/\\\`([^\\\`]+)\\\`/g, '<code>$1</code>')
     .replace(/\\*\\*([^*]+)\\*\\*/g, '<b>$1</b>')
+    .replace(/(?<![\\w*])\\*(\\S(?:[^*\\n]*\\S)?)\\*(?![\\w*])/g, '<em>$1</em>')
     .replace(/(?<!!)\\[([^\\]]*)\\]\\(([^)\\s]+)\\)/g, (m, txt, href) => {
       const nid = resolveMd(fromId, href);
       if (nid) return '<a href="#" data-node="' + esc(nid) + '">' + txt + '</a>';
@@ -532,8 +539,20 @@ function mdToHtml(md, fromId) {
     if (inFence) { fence.push(line); continue; }
     const h = line.match(/^(#{1,4})\\s+(.*)/);
     if (h) { flushList(); flushPara(); out.push('<h3>' + inline(h[2]) + '</h3>'); continue; }
-    const li = line.match(/^\\s*[-*]\\s+(.*)/);
-    if (li) { flushPara(); (list = list || []).push('<li>' + inline(li[1]) + '</li>'); continue; }
+    const ul = line.match(/^\\s*[-*]\\s+(.*)/);
+    const ol = ul ? null : line.match(/^\\s*\\d+[.)]\\s+(.*)/);
+    if (ul || ol) {
+      flushPara();
+      const type = ul ? 'ul' : 'ol';
+      if (list && list.type !== type) flushList();
+      list = list || { type, items: [] };
+      list.items.push(inline((ul || ol)[1]));
+      continue;
+    }
+    if (list && /^\\s{2,}\\S/.test(line)) {   // hard-wrapped continuation of the current item
+      list.items[list.items.length - 1] += ' ' + inline(line.trim());
+      continue;
+    }
     if (!line.trim()) { flushList(); flushPara(); continue; }
     flushList(); para.push(inline(line));
   }
@@ -557,7 +576,9 @@ function select(n, center) {
   const inn = inLinks[n.id] || [];
   const linkList = ids => ids.map(i =>
     '<a href="#" data-node="' + esc(i) + '">' + esc(byId[i].title) + '</a>').join(' · ') || '<span style="color:var(--ink-muted)">none</span>';
+  panel.style.width = panelWidth();
   panel.innerHTML =
+    '<div class="resizer"></div>' +
     '<button class="close" aria-label="Close">×</button>' +
     '<h2>' + esc(n.title) + '</h2>' +
     '<span class="chip"><span class="dot" style="background:' + colorOf(n.type) + '"></span>' + esc(n.type) + '</span>' +
@@ -580,7 +601,9 @@ function selectFile(path) {
   const refs = f.refs.filter(i => byId[i]).map(i =>
     '<a href="#" data-node="' + esc(i) + '">' + esc(byId[i].title) + '</a>').join(' · ') ||
     '<span style="color:var(--ink-muted)">none</span>';
+  panel.style.width = panelWidth();
   panel.innerHTML =
+    '<div class="resizer"></div>' +
     '<button class="close" aria-label="Close">×</button>' + back +
     '<h2>' + esc(path.split('/').pop()) + '</h2>' +
     '<span class="chip"><span class="dot" style="background:var(--ink-muted)"></span>' + esc(f.lang) + '</span>' +
@@ -597,6 +620,37 @@ document.getElementById('panel').addEventListener('click', e => {
   const a = e.target.closest('a[data-node]');
   if (a) { e.preventDefault(); select(byId[a.dataset.node], true); }
 });
+
+// --- panel resize (drag the left edge; width persists) -----------------------
+let panelW = +localStorage.getItem('okfVizPanelW') || 0;
+function panelWidth() {
+  const max = document.getElementById('stage').clientWidth * 0.92;
+  return panelW ? Math.min(panelW, max) + 'px' : 'min(460px, 85%)';
+}
+{
+  const panel = document.getElementById('panel');
+  let resizing = false;
+  panel.addEventListener('pointerdown', e => {
+    const r = e.target.closest('.resizer');
+    if (!r) return;
+    e.preventDefault();
+    resizing = true;
+    r.classList.add('active');
+    panel.setPointerCapture(e.pointerId);
+  });
+  panel.addEventListener('pointermove', e => {
+    if (!resizing) return;
+    const stage = document.getElementById('stage').getBoundingClientRect();
+    panelW = Math.round(Math.min(Math.max(300, stage.right - e.clientX), stage.width * 0.92));
+    panel.style.width = panelW + 'px';
+  });
+  panel.addEventListener('pointerup', e => {
+    if (!resizing) return;
+    resizing = false;
+    panel.querySelector('.resizer')?.classList.remove('active');
+    if (panelW) localStorage.setItem('okfVizPanelW', panelW);
+  });
+}
 </script>
 </body>
 </html>
