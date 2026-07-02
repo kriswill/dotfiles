@@ -66,10 +66,25 @@ export class GraphScene {
     this.camera = new THREE.PerspectiveCamera(55, 1, 1, 6000);
     this.camera.position.set(0, 60, 620);
 
-    this.composer = new EffectComposer(this.renderer, { multisampling: 0 });
+    // HalfFloat framebuffer: without it the >1.0 instance colors are clamped
+    // before the bloom pass, killing the glow entirely.
+    this.composer = new EffectComposer(this.renderer, {
+      multisampling: 0,
+      frameBufferType: THREE.HalfFloatType,
+    });
     this.composer.addPass(new RenderPass(this.scene, this.camera));
+    // Params mirror graph-ui's <Bloom> exactly.
     this.composer.addPass(
-      new EffectPass(this.camera, new BloomEffect({ intensity: 1.15, luminanceThreshold: 0.9, mipmapBlur: true })),
+      new EffectPass(
+        this.camera,
+        new BloomEffect({
+          intensity: 1.2,
+          luminanceThreshold: 0.3,
+          luminanceSmoothing: 0.7,
+          mipmapBlur: true,
+          radius: 0.6,
+        }),
+      ),
     );
 
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
@@ -122,7 +137,7 @@ export class GraphScene {
     const el = this.renderer.domElement;
     const ray = new THREE.Raycaster();
     const ndc = new THREE.Vector2();
-    let downX = 0, downY = 0, hovered: number | null = null;
+    let downX = 0, downY = 0, isDown = false, hovered: number | null = null;
     const pick = (e: PointerEvent): number | null => {
       const rect = el.getBoundingClientRect();
       ndc.set(((e.clientX - rect.left) / rect.width) * 2 - 1, -((e.clientY - rect.top) / rect.height) * 2 + 1);
@@ -141,8 +156,10 @@ export class GraphScene {
       }
       this.cb.onHover(i, e.clientX, e.clientY);
     });
-    el.addEventListener("pointerdown", (e) => { this.poke(); downX = e.clientX; downY = e.clientY; });
+    el.addEventListener("pointerdown", (e) => { this.poke(); isDown = true; downX = e.clientX; downY = e.clientY; });
     el.addEventListener("pointerup", (e) => {
+      if (!isDown) return; // ignore synthetic pointerup with no matching down
+      isDown = false;
       if (Math.hypot(e.clientX - downX, e.clientY - downY) > 4) return;
       this.cb.onSelect(pick(e));
     });

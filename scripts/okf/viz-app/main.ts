@@ -229,3 +229,6 @@ function panelWidth() {
     if (panelW) localStorage.setItem("okfVizPanelW", String(panelW));
   });
 }
+
+// Debug/scripting hook (also used by automated visual checks).
+(window as any).__okf = { select: (id: string, fly = true) => select(byId[id] ?? null, fly), selectFile };
