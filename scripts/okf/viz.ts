@@ -107,6 +107,7 @@ function addFile(rel: string, ref: string) {
     if (!existing.refs.includes(ref)) existing.refs.push(ref);
     return;
   }
+  if (rel.split("/").includes("..")) return;
   const abs = join(repo, rel);
   if (!existsSync(abs) || !statSync(abs).isFile()) return;
   const size = statSync(abs).size;
@@ -132,6 +133,11 @@ for (const n of nodes) {
     if (resolveLink(bundle, n.id + ".md", target)) continue; // stays inside the bundle
     const inRepo = resolveLink(repo, join("knowledge", n.id + ".md"), target);
     if (inRepo && !inRepo.startsWith("knowledge/")) addFile(inRepo, n.id);
+  }
+  // Bare repo-path mentions in prose (e.g. "./flakes/x/darwin-module.nix")
+  // get embedded too, so the runtime autolinker has something to open.
+  for (const m of n.body.matchAll(/(?:^|[\s(`])((?:\.\/)?(?:[A-Za-z0-9_.-]+\/)+[A-Za-z0-9_.-]+\.[A-Za-z0-9]{1,6})/g)) {
+    addFile(m[1].replace(/^\.\//, ""), n.id);
   }
 }
 
@@ -484,10 +490,28 @@ function resolveRepoFile(fromId, target) {
   const p = base.join('/');
   return FILES[p] ? p : null;
 }
+// Wrap bare repo-path mentions (repo-root-relative, optional ./) in file links
+// when the file is embedded. Skips text already inside an anchor.
+function autolinkPaths(html) {
+  let inA = 0;
+  return html.split(/(<[^>]*>)/).map(seg => {
+    if (seg.startsWith('<')) {
+      if (/^<a[\\s>]/i.test(seg)) inA++;
+      else if (/^<\\/a>/i.test(seg)) inA = Math.max(0, inA - 1);
+      return seg;
+    }
+    if (inA) return seg;
+    return seg.replace(/(^|[\\s(])((?:\\.\\/)?(?:[\\w.-]+\\/)+[\\w.-]+\\.[A-Za-z0-9]{1,6})/g, (m, pre, p) => {
+      const rel = p.replace(/^\\.\\//, '');
+      return FILES[rel] ? pre + '<a href="#" data-file="' + rel + '">' + p + '</a>' : m;
+    });
+  }).join('');
+}
 function mdToHtml(md, fromId) {
-  const out = []; let inFence = false, fence = [], list = null;
+  const out = []; let inFence = false, fence = [], list = null, para = [];
   const flushList = () => { if (list) { out.push('<ul>' + list.join('') + '</ul>'); list = null; } };
-  const inline = s => esc(s)
+  const flushPara = () => { if (para.length) { out.push('<p>' + para.join(' ') + '</p>'); para = []; } };
+  const inlineRaw = s => esc(s)
     .replace(/\\\`([^\\\`]+)\\\`/g, '<code>$1</code>')
     .replace(/\\*\\*([^*]+)\\*\\*/g, '<b>$1</b>')
     .replace(/(?<!!)\\[([^\\]]*)\\]\\(([^)\\s]+)\\)/g, (m, txt, href) => {
@@ -498,20 +522,23 @@ function mdToHtml(md, fromId) {
       if (/^https?:/.test(href)) return '<a href="' + esc(href) + '" target="_blank" rel="noopener">' + txt + '</a>';
       return '<a title="' + esc(href) + '">' + txt + '</a>';
     });
+  const inline = s => autolinkPaths(inlineRaw(s));
   for (const line of md.split('\\n')) {
     if (/^(\\\`\\\`\\\`|~~~)/.test(line)) {
+      flushPara();
       if (inFence) { out.push('<pre><code>' + esc(fence.join('\\n')) + '</code></pre>'); fence = []; }
       inFence = !inFence; continue;
     }
     if (inFence) { fence.push(line); continue; }
     const h = line.match(/^(#{1,4})\\s+(.*)/);
-    if (h) { flushList(); out.push('<h3>' + inline(h[2]) + '</h3>'); continue; }
+    if (h) { flushList(); flushPara(); out.push('<h3>' + inline(h[2]) + '</h3>'); continue; }
     const li = line.match(/^\\s*[-*]\\s+(.*)/);
-    if (li) { (list = list || []).push('<li>' + inline(li[1]) + '</li>'); continue; }
-    if (!line.trim()) { flushList(); continue; }
-    flushList(); out.push('<p>' + inline(line) + '</p>');
+    if (li) { flushPara(); (list = list || []).push('<li>' + inline(li[1]) + '</li>'); continue; }
+    if (!line.trim()) { flushList(); flushPara(); continue; }
+    flushList(); para.push(inline(line));
   }
   flushList();
+  flushPara();
   if (inFence) out.push('<pre><code>' + esc(fence.join('\\n')) + '</code></pre>');
   return out.join('');
 }
@@ -523,6 +550,7 @@ function select(n, center) {
   const fmRows = Object.entries(n.fm).map(([k, v]) => {
     let val = esc(Array.isArray(v) ? v.join(', ') : v);
     if (k === 'resource' && FILES[v]) val = '<a href="#" data-file="' + esc(v) + '">' + val + '</a>';
+    else if (k === 'description') val = autolinkPaths(val);
     return '<tr><td>' + esc(k) + '</td><td>' + val + '</td></tr>';
   }).join('');
   const out = edges.filter(e => e.s === n.id).map(e => e.t);
