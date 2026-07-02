@@ -60,6 +60,7 @@ const html = `<!doctype html>
     --surface-1: #fcfcfb; --page: #f9f9f7;
     --ink-1: #0b0b0b; --ink-2: #52514e; --ink-muted: #898781;
     --grid: #e1e0d9; --baseline: #c3c2b7; --ring: rgba(11,11,11,0.10);
+    --link: #256abf;
     --s1:#2a78d6; --s2:#1baf7a; --s3:#eda100; --s4:#008300;
     --s5:#4a3aa7; --s6:#e34948; --s7:#e87ba4; --s8:#eb6834;
   }
@@ -68,11 +69,15 @@ const html = `<!doctype html>
       --surface-1: #1a1a19; --page: #0d0d0d;
       --ink-1: #ffffff; --ink-2: #c3c2b7; --ink-muted: #898781;
       --grid: #2c2c2a; --baseline: #383835; --ring: rgba(255,255,255,0.10);
+      --link: #6da7ec;
       --s1:#3987e5; --s2:#199e70; --s3:#c98500; --s4:#008300;
       --s5:#9085e9; --s6:#e66767; --s7:#d55181; --s8:#d95926;
     }
   }
   * { box-sizing: border-box; margin: 0; }
+  a { color: var(--link); text-underline-offset: 2px;
+      text-decoration-color: color-mix(in srgb, var(--link) 45%, transparent); }
+  a:hover { text-decoration-color: var(--link); }
   html, body { height: 100%; }
   body {
     font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif;
@@ -138,7 +143,7 @@ const html = `<!doctype html>
   #body-md pre { background: var(--page); border: 1px solid var(--grid); border-radius: 6px;
                  padding: 8px 10px; overflow-x: auto; }
   #body-md pre code { border: 0; background: none; padding: 0; }
-  #body-md a { color: var(--ink-1); }
+  #body-md a { color: var(--link); }
   .backlinks { border-top: 1px solid var(--grid); margin-top: 14px; padding-top: 10px; }
   .backlinks h4 { font-size: 12px; color: var(--ink-muted); margin-bottom: 4px;
                   text-transform: uppercase; letter-spacing: 0.04em; }
