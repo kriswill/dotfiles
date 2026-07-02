@@ -12,7 +12,7 @@ interesting ones by hand — scaffolding never overwrites an existing doc.
 * [Codebase Memory Mcp](codebase-memory-mcp.md) - codebase-memory-mcp ships its nix-darwin module in our kriswill/codebase-memory-mcp `nix` fork (nix/darwin/module.nix); re-export it into the Dendritic module set so hosts pick it up like any in-tree modules/darwin/* module.
 * [Core](core.md) - Kris' custom darwin modules.
 * [Darwin](darwin.md) - Declares `configurations.darwin.<name>` and realises each into a `darwinConfigurations.<name>` flake output (plus a toplevel build check).
-* [Dev](dev.md) - Development shell and formatter.
+* [Dev](dev.md) - Development shell (deadnix, statix, nixfmt-tree, just, okf) and formatter.
 * [Diffnav](diffnav.md) - diffnav git diff pager.
 * [Direnv Nom](direnv-nom.md) - Closure diff tool: nvd (nh-style formatted output), native (nix store diff-closures), or none to disable.
 * [Direnv](direnv.md) - Kris' direnv + nix-direnv.

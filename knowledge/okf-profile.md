@@ -48,13 +48,17 @@ here.
 
 ## Tooling
 
-All zero-dependency bun/TypeScript in [`scripts/okf/`](../scripts/okf/):
+All zero-dependency bun/TypeScript in [`scripts/okf/`](../scripts/okf/). In
+the dev shell (`nix develop` / direnv) it's on `PATH` as **`okf`** via the
+[dev](modules/dev.md) module; outside it, invoke with bun directly:
 
 ```sh
-bun scripts/okf/okf.ts scaffold   # stub catalog docs from the repo (idempotent)
-bun scripts/okf/okf.ts index     # regenerate index.md listings
-bun scripts/okf/okf.ts validate  # spec + profile conformance; exit 1 on errors
-bun scripts/okf/okf.ts viz      # render knowledge/viz.html interactive graph
+okf scaffold   # stub catalog docs from the repo (idempotent)
+okf index     # regenerate index.md listings
+okf validate  # spec + profile conformance; exit 1 on errors
+okf viz      # render knowledge/viz.html interactive graph
+
+bun scripts/okf/okf.ts <cmd>   # equivalent, no dev shell needed
 ```
 
 `viz.html` is generated output and gitignored — regenerate at will.

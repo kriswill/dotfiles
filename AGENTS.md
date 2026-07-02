@@ -10,7 +10,7 @@ Platform: aarch64-darwin (Apple Silicon only). Flake-based, using flake-parts + 
 **Primary Commands:**
 
 - `darwin-rebuild switch --flake .` - Apply system configuration
-- `nix develop` - Enter dev shell (deadnix, statix, nixfmt-tree, just)
+- `nix develop` - Enter dev shell (deadnix, statix, nixfmt-tree, just, okf)
 
 **Testing & Validation:**
 
@@ -124,4 +124,4 @@ Each dir under `home/` is one stow package mirroring `$HOME` (e.g. `home/tmux/.c
 
 `knowledge/` is the repo's authored knowledge layer — an [OKF v0.1](https://github.com/GoogleCloudPlatform/knowledge-catalog/blob/main/okf/SPEC.md) bundle of architecture patterns, decision records, playbooks, and a scaffolded catalog of every module/package/host, cross-linked into a graph. Conventions: `knowledge/okf-profile.md`. Start reading at `knowledge/index.md` (each directory's `index.md` discloses one level at a time).
 
-**Keep it current as part of any change** (the `knowledge-bundle` skill has the full procedure): after adding a module/package/host run `bun scripts/okf/okf.ts scaffold` + `index`; record non-obvious decisions in `knowledge/decisions/`; append `knowledge/log.md`; `bun scripts/okf/okf.ts validate` must exit 0 before committing. `bun scripts/okf/okf.ts viz` renders an interactive graph at `knowledge/viz.html` (gitignored).
+**Keep it current as part of any change** (the `knowledge-bundle` skill has the full procedure): after adding a module/package/host run `okf scaffold` + `okf index`; record non-obvious decisions in `knowledge/decisions/`; append `knowledge/log.md`; `okf validate` must exit 0 before committing. `okf viz` renders an interactive graph at `knowledge/viz.html` (gitignored). The `okf` command is on the dev-shell PATH (`modules/dev.nix`); outside the dev shell use `bun scripts/okf/okf.ts <cmd>`.

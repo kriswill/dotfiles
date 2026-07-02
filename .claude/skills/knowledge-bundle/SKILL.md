@@ -13,11 +13,14 @@ All conventions live in `knowledge/okf-profile.md`; read it before authoring.
 
 ## Commands (zero-dep bun, in scripts/okf/)
 
+In the dev shell (`nix develop` / direnv) these are on `PATH` as `okf <cmd>`;
+outside it, run `bun scripts/okf/okf.ts <cmd>`:
+
 ```sh
-bun scripts/okf/okf.ts scaffold   # stub catalog docs for new modules/packages/hosts (never overwrites)
-bun scripts/okf/okf.ts index     # regenerate index.md listings (blurbs above first heading are preserved)
-bun scripts/okf/okf.ts validate  # conformance + link check; must exit 0 before committing
-bun scripts/okf/okf.ts viz      # regenerate knowledge/viz.html interactive graph (gitignored)
+okf scaffold   # stub catalog docs for new modules/packages/hosts (never overwrites)
+okf index     # regenerate index.md listings (blurbs above first heading are preserved)
+okf validate  # conformance + link check; must exit 0 before committing
+okf viz      # regenerate knowledge/viz.html interactive graph (gitignored)
 ```
 
 ## When to update what
