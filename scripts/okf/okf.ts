@@ -8,7 +8,8 @@ import { c } from "./lib";
 interface Cmd {
   file: string;
   args: string;
-  summary: string;
+  brief: string; // one line, for the command table
+  summary: string; // full detail, for `okf help <cmd>`
   flags: [string, string][];
 }
 
@@ -16,24 +17,28 @@ const commands: Record<string, Cmd> = {
   scaffold: {
     file: "./scaffold.ts",
     args: "[--force]",
+    brief: "stub catalog docs for new modules/packages/hosts",
     summary: "Stub catalog docs (modules/hosts/packages) from the repo sources. Idempotent: existing docs are never touched, so hand enrichment survives re-runs.",
     flags: [["--force", "overwrite existing docs with fresh stubs (discards enrichment)"]],
   },
   index: {
     file: "./index-gen.ts",
     args: "",
+    brief: "regenerate index.md listings",
     summary: "Regenerate every index.md listing (OKF progressive disclosure). The hand-written blurb above the first heading is preserved; listings are rebuilt.",
     flags: [],
   },
   validate: {
     file: "./validate.ts",
     args: "[--strict]",
+    brief: "check conformance + links; exit 1 on errors",
     summary: "Check OKF v0.1 + profile conformance: frontmatter, required fields, reserved files, link style, dangling links. Exits 1 on errors.",
     flags: [["--strict", "treat warnings (missing recommended fields, dangling links) as errors"]],
   },
   viz: {
     file: "./viz.ts",
     args: "",
+    brief: "render the graph at knowledge/viz.html",
     summary: "Render the bundle as a self-contained interactive graph at knowledge/viz.html (gitignored) — nodes by type, edges from cross-links, backlink panel.",
     flags: [],
   },
@@ -56,39 +61,36 @@ function wrap(text: string, indent: number, width = 78): string {
 }
 
 function usage() {
-  const out: string[] = [
-    `${c.bold("okf")} — maintain the ${c.cyan("knowledge/")} OKF bundle (patterns, decisions, playbooks, catalog)`,
-    "",
-    `${c.bold("Usage:")} ${prog} ${c.cyan("<command>")} ${c.yellow("[flags]")}`,
-    "",
-    c.bold("Commands:"),
-  ];
-  for (const [name, cmd] of Object.entries(commands)) {
-    out.push(`  ${c.cyan(name.padEnd(9))}${c.yellow(cmd.args.padEnd(11))}${wrap(cmd.summary, 22)}`);
-    for (const [flag, desc] of cmd.flags) out.push(`             ${c.yellow(flag.padEnd(9))} ${c.dim(wrap(desc, 23))}`);
-    out.push("");
-  }
-  out.push(
-    c.bold("Typical loop:"),
-    `  ${c.dim("after adding a module/package/host:")}  ${prog} scaffold ${c.dim("&&")} ${prog} index`,
-    `  ${c.dim("before committing bundle changes:  ")}  ${prog} validate`,
-    "",
-    c.bold("Docs:"),
-    `  ${c.cyan("knowledge/okf-profile.md")}             ${c.dim("conventions: frontmatter, links, headings")}`,
-    `  ${c.cyan(".claude/skills/knowledge-bundle/")}     ${c.dim("when to update what (maintenance procedure)")}`,
+  const rows = Object.entries(commands).map(
+    ([name, cmd]) =>
+      `  ${c.cyan(name.padEnd(10))}${cmd.args ? cmd.brief.padEnd(50) + c.yellow(cmd.args) : cmd.brief}`,
   );
-  console.log(out.join("\n"));
+  console.log(
+    [
+      `${c.bold("okf")} ${c.dim("—")} maintain the ${c.cyan("knowledge/")} OKF bundle`,
+      "",
+      `${c.bold("Usage:")} ${prog} ${c.cyan("<command>")} ${c.yellow("[flags]")}   ${c.dim(`· ${prog} help <command> for details`)}`,
+      "",
+      ...rows,
+      "",
+      `${c.bold("Loop:")}  ${c.cyan("scaffold && index")} ${c.dim("after adding components")} · ${c.cyan("validate")} ${c.dim("before committing")}`,
+      `${c.bold("Docs:")}  knowledge/okf-profile.md ${c.dim("·")} .claude/skills/knowledge-bundle/`,
+    ].join("\n"),
+  );
+}
+
+function commandHelp(name: string) {
+  const t = commands[name];
+  console.log(`${c.bold("Usage:")} ${prog} ${c.cyan(name)} ${c.yellow(t.args)}\n\n${wrap(t.summary, 0)}`);
+  for (const [flag, desc] of t.flags) console.log(`\n  ${c.yellow(flag)}  ${desc}`);
 }
 
 const [cmd, ...rest] = process.argv.slice(2);
 
 if (!cmd || cmd === "help" || cmd === "--help" || cmd === "-h") {
   const topic = cmd === "help" ? rest[0] : undefined;
-  if (topic && commands[topic]) {
-    const t = commands[topic];
-    console.log(`${c.bold("Usage:")} ${prog} ${c.cyan(topic)} ${c.yellow(t.args)}\n\n${wrap(t.summary, 0)}`);
-    for (const [flag, desc] of t.flags) console.log(`\n  ${c.yellow(flag)}  ${desc}`);
-  } else usage();
+  if (topic && commands[topic]) commandHelp(topic);
+  else usage();
   process.exit(0);
 }
 
@@ -99,9 +101,7 @@ if (!commands[cmd]) {
 }
 
 if (rest.includes("--help") || rest.includes("-h")) {
-  const t = commands[cmd];
-  console.log(`${c.bold("Usage:")} ${prog} ${c.cyan(cmd)} ${c.yellow(t.args)}\n\n${wrap(t.summary, 0)}`);
-  for (const [flag, desc] of t.flags) console.log(`\n  ${c.yellow(flag)}  ${desc}`);
+  commandHelp(cmd);
   process.exit(0);
 }
 
