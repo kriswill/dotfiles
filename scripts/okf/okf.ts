@@ -39,7 +39,7 @@ const commands: Record<string, Cmd> = {
     file: "./viz.ts",
     args: "",
     brief: "render the graph at knowledge/viz.html",
-    summary: "Render the bundle as a self-contained interactive graph at knowledge/viz.html (gitignored) — nodes by type, edges from cross-links, backlink panel.",
+    summary: "Render the bundle as a self-contained interactive graph at knowledge/viz.html (gitignored) — nodes by type, edges from cross-links, backlink panel. Referenced source files are embedded with syntax highlighting; resource paths and file links open an in-panel preview.",
     flags: [],
   },
 };

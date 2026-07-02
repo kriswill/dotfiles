@@ -4,9 +4,9 @@
 // detail panel shows frontmatter, the rendered body, and computed backlinks.
 // No external assets: hand-rolled force layout + minimal markdown renderer.
 
-import { writeFileSync } from "node:fs";
-import { join } from "node:path";
-import { bundleRoot, extractLinks, isExternal, parseDoc, resolveLink, walkMd, RESERVED } from "./lib";
+import { existsSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import { extname, join } from "node:path";
+import { bundleRoot, extractLinks, gitISO, isExternal, parseDoc, repoRoot, resolveLink, walkMd, RESERVED } from "./lib";
 
 const bundle = bundleRoot();
 
@@ -47,7 +47,95 @@ const dedupedEdges = edges.filter((e) => {
   return true;
 });
 
-const data = JSON.stringify({ nodes, edges: dedupedEdges }).replace(/<\//g, "<\\/");
+// --- Embed referenced source files, highlighted at generation time ----------
+// The viewer is a self-contained file:// page (no fetch), so every repo file a
+// concept references is bundled in, pre-highlighted by a small lexer. Not
+// tree-sitter — token-level only — but zero runtime deps and offline.
+
+const escHtml = (s: string) =>
+  s.replace(/[&<>"]/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[ch]!);
+
+const LANG_BY_EXT: Record<string, string> = {
+  ".nix": "nix", ".ts": "ts", ".js": "ts", ".mjs": "ts", ".sh": "shell", ".zsh": "shell",
+  ".bash": "shell", ".md": "markdown", ".toml": "toml", ".yaml": "yaml", ".yml": "yaml",
+  ".json": "json", ".lua": "lua", ".conf": "conf",
+};
+
+const KEYWORDS: Record<string, string> = {
+  nix: "let in if then else with inherit rec assert import or true false null",
+  ts: "const let var function return if else for while of in new import export from await async type interface class extends throw try catch switch case default break continue true false null undefined",
+  shell: "if then else elif fi for while until do done case esac function local exec exit return set trap source alias export readonly echo shift",
+  lua: "local function end if then else elseif for while do return require true false nil",
+  toml: "true false", yaml: "true false null", json: "true false null",
+};
+
+function highlight(src: string, lang: string): string {
+  const kw = new Set((KEYWORDS[lang] ?? "").split(" ").filter(Boolean));
+  const NEVER = "(?!x)x";
+  const comment =
+    lang === "ts" ? "\\/\\/[^\\n]*|\\/\\*[\\s\\S]*?\\*\\/"
+    : lang === "lua" ? "--\\[\\[[\\s\\S]*?\\]\\]|--[^\\n]*"
+    : lang === "nix" ? "#[^\\n]*|\\/\\*[\\s\\S]*?\\*\\/"
+    : ["shell", "toml", "yaml", "conf"].includes(lang) ? "#[^\\n]*"
+    : NEVER;
+  const str =
+    lang === "nix" ? `''(?:[^']|'[^'])*''|"(?:\\\\.|[^"\\\\])*"`
+    : lang === "markdown" || lang === "text" ? NEVER
+    : "`(?:\\\\.|[^`\\\\])*`|\"(?:\\\\.|[^\"\\\\\\n])*\"|'(?:\\\\.|[^'\\\\\\n])*'";
+  const master = new RegExp(`(${comment})|(${str})|(\\b\\d[\\d._]*\\b)|([A-Za-z_][\\w'-]*)`, "g");
+  let out = "";
+  let last = 0;
+  for (const m of src.matchAll(master)) {
+    out += escHtml(src.slice(last, m.index!));
+    const tok = m[0];
+    if (m[1]) out += `<span class="tok-c">${escHtml(tok)}</span>`;
+    else if (m[2]) out += `<span class="tok-s">${escHtml(tok)}</span>`;
+    else if (m[3]) out += `<span class="tok-n">${escHtml(tok)}</span>`;
+    else out += kw.has(tok) ? `<span class="tok-k">${escHtml(tok)}</span>` : escHtml(tok);
+    last = m.index! + tok.length;
+  }
+  return out + escHtml(src.slice(last));
+}
+
+const repo = repoRoot();
+interface Embedded { html: string; lang: string; lines: number; size: number; date: string; refs: string[] }
+const files: Record<string, Embedded> = {};
+
+function addFile(rel: string, ref: string) {
+  const existing = files[rel];
+  if (existing) {
+    if (!existing.refs.includes(ref)) existing.refs.push(ref);
+    return;
+  }
+  const abs = join(repo, rel);
+  if (!existsSync(abs) || !statSync(abs).isFile()) return;
+  const size = statSync(abs).size;
+  if (size > 200_000) return;
+  const text = readFileSync(abs, "utf8");
+  if (text.includes("\u0000")) return;
+  const lang = LANG_BY_EXT[extname(rel)] ?? "text";
+  files[rel] = {
+    html: highlight(text, lang),
+    lang,
+    lines: text.split("\n").length,
+    size,
+    date: gitISO(rel).slice(0, 10),
+    refs: [ref],
+  };
+}
+
+for (const n of nodes) {
+  const res = n.fm?.resource;
+  if (typeof res === "string") addFile(res.replace(/\/$/, ""), n.id);
+  for (const target of extractLinks(n.body)) {
+    if (isExternal(target)) continue;
+    if (resolveLink(bundle, n.id + ".md", target)) continue; // stays inside the bundle
+    const inRepo = resolveLink(repo, join("knowledge", n.id + ".md"), target);
+    if (inRepo && !inRepo.startsWith("knowledge/")) addFile(inRepo, n.id);
+  }
+}
+
+const data = JSON.stringify({ nodes, edges: dedupedEdges, files }).replace(/<\//g, "<\\/");
 
 const html = `<!doctype html>
 <html lang="en">
@@ -61,6 +149,7 @@ const html = `<!doctype html>
     --ink-1: #0b0b0b; --ink-2: #52514e; --ink-muted: #898781;
     --grid: #e1e0d9; --baseline: #c3c2b7; --ring: rgba(11,11,11,0.10);
     --link: #256abf;
+    --tok-c: #898781; --tok-s: #0b7a4e; --tok-k: #4a3aa7; --tok-n: #9a5b00;
     --s1:#2a78d6; --s2:#1baf7a; --s3:#eda100; --s4:#008300;
     --s5:#4a3aa7; --s6:#e34948; --s7:#e87ba4; --s8:#eb6834;
   }
@@ -70,6 +159,7 @@ const html = `<!doctype html>
       --ink-1: #ffffff; --ink-2: #c3c2b7; --ink-muted: #898781;
       --grid: #2c2c2a; --baseline: #383835; --ring: rgba(255,255,255,0.10);
       --link: #6da7ec;
+      --tok-c: #898781; --tok-s: #2fbe8b; --tok-k: #9085e9; --tok-n: #d99a1f;
       --s1:#3987e5; --s2:#199e70; --s3:#c98500; --s4:#008300;
       --s5:#9085e9; --s6:#e66767; --s7:#d55181; --s8:#d95926;
     }
@@ -147,6 +237,14 @@ const html = `<!doctype html>
   .backlinks { border-top: 1px solid var(--grid); margin-top: 14px; padding-top: 10px; }
   .backlinks h4 { font-size: 12px; color: var(--ink-muted); margin-bottom: 4px;
                   text-transform: uppercase; letter-spacing: 0.04em; }
+  .back { display: inline-block; font-size: 12px; margin: 0 0 10px; }
+  .src { background: var(--page); border: 1px solid var(--grid); border-radius: 6px;
+         padding: 10px 12px; overflow-x: auto; white-space: pre; margin-top: 12px;
+         font: 12px/1.55 ui-monospace, Menlo, monospace; color: var(--ink-2); }
+  .tok-c { color: var(--tok-c); font-style: italic; }
+  .tok-s { color: var(--tok-s); }
+  .tok-k { color: var(--tok-k); }
+  .tok-n { color: var(--tok-n); }
 </style>
 </head>
 <body>
@@ -165,6 +263,7 @@ const html = `<!doctype html>
 <script id="data" type="application/json">${data}</script>
 <script>
 const DATA = JSON.parse(document.getElementById('data').textContent);
+const FILES = DATA.files || {};
 const css = k => getComputedStyle(document.documentElement).getPropertyValue(k).trim();
 // Fixed slot order (never cycled); overflow types fold into muted "Other".
 const TYPE_ORDER = ['Darwin Module','Nix Package','Playbook','Pattern','Decision','Host','Sub-flake','Flake-parts Module'];
@@ -375,6 +474,16 @@ function resolveMd(fromId, target) {
   const p = base.join('/');
   return p.endsWith('.md') && byId[p.slice(0, -3)] ? p.slice(0, -3) : null;
 }
+function resolveRepoFile(fromId, target) {
+  if (/^[a-z][a-z0-9+.-]*:/.test(target) || target.startsWith('#')) return null;
+  const base = ('knowledge/' + fromId).split('/').slice(0, -1);
+  for (const part of target.split('#')[0].split('/')) {
+    if (part === '' || part === '.') continue;
+    if (part === '..') base.pop(); else base.push(part);
+  }
+  const p = base.join('/');
+  return FILES[p] ? p : null;
+}
 function mdToHtml(md, fromId) {
   const out = []; let inFence = false, fence = [], list = null;
   const flushList = () => { if (list) { out.push('<ul>' + list.join('') + '</ul>'); list = null; } };
@@ -384,6 +493,8 @@ function mdToHtml(md, fromId) {
     .replace(/(?<!!)\\[([^\\]]*)\\]\\(([^)\\s]+)\\)/g, (m, txt, href) => {
       const nid = resolveMd(fromId, href);
       if (nid) return '<a href="#" data-node="' + esc(nid) + '">' + txt + '</a>';
+      const fp = resolveRepoFile(fromId, href);
+      if (fp) return '<a href="#" data-file="' + esc(fp) + '">' + txt + '</a>';
       if (/^https?:/.test(href)) return '<a href="' + esc(href) + '" target="_blank" rel="noopener">' + txt + '</a>';
       return '<a title="' + esc(href) + '">' + txt + '</a>';
     });
@@ -409,8 +520,11 @@ function select(n, center) {
   const panel = document.getElementById('panel');
   if (!n) { panel.classList.remove('open'); return; }
   if (center) { ox = W / 2 - n.x * scale; oy = H / 2 - n.y * scale; }
-  const fmRows = Object.entries(n.fm).map(([k, v]) =>
-    '<tr><td>' + esc(k) + '</td><td>' + esc(Array.isArray(v) ? v.join(', ') : v) + '</td></tr>').join('');
+  const fmRows = Object.entries(n.fm).map(([k, v]) => {
+    let val = esc(Array.isArray(v) ? v.join(', ') : v);
+    if (k === 'resource' && FILES[v]) val = '<a href="#" data-file="' + esc(v) + '">' + val + '</a>';
+    return '<tr><td>' + esc(k) + '</td><td>' + val + '</td></tr>';
+  }).join('');
   const out = edges.filter(e => e.s === n.id).map(e => e.t);
   const inn = inLinks[n.id] || [];
   const linkList = ids => ids.map(i =>
@@ -425,8 +539,33 @@ function select(n, center) {
     '<div class="backlinks"><h4>Cited by</h4>' + linkList(inn) + '</div>';
   panel.classList.add('open');
 }
+function selectFile(path) {
+  const f = FILES[path]; if (!f) return;
+  const panel = document.getElementById('panel');
+  const back = selected
+    ? '<a href="#" class="back" data-node="' + esc(selected.id) + '">← ' + esc(selected.title) + '</a>'
+    : '';
+  const meta = [
+    ['path', esc(path)], ['language', esc(f.lang)], ['lines', f.lines],
+    ['size', (f.size / 1024).toFixed(1) + ' KB'], ['last commit', esc(f.date)],
+  ].map(([k, v]) => '<tr><td>' + k + '</td><td>' + v + '</td></tr>').join('');
+  const refs = f.refs.filter(i => byId[i]).map(i =>
+    '<a href="#" data-node="' + esc(i) + '">' + esc(byId[i].title) + '</a>').join(' · ') ||
+    '<span style="color:var(--ink-muted)">none</span>';
+  panel.innerHTML =
+    '<button class="close" aria-label="Close">×</button>' + back +
+    '<h2>' + esc(path.split('/').pop()) + '</h2>' +
+    '<span class="chip"><span class="dot" style="background:var(--ink-muted)"></span>' + esc(f.lang) + '</span>' +
+    '<table class="fm">' + meta + '</table>' +
+    '<div class="backlinks" style="border-top:0;margin-top:0;padding-top:0"><h4>Referenced by</h4>' + refs + '</div>' +
+    '<pre class="src">' + f.html + '</pre>';
+  panel.classList.add('open');
+  panel.scrollTop = 0;
+}
 document.getElementById('panel').addEventListener('click', e => {
   if (e.target.closest('.close')) { select(null); return; }
+  const af = e.target.closest('a[data-file]');
+  if (af) { e.preventDefault(); selectFile(af.dataset.file); return; }
   const a = e.target.closest('a[data-node]');
   if (a) { e.preventDefault(); select(byId[a.dataset.node], true); }
 });
