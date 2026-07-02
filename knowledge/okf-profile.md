@@ -53,10 +53,11 @@ the dev shell (`nix develop` / direnv) it's on `PATH` as **`okf`** via the
 [dev](modules/dev.md) module; outside it, invoke with bun directly:
 
 ```sh
-okf scaffold   # stub catalog docs from the repo (idempotent)
-okf index     # regenerate index.md listings
-okf validate  # spec + profile conformance; exit 1 on errors
-okf viz      # render knowledge/viz.html interactive graph
+okf scaffold [--force]   # stub catalog docs from the repo (idempotent; --force overwrites)
+okf index               # regenerate index.md listings
+okf validate [--strict]  # spec + profile conformance; --strict fails on warnings too
+okf viz                 # render knowledge/viz.html interactive graph
+okf help [command]      # full usage, per-command flags, docs pointers
 
 bun scripts/okf/okf.ts <cmd>   # equivalent, no dev shell needed
 ```

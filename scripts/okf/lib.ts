@@ -159,3 +159,15 @@ export function nowISO(): string {
 export function fileExists(p: string): boolean {
   return existsSync(p);
 }
+
+// ANSI colors, gated on TTY and NO_COLOR so piped/captured output stays plain.
+const tty = process.stdout.isTTY === true && !process.env.NO_COLOR;
+const paint = (open: string) => (s: string) => (tty ? `\x1b[${open}m${s}\x1b[0m` : s);
+export const c = {
+  bold: paint("1"),
+  dim: paint("2"),
+  red: paint("31"),
+  green: paint("32"),
+  yellow: paint("33"),
+  cyan: paint("36"),
+};

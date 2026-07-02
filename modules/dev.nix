@@ -15,7 +15,7 @@
             echo "okf: $root has no scripts/okf/okf.ts — run inside the dotfiles repo" >&2
             exit 1
           fi
-          exec bun "$root/scripts/okf/okf.ts" "$@"
+          OKF_PROG=okf exec bun "$root/scripts/okf/okf.ts" "$@"
         '';
       };
     in

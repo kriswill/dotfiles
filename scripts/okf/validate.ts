@@ -10,7 +10,7 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import {
-  bundleRoot, extractLinks, isExternal, parseDoc, repoRoot, resolveLink,
+  bundleRoot, c, extractLinks, isExternal, parseDoc, repoRoot, resolveLink,
   walkMd, PROFILE_FIELDS, RESERVED,
 } from "./lib";
 
@@ -70,7 +70,8 @@ for (const rel of files) {
   }
 }
 
-for (const w of warnings) console.log(`warn:  ${w}`);
-for (const e of errors) console.log(`ERROR: ${e}`);
-console.log(`\n${files.length} files checked — ${errors.length} error(s), ${warnings.length} warning(s)`);
+for (const w of warnings) console.log(`${c.yellow("warn:")}  ${w}`);
+for (const e of errors) console.log(`${c.red("ERROR:")} ${e}`);
+const summary = `${files.length} files checked — ${errors.length} error(s), ${warnings.length} warning(s)`;
+console.log("\n" + (errors.length ? c.red(summary) : warnings.length ? c.yellow(summary) : c.green(summary)));
 process.exit(errors.length || (STRICT && warnings.length) ? 1 : 0);
