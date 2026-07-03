@@ -29,6 +29,15 @@
             statix
             nixfmt-tree
             just
+            # Nix tooling (from nebula's old shell.nix)
+            nil
+            nix-output-monitor
+            # Secrets (sops-nix age keys — see .sops.yaml)
+            sops
+            age
+            ssh-to-age
+            # Dotfiles management
+            stow
             ;
           inherit okf;
         };
