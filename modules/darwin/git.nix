@@ -15,6 +15,7 @@
           git
           gh # github CLI + git credential helper
           git-lfs # large file storage filters
+          difftastic # structural diff for `git difftool` ([difftool "difftastic"] in shared config)
           ;
       };
     };

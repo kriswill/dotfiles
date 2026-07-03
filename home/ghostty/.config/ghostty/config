@@ -1,4 +1,11 @@
 # vim:ft=ghostty
+# Shared ghostty config (stow: home/ghostty). OS-specific keys (window chrome,
+# font size, theme overrides) live in os.conf, generated and linked beside this
+# file by each OS's ghostty module (modules/darwin/ghostty.nix via activation,
+# modules/nixos/ghostty.nix via tmpfiles). config-file includes load after this
+# file, so os.conf gets the final word; `?` makes a missing os.conf non-fatal.
+
+# Theme: kanagawabones palette.
 palette = 0=#2d2c2c
 palette = 1=#c4746e
 palette = 2=#8a9a7b
@@ -16,19 +23,14 @@ palette = 13=#938aa9
 palette = 14=#7aa89f
 palette = 15=#c5c9c5
 
-window-width = 141
-window-height = 45
-
 # background = 181616
 background = #101014
 foreground = #c5c9c5
 cursor-color = #c8c093
 selection-background = #2d4f67
 selection-foreground = #c8c093
-
-# theme = kanagawabones
-macos-titlebar-style = hidden
-font-size = 18
-keybind = global:cmd+grave_accent=toggle_quick_terminal
 background-opacity = 0.95
+
 keybind = shift+enter=text:\n
+
+config-file = ?os.conf

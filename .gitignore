@@ -1,8 +1,13 @@
 .direnv
 pkgs/result
+# nebula's hand-appended rebuild log (untracked since the dual-OS merge review)
+updates.log
 **/.DS_Store
 .obsidian
 **/result
+result-*
+*.swp
+*~
 # Ignore local Claude state (settings.local.json, worktrees) but track shared skills
 .claude/*
 !.claude/skills/

@@ -1,14 +1,15 @@
 # Kris' git config — stow-managed (home/git/.config/git/config), symlinked to
-# ~/.config/git/config by modules/darwin/dotfiles-stow.nix. Edit live; no
-# rebuild needed. Ported from the old home-manager programs.git module.
+# ~/.config/git/config by the dotfiles-stow module of each OS
+# (modules/darwin/dotfiles-stow.nix, modules/nixos/dotfiles-stow.nix). Edit
+# live; no rebuild needed. Ported from the old home-manager programs.git module.
 #
-# Helper commands are referenced by bare name (gh, git-lfs, rg, jq) instead of
-# /nix/store paths: this is a static file (not regenerated on rebuild), so a
-# pinned store path would go stale on the next package bump. All four are on
-# PATH via modules/darwin/{git,user-packages}.nix.
+# Helper commands are referenced by bare name (gh, git-lfs, rg, jq, difft)
+# instead of /nix/store paths: this is a static file (not regenerated on
+# rebuild), so a pinned store path would go stale on the next package bump.
+# All are on PATH via the git/user-packages modules of each OS.
 #
-# [pager] points at diffnav (modules/darwin/diffnav.nix). [credential] comes
-# from the old programs.gh; [filter "lfs"] from programs.git.lfs.
+# [pager] points at diffnav. [credential] comes from the old programs.gh;
+# [filter "lfs"] from programs.git.lfs.
 
 [alias]
 	amend = "commit --amend -m"
@@ -37,6 +38,52 @@
 	helper = ""
 	helper = "!gh auth git-credential"
 
+# Codeberg PAT comes from 1Password at fetch time — nothing secret is stored in
+# this file, and `op` resolves from PATH on both OSes.
+[credential "https://codeberg.org"]
+	username = "kriswill"
+	helper = ""
+	helper = "!f() { test \"$1\" = get && printf \"password=%s\\n\" \"$(op read \"op://Private/3htxxhinni5u5mzz5oguowunii/zfptfg4lpdernsrst4kgaxicge\")\"; }; f"
+
+# Styling for delta, which diffnav drives. Kanagawa palette (kept in sync by
+# hand with lib/kanagawa.nix).
+[delta]
+	syntax-theme = "ansi"
+	dark = true
+	tabs = 2
+	file-style = "omit"
+	file-decoration-style = "none"
+	line-numbers = true
+	line-numbers-left-format = "{nm:>4} "
+	line-numbers-right-format = "│ {np:>4} "
+	line-numbers-left-style = "#54546D dim"
+	line-numbers-right-style = "#2A2A37 dim"
+	line-numbers-zero-style = "#54546D dim"
+	line-numbers-plus-style = "#54546D dim"
+	line-numbers-minus-style = "#54546D dim"
+	plus-style = "syntax #222B26"
+	plus-emph-style = "syntax #2B3328"
+	minus-style = "syntax #2B2024"
+	minus-emph-style = "syntax #3A242B"
+	hunk-header-style = "#727169"
+	hunk-header-file-style = "#727169 dim"
+	hunk-header-line-number-style = "#223249"
+	hunk-header-decoration-style = "#2A2A37 ol ul"
+	wrap-left-symbol = " "
+	wrap-right-symbol = " "
+	wrap-right-prefix-symbol = " "
+
+# `git difftool` launches difftastic for per-file dir-diffs; diffnav (below)
+# only renders a unified diff piped on stdin.
+[diff]
+	tool = "difftastic"
+
+[difftool]
+	prompt = false
+
+[difftool "difftastic"]
+	cmd = "difft \"$LOCAL\" \"$REMOTE\""
+
 [filter "lfs"]
 	clean = "git-lfs clean -- %f"
 	process = "git-lfs filter-process"
@@ -57,8 +104,10 @@
 # bundle; NixOS: the system-profile path). This config is shared across machines,
 # so select the program by home-dir prefix rather than hardcoding one — every
 # repo lives under $HOME, whose prefix differs by OS (/Users vs /home), and
-# gitdir resolves symlinks so a symlinked path still matches. Relative include
-# paths resolve next to this file (~/.config/git/), where stow links the siblings.
+# gitdir resolves symlinks so a symlinked path still matches (nebula's
+# /etc/nixos -> /home/k/... rebuild path also matches the Linux branch).
+# Relative include paths resolve next to this file (~/.config/git/), where stow
+# links the siblings.
 [includeIf "gitdir:/Users/"]
 	path = "signing-macos.inc"
 [includeIf "gitdir:/home/"]
@@ -78,6 +127,7 @@
 [pager]
 	diff = "diffnav"
 	show = "diffnav"
+	difftool = true
 
 [pull]
 	rebase = false
