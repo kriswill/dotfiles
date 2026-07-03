@@ -2,6 +2,14 @@
 
 ## 2026-07-03
 
+- **Creation** — recorded the
+  [vesktop pnpm whitelist decision](decisions/vesktop-pnpm-whitelist.md):
+  nixpkgs' vesktop deliberately pins the CVE-flagged pnpm-10.29.2 (newer pnpm
+  crashes its electron-builder), so nebula tolerates a scoped
+  `permittedInsecurePackages` entry for now; the whitelist-free exit (AppImage
+  repack à la wowup + `programs.discord.package`) is written down for when
+  it's needed.
+
 - **Milestone** — merged the orphan `nebula-snowglobe` branch into one dual-OS
   flake ([decision](decisions/nixos-darwin-unification.md)): three darwin
   hosts + the `nebula` NixOS desktop build from a single flake on one
