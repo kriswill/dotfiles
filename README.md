@@ -2,11 +2,26 @@
 
 This is the configuration I currently use to manage my coding computers. Some of the other branches are used for NixOS gaming desktops and VMs.
 
-Repo knowledge lives in two places: [`AGENTS.md`](AGENTS.md) (conventions and
-working instructions) and [`knowledge/`](knowledge/index.md) (an
-[OKF](https://github.com/GoogleCloudPlatform/knowledge-catalog/tree/main/okf)
-bundle of patterns, decision records, playbooks, and a component catalog —
-start at its [index](knowledge/index.md)).
+## Knowledge
+
+**Browse the knowledge graph: <https://kris.net/dotfiles/>** — an interactive
+3D map of everything documented below, rebuilt from this repo on every push.
+Search for a concept, orbit its neighborhood, and read the docs (and linked
+source files) in place.
+
+Repo knowledge lives in two places:
+
+- [`AGENTS.md`](AGENTS.md) — conventions and working instructions for anyone
+  (human or agent) making changes.
+- [`knowledge/`](knowledge/index.md) — an
+  [OKF](https://github.com/GoogleCloudPlatform/knowledge-catalog/tree/main/okf)
+  bundle of architecture patterns, decision records, playbooks, and a catalog
+  of every module, package, and host, cross-linked into a graph. It captures
+  the *why* behind the config — the part you can't recover from the code
+  alone. Start at the [index](knowledge/index.md).
+
+The published site is the same bundle rendered by `okf viz`
+(`scripts/okf/`), so it can never drift from what's committed.
 
 ## MacOS
 
