@@ -2,6 +2,15 @@
 
 ## 2026-07-03
 
+- **Update** — nrs/nrt became real executables and gained a sibling: the
+  [nh](modules/nh.md) module now ships `writeShellScriptBin` helpers `nrs`
+  (nh darwin switch), `nrb` (nh darwin build — no root, safe for agent
+  harnesses), and `nrt` (darwin-rebuild check; both `nh darwin test` and
+  `darwin-rebuild test` have been removed upstream, so the old nrt alias was
+  silently broken). The `environment.shellAliases` block left core.nix —
+  aliases only exist in interactive zsh, which is why `nrs` was unavailable
+  from non-interactive shells.
+
 - **Update** — removed all `options.kriswill.*` module gating: universal
   features are plain ungated deferred modules in `flake.modules.darwin.*`;
   host-selective features (podman-desktop, claude-account-selector, and the
