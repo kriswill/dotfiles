@@ -26,7 +26,6 @@
     services.apple-container.enable = true;
 
     kriswill = {
-      enable = true;
       podman-desktop.enable = true;
 
       claude-account-selector = {

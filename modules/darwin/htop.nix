@@ -8,12 +8,7 @@
 # which against a writable stow link would churn the repo on every run.
 {
   flake.modules.darwin.htop =
-    {
-      lib,
-      pkgs,
-      config,
-      ...
-    }:
+    { lib, pkgs, ... }:
     let
       # Equivalent to the old module's generated htoprc: the meter/field layout
       # is home-manager's default `fields` line; the rest are the three settings
@@ -26,18 +21,14 @@
       '';
     in
     {
-      # No per-feature kriswill toggle (programs.htop had none); gate on the
-      # darwin master toggle, like the other ex-inline programs.
-      config = lib.mkIf config.kriswill.enable {
-        environment.systemPackages = [ pkgs.htop ];
+      environment.systemPackages = [ pkgs.htop ];
 
-        # Order 1600: after dotfiles-stow (1500) has created ~/.config. Run as
-        # the user so the dir/link aren't root-owned; ln -sfn replaces any stale
-        # link so the store path tracks rebuilds.
-        system.activationScripts.postActivation.text = lib.mkOrder 1600 ''
-          /usr/bin/sudo -u k --set-home /bin/sh -c \
-            'mkdir -p /Users/k/.config/htop && ln -sfn ${htoprc} /Users/k/.config/htop/htoprc'
-        '';
-      };
+      # Order 1600: after dotfiles-stow (1500) has created ~/.config. Run as
+      # the user so the dir/link aren't root-owned; ln -sfn replaces any stale
+      # link so the store path tracks rebuilds.
+      system.activationScripts.postActivation.text = lib.mkOrder 1600 ''
+        /usr/bin/sudo -u k --set-home /bin/sh -c \
+          'mkdir -p /Users/k/.config/htop && ln -sfn ${htoprc} /Users/k/.config/htop/htoprc'
+      '';
     };
 }

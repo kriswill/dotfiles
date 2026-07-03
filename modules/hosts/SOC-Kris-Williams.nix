@@ -27,7 +27,6 @@
     services.apple-container.enable = true;
 
     kriswill = {
-      enable = true;
       alias-en0.enable = true;
       podman-desktop.enable = true;
     };
