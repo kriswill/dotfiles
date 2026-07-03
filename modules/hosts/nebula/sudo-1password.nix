@@ -31,7 +31,12 @@
 
       # Point the session at the 1Password agent socket so sudo (and ssh) find it.
       # In a TTY this path won't have a live agent, so sudo just falls back to a password.
-      environment.sessionVariables.SSH_AUTH_SOCK = "\${HOME}/.1password/agent.sock";
+      # MUST be the unbraced literal `$HOME`: NixOS writes sessionVariables into
+      # /etc/pam/environment via a plain replaceStrings ["$HOME"] ["@{HOME}"] —
+      # a braced `${HOME}` is not matched, lands verbatim in the file, and
+      # pam_env then resolves it as a (nonexistent) pam_env variable, silently
+      # breaking the socket path for every PAM session.
+      environment.sessionVariables.SSH_AUTH_SOCK = "$HOME/.1password/agent.sock";
 
       # gnome-keyring (pulled in by the desktop session) ships gcr-ssh-agent, which otherwise
       # claims SSH_AUTH_SOCK (=/run/user/$UID/gcr/ssh) and shadows the 1Password agent.

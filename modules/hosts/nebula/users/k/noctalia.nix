@@ -60,9 +60,10 @@
         pkgs.ddcutil
 
         # tomato — comment/format-preserving TOML get/set CLI (Rust, toml_edit).
-        # The Hyprland "toggle gaps" keybind (home/hyprland/.config/hypr/scripts/
-        # toggle-gaps.sh) uses it to flip [shell.screen_corners].enabled in
-        # settings.toml in lockstep with the gaps toggle, then `noctalia msg
+        # The Hyprland "toggle gaps" keybind (toggleGaps in
+        # home/hyprland/.config/hypr/keybindings.lua, formerly
+        # scripts/toggle-gaps.sh) uses it to flip [shell.screen_corners].enabled
+        # in settings.toml in lockstep with the gaps toggle, then `noctalia msg
         # config-reload`. Built from the `tomato` flake input; see
         # pkgs/tomato.nix.
         pkgs.tomato

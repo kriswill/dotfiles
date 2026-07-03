@@ -9,7 +9,8 @@
 # `set` writes the file IN PLACE (File::create — truncate+rewrite, NOT atomic),
 # so callers that target a live-watched file (e.g. Noctalia's settings.toml)
 # must edit a same-directory temp copy and atomically `mv` it into place — see
-# home/hyprland/.config/hypr/scripts/toggle-gaps.sh and docs/noctalia.md.
+# setNoctaliaScreenCorners in home/hyprland/.config/hypr/keybindings.lua (the
+# gaps toggle, formerly scripts/toggle-gaps.sh) and docs/noctalia.md.
 #
 # Source comes from the `tomato` flake input (flake = false), passed as
 # `tomato-src`. Deps are all crates.io, so cargoLock.lockFile pins them from the

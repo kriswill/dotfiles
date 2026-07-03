@@ -15,6 +15,10 @@
 # $CBISSUE_TOKEN_REF.
 set -euo pipefail
 
+# Colors (AGENTS.md shell convention).
+# shellcheck disable=SC2034 # full palette defined per convention; not all used
+RED=$'\e[31m' GREEN=$'\e[32m' YELLOW=$'\e[33m' BLUE=$'\e[34m' NC=$'\e[0m'
+
 ref="${CBISSUE_TOKEN_REF:-op://Private/3htxxhinni5u5mzz5oguowunii/zfptfg4lpdernsrst4kgaxicge}"
 api="https://codeberg.org/api/v1"
 
@@ -28,7 +32,7 @@ while [ "$#" -gt 0 ]; do
     -l | --label)
       shift
       [ "$#" -gt 0 ] || {
-        echo "cbissue: -l needs a label name" >&2
+        echo "${RED}cbissue: -l needs a label name${NC}" >&2
         exit 2
       }
       labels+=("$1")
@@ -46,7 +50,7 @@ while [ "$#" -gt 0 ]; do
       break
       ;;
     -*)
-      echo "cbissue: unknown option: $1" >&2
+      echo "${RED}cbissue: unknown option: $1${NC}" >&2
       usage
       exit 2
       ;;
@@ -62,6 +66,11 @@ if [ "$#" -lt 2 ] || [ "$#" -gt 3 ]; then
 fi
 repo="$1"
 title="$2"
+# Strict owner/repo slug ($repo is spliced into API URLs) — same rule as cbissues.
+if ! [[ "$repo" =~ ^[A-Za-z0-9][A-Za-z0-9._-]*/[A-Za-z0-9][A-Za-z0-9._-]*$ ]]; then
+  echo "${RED}cbissue: invalid repo \"$repo\" (expected owner/repo)${NC}" >&2
+  exit 2
+fi
 body="${3:-}"
 
 # Token: read once into memory only (never disk/argv).
@@ -76,7 +85,7 @@ if [ "${#labels[@]}" -gt 0 ]; then
   for name in "${labels[@]}"; do
     id="$(printf '%s' "$all" | jq -r --arg n "$name" 'map(select(.name == $n)) | .[0].id // empty')"
     if [ -z "$id" ]; then
-      echo "cbissue: no label named \"$name\" in $repo" >&2
+      echo "${RED}cbissue: no label named \"$name\" in $repo${NC}" >&2
       echo "  available: $(printf '%s' "$all" | jq -r 'map(.name) | join(", ")')" >&2
       exit 1
     fi

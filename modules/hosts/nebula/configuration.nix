@@ -13,7 +13,9 @@
       # Hyprland (the host's only desktop) is configured in ./hyprland.nix,
       # which also asserts the shared snowglobe desktop layer that niri used to
       # pull in.
-      snowglobe-lib.libvirtd-qemu.enable = true;
+      # (renamed from libvirtd-qemu in snowglobe-lib f0135ce; same
+      # libvirtd + qemu_kvm + virt-manager payload)
+      snowglobe-lib.qemu.enable = true;
 
       # custom profiles
       snowglobe-lib.profiles.hardware-tools.enable = true;
@@ -112,6 +114,11 @@
         enable = true;
         # package = pkgs.discord;
       };
+      # vesktop (snowglobe's discord client) builds with pnpm, which nixpkgs
+      # b5aa0fb marks insecure (CVE-2026-48995 + 6 more — pnpm CLI issues,
+      # build-time-only exposure here). Remove once vesktop migrates off the
+      # flagged pnpm (2026-07-03).
+      nixpkgs.config.permittedInsecurePackages = [ "pnpm-10.29.2" ];
     }
 
   ;
