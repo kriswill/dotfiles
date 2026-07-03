@@ -14,4 +14,4 @@ colorized with the `:BaleiaColorize` user command.
 ## Source
 
 - Spec: [`home/nvim/.config/nvim/lua/plugins/baleia.lua`](../../../home/nvim/.config/nvim/lua/plugins/baleia.lua)
-- Upstream: <https://github.com/m00qek/baleia.nvim>
+- Upstream: [https://github.com/m00qek/baleia.nvim](https://github.com/m00qek/baleia.nvim)

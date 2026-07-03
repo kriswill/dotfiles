@@ -16,4 +16,4 @@ pure UI. Toggle with `<leader>ut`, alongside the snacks UI toggles in the
 ## Source
 
 - Spec: [`home/nvim/.config/nvim/lua/plugins/treesitter-context.lua`](../../../home/nvim/.config/nvim/lua/plugins/treesitter-context.lua)
-- Upstream: <https://github.com/nvim-treesitter/nvim-treesitter-context>
+- Upstream: [https://github.com/nvim-treesitter/nvim-treesitter-context](https://github.com/nvim-treesitter/nvim-treesitter-context)

@@ -32,4 +32,4 @@ overrides in [kanagawa](colorscheme.md) build on these parsers.
 ## Source
 
 - Spec: [`home/nvim/.config/nvim/lua/plugins/treesitter.lua`](../../../home/nvim/.config/nvim/lua/plugins/treesitter.lua)
-- Upstream: <https://github.com/nvim-treesitter/nvim-treesitter>
+- Upstream: [https://github.com/nvim-treesitter/nvim-treesitter](https://github.com/nvim-treesitter/nvim-treesitter)

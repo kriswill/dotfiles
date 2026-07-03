@@ -15,4 +15,4 @@ computed palette in `_G.kanagawa_colors` for any later consumer.
 ## Source
 
 - Spec: [`home/nvim/.config/nvim/lua/plugins/colorful-winsep.lua`](../../../home/nvim/.config/nvim/lua/plugins/colorful-winsep.lua)
-- Upstream: <https://github.com/nvim-zh/colorful-winsep.nvim>
+- Upstream: [https://github.com/nvim-zh/colorful-winsep.nvim](https://github.com/nvim-zh/colorful-winsep.nvim)

@@ -32,7 +32,7 @@ for the condition).
 ## Source
 
 - Spec tree: [`home/nvim/.config/nvim/lua/plugins/debug/`](../../../home/nvim/.config/nvim/lua/plugins/debug/)
-- Upstream: <https://github.com/mfussenegger/nvim-dap>
-- Bundled deps: <https://github.com/rcarriga/nvim-dap-ui>,
-  <https://github.com/leoluz/nvim-dap-go>,
-  <https://github.com/nvim-neotest/nvim-nio>
+- Upstream: [https://github.com/mfussenegger/nvim-dap](https://github.com/mfussenegger/nvim-dap)
+- Bundled deps: [https://github.com/rcarriga/nvim-dap-ui](https://github.com/rcarriga/nvim-dap-ui),
+  [https://github.com/leoluz/nvim-dap-go](https://github.com/leoluz/nvim-dap-go),
+  [https://github.com/nvim-neotest/nvim-nio](https://github.com/nvim-neotest/nvim-nio)

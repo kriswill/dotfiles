@@ -57,4 +57,4 @@ so `:=` pretty-prints via snacks.
 ## Source
 
 - Spec tree: [`home/nvim/.config/nvim/lua/plugins/snacks/`](../../../home/nvim/.config/nvim/lua/plugins/snacks/)
-- Upstream: <https://github.com/folke/snacks.nvim>
+- Upstream: [https://github.com/folke/snacks.nvim](https://github.com/folke/snacks.nvim)

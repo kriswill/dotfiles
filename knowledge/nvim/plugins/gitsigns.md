@@ -14,4 +14,4 @@ so gitsigns stays a passive indicator.
 ## Source
 
 - Spec: [`home/nvim/.config/nvim/lua/plugins/gitsigns.lua`](../../../home/nvim/.config/nvim/lua/plugins/gitsigns.lua)
-- Upstream: <https://github.com/lewis6991/gitsigns.nvim>
+- Upstream: [https://github.com/lewis6991/gitsigns.nvim](https://github.com/lewis6991/gitsigns.nvim)

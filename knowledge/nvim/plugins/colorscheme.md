@@ -29,4 +29,4 @@ setups — [lualine](lualine.md) pulls its theme, and
 ## Source
 
 - Spec: [`home/nvim/.config/nvim/lua/plugins/colorscheme.lua`](../../../home/nvim/.config/nvim/lua/plugins/colorscheme.lua)
-- Upstream: <https://github.com/rebelot/kanagawa.nvim>
+- Upstream: [https://github.com/rebelot/kanagawa.nvim](https://github.com/rebelot/kanagawa.nvim)

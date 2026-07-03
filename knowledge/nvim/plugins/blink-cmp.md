@@ -23,6 +23,6 @@ Completions are served by the servers in [LSP](../lsp.md).
 ## Source
 
 - Spec: [`home/nvim/.config/nvim/lua/plugins/blink-cmp.lua`](../../../home/nvim/.config/nvim/lua/plugins/blink-cmp.lua)
-- Upstream: <https://github.com/saghen/blink.cmp>
-- Bundled dep: <https://github.com/rafamadriz/friendly-snippets>
+- Upstream: [https://github.com/saghen/blink.cmp](https://github.com/saghen/blink.cmp)
+- Bundled dep: [https://github.com/rafamadriz/friendly-snippets](https://github.com/rafamadriz/friendly-snippets)
 - Version pin: `vim.version.range("1.*")`

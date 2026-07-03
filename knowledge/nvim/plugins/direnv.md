@@ -18,4 +18,4 @@ module](../../modules/direnv.md)).
 ## Source
 
 - Spec: [`home/nvim/.config/nvim/lua/plugins/direnv.lua`](../../../home/nvim/.config/nvim/lua/plugins/direnv.lua)
-- Upstream: <https://github.com/NotAShelf/direnv.nvim>
+- Upstream: [https://github.com/NotAShelf/direnv.nvim](https://github.com/NotAShelf/direnv.nvim)

@@ -21,4 +21,4 @@ quirks list in [keymaps](../keymaps.md). Defines one map itself:
 ## Source
 
 - Spec: [`home/nvim/.config/nvim/lua/plugins/which-key.lua`](../../../home/nvim/.config/nvim/lua/plugins/which-key.lua)
-- Upstream: <https://github.com/folke/which-key.nvim>
+- Upstream: [https://github.com/folke/which-key.nvim](https://github.com/folke/which-key.nvim)

@@ -17,4 +17,4 @@ offset.
 ## Source
 
 - Spec: [`home/nvim/.config/nvim/lua/plugins/lazydev-nvim.lua`](../../../home/nvim/.config/nvim/lua/plugins/lazydev-nvim.lua)
-- Upstream: <https://github.com/folke/lazydev.nvim>
+- Upstream: [https://github.com/folke/lazydev.nvim](https://github.com/folke/lazydev.nvim)

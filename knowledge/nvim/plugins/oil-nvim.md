@@ -16,5 +16,5 @@ picker opens plugin directories through oil.
 ## Source
 
 - Spec: [`home/nvim/.config/nvim/lua/plugins/oil-nvim.lua`](../../../home/nvim/.config/nvim/lua/plugins/oil-nvim.lua)
-- Upstream: <https://github.com/stevearc/oil.nvim>
-- Bundled dep: <https://github.com/echasnovski/mini.icons>
+- Upstream: [https://github.com/stevearc/oil.nvim](https://github.com/stevearc/oil.nvim)
+- Bundled dep: [https://github.com/echasnovski/mini.icons](https://github.com/echasnovski/mini.icons)

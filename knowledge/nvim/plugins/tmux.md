@@ -17,4 +17,4 @@ module](../../modules/tmux.md)'s config.
 ## Source
 
 - Spec: [`home/nvim/.config/nvim/lua/plugins/tmux.lua`](../../../home/nvim/.config/nvim/lua/plugins/tmux.lua)
-- Upstream: <https://github.com/alexghergh/nvim-tmux-navigation>
+- Upstream: [https://github.com/alexghergh/nvim-tmux-navigation](https://github.com/alexghergh/nvim-tmux-navigation)

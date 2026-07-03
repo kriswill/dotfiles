@@ -17,4 +17,4 @@ automatically.
 ## Source
 
 - Spec: [`home/nvim/.config/nvim/lua/plugins/schemastore.lua`](../../../home/nvim/.config/nvim/lua/plugins/schemastore.lua)
-- Upstream: <https://github.com/b0o/schemastore.nvim>
+- Upstream: [https://github.com/b0o/schemastore.nvim](https://github.com/b0o/schemastore.nvim)

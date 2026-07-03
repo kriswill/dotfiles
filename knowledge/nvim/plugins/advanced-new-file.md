@@ -14,4 +14,4 @@ Directory-first file creation is otherwise handled by [oil](oil-nvim.md).
 ## Source
 
 - Spec: [`home/nvim/.config/nvim/lua/plugins/advanced-new-file.lua`](../../../home/nvim/.config/nvim/lua/plugins/advanced-new-file.lua)
-- Upstream: <https://github.com/Mohammed-Taher/AdvancedNewFile.nvim>
+- Upstream: [https://github.com/Mohammed-Taher/AdvancedNewFile.nvim](https://github.com/Mohammed-Taher/AdvancedNewFile.nvim)

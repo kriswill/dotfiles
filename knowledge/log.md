@@ -2,6 +2,11 @@
 
 ## 2026-07-02
 
+- **Update** — Normalized all 30 `<https://…>` autolinks (24 files, mostly
+  `Upstream:` lines in `nvim/plugins/`) to explicit inline markdown links.
+  The viz markdown renderer also learned pipe tables and autolink syntax,
+  and the embedded source-file view now renders `https://` URLs as links.
+
 - **Creation** — New `nvim/` knowledge area covering the whole Neovim
   configuration: core concepts ([architecture](nvim/architecture.md),
   [options](nvim/options.md), [keymaps](nvim/keymaps.md),

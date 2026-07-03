@@ -14,4 +14,4 @@ explicit, direction-stating maps: `sj` join, `sk` split (normal and visual).
 ## Source
 
 - Spec: [`home/nvim/.config/nvim/lua/plugins/mini-splitjoin.lua`](../../../home/nvim/.config/nvim/lua/plugins/mini-splitjoin.lua)
-- Upstream: <https://github.com/echasnovski/mini.splitjoin>
+- Upstream: [https://github.com/echasnovski/mini.splitjoin](https://github.com/echasnovski/mini.splitjoin)

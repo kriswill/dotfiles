@@ -21,4 +21,4 @@ classes included), skipping buffers over ~1 MB. The bulk of the spec is
 ## Source
 
 - Spec: [`home/nvim/.config/nvim/lua/plugins/highlight-colors.lua`](../../../home/nvim/.config/nvim/lua/plugins/highlight-colors.lua)
-- Upstream: <https://github.com/brenoprata10/nvim-highlight-colors>
+- Upstream: [https://github.com/brenoprata10/nvim-highlight-colors](https://github.com/brenoprata10/nvim-highlight-colors)

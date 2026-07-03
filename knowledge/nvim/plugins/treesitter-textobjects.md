@@ -25,4 +25,4 @@ See the [keymap topology](../keymaps.md) for how these fit the wider layout.
 ## Source
 
 - Spec: [`home/nvim/.config/nvim/lua/plugins/treesitter-textobjects.lua`](../../../home/nvim/.config/nvim/lua/plugins/treesitter-textobjects.lua)
-- Upstream: <https://github.com/nvim-treesitter/nvim-treesitter-textobjects>
+- Upstream: [https://github.com/nvim-treesitter/nvim-treesitter-textobjects](https://github.com/nvim-treesitter/nvim-treesitter-textobjects)

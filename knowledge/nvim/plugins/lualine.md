@@ -22,5 +22,5 @@ The LSP-servers segment reflects whatever [LSP](../lsp.md) has attached.
 ## Source
 
 - Spec: [`home/nvim/.config/nvim/lua/plugins/lualine.lua`](../../../home/nvim/.config/nvim/lua/plugins/lualine.lua)
-- Upstream: <https://github.com/nvim-lualine/lualine.nvim>
-- Bundled dep: <https://github.com/meuter/lualine-so-fancy.nvim>
+- Upstream: [https://github.com/nvim-lualine/lualine.nvim](https://github.com/nvim-lualine/lualine.nvim)
+- Bundled dep: [https://github.com/meuter/lualine-so-fancy.nvim](https://github.com/meuter/lualine-so-fancy.nvim)

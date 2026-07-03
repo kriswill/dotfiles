@@ -15,4 +15,4 @@ conventions.
 ## Source
 
 - Spec: [`home/nvim/.config/nvim/lua/plugins/vim-sleuth.lua`](../../../home/nvim/.config/nvim/lua/plugins/vim-sleuth.lua)
-- Upstream: <https://github.com/tpope/vim-sleuth>
+- Upstream: [https://github.com/tpope/vim-sleuth](https://github.com/tpope/vim-sleuth)

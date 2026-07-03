@@ -17,4 +17,4 @@ modules fall short) lives in [LSP & Formatting](../lsp.md) and the
 ## Source
 
 - Spec: [`home/nvim/.config/nvim/lua/plugins/efmls-configs-nvim.lua`](../../../home/nvim/.config/nvim/lua/plugins/efmls-configs-nvim.lua)
-- Upstream: <https://github.com/creativenull/efmls-configs-nvim>
+- Upstream: [https://github.com/creativenull/efmls-configs-nvim](https://github.com/creativenull/efmls-configs-nvim)

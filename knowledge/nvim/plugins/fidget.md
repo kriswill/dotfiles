@@ -14,4 +14,4 @@ loading workspaces) unobtrusively. Notifications otherwise go through the
 ## Source
 
 - Spec: [`home/nvim/.config/nvim/lua/plugins/fidget.lua`](../../../home/nvim/.config/nvim/lua/plugins/fidget.lua)
-- Upstream: <https://github.com/j-hui/fidget.nvim>
+- Upstream: [https://github.com/j-hui/fidget.nvim](https://github.com/j-hui/fidget.nvim)
