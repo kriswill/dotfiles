@@ -47,6 +47,7 @@ export class GraphScene {
   private anim: { toPos: THREE.Vector3; toTarget: THREE.Vector3; t: number } | null = null;
   private labelRank: number[];
   private viewShift = 0;
+  private adj: Set<number>[] = [];
 
   constructor(
     private container: HTMLElement,
@@ -127,7 +128,11 @@ export class GraphScene {
 
     // Labels: rank by degree, show the busiest plus hover/selection
     const deg = new Array(nodes.length).fill(0);
-    edges.forEach(([a, b]) => { deg[a]++; deg[b]++; });
+    this.adj = nodes.map(() => new Set<number>());
+    edges.forEach(([a, b]) => {
+      deg[a]++; deg[b]++;
+      this.adj[a].add(b); this.adj[b].add(a);
+    });
     this.labelRank = nodes.map((_, i) => i).sort((a, b) => deg[b] - deg[a]);
     this.buildLabels();
 
@@ -189,18 +194,26 @@ export class GraphScene {
 
   /* --- colors ---------------------------------------------------------- */
 
-  private boosted(i: number, c: THREE.Color): THREE.Color {
-    if (this.dimmed(i)) return c.multiplyScalar(0.12);
-    const brightness = (c.r + c.g + c.b) / 3;
-    return c.multiplyScalar(1.2 + brightness * 0.8); // bloom feeds on the >1.0 excess
+  private isNeighbor(i: number): boolean {
+    return this.selected !== null && this.adj[this.selected].has(i);
   }
 
   repaint() {
     const c = new THREE.Color();
     this.nodes.forEach((n, i) => {
       c.set(n.color);
-      this.boosted(i, c);
-      if (i === this.selected) c.multiplyScalar(1.25);
+      if (this.dimmed(i)) {
+        c.multiplyScalar(0.12);
+      } else {
+        const brightness = (c.r + c.g + c.b) / 3;
+        let boost = 1.2 + brightness * 0.8; // bloom feeds on the >1.0 excess
+        if (this.selected !== null) {
+          if (i === this.selected) boost *= 1.5;      // hero glow
+          else if (this.isNeighbor(i)) boost *= 1.15; // linked nodes brighten
+          else boost *= 0.4;                          // the rest recede
+        }
+        c.multiplyScalar(boost);
+      }
       this.mesh.setColorAt(i, c);
     });
     this.mesh.instanceColor!.needsUpdate = true;
@@ -211,13 +224,31 @@ export class GraphScene {
       const active =
         this.selected !== null ? (a === this.selected || b === this.selected) : true;
       const dim = this.dimmed(a) || this.dimmed(b) || !active;
-      const k = dim ? (this.selected !== null && !active ? 0.05 : 0.08) : 0.4;
+      const k = dim ? (this.selected !== null && !active ? 0.04 : 0.08) : this.selected !== null ? 0.65 : 0.4;
       ca.set(this.nodes[a].color).multiplyScalar(k);
       cbCol.set(this.nodes[b].color).multiplyScalar(k);
       colAttr.set([ca.r, ca.g, ca.b, cbCol.r, cbCol.g, cbCol.b], i * 6);
     });
     colAttr.needsUpdate = true;
     this.updateLabelVisibility();
+  }
+
+  /** Selected node scales up and its label grows; everything else at rest. */
+  private applyEmphasis() {
+    const m = new THREE.Matrix4();
+    this.nodes.forEach((n, i) => {
+      const isSel = i === this.selected;
+      const s = n.r * (isSel ? 1.3 : 1);
+      m.makeScale(s, s, s).setPosition(n.x, n.y, n.z);
+      this.mesh.setMatrixAt(i, m);
+      const sp = this.labels[i];
+      if (!sp) return;
+      const base = sp.userData.base;
+      const k = isSel ? 1.45 : 1;
+      sp.scale.set(base.w * k, base.h * k, 1);
+      sp.position.set(n.x, n.y - s - (isSel ? 8 : 7), n.z);
+    });
+    this.mesh.instanceMatrix.needsUpdate = true;
   }
 
   /* --- labels ----------------------------------------------------------- */
@@ -249,11 +280,13 @@ export class GraphScene {
         new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false, toneMapped: false }),
       );
       const h = 7.5;
+      sp.userData.base = { w: h * aspect, h };
       sp.scale.set(h * aspect, h, 1);
       sp.position.set(n.x, n.y - n.r - 7, n.z);
       this.scene.add(sp);
       return sp;
     });
+    this.applyEmphasis();
     this.updateLabelVisibility();
   }
 
@@ -261,7 +294,8 @@ export class GraphScene {
     const top = new Set(this.labelRank.slice(0, MAX_LABELS));
     this.labels.forEach((sp, i) => {
       sp.visible =
-        !this.dimmed(i) && (top.has(i) || i === this.selected || i === this.hoverLabel);
+        !this.dimmed(i) &&
+        (top.has(i) || i === this.selected || i === this.hoverLabel || this.isNeighbor(i));
     });
   }
 
@@ -274,6 +308,7 @@ export class GraphScene {
 
   setSelected(i: number | null, fly = false) {
     this.selected = i;
+    this.applyEmphasis();
     this.repaint();
     if (i !== null && fly) {
       const n = this.nodes[i];
