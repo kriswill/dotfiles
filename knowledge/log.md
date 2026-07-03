@@ -2,6 +2,17 @@
 
 ## 2026-07-02
 
+- **Update** — viz layout: degree-adaptive forces for real clustering.
+  Springs follow the d3-force recipe (strength ∝ 1/min-degree, shorter rest
+  for leaf edges, pull biased onto the lower-degree endpoint) and repulsion
+  is ForceAtlas2-style degree-weighted, so hubs shove apart and each keeps
+  a tight star of satellites instead of one uniform ball.
+
+- **Update** — viz camera: navigating to a node now flies to an exact
+  landing (manual pan offsets no longer carry over and clip labels),
+  approaches from opposite the node's neighbor centroid so its links fan
+  out in view, and the idle auto-rotation is gone — the graph stays put.
+
 - **Update** — Normalized all 30 `<https://…>` autolinks (24 files, mostly
   `Upstream:` lines in `nvim/plugins/`) to explicit inline markdown links.
   The viz markdown renderer also learned pipe tables and autolink syntax,
