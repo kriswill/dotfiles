@@ -23,10 +23,11 @@
       )
     ];
 
+    services.apple-container.enable = true;
+
     kriswill = {
       enable = true;
       dnsmasq.enable = true;
-      apple-container.enable = true;
       podman-desktop.enable = true;
 
       claude-account-selector = {

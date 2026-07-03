@@ -24,11 +24,12 @@
       )
     ];
 
+    services.apple-container.enable = true;
+
     kriswill = {
       enable = true;
       alias-en0.enable = true;
       dnsmasq.enable = true;
-      apple-container.enable = true;
       podman-desktop.enable = true;
     };
 

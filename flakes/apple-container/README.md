@@ -63,8 +63,8 @@ The flake also exports `darwinModules.apple-container` (alias: `default`), defin
 }
 ```
 
-Options: `kriswill.apple-container.enable` (default `false`) and
-`kriswill.apple-container.package` (defaults to this flake's package for the host
+Options: `services.apple-container.enable` (default `false`) and
+`services.apple-container.package` (defaults to this flake's package for the host
 system — no overlay needed). The module requires `system.primaryUser` to be set.
 
 ## Bumping the version
