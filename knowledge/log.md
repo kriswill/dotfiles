@@ -2,6 +2,14 @@
 
 ## 2026-07-02
 
+- **Creation** — Svelte manual under `docs/svelt/`: `manual.md` hub (cheat
+  sheets, tooling, maintenance protocol) plus topic docs `runes.md`,
+  `sveltekit.md`, `migration-svelte4-to-5.md`, and an append-only
+  `learnings.md` gotcha log. Verified against svelte.dev llms.txt dumps and
+  npm registry (svelte 5.56 / kit 2.69). Establishes the `docs/<tool>/`
+  manual convention; noted gap: nvim has the svelte treesitter grammar but
+  no Svelte LSP config.
+
 - **Update** — viz layout: degree-adaptive forces for real clustering.
   Springs follow the d3-force recipe (strength ∝ 1/min-degree, shorter rest
   for leaf edges, pull biased onto the lower-degree endpoint) and repulsion
