@@ -2,16 +2,29 @@
   import type { VizState } from "./state.svelte";
 
   const { viz }: { viz: VizState } = $props();
+
+  // The focused concept: the selected one, or the referrer while a file view
+  // is open (matches the scene's emphasis).
+  const focusedId = $derived((viz.selectedConcept ?? viz.backConcept)?.id ?? null);
+
+  let nav: HTMLElement | null = $state(null);
+  $effect(() => {
+    if (!focusedId || !nav) return;
+    nav.querySelector(`a[data-id="${focusedId}"]`)?.scrollIntoView({ block: "nearest" });
+  });
 </script>
 
-<nav id="list">
+<nav id="list" bind:this={nav}>
   {#each viz.visibleSorted as n (n.id)}
     <a
       href="#c/{n.id}"
+      data-id={n.id}
+      class:selected={n.id === focusedId}
+      aria-current={n.id === focusedId ? "true" : undefined}
       onclick={(e) => {
         e.preventDefault();
         viz.selectConcept(n.id, true);
-      }}>{n.title}</a
+      }}><span class="dot" style="background:{viz.colorOf(n.type)}"></span>{n.title}</a
     >
   {/each}
 </nav>
@@ -36,5 +49,21 @@
   #list a:hover {
     background: var(--page);
     color: var(--ink-1);
+  }
+  #list a.selected {
+    background: var(--page);
+    color: var(--ink-1);
+    font-weight: 600;
+  }
+  #list a.selected .dot {
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--ink-1) 40%, transparent);
+  }
+  .dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 7px;
+    vertical-align: 1px;
   }
 </style>

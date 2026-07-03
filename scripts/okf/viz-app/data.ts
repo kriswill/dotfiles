@@ -45,7 +45,9 @@ export interface VizModel {
   radii: number[];
 }
 
-// Fixed palette slot order (never cycled); overflow types fold into muted "Other".
+// Fixed palette slot order (never cycled): slot N = CSS var --sN in every
+// theme (viz-app/themes.ts). Append-only — existing types keep their colors.
+// Types not listed here get a stable generated color (viz-app/color.ts).
 export const TYPE_ORDER = [
   "Darwin Module",
   "Nix Package",
@@ -55,6 +57,10 @@ export const TYPE_ORDER = [
   "Host",
   "Sub-flake",
   "Flake-parts Module",
+  "Neovim Config",
+  "Neovim Plugin",
+  "Overlay",
+  "Reference",
 ];
 
 export function buildModel(raw: RawData): VizModel {

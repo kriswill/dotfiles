@@ -1,6 +1,7 @@
 // Reactive core of the viewer (Svelte 5 runes). Components bind to this;
 // Stage.svelte bridges it into the imperative GraphScene.
 import { SvelteSet } from "svelte/reactivity";
+import { nameColor } from "./color";
 import { TYPE_ORDER, type ConceptNode, type VizModel } from "./data";
 import type { Selection } from "./hash";
 import { applyThemeVars, defaultThemeIndex, THEMES } from "./themes";
@@ -11,7 +12,6 @@ export interface Hover {
   y: number;
 }
 
-const OTHER = "#898781";
 const PANEL_KEY = "okfVizPanelW";
 const THEME_KEY = "okfVizTheme";
 
@@ -52,7 +52,6 @@ export function createVizState(model: VizModel) {
   const computeSlots = () => {
     const m: Record<string, string> = {};
     TYPE_ORDER.forEach((t, i) => (m[t] = cssVar("--s" + (i + 1))));
-    m["__other"] = cssVar("--s-other"); // overflow types, theme-tuned
     return m;
   };
   // Re-read on repaint() — the CSS custom properties flip with the color scheme.
@@ -182,7 +181,9 @@ export function createVizState(model: VizModel) {
       repaintNow();
     },
     colorOf(t: string) {
-      return slots[t] || slots["__other"] || OTHER;
+      // Curated slot if registered in TYPE_ORDER; otherwise a stable
+      // generated color at the theme's lightness/chroma.
+      return slots[t] || nameColor(t, THEMES[themeIndex]!.gen);
     },
     theme() {
       return { bg: cssVar("--page"), labelInk: cssVar("--ink-2"), labelStroke: cssVar("--surface-1") };

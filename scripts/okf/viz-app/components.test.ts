@@ -79,12 +79,30 @@ describe("ConceptList", () => {
     const state = createVizState(model());
     mountC(ConceptList, { viz: state });
     expect([...document.querySelectorAll("#list a")].map((a) => a.textContent)).toEqual(["Alpha", "Beta"]);
+    expect(document.querySelectorAll("#list a .dot")).toHaveLength(2); // type color dot per entry
     state.query = "beta";
     flushSync();
     expect([...document.querySelectorAll("#list a")].map((a) => a.textContent)).toEqual(["Beta"]);
     (document.querySelector("#list a") as HTMLElement).click();
     flushSync();
     expect(state.sel).toEqual({ kind: "concept", id: "b" });
+  });
+
+  test("focused concept is marked, also while its file view is open", () => {
+    const state = createVizState(model());
+    mountC(ConceptList, { viz: state });
+    expect(document.querySelector("#list a.selected")).toBeNull();
+    state.selectConcept("a");
+    flushSync();
+    const sel = document.querySelector("#list a.selected")!;
+    expect(sel.textContent).toBe("Alpha");
+    expect(sel.getAttribute("aria-current")).toBe("true");
+    state.selectFile("scripts/okf/viz.ts"); // file view keeps the referrer marked
+    flushSync();
+    expect(document.querySelector("#list a.selected")!.textContent).toBe("Alpha");
+    state.clearSelection();
+    flushSync();
+    expect(document.querySelector("#list a.selected")).toBeNull();
   });
 });
 

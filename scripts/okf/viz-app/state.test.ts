@@ -118,10 +118,13 @@ describe("panel width", () => {
 });
 
 describe("palette", () => {
-  test("colorOf falls back to muted Other without CSS vars", () => {
+  test("unregistered types get stable generated colors", () => {
     const s = createVizState(model());
-    expect(s.colorOf("Unknown Type")).toBe("#898781");
-    expect(s.colorOf("Decision")).toBe("#898781"); // happy-dom has no :root vars
+    const a = s.colorOf("Some Future Type");
+    expect(a).toMatch(/^#[0-9a-f]{6}$/);
+    expect(s.colorOf("Some Future Type")).toBe(a); // stable within an instance
+    expect(createVizState(model()).colorOf("Some Future Type")).toBe(a); // and across
+    expect(s.colorOf("Another Future Type")).not.toBe(a); // names get distinct hues
   });
 });
 

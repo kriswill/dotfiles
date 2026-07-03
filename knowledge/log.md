@@ -2,6 +2,17 @@
 
 ## 2026-07-02
 
+- **Update** — viz palette: all 12 concept types now get distinct colors.
+  `TYPE_ORDER` grew 8 → 12 curated slots (`--s1..--s12`, append-only so
+  existing types keep their hue families); per-theme palettes were
+  re-optimized against the dataviz six checks and pass all-pairs
+  colorblind separation (Machado protan/deutan ΔE ≥ 15, target 12) on every
+  stop's surface — node labels/legend/tooltips carry the documented contrast
+  relief. Types beyond the registry no longer fold into one gray: a
+  deterministic OKLCH generator (`viz-app/color.ts`, FNV-1a name hash →
+  golden-angle hue at theme-tuned lightness/chroma) gives new types stable,
+  distinct colors without repainting existing ones.
+
 - **Update** — viz theme slider: four stops (light → medium → dark → black)
   in a footer pinned to the bottom of the sidebar. Each stop is a full CSS
   custom-property set applied inline on `:root` (`viz-app/themes.ts`), so a
