@@ -2,7 +2,7 @@
 type: Decision
 title: Claude Profile Isolation Strategy
 description: The claude wrapper prefers each profile's own interactive login and uses the Keychain token only as a fallback; the desktop app is pinned via a launchd Aqua-domain setenv plus a shell scrub.
-resource: modules/darwin/claude-account-selector/README.md
+resource: modules/hosts/k/claude-account-selector/README.md
 tags: [claude, credentials, macos]
 timestamp: '2026-07-02T00:00:00-07:00'
 ---
@@ -46,4 +46,4 @@ login per `CLAUDE_CONFIG_DIR`.
 
 ## Citations
 
-- [Module README](../../modules/darwin/claude-account-selector/README.md)
+- [Module README](../../modules/hosts/k/claude-account-selector/README.md)

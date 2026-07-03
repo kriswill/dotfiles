@@ -5,7 +5,7 @@
 // existing docs are never overwritten (enrichment happens by hand or by
 // agents), use --force to redo.
 
-import { readdirSync, readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
+import { readdirSync, readFileSync, writeFileSync, mkdirSync, existsSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { bundleRoot, fmToYaml, gitISO, repoRoot, titleFromSlug, type FM } from "./lib";
 
@@ -102,7 +102,8 @@ for (const entry of nixFiles("modules/darwin")) {
   const lines = [
     mdSafe(sentence(desc)),
     "",
-    "Follows the [module option pattern](../patterns/module-option-pattern.md), auto-discovered",
+    "Mounted ungated on every darwin host (see the",
+    "[host-mounted modules pattern](../patterns/host-mounted-modules.md)), auto-discovered",
     "via the [Dendritic module layout](../patterns/dendritic-modules.md).",
     "",
     "## Source",
@@ -149,17 +150,81 @@ for (const entry of nixFiles("modules").filter((f) => f.endsWith(".nix"))) {
   ].join("\n"));
 }
 
-// --- Hosts -> knowledge/hosts/<name>.md --------------------------------------
+// --- Hosts + host-mounted features -------------------------------------------
+// modules/hosts/ holds two kinds of dendritic files: host definitions
+// (<host>.nix declaring configurations.darwin.<host>) and host-selective
+// feature mounts — files that merge a feature into one or more OTHER hosts'
+// configurations (see knowledge/patterns/host-mounted-modules.md). Single-host
+// features live in modules/hosts/<host>/ subdirectories.
+const hosts: Array<{ name: string; srcRel: string; src: string }> = [];
+const hostMounts: Array<{ name: string; srcRel: string; src: string }> = [];
+for (const entry of nixFiles("modules/hosts")) {
+  if (entry.endsWith(".nix")) {
+    const name = entry.replace(/\.nix$/, "");
+    const srcRel = `modules/hosts/${entry}`;
+    const src = read(srcRel);
+    if (src.includes(`configurations.darwin.${name}`)) hosts.push({ name, srcRel, src });
+    else hostMounts.push({ name, srcRel, src });
+  } else if (statSync(join(repo, "modules/hosts", entry)).isDirectory()) {
+    for (const sub of nixFiles(`modules/hosts/${entry}`)) {
+      let name: string, srcRel: string;
+      if (sub.endsWith(".nix")) {
+        name = sub.replace(/\.nix$/, "");
+        srcRel = `modules/hosts/${entry}/${sub}`;
+      } else if (existsSync(join(repo, "modules/hosts", entry, sub, "default.nix"))) {
+        name = sub;
+        srcRel = `modules/hosts/${entry}/${sub}/default.nix`;
+      } else continue;
+      hostMounts.push({ name, srcRel, src: read(srcRel) });
+    }
+  }
+}
+
+console.log("host-mounted features:");
+for (const { name, srcRel, src } of hostMounts) {
+  moduleNames.add(name);
+  const desc = leadingComment(src) ?? `Host-mounted feature '${name}'`;
+  const mounts = [
+    ...new Set(
+      [...src.matchAll(/configurations\.darwin\.([A-Za-z0-9_-]+)\.module/g)].map((m) => m[1]),
+    ),
+  ].sort();
+  const readmeRel = srcRel.replace(/[^/]+$/, "README.md");
+  const readme = existsSync(join(repo, readmeRel)) ? readmeRel : null;
+  const stow = existsSync(join(repo, "home", name)) ? `home/${name}/` : null;
+
+  const lines = [
+    mdSafe(sentence(desc)),
+    "",
+    `Host-mounted feature (${mounts.map((h) => `[${h}](../hosts/${h}.md)`).join(", ")}) — merged`,
+    "straight into the hosts' configurations per the",
+    "[host-mounted modules pattern](../patterns/host-mounted-modules.md).",
+    "",
+    "## Source",
+    "",
+    `- Module: [\`${srcRel}\`](../../${srcRel})`,
+  ];
+  if (stow) lines.push(`- Stow package: [\`${stow}\`](../../${stow}) — see the [stow tree pattern](../patterns/stow-tree.md)`);
+  if (readme) lines.push(`- README: [\`${readme}\`](../../${readme})`);
+
+  emit(`modules/${name}.md`, {
+    type: "Darwin Module",
+    title: titleFromSlug(name),
+    description: firstSentence(desc),
+    resource: srcRel,
+    tags: ["darwin-module", "host-mounted"],
+    timestamp: gitISO(srcRel),
+  }, lines.join("\n"));
+}
+
 console.log("hosts:");
-for (const entry of nixFiles("modules/hosts").filter((f) => f.endsWith(".nix"))) {
-  const name = entry.replace(/\.nix$/, "");
-  const srcRel = `modules/hosts/${entry}`;
-  const src = read(srcRel);
+for (const { name, srcRel, src } of hosts) {
   const desc = leadingComment(src) ?? `Host configuration '${name}'`;
-  const features = [...src.matchAll(/([A-Za-z0-9_-]+)\.enable\s*=\s*true/g)]
-    .map((m) => m[1])
-    .filter((f) => moduleNames.has(f));
-  const featureLines = [...new Set(features)].sort().map((f) => `- [${f}](../modules/${f}.md)`);
+  const mounted = hostMounts
+    .filter((m) => m.src.includes(`configurations.darwin.${name}.module`))
+    .map((m) => m.name)
+    .sort();
+  const mountedLines = mounted.map((f) => `- [${f}](../modules/${f}.md)`);
 
   emit(`hosts/${name}.md`, {
     type: "Host",
@@ -171,9 +236,13 @@ for (const entry of nixFiles("modules/hosts").filter((f) => f.endsWith(".nix")))
   }, [
     mdSafe(sentence(desc)),
     "",
-    "## Enabled features",
+    "Imports every universal [darwin module](../modules/index.md); the features",
+    "below are additionally mounted into this host per the",
+    "[host-mounted modules pattern](../patterns/host-mounted-modules.md).",
     "",
-    ...(featureLines.length ? featureLines : ["- (defaults only)"]),
+    "## Host-mounted features",
+    "",
+    ...(mountedLines.length ? mountedLines : ["- (none — universal modules only)"]),
     "",
     "## Source",
     "",

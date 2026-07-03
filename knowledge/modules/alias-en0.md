@@ -1,18 +1,18 @@
 ---
 type: Darwin Module
 title: Alias En0
-description: en0 local IP address alias - used for dev.
-resource: modules/darwin/alias-en0.nix
-tags: [darwin-module]
-timestamp: '2026-05-24T22:21:04-07:00'
+description: Alias a local dev IP onto en0 (work host only).
+resource: modules/hosts/SOC-Kris-Williams/alias-en0.nix
+tags: [darwin-module, host-mounted]
+timestamp: '2026-07-03T10:23:09-07:00'
 ---
 
-en0 local IP address alias - used for dev.
+Alias a local dev IP onto en0 (work host only).
 
-Follows the [module option pattern](../patterns/module-option-pattern.md), auto-discovered
-via the [Dendritic module layout](../patterns/dendritic-modules.md).
+Host-mounted feature ([SOC-Kris-Williams](../hosts/SOC-Kris-Williams.md)) — merged
+straight into the hosts' configurations per the
+[host-mounted modules pattern](../patterns/host-mounted-modules.md).
 
 ## Source
 
-- Module: [`modules/darwin/alias-en0.nix`](../../modules/darwin/alias-en0.nix)
-- Options under: `kriswill.alias-en0`
+- Module: [`modules/hosts/SOC-Kris-Williams/alias-en0.nix`](../../modules/hosts/SOC-Kris-Williams/alias-en0.nix)

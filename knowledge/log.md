@@ -1,5 +1,25 @@
 # Log
 
+## 2026-07-03
+
+- **Update** — removed all `options.kriswill.*` module gating: universal
+  features are plain ungated deferred modules in `flake.modules.darwin.*`;
+  host-selective features (podman-desktop, apple-container,
+  codebase-memory-mcp, claude-account-selector, alias-en0) mount directly
+  into `configurations.darwin.<host>.module` from `modules/hosts/` files.
+  The [module option pattern](patterns/host-mounted-modules.md) doc was
+  rewritten as the host-mounted modules pattern; decision recorded in
+  [remove-option-gating](decisions/remove-option-gating.md). `modules/lib.nix`
+  (`kriswill.lib`) and `mkProgramOption` are gone (kanagawa is merged onto
+  lib inline by the darwin realiser); the apple-container sub-flake's options
+  renamed to `services.apple-container.*`. Deleted the toggle-only `ssh` and
+  `neovide` module stubs (and their catalog docs) plus the `lib` plumbing doc;
+  `okf scaffold` now classifies `modules/hosts/` files as hosts vs
+  host-mounted features and stubs the latter into `knowledge/modules/`.
+  Layout deliberately mirrors the `nebula-snowglobe` NixOS branch for a clean
+  future merge. Parity-verified: empty `nix store diff-closures` on all three
+  hosts.
+
 ## 2026-07-02
 
 - **Update** — xhigh code-review pass over the branch fixed nine findings in

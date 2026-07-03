@@ -1,23 +1,23 @@
 ---
 type: Darwin Module
 title: Claude Account Selector
-description: zsh wrapper that auto-selects a Claude Code account/profile by launch directory, with per-profile config-dir isolation.
-resource: modules/darwin/claude-account-selector/default.nix
-tags: [darwin-module]
-timestamp: '2026-06-28T19:42:52-07:00'
+description: 'Kris'' profile-aware `claude` wrapper — mounted straight into host k''s configuration (the only consumer), not a shared flake.modules.darwin.* module.'
+resource: modules/hosts/k/claude-account-selector/default.nix
+tags: [darwin-module, host-mounted]
+timestamp: '2026-07-03T10:23:09-07:00'
 ---
 
-zsh wrapper that auto-selects a Claude Code account/profile by launch
-directory, so a personal and a corporate account coexist on one machine.
+Kris' profile-aware `claude` wrapper — mounted straight into host k's configuration (the only consumer), not a shared flake.modules.darwin.* module. nix-darwin has no per-user xdg.configFile, so the generated zsh snippet — the host-specific rule/profile assignments prepended to the static wrapper.zsh — is built with writeText and linked into ~/.config/zsh during activation (the stowed ~/.config/zsh/.zshrc sources it when present). The desktop-app pin uses nix-darwin's launchd.user.agents.
+
 Rationale: [Claude profile isolation](../decisions/claude-profile-isolation.md);
 the generated rule preamble follows
 [store-path-embedding configs](../patterns/store-path-configs.md).
 
-Follows the [module option pattern](../patterns/module-option-pattern.md), auto-discovered
-via the [Dendritic module layout](../patterns/dendritic-modules.md).
+Host-mounted feature ([k](../hosts/k.md)) — merged
+straight into the hosts' configurations per the
+[host-mounted modules pattern](../patterns/host-mounted-modules.md).
 
 ## Source
 
-- Module: [`modules/darwin/claude-account-selector/default.nix`](../../modules/darwin/claude-account-selector/default.nix)
-- Options under: `kriswill.claude-account-selector`
-- README: [`modules/darwin/claude-account-selector/README.md`](../../modules/darwin/claude-account-selector/README.md)
+- Module: [`modules/hosts/k/claude-account-selector/default.nix`](../../modules/hosts/k/claude-account-selector/default.nix)
+- README: [`modules/hosts/k/claude-account-selector/README.md`](../../modules/hosts/k/claude-account-selector/README.md)

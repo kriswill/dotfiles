@@ -1,17 +1,18 @@
 ---
 type: Darwin Module
 title: Codebase Memory Mcp
-description: codebase-memory-mcp ships its nix-darwin module in our kriswill/codebase-memory-mcp `nix` fork (nix/darwin/module.nix); re-export it into the Dendritic module set so hosts pick it up like any in-tree modules/darwin/* module.
-resource: modules/darwin/codebase-memory-mcp.nix
-tags: [darwin-module]
-timestamp: '2026-06-30T23:18:47-07:00'
+description: codebase-memory-mcp launchd daemon, mounted into hosts k + SOC.
+resource: modules/hosts/codebase-memory-mcp.nix
+tags: [darwin-module, host-mounted]
+timestamp: '2026-07-03T10:23:09-07:00'
 ---
 
-codebase-memory-mcp ships its nix-darwin module in our kriswill/codebase-memory-mcp `nix` fork (nix/darwin/module.nix); re-export it into the Dendritic module set so hosts pick it up like any in-tree modules/darwin/* module. The module defaults services.codebase-memory-mcp.package to the fork's own package, so no overlay or pkgs wiring is needed. Enable per host with `services.codebase-memory-mcp.enable = true;`.
+codebase-memory-mcp launchd daemon, mounted into hosts k + SOC. The nix-darwin module ships in our kriswill/codebase-memory-mcp `nix` fork (nix/darwin/module.nix) and defaults services.codebase-memory-mcp.package to the fork's own package, so no overlay or pkgs wiring is needed. (The CLI package itself is on every host via core.nix's systemPackages.).
 
-Follows the [module option pattern](../patterns/module-option-pattern.md), auto-discovered
-via the [Dendritic module layout](../patterns/dendritic-modules.md).
+Host-mounted feature ([SOC-Kris-Williams](../hosts/SOC-Kris-Williams.md), [k](../hosts/k.md)) — merged
+straight into the hosts' configurations per the
+[host-mounted modules pattern](../patterns/host-mounted-modules.md).
 
 ## Source
 
-- Module: [`modules/darwin/codebase-memory-mcp.nix`](../../modules/darwin/codebase-memory-mcp.nix)
+- Module: [`modules/hosts/codebase-memory-mcp.nix`](../../modules/hosts/codebase-memory-mcp.nix)
