@@ -29,13 +29,22 @@ const model = () =>
       node("a", "Decision", "Alpha", {
         desc: "the alpha decision",
         fm: { type: "Decision", resource: "scripts/okf/viz.ts", description: "uses scripts/okf/viz.ts" },
-        body: "## Context\nsee [beta](../b.md)",
+        body: "## Context\nsee [beta](b.md)",
       }),
       node("b", "Pattern", "Beta"),
     ],
     edges: [{ s: "a", t: "b" }],
     files: {
       "scripts/okf/viz.ts": { html: "<span class=\"tok-k\">const</span>", lines: 3, size: 2048, date: "2026-01-01", lang: "ts", refs: ["a"] },
+      "docs/notes.md": {
+        html: "",
+        md: "# Notes\nsee [beta](../knowledge/b.md) and [viz](../scripts/okf/viz.ts)",
+        lines: 2,
+        size: 64,
+        date: "2026-01-01",
+        lang: "markdown",
+        refs: ["a"],
+      },
     },
   });
 
@@ -125,6 +134,8 @@ describe("DetailPanel", () => {
     mountC(DetailPanel, { viz: state, stageEl: stage() });
     const panel = document.getElementById("panel")!;
     expect(panel.querySelector("h2")!.textContent).toBe("Alpha");
+    expect(panel.querySelector(".bar .crumb")!.textContent).toBe("Alpha"); // locked header crumb
+    expect(panel.querySelector(".bar .close")).not.toBeNull();
     expect(panel.querySelector(".chip")!.textContent).toContain("Decision");
     expect(panel.querySelector('td a[data-file="scripts/okf/viz.ts"]')).not.toBeNull();
     expect(panel.querySelector("#body-md h3")!.textContent).toBe("Context");
@@ -132,6 +143,21 @@ describe("DetailPanel", () => {
     const backlinks = [...panel.querySelectorAll(".backlinks")];
     expect(backlinks[0]!.textContent).toContain("Beta"); // Links to
     expect(backlinks[1]!.textContent).toContain("none"); // Cited by
+  });
+
+  test("markdown files render as documents, not source views", () => {
+    const state = createVizState(model());
+    state.selectConcept("a");
+    state.selectFile("docs/notes.md");
+    mountC(DetailPanel, { viz: state, stageEl: stage() });
+    const panel = document.getElementById("panel")!;
+    expect(panel.querySelector(".bar .back")!.textContent).toContain("Alpha"); // locked header back link
+    const body = panel.querySelector("#body-md.md-doc")!;
+    expect(body.querySelector("h3")!.textContent).toBe("Notes");
+    expect(body.querySelector('a[data-node="b"]')).not.toBeNull(); // file-relative into knowledge/
+    expect(body.querySelector('a[data-file="scripts/okf/viz.ts"]')).not.toBeNull();
+    expect(panel.querySelector("pre.src")).toBeNull();
+    expect(panel.querySelector("table.fm")).toBeNull();
   });
 
   test("file view via delegation: back-link, meta, source; close clears", () => {

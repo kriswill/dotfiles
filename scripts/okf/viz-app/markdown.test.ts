@@ -5,7 +5,7 @@ import { describe, expect, test } from "bun:test";
 import { createMd, esc } from "./markdown";
 
 const ctx = {
-  files: { "scripts/okf/viz.ts": {}, "modules/dev.nix": {} },
+  files: { "scripts/okf/viz.ts": {}, "modules/dev.nix": {}, "docs/svelt/manual.md": {} },
   byId: { "nvim/architecture": {}, "decisions/other": {} },
 };
 const md = createMd(ctx);
@@ -67,6 +67,35 @@ describe("bare path autolinking", () => {
   test("text inside an existing anchor is not re-linked", () => {
     expect(md.mdToHtml("[scripts/okf/viz.ts](https://example.com)", from)).toBe(
       '<p><a href="https://example.com" target="_blank" rel="noopener">scripts/okf/viz.ts</a></p>',
+    );
+  });
+});
+
+describe("mdFileToHtml (embedded markdown files)", () => {
+  const fromFile = "docs/svelt/learnings.md";
+
+  test("relative links resolve against the file's own directory", () => {
+    expect(md.mdFileToHtml("[manual](./manual.md)", fromFile)).toBe(
+      '<p><a href="#" data-file="docs/svelt/manual.md">manual</a></p>',
+    );
+  });
+
+  test("links into knowledge/ resolve to concepts", () => {
+    expect(md.mdFileToHtml("[arch](../../knowledge/nvim/architecture.md)", fromFile)).toBe(
+      '<p><a href="#" data-node="nvim/architecture">arch</a></p>',
+    );
+  });
+
+  test("external links and unresolvable targets behave like concept bodies", () => {
+    expect(md.mdFileToHtml("[s](https://svelte.dev)", fromFile)).toBe(
+      '<p><a href="https://svelte.dev" target="_blank" rel="noopener">s</a></p>',
+    );
+    expect(md.mdFileToHtml("[x](./nope.md)", fromFile)).toBe('<p><a title="./nope.md">x</a></p>');
+  });
+
+  test("bare repo paths still autolink", () => {
+    expect(md.mdFileToHtml("see scripts/okf/viz.ts here", fromFile)).toBe(
+      '<p>see <a href="#" data-file="scripts/okf/viz.ts">scripts/okf/viz.ts</a> here</p>',
     );
   });
 });

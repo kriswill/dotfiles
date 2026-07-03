@@ -20,6 +20,8 @@ export interface EmbeddedFile {
   date: string;
   lang: string;
   refs: string[];
+  /** Raw source, present for markdown files — rendered instead of `html`. */
+  md?: string;
 }
 
 export interface RawData {

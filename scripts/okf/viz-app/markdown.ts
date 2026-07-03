@@ -11,28 +11,32 @@ export interface MdCtx {
 }
 
 export function createMd({ files, byId }: MdCtx) {
-  function resolveMd(fromId: string, target: string): string | null {
+  /** Resolve a relative link target against a repo-root-relative directory. */
+  function resolveRel(dir: string[], target: string): string | null {
     if (/^[a-z][a-z0-9+.-]*:/.test(target) || target.startsWith("#")) return null;
-    const base = fromId.split("/").slice(0, -1);
+    const base = [...dir];
     for (const part of target.split("#")[0].split("/")) {
       if (part === "" || part === ".") continue;
       if (part === "..") base.pop();
       else base.push(part);
     }
-    const p = base.join("/");
-    return p.endsWith(".md") && byId[p.slice(0, -3)] ? p.slice(0, -3) : null;
+    return base.join("/");
+  }
+
+  /** Directory (repo-relative) a concept's links resolve against. */
+  const conceptDir = (fromId: string) => ("knowledge/" + fromId).split("/").slice(0, -1);
+
+  /** Concept id if a repo-relative path is a bundle document, else null. */
+  const conceptOf = (p: string | null) =>
+    p && p.startsWith("knowledge/") && p.endsWith(".md") && byId[p.slice(10, -3)] ? p.slice(10, -3) : null;
+
+  function resolveMd(fromId: string, target: string): string | null {
+    return conceptOf(resolveRel(conceptDir(fromId), target));
   }
 
   function resolveRepoFile(fromId: string, target: string): string | null {
-    if (/^[a-z][a-z0-9+.-]*:/.test(target) || target.startsWith("#")) return null;
-    const base = ("knowledge/" + fromId).split("/").slice(0, -1);
-    for (const part of target.split("#")[0].split("/")) {
-      if (part === "" || part === ".") continue;
-      if (part === "..") base.pop();
-      else base.push(part);
-    }
-    const p = base.join("/");
-    return files[p] ? p : null;
+    const p = resolveRel(conceptDir(fromId), target);
+    return p && files[p] ? p : null;
   }
 
   /** Wrap bare repo-path mentions in file links; skips text inside anchors. */
@@ -58,7 +62,7 @@ export function createMd({ files, byId }: MdCtx) {
       .join("");
   }
 
-  const inlineRaw = (s: string, fromId: string) =>
+  const inlineRaw = (s: string, dir: string[]) =>
     esc(s)
       .replace(
         /&lt;(https?:\/\/(?:[^&\s]|&amp;)+)&gt;/g,
@@ -68,16 +72,16 @@ export function createMd({ files, byId }: MdCtx) {
       .replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>")
       .replace(/(?<![\w*])\*(\S(?:[^*\n]*\S)?)\*(?![\w*])/g, "<em>$1</em>")
       .replace(/(?<!!)\[([^\]]*)\]\(([^)\s]+)\)/g, (_m, txt, href) => {
-        const nid = resolveMd(fromId, href);
+        const p = resolveRel(dir, href);
+        const nid = conceptOf(p);
         if (nid) return `<a href="#" data-node="${esc(nid)}">${txt}</a>`;
-        const fp = resolveRepoFile(fromId, href);
-        if (fp) return `<a href="#" data-file="${esc(fp)}">${txt}</a>`;
+        if (p && files[p]) return `<a href="#" data-file="${esc(p)}">${txt}</a>`;
         if (/^https?:/.test(href)) return `<a href="${esc(href)}" target="_blank" rel="noopener">${txt}</a>`;
         return `<a title="${esc(href)}">${txt}</a>`;
       });
 
-  function mdToHtml(md: string, fromId: string): string {
-    const inline = (s: string) => autolinkPaths(inlineRaw(s, fromId));
+  function render(md: string, dir: string[]): string {
+    const inline = (s: string) => autolinkPaths(inlineRaw(s, dir));
     const out: string[] = [];
     let inFence = false;
     let fence: string[] = [];
@@ -187,5 +191,11 @@ export function createMd({ files, byId }: MdCtx) {
     return out.join("");
   }
 
-  return { mdToHtml, autolinkPaths, resolveMd, resolveRepoFile };
+  /** Render a concept body; links resolve relative to the concept's id. */
+  const mdToHtml = (md: string, fromId: string) => render(md, conceptDir(fromId));
+
+  /** Render an embedded repo markdown file; links resolve relative to it. */
+  const mdFileToHtml = (md: string, path: string) => render(md, path.split("/").slice(0, -1));
+
+  return { mdToHtml, mdFileToHtml, autolinkPaths, resolveMd, resolveRepoFile };
 }

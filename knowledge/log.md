@@ -2,6 +2,14 @@
 
 ## 2026-07-02
 
+- **Update** — viz polish: initial camera now fits the whole graph (aims at
+  the layout centroid, backs off to fit the bounding sphere in both FOVs —
+  no more small/off-center default view); embedded markdown files render as
+  documents (raw md shipped instead of a highlighted source view, links
+  resolve file-relative, doc heading styled as the panel title); and the
+  detail panel gained a locked sticky header — back link or title crumb plus
+  close — visible at any scroll depth on every view.
+
 - **Update** — viz viewer rebuilt on Svelte 5 (runes) via bun-plugin-svelte
   inside the same one-shot `Bun.build` — componentized (Sidebar/Legend/
   Search/ConceptList/Stage/DetailPanel/Tooltip), a rune store with `$effect`

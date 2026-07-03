@@ -146,7 +146,7 @@ function highlight(src: string, lang: string): string {
 }
 
 const repo = repoRoot();
-interface Embedded { html: string; lang: string; lines: number; size: number; date: string; refs: string[] }
+interface Embedded { html: string; lang: string; lines: number; size: number; date: string; refs: string[]; md?: string }
 const files: Record<string, Embedded> = {};
 
 function addFile(rel: string, ref: string) {
@@ -164,7 +164,10 @@ function addFile(rel: string, ref: string) {
   if (text.includes("\u0000")) return;
   const lang = LANG_BY_EXT[extname(rel)] ?? "text";
   files[rel] = {
-    html: highlight(text, lang),
+    // Markdown ships raw and is rendered by the viewer; everything else is
+    // pre-highlighted into a source view here.
+    html: lang === "markdown" ? "" : highlight(text, lang),
+    ...(lang === "markdown" ? { md: text } : {}),
     lang,
     lines: text.split("\n").length,
     size,

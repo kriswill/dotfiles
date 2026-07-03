@@ -88,7 +88,18 @@
     onpointerup={onPointerUp}
   >
     <div class="resizer" class:active={resizing}></div>
-    <button class="close" aria-label="Close">×</button>
+    <!-- Locked header: back link (when a concept referred us here) or a title
+         crumb, plus close — always visible while the body scrolls. -->
+    <header class="bar">
+      {#if viz.sel.kind === "file" && viz.backConcept}
+        <a href="#c/{viz.backConcept.id}" class="back" data-node={viz.backConcept.id}>← {viz.backConcept.title}</a>
+      {:else if viz.selectedConcept}
+        <span class="crumb">{viz.selectedConcept.title}</span>
+      {:else}
+        <span class="crumb">{filePath.split("/").pop()}</span>
+      {/if}
+      <button class="close" aria-label="Close">×</button>
+    </header>
     {#if viz.selectedConcept}
       {@const n = viz.selectedConcept}
       <h2>{n.title}</h2>
@@ -104,22 +115,26 @@
       <div class="backlinks"><h4>Links to</h4>{@html linkList(outLinks(n.id))}</div>
       <div class="backlinks"><h4>Cited by</h4>{@html linkList(viz.model.inLinks[n.id] || [])}</div>
     {:else if file}
-      {#if viz.backConcept}
-        <a href="#c/{viz.backConcept.id}" class="back" data-node={viz.backConcept.id}>← {viz.backConcept.title}</a>
+      {#if file.md != null}
+        <!-- Markdown files read as documents: back link, rendered body,
+             backlinks — no source view or metadata table. -->
+        <div id="body-md" class="md-doc">{@html md.mdFileToHtml(file.md, filePath)}</div>
+        <div class="backlinks"><h4>Referenced by</h4>{@html refList(file.refs)}</div>
+      {:else}
+        <h2>{filePath.split("/").pop()}</h2>
+        <span class="chip"><span class="dot" style="background:var(--ink-muted)"></span>{file.lang}</span>
+        <table class="fm">
+          <tbody>
+            <tr><td>path</td><td>{filePath}</td></tr>
+            <tr><td>language</td><td>{file.lang}</td></tr>
+            <tr><td>lines</td><td>{file.lines}</td></tr>
+            <tr><td>size</td><td>{(file.size / 1024).toFixed(1)} KB</td></tr>
+            <tr><td>last commit</td><td>{file.date}</td></tr>
+          </tbody>
+        </table>
+        <div class="backlinks flat"><h4>Referenced by</h4>{@html refList(file.refs)}</div>
+        <pre class="src">{@html file.html}</pre>
       {/if}
-      <h2>{filePath.split("/").pop()}</h2>
-      <span class="chip"><span class="dot" style="background:var(--ink-muted)"></span>{file.lang}</span>
-      <table class="fm">
-        <tbody>
-          <tr><td>path</td><td>{filePath}</td></tr>
-          <tr><td>language</td><td>{file.lang}</td></tr>
-          <tr><td>lines</td><td>{file.lines}</td></tr>
-          <tr><td>size</td><td>{(file.size / 1024).toFixed(1)} KB</td></tr>
-          <tr><td>last commit</td><td>{file.date}</td></tr>
-        </tbody>
-      </table>
-      <div class="backlinks flat"><h4>Referenced by</h4>{@html refList(file.refs)}</div>
-      <pre class="src">{@html file.html}</pre>
     {/if}
   </section>
 {/if}
@@ -133,7 +148,7 @@
     width: min(460px, 85%);
     background: var(--surface-1);
     border-left: 1px solid var(--grid);
-    padding: 18px;
+    padding: 0 18px 18px;
     overflow-y: auto;
     z-index: 2;
   }
@@ -145,18 +160,44 @@
     width: 6px;
     cursor: col-resize;
     touch-action: none;
+    z-index: 4;
   }
   .resizer:hover,
   .resizer.active {
     background: var(--grid);
   }
-  #panel .close {
-    float: right;
+  .bar {
+    position: sticky;
+    top: 0;
+    z-index: 3;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0 -18px 12px;
+    padding: 10px 18px;
+    background: var(--surface-1);
+    border-bottom: 1px solid var(--grid);
+  }
+  .bar .back,
+  .bar .crumb {
+    font-size: 12px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .bar .crumb {
+    color: var(--ink-muted);
+  }
+  .bar .close {
+    margin-left: auto;
+    flex: none;
     cursor: pointer;
     color: var(--ink-muted);
     font-size: 18px;
+    line-height: 1;
     border: 0;
     background: none;
+    padding: 0;
   }
   #panel h2 {
     font-size: 17px;
@@ -213,15 +254,16 @@
     text-transform: uppercase;
     letter-spacing: 0.04em;
   }
-  .back {
-    display: inline-block;
-    font-size: 12px;
-    margin: 0 0 10px;
-  }
   /* Injected via {@html} — must escape Svelte's scoping. */
   #body-md {
     font-size: 13.5px;
     color: var(--ink-2);
+  }
+  /* A rendered markdown document's leading heading acts as the panel title. */
+  .md-doc :global(h3:first-child) {
+    color: var(--ink-1);
+    font-size: 17px;
+    margin: 0 0 8px;
   }
   #body-md :global(h3) {
     color: var(--ink-1);
