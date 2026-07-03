@@ -2,38 +2,83 @@
 
 ## Overview
 
-Nix-based dotfiles for MacOS (nix-darwin only — home-manager has been fully retired; every config is a darwin module + the GNU Stow tree under `home/`). Primary configs: Neovim (Lua), Tmux, Zsh, CLI tools.
-Platform: aarch64-darwin (Apple Silicon only). Flake-based, using flake-parts + `import-tree` (the Dendritic pattern): every `.nix` file under `modules/` is auto-discovered as a flake-parts module.
+Nix-based dotfiles for **macOS (nix-darwin)** and **NixOS** in one flake — no
+home-manager anywhere; every config is a per-class system module + the shared
+GNU Stow tree under `home/`. Hosts: `k`, `mini`, `SOC-Kris-Williams`
+(aarch64-darwin) and `nebula` (x86_64-linux desktop: Hyprland/Noctalia on
+[snowglobe-lib](https://codeberg.org/earthgman/snowglobe-lib)). Primary
+configs: Neovim (Lua), Tmux, Zsh, CLI tools; nebula adds the Wayland desktop
+stack. Flake-based, using flake-parts + `import-tree` (the Dendritic pattern):
+every `.nix` file under `modules/` is auto-discovered as a flake-parts module.
 
 ## Build & Commands
 
 **Primary Commands:**
 
-- `darwin-rebuild switch --flake .` - Apply system configuration
-- `nix develop` - Enter dev shell (deadnix, statix, nixfmt-tree, just, okf)
+- `darwin-rebuild switch --flake .` — apply system configuration (macOS); or `nrs`
+- `sudo nixos-rebuild switch --flake .#nebula` — apply on nebula (or `nrs`;
+  run after `cd` into the real checkout — nix's `--flake <path>` does not
+  follow a symlinked path like `~/src/dotfiles` on nebula)
+- `nix develop` — dev shell (deadnix, statix, nixfmt-tree, just, okf, nil,
+  nix-output-monitor, sops, age, ssh-to-age, stow)
 
 **Testing & Validation:**
 
-- `nix flake check` - Validate flake structure
-- `nix build .#darwinConfigurations.k.system` - Test build without applying
-- `nix eval .#darwinConfigurations.k.config.<path>` - Evaluate specific config values
-- `nix flake show` - Show all flake outputs
-- `nix build .#packages.aarch64-darwin.<package>` - Build specific package
+- `nix flake check` — validate flake + build the current system's host checks
+  (other-system checks eval only)
+- `nix build .#darwinConfigurations.<host>.system` — test-build a darwin host
+- `nix eval .#nixosConfigurations.nebula.config.system.build.toplevel.drvPath`
+  — full cross-eval of the NixOS host from a Mac (the pre-hardware gate)
+- `nix eval .#darwinConfigurations.k.config.<path>` — evaluate specific values
+- `nix build .#packages.<system>.<package>` — build a specific package
 
 **Code Quality:**
 
-- `nix fmt` - Format all Nix files (nixfmt-tree)
-- `statix check .` - Lint Nix code
-- `deadnix .` - Find unused Nix code
+- `nix fmt` — format all Nix files (nixfmt-tree)
+- `statix check .` / `deadnix .` — lint Nix code
 
 ## Code Style - Nix
 
-- **Module pattern:** universal features (every darwin host) are plain ungated deferred modules in `flake.modules.darwin.<name>` (see `modules/darwin/tmux.nix`); hosts blanket-import the whole set via `builtins.attrValues config.flake.modules.darwin`. Host-selective features also live in `modules/darwin/` but gate their config behind an enable option — `programs.<name>.*` for user-facing programs (see `modules/darwin/podman-desktop.nix`), `services.<name>.*` for daemons and sub-flake re-exports — which hosts flip in `modules/hosts/<hostname>/default.nix`. Truly host-specific config is a file beside the host's `default.nix` (e.g. `modules/hosts/SOC-Kris-Williams/alias-en0.nix`).
+- **Module pattern:** two module classes, one per OS, deliberately parallel:
+  - `flake.modules.darwin.<name>` (`modules/darwin/`) — realised by
+    `modules/darwin.nix` via `configurations.darwin.<host>`.
+  - `flake.modules.nixos.<name>` (`modules/nixos/`) — realised by
+    `modules/nixos.nix` via `configurations.nixos.<host>` through
+    snowglobe-lib's `mkNixosHost` (hardware metadata lives in the registry
+    entry, `modules/hosts/nebula.nix`).
+  Hosts blanket-import their whole class (`builtins.attrValues
+  config.flake.modules.<class>`). Universal features are ungated; darwin
+  host-selective features gate behind `programs.<name>.enable` /
+  `services.<name>.enable` flipped in `modules/hosts/<hostname>/default.nix`.
+  The nixos class is currently all-universal (single Linux host) — retrofit
+  gates when a second NixOS host appears. Truly host-specific config is a file
+  beside the host's registration (e.g. `modules/hosts/SOC-Kris-Williams/alias-en0.nix`,
+  `modules/hosts/nebula/*.nix`).
+- **Cross-platform features get twins:** a feature shared by both OSes has a
+  module in each class dir (`modules/darwin/git.nix` ↔ `modules/nixos/git.nix`);
+  shared generated-file text is extracted to `lib/` (see
+  `lib/direnv-nom-wrapper.nix`). Keep the twins' package lists in sync.
 - **Imports:** Use `inherit` for cleaner destructuring
 - **Package lists:** Use `builtins.attrValues { inherit (pkgs) ...; }` pattern
-- **Options:** host-selective modules gate on `lib.mkEnableOption` under `programs.<name>` / `services.<name>` (no personal namespace); universal modules carry no toggles, though a behavior setting is fine (`programs.direnv-nom.diff`). Universal modules' override-prone scalars use `lib.mkDefault`; overriding anything else per host needs `lib.mkForce`
-- **Symlinks:** Stow tree under `home/` for plain config files (see Symlinked Configs below); files that must embed /nix/store paths are generated by the feature's darwin module and linked during activation (see `modules/darwin/tmux.nix`)
-- **Unfree packages:** Repo sets `nixpkgs.config.allowUnfree = false` in `modules/darwin/core.nix`; to permit a specific unfree package add a `nixpkgs.config.allowUnfreePredicate` there
+- **Options:** darwin host-selective modules gate on `lib.mkEnableOption` under
+  `programs.<name>` / `services.<name>` (no personal namespace); universal
+  modules carry no toggles, though a behavior setting is fine
+  (`programs.direnv-nom.diff`, declared in both classes' twins). Universal
+  modules' override-prone scalars use `lib.mkDefault`; overriding anything else
+  per host needs `lib.mkForce`
+- **Symlinks:** Stow tree under `home/` for plain config files (see Symlinked
+  Configs below); files that must embed /nix/store paths are generated by the
+  feature's module — darwin: activation script (`postActivation`, order 1600),
+  nixos: `systemd.tmpfiles.rules` (`L+`) — see `modules/darwin/tmux.nix` ↔
+  `modules/nixos/tmux.nix`
+- **Overlays:** every host on both OSes applies the whole `flake.overlays` set;
+  an overlay that only makes sense on one OS must be internally
+  platform-guarded (see `overlays/podman.nix`) or only ADD lazy attrs the
+  other OS never evaluates (hyprland overlays)
+- **Unfree packages:** Repo sets `nixpkgs.config.allowUnfree = false` in
+  `modules/darwin/core.nix` (darwin); to permit a specific unfree package add a
+  `nixpkgs.config.allowUnfreePredicate` there. nebula's unfree policy comes via
+  snowglobe-lib profiles.
 
 ## Code Style - Lua (Neovim)
 
@@ -59,68 +104,152 @@ Platform: aarch64-darwin (Apple Silicon only). Flake-based, using flake-parts + 
 
 ## Naming Conventions
 
-- **Module options:** `programs.<name>.*` (user-facing programs) / `services.<name>.*` (daemons, sub-flake modules) for host-selective features; universal modules define no options
-- **Packages:** kebab-case (e.g., `kitten`, `iv`, `tofu-ls`)
+- **Module options:** `programs.<name>.*` (user-facing programs) /
+  `services.<name>.*` (daemons, sub-flake modules) for darwin host-selective
+  features; universal modules define no options
+- **Packages:** kebab-case (e.g., `kitten`, `iv`, `tofu-ls`, `helium-config`)
 - **Nix functions:** camelCase (e.g., `kanagawa`)
 - **Files:** kebab-case for multi-word (e.g., `alias-en0.nix`, `update-opencode.sh`)
-- **Hosts:** Descriptive names (e.g., `k`, `SOC-Kris-Williams`)
+- **Hosts:** Descriptive names (e.g., `k`, `nebula`, `SOC-Kris-Williams`)
 
 ## File Organization
 
 ```text
 ├── modules/             # Every .nix here is auto-imported as a flake-parts module
-│   ├── flake-parts.nix  # systems list + flake-parts plumbing
+│   ├── flake-parts.nix  # systems list (aarch64-darwin + x86_64-linux) + plumbing
 │   ├── darwin.nix       # realises `configurations.darwin.<host>` → darwinConfigurations
+│   ├── nixos.nix        # realises `configurations.nixos.<host>` → nixosConfigurations
+│   │                    #   (through snowglobe-lib's mkNixosHost; hardware metadata in the registry)
 │   ├── packages.nix, overlays.nix, dev.nix
-│   ├── darwin/          # nix-darwin feature modules (universal ungated; host-selective behind programs./services. enables)
-│   └── hosts/           # One folder per host (exact hostname; darwin or, later, nixos)
-│       ├── k/default.nix, mini/default.nix, SOC-Kris-Williams/default.nix
-│       └── SOC-Kris-Williams/alias-en0.nix   # host-specific files live beside default.nix
-├── home/                # GNU Stow tree — one package per dir mirroring $HOME
-│   ├── nvim/            #   e.g. home/nvim/.config/nvim/… (Neovim Lua config)
-│   ├── tmux/, zsh/, git/, gh/, ssh/, kitty/, direnv/, podman-desktop/, fastfetch/, ghostty/, karabiner/, glow/, oksh/, starship/
-│   │                    #   …deployed by modules/darwin/dotfiles-stow.nix on every rebuild
+│   ├── darwin/          # nix-darwin feature modules (universal ungated; host-selective gated)
+│   ├── nixos/           # NixOS feature modules (all universal within the class today)
+│   └── hosts/           # One folder/file per host (exact hostname)
+│       ├── k/, mini/, SOC-Kris-Williams/        (darwin; default.nix + side files)
+│       └── nebula.nix + nebula/                 (nixos; registry entry + host files,
+│                                                 secrets.yaml, users/k/, disko.nix, …)
+├── home/                # GNU Stow tree — one package per dir mirroring $HOME, SHARED by both OSes
+│   ├── nvim/, tmux/, zsh/, git/, gh/, ghostty/, starship/, fastfetch/, direnv/, diffnav/
+│   │                    #   …cross-platform (deployed everywhere)
+│   ├── ssh/, kitty/, karabiner/, glow/, oksh/, podman-desktop/, yazi/   # macOS-only (skip-listed on nixos)
+│   ├── hyprland/, fuzzel/, gtk/, mimeapps/, pupgui/, desktop-entries/   # Linux-only (skip-listed on darwin)
+│   │                    #   deployed by modules/{darwin,nixos}/dotfiles-stow.nix on every rebuild
+├── config/              # NON-symlinkable app-owned configs (Helium, Noctalia) — snapshot
+│                        #   sync via helium-config/noctalia-config CLIs; see config/README.md
 ├── pkgs/                # Custom package definitions (*.nix files or subdirectories)
-├── flakes/              # Self-contained sub-flakes consumed by the root via relative-path inputs (e.g. flakes/ccglass)
+├── flakes/              # Self-contained sub-flakes consumed via relative-path inputs (e.g. flakes/ccglass)
 ├── overlays/            # Nixpkgs overlays (makes custom packages available)
-├── lib/                 # Pure lib helpers (kanagawa) — outside modules/ so import-tree skips them
-└── scripts/             # Helper scripts for package updates
+├── lib/                 # Pure lib helpers (kanagawa, direnv-nom-wrapper) — outside modules/ so import-tree skips them
+├── docs/                # Task-focused manuals (hyprland, noctalia, helium, tmux, fastfetch, …)
+└── scripts/             # Helper scripts for package updates + the okf knowledge CLI
 ```
 
 ## Custom Library Functions
 
-Pure helpers live in `lib/default.nix` (currently just the `kanagawa` palette). `modules/darwin.nix` extends `nixpkgs.lib` with them inline and hands the result to the darwin evaluation via specialArgs, so modules reach them as `lib.kanagawa`. Module auto-discovery and the old `mkDarwin`/`mkHomeManager`/`autoImport` builders are gone — flake-parts + `import-tree ./modules` (wired in `flake.nix`) handles discovery, and `modules/darwin.nix` realises the configurations.
+Pure helpers live in `lib/` (the `kanagawa` palette via `lib/default.nix`, plus
+standalone builder files like `lib/direnv-nom-wrapper.nix` imported by path).
+`modules/darwin.nix` extends `nixpkgs.lib` with `lib/default.nix` and hands the
+result to the darwin evaluation via specialArgs, so darwin modules reach them
+as `lib.kanagawa`. The nixos evaluation goes through snowglobe-lib's
+`mkNixosHost` and does NOT get the extended lib — nixos modules import lib
+files by path when needed.
+
+## Secrets (sops-nix)
+
+- Recipients and creation rules: `.sops.yaml`. Every host's age identity is
+  derived from its SSH host key — on a new machine run
+  `ssh-to-age < /etc/ssh/ssh_host_ed25519_key.pub` and add an anchor + rule.
+- Secrets files: `modules/hosts/<host>/secrets.yaml`, edited with
+  `sops modules/hosts/<host>/secrets.yaml` (tools in the dev shell).
+- Machinery: darwin imports `sops-nix.darwinModules.sops` via
+  `modules/darwin/sops.nix`; nebula gets the NixOS module via snowglobe-lib.
+  A host consumes secrets with `sops.defaultSopsFile` + `sops.secrets.<name>`.
+- git commit signing is NOT gpg: it's SSH-format signing through the 1Password
+  agent, OS-branched inside `home/git/.config/git/config` via
+  `includeIf gitdir:/Users/ | /home/`. gpg-agent (both OSes) only backs `pass`
+  and ad-hoc gpg; `enableSSHSupport` stays false.
 
 ## Common Patterns
 
 **Adding a New Module:**
 
-1. Create a bare `<name>.nix` in `modules/darwin/` defining `flake.modules.darwin.<name>` (a directory only when bundling adjacent config files). Universal (every darwin host): no options, no `lib.mkIf` — the blanket import turns it on everywhere. Host-selective: gate the config behind `programs.<name>.enable` / `services.<name>.enable` (`lib.mkEnableOption` + `lib.mkIf`; see `modules/darwin/podman-desktop.nix`) and flip it in each wanting host's `modules/hosts/<hostname>/default.nix`.
-2. Config that only ever applies to one machine (fixed IPs, hardware quirks) skips `modules/darwin/` entirely: put it in a file beside that host's `default.nix` merging into `configurations.darwin.<hostname>.module`.
-3. File is auto-discovered by `import-tree` — no manual import needed (prefix a path component with `_` to exclude it, e.g. `yazi/_themes/`)
-4. **Must `git add` new files before `nix build`** — flakes only see git-tracked files
+1. Create a bare `<name>.nix` in `modules/darwin/` or `modules/nixos/` defining
+   `flake.modules.<class>.<name>` (a directory only when bundling adjacent
+   config files). Universal: no options, no `lib.mkIf`. Darwin host-selective:
+   gate behind `programs.<name>.enable` / `services.<name>.enable`
+   (`lib.mkEnableOption` + `lib.mkIf`; see `modules/darwin/podman-desktop.nix`)
+   and flip it in each wanting host's `modules/hosts/<hostname>/default.nix`.
+2. Cross-platform feature? Add the twin in the other class dir; share generated
+   file text via `lib/` if non-trivial.
+3. Config that only ever applies to one machine (fixed IPs, hardware quirks)
+   skips the class dirs entirely: put it in a file beside that host's
+   registration merging into `configurations.<class>.<hostname>.module`.
+4. File is auto-discovered by `import-tree` — no manual import needed (prefix a
+   path component with `_` to exclude it, e.g. `yazi/_themes/`)
+5. **Must `git add` new files before `nix build`** — flakes only see
+   git-tracked files
 
 **Adding a Custom Package:**
 
 1. Create `pkgs/<name>.nix` (or `pkgs/<name>/package.nix`)
-2. Add `<name> = pkgs.callPackage ../pkgs/<name>.nix { };` to `perSystem.packages` in `modules/packages.nix`
-3. To make it available to hosts, create `overlays/<name>.nix` and register it in `modules/overlays.nix` (`flake.overlays.<name>`)
-4. If unfree: add a `nixpkgs.config.allowUnfreePredicate` entry in `modules/darwin/core.nix`
+2. Add `<name> = pkgs.callPackage ../pkgs/<name>.nix { };` to
+   `perSystem.packages` in `modules/packages.nix` — under the right platform
+   guard (`lib.optionalAttrs`) if it only builds on one OS
+3. To make it available to hosts, create `overlays/<name>.nix` and register it
+   in `modules/overlays.nix` (`flake.overlays.<name>`)
+4. If unfree: add a `nixpkgs.config.allowUnfreePredicate` entry in
+   `modules/darwin/core.nix`
 
 **Adding a Custom Package as a Sub-flake (extraction pattern):**
 
-For a package that warrants its own flake — forked/patched source, standalone-buildable, or destined to become a separate repo — put it under `flakes/<name>/` instead of `pkgs/`:
+For a package that warrants its own flake — forked/patched source,
+standalone-buildable, or destined to become a separate repo — put it under
+`flakes/<name>/` instead of `pkgs/`:
 
-1. Create `flakes/<name>/{flake.nix,package.nix,…}`. `flake.nix` uses flake-parts and exposes `packages.<system>.<name>` (+ `default`). **`git add` it** — sub-flake files must be git-tracked to be seen.
-2. Add a relative-path input in `flake.nix`: `inputs.<name>.url = "./flakes/<name>";` with `inputs.<name>.inputs.{nixpkgs,flake-parts}.follows` to dedupe nixpkgs.
-3. Re-export in `modules/packages.nix`: `<name> = inputs.<name>.packages.${system}.<name>;` (plus a `flake.packages` block for systems outside the root `systems` list).
-4. If a host needs it on `pkgs`, add an **inline** overlay in `modules/overlays.nix` (which receives `inputs`): `<name> = _final: prev: { <name> = inputs.<name>.packages.${prev.stdenv.hostPlatform.system}.<name>; };`.
+1. Create `flakes/<name>/{flake.nix,package.nix,…}`. `flake.nix` uses
+   flake-parts and exposes `packages.<system>.<name>` (+ `default`).
+   **`git add` it** — sub-flake files must be git-tracked to be seen.
+2. Add a relative-path input in `flake.nix`: `inputs.<name>.url = "./flakes/<name>";`
+   with `inputs.<name>.inputs.{nixpkgs,flake-parts}.follows` to dedupe nixpkgs.
+3. Re-export in `modules/packages.nix`: `<name> = inputs.<name>.packages.${system}.<name>;`.
+4. If a host needs it on `pkgs`, add an **inline** overlay in
+   `modules/overlays.nix` (which receives `inputs`).
 
-Later extraction to a separate repo is just swapping the input URL `"./flakes/<name>"` → `"github:owner/<name>"`. See `flakes/ccglass/` for a worked example.
+Later extraction to a separate repo is just swapping the input URL
+`"./flakes/<name>"` → `"github:owner/<name>"`. See `flakes/ccglass/` for a
+worked example.
 
 **Symlinked Configs — the stow tree (`home/`), pointing at the live repo (editable without rebuild):**
 
-Each dir under `home/` is one stow package mirroring `$HOME` (e.g. `home/tmux/.config/tmux/tmux.conf`). `modules/darwin/dotfiles-stow.nix` restows every package during activation (`--no-folding`, conflicts logged + skipped per package, stale links self-healed). Adding a package = adding a directory; no nix edit needed. Capture an existing file with `dots-adopt <pkg> <relpath-under-$HOME>`; pull live edits of an already-tracked file back with `stow -d ~/src/dotfiles/home -t ~ --no-folding --adopt <pkg>` (overwrites the repo copy). Files that must embed /nix/store paths (e.g. tmux `plugins.conf`, or claude-account-selector's generated zsh snippet) are generated by the feature's module and linked in activation instead.
+Each dir under `home/` is one stow package mirroring `$HOME` (e.g.
+`home/tmux/.config/tmux/tmux.conf`), **shared by both OSes**. Each OS's
+dotfiles-stow module restows every package during activation (`--no-folding`,
+conflicts logged + skipped per package, stale links self-healed) — except the
+packages on its `skip` list (macOS-only packages skipped on nixos and vice
+versa; the two lists mirror each other in
+`modules/{darwin,nixos}/dotfiles-stow.nix`). Adding a package = adding a
+directory (deployed on BOTH OSes unless skip-listed); no nix edit needed.
+Capture an existing file with `dots-adopt <pkg> <relpath-under-$HOME>`; pull
+live edits of an already-tracked file back with
+`stow -d ~/src/dotfiles/home -t ~ --no-folding --adopt <pkg>` (overwrites the
+repo copy). Files that must embed /nix/store paths (e.g. tmux `plugins.conf`,
+ghostty's per-OS `os.conf`) are generated by the feature's module per class.
+
+**Non-symlinkable configs — `config/`:**
+
+Apps that rewrite their config via atomic rename (Helium/Chromium, Noctalia)
+break stow symlinks, so their settings are git-tracked as **snapshots** under
+`config/` and synced manually with per-app CLIs (`helium-config`,
+`noctalia-config`: `capture` / `restore` / `diff`; Helium snapshots are
+age-encrypted). Linux/nebula-only today. Full design: `config/README.md`.
+
+## Manuals (`docs/`)
+
+`docs/` holds task-focused reference manuals (hyprland, noctalia, helium,
+suspend, fastfetch, tmux, libreoffice, CVE audits, svelte…) — researched,
+machine-verified, written for agent reuse. Consult the relevant manual before
+working on its topic and keep it current: lead with the verified version/state,
+keep a dated "Learned behaviours & workarounds" section, correct stale claims
+rather than appending contradictions.
 
 ## Knowledge Bundle (`knowledge/`)
 

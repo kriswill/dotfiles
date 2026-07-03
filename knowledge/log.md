@@ -2,6 +2,28 @@
 
 ## 2026-07-03
 
+- **Creation** — recorded the
+  [vesktop pnpm whitelist decision](decisions/vesktop-pnpm-whitelist.md):
+  nixpkgs' vesktop deliberately pins the CVE-flagged pnpm-10.29.2 (newer pnpm
+  crashes its electron-builder), so nebula tolerates a scoped
+  `permittedInsecurePackages` entry for now; the whitelist-free exit (AppImage
+  repack à la wowup + `programs.discord.package`) is written down for when
+  it's needed.
+
+- **Milestone** — merged the orphan `nebula-snowglobe` branch into one dual-OS
+  flake ([decision](decisions/nixos-darwin-unification.md)): three darwin
+  hosts + the `nebula` NixOS desktop build from a single flake on one
+  `nixos-unstable` nixpkgs. `home/` is now shared with per-OS skip lists in
+  the stow modules ([decision](decisions/stow-os-skip-lists.md)); shared git
+  config unified (aliases + difftastic + delta + codeberg helper); ghostty
+  split into shared config + generated per-OS `os.conf`; nvim tree
+  reconciled on main's (newer) copy. NixOS twins added for nh, git, direnv,
+  direnv-nom, ghostty (nebula's direnv had been transitive-only); nebula's
+  `packages/` dissolved into `pkgs/` + overlays. sops-nix now runs on darwin
+  too, with host age identities derived from SSH host keys
+  ([decision](decisions/sops-darwin-ssh-host-keys.md)), and gpg-agent/pass
+  are class-wide on both OSes. AGENTS.md/README rewritten for dual-OS.
+
 - **Update** — xhigh code-review pass over the de-gating branch fixed seven
   findings: direnv-nom's diff enum was accidentally removed (restored as
   `programs.direnv-nom.diff` — a behavior setting on a universal module);
