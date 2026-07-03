@@ -1,4 +1,11 @@
-{ writeShellApplication, coreutils, jq, diffutils, procps, age }:
+{
+  writeShellApplication,
+  coreutils,
+  jq,
+  diffutils,
+  procps,
+  age,
+}:
 # Snapshot/restore Helium's user settings between the live profile
 # (~/.config/net.imput.helium, app-owned) and the dotfiles repo, WITHOUT
 # symlinking the live files.
@@ -32,6 +39,12 @@
 # from the ambient PATH (/run/wrappers/bin/op), unlocked via the desktop app.
 writeShellApplication {
   name = "helium-config";
-  runtimeInputs = [ coreutils jq diffutils procps age ];
+  runtimeInputs = [
+    coreutils
+    jq
+    diffutils
+    procps
+    age
+  ];
   text = builtins.readFile ./helium-config.sh;
 }

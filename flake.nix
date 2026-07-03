@@ -54,9 +54,11 @@
       url = "git+https://codeberg.org/earthgman/snowglobe-lib?ref=unstable";
       # We own nixpkgs (above); make snowglobe follow it so there's a single
       # nixpkgs in the store and we control the rev (e.g. to pull kernel 7.1).
-      inputs.nixpkgs.follows = "nixpkgs";
-      inputs.import-tree.follows = "import-tree";
-      inputs.sops-nix.follows = "sops-nix";
+      inputs = {
+        nixpkgs.follows = "nixpkgs";
+        import-tree.follows = "import-tree";
+        sops-nix.follows = "sops-nix";
+      };
     };
     # Explicit sops-nix (snowglobe-lib follows it, above): also provides
     # darwinModules.sops for secrets on the macOS hosts.

@@ -43,11 +43,13 @@ let
   # path and links it to a clean ~/Games location for the GUI to point at.
   launcher = writeScript pname ''
     #!${runtimeShell}
-    ${lib.optionalString (wowPath != null) ''
-      export WOWUP_WOW_PATH=${lib.escapeShellArg wowPath}
-      mkdir -p "$HOME/Games"
-      ln -sfn ${lib.escapeShellArg wowPath} "$HOME/Games/World of Warcraft"
-    ''}here="$(dirname "$(readlink -f "$0")")"
+    ${
+      lib.optionalString (wowPath != null) ''
+        export WOWUP_WOW_PATH=${lib.escapeShellArg wowPath}
+        mkdir -p "$HOME/Games"
+        ln -sfn ${lib.escapeShellArg wowPath} "$HOME/Games/World of Warcraft"
+      ''
+    }here="$(dirname "$(readlink -f "$0")")"
     exec "$here/.${pname}-wrapped" --no-sandbox "$@"
   '';
 in
