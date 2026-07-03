@@ -3,6 +3,9 @@ pkgs/result
 **/.DS_Store
 .obsidian
 **/result
+result-*
+*.swp
+*~
 # Ignore local Claude state (settings.local.json, worktrees) but track shared skills
 .claude/*
 !.claude/skills/

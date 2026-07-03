@@ -1,13 +1,15 @@
 # ~/.config/zsh/.zshrc — Kris' interactive zsh config (ZDOTDIR = ~/.config/zsh).
 #
-# Deployed by the stow tree (home/zsh) via modules/darwin/dotfiles-stow.nix.
-# nix-darwin's /etc/zshenv sets ZDOTDIR here (modules/darwin/zsh.nix), and
-# /etc/zshrc provides compinit, autosuggestions, and syntax highlighting. This
-# file runs last, so it gets the final word on aliases and the prompt.
+# Deployed by the stow tree (home/zsh) via each OS's dotfiles-stow module
+# (modules/darwin/dotfiles-stow.nix, modules/nixos/dotfiles-stow.nix). The
+# system /etc/zshenv sets ZDOTDIR here (each OS's zsh module), and /etc/zshrc
+# provides compinit, autosuggestions, and syntax highlighting. This file runs
+# last, so it gets the final word on aliases and the prompt.
 
-## History — /etc/zshrc (nix-darwin) already set HISTSIZE/SAVEHIST/HISTFILE
+## History — the system /etc/zshrc already set HISTSIZE/SAVEHIST/HISTFILE
 ## (~/.local/state/zsh/history); raise the limits here.
 HISTSIZE=100000
+# shellcheck disable=SC2034 # SAVEHIST is a zsh parameter; shellcheck only knows bash
 SAVEHIST=10000000
 
 ## Options
@@ -15,7 +17,7 @@ setopt interactivecomments # allow comments on the command line
 setopt AUTO_CD             # bare `dir/` cd's into it
 
 ## Editor — used by edit-command-line below (EDITOR/MANPAGER are set
-## system-wide by modules/darwin/neovim.nix).
+## system-wide by each OS's neovim module).
 export VISUAL=nvim
 
 ## Vi-mode + edit-command-line: press `v` in command mode to edit the current
@@ -75,7 +77,7 @@ function stderred() {
   exec 2> >(colorize_stderr)
 }
 
-## Darwin-specific (guarded so this file stays portable across hosts).
+## Darwin-specific (guarded so this file stays portable across hosts and OSes).
 ## determinate-nixd's `completion zsh` takes ~300ms per shell to emit the same
 ## static script, so cache it and refresh only when the binary changes.
 if command -v determinate-nixd > /dev/null; then
@@ -90,32 +92,33 @@ fi
 [ -x /opt/homebrew/bin/brew ] && eval "$(/opt/homebrew/bin/brew shellenv)"
 
 ## PATH: bun globals and user-local bins, plus the persistent system-profile path
-## as a fallback. nix-darwin's set-environment puts /run/current-system/sw/bin on
+## as a fallback. On macOS, set-environment puts /run/current-system/sw/bin on
 ## PATH, but that symlink lives in volatile /run and is only recreated by the
 ## activate-system daemon once the FileVault-encrypted /nix volume mounts at login
 ## — so a terminal opened in that brief post-login window can't find
 ## starship/zoxide/direnv/etc. /nix/var/nix/profiles/system/sw/bin is the same
 ## store path and resolves the moment /nix is mounted, independent of /run.
+## (Harmless on NixOS, where /run/current-system is reliable.)
 export PATH="$HOME/.bun/bin:$HOME/.local/bin:$PATH:/nix/var/nix/profiles/system/sw/bin"
 
-## Prompt — starship (nix-darwin's default `prompt suse` is disabled in
-## modules/darwin/zsh.nix so this wins cleanly).
+## Prompt — starship (each OS's zsh module disables the default `prompt suse`
+## so this wins cleanly).
 eval "$(starship init zsh)"
 
 ## Smart cd — zoxide, jump with `j <dir>`.
 eval "$(zoxide init zsh --cmd j)"
 
-## direnv — per-directory envs.
-eval "$(direnv hook zsh)"
+## direnv — per-directory envs (guarded: not provisioned on every host yet).
+command -v direnv > /dev/null && eval "$(direnv hook zsh)"
 
-## fd/tree come from the user package set (modules/darwin/user-packages.nix).
+## fd/tree come from the user package set (each OS's user-packages module).
 export FZF_DEFAULT_COMMAND="fd --type f"
 export FZF_DEFAULT_OPTS="--height 40% --prompt ⟫"
 export FZF_ALT_C_COMMAND="fd --type d"
 export FZF_ALT_C_OPTS="--preview 'tree -C {} | head -200'"
 
 ## fzf keybindings + completion (binds Ctrl-R; hstr below must come AFTER so its Ctrl-R wins).
-source <(fzf --zsh)
+command -v fzf > /dev/null && source <(fzf --zsh)
 
 ## hstr — fuzzy history picker on Ctrl-R.
 export HSTR_CONFIG=hicolor
