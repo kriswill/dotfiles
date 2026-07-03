@@ -22,7 +22,6 @@
     {
       lib,
       pkgs,
-      config,
       inputs,
       ...
     }:
@@ -33,28 +32,25 @@
       flavor = import ./_themes/kanagawa-dragon { inherit lib pkgs; };
     in
     {
-      options.kriswill.yazi.enable = lib.mkEnableOption "Kris' yazi";
-      config = lib.mkIf config.kriswill.yazi.enable {
-        # yazi itself, plus `magick` (ImageMagick 7) required by the font
-        # previewer. glow (md previews, from core.nix) and bat (code previews)
-        # are already on PATH; the previewer invokes them by bare name.
-        environment.systemPackages = builtins.attrValues {
-          inherit (pkgs) yazi imagemagick;
-        };
-
-        # Order 1600: after dotfiles-stow (1500) has populated ~/.config/yazi
-        # (the static files + the font-dark plugin dir). Run as the user so the
-        # dirs/links aren't root-owned; `ln -sfn` replaces any stale link so the
-        # store paths track rebuilds.
-        system.activationScripts.postActivation.text = lib.mkOrder 1600 ''
-          /usr/bin/sudo -u k --set-home /bin/sh -c '
-            mkdir -p /Users/k/.config/yazi/plugins /Users/k/.config/yazi/flavors
-            ln -sfn ${pkgs.yaziPlugins.git} /Users/k/.config/yazi/plugins/git.yazi
-            ln -sfn ${inputs.faster-piper-yazi} /Users/k/.config/yazi/plugins/faster-piper.yazi
-            ln -sfn ${inputs.yazi-plugins}/types.yazi /Users/k/.config/yazi/plugins/types.yazi
-            ln -sfn ${flavor} /Users/k/.config/yazi/flavors/kanagawa-dragon.yazi
-          '
-        '';
+      # yazi itself, plus `magick` (ImageMagick 7) required by the font
+      # previewer. glow (md previews, from core.nix) and bat (code previews)
+      # are already on PATH; the previewer invokes them by bare name.
+      environment.systemPackages = builtins.attrValues {
+        inherit (pkgs) yazi imagemagick;
       };
+
+      # Order 1600: after dotfiles-stow (1500) has populated ~/.config/yazi
+      # (the static files + the font-dark plugin dir). Run as the user so the
+      # dirs/links aren't root-owned; `ln -sfn` replaces any stale link so the
+      # store paths track rebuilds.
+      system.activationScripts.postActivation.text = lib.mkOrder 1600 ''
+        /usr/bin/sudo -u k --set-home /bin/sh -c '
+          mkdir -p /Users/k/.config/yazi/plugins /Users/k/.config/yazi/flavors
+          ln -sfn ${pkgs.yaziPlugins.git} /Users/k/.config/yazi/plugins/git.yazi
+          ln -sfn ${inputs.faster-piper-yazi} /Users/k/.config/yazi/plugins/faster-piper.yazi
+          ln -sfn ${inputs.yazi-plugins}/types.yazi /Users/k/.config/yazi/plugins/types.yazi
+          ln -sfn ${flavor} /Users/k/.config/yazi/flavors/kanagawa-dragon.yazi
+        '
+      '';
     };
 }

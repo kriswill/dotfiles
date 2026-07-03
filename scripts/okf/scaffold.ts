@@ -5,7 +5,7 @@
 // existing docs are never overwritten (enrichment happens by hand or by
 // agents), use --force to redo.
 
-import { readdirSync, readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
+import { readdirSync, readFileSync, writeFileSync, mkdirSync, existsSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { bundleRoot, fmToYaml, gitISO, repoRoot, titleFromSlug, type FM } from "./lib";
 
@@ -88,22 +88,49 @@ for (const entry of nixFiles("modules/darwin")) {
   moduleNames.add(name);
 
   const src = read(srcRel);
+  // Leading comment first — `description = "..."` regexes match arbitrary
+  // option descriptions (e.g. a settings option's), not the module's purpose.
   const desc =
-    firstMatch(src, /description\s*=\s*"([^"]+)"/) ??
-    firstMatch(src, /mkEnableOption\s+"([^"]+)"/) ??
     leadingComment(src) ??
+    firstMatch(src, /mkEnableOption\s+"([^"]+)"/) ??
+    firstMatch(src, /description\s*=\s*"([^"]+)"/) ??
     `Darwin feature module '${name}'`;
-  const option = firstMatch(src, /options\.([A-Za-z0-9_.-]+?)(?:\s*=|\.enable)/);
+  // Gating detection: an enable option declared in the file itself, or — for
+  // sub-flake re-exports whose options live in the re-exported module — a
+  // backticked `<ns>.enable = true;` hint anywhere in the file's comments.
+  const option =
+    firstMatch(src, /options\.([A-Za-z0-9_.-]+?)\.enable\s*=/) ??
+    firstMatch(src, /options\.([A-Za-z0-9_.-]+?)\s*=\s*\{\s*\n\s*enable\s*=/) ??
+    firstMatch(src, /`([A-Za-z0-9_.-]+)\.enable = true;?`/);
+  const reExport = /inputs\.[A-Za-z0-9_-]+\.darwinModules\./.test(src);
   const readme = existsSync(join(repo, `modules/darwin/${name}/README.md`))
     ? `modules/darwin/${name}/README.md`
     : null;
   const stow = existsSync(join(repo, "home", name)) ? `home/${name}/` : null;
 
+  const mountLines = option
+    ? [
+        `Imported on every darwin host but disabled by default — hosts opt in with`,
+        `\`${option}.enable = true;\` (see the`,
+        "[host-mounted modules pattern](../patterns/host-mounted-modules.md)); auto-discovered",
+        "via the [Dendritic module layout](../patterns/dendritic-modules.md).",
+      ]
+    : reExport
+      ? [
+          "Re-exports a module whose options ship with the re-exported flake —",
+          "disabled by default; hosts opt in via its enable option (see the",
+          "[host-mounted modules pattern](../patterns/host-mounted-modules.md)); auto-discovered",
+          "via the [Dendritic module layout](../patterns/dendritic-modules.md).",
+        ]
+      : [
+          "Mounted ungated on every darwin host (see the",
+          "[host-mounted modules pattern](../patterns/host-mounted-modules.md)), auto-discovered",
+          "via the [Dendritic module layout](../patterns/dendritic-modules.md).",
+        ];
   const lines = [
     mdSafe(sentence(desc)),
     "",
-    "Follows the [module option pattern](../patterns/module-option-pattern.md), auto-discovered",
-    "via the [Dendritic module layout](../patterns/dendritic-modules.md).",
+    ...mountLines,
     "",
     "## Source",
     "",
@@ -149,17 +176,97 @@ for (const entry of nixFiles("modules").filter((f) => f.endsWith(".nix"))) {
   ].join("\n"));
 }
 
-// --- Hosts -> knowledge/hosts/<name>.md --------------------------------------
+// --- Hosts + host-specific files ----------------------------------------------
+// modules/hosts/ holds one folder per host (exact hostname), each with a
+// default.nix declaring configurations.(darwin|nixos).<hostname> plus any
+// files specific to that host (e.g. SOC-Kris-Williams/alias-en0.nix). A flat
+// <host>.nix is also recognized for compatibility (nebula-snowglobe's layout).
+const hosts: Array<{ name: string; srcRel: string; src: string }> = [];
+const hostFiles: Array<{ name: string; host: string; srcRel: string; src: string }> = [];
+for (const entry of nixFiles("modules/hosts")) {
+  if (entry.endsWith(".nix")) {
+    const name = entry.replace(/\.nix$/, "");
+    hosts.push({ name, srcRel: `modules/hosts/${entry}`, src: read(`modules/hosts/${entry}`) });
+  } else if (statSync(join(repo, "modules/hosts", entry)).isDirectory()) {
+    for (const sub of nixFiles(`modules/hosts/${entry}`)) {
+      if (sub === "default.nix") {
+        const srcRel = `modules/hosts/${entry}/default.nix`;
+        hosts.push({ name: entry, srcRel, src: read(srcRel) });
+      } else if (sub.endsWith(".nix")) {
+        const srcRel = `modules/hosts/${entry}/${sub}`;
+        hostFiles.push({ name: sub.replace(/\.nix$/, ""), host: entry, srcRel, src: read(srcRel) });
+      } else if (existsSync(join(repo, "modules/hosts", entry, sub, "default.nix"))) {
+        const srcRel = `modules/hosts/${entry}/${sub}/default.nix`;
+        hostFiles.push({ name: sub, host: entry, srcRel, src: read(srcRel) });
+      }
+    }
+  }
+}
+
+console.log("host-specific files:");
+// Host-qualify a doc name when its basename collides with a module doc or
+// another host's same-named file — emit() skips existing files, which would
+// otherwise silently drop the second source's doc.
+const hostFileSlug = new Map<string, string>();
+{
+  const taken = new Set(moduleNames);
+  for (const hf of hostFiles) {
+    const slug = taken.has(hf.name) ? `${hf.host}-${hf.name}` : hf.name;
+    if (slug !== hf.name) console.log(`  ! ${hf.srcRel}: basename taken, doc is modules/${slug}.md`);
+    taken.add(slug);
+    taken.add(hf.name);
+    hostFileSlug.set(hf.srcRel, slug);
+  }
+}
+for (const { name, host, srcRel, src } of hostFiles) {
+  const slug = hostFileSlug.get(srcRel)!;
+  const desc = leadingComment(src) ?? `Host-specific config '${name}' for ${host}`;
+  emit(`modules/${slug}.md`, {
+    type: "Darwin Module",
+    title: titleFromSlug(name),
+    description: firstSentence(desc),
+    resource: srcRel,
+    tags: ["darwin-module", "host-specific"],
+    timestamp: gitISO(srcRel),
+  }, [
+    mdSafe(sentence(desc)),
+    "",
+    `Host-specific file for [${host}](../hosts/${host}.md) — merged straight into`,
+    "that host's configuration per the",
+    "[host-mounted modules pattern](../patterns/host-mounted-modules.md).",
+    "",
+    "## Source",
+    "",
+    `- Module: [\`${srcRel}\`](../../${srcRel})`,
+  ].join("\n"));
+}
+
 console.log("hosts:");
-for (const entry of nixFiles("modules/hosts").filter((f) => f.endsWith(".nix"))) {
-  const name = entry.replace(/\.nix$/, "");
-  const srcRel = `modules/hosts/${entry}`;
-  const src = read(srcRel);
+for (const { name, srcRel, src } of hosts) {
   const desc = leadingComment(src) ?? `Host configuration '${name}'`;
-  const features = [...src.matchAll(/([A-Za-z0-9_-]+)\.enable\s*=\s*true/g)]
-    .map((m) => m[1])
-    .filter((f) => moduleNames.has(f));
-  const featureLines = [...new Set(features)].sort().map((f) => `- [${f}](../modules/${f}.md)`);
+  // Features this host opts into (enable flags flipped in the host module),
+  // plus its host-specific sibling files. Two enable spellings: the dotted
+  // one-liner `programs.<name>.enable = true;` and the attrset form
+  // `programs.<name> = { enable = true; ... };` (bounded window so a nested
+  // sub-attrset's enable isn't credited to the outer name).
+  const enabled = [
+    ...new Set(
+      [
+        ...[...src.matchAll(/([A-Za-z0-9_-]+)\.enable\s*=\s*true/g)].map((m) => m[1]),
+        ...[...src.matchAll(/([A-Za-z0-9_-]+)\s*=\s*\{[^{}]{0,200}?\benable\s*=\s*true/g)].map(
+          (m) => m[1],
+        ),
+      ].filter((f) => moduleNames.has(f)),
+    ),
+  ].sort();
+  const extras = hostFiles
+    .filter((m) => m.host === name)
+    .map((m) => ({ text: m.name, slug: hostFileSlug.get(m.srcRel)! }))
+    .sort((a, b) => a.text.localeCompare(b.text));
+  const featureLines = [
+    ...enabled.map((f) => `- [${f}](../modules/${f}.md)`),
+    ...extras.map((f) => `- [${f.text}](../modules/${f.slug}.md) (host-specific file)`),
+  ];
 
   emit(`hosts/${name}.md`, {
     type: "Host",
@@ -171,9 +278,13 @@ for (const entry of nixFiles("modules/hosts").filter((f) => f.endsWith(".nix")))
   }, [
     mdSafe(sentence(desc)),
     "",
-    "## Enabled features",
+    "Imports every [darwin module](../modules/index.md); host-selective features",
+    "are opted into below per the",
+    "[host-mounted modules pattern](../patterns/host-mounted-modules.md).",
     "",
-    ...(featureLines.length ? featureLines : ["- (defaults only)"]),
+    "## Host-selective features",
+    "",
+    ...(featureLines.length ? featureLines : ["- (universal modules only)"]),
     "",
     "## Source",
     "",

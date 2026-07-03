@@ -1,7 +1,7 @@
-# Core nix-darwin system configuration (was modules/darwin/mixins/default.nix).
-# Declares the darwin-side `kriswill.enable` master toggle and the always-on
-# system baseline. Sibling darwin features are now separate flake-parts modules
-# auto-imported by import-tree, so the old `lib.autoImport` is gone.
+# Core nix-darwin system configuration: the always-on baseline shared by every
+# darwin host. Sibling darwin features are separate flake-parts modules
+# auto-imported by import-tree and mounted ungated — a host that imports a
+# module gets it, period (host-selective features live under modules/hosts/).
 {
   flake.modules.darwin.core =
     {
@@ -11,98 +11,63 @@
       ...
     }:
     {
-      options.kriswill.enable = lib.mkEnableOption "Kris' custom darwin modules";
-      config = {
-        kriswill = {
-          homebrew.enable = lib.mkDefault true;
-          ghostty.enable = lib.mkDefault true;
-          macos-defaults.enable = lib.mkDefault true;
-          dotfiles-stow.enable = lib.mkDefault true;
-          tmux.enable = lib.mkDefault true;
-          zsh.enable = lib.mkDefault true;
-          neovim.enable = lib.mkDefault true;
-          fastfetch.enable = lib.mkDefault true;
-          oksh.enable = lib.mkDefault true;
-          yazi.enable = lib.mkDefault true;
-          # Ported from the old home-manager/core.nix (now system-level modules
-          # + the stow tree). git/ssh/kitty/direnv config lives under home/;
-          # see the matching modules/darwin/<feature>.nix.
-          git.enable = lib.mkDefault true;
-          ssh.enable = lib.mkDefault true;
-          zk.enable = lib.mkDefault true;
-          diffnav.enable = lib.mkDefault true;
-          kitty.enable = lib.mkDefault true;
-          neovide.enable = lib.mkDefault true;
-          direnv.enable = lib.mkDefault true;
-          direnv-nom.enable = lib.mkDefault true;
-        };
-        system = {
-          # Used for backwards compatibility, please read the changelog before changing.
-          # $ darwin-rebuild changelog
-          stateVersion = 5;
-          # Set Git commit hash for darwin-version.
-          configurationRevision = self.rev or self.dirtyRev or null;
-          #
-          primaryUser = "k";
-        };
+      system = {
+        # Used for backwards compatibility, please read the changelog before changing.
+        # $ darwin-rebuild changelog
+        stateVersion = 5;
+        # Set Git commit hash for darwin-version.
+        configurationRevision = self.rev or self.dirtyRev or null;
+        #
+        primaryUser = "k";
+      };
 
-        environment = {
-          # $ nix-env -qaP | grep wget
-          systemPackages = [
-            pkgs.iproute2mac # ip command (like linux)
-            pkgs.pstree
-            # markdown reader; config is stow-managed (home/glow/), and the
-            # yazi previewer invokes it by bare name
-            pkgs.glow
-            # MCP server for codebase memory/graph indexing (flakes/codebase-memory-mcp)
-            pkgs.codebase-memory-mcp
-          ];
-          shellAliases =
-            let
-              nh = lib.getExe pkgs.nh;
-            in
-            {
-              nrs = "NH_NO_CHECKS=1 ${nh} darwin switch ~/src/dotfiles";
-              nrt = "NH_NO_CHECKS=1 ${nh} darwin test ~/src/dotfiles";
-            };
-          etc."pam.d/sudo_local".text = ''
-            # Allow for touch ID to work for sudo, inside of tmux
-            auth       optional       ${pkgs.pam-reattach}/lib/pam/pam_reattach.so ignore_ssh
-            auth       sufficient     pam_tid.so
-          '';
-        };
-
-        security.pam.services.sudo_local.touchIdAuth = true;
-
-        # Disable documentation generation to avoid builtins.toFile warnings
-        # with custom module options
-        documentation.enable = false;
-
-        # nix repl -f '<nixpkgs>'
-        # > nerd-fonts.<tab>
-        fonts.packages = builtins.attrValues {
-          inherit (pkgs.nerd-fonts)
-            victor-mono
-            sauce-code-pro
-            jetbrains-mono
-            ;
-        };
-
-        programs = {
-          fish.enable = true;
-          zsh.enable = true;
-          nh.enable = true;
-        };
-
-        users.users.k.openssh.authorizedKeys.keys = [
-          "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBxqhXoAlCKYNwsB1YrszftURThiCI94oeR0W9EDhrLy"
+      environment = {
+        # $ nix-env -qaP | grep wget
+        systemPackages = [
+          pkgs.iproute2mac # ip command (like linux)
+          pkgs.pstree
+          # markdown reader; config is stow-managed (home/glow/), and the
+          # yazi previewer invokes it by bare name
+          pkgs.glow
+          # MCP server for codebase memory/graph indexing (flakes/codebase-memory-mcp)
+          pkgs.codebase-memory-mcp
         ];
+        etc."pam.d/sudo_local".text = ''
+          # Allow for touch ID to work for sudo, inside of tmux
+          auth       optional       ${pkgs.pam-reattach}/lib/pam/pam_reattach.so ignore_ssh
+          auth       sufficient     pam_tid.so
+        '';
+      };
 
-        # Cannot let nix-darwin control nix when using determinate
-        nix.enable = lib.mkForce false;
-        nixpkgs = {
-          config.allowUnfree = false;
-        };
+      security.pam.services.sudo_local.touchIdAuth = true;
+
+      # Disable documentation generation to avoid builtins.toFile warnings
+      # with custom module options
+      documentation.enable = false;
+
+      # nix repl -f '<nixpkgs>'
+      # > nerd-fonts.<tab>
+      fonts.packages = builtins.attrValues {
+        inherit (pkgs.nerd-fonts)
+          victor-mono
+          sauce-code-pro
+          jetbrains-mono
+          ;
+      };
+
+      programs = {
+        fish.enable = true;
+        zsh.enable = true;
+      };
+
+      users.users.k.openssh.authorizedKeys.keys = [
+        "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBxqhXoAlCKYNwsB1YrszftURThiCI94oeR0W9EDhrLy"
+      ];
+
+      # Cannot let nix-darwin control nix when using determinate
+      nix.enable = lib.mkForce false;
+      nixpkgs = {
+        config.allowUnfree = false;
       };
     };
 }

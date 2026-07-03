@@ -13,12 +13,7 @@
 # We reproduce that wrapped binary so an ad-hoc `delta foo bar` keeps the theme.
 {
   flake.modules.darwin.diffnav =
-    {
-      lib,
-      pkgs,
-      config,
-      ...
-    }:
+    { lib, pkgs, ... }:
     let
       inherit (lib) kanagawa;
       # The old programs.delta.options, verbatim, rendered to a git-config-format
@@ -74,9 +69,6 @@
       };
     in
     {
-      options.kriswill.diffnav.enable = lib.mkEnableOption "diffnav git diff pager";
-      config = lib.mkIf config.kriswill.diffnav.enable {
-        environment.systemPackages = [ themedDelta ];
-      };
+      environment.systemPackages = [ themedDelta ];
     };
 }

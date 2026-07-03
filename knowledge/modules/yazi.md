@@ -9,11 +9,10 @@ timestamp: '2026-06-28T17:04:23-07:00'
 
 Kris' yazi.
 
-Follows the [module option pattern](../patterns/module-option-pattern.md), auto-discovered
+Mounted ungated on every darwin host (see the [host-mounted modules pattern](../patterns/host-mounted-modules.md)), auto-discovered
 via the [Dendritic module layout](../patterns/dendritic-modules.md).
 
 ## Source
 
 - Module: [`modules/darwin/yazi/default.nix`](../../modules/darwin/yazi/default.nix)
-- Options under: `kriswill.yazi`
 - Stow package: [`home/yazi/`](../../home/yazi/) — see the [stow tree pattern](../patterns/stow-tree.md)

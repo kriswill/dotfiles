@@ -9,11 +9,10 @@ timestamp: '2026-06-11T16:52:35-07:00'
 
 Ghostty terminal.
 
-Follows the [module option pattern](../patterns/module-option-pattern.md), auto-discovered
+Mounted ungated on every darwin host (see the [host-mounted modules pattern](../patterns/host-mounted-modules.md)), auto-discovered
 via the [Dendritic module layout](../patterns/dendritic-modules.md).
 
 ## Source
 
 - Module: [`modules/darwin/ghostty.nix`](../../modules/darwin/ghostty.nix)
-- Options under: `kriswill.ghostty`
 - Stow package: [`home/ghostty/`](../../home/ghostty/) — see the [stow tree pattern](../patterns/stow-tree.md)

@@ -7,18 +7,14 @@
 # into the repo). settings.json is rewritten by the GUI app at runtime; the
 # normalize-podman-settings git filter (see .gitattributes) scrubs the volatile
 # fields on commit. The podman-desktop / podman / vfkit / k9s packages are
-# declared per-host in users.users.k.packages (modules/hosts/*.nix); this module
-# only carries the enable toggle.
+# declared per-host in users.users.k.packages (modules/hosts/*/default.nix);
+# this module only carries the enable toggle.
 {
   flake.modules.darwin.podman-desktop =
+    { lib, config, ... }:
     {
-      lib,
-      config,
-      ...
-    }:
-    {
-      options.kriswill.podman-desktop.enable = lib.mkEnableOption "Podman Desktop";
-      config = lib.mkIf config.kriswill.podman-desktop.enable {
+      options.programs.podman-desktop.enable = lib.mkEnableOption "Podman Desktop";
+      config = lib.mkIf config.programs.podman-desktop.enable {
         # Expose /libexec in the system + per-user profiles (default pathsToLink
         # is bin/share/info only; this list-merges). podman's bundled machine
         # helpers live at $out/libexec/podman/{vfkit,gvproxy} (pkgs/podman.nix),

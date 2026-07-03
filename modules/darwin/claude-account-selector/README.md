@@ -81,7 +81,7 @@ Set `desktopProfile` to pin it. The module then installs a per-user **LaunchAgen
 the desktop app inherits:
 
 ```nix
-kriswill.claude-account-selector = {
+programs.claude-account-selector = {
   enable = true;
   defaultProfile = "me";
   profiles = [ "me" "work" ];
@@ -175,7 +175,7 @@ The TSV is plain `path<TAB>profile`, one rule per line; edit it by hand or via
 
 ## Configuration (nix options)
 
-All inputs are nix options under `kriswill.claude-account-selector`. The module passes them
+All inputs are nix options under `programs.claude-account-selector`. The module passes them
 to the wrapper as shell variable assignments prepended to it — `wrapper.zsh` stays a plain
 zsh file with built-in fallbacks, so it also runs standalone (e.g. under test).
 
@@ -188,9 +188,8 @@ zsh file with built-in fallbacks, so it also runs standalone (e.g. under test).
 | `desktopProfile` | str or null | `null` | Pin the GUI Claude **desktop app** to `~/.claude-<name>` via a login LaunchAgent. See [Desktop app (GUI)](#desktop-app-gui). |
 
 ```nix
-# In a darwin host module, set the option directly under `kriswill`
-# (this is a darwin module now; the wrapper itself is system-level):
-kriswill.claude-account-selector = {
+# In a host module (modules/hosts/<hostname>/default.nix):
+programs.claude-account-selector = {
   enable = true;
   defaultProfile = "me";
   profiles = [ "me" "work" "oss" ];
@@ -285,10 +284,10 @@ Run it any time you re-seed a profile from `~/.claude`, not just at first setup.
 
 **Opt-in — disabled by default**, so a `darwin-rebuild switch` never silently redirects your
 existing `claude`. Complete the one-time setup above *first*, then enable it in your host
-module (e.g. `modules/hosts/<host>.nix`):
+module (`modules/hosts/<hostname>/default.nix`):
 
 ```nix
-kriswill.claude-account-selector.enable = true;
+programs.claude-account-selector.enable = true;
 ```
 
 ## Notes & caveats

@@ -9,12 +9,12 @@ self:
   ...
 }:
 let
-  cfg = config.kriswill.apple-container;
+  cfg = config.services.apple-container;
   user = config.system.primaryUser;
   container = lib.getExe cfg.package; # $out/bin/container (the wrapper)
 in
 {
-  options.kriswill.apple-container = {
+  options.services.apple-container = {
     enable = lib.mkEnableOption "Apple's native macOS container CLI";
     package = lib.mkOption {
       type = lib.types.package;
@@ -31,7 +31,7 @@ in
       # Both guards interpolate ${user}; registering here turns a null
       # system.primaryUser into nix-darwin's friendly migration assertion instead
       # of a raw "cannot coerce null to a string" for external consumers.
-      requiresPrimaryUser = [ "kriswill.apple-container.enable" ];
+      requiresPrimaryUser = [ "services.apple-container.enable" ];
 
       # Guard 1 — refuse to activate over a foreign (manual .pkg / Homebrew) install.
       # Lives in system.checks so `darwin-rebuild check` exercises it without switching.
@@ -54,7 +54,7 @@ in
           echo >&2 "    sudo pkgutil --forget com.apple.container-installer"
           echo >&2 "    brew uninstall container                     # Homebrew install"
           echo >&2 "  If this is an unrelated tool that happens to be named 'container',"
-          echo >&2 "  rename it or disable kriswill.apple-container."
+          echo >&2 "  rename it or disable services.apple-container."
           echo >&2 "  Note: after a failed 'switch' the system profile already points at the"
           echo >&2 "  new generation — resolve this (or 'darwin-rebuild rollback') before rebooting."
           exit 1

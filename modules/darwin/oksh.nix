@@ -6,17 +6,9 @@
 # are nix's business.
 {
   flake.modules.darwin.oksh =
+    { lib, pkgs, ... }:
     {
-      lib,
-      pkgs,
-      config,
-      ...
-    }:
-    {
-      options.kriswill.oksh.enable = lib.mkEnableOption "Kris' oksh";
-      config = lib.mkIf config.kriswill.oksh.enable {
-        environment.systemPackages = [ pkgs.oksh ];
-        environment.variables.ENV = "$HOME/.kshrc";
-      };
+      environment.systemPackages = [ pkgs.oksh ];
+      environment.variables.ENV = lib.mkDefault "$HOME/.kshrc";
     };
 }

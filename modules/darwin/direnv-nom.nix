@@ -18,7 +18,7 @@
       ...
     }:
     let
-      cfg = config.kriswill.direnv-nom;
+      cfg = config.programs.direnv-nom;
       nom = lib.getExe pkgs.nix-output-monitor;
       readlink = "${pkgs.coreutils}/bin/readlink";
       diffCmd =
@@ -85,20 +85,19 @@
       '';
     in
     {
-      options.kriswill.direnv-nom = {
-        enable = lib.mkEnableOption "nom integration for nix-direnv";
-        diff = lib.mkOption {
-          type = lib.types.enum [
-            "nvd"
-            "native"
-            "none"
-          ];
-          default = "nvd";
-          description = "Closure diff tool: nvd (nh-style formatted output), native (nix store diff-closures), or none to disable";
-        };
+      # The module itself is universal (always mounted, no enable); this is a
+      # behavior setting, not a gate.
+      options.programs.direnv-nom.diff = lib.mkOption {
+        type = lib.types.enum [
+          "nvd"
+          "native"
+          "none"
+        ];
+        default = "nvd";
+        description = "Closure diff tool: nvd (nh-style formatted output), native (nix store diff-closures), or none to disable";
       };
 
-      config = lib.mkIf (cfg.enable && config.kriswill.direnv.enable) {
+      config = {
         # Order 1600: after dotfiles-stow (1500), alongside direnv.nix which links
         # nix-direnv.sh into the same lib dir. Run as the user so the link isn't
         # root-owned; ln -sfn keeps the store path current across bumps.

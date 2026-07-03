@@ -10,12 +10,7 @@
 #    and link it during activation.
 {
   flake.modules.darwin.tmux =
-    {
-      lib,
-      pkgs,
-      config,
-      ...
-    }:
+    { lib, pkgs, ... }:
     let
       whichKey = pkgs.tmuxPlugins.tmux-which-key;
 
@@ -27,17 +22,14 @@
       '';
     in
     {
-      options.kriswill.tmux.enable = lib.mkEnableOption "Kris' tmux";
-      config = lib.mkIf config.kriswill.tmux.enable {
-        environment.systemPackages = [ pkgs.tmux ];
+      environment.systemPackages = [ pkgs.tmux ];
 
-        # Order 1600: after dotfiles-stow (1500) has populated ~/.config/tmux.
-        # Run as the user so the dir isn't root-owned; `ln -sfn` replaces any
-        # stale link so the store path tracks rebuilds.
-        system.activationScripts.postActivation.text = lib.mkOrder 1600 ''
-          /usr/bin/sudo -u k --set-home /bin/sh -c \
-            'mkdir -p /Users/k/.config/tmux && ln -sfn ${pluginsConf} /Users/k/.config/tmux/plugins.conf'
-        '';
-      };
+      # Order 1600: after dotfiles-stow (1500) has populated ~/.config/tmux.
+      # Run as the user so the dir isn't root-owned; `ln -sfn` replaces any
+      # stale link so the store path tracks rebuilds.
+      system.activationScripts.postActivation.text = lib.mkOrder 1600 ''
+        /usr/bin/sudo -u k --set-home /bin/sh -c \
+          'mkdir -p /Users/k/.config/tmux && ln -sfn ${pluginsConf} /Users/k/.config/tmux/plugins.conf'
+      '';
     };
 }

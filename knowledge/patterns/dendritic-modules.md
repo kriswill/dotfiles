@@ -23,14 +23,15 @@ Key consequences:
   (e.g. `yazi/_themes/`) — the escape hatch for non-module files that must
   live under `modules/`.
 - Pure helpers live in `lib/` *outside* `modules/` precisely so import-tree
-  skips them; they're merged onto `nixpkgs.lib` by the
-  [lib](../modules/lib.md) plumbing module and reach darwin modules via
+  skips them; the [darwin](../modules/darwin.md) realiser merges them onto
+  `nixpkgs.lib` inline and hands the result to darwin modules via
   `specialArgs`.
 - **Flakes only see git-tracked files** — a new module must be `git add`ed
   before `nix build` can see it (the most common gotcha; see the
   [add-module playbook](../playbooks/add-module.md)).
 
-Feature modules follow the [module option pattern](module-option-pattern.md).
+Feature modules are mounted ungated per the
+[host-mounted modules pattern](host-mounted-modules.md).
 
 ## Citations
 

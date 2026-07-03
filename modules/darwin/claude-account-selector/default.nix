@@ -16,7 +16,7 @@
     }:
     let
       home = "/Users/k";
-      cfg = config.kriswill.claude-account-selector;
+      cfg = config.programs.claude-account-selector;
       # Pure-zsh "inputs" prepended to wrapper.zsh: well-known variable
       # assignments, NOT template interpolation. wrapper.zsh stays a
       # standalone-runnable file.
@@ -45,7 +45,7 @@
       );
     in
     {
-      options.kriswill.claude-account-selector = {
+      options.programs.claude-account-selector = {
         enable = lib.mkEnableOption "Kris' profile-aware claude wrapper (per-project account selection)";
 
         defaultProfile = lib.mkOption {

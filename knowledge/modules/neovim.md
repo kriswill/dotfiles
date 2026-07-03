@@ -20,11 +20,10 @@ documented as its own knowledge area: **[nvim](../nvim/index.md)** —
 [options](../nvim/options.md), and a [per-plugin
 catalog](../nvim/plugins/index.md).
 
-Follows the [module option pattern](../patterns/module-option-pattern.md), auto-discovered
+Mounted ungated on every darwin host (see the [host-mounted modules pattern](../patterns/host-mounted-modules.md)), auto-discovered
 via the [Dendritic module layout](../patterns/dendritic-modules.md).
 
 ## Source
 
 - Module: [`modules/darwin/neovim.nix`](../../modules/darwin/neovim.nix)
-- Options under: `kriswill.neovim`
 - Stow package: [`home/nvim/`](../../home/nvim/) — see the [stow tree pattern](../patterns/stow-tree.md)

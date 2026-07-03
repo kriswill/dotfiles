@@ -1,5 +1,50 @@
 # Log
 
+## 2026-07-03
+
+- **Update** — xhigh code-review pass over the de-gating branch fixed seven
+  findings: direnv-nom's diff enum was accidentally removed (restored as
+  `programs.direnv-nom.diff` — a behavior setting on a universal module);
+  override-prone scalars in dnsmasq/homebrew/macos-defaults/neovim/oksh/zsh
+  regained `lib.mkDefault` (with the `lib.mkForce` escape hatch documented in
+  the [pattern](patterns/host-mounted-modules.md)); nrs/nrb share an `mkNhHelper`;
+  and three `okf scaffold` gaps closed — sub-flake re-exports are no longer
+  stamped "mounted ungated" (options detected via the backticked comment
+  hint, with a generic gated fallback for re-exports), attrset-form
+  `programs.<name> = { enable = true; … }` host enables are now detected, and
+  same-basename host-specific files get host-qualified doc names instead of
+  silently colliding.
+
+- **Update** — nrs/nrt became real executables and gained a sibling: the
+  [nh](modules/nh.md) module now ships `writeShellScriptBin` helpers `nrs`
+  (nh darwin switch), `nrb` (nh darwin build — no root, safe for agent
+  harnesses), and `nrt` (darwin-rebuild check; both `nh darwin test` and
+  `darwin-rebuild test` have been removed upstream, so the old nrt alias was
+  silently broken). The `environment.shellAliases` block left core.nix —
+  aliases only exist in interactive zsh, which is why `nrs` was unavailable
+  from non-interactive shells.
+
+- **Update** — removed all `options.kriswill.*` module gating: universal
+  features are plain ungated deferred modules in `flake.modules.darwin.*`;
+  host-selective features (podman-desktop, claude-account-selector, and the
+  apple-container / codebase-memory-mcp sub-flake re-exports) stay under
+  `modules/darwin/` behind idiomatic `programs.<name>.*` / `services.<name>.*`
+  enables that hosts flip. Hosts became folders —
+  `modules/hosts/<hostname>/default.nix` (darwin now, nixos after the
+  `nebula-snowglobe` merge) with truly host-specific files beside them
+  (`SOC-Kris-Williams/alias-en0.nix`). An intermediate iteration that mounted
+  selective features as naked `modules/hosts/*.nix` files was rejected in
+  review the same day. The [module option pattern](patterns/host-mounted-modules.md)
+  doc was rewritten as the host-mounted modules pattern; decision recorded in
+  [remove-option-gating](decisions/remove-option-gating.md). `modules/lib.nix`
+  (`kriswill.lib`) and `mkProgramOption` are gone (kanagawa is merged onto
+  lib inline by the darwin realiser); the apple-container sub-flake's options
+  renamed to `services.apple-container.*`. Deleted the toggle-only `ssh` and
+  `neovide` module stubs (and their catalog docs) plus the `lib` plumbing doc;
+  `okf scaffold` understands the host-folder layout and stubs host-specific
+  sibling files as darwin-module docs. Parity-verified: empty
+  `nix store diff-closures` on all three hosts.
+
 ## 2026-07-02
 
 - **Update** — xhigh code-review pass over the branch fixed nine findings in

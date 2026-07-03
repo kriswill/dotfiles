@@ -9,11 +9,16 @@ timestamp: '2026-07-02T00:00:00-07:00'
 ## Examples
 
 ```sh
-darwin-rebuild switch --flake .              # apply (alias: nrs via nh)
-nix build .#darwinConfigurations.k.system    # test build without applying
-nix flake check                              # validate flake structure
+nrs                                          # apply: nh darwin switch (sudo at activation)
+nrb                                          # build only, no root — safe anywhere
+nrt                                          # build + run system.checks, no activation
+nix flake check                              # validate flake structure (builds all hosts)
 nix eval .#darwinConfigurations.k.config.<path>   # inspect a config value
 ```
+
+The `nr*` helpers are real executables from [nh](../modules/nh.md) (not shell
+aliases), so they also work in non-interactive shells (agent harnesses,
+scripts); extra args pass through (`nrs -v`, `nrb --dry`).
 
 Inspect what a switch changed (commit bodies here conventionally include this):
 

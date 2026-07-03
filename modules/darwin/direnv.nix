@@ -11,27 +11,19 @@
 # wrapper (modules/darwin/direnv-nom.nix) can redefine _nix afterwards.
 {
   flake.modules.darwin.direnv =
+    { lib, pkgs, ... }:
     {
-      lib,
-      pkgs,
-      config,
-      ...
-    }:
-    {
-      options.kriswill.direnv.enable = lib.mkEnableOption "Kris' direnv + nix-direnv";
-      config = lib.mkIf config.kriswill.direnv.enable {
-        environment.systemPackages = builtins.attrValues {
-          inherit (pkgs) direnv nix-direnv;
-        };
-
-        # Order 1600: after dotfiles-stow (1500). Run as the user so the dir/link
-        # aren't root-owned; ln -sfn keeps the store path current across bumps.
-        system.activationScripts.postActivation.text = lib.mkOrder 1600 ''
-          /usr/bin/sudo -u k --set-home /bin/sh -c '
-            mkdir -p /Users/k/.config/direnv/lib
-            ln -sfn ${pkgs.nix-direnv}/share/nix-direnv/direnvrc /Users/k/.config/direnv/lib/nix-direnv.sh
-          '
-        '';
+      environment.systemPackages = builtins.attrValues {
+        inherit (pkgs) direnv nix-direnv;
       };
+
+      # Order 1600: after dotfiles-stow (1500). Run as the user so the dir/link
+      # aren't root-owned; ln -sfn keeps the store path current across bumps.
+      system.activationScripts.postActivation.text = lib.mkOrder 1600 ''
+        /usr/bin/sudo -u k --set-home /bin/sh -c '
+          mkdir -p /Users/k/.config/direnv/lib
+          ln -sfn ${pkgs.nix-direnv}/share/nix-direnv/direnvrc /Users/k/.config/direnv/lib/nix-direnv.sh
+        '
+      '';
     };
 }
