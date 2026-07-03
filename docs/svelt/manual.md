@@ -163,10 +163,12 @@ Server-side: `import { render } from 'svelte/server'` → `{ body, head }`.
 
 - Editor: VS Code `svelte.svelte-vscode`; the language server is
   `svelte-language-server` (binary `svelteserver`).
-- **This repo's Neovim**: the `svelte` treesitter grammar is installed
-  (`home/nvim/.config/nvim/lua/plugins/treesitter.lua`) but **no Svelte LSP
-  is configured** — for real Svelte work add
-  `home/nvim/.config/nvim/lsp/svelte.lua` (svelteserver) alongside `vtsls`.
+- **This repo's Neovim**: fully wired for Svelte — treesitter grammar
+  (`home/nvim/.config/nvim/lua/plugins/treesitter.lua`) plus the Svelte LSP
+  (`home/nvim/.config/nvim/lsp/svelte.lua`, binary `svelteserver` installed
+  globally by `modules/darwin/neovim.nix`). `vtsls` handles plain `.ts`/`.js`.
+  Caveat: format-on-save runs only through efm, so `.svelte` files aren't
+  auto-formatted (see learnings.md 2026-07-02).
 - Testing: Vitest. Test runes-using code in files named `*.svelte.test.ts`.
   Component testing: `vitest-browser-svelte` (needs Vitest 4) or
   `@testing-library/svelte`.

@@ -2,6 +2,14 @@
 
 ## 2026-07-02
 
+- **Update** — Svelte LSP wired into Neovim: `lsp/svelte.lua`
+  (`svelteserver --stdio`), enabled in `lua/config/lsp.lua`, and
+  `svelte-language-server` added to the [neovim module](modules/neovim.md)'s
+  lsp-servers. [nvim/lsp](nvim/lsp.md) and `LANGUAGES.md` updated —
+  svelteserver owns `.svelte` buffers (vtsls stays on plain js/ts); svelte
+  has no efm formatter so format-on-save is a no-op there. Verified headless:
+  attach with correct root + published diagnostics.
+
 - **Creation** — Svelte manual under `docs/svelt/`: `manual.md` hub (cheat
   sheets, tooling, maintenance protocol) plus topic docs `runes.md`,
   `sveltekit.md`, `migration-svelte4-to-5.md`, and an append-only

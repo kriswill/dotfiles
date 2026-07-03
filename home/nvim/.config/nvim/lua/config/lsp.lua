@@ -17,6 +17,7 @@ vim.lsp.enable({
   "luals",
   "nil_ls",
   "rust_analyzer",
+  "svelte",
   -- "terraform",
   "tofu_ls",
   "vtsls", -- vscode wrapper for typescript

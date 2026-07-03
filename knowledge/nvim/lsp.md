@@ -21,7 +21,8 @@ matrix lives in
 ## Enabled servers
 
 bash · buf_ls · css · dockerfile · efm · gopls · html · json · luals ·
-nil_ls · rust_analyzer · tofu_ls · vtsls · yaml. `lsp/terraform.lua` exists
+nil_ls · rust_analyzer · svelte · tofu_ls · vtsls · yaml.
+`lsp/terraform.lua` exists
 but is commented out — [tofu_ls](https://github.com/opentofu/tofu-ls)
 supersedes it for the same filetypes. Notable per-server choices:
 
@@ -34,6 +35,9 @@ supersedes it for the same filetypes. Notable per-server choices:
 - **nil_ls** — `autoEvalInputs = false` ("generates too many issues"),
   formats with nixfmt, ignores `unused_binding`/`unused_with` (dendritic
   modules legitimately keep unused args).
+- **svelte** — `svelteserver` (from `svelte-language-server`) owns `.svelte`
+  files, including their embedded JS/TS/CSS; vtsls stays scoped to plain
+  js/ts filetypes so the two never fight over a buffer.
 - **vtsls** — workspace TypeScript SDK preferred, inlay hints on (parameter
   names for literals only), server-side fuzzy completion.
 
@@ -60,7 +64,7 @@ yamllint, rumdl (markdown). Format: shfmt, yamlfmt, prettier_d (html), biome
 lua-ls) never format, so there is exactly one formatting source. The manual
 `<leader>cf` map (see [keymaps](keymaps.md)) applies the same filter, so
 manual and automatic paths agree. Filetypes not in efm's table (go, proto,
-terraform, json) don't auto-format.
+terraform, json, svelte) don't auto-format.
 
 ## Filetype plumbing
 

@@ -25,6 +25,7 @@ resolves that file automatically.
 | `luals`         | lua                                                      | `lua-language-server`           | `lsp/luals.lua`           | Libraries auto-discovered from `runtimepath`. |
 | `nil_ls`        | nix                                                      | `nil`                           | `lsp/nil_ls.lua`          | `settings.formatting.command = { "nixfmt" }` — present but not used (efm owns format). |
 | `rust_analyzer` | rust                                                     | `rust-analyzer`                 | `lsp/rust_analyzer.lua`   | |
+| `svelte`        | svelte                                                    | `svelteserver`                  | `lsp/svelte.lua`          | Handles embedded JS/TS/CSS in `.svelte` files itself; `vtsls` stays scoped to plain js/ts. No formatter wired — format-on-save is a no-op for svelte. |
 | `tofu_ls`       | terraform, terraform-vars, opentofu, opentofu-vars       | `tofu-ls` (subcommand `serve`)  | `lsp/tofu_ls.lua`         | |
 | `vtsls`         | javascript, javascriptreact, javascript.jsx, typescript, typescriptreact, typescript.tsx | `vtsls` | `lsp/vtsls.lua` | Inlay hints + workspace-local TS SDK. biome owns format, not vtsls. |
 | `yaml`          | yaml, yaml.docker-compose                                | `yaml-language-server`          | `lsp/yaml.lua`            | Uses SchemaStore for schema validation. yamllint (via efm) owns style lint. |

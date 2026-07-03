@@ -6,6 +6,15 @@ When a learning is folded into a topic doc, the entry stays here as history.
 
 ## 2026-07-02
 
+- **[this-repo]** Svelte LSP gap closed: `lsp/svelte.lua` (`svelteserver --stdio`,
+  root markers `svelte.config.js|mjs|ts`/`package.json`/`.git`) + `"svelte"` in
+  `vim.lsp.enable` + `svelte-language-server` (0.18.0) in `modules/darwin/neovim.nix`
+  → verified headless: attaches with correct root and publishes diagnostics.
+- **[this-repo]** `.svelte` files get **no format-on-save**: the repo's
+  `BufWritePre` hook filters to efm only, and efm has no svelte formatter →
+  svelteserver's own formatting is deliberately skipped; adding prettierd for
+  svelte would require project-local `prettier-plugin-svelte` anyway. Format
+  manually with `vim.lsp.buf.format({ filter = c.name == "svelte" })` if needed.
 - **[tooling]** `@sveltejs/vite-plugin-svelte` 7.x peer-requires **Vite 8** →
   on Vite 5–7 projects pin plugin major 4/5/6 accordingly (npm registry peers, 2026-07-02).
 - **[async]** `await` in components needs `compilerOptions.experimental.async: true`
