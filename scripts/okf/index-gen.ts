@@ -7,10 +7,9 @@
 //     first `# ` heading, used as the directory's description in its parent.
 // Everything from the first heading down is regenerated.
 
-import { readdirSync, statSync, writeFileSync, existsSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { bundleRoot, fmToYaml, parseDoc, parseFrontmatter, titleFromSlug, RESERVED, type FM } from "./lib";
-import { readFileSync } from "node:fs";
 
 const bundle = bundleRoot();
 
@@ -23,12 +22,12 @@ function listDir(absDir: string) {
   return { dirs, mds };
 }
 
-function existingBlurbAndFm(absIndex: string): { blurb: string; fm: FM | null } {
-  if (!existsSync(absIndex)) return { blurb: "", fm: null };
-  const { fm, body } = parseFrontmatter(readFileSync(absIndex, "utf8"));
+function existingBlurbAndFm(absIndex: string): { blurb: string; fm: FM | null; fmError: string | null } {
+  if (!existsSync(absIndex)) return { blurb: "", fm: null, fmError: null };
+  const { fm, fmError, body } = parseFrontmatter(readFileSync(absIndex, "utf8"));
   const withoutTitle = body.replace(/^\s*# .*\n/, "");
   const beforeHeading = withoutTitle.split(/^#{1,6} /m)[0].trim();
-  return { blurb: beforeHeading, fm };
+  return { blurb: beforeHeading, fm, fmError };
 }
 
 function genDir(relDir: string): DirInfo {
@@ -37,7 +36,7 @@ function genDir(relDir: string): DirInfo {
   const children = dirs.map((d) => genDir(relDir ? `${relDir}/${d}` : d));
 
   const absIndex = join(absDir, "index.md");
-  const { blurb, fm } = existingBlurbAndFm(absIndex);
+  const { blurb, fm, fmError } = existingBlurbAndFm(absIndex);
 
   const conceptLines = mds.map((f) => {
     const doc = parseDoc(bundle, relDir ? `${relDir}/${f}` : f);
@@ -54,6 +53,12 @@ function genDir(relDir: string): DirInfo {
   const isRoot = relDir === "";
   const parts: string[] = [];
   if (isRoot) {
+    // The root frontmatter is preserved verbatim — if it won't parse, bail
+    // rather than silently overwrite it with a stub.
+    if (fmError) {
+      console.error(`index-gen: knowledge/index.md frontmatter is malformed (${fmError}); fix it and re-run`);
+      process.exit(1);
+    }
     const rootFm = fm ?? { okf_version: "0.1" };
     if (!rootFm.okf_version) rootFm.okf_version = "0.1";
     parts.push(fmToYaml(rootFm));

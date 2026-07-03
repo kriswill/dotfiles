@@ -1,8 +1,15 @@
 <script lang="ts">
+  import { encodeHash } from "./hash";
   import { createMd, esc } from "./markdown";
   import type { VizState } from "./state.svelte";
 
-  const { viz, stageEl }: { viz: VizState; stageEl: HTMLElement | null } = $props();
+  interface Props {
+    viz: VizState;
+    stageEl: HTMLElement | null;
+    /** Bumped by Stage on window resize — clientWidth reads are not reactive. */
+    resizeSeq?: number;
+  }
+  const { viz, stageEl, resizeSeq = 0 }: Props = $props();
 
   // svelte-ignore state_referenced_locally -- viz's identity never changes
   const md = createMd({ files: viz.model.files, byId: viz.model.byId });
@@ -64,7 +71,10 @@
     viz.persistPanelW();
   }
 
-  const widthStyle = $derived(stageEl ? viz.panelPx(stageEl.clientWidth) + "px" : undefined);
+  const widthStyle = $derived.by(() => {
+    void resizeSeq;
+    return stageEl ? viz.panelPx(stageEl.clientWidth) + "px" : undefined;
+  });
 
   $effect(() => {
     void viz.sel;
@@ -92,7 +102,9 @@
          crumb, plus close — always visible while the body scrolls. -->
     <header class="bar">
       {#if viz.sel.kind === "file" && viz.backConcept}
-        <a href="#c/{viz.backConcept.id}" class="back" data-node={viz.backConcept.id}>← {viz.backConcept.title}</a>
+        <a href="#{encodeHash({ kind: 'concept', id: viz.backConcept.id })}" class="back" data-node={viz.backConcept.id}
+          >← {viz.backConcept.title}</a
+        >
       {:else if viz.selectedConcept}
         <span class="crumb">{viz.selectedConcept.title}</span>
       {:else}

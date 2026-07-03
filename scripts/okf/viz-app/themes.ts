@@ -1,9 +1,9 @@
 // Theme stops for the sidebar slider: light → medium → dark → black. Each
 // stop is a complete CSS custom-property set applied inline on :root —
 // inline wins over the prefers-color-scheme media block in the shell, so a
-// chosen theme overrides the OS scheme. "light" and "black" must stay
-// byte-identical to the shell's :root light/dark blocks in
-// scripts/okf/viz.ts (they are the un-picked defaults).
+// chosen theme overrides the OS scheme. The shell's :root light/dark blocks
+// (the un-picked defaults) are generated from the "light" and "black" stops
+// at build time — viz.ts imports THEMES — so they can never drift.
 //
 // The 12 categorical slots (--s1..--s12, mapped by data.ts TYPE_ORDER) were
 // optimized per surface against the dataviz six checks and PASS all-pairs

@@ -1,17 +1,6 @@
 import { describe, expect, test } from "bun:test";
-import { buildModel, type ConceptNode } from "./data";
-
-const node = (id: string, type: string, title = id): ConceptNode => ({
-  id,
-  type,
-  title,
-  desc: "",
-  fm: {},
-  body: "",
-  x: 0,
-  y: 0,
-  z: 0,
-});
+import { buildModel } from "./data";
+import { node } from "./test-helpers";
 
 const raw = {
   nodes: [node("a", "Decision", "Alpha"), node("b", "Zeta Type", "Beta"), node("c", "Darwin Module", "Gamma")],

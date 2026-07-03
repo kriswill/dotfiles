@@ -3,25 +3,13 @@
 import { afterEach, describe, expect, test } from "bun:test";
 import { flushSync, mount, unmount } from "svelte";
 import ConceptList from "./ConceptList.svelte";
-import { buildModel, type ConceptNode } from "./data";
+import { buildModel } from "./data";
 import DetailPanel from "./DetailPanel.svelte";
 import Legend from "./Legend.svelte";
 import Search from "./Search.svelte";
 import { createVizState } from "./state.svelte";
+import { node } from "./test-helpers";
 import Tooltip from "./Tooltip.svelte";
-
-const node = (id: string, type: string, title: string, extra: Partial<ConceptNode> = {}): ConceptNode => ({
-  id,
-  type,
-  title,
-  desc: "",
-  fm: {},
-  body: "",
-  x: 0,
-  y: 0,
-  z: 0,
-  ...extra,
-});
 
 const model = () =>
   buildModel({

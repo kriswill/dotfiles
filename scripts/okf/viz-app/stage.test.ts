@@ -2,22 +2,10 @@
 // GraphScene API. A recording stub replaces the WebGL scene.
 import { afterEach, describe, expect, test } from "bun:test";
 import { flushSync, mount, unmount } from "svelte";
-import { buildModel, type ConceptNode } from "./data";
-import type { SceneApi } from "./scene";
+import { buildModel } from "./data";
 import Stage from "./Stage.svelte";
 import { createVizState } from "./state.svelte";
-
-const node = (id: string, type: string, title: string): ConceptNode => ({
-  id,
-  type,
-  title,
-  desc: "",
-  fm: {},
-  body: "",
-  x: 0,
-  y: 0,
-  z: 0,
-});
+import { makeStub, node } from "./test-helpers";
 
 const model = () =>
   buildModel({
@@ -25,32 +13,6 @@ const model = () =>
     edges: [{ s: "a", t: "b" }],
     files: { "f.ts": { html: "", lines: 1, size: 1, date: "", lang: "ts", refs: [] } },
   });
-
-interface StubScene extends SceneApi {
-  calls: [string, ...unknown[]][];
-  dimFn: ((i: number) => boolean) | null;
-}
-const makeStub = (): StubScene => {
-  const s: StubScene = {
-    calls: [],
-    dimFn: null,
-    setDim(fn) {
-      s.dimFn = fn;
-      s.calls.push(["setDim"]);
-    },
-    setSelected(i, fly) {
-      s.calls.push(["setSelected", i, fly]);
-    },
-    applyTheme() {
-      s.calls.push(["applyTheme"]);
-    },
-    setViewShift(px) {
-      s.calls.push(["setViewShift", px]);
-    },
-    resize() {},
-  };
-  return s;
-};
 
 let cleanup: (() => void) | null = null;
 afterEach(() => {
@@ -118,6 +80,22 @@ describe("Stage bridges", () => {
     state.clearSelection();
     flushSync();
     expect(shifts().at(-1)![1]).toBe(0);
+  });
+
+  test("view shift and panel width re-clamp on window resize", () => {
+    const { stub, state } = mountStage();
+    const stage = document.getElementById("stage")!;
+    Object.defineProperty(stage, "clientWidth", { value: 1000, configurable: true });
+    const shifts = () => stub.calls.filter(([m]) => m === "setViewShift");
+    state.selectConcept("a");
+    flushSync();
+    expect(shifts().at(-1)![1]).toBe(460);
+    expect((document.getElementById("panel") as HTMLElement).style.width).toBe("460px");
+    Object.defineProperty(stage, "clientWidth", { value: 400, configurable: true });
+    window.dispatchEvent(new Event("resize"));
+    flushSync();
+    expect(shifts().at(-1)![1]).toBe(340); // re-clamped: min(460, 85% of 400)
+    expect((document.getElementById("panel") as HTMLElement).style.width).toBe("340px");
   });
 
   test("theme bridge reapplies on dark flip and repaint", () => {

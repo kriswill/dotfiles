@@ -12,13 +12,22 @@ export interface HashModel {
 }
 
 export function encodeHash(sel: Selection): string {
-  if (sel.kind === "concept") return "c/" + sel.id;
-  if (sel.kind === "file") return "f/" + sel.path;
+  // '%' is the one character that breaks the decode round-trip — escape it so
+  // ids/paths containing it survive the URL. Browsers pass other fragment
+  // chars through (or add %XX that decodeURIComponent restores).
+  const enc = (s: string) => s.replace(/%/g, "%25");
+  if (sel.kind === "concept") return "c/" + enc(sel.id);
+  if (sel.kind === "file") return "f/" + enc(sel.path);
   return "";
 }
 
 export function decodeHash(raw: string, model: HashModel): Selection {
-  const h = decodeURIComponent(raw.replace(/^#/, ""));
+  let h: string;
+  try {
+    h = decodeURIComponent(raw.replace(/^#/, ""));
+  } catch {
+    return { kind: "none" }; // stray '%' in a hand-edited or truncated link
+  }
   if (h.startsWith("c/") && model.byId[h.slice(2)]) return { kind: "concept", id: h.slice(2) };
   if (h.startsWith("f/") && model.files[h.slice(2)]) return { kind: "file", path: h.slice(2) };
   return { kind: "none" };

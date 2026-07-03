@@ -20,6 +20,10 @@
 
   let el = $state<HTMLElement | null>(null);
   let scene = $state<SceneApi | null>(null);
+  // clientWidth is not a signal — the window resize listener below bumps this
+  // so width-derived state (view shift here, panel width in DetailPanel)
+  // re-reads it.
+  let resizeSeq = $state(0);
 
   // The scene keeps this array by reference; the theme bridge mutates entry
   // colors in place before applyTheme() re-reads them (legacy contract).
@@ -67,6 +71,7 @@
   });
 
   $effect(() => {
+    void resizeSeq;
     const open = viz.sel.kind !== "none";
     const px = viz.panelPx(el?.clientWidth ?? 0);
     scene?.setViewShift(open ? px : 0);
@@ -83,9 +88,11 @@
   });
 </script>
 
+<svelte:window onresize={() => resizeSeq++} />
+
 <main id="stage" bind:this={el} {@attach attach}>
   <Tooltip {viz} />
-  <DetailPanel {viz} stageEl={el} />
+  <DetailPanel {viz} stageEl={el} {resizeSeq} />
 </main>
 
 <style>

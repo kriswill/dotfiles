@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { encodeHash } from "./hash";
   import type { VizState } from "./state.svelte";
 
   const { viz }: { viz: VizState } = $props();
@@ -17,7 +18,7 @@
 <nav id="list" bind:this={nav}>
   {#each viz.visibleSorted as n (n.id)}
     <a
-      href="#c/{n.id}"
+      href="#{encodeHash({ kind: 'concept', id: n.id })}"
       data-id={n.id}
       class:selected={n.id === focusedId}
       aria-current={n.id === focusedId ? "true" : undefined}

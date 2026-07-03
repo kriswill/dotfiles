@@ -17,10 +17,14 @@
   let currentState: string | null = null;
 
   function applyHash() {
-    const h = decodeURIComponent(location.hash.slice(1));
+    // decodeHash owns the (single) decode of the raw hash. currentState always
+    // holds the canonical encodeHash form, so an encoded deep link compares
+    // equal to what the write-effect stores: the URL is applied, never
+    // rewritten (a rewrite pushes a history entry per navigation — Back trap).
+    const sel = decodeHash(location.hash.slice(1), viz.model);
+    const h = encodeHash(sel);
     if (h === currentState) return;
     currentState = h;
-    const sel = decodeHash(h, viz.model);
     if (sel.kind === "concept") viz.selectConcept(sel.id, true);
     else if (sel.kind === "file") viz.selectFile(sel.path);
     else viz.clearSelection();

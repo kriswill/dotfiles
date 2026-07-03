@@ -11,6 +11,8 @@ import { existsSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { extname, join } from "node:path";
 import { bundleRoot, extractLinks, gitISO, isExternal, parseDoc, repoRoot, resolveLink, walkMd, RESERVED } from "./lib";
 import { layout3d } from "./layout3d";
+import { esc } from "./viz-app/markdown";
+import { THEMES } from "./viz-app/themes";
 
 const argv = process.argv.slice(2);
 
@@ -81,9 +83,6 @@ lap("graph");
 // concept references is bundled in, pre-highlighted by a small lexer. Not
 // tree-sitter — token-level only — but zero runtime deps and offline.
 
-const escHtml = (s: string) =>
-  s.replace(/[&<>"]/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[ch]!);
-
 /** Escape text, wrapping any https?:// URLs in it as external links. */
 function linkifyUrls(s: string): string {
   let out = "";
@@ -92,11 +91,11 @@ function linkifyUrls(s: string): string {
     let url = m[0];
     const trail = url.match(/[.,;:!?)\]}]+$/);
     if (trail) url = url.slice(0, -trail[0].length);
-    out += escHtml(s.slice(last, m.index!));
-    out += `<a href="${escHtml(url)}" target="_blank" rel="noopener">${escHtml(url)}</a>`;
+    out += esc(s.slice(last, m.index!));
+    out += `<a href="${esc(url)}" target="_blank" rel="noopener">${esc(url)}</a>`;
     last = m.index! + url.length;
   }
-  return out + escHtml(s.slice(last));
+  return out + esc(s.slice(last));
 }
 
 const LANG_BY_EXT: Record<string, string> = {
@@ -133,16 +132,16 @@ function highlight(src: string, lang: string): string {
   let out = "";
   let last = 0;
   for (const m of src.matchAll(master)) {
-    out += escHtml(src.slice(last, m.index!));
+    out += esc(src.slice(last, m.index!));
     const tok = m[0];
     if (m[1]) out += `<span class="tok-c">${linkifyUrls(tok)}</span>`;
     else if (m[2]) out += `<span class="tok-s">${linkifyUrls(tok)}</span>`;
-    else if (m[3]) out += `<span class="tok-n">${escHtml(tok)}</span>`;
+    else if (m[3]) out += `<span class="tok-n">${esc(tok)}</span>`;
     else if (m[4]) out += linkifyUrls(tok);
-    else out += kw.has(tok) ? `<span class="tok-k">${escHtml(tok)}</span>` : escHtml(tok);
+    else out += kw.has(tok) ? `<span class="tok-k">${esc(tok)}</span>` : esc(tok);
     last = m.index! + tok.length;
   }
-  return out + escHtml(src.slice(last));
+  return out + esc(src.slice(last));
 }
 
 const repo = repoRoot();
@@ -232,6 +231,12 @@ lap("bundle");
 
 const data = JSON.stringify({ nodes, edges: dedupedEdges, files }).replace(/<\//g, "<\\/");
 
+/** :root custom-property block for a named theme stop, from the app's THEMES. */
+const themeCss = (name: string) =>
+  Object.entries(THEMES.find((t) => t.name === name)!.vars)
+    .map(([k, v]) => `${k}: ${v};`)
+    .join(" ");
+
 const html = `<!doctype html>
 <html lang="en">
 <head>
@@ -239,29 +244,11 @@ const html = `<!doctype html>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>knowledge/ — OKF bundle graph</title>
 <style>
-  :root {
-    /* Mirrors the "light" stop in viz-app/themes.ts — keep in sync. */
-    --surface-1: #faf9f4; --page: #f3f2ec;
-    --ink-1: #0b0b0b; --ink-2: #52514e; --ink-muted: #898781;
-    --grid: #ddddd3; --baseline: #c0bfb2;
-    --link: #256abf;
-    --tok-c: #898781; --tok-s: #0b7a4e; --tok-k: #4a3aa7; --tok-n: #9a5b00;
-    --s1:#4478bc; --s2:#009766; --s3:#d38f00; --s4:#056b00;
-    --s5:#5041ae; --s6:#c54b46; --s7:#e9709e; --s8:#e66e41;
-    --s9:#2fbbb9; --s10:#51abd7; --s11:#87b46f; --s12:#6c4686;
-  }
+  /* Un-picked defaults: the "light" and "black" stops from viz-app/themes.ts,
+     inlined at build time so the pre-hydration paint can never drift. */
+  :root { ${themeCss("light")} }
   @media (prefers-color-scheme: dark) {
-    :root {
-      /* Mirrors the "black" stop in viz-app/themes.ts — keep in sync. */
-      --surface-1: #1a1a19; --page: #0d0d0d;
-      --ink-1: #ffffff; --ink-2: #c3c2b7; --ink-muted: #898781;
-      --grid: #2c2c2a; --baseline: #383835;
-      --link: #6da7ec;
-      --tok-c: #898781; --tok-s: #2fbe8b; --tok-k: #9085e9; --tok-n: #d99a1f;
-      --s1:#1481f3; --s2:#46a87f; --s3:#c68413; --s4:#007600;
-      --s5:#857dd3; --s6:#ad4b4b; --s7:#b31d60; --s8:#cb5e36;
-      --s9:#16a295; --s10:#359eba; --s11:#81a05a; --s12:#77569b;
-    }
+    :root { ${themeCss("black")} }
   }
   * { box-sizing: border-box; margin: 0; }
   a { color: var(--link); text-underline-offset: 2px;

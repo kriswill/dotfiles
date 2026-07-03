@@ -1,5 +1,6 @@
 # Publish the knowledge/ graph viewer (okf viz) as public documentation on
-# GitHub Pages: https://kriswill.github.io/dotfiles/
+# GitHub Pages: https://kris.net/dotfiles/ (account-level custom domain;
+# kriswill.github.io/dotfiles redirects there).
 # The page is a single self-contained HTML file, rebuilt from the bundle on
 # every push — knowledge/viz.html itself stays gitignored.
 name: pages

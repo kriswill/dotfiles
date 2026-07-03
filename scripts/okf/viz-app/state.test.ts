@@ -1,23 +1,12 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
-import { buildModel, type ConceptNode } from "./data";
+import { buildModel } from "./data";
 import { createVizState } from "./state.svelte";
-
-const node = (id: string, type: string, title: string, desc = ""): ConceptNode => ({
-  id,
-  type,
-  title,
-  desc,
-  fm: {},
-  body: "",
-  x: 0,
-  y: 0,
-  z: 0,
-});
+import { node } from "./test-helpers";
 
 const model = () =>
   buildModel({
     nodes: [
-      node("a", "Decision", "Alpha", "first decision"),
+      node("a", "Decision", "Alpha", { desc: "first decision" }),
       node("b", "Pattern", "Beta"),
       node("c", "Decision", "Gamma"),
     ],

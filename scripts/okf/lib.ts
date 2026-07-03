@@ -142,14 +142,36 @@ export function titleFromSlug(slug: string): string {
     .join(" ");
 }
 
-/** ISO-8601 timestamp of a path's last commit; falls back to the current time. */
-export function gitISO(path: string): string {
-  const r = spawnSync("git", ["log", "-1", "--format=%cI", "--", path], {
+// One batched `git log --name-only` pass (newest first) instead of a git
+// subprocess per gitISO() call — the per-file spawns dominated viz/scaffold
+// build time.
+let gitDates: Map<string, string> | null = null;
+
+function loadGitDates(): Map<string, string> {
+  const map = new Map<string, string>();
+  const r = spawnSync("git", ["-c", "core.quotepath=off", "log", "--format=%x00%cI", "--name-only"], {
     cwd: repoRoot(),
     encoding: "utf8",
+    maxBuffer: 64 * 1024 * 1024,
   });
-  const out = (r.stdout ?? "").trim();
-  return out || nowISO();
+  let date = "";
+  for (const line of (r.stdout ?? "").split("\n")) {
+    if (line.charCodeAt(0) === 0) date = line.slice(1); // NUL from %x00 marks a commit line
+    else if (line && !map.has(line)) map.set(line, date); // first hit = newest
+  }
+  return map;
+}
+
+/** ISO-8601 timestamp of a path's last commit; falls back to the current time. */
+export function gitISO(path: string): string {
+  gitDates ??= loadGitDates();
+  const exact = gitDates.get(path);
+  if (exact) return exact;
+  // Directories never appear in --name-only output — take the newest file
+  // under the prefix (the map preserves newest-first insertion order).
+  const prefix = path.endsWith("/") ? path : path + "/";
+  for (const [k, d] of gitDates) if (k.startsWith(prefix)) return d;
+  return nowISO();
 }
 
 export function nowISO(): string {

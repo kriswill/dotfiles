@@ -2,6 +2,19 @@
 
 ## 2026-07-02
 
+- **Update** — xhigh code-review pass over the branch fixed nine findings in
+  the okf tooling: viewer URL hashes now round-trip (decoded exactly once,
+  `%` escaped on encode, encoded deep links applied without rewriting the
+  URL or pushing history entries; malformed sequences select nothing instead
+  of throwing), `okf index` refuses to
+  regenerate over a malformed root `index.md` frontmatter instead of
+  silently stubbing it, panel width + camera view-shift re-clamp on window
+  resize, `gitISO` batches all last-commit dates from one `git log` pass
+  (viz "sources" phase 917ms → 41ms), the shell's `:root` theme blocks are
+  generated from `viz-app/themes.ts` (single source of truth), HTML escaping
+  and test fixtures are shared instead of duplicated, and the pages workflow
+  comment names the real public URL (<https://kris.net/dotfiles/>).
+
 - **Creation** — viz published as public documentation via GitHub Pages
   (`.github/workflows/pages.yml`): every push rebuilds `viz.html` from the
   bundle with `okf viz` and deploys it as the site's `index.html` at
