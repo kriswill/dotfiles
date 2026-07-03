@@ -17,8 +17,8 @@ const commands: Record<string, Cmd> = {
   scaffold: {
     file: "./scaffold.ts",
     args: "[--force]",
-    brief: "stub catalog docs for new modules/packages/hosts",
-    summary: "Stub catalog docs (modules/hosts/packages) from the repo sources. Idempotent: existing docs are never touched, so hand enrichment survives re-runs.",
+    brief: "stub catalog docs for new modules/packages/hosts/nvim-plugins",
+    summary: "Stub catalog docs (modules/hosts/packages/nvim-plugins) from the repo sources. Idempotent: existing docs are never touched, so hand enrichment survives re-runs.",
     flags: [["--force", "overwrite existing docs with fresh stubs (discards enrichment)"]],
   },
   index: {

@@ -2,6 +2,20 @@
 
 ## 2026-07-02
 
+- **Creation** — New `nvim/` knowledge area covering the whole Neovim
+  configuration: core concepts ([architecture](nvim/architecture.md),
+  [options](nvim/options.md), [keymaps](nvim/keymaps.md),
+  [lsp](nvim/lsp.md), [filetypes](nvim/filetypes.md)) plus a per-plugin
+  catalog (23 docs under `nvim/plugins/`). Two decision records added:
+  [native vim.pack](decisions/native-vim-pack.md) and
+  [efm umbrella formatting](decisions/efm-umbrella-formatting.md).
+  `okf scaffold` gained a neovim-plugins pass (stubs
+  `nvim/plugins/<name>.md` from `lua/plugins/` specs); type registry gained
+  `Neovim Plugin` and `Neovim Config`. Source-side staleness spotted while
+  authoring was fixed in a sibling commit: `LANGUAGES.md`'s retired
+  home-manager module path, `ftplugin/markdown.lua`'s pre-stow `spellfile`
+  path, and duplicate `<leader>n` / `<M-B>` keymap definitions.
+
 - **Update** — `okf viz` rebuilt as a 3D orbit view in the style of
   codebase-memory-mcp's graph-ui: Three.js instanced glow spheres + bloom,
   frozen generation-time layout (`scripts/okf/layout3d.ts`), viewer app in

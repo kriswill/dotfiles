@@ -28,7 +28,7 @@ interesting ones by hand — scaffolding never overwrites an existing doc.
 * [Lib](lib.md) - Exposes the nixpkgs lib extended with this repo's pure helpers (`mkProgramOption`, `kanagawa`) as a top-level option, so both the darwin and home-manager evaluations can receive it via specialArgs / extraSpecialArgs.
 * [Macos Defaults](macos-defaults.md) - Kris' macOS defaults.
 * [Neovide](neovide.md) - Kris' neovide.
-* [Neovim](neovim.md) - Kris' neovim.
+* [Neovim](neovim.md) - Installs Neovim plus every LSP/linter/formatter binary on the global PATH; the Lua config itself is stow-deployed and documented in the nvim knowledge area.
 * [Nh](nh.md) - Nix Helper.
 * [Oksh](oksh.md) - Kris' oksh.
 * [Overlays](overlays.md) - Nixpkgs overlays, exposed as flake outputs and consumed by the host modules via `nixpkgs.overlays = builtins.attrValues config.flake.overlays`.

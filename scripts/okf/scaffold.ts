@@ -1,8 +1,9 @@
 // Scaffold catalog concept stubs from the repo itself — the Nix analog of the
 // OKF reference agent's metadata pass. Walks modules/, pkgs/, overlays/,
-// flakes/ and modules/hosts/, and writes one stub per component into
-// knowledge/{modules,packages,hosts}/. Idempotent: existing docs are never
-// overwritten (enrichment happens by hand or by agents), use --force to redo.
+// flakes/, modules/hosts/ and the Neovim plugin specs, and writes one stub per
+// component into knowledge/{modules,packages,hosts,nvim/plugins}/. Idempotent:
+// existing docs are never overwritten (enrichment happens by hand or by
+// agents), use --force to redo.
 
 import { readdirSync, readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
 import { join } from "node:path";
@@ -26,11 +27,11 @@ function read(rel: string): string {
   return readFileSync(join(repo, rel), "utf8");
 }
 
-/** Leading `# …` comment block at the top of a .nix file, joined. */
-function leadingComment(src: string): string | null {
+/** Leading comment block at the top of a file, joined. */
+function leadingCommentWith(src: string, marker: RegExp): string | null {
   const lines: string[] = [];
   for (const line of src.split("\n")) {
-    const m = line.match(/^#\s?(.*)$/);
+    const m = line.match(marker);
     if (m) lines.push(m[1]);
     else if (line.trim() === "") continue;
     else break;
@@ -38,6 +39,12 @@ function leadingComment(src: string): string | null {
   const text = lines.join(" ").trim();
   return text || null;
 }
+
+/** Leading `# …` comment block at the top of a .nix file, joined. */
+const leadingComment = (src: string) => leadingCommentWith(src, /^#\s?(.*)$/);
+
+/** Leading `-- …` comment block at the top of a .lua file, joined. */
+const leadingLuaComment = (src: string) => leadingCommentWith(src, /^--\s?(.*)$/);
 
 function firstMatch(src: string, re: RegExp): string | null {
   const m = src.match(re);
@@ -263,6 +270,58 @@ for (const entry of nixFiles("flakes")) {
     resource: `flakes/${entry}/`,
     tags: ["sub-flake", "package"],
     timestamp: gitISO(`flakes/${entry}`),
+  }, lines.join("\n"));
+}
+
+// --- Neovim plugins -> knowledge/nvim/plugins/<name>.md ----------------------
+// Each spec file under lua/plugins/ (or dir with init.lua) is one plugin,
+// dispatched by lua/config/pack.lua — see knowledge/nvim/architecture.md.
+console.log("neovim plugins:");
+const NVIM_PLUGINS = "home/nvim/.config/nvim/lua/plugins";
+for (const entry of nixFiles(NVIM_PLUGINS)) {
+  let name: string, srcRel: string, resource: string;
+  if (entry.endsWith(".lua")) {
+    name = entry.replace(/\.lua$/, "");
+    srcRel = `${NVIM_PLUGINS}/${entry}`;
+    resource = srcRel;
+  } else if (existsSync(join(repo, NVIM_PLUGINS, entry, "init.lua"))) {
+    name = entry;
+    srcRel = `${NVIM_PLUGINS}/${entry}/init.lua`;
+    resource = `${NVIM_PLUGINS}/${entry}/`;
+  } else continue;
+
+  const src = read(srcRel);
+  const desc = leadingLuaComment(src) ?? `Neovim plugin '${name}'`;
+  const trigger =
+    firstMatch(src, /trigger\s*=\s*"(\w+)"/) ??
+    firstMatch(src, /trigger\s*=\s*\{\s*(ft|cmd|keys)/) ??
+    "now";
+  const version =
+    firstMatch(src, /version\s*=\s*"([^"]+)"/) ??
+    firstMatch(src, /version\s*=\s*(vim\.version\.range\([^)]*\))/);
+  const urls = [...new Set([...src.matchAll(/src\s*=\s*"([^"]+)"/g)].map((m) => m[1]))];
+
+  const lines = [
+    mdSafe(sentence(desc)),
+    "",
+    "Declared as a pack spec under `lua/plugins/` and dispatched by the",
+    "[plugin architecture](../architecture.md) (trigger: `" + trigger + "`).",
+    "",
+    "## Source",
+    "",
+    `- Spec: [\`${resource}\`](../../../${resource})`,
+  ];
+  if (urls.length) lines.push(`- Upstream: <${urls[0]}>`);
+  for (const dep of urls.slice(1)) lines.push(`- Bundled dep: <${dep}>`);
+  if (version) lines.push(`- Version pin: \`${version}\``);
+
+  emit(`nvim/plugins/${name}.md`, {
+    type: "Neovim Plugin",
+    title: titleFromSlug(name),
+    description: firstSentence(desc),
+    resource,
+    tags: ["nvim-plugin"],
+    timestamp: gitISO(srcRel),
   }, lines.join("\n"));
 }
 

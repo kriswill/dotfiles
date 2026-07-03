@@ -43,8 +43,8 @@ tooling disagree, we pick one and record it here.
 
 Free-form per the spec; this bundle currently uses: `Pattern`, `Decision`,
 `Playbook`, `Darwin Module`, `Flake-parts Module`, `Host`, `Nix Package`,
-`Overlay`, `Sub-flake`, `Reference`. Add new types sparingly and list them
-here.
+`Overlay`, `Sub-flake`, `Neovim Plugin`, `Neovim Config`, `Reference`. Add
+new types sparingly and list them here.
 
 ## Tooling
 

@@ -17,7 +17,7 @@ In the dev shell (`nix develop` / direnv) these are on `PATH` as `okf <cmd>`;
 outside it, run `bun scripts/okf/okf.ts <cmd>`:
 
 ```sh
-okf scaffold   # stub catalog docs for new modules/packages/hosts (never overwrites)
+okf scaffold   # stub catalog docs for new modules/packages/hosts/nvim-plugins (never overwrites)
 okf index     # regenerate index.md listings (blurbs above first heading are preserved)
 okf validate  # conformance + link check; must exit 0 before committing
 okf viz      # regenerate knowledge/viz.html interactive graph (gitignored)
@@ -27,8 +27,9 @@ okf viz      # regenerate knowledge/viz.html interactive graph (gitignored)
 
 | Change you just made | Bundle action |
 |---|---|
-| Added a module / package / host / sub-flake | `scaffold` then `index`; improve the stub's description if extraction was poor |
-| Removed or renamed a component | Delete/rename its doc under `knowledge/{modules,packages,hosts}/`, fix inbound links (`validate` finds them), `index` |
+| Added a module / package / host / sub-flake / nvim plugin | `scaffold` then `index`; improve the stub's description if extraction was poor |
+| Removed or renamed a component | Delete/rename its doc under `knowledge/{modules,packages,hosts,nvim/plugins}/`, fix inbound links (`validate` finds them), `index` |
+| Changed nvim core config (pack dispatcher, LSP/efm, keymaps, options, filetypes) | Update the matching `knowledge/nvim/*.md` concept |
 | Made a non-obvious decision (anything that would deserve a long commit body) | Add `knowledge/decisions/<slug>.md` (template below); cite commit hashes; link affected concepts both ways |
 | Changed how a core mechanism works (stow, module discovery, sub-flakes, …) | Update the matching `knowledge/patterns/*.md` |
 | New recurring procedure | Add `knowledge/playbooks/<slug>.md` |
