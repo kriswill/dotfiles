@@ -63,6 +63,21 @@ const dedupedEdges = edges.filter((e) => {
 const escHtml = (s: string) =>
   s.replace(/[&<>"]/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[ch]!);
 
+/** Escape text, wrapping any https?:// URLs in it as external links. */
+function linkifyUrls(s: string): string {
+  let out = "";
+  let last = 0;
+  for (const m of s.matchAll(/https?:\/\/[^\s"'`<>]+/g)) {
+    let url = m[0];
+    const trail = url.match(/[.,;:!?)\]}]+$/);
+    if (trail) url = url.slice(0, -trail[0].length);
+    out += escHtml(s.slice(last, m.index!));
+    out += `<a href="${escHtml(url)}" target="_blank" rel="noopener">${escHtml(url)}</a>`;
+    last = m.index! + url.length;
+  }
+  return out + escHtml(s.slice(last));
+}
+
 const LANG_BY_EXT: Record<string, string> = {
   ".nix": "nix", ".ts": "ts", ".js": "ts", ".mjs": "ts", ".sh": "shell", ".zsh": "shell",
   ".bash": "shell", ".md": "markdown", ".toml": "toml", ".yaml": "yaml", ".yml": "yaml",
@@ -90,15 +105,19 @@ function highlight(src: string, lang: string): string {
     lang === "nix" ? `''(?:[^']|'[^'])*''|"(?:\\\\.|[^"\\\\])*"`
     : lang === "markdown" || lang === "text" ? NEVER
     : "`(?:\\\\.|[^`\\\\])*`|\"(?:\\\\.|[^\"\\\\\\n])*\"|'(?:\\\\.|[^'\\\\\\n])*'";
-  const master = new RegExp(`(${comment})|(${str})|(\\b\\d[\\d._]*\\b)|([A-Za-z_][\\w'-]*)`, "g");
+  const master = new RegExp(
+    `(${comment})|(${str})|(\\b\\d[\\d._]*\\b)|(https?:\\/\\/[^\\s"'\`<>]+)|([A-Za-z_][\\w'-]*)`,
+    "g",
+  );
   let out = "";
   let last = 0;
   for (const m of src.matchAll(master)) {
     out += escHtml(src.slice(last, m.index!));
     const tok = m[0];
-    if (m[1]) out += `<span class="tok-c">${escHtml(tok)}</span>`;
-    else if (m[2]) out += `<span class="tok-s">${escHtml(tok)}</span>`;
+    if (m[1]) out += `<span class="tok-c">${linkifyUrls(tok)}</span>`;
+    else if (m[2]) out += `<span class="tok-s">${linkifyUrls(tok)}</span>`;
     else if (m[3]) out += `<span class="tok-n">${escHtml(tok)}</span>`;
+    else if (m[4]) out += linkifyUrls(tok);
     else out += kw.has(tok) ? `<span class="tok-k">${escHtml(tok)}</span>` : escHtml(tok);
     last = m.index! + tok.length;
   }
@@ -271,6 +290,11 @@ const html = `<!doctype html>
   #body-md pre { background: var(--page); border: 1px solid var(--grid); border-radius: 6px;
                  padding: 8px 10px; overflow-x: auto; }
   #body-md pre code { border: 0; background: none; padding: 0; }
+  #body-md .tbl-wrap { overflow-x: auto; margin: 0 0 10px; }
+  #body-md .tbl-wrap table { border-collapse: collapse; font-size: 12.5px; width: 100%; }
+  #body-md .tbl-wrap th, #body-md .tbl-wrap td { border: 1px solid var(--grid);
+                 padding: 4px 8px; text-align: left; vertical-align: top; }
+  #body-md .tbl-wrap th { color: var(--ink-1); background: var(--page); }
   #body-md a { color: var(--link); }
   .backlinks { border-top: 1px solid var(--grid); margin-top: 14px; padding-top: 10px; }
   .backlinks h4 { font-size: 12px; color: var(--ink-muted); margin-bottom: 4px;
@@ -279,6 +303,8 @@ const html = `<!doctype html>
   .src { background: var(--page); border: 1px solid var(--grid); border-radius: 6px;
          padding: 10px 12px; overflow-x: auto; white-space: pre; margin-top: 12px;
          font: 12px/1.55 ui-monospace, Menlo, monospace; color: var(--ink-2); }
+  .src a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
+  .src a:hover { color: var(--link); }
   .tok-c { color: var(--tok-c); font-style: italic; }
   .tok-s { color: var(--tok-s); }
   .tok-k { color: var(--tok-k); }

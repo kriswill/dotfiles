@@ -1,6 +1,6 @@
 // Minimal markdown renderer for concept bodies — headings, ul/ol with
-// hard-wrap continuations, fences, inline code/bold/em/links, and
-// autolinking of bare repo paths that resolve to embedded files.
+// hard-wrap continuations, fences, pipe tables, inline code/bold/em/links,
+// and autolinking of bare repo paths that resolve to embedded files.
 
 export const esc = (s: unknown) =>
   String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!);
@@ -60,6 +60,10 @@ export function createMd({ files, byId }: MdCtx) {
 
   const inlineRaw = (s: string, fromId: string) =>
     esc(s)
+      .replace(
+        /&lt;(https?:\/\/(?:[^&\s]|&amp;)+)&gt;/g,
+        '<a href="$1" target="_blank" rel="noopener">$1</a>',
+      )
       .replace(/`([^`]+)`/g, "<code>$1</code>")
       .replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>")
       .replace(/(?<![\w*])\*(\S(?:[^*\n]*\S)?)\*(?![\w*])/g, "<em>$1</em>")
@@ -79,6 +83,7 @@ export function createMd({ files, byId }: MdCtx) {
     let fence: string[] = [];
     let list: { type: string; items: string[] } | null = null;
     let para: string[] = [];
+    let tbl: string[] = [];
     const flushList = () => {
       if (list) {
         out.push(`<${list.type}><li>${list.items.join("</li><li>")}</li></${list.type}>`);
@@ -91,8 +96,41 @@ export function createMd({ files, byId }: MdCtx) {
         para = [];
       }
     };
+    const splitRow = (line: string) =>
+      line
+        .trim()
+        .replace(/^\|/, "")
+        .replace(/\|$/, "")
+        .split(/(?<!\\)\|/)
+        .map((c) => c.trim().replace(/\\\|/g, "|"));
+    const flushTable = () => {
+      if (!tbl.length) return;
+      const lines = tbl;
+      tbl = [];
+      const sep = lines.length > 1 ? splitRow(lines[1]) : null;
+      if (!sep || !sep.every((c) => /^:?-+:?$/.test(c))) {
+        // Not a real table (no delimiter row) — keep old paragraph behavior.
+        for (const l of lines) para.push(inline(l));
+        flushPara();
+        return;
+      }
+      const align = sep.map((c) =>
+        c.startsWith(":") && c.endsWith(":") ? "center" : c.endsWith(":") ? "right" : "",
+      );
+      const row = (tag: string, cells: string[]) =>
+        cells
+          .map((c, i) => `<${tag}${align[i] ? ` style="text-align:${align[i]}"` : ""}>${inline(c)}</${tag}>`)
+          .join("");
+      const head = `<thead><tr>${row("th", splitRow(lines[0]))}</tr></thead>`;
+      const body = lines
+        .slice(2)
+        .map((l) => `<tr>${row("td", splitRow(l))}</tr>`)
+        .join("");
+      out.push(`<div class="tbl-wrap"><table>${head}${body ? `<tbody>${body}</tbody>` : ""}</table></div>`);
+    };
     for (const line of md.split("\n")) {
       if (/^(```|~~~)/.test(line)) {
+        flushTable();
         flushList();
         flushPara();
         if (inFence) {
@@ -106,6 +144,13 @@ export function createMd({ files, byId }: MdCtx) {
         fence.push(line);
         continue;
       }
+      if (/^\s*\|/.test(line) && line.trim().length > 1) {
+        flushList();
+        flushPara();
+        tbl.push(line);
+        continue;
+      }
+      flushTable();
       const h = line.match(/^(#{1,4})\s+(.*)/);
       if (h) {
         flushList();
@@ -135,6 +180,7 @@ export function createMd({ files, byId }: MdCtx) {
       flushList();
       para.push(inline(line));
     }
+    flushTable();
     flushList();
     flushPara();
     if (inFence) out.push(`<pre><code>${esc(fence.join("\n"))}</code></pre>`);
