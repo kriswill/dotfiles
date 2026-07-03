@@ -3,7 +3,6 @@ return {
   -- Top level search
   { "<leader>/", function() Snacks.picker.grep() end, desc = "Grep" },
   { "<leader>:", function() Snacks.picker.command_history() end, desc = "Command History" },
-  { "<leader>n", function() Snacks.picker.notifications() end, desc = "Notification History" },
 
   -- Buffer search
   { "<leader>sb", function() Snacks.picker.lines() end, desc = "Buffer Lines" },
@@ -36,4 +35,3 @@ return {
   { "<leader>ss", function() Snacks.picker.lsp_symbols() end, desc = "LSP Symbols" },
   { "<leader>sS", function() Snacks.picker.lsp_workspace_symbols() end, desc = "LSP Workspace Symbols" },
 }
-

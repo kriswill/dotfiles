@@ -8,7 +8,6 @@ return {
   { "<F11>", function() require("dap").step_into() end, desc = "Debug: Step In" },
   { "<F12>", function() require("dap").step_out() end, desc = "Debug: Step Out" },
   { "<M-b>", function() require("dap").toggle_breakpoint() end, desc = "Toggle Breakpoint" },
-  { "<M-B>", function() require("dap").toggle_breakpoint() end, desc = "Toggle Conditional Breakpoint" },
   {
     "<M-B>",
     function() require("dap").set_breakpoint(vim.fn.input("Breakpoint condition: ")) end,

@@ -1,9 +1,9 @@
 # Language support matrix
 
 Snapshot of every filetype's LSP, linter, and formatter in this Neovim
-config. Source files referenced below are relative to `config/nvim/`.
-Binaries are provisioned by `modules/home-manager/neovim/default.nix`
-under `programs.neovim.extraPackages`.
+config. Source files referenced below are relative to
+`home/nvim/.config/nvim/`. Binaries are provisioned by
+`modules/darwin/neovim.nix` under `environment.systemPackages`.
 
 LSP registration uses Neovim 0.11+'s native `vim.lsp.config` /
 `vim.lsp.enable` — see `lua/config/lsp.lua`. Each server is configured
@@ -25,6 +25,7 @@ resolves that file automatically.
 | `luals`         | lua                                                      | `lua-language-server`           | `lsp/luals.lua`           | Libraries auto-discovered from `runtimepath`. |
 | `nil_ls`        | nix                                                      | `nil`                           | `lsp/nil_ls.lua`          | `settings.formatting.command = { "nixfmt" }` — present but not used (efm owns format). |
 | `rust_analyzer` | rust                                                     | `rust-analyzer`                 | `lsp/rust_analyzer.lua`   | |
+| `svelte`        | svelte                                                    | `svelteserver`                  | `lsp/svelte.lua`          | Handles embedded JS/TS/CSS in `.svelte` files itself; `vtsls` stays scoped to plain js/ts. No formatter wired — format-on-save is a no-op for svelte. |
 | `tofu_ls`       | terraform, terraform-vars, opentofu, opentofu-vars       | `tofu-ls` (subcommand `serve`)  | `lsp/tofu_ls.lua`         | |
 | `vtsls`         | javascript, javascriptreact, javascript.jsx, typescript, typescriptreact, typescript.tsx | `vtsls` | `lsp/vtsls.lua` | Inlay hints + workspace-local TS SDK. biome owns format, not vtsls. |
 | `yaml`          | yaml, yaml.docker-compose                                | `yaml-language-server`          | `lsp/yaml.lua`            | Uses SchemaStore for schema validation. yamllint (via efm) owns style lint. |
@@ -89,9 +90,8 @@ efm, so manual and automatic format paths agree.
 
 ## Linter / formatter binaries in Nix
 
-All binaries are installed via `programs.neovim.extraPackages` in
-`modules/home-manager/neovim/default.nix`. They land on nvim's PATH
-only — not the user's shell PATH — so `which shellcheck` from a normal
-terminal returns nothing. Use `:!which <bin>` inside nvim, or
-`vim.fn.exepath(<bin>)`, to confirm a binary is reachable by the
-server.
+All binaries are installed via `environment.systemPackages` in
+`modules/darwin/neovim.nix` (nix-darwin has no `programs.neovim`, so
+there is no wrapper). They land on the global PATH, so `which
+shellcheck` works from any shell; inside nvim,
+`vim.fn.exepath(<bin>)` confirms what the server will resolve.

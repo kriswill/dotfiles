@@ -1,0 +1,63 @@
+# Publish the knowledge/ graph viewer (okf viz) as public documentation on
+# GitHub Pages: https://kris.net/dotfiles/ (account-level custom domain;
+# kriswill.github.io/dotfiles redirects there).
+# The page is a single self-contained HTML file, rebuilt from the bundle on
+# every push — knowledge/viz.html itself stays gitignored.
+name: pages
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "knowledge/**"
+      - "scripts/okf/**"
+      - ".github/workflows/pages.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # gitISO stamps each embedded file with its last-commit date
+
+      - uses: oven-sh/setup-bun@v2
+
+      - name: Install viewer dependencies
+        working-directory: scripts/okf
+        run: bun install --frozen-lockfile
+
+      - name: Build viz.html
+        run: bun scripts/okf/okf.ts viz
+
+      - name: Stage Pages artifact
+        run: |
+          mkdir -p dist
+          cp knowledge/viz.html dist/index.html
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

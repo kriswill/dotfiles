@@ -1,0 +1,286 @@
+// Render the knowledge/ bundle as a self-contained interactive 3D graph
+// (knowledge/viz.html, gitignored — regenerate any time), in the style of
+// codebase-memory-mcp's graph-ui: Three.js instanced glow spheres + bloom,
+// additive edge lines, orbit camera. The force layout runs HERE at generation
+// time (layout3d.ts) so the viewer renders frozen positions — nothing ever
+// simulates or jiggles at runtime. The viewer app (viz-app/) is bundled by
+// Bun.build with three + postprocessing and inlined, so the output is still
+// one offline file:// page.
+
+import { existsSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import { extname, join } from "node:path";
+import { bundleRoot, extractLinks, gitISO, isExternal, parseDoc, repoRoot, resolveLink, walkMd, RESERVED } from "./lib";
+import { layout3d } from "./layout3d";
+import { esc } from "./viz-app/markdown";
+import { THEMES } from "./viz-app/themes";
+
+const argv = process.argv.slice(2);
+
+// --check: typecheck the viewer app (svelte-check) instead of building.
+if (argv.includes("--check")) {
+  const r = Bun.spawnSync(["bunx", "svelte-check", "--tsconfig", "./tsconfig.json"], {
+    cwd: import.meta.dir,
+    stdout: "inherit",
+    stderr: "inherit",
+  });
+  process.exit(r.exitCode ?? 1);
+}
+
+// Build-phase timings, printed with the summary on every run.
+const phases: [string, number][] = [];
+let phaseT0 = performance.now();
+const lap = (name: string) => {
+  phases.push([name, performance.now() - phaseT0]);
+  phaseT0 = performance.now();
+};
+
+const bundle = bundleRoot();
+
+interface Node {
+  id: string; type: string; title: string; desc: string;
+  fm: Record<string, unknown>; body: string;
+  x?: number; y?: number; z?: number;
+}
+
+const nodes: Node[] = [];
+const edges: { s: string; t: string }[] = [];
+const ids = new Set<string>();
+
+for (const rel of walkMd(bundle)) {
+  if (RESERVED.has(rel.split("/").pop()!)) continue;
+  const doc = parseDoc(bundle, rel);
+  const id = rel.replace(/\.md$/, "");
+  ids.add(id);
+  nodes.push({
+    id,
+    type: (doc.fm?.type as string) ?? "Unknown",
+    title: (doc.fm?.title as string) ?? id,
+    desc: (doc.fm?.description as string) ?? "",
+    fm: doc.fm ?? {},
+    body: doc.body,
+  });
+}
+for (const n of nodes) {
+  for (const target of extractLinks(n.body)) {
+    if (isExternal(target)) continue;
+    const resolved = resolveLink(bundle, n.id + ".md", target);
+    if (!resolved || !resolved.endsWith(".md")) continue;
+    const t = resolved.replace(/\.md$/, "");
+    if (ids.has(t) && t !== n.id) edges.push({ s: n.id, t });
+  }
+}
+const seen = new Set<string>();
+const dedupedEdges = edges.filter((e) => {
+  const k = `${e.s} ${e.t}`;
+  if (seen.has(k)) return false;
+  seen.add(k);
+  return true;
+});
+lap("graph");
+
+// --- Embed referenced source files, highlighted at generation time ----------
+// The viewer is a self-contained file:// page (no fetch), so every repo file a
+// concept references is bundled in, pre-highlighted by a small lexer. Not
+// tree-sitter — token-level only — but zero runtime deps and offline.
+
+/** Escape text, wrapping any https?:// URLs in it as external links. */
+function linkifyUrls(s: string): string {
+  let out = "";
+  let last = 0;
+  for (const m of s.matchAll(/https?:\/\/[^\s"'`<>]+/g)) {
+    let url = m[0];
+    const trail = url.match(/[.,;:!?)\]}]+$/);
+    if (trail) url = url.slice(0, -trail[0].length);
+    out += esc(s.slice(last, m.index!));
+    out += `<a href="${esc(url)}" target="_blank" rel="noopener">${esc(url)}</a>`;
+    last = m.index! + url.length;
+  }
+  return out + esc(s.slice(last));
+}
+
+const LANG_BY_EXT: Record<string, string> = {
+  ".nix": "nix", ".ts": "ts", ".js": "ts", ".mjs": "ts", ".sh": "shell", ".zsh": "shell",
+  ".bash": "shell", ".md": "markdown", ".toml": "toml", ".yaml": "yaml", ".yml": "yaml",
+  ".json": "json", ".lua": "lua", ".conf": "conf",
+};
+
+const KEYWORDS: Record<string, string> = {
+  nix: "let in if then else with inherit rec assert import or true false null",
+  ts: "const let var function return if else for while of in new import export from await async type interface class extends throw try catch switch case default break continue true false null undefined",
+  shell: "if then else elif fi for while until do done case esac function local exec exit return set trap source alias export readonly echo shift",
+  lua: "local function end if then else elseif for while do return require true false nil",
+  toml: "true false", yaml: "true false null", json: "true false null",
+};
+
+function highlight(src: string, lang: string): string {
+  const kw = new Set((KEYWORDS[lang] ?? "").split(" ").filter(Boolean));
+  const NEVER = "(?!x)x";
+  const comment =
+    lang === "ts" ? "\\/\\/[^\\n]*|\\/\\*[\\s\\S]*?\\*\\/"
+    : lang === "lua" ? "--\\[\\[[\\s\\S]*?\\]\\]|--[^\\n]*"
+    : lang === "nix" ? "#[^\\n]*|\\/\\*[\\s\\S]*?\\*\\/"
+    : ["shell", "toml", "yaml", "conf"].includes(lang) ? "#[^\\n]*"
+    : NEVER;
+  const str =
+    lang === "nix" ? `''(?:[^']|'[^'])*''|"(?:\\\\.|[^"\\\\])*"`
+    : lang === "markdown" || lang === "text" ? NEVER
+    : "`(?:\\\\.|[^`\\\\])*`|\"(?:\\\\.|[^\"\\\\\\n])*\"|'(?:\\\\.|[^'\\\\\\n])*'";
+  const master = new RegExp(
+    `(${comment})|(${str})|(\\b\\d[\\d._]*\\b)|(https?:\\/\\/[^\\s"'\`<>]+)|([A-Za-z_][\\w'-]*)`,
+    "g",
+  );
+  let out = "";
+  let last = 0;
+  for (const m of src.matchAll(master)) {
+    out += esc(src.slice(last, m.index!));
+    const tok = m[0];
+    if (m[1]) out += `<span class="tok-c">${linkifyUrls(tok)}</span>`;
+    else if (m[2]) out += `<span class="tok-s">${linkifyUrls(tok)}</span>`;
+    else if (m[3]) out += `<span class="tok-n">${esc(tok)}</span>`;
+    else if (m[4]) out += linkifyUrls(tok);
+    else out += kw.has(tok) ? `<span class="tok-k">${esc(tok)}</span>` : esc(tok);
+    last = m.index! + tok.length;
+  }
+  return out + esc(src.slice(last));
+}
+
+const repo = repoRoot();
+interface Embedded { html: string; lang: string; lines: number; size: number; date: string; refs: string[]; md?: string }
+const files: Record<string, Embedded> = {};
+
+function addFile(rel: string, ref: string) {
+  const existing = files[rel];
+  if (existing) {
+    if (!existing.refs.includes(ref)) existing.refs.push(ref);
+    return;
+  }
+  if (rel.split("/").includes("..")) return;
+  const abs = join(repo, rel);
+  if (!existsSync(abs) || !statSync(abs).isFile()) return;
+  const size = statSync(abs).size;
+  if (size > 200_000) return;
+  const text = readFileSync(abs, "utf8");
+  if (text.includes("\u0000")) return;
+  const lang = LANG_BY_EXT[extname(rel)] ?? "text";
+  files[rel] = {
+    // Markdown ships raw and is rendered by the viewer; everything else is
+    // pre-highlighted into a source view here.
+    html: lang === "markdown" ? "" : highlight(text, lang),
+    ...(lang === "markdown" ? { md: text } : {}),
+    lang,
+    lines: text.split("\n").length,
+    size,
+    date: gitISO(rel).slice(0, 10),
+    refs: [ref],
+  };
+}
+
+for (const n of nodes) {
+  const res = n.fm?.resource;
+  if (typeof res === "string") addFile(res.replace(/\/$/, ""), n.id);
+  for (const target of extractLinks(n.body)) {
+    if (isExternal(target)) continue;
+    if (resolveLink(bundle, n.id + ".md", target)) continue; // stays inside the bundle
+    const inRepo = resolveLink(repo, join("knowledge", n.id + ".md"), target);
+    if (inRepo && !inRepo.startsWith("knowledge/")) addFile(inRepo, n.id);
+  }
+  // Bare repo-path mentions in prose (e.g. "./flakes/x/darwin-module.nix")
+  // get embedded too, so the runtime autolinker has something to open.
+  for (const m of n.body.matchAll(/(?:^|[\s(`])((?:\.\/)?(?:[A-Za-z0-9_.-]+\/)+[A-Za-z0-9_.-]+\.[A-Za-z0-9]{1,6})/g)) {
+    addFile(m[1].replace(/^\.\//, ""), n.id);
+  }
+}
+lap("sources");
+
+// --- Frozen 3D layout ---------------------------------------------------------
+const positions = layout3d(nodes.map((n) => n.id), dedupedEdges);
+for (const n of nodes) Object.assign(n, positions.get(n.id));
+lap("layout");
+
+// --- Bundle the viewer app (Svelte 5 via bun-plugin-svelte) ---------------------
+if (!existsSync(join(import.meta.dir, "node_modules", "svelte"))) {
+  console.log("viz: installing viewer dependencies (bun install)…");
+  const r = Bun.spawnSync(["bun", "install"], { cwd: import.meta.dir, stdout: "inherit", stderr: "inherit" });
+  if (r.exitCode !== 0) process.exit(r.exitCode ?? 1);
+}
+// Imported lazily so a fresh clone reaches the install step above first.
+const { SveltePlugin } = await import("bun-plugin-svelte");
+const build = await Bun.build({
+  entrypoints: [join(import.meta.dir, "viz-app", "main.ts")],
+  target: "browser",
+  format: "esm",
+  minify: true,
+  plugins: [SveltePlugin({ development: false, compilerOptions: { runes: true } })],
+});
+if (!build.success) {
+  for (const log of build.logs) console.error(String(log));
+  process.exit(1);
+}
+const jsOut = build.outputs.find((o) => o.kind === "entry-point");
+if (!jsOut) {
+  console.error("viz: no entry-point in build output");
+  process.exit(1);
+}
+const appJs = (await jsOut.text()).replace(/<\/script/gi, "<\\/script");
+// Component CSS comes out as separate artifacts (the plugin compiles with
+// css: "external") — inline them so the page stays a single offline file.
+let appCss = "";
+for (const o of build.outputs) if (o.path.endsWith(".css")) appCss += await o.text();
+appCss = appCss.replace(/<\/style/gi, "<\\/style");
+lap("bundle");
+
+const data = JSON.stringify({ nodes, edges: dedupedEdges, files }).replace(/<\//g, "<\\/");
+
+/** :root custom-property block for a named theme stop, from the app's THEMES. */
+const themeCss = (name: string) =>
+  Object.entries(THEMES.find((t) => t.name === name)!.vars)
+    .map(([k, v]) => `${k}: ${v};`)
+    .join(" ");
+
+const html = `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>knowledge/ — OKF bundle graph</title>
+<style>
+  /* Un-picked defaults: the "light" and "black" stops from viz-app/themes.ts,
+     inlined at build time so the pre-hydration paint can never drift. */
+  :root { ${themeCss("light")} }
+  @media (prefers-color-scheme: dark) {
+    :root { ${themeCss("black")} }
+  }
+  * { box-sizing: border-box; margin: 0; }
+  a { color: var(--link); text-underline-offset: 2px;
+      text-decoration-color: color-mix(in srgb, var(--link) 45%, transparent); }
+  a:hover { text-decoration-color: var(--link); }
+  html, body { height: 100%; }
+  body {
+    font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif;
+    color: var(--ink-1); background: var(--page);
+    display: grid; grid-template-columns: 260px 1fr; overflow: hidden;
+  }
+</style>
+<style>${appCss}</style>
+</head>
+<body>
+<script id="data" type="application/json">${data}</script>
+<script type="module">${appJs}</script>
+</body>
+</html>
+`;
+
+const out = join(bundle, "viz.html");
+writeFileSync(out, html);
+lap("write");
+const fmtMs = (ms: number) => (ms < 10 ? ms.toFixed(1) : String(Math.round(ms))) + "ms";
+console.log(`viz build: ${phases.map(([n, ms]) => `${n} ${fmtMs(ms)}`).join(" · ")}`);
+console.log(
+  `viz: ${nodes.length} nodes, ${dedupedEdges.length} edges, ${Object.keys(files).length} files -> ${out} (${(html.length / 1024).toFixed(0)} KB)`,
+);
+
+// --perf: measure viewer startup in headless Chrome against the file we just wrote.
+if (argv.includes("--perf")) {
+  const { measureStartup, printStartup } = await import("./viz-perf");
+  printStartup(await measureStartup(out));
+}
