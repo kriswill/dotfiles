@@ -4,21 +4,24 @@
 
 - **Update** — removed all `options.kriswill.*` module gating: universal
   features are plain ungated deferred modules in `flake.modules.darwin.*`;
-  host-selective features (podman-desktop, apple-container,
-  codebase-memory-mcp, claude-account-selector, alias-en0) mount directly
-  into `configurations.darwin.<host>.module` from `modules/hosts/` files.
-  The [module option pattern](patterns/host-mounted-modules.md) doc was
-  rewritten as the host-mounted modules pattern; decision recorded in
+  host-selective features (podman-desktop, claude-account-selector, and the
+  apple-container / codebase-memory-mcp sub-flake re-exports) stay under
+  `modules/darwin/` behind idiomatic `programs.<name>.*` / `services.<name>.*`
+  enables that hosts flip. Hosts became folders —
+  `modules/hosts/<hostname>/default.nix` (darwin now, nixos after the
+  `nebula-snowglobe` merge) with truly host-specific files beside them
+  (`SOC-Kris-Williams/alias-en0.nix`). An intermediate iteration that mounted
+  selective features as naked `modules/hosts/*.nix` files was rejected in
+  review the same day. The [module option pattern](patterns/host-mounted-modules.md)
+  doc was rewritten as the host-mounted modules pattern; decision recorded in
   [remove-option-gating](decisions/remove-option-gating.md). `modules/lib.nix`
   (`kriswill.lib`) and `mkProgramOption` are gone (kanagawa is merged onto
   lib inline by the darwin realiser); the apple-container sub-flake's options
   renamed to `services.apple-container.*`. Deleted the toggle-only `ssh` and
   `neovide` module stubs (and their catalog docs) plus the `lib` plumbing doc;
-  `okf scaffold` now classifies `modules/hosts/` files as hosts vs
-  host-mounted features and stubs the latter into `knowledge/modules/`.
-  Layout deliberately mirrors the `nebula-snowglobe` NixOS branch for a clean
-  future merge. Parity-verified: empty `nix store diff-closures` on all three
-  hosts.
+  `okf scaffold` understands the host-folder layout and stubs host-specific
+  sibling files as darwin-module docs. Parity-verified: empty
+  `nix store diff-closures` on all three hosts.
 
 ## 2026-07-02
 
