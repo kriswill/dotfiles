@@ -3,6 +3,7 @@
 import { SvelteSet } from "svelte/reactivity";
 import { TYPE_ORDER, type ConceptNode, type VizModel } from "./data";
 import type { Selection } from "./hash";
+import { applyThemeVars, defaultThemeIndex, THEMES } from "./themes";
 
 export interface Hover {
   i: number;
@@ -12,6 +13,7 @@ export interface Hover {
 
 const OTHER = "#898781";
 const PANEL_KEY = "okfVizPanelW";
+const THEME_KEY = "okfVizTheme";
 
 const cssVar = (k: string) =>
   typeof document === "undefined" ? "" : getComputedStyle(document.documentElement).getPropertyValue(k).trim();
@@ -32,6 +34,16 @@ export function createVizState(model: VizModel) {
   let dark = $state(typeof matchMedia === "undefined" ? false : matchMedia("(prefers-color-scheme: dark)").matches);
   let paletteVersion = $state(0);
 
+  // Theme slider: an explicit pick is persisted and overrides the OS scheme
+  // (inline :root vars beat the media block); otherwise follow the scheme.
+  const storedTheme = typeof localStorage === "undefined" ? null : localStorage.getItem(THEME_KEY);
+  let themeIndex = $state(
+    storedTheme != null && +storedTheme >= 0 && +storedTheme < THEMES.length
+      ? +storedTheme
+      : defaultThemeIndex(dark),
+  );
+  if (storedTheme != null) applyThemeVars(themeIndex);
+
   const match = $derived.by(() => {
     const q = query.trim().toLowerCase();
     return q ? (n: ConceptNode) => `${n.title} ${n.id} ${n.desc} ${n.type}`.toLowerCase().includes(q) : null;
@@ -40,10 +52,16 @@ export function createVizState(model: VizModel) {
   const computeSlots = () => {
     const m: Record<string, string> = {};
     TYPE_ORDER.forEach((t, i) => (m[t] = cssVar("--s" + (i + 1))));
+    m["__other"] = cssVar("--s-other"); // overflow types, theme-tuned
     return m;
   };
   // Re-read on repaint() — the CSS custom properties flip with the color scheme.
   let slots = $state(computeSlots());
+
+  const repaintNow = () => {
+    slots = computeSlots();
+    paletteVersion++;
+  };
 
   const visible = (n: ConceptNode) => !hidden.has(n.type) && (!match || match(n));
   const visibleSorted = $derived(model.nodes.filter(visible).sort((a, b) => a.title.localeCompare(b.title)));
@@ -144,12 +162,27 @@ export function createVizState(model: VizModel) {
     get paletteVersion() {
       return paletteVersion;
     },
-    repaint() {
-      slots = computeSlots();
-      paletteVersion++;
+    repaint: repaintNow,
+    get themeIndex() {
+      return themeIndex;
+    },
+    setTheme(i: number) {
+      if (i < 0 || i >= THEMES.length) return;
+      themeIndex = i;
+      applyThemeVars(i);
+      if (typeof localStorage !== "undefined") localStorage.setItem(THEME_KEY, String(i));
+      repaintNow();
+    },
+    /** OS scheme flip: move the slider only while the user hasn't picked. */
+    systemSchemeChanged(isDark: boolean) {
+      dark = isDark;
+      if (typeof localStorage === "undefined" || localStorage.getItem(THEME_KEY) == null) {
+        themeIndex = defaultThemeIndex(isDark);
+      }
+      repaintNow();
     },
     colorOf(t: string) {
-      return slots[t] || OTHER;
+      return slots[t] || slots["__other"] || OTHER;
     },
     theme() {
       return { bg: cssVar("--page"), labelInk: cssVar("--ink-2"), labelStroke: cssVar("--surface-1") };

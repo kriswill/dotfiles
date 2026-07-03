@@ -45,10 +45,7 @@
   /* --- dark mode ----------------------------------------------------------- */
   $effect(() => {
     const m = matchMedia("(prefers-color-scheme: dark)");
-    const on = () => {
-      viz.dark = m.matches;
-      viz.repaint();
-    };
+    const on = () => viz.systemSchemeChanged(m.matches);
     m.addEventListener("change", on);
     return () => m.removeEventListener("change", on);
   });

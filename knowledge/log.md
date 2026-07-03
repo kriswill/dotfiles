@@ -2,6 +2,19 @@
 
 ## 2026-07-02
 
+- **Update** — viz theme slider: four stops (light → medium → dark → black)
+  in a footer pinned to the bottom of the sidebar. Each stop is a full CSS
+  custom-property set applied inline on `:root` (`viz-app/themes.ts`), so a
+  pick overrides the OS scheme and persists in localStorage; untouched, the
+  slider follows `prefers-color-scheme`. The scene renders theme-aware by
+  background luminance: dark stops keep the glow look (additive edge
+  blending, >1.0 bloom-boosted colors, dim-to-black), light stops switch to
+  ink-on-paper (normal blending, bloom nearly off, strong node-colored edges,
+  de-emphasis fades toward the page instead of black) with per-stop node
+  palettes — deep on paper and mid-gray, bright on dark. Overflow types get
+  a per-theme `--s-other` (the old hardcoded muted gray vanished on the
+  medium background).
+
 - **Update** — viz polish: initial camera now fits the whole graph (aims at
   the layout centroid, backs off to fit the bounding sphere in both FOVs —
   no more small/off-center default view); embedded markdown files render as

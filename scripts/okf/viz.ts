@@ -240,16 +240,19 @@ const html = `<!doctype html>
 <title>knowledge/ — OKF bundle graph</title>
 <style>
   :root {
-    --surface-1: #fcfcfb; --page: #f9f9f7;
+    /* Mirrors the "light" stop in viz-app/themes.ts — keep in sync. */
+    --surface-1: #faf9f4; --page: #f3f2ec;
     --ink-1: #0b0b0b; --ink-2: #52514e; --ink-muted: #898781;
-    --grid: #e1e0d9; --baseline: #c3c2b7;
+    --grid: #ddddd3; --baseline: #c0bfb2;
     --link: #256abf;
     --tok-c: #898781; --tok-s: #0b7a4e; --tok-k: #4a3aa7; --tok-n: #9a5b00;
-    --s1:#2a78d6; --s2:#1baf7a; --s3:#eda100; --s4:#008300;
-    --s5:#4a3aa7; --s6:#e34948; --s7:#e87ba4; --s8:#eb6834;
+    --s1:#1e6bc8; --s2:#12996a; --s3:#d18e00; --s4:#0a7500;
+    --s5:#4a3aa7; --s6:#d83c3b; --s7:#d76490; --s8:#dd5a25;
+    --s-other:#898781;
   }
   @media (prefers-color-scheme: dark) {
     :root {
+      /* Mirrors the "black" stop in viz-app/themes.ts — keep in sync. */
       --surface-1: #1a1a19; --page: #0d0d0d;
       --ink-1: #ffffff; --ink-2: #c3c2b7; --ink-muted: #898781;
       --grid: #2c2c2a; --baseline: #383835;
@@ -257,6 +260,7 @@ const html = `<!doctype html>
       --tok-c: #898781; --tok-s: #2fbe8b; --tok-k: #9085e9; --tok-n: #d99a1f;
       --s1:#3987e5; --s2:#199e70; --s3:#c98500; --s4:#008300;
       --s5:#9085e9; --s6:#e66767; --s7:#d55181; --s8:#d95926;
+      --s-other:#898781;
     }
   }
   * { box-sizing: border-box; margin: 0; }

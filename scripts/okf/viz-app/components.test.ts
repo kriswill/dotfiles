@@ -115,6 +115,27 @@ describe("Tooltip", () => {
   });
 });
 
+describe("ThemeSlider", () => {
+  test("slider drives viz.setTheme and shows the stop name", async () => {
+    const { default: ThemeSlider } = await import("./ThemeSlider.svelte");
+    localStorage.removeItem("okfVizTheme"); // isolate from other suites
+    document.documentElement.removeAttribute("style");
+    const state = createVizState(model());
+    mountC(ThemeSlider, { viz: state });
+    const input = document.getElementById("theme-slider") as HTMLInputElement;
+    expect(input.value).toBe("0");
+    expect(input.max).toBe("3");
+    expect(document.querySelector(".theme-bar .name")!.textContent).toBe("light");
+    input.value = "2";
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+    flushSync();
+    expect(state.themeIndex).toBe(2);
+    expect(document.querySelector(".theme-bar .name")!.textContent).toBe("dark");
+    localStorage.removeItem("okfVizTheme");
+    document.documentElement.removeAttribute("style");
+  });
+});
+
 describe("DetailPanel", () => {
   const stage = () => {
     const el = document.createElement("main");

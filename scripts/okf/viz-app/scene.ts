@@ -72,6 +72,10 @@ export class GraphScene {
   private labelRank: number[];
   private viewShift = 0;
   private adj: Set<number>[] = [];
+  private bloom!: BloomEffect;
+  // Dark backgrounds get the glow look (additive lines, >1.0 bloom colors);
+  // light ones get ink-on-paper (normal blending, colors fade toward the page).
+  private darkBg = true;
 
   constructor(
     private container: HTMLElement,
@@ -99,19 +103,15 @@ export class GraphScene {
       frameBufferType: THREE.HalfFloatType,
     });
     this.composer.addPass(new RenderPass(this.scene, this.camera));
-    // Params mirror graph-ui's <Bloom> exactly.
-    this.composer.addPass(
-      new EffectPass(
-        this.camera,
-        new BloomEffect({
-          intensity: 1.2,
-          luminanceThreshold: 0.3,
-          luminanceSmoothing: 0.7,
-          mipmapBlur: true,
-          radius: 0.6,
-        }),
-      ),
-    );
+    // Params mirror graph-ui's <Bloom> exactly (intensity retuned per theme).
+    this.bloom = new BloomEffect({
+      intensity: 1.2,
+      luminanceThreshold: 0.3,
+      luminanceSmoothing: 0.7,
+      mipmapBlur: true,
+      radius: 0.6,
+    });
+    this.composer.addPass(new EffectPass(this.camera, this.bloom));
 
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
     this.controls.enableDamping = true;
@@ -226,19 +226,30 @@ export class GraphScene {
 
   repaint() {
     const c = new THREE.Color();
+    const bg = new THREE.Color(this.theme.bg);
     this.nodes.forEach((n, i) => {
       c.set(n.color);
-      if (this.dimmed(i)) {
-        c.multiplyScalar(0.12);
-      } else {
-        const brightness = (c.r + c.g + c.b) / 3;
-        let boost = 1.2 + brightness * 0.8; // bloom feeds on the >1.0 excess
-        if (this.selected !== null) {
-          if (i === this.selected) boost *= 1.5;      // hero glow
-          else if (this.isNeighbor(i)) boost *= 1.15; // linked nodes brighten
-          else boost *= 0.4;                          // the rest recede
+      if (this.darkBg) {
+        if (this.dimmed(i)) {
+          c.multiplyScalar(0.12);
+        } else {
+          const brightness = (c.r + c.g + c.b) / 3;
+          let boost = 1.2 + brightness * 0.8; // bloom feeds on the >1.0 excess
+          if (this.selected !== null) {
+            if (i === this.selected) boost *= 1.5;      // hero glow
+            else if (this.isNeighbor(i)) boost *= 1.15; // linked nodes brighten
+            else boost *= 0.4;                          // the rest recede
+          }
+          c.multiplyScalar(boost);
         }
-        c.multiplyScalar(boost);
+      } else {
+        // Ink-on-paper: de-emphasis fades toward the page, never toward black.
+        // Non-neighbors keep ~40% presence — the dark path's 0.4× equivalent.
+        if (this.dimmed(i)) c.lerp(bg, 0.88);
+        else if (this.selected !== null) {
+          if (this.isNeighbor(i)) c.lerp(bg, 0.08);
+          else if (i !== this.selected) c.lerp(bg, 0.6);
+        }
       }
       this.mesh.setColorAt(i, c);
     });
@@ -250,10 +261,18 @@ export class GraphScene {
       const active =
         this.selected !== null ? (a === this.selected || b === this.selected) : true;
       const dim = this.dimmed(a) || this.dimmed(b) || !active;
-      // Rest state: a uniform quiet web; edges only assert themselves for a selection.
-      const k = dim ? (this.selected !== null && !active ? 0.04 : 0.08) : this.selected !== null ? 0.75 : 0.28;
-      ca.set(this.nodes[a].color).multiplyScalar(k);
-      cbCol.set(this.nodes[b].color).multiplyScalar(k);
+      if (this.darkBg) {
+        // Rest state: a uniform quiet web; edges only assert themselves for a selection.
+        const k = dim ? (this.selected !== null && !active ? 0.04 : 0.08) : this.selected !== null ? 0.75 : 0.28;
+        ca.set(this.nodes[a].color).multiplyScalar(k);
+        cbCol.set(this.nodes[b].color).multiplyScalar(k);
+      } else {
+        // Normal blending: visibility comes from staying darker than the page.
+        // The rest of the web stays a visible whisper during a selection.
+        const t = dim ? (this.selected !== null && !active ? 0.8 : 0.84) : this.selected !== null ? 0.08 : 0.42;
+        ca.set(this.nodes[a].color).lerp(bg, t);
+        cbCol.set(this.nodes[b].color).lerp(bg, t);
+      }
       edgeColors.set([ca.r, ca.g, ca.b, cbCol.r, cbCol.g, cbCol.b], i * 6);
     });
     (this.lines.geometry as LineSegmentsGeometry).setColors(edgeColors);
@@ -304,8 +323,15 @@ export class GraphScene {
     this.labels = this.nodes.map((n) => {
       const { tex, aspect } = this.makeLabelTexture(n.title);
       const sp = new THREE.Sprite(
-        new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false, toneMapped: false }),
+        new THREE.SpriteMaterial({
+          map: tex,
+          transparent: true,
+          depthWrite: false,
+          depthTest: false, // text always reads — lines/spheres never overdraw it
+          toneMapped: false,
+        }),
       );
+      sp.renderOrder = 2;
       const h = 7.5;
       sp.userData.base = { w: h * aspect, h };
       sp.scale.set(h * aspect, h, 1);
@@ -398,7 +424,14 @@ export class GraphScene {
 
   applyTheme(theme: Theme) {
     this.theme = theme;
-    this.scene.background = new THREE.Color(theme.bg);
+    const bg = new THREE.Color(theme.bg);
+    // Linear-space relative luminance; mid gray (~0.26) still counts as light.
+    this.darkBg = 0.2126 * bg.r + 0.7152 * bg.g + 0.0722 * bg.b < 0.15;
+    this.bloom.intensity = this.darkBg ? 1.2 : 0.15;
+    this.lineMat.blending = this.darkBg ? THREE.AdditiveBlending : THREE.NormalBlending;
+    this.lineMat.opacity = this.darkBg ? 0.7 : 1;
+    this.lineMat.needsUpdate = true;
+    this.scene.background = bg;
     this.buildLabels();
     this.repaint();
   }
