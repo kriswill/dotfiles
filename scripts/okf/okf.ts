@@ -37,10 +37,13 @@ const commands: Record<string, Cmd> = {
   },
   viz: {
     file: "./viz.ts",
-    args: "",
+    args: "[--check] [--perf]",
     brief: "render the 3D graph at knowledge/viz.html",
-    summary: "Render the bundle as a self-contained interactive 3D graph at knowledge/viz.html (gitignored) — Three.js glow spheres with bloom, orbit camera with fly-to, frozen generation-time layout. Referenced source files are embedded with syntax highlighting; resource paths and file links open an in-panel preview.",
-    flags: [],
+    summary: "Render the bundle as a self-contained interactive 3D graph at knowledge/viz.html (gitignored) — a Svelte 5 viewer around Three.js glow spheres with bloom, orbit camera with fly-to, frozen generation-time layout. Referenced source files are embedded with syntax highlighting; resource paths and file links open an in-panel preview. Build-phase timings print on every run; the page records startup marks on window.__okf.perf.",
+    flags: [
+      ["--check", "typecheck the viewer app (svelte-check) instead of building"],
+      ["--perf", "after building, measure viewer startup in headless Chrome and print a timing table"],
+    ],
   },
 };
 

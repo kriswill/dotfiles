@@ -48,7 +48,10 @@ new types sparingly and list them here.
 
 ## Tooling
 
-All zero-dependency bun/TypeScript in [`scripts/okf/`](../scripts/okf/). In
+All bun/TypeScript in [`scripts/okf/`](../scripts/okf/) — the CLI itself is
+dependency-free; the viz viewer is a Svelte 5 app bundling three +
+postprocessing (deps in `scripts/okf/package.json`, `bun install`ed on
+demand). In
 the dev shell (`nix develop` / direnv) it's on `PATH` as **`okf`** via the
 [dev](modules/dev.md) module; outside it, invoke with bun directly:
 
@@ -56,13 +59,16 @@ the dev shell (`nix develop` / direnv) it's on `PATH` as **`okf`** via the
 okf scaffold [--force]   # stub catalog docs from the repo (idempotent; --force overwrites)
 okf index               # regenerate index.md listings
 okf validate [--strict]  # spec + profile conformance; --strict fails on warnings too
-okf viz                 # render knowledge/viz.html interactive graph
+okf viz [--check|--perf] # render knowledge/viz.html (Svelte 5 viewer); --check runs svelte-check, --perf measures startup in headless Chrome
 okf help [command]      # full usage, per-command flags, docs pointers
 
 bun scripts/okf/okf.ts <cmd>   # equivalent, no dev shell needed
 ```
 
-`viz.html` is generated output and gitignored — regenerate at will.
+`viz.html` is generated output and gitignored — regenerate at will. Every
+`okf viz` run prints build-phase timings; the page records startup marks on
+`window.__okf.perf`. The viewer app (`scripts/okf/viz-app/`) has bun tests
+(`cd scripts/okf && bun test`).
 
 ## Citations
 

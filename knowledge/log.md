@@ -2,6 +2,16 @@
 
 ## 2026-07-02
 
+- **Update** — viz viewer rebuilt on Svelte 5 (runes) via bun-plugin-svelte
+  inside the same one-shot `Bun.build` — componentized (Sidebar/Legend/
+  Search/ConceptList/Stage/DetailPanel/Tooltip), a rune store with `$effect`
+  bridges into the unchanged imperative `GraphScene`, all legacy contracts
+  kept (`#data` blob, `window.__okf`, hash routing, panel-width
+  localStorage). New: build-phase timings on every run, in-page startup
+  marks (`__okf.perf`), `okf viz --perf` (headless-Chrome startup table)
+  and `okf viz --check` (svelte-check), plus 52 bun tests. See
+  [decision](decisions/viz-svelte-rebuild.md).
+
 - **Update** — Svelte LSP wired into Neovim: `lsp/svelte.lua`
   (`svelteserver --stdio`), enabled in `lua/config/lsp.lua`, and
   `svelte-language-server` added to the [neovim module](modules/neovim.md)'s

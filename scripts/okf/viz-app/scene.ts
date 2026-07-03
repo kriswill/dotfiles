@@ -27,7 +27,26 @@ export interface Theme {
 export interface Callbacks {
   onHover(index: number | null, clientX: number, clientY: number): void;
   onSelect(index: number | null): void;
+  /** Fired once, right after the first composited frame (startup perf mark). */
+  onFirstFrame?(): void;
 }
+
+/** The slice of GraphScene the reactive bridges drive (stubbable in tests). */
+export interface SceneApi {
+  setDim(fn: (i: number) => boolean): void;
+  setSelected(i: number | null, fly?: boolean): void;
+  applyTheme(theme: Theme): void;
+  setViewShift(px: number): void;
+  resize(): void;
+}
+
+export type CreateScene = (
+  el: HTMLElement,
+  nodes: SceneNode[],
+  edges: [number, number][],
+  theme: Theme,
+  cb: Callbacks,
+) => SceneApi;
 
 const MAX_LABELS = 28;
 
@@ -178,11 +197,16 @@ export class GraphScene {
     new ResizeObserver(() => this.resize()).observe(container);
     this.resize();
 
+    let firstFrame = true;
     const loop = () => {
       requestAnimationFrame(loop);
       this.stepFly();
       this.controls.update();
       this.composer.render();
+      if (firstFrame) {
+        firstFrame = false;
+        this.cb.onFirstFrame?.();
+      }
     };
     requestAnimationFrame(loop);
   }

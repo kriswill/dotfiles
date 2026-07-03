@@ -20,7 +20,7 @@ outside it, run `bun scripts/okf/okf.ts <cmd>`:
 okf scaffold   # stub catalog docs for new modules/packages/hosts/nvim-plugins (never overwrites)
 okf index     # regenerate index.md listings (blurbs above first heading are preserved)
 okf validate  # conformance + link check; must exit 0 before committing
-okf viz      # regenerate knowledge/viz.html interactive graph (gitignored)
+okf viz      # regenerate knowledge/viz.html interactive graph (gitignored; Svelte 5 viewer — --check typechecks, --perf measures startup)
 ```
 
 ## When to update what

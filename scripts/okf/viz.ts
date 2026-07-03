@@ -12,6 +12,26 @@ import { extname, join } from "node:path";
 import { bundleRoot, extractLinks, gitISO, isExternal, parseDoc, repoRoot, resolveLink, walkMd, RESERVED } from "./lib";
 import { layout3d } from "./layout3d";
 
+const argv = process.argv.slice(2);
+
+// --check: typecheck the viewer app (svelte-check) instead of building.
+if (argv.includes("--check")) {
+  const r = Bun.spawnSync(["bunx", "svelte-check", "--tsconfig", "./tsconfig.json"], {
+    cwd: import.meta.dir,
+    stdout: "inherit",
+    stderr: "inherit",
+  });
+  process.exit(r.exitCode ?? 1);
+}
+
+// Build-phase timings, printed with the summary on every run.
+const phases: [string, number][] = [];
+let phaseT0 = performance.now();
+const lap = (name: string) => {
+  phases.push([name, performance.now() - phaseT0]);
+  phaseT0 = performance.now();
+};
+
 const bundle = bundleRoot();
 
 interface Node {
@@ -54,6 +74,7 @@ const dedupedEdges = edges.filter((e) => {
   seen.add(k);
   return true;
 });
+lap("graph");
 
 // --- Embed referenced source files, highlighted at generation time ----------
 // The viewer is a self-contained file:// page (no fetch), so every repo file a
@@ -167,28 +188,44 @@ for (const n of nodes) {
     addFile(m[1].replace(/^\.\//, ""), n.id);
   }
 }
+lap("sources");
 
 // --- Frozen 3D layout ---------------------------------------------------------
 const positions = layout3d(nodes.map((n) => n.id), dedupedEdges);
 for (const n of nodes) Object.assign(n, positions.get(n.id));
+lap("layout");
 
-// --- Bundle the viewer app ------------------------------------------------------
-if (!existsSync(join(import.meta.dir, "node_modules", "three"))) {
+// --- Bundle the viewer app (Svelte 5 via bun-plugin-svelte) ---------------------
+if (!existsSync(join(import.meta.dir, "node_modules", "svelte"))) {
   console.log("viz: installing viewer dependencies (bun install)…");
   const r = Bun.spawnSync(["bun", "install"], { cwd: import.meta.dir, stdout: "inherit", stderr: "inherit" });
   if (r.exitCode !== 0) process.exit(r.exitCode ?? 1);
 }
+// Imported lazily so a fresh clone reaches the install step above first.
+const { SveltePlugin } = await import("bun-plugin-svelte");
 const build = await Bun.build({
   entrypoints: [join(import.meta.dir, "viz-app", "main.ts")],
   target: "browser",
   format: "esm",
   minify: true,
+  plugins: [SveltePlugin({ development: false, compilerOptions: { runes: true } })],
 });
 if (!build.success) {
   for (const log of build.logs) console.error(String(log));
   process.exit(1);
 }
-const appJs = (await build.outputs[0].text()).replace(/<\/script/gi, "<\\/script");
+const jsOut = build.outputs.find((o) => o.kind === "entry-point");
+if (!jsOut) {
+  console.error("viz: no entry-point in build output");
+  process.exit(1);
+}
+const appJs = (await jsOut.text()).replace(/<\/script/gi, "<\\/script");
+// Component CSS comes out as separate artifacts (the plugin compiles with
+// css: "external") — inline them so the page stays a single offline file.
+let appCss = "";
+for (const o of build.outputs) if (o.path.endsWith(".css")) appCss += await o.text();
+appCss = appCss.replace(/<\/style/gi, "<\\/style");
+lap("bundle");
 
 const data = JSON.stringify({ nodes, edges: dedupedEdges, files }).replace(/<\//g, "<\\/");
 
@@ -229,100 +266,10 @@ const html = `<!doctype html>
     color: var(--ink-1); background: var(--page);
     display: grid; grid-template-columns: 260px 1fr; overflow: hidden;
   }
-  #side {
-    border-right: 1px solid var(--grid); background: var(--surface-1);
-    padding: 14px; overflow-y: auto; z-index: 2;
-  }
-  #side h1 { font-size: 15px; margin-bottom: 2px; }
-  #side .sub { color: var(--ink-muted); font-size: 12px; margin-bottom: 12px; }
-  #q {
-    width: 100%; padding: 6px 8px; font: inherit; color: inherit;
-    background: var(--page); border: 1px solid var(--baseline); border-radius: 6px;
-    margin-bottom: 12px;
-  }
-  .leg { display: flex; align-items: center; gap: 8px; padding: 3px 4px;
-         border-radius: 5px; cursor: pointer; user-select: none; }
-  .leg:hover { background: var(--page); }
-  .leg.off { opacity: 0.35; }
-  .dot { width: 10px; height: 10px; border-radius: 50%; flex: none;
-         box-shadow: 0 0 0 2px var(--surface-1); }
-  .leg .n { margin-left: auto; color: var(--ink-muted); font-size: 12px;
-            font-variant-numeric: tabular-nums; }
-  #list { margin-top: 14px; border-top: 1px solid var(--grid); padding-top: 10px; }
-  #list a { display: block; padding: 3px 4px; border-radius: 5px; color: var(--ink-2);
-            text-decoration: none; font-size: 13px; white-space: nowrap;
-            overflow: hidden; text-overflow: ellipsis; }
-  #list a:hover { background: var(--page); color: var(--ink-1); }
-  #stage { position: relative; overflow: hidden; }
-  #tip {
-    position: absolute; pointer-events: none; display: none; max-width: 320px;
-    background: var(--surface-1); border: 1px solid var(--grid); border-radius: 8px;
-    padding: 8px 10px; box-shadow: 0 4px 16px rgba(0,0,0,0.12); z-index: 3;
-  }
-  #tip b { display: block; }
-  #tip .t { color: var(--ink-muted); font-size: 12px; }
-  #tip .d { color: var(--ink-2); font-size: 12px; margin-top: 3px; }
-  #panel {
-    position: absolute; top: 0; right: 0; bottom: 0; width: min(460px, 85%);
-    background: var(--surface-1); border-left: 1px solid var(--grid);
-    padding: 18px; overflow-y: auto; display: none; z-index: 2;
-  }
-  #panel.open { display: block; }
-  .resizer { position: absolute; left: 0; top: 0; bottom: 0; width: 6px;
-             cursor: col-resize; touch-action: none; }
-  .resizer:hover, .resizer.active { background: var(--grid); }
-  #panel .close { float: right; cursor: pointer; color: var(--ink-muted);
-                  font-size: 18px; border: 0; background: none; }
-  #panel h2 { font-size: 17px; margin: 0 0 4px; }
-  .chip { display: inline-flex; align-items: center; gap: 6px; font-size: 12px;
-          color: var(--ink-2); border: 1px solid var(--grid); border-radius: 999px;
-          padding: 2px 9px; margin-bottom: 10px; }
-  table.fm { width: 100%; border-collapse: collapse; font-size: 12px; margin: 8px 0 14px; }
-  table.fm td { border-top: 1px solid var(--grid); padding: 4px 6px; vertical-align: top; }
-  table.fm td:first-child { color: var(--ink-muted); white-space: nowrap; width: 1%; }
-  #body-md { font-size: 13.5px; color: var(--ink-2); }
-  #body-md h3 { color: var(--ink-1); font-size: 14px; margin: 14px 0 6px; }
-  #body-md p, #body-md ul, #body-md ol, #body-md pre { margin: 0 0 8px; }
-  #body-md ul, #body-md ol { padding-left: 20px; }
-  #body-md li { margin-bottom: 3px; }
-  #body-md code { font: 12px ui-monospace, Menlo, monospace; background: var(--page);
-                  border: 1px solid var(--grid); border-radius: 4px; padding: 0 4px; }
-  #body-md pre { background: var(--page); border: 1px solid var(--grid); border-radius: 6px;
-                 padding: 8px 10px; overflow-x: auto; }
-  #body-md pre code { border: 0; background: none; padding: 0; }
-  #body-md .tbl-wrap { overflow-x: auto; margin: 0 0 10px; }
-  #body-md .tbl-wrap table { border-collapse: collapse; font-size: 12.5px; width: 100%; }
-  #body-md .tbl-wrap th, #body-md .tbl-wrap td { border: 1px solid var(--grid);
-                 padding: 4px 8px; text-align: left; vertical-align: top; }
-  #body-md .tbl-wrap th { color: var(--ink-1); background: var(--page); }
-  #body-md a { color: var(--link); }
-  .backlinks { border-top: 1px solid var(--grid); margin-top: 14px; padding-top: 10px; }
-  .backlinks h4 { font-size: 12px; color: var(--ink-muted); margin-bottom: 4px;
-                  text-transform: uppercase; letter-spacing: 0.04em; }
-  .back { display: inline-block; font-size: 12px; margin: 0 0 10px; }
-  .src { background: var(--page); border: 1px solid var(--grid); border-radius: 6px;
-         padding: 10px 12px; overflow-x: auto; white-space: pre; margin-top: 12px;
-         font: 12px/1.55 ui-monospace, Menlo, monospace; color: var(--ink-2); }
-  .src a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
-  .src a:hover { color: var(--link); }
-  .tok-c { color: var(--tok-c); font-style: italic; }
-  .tok-s { color: var(--tok-s); }
-  .tok-k { color: var(--tok-k); }
-  .tok-n { color: var(--tok-n); }
 </style>
+<style>${appCss}</style>
 </head>
 <body>
-<aside id="side">
-  <h1>knowledge/ bundle</h1>
-  <div class="sub" id="counts"></div>
-  <input id="q" type="search" placeholder="Search concepts…" aria-label="Search concepts">
-  <div id="legend"></div>
-  <div id="list"></div>
-</aside>
-<main id="stage">
-  <div id="tip"></div>
-  <section id="panel" aria-live="polite"></section>
-</main>
 <script id="data" type="application/json">${data}</script>
 <script type="module">${appJs}</script>
 </body>
@@ -331,6 +278,15 @@ const html = `<!doctype html>
 
 const out = join(bundle, "viz.html");
 writeFileSync(out, html);
+lap("write");
+const fmtMs = (ms: number) => (ms < 10 ? ms.toFixed(1) : String(Math.round(ms))) + "ms";
+console.log(`viz build: ${phases.map(([n, ms]) => `${n} ${fmtMs(ms)}`).join(" · ")}`);
 console.log(
   `viz: ${nodes.length} nodes, ${dedupedEdges.length} edges, ${Object.keys(files).length} files -> ${out} (${(html.length / 1024).toFixed(0)} KB)`,
 );
+
+// --perf: measure viewer startup in headless Chrome against the file we just wrote.
+if (argv.includes("--perf")) {
+  const { measureStartup, printStartup } = await import("./viz-perf");
+  printStartup(await measureStartup(out));
+}

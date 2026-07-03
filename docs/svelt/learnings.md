@@ -6,6 +6,43 @@ When a learning is folded into a topic doc, the entry stays here as history.
 
 ## 2026-07-02
 
+- **[runes]** Don't name a prop/variable `state`: with runes/legacy
+  auto-detection, a `.svelte` file that has a binding named `state` in scope
+  compiles `$state(...)` as a legacy **store subscription to that binding** →
+  runtime `store_invalid_shape` ("`state` is not a store"). Fix both ways:
+  pass `runes: true` in compile options (and
+  `compilerOptions: { runes: true }` to bun-plugin-svelte) and rename the
+  binding (`viz` here). Note `compileModule()` has **no** `runes` option —
+  `.svelte.ts` modules are always runes-mode (svelte 5.56).
+- **[testing]** Dependency-hint statements like `void someRune;` inside
+  `.svelte.ts` are unreliable when the file passes through `Bun.Transpiler`
+  before `compileModule` (bun test loader) — the side-effect-free expression
+  can be dropped, silently killing the reactive edge. Make dependencies real
+  values instead (e.g. reassign a `$state` object) or read the rune
+  explicitly in the consuming `$effect` body (verified bun 1.3.13).
+- **[tooling]** `bun-plugin-svelte` 0.0.6 + bun 1.3.13 `Bun.build` gate **passed**
+  for the okf viz rebuild: `.svelte` with `lang="ts"`, runes, `{@attach}`, scoped
+  `<style>`, and `.svelte.ts` rune modules all compile (target browser →
+  `generate: "client"` auto-selected); component CSS comes out as a separate
+  `kind: "asset"` `.css` artifact in `build.outputs` (plugin hardcodes
+  `css: "external"`) → inline it into the HTML `<style>` yourself. Verified
+  end-to-end in headless Chrome: reactivity, shared-store state, attachment,
+  scoped CSS all work.
+- **[testing]** `bun-plugin-svelte` **cannot be used under `bun test`**: client
+  components emit virtual `bun-svelte:*.css` imports resolved via `onResolve`,
+  but bun runtime plugins' `onResolve` never fires (verified 1.3.13) → "Cannot
+  find package 'bun-svelte:…css'". Fix: `[test].preload` a ~25-line loader that
+  calls `svelte/compiler` `compile()` (`generate: "client"`, `css: "injected"`)
+  for `.svelte` and `compileModule()` (after `Bun.Transpiler` TS strip) for
+  `.svelte.ts` — no virtual modules, tests pass.
+- **[testing]** `bun test` resolves package exports with the **default (server)
+  condition** and has no `--conditions` flag → `import { mount } from "svelte"`
+  hits `index-server.js` ("mount(...) is not available on the server"). Fix in
+  the same preload: `onLoad` filter on `svelte/src/**/index-server.js` returning
+  the sibling `index-client.js` contents (same dir, relative imports unchanged).
+- **[testing]** Svelte 5 `mount()`/`unmount()` + rune reactivity work under
+  happy-dom 20.10 (`@happy-dom/global-registrator` preload) in `bun test`;
+  assert after `flushSync()` (bun 1.3.13, svelte 5.56.4).
 - **[this-repo]** Svelte LSP gap closed: `lsp/svelte.lua` (`svelteserver --stdio`,
   root markers `svelte.config.js|mjs|ts`/`package.json`/`.git`) + `"svelte"` in
   `vim.lsp.enable` + `svelte-language-server` (0.18.0) in `modules/darwin/neovim.nix`
