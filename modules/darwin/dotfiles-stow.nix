@@ -12,6 +12,21 @@
       user = "k";
       home = "/Users/k";
       stowDir = "${home}/src/dotfiles/home";
+      # home/ is shared with the NixOS hosts; these packages are Linux-only
+      # (Wayland desktop, freedesktop conventions) and must not be stowed on
+      # macOS. Everything not listed deploys on both OSes — the right default
+      # for cross-platform CLI configs. Mirror list:
+      # modules/nixos/dotfiles-stow.nix.
+      skip = [
+        "desktop-entries" # ~/.local/share/applications launchers
+        "diffnav" # nebula's diffnav config (darwin themes delta via its module)
+        "fuzzel" # Wayland launcher
+        "gtk" # GTK settings
+        "hyprland" # Wayland compositor config
+        "mimeapps" # freedesktop default-apps registry
+        "pupgui" # ProtonUp-Qt (gaming, Linux)
+      ];
+      skipPattern = builtins.concatStringsSep "|" skip;
     in
     {
       environment.systemPackages = [
@@ -44,6 +59,13 @@
         for pkgdir in "${stowDir}"/*/; do
           [ -d "$pkgdir" ] || continue
           pkg="$(${pkgs.coreutils}/bin/basename "$pkgdir")"
+          # Per-OS scoping: skip packages that belong to the other OS.
+          case "$pkg" in
+            ${skipPattern})
+              echo "stow: skipping $pkg (linux-only)" >&2
+              continue
+              ;;
+          esac
           # Self-heal: drop any target symlink that IS one of this package's files
           # but reaches it through a symlinked (non-canonical) path, so the restow
           # below recreates it canonically instead of conflict-skipping the whole

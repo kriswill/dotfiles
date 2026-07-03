@@ -17,13 +17,6 @@
         histFile = "$HOME/.local/state/zsh/history";
 
         promptInit = lib.mkForce "";
-
-        interactiveShellInit = ''
-          if id -nG 2>/dev/null | grep -qw wheel; then
-            nrs() { NH_NO_CHECKS=1 nh os switch "$(readlink -f /etc/nixos)" "$@"; }
-            nrt() { NH_NO_CHECKS=1 nh os test "$(readlink -f /etc/nixos)" "$@"; }
-          fi
-        '';
       };
 
       # zsh / less won't create these parent dirs themselves — do it declaratively
@@ -36,6 +29,7 @@
 
       environment.systemPackages = builtins.attrValues {
         inherit (pkgs)
+          eza # ls replacement (alias chain)
           starship # prompt
           zoxide # `j` smart-cd
           hstr # Ctrl-R history picker
