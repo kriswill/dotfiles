@@ -47,7 +47,7 @@ const theme = () => ({ bg: css("--page"), labelInk: css("--ink-2"), labelStroke:
 const stage = document.getElementById("stage")!;
 const sceneNodes = nodes.map((n) => ({
   x: n.x, y: n.y, z: n.z,
-  r: 4 + Math.min(7, (deg[n.id] || 0) * 0.9),
+  r: 3.5 + Math.min(6.5, (deg[n.id] || 0) * 0.8),
   color: colorOf(n.type),
   title: n.title,
 }));
@@ -133,7 +133,13 @@ let selected: ConceptNode | null = null;
 function select(n: ConceptNode | null, fly = false) {
   selected = n;
   scene.setSelected(n ? indexOf.get(n.id)! : null, fly);
-  if (!n) { panel.classList.remove("open"); return; }
+  updateHash(n ? "c/" + n.id : "");
+  if (!n) {
+    panel.classList.remove("open");
+    scene.setViewShift(0);
+    return;
+  }
+  scene.setViewShift(panelPx());
   const fmRows = Object.entries(n.fm)
     .map(([k, v]) => {
       let val = esc(Array.isArray(v) ? v.join(", ") : v);
@@ -164,6 +170,8 @@ function select(n: ConceptNode | null, fly = false) {
 function selectFile(path: string) {
   const f = FILES[path];
   if (!f) return;
+  updateHash("f/" + path);
+  scene.setViewShift(panelPx());
   const back = selected
     ? `<a href="#" class="back" data-node="${esc(selected.id)}">← ${esc(selected.title)}</a>`
     : "";
@@ -202,9 +210,12 @@ panel.addEventListener("click", (e) => {
 
 /* --- panel resize (drag the left edge; width persists) -------------------------- */
 let panelW = +(localStorage.getItem("okfVizPanelW") || 0);
-function panelWidth() {
+function panelPx() {
   const max = stage.clientWidth * 0.92;
-  return panelW ? Math.min(panelW, max) + "px" : "min(460px, 85%)";
+  return Math.min(panelW || Math.min(460, stage.clientWidth * 0.85), max);
+}
+function panelWidth() {
+  return panelPx() + "px";
 }
 {
   let resizing = false;
@@ -221,6 +232,7 @@ function panelWidth() {
     const rect = stage.getBoundingClientRect();
     panelW = Math.round(Math.min(Math.max(300, rect.right - e.clientX), rect.width * 0.92));
     panel.style.width = panelW + "px";
+    scene.setViewShift(panelW);
   });
   panel.addEventListener("pointerup", () => {
     if (!resizing) return;
@@ -229,6 +241,31 @@ function panelWidth() {
     if (panelW) localStorage.setItem("okfVizPanelW", String(panelW));
   });
 }
+
+/* --- URL state (hash) — selections survive reload and back/forward -------------- */
+let currentState: string | null = null;
+function updateHash(h: string) {
+  if (currentState === h) return;
+  currentState = h;
+  if (location.hash.slice(1) !== h) {
+    if (h) location.hash = h;
+    else {
+      try { history.pushState(null, "", location.pathname + location.search); }
+      catch { location.hash = ""; }
+    }
+  }
+}
+function applyHash() {
+  const h = decodeURIComponent(location.hash.slice(1));
+  if (h === currentState) return;
+  currentState = h;
+  if (h.startsWith("c/") && byId[h.slice(2)]) select(byId[h.slice(2)], true);
+  else if (h.startsWith("f/") && FILES[h.slice(2)]) selectFile(h.slice(2));
+  else select(null);
+}
+addEventListener("hashchange", applyHash);
+addEventListener("popstate", applyHash);
+applyHash();
 
 // Debug/scripting hook (also used by automated visual checks).
 (window as any).__okf = { select: (id: string, fly = true) => select(byId[id] ?? null, fly), selectFile };

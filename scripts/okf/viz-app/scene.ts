@@ -46,6 +46,7 @@ export class GraphScene {
   private lastInteraction = Date.now();
   private anim: { toPos: THREE.Vector3; toTarget: THREE.Vector3; t: number } | null = null;
   private labelRank: number[];
+  private viewShift = 0;
 
   constructor(
     private container: HTMLElement,
@@ -247,7 +248,7 @@ export class GraphScene {
       const sp = new THREE.Sprite(
         new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false, toneMapped: false }),
       );
-      const h = 9;
+      const h = 7.5;
       sp.scale.set(h * aspect, h, 1);
       sp.position.set(n.x, n.y - n.r - 7, n.z);
       this.scene.add(sp);
@@ -278,7 +279,7 @@ export class GraphScene {
       const n = this.nodes[i];
       const target = new THREE.Vector3(n.x, n.y, n.z);
       const dir = this.camera.position.clone().sub(this.controls.target).normalize();
-      const toPos = target.clone().add(dir.multiplyScalar(n.r * 10 + 120));
+      const toPos = target.clone().add(dir.multiplyScalar(n.r * 12 + 340));
       this.anim = { toPos, toTarget: target, t: 0 };
     }
   }
@@ -299,10 +300,19 @@ export class GraphScene {
     this.repaint();
   }
 
+  /** Shift the projection center left by px/2 so content centers in the area
+   *  not covered by the detail panel (0 to clear). */
+  setViewShift(px: number) {
+    this.viewShift = px;
+    this.resize();
+  }
+
   resize() {
     const w = this.container.clientWidth, h = this.container.clientHeight;
     if (!w || !h) return;
     this.camera.aspect = w / h;
+    if (this.viewShift > 0) this.camera.setViewOffset(w, h, this.viewShift / 2, 0, w, h);
+    else this.camera.clearViewOffset();
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(w, h);
     this.composer.setSize(w, h);
