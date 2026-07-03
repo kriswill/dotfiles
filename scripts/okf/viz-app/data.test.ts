@@ -43,7 +43,9 @@ describe("buildModel", () => {
     expect(m.indexOf.get("c")).toBe(2);
   });
 
-  test("missing files key defaults to empty record", () => {
-    expect(buildModel({ nodes: raw.nodes, edges: [] }).files).toEqual({});
+  test("missing files/dirs keys default to empty records", () => {
+    const empty = buildModel({ nodes: raw.nodes, edges: [] });
+    expect(empty.files).toEqual({});
+    expect(empty.dirs).toEqual({});
   });
 });

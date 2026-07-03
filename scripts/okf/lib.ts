@@ -178,6 +178,16 @@ export function nowISO(): string {
   return new Date().toISOString().replace(/\.\d{3}Z$/, "+00:00");
 }
 
+/** All git-tracked file paths (repo-relative), one spawn. */
+export function gitTrackedFiles(): string[] {
+  const r = spawnSync("git", ["-c", "core.quotepath=off", "ls-files"], {
+    cwd: repoRoot(),
+    encoding: "utf8",
+    maxBuffer: 64 * 1024 * 1024,
+  });
+  return (r.stdout ?? "").split("\n").filter(Boolean);
+}
+
 export function fileExists(p: string): boolean {
   return existsSync(p);
 }

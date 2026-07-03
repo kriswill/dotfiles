@@ -2,6 +2,16 @@
 
 ## 2026-07-03
 
+- **Update** — `okf viz` learned directories. Concept links and `resource:`
+  paths that point at a git-tracked directory (sub-flakes like
+  `flakes/ccglass/`, stow packages like `home/git/`, nvim spec trees)
+  previously rendered as dead title-only anchors; they now open an in-panel
+  directory listing (immediate subdirs + files with line/size metadata, every
+  tracked descendant embedded and clickable, `d/<path>` deep links, back-link
+  and Referenced-by intact). Trees are walked via `git ls-files`, so
+  untracked junk never leaks in; the existing 200 KB/binary embed caps still
+  apply — oversized files are listed as "not embedded".
+
 - **Update** — applied all fifteen xhigh code-review findings on the
   reorientation pass. `okf scaffold` hardened: per-class gating is no longer
   flattened across a twin's two implementations (a gated darwin module with

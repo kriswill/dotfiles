@@ -12,6 +12,7 @@ const model = () =>
     ],
     edges: [{ s: "a", t: "b" }],
     files: { "scripts/okf/viz.ts": { html: "", lines: 1, size: 10, date: "", lang: "ts", refs: ["a"] } },
+    dirs: { "flakes/ccglass": { files: ["flakes/ccglass/flake.nix"], dirs: [], date: "2026-01-01", refs: ["a"] } },
   });
 
 beforeEach(() => localStorage.clear());
@@ -30,6 +31,7 @@ describe("selection", () => {
     const s = createVizState(model());
     s.selectConcept("nope");
     s.selectFile("nope.ts");
+    s.selectDir("nope");
     expect(s.sel).toEqual({ kind: "none" });
   });
 
@@ -38,6 +40,16 @@ describe("selection", () => {
     s.selectConcept("a");
     s.selectFile("scripts/okf/viz.ts");
     expect(s.sel).toEqual({ kind: "file", path: "scripts/okf/viz.ts" });
+    expect(s.selectedConcept).toBeNull();
+    expect(s.backConcept?.id).toBe("a");
+    expect(s.sceneSelectedIndex).toBe(0);
+  });
+
+  test("dir view keeps scene emphasis and back-link on last concept", () => {
+    const s = createVizState(model());
+    s.selectConcept("a");
+    s.selectDir("flakes/ccglass");
+    expect(s.sel).toEqual({ kind: "dir", path: "flakes/ccglass" });
     expect(s.selectedConcept).toBeNull();
     expect(s.backConcept?.id).toBe("a");
     expect(s.sceneSelectedIndex).toBe(0);

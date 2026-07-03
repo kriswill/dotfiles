@@ -24,8 +24,8 @@ export function createVizState(model: VizModel) {
   // Bumped on every concept select/clear so the scene bridge re-runs even when
   // the same node is re-selected (legacy re-flies the camera in that case).
   let selSeq = $state(0);
-  // Scene emphasis + file-view back-link keep pointing at the last concept
-  // even while a file is shown (legacy behavior).
+  // Scene emphasis + file/dir-view back-link keep pointing at the last concept
+  // even while a file or directory is shown (legacy behavior).
   let lastConceptId = $state<string | null>(null);
   const hidden = new SvelteSet<string>();
   let query = $state("");
@@ -68,7 +68,7 @@ export function createVizState(model: VizModel) {
   const selectedConcept = $derived(sel.kind === "concept" ? (model.byId[sel.id] ?? null) : null);
   const backConcept = $derived(lastConceptId ? (model.byId[lastConceptId] ?? null) : null);
   const sceneSelectedIndex = $derived.by(() => {
-    const id = sel.kind === "concept" ? sel.id : sel.kind === "file" ? lastConceptId : null;
+    const id = sel.kind === "concept" ? sel.id : sel.kind === "file" || sel.kind === "dir" ? lastConceptId : null;
     return id != null ? (model.indexOf.get(id) ?? null) : null;
   });
 
@@ -103,6 +103,10 @@ export function createVizState(model: VizModel) {
     selectFile(path: string) {
       if (!model.files[path]) return;
       sel = { kind: "file", path };
+    },
+    selectDir(path: string) {
+      if (!model.dirs[path]) return;
+      sel = { kind: "dir", path };
     },
     clearSelection() {
       sel = { kind: "none" };

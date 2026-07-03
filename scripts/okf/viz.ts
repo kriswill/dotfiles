@@ -9,7 +9,7 @@
 
 import { existsSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { extname, join } from "node:path";
-import { bundleRoot, extractLinks, gitISO, isExternal, parseDoc, repoRoot, resolveLink, walkMd, RESERVED } from "./lib";
+import { bundleRoot, extractLinks, gitISO, gitTrackedFiles, isExternal, parseDoc, repoRoot, resolveLink, walkMd, RESERVED } from "./lib";
 import { layout3d } from "./layout3d";
 import { esc } from "./viz-app/markdown";
 import { THEMES } from "./viz-app/themes";
@@ -175,14 +175,57 @@ function addFile(rel: string, ref: string) {
   };
 }
 
+// Referenced *directories* (sub-flakes, stow packages, plugin spec trees) get
+// a browsable listing: the dir's git-tracked children are recorded and every
+// descendant file is embedded via addFile (same size/binary caps).
+interface EmbeddedDir { files: string[]; dirs: string[]; date: string; refs: string[] }
+const dirs: Record<string, EmbeddedDir> = {};
+
+const childFiles = new Map<string, string[]>();
+const childDirs = new Map<string, Set<string>>();
+for (const f of gitTrackedFiles()) {
+  const parts = f.split("/");
+  for (let i = 0; i < parts.length - 1; i++) {
+    const dir = parts.slice(0, i + 1).join("/");
+    if (i + 2 === parts.length) {
+      if (!childFiles.has(dir)) childFiles.set(dir, []);
+      childFiles.get(dir)!.push(f);
+    } else {
+      if (!childDirs.has(dir)) childDirs.set(dir, new Set());
+      childDirs.get(dir)!.add(parts.slice(0, i + 2).join("/"));
+    }
+  }
+}
+
+function addDir(rel: string, ref: string) {
+  const existing = dirs[rel];
+  if (existing) {
+    if (!existing.refs.includes(ref)) existing.refs.push(ref);
+    return;
+  }
+  const fs = (childFiles.get(rel) ?? []).slice().sort();
+  const ds = [...(childDirs.get(rel) ?? [])].sort();
+  if (!fs.length && !ds.length) return; // not a tracked directory
+  dirs[rel] = { files: fs, dirs: ds, date: gitISO(rel).slice(0, 10), refs: [ref] };
+  for (const f of fs) addFile(f, ref);
+  for (const d of ds) addDir(d, ref);
+}
+
+/** Resource / link target that may be a file or a tracked directory. */
+function addRepoPath(rel: string, ref: string) {
+  rel = rel.replace(/\/$/, "");
+  if (childFiles.has(rel) || childDirs.has(rel)) addDir(rel, ref);
+  else addFile(rel, ref);
+}
+
 for (const n of nodes) {
   const res = n.fm?.resource;
-  if (typeof res === "string") addFile(res.replace(/\/$/, ""), n.id);
+  if (typeof res === "string") addRepoPath(res, n.id);
   for (const target of extractLinks(n.body)) {
     if (isExternal(target)) continue;
     if (resolveLink(bundle, n.id + ".md", target)) continue; // stays inside the bundle
     const inRepo = resolveLink(repo, join("knowledge", n.id + ".md"), target);
-    if (inRepo && !inRepo.startsWith("knowledge/")) addFile(inRepo, n.id);
+    if (inRepo && !inRepo.startsWith("knowledge/")) addRepoPath(inRepo, n.id);
   }
   // Bare repo-path mentions in prose (e.g. "./flakes/x/darwin-module.nix")
   // get embedded too, so the runtime autolinker has something to open.
@@ -229,7 +272,7 @@ for (const o of build.outputs) if (o.path.endsWith(".css")) appCss += await o.te
 appCss = appCss.replace(/<\/style/gi, "<\\/style");
 lap("bundle");
 
-const data = JSON.stringify({ nodes, edges: dedupedEdges, files }).replace(/<\//g, "<\\/");
+const data = JSON.stringify({ nodes, edges: dedupedEdges, files, dirs }).replace(/<\//g, "<\\/");
 
 /** :root custom-property block for a named theme stop, from the app's THEMES. */
 const themeCss = (name: string) =>
@@ -276,7 +319,7 @@ lap("write");
 const fmtMs = (ms: number) => (ms < 10 ? ms.toFixed(1) : String(Math.round(ms))) + "ms";
 console.log(`viz build: ${phases.map(([n, ms]) => `${n} ${fmtMs(ms)}`).join(" · ")}`);
 console.log(
-  `viz: ${nodes.length} nodes, ${dedupedEdges.length} edges, ${Object.keys(files).length} files -> ${out} (${(html.length / 1024).toFixed(0)} KB)`,
+  `viz: ${nodes.length} nodes, ${dedupedEdges.length} edges, ${Object.keys(files).length} files, ${Object.keys(dirs).length} dirs -> ${out} (${(html.length / 1024).toFixed(0)} KB)`,
 );
 
 // --perf: measure viewer startup in headless Chrome against the file we just wrote.
