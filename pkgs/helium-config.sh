@@ -14,6 +14,10 @@
 # never off nebula's unencrypted disk.
 set -euo pipefail
 
+# Colors (AGENTS.md shell convention).
+# shellcheck disable=SC2034 # full palette defined per convention; not all used
+RED=$'\e[31m' GREEN=$'\e[32m' YELLOW=$'\e[33m' BLUE=$'\e[34m' NC=$'\e[0m'
+
 prof="${HELIUM_PROFILE:-$HOME/.config/net.imput.helium}"
 repo="${DOTFILES:-$HOME/src/dotfiles}"
 snap="$repo/config/helium"
@@ -107,7 +111,12 @@ case "${1:-}" in
       # filtered plaintext -> TMPDIR scratch (NEVER inside the repo tree)
       new_plain="$(mktemp "${TMPDIR:-/tmp}/helium-cap.XXXXXX")"; tmpfiles+=("$new_plain")
       if ! apply "$xf" "$src" > "$new_plain"; then
-        echo "ERROR: $rel is not valid JSON" >&2; exit 1
+        # jq failing means malformed JSON; for raw (cat) it's a plain read error.
+        case "$xf" in
+          raw) echo "${RED}ERROR: failed to read $rel${NC}" >&2 ;;
+          *)   echo "${RED}ERROR: $rel is not valid JSON${NC}" >&2 ;;
+        esac
+        exit 1
       fi
       # compare-skip: age's fresh nonce makes ciphertext nondeterministic, so only
       # re-encrypt when the decrypted plaintext actually changed (keeps git stable).

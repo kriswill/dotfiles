@@ -3,7 +3,9 @@ return {
   -- Top level search
   { "<leader>/", function() Snacks.picker.grep() end, desc = "Grep" },
   { "<leader>:", function() Snacks.picker.command_history() end, desc = "Command History" },
-  { "<leader>n", function() Snacks.picker.notifications() end, desc = "Notification History" },
+  -- NOTE: no <leader>n here — misc.lua binds it to Snacks.notifier.show_history()
+  -- (a duplicate was removed once in 2595d6c and again after the nebula merge
+  -- pulled the pre-fix copy back in).
 
   -- Buffer search
   { "<leader>sb", function() Snacks.picker.lines() end, desc = "Buffer Lines" },

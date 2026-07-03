@@ -52,4 +52,12 @@
         wowup = pkgs.callPackage ../pkgs/wowup.nix { };
       };
     };
+
+  # Re-export the sub-flakes' aarch64-linux outputs (deliberate coverage from
+  # 371fa1b — ARM Linux boxes / Docker CI). The root `systems` list only has
+  # aarch64-darwin + x86_64-linux, so perSystem doesn't produce these.
+  flake.packages.aarch64-linux = {
+    ccglass = inputs.ccglass.packages.aarch64-linux.ccglass;
+    codebase-memory-mcp = inputs.codebase-memory-mcp.packages.aarch64-linux.codebase-memory-mcp;
+  };
 }

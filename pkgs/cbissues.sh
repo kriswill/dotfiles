@@ -16,6 +16,10 @@
 # rest (curl/jq/fzf/git/xdg-utils/util-linux/coreutils) are pinned there.
 set -euo pipefail
 
+# Colors (AGENTS.md shell convention).
+# shellcheck disable=SC2034 # full palette defined per convention; not all used
+RED=$'\e[31m' GREEN=$'\e[32m' YELLOW=$'\e[33m' BLUE=$'\e[34m' NC=$'\e[0m'
+
 ref="${CBISSUE_TOKEN_REF:-op://Private/3htxxhinni5u5mzz5oguowunii/zfptfg4lpdernsrst4kgaxicge}"
 api="https://codeberg.org/api/v1"
 
@@ -27,8 +31,15 @@ positional=()
 while [ "$#" -gt 0 ]; do
   case "$1" in
     --state)
+      # Guard before consuming: if --state is the last arg, the loop's trailing
+      # shift would hit $#==0 and kill the script silently under set -e.
+      [ "$#" -gt 1 ] || {
+        echo "${RED}cbissues: --state needs a value${NC}" >&2
+        usage
+        exit 2
+      }
       shift
-      state="${1:-}"
+      state="$1"
       ;;
     --state=*) state="${1#*=}" ;;
     --plain) plain=1 ;;
@@ -45,7 +56,7 @@ while [ "$#" -gt 0 ]; do
       break
       ;;
     -*)
-      echo "cbissues: unknown option: $1" >&2
+      echo "${RED}cbissues: unknown option: $1${NC}" >&2
       usage
       exit 2
       ;;
@@ -59,7 +70,7 @@ repo="${1:-}"
 case "$state" in
   open | closed | all) ;;
   *)
-    echo "cbissues: --state must be open|closed|all" >&2
+    echo "${RED}cbissues: --state must be open|closed|all${NC}" >&2
     exit 2
     ;;
 esac
@@ -79,6 +90,14 @@ fi
   usage
   exit 2
 }
+# Strict owner/repo slug. $repo is spliced into API URLs and — worse — into a
+# single-quoted command inside the fzf enter binding below, which fzf hands to
+# $SHELL -c; a single quote in a crafted remote URL or CLI arg would break out
+# of the quoting and execute arbitrary commands. Reject, don't escape.
+if ! [[ "$repo" =~ ^[A-Za-z0-9][A-Za-z0-9._-]*/[A-Za-z0-9][A-Za-z0-9._-]*$ ]]; then
+  echo "${RED}cbissues: invalid repo \"$repo\" (expected owner/repo)${NC}" >&2
+  exit 2
+fi
 
 tmp="$(mktemp)"
 data="$(mktemp)"
@@ -106,7 +125,7 @@ fetch_page() {
       | curl -s --config - -o "$tmp" -w '%{http_code}' "$api/$q")"
   fi
   if [ "$code" != 200 ]; then
-    echo "cbissues: GET issues -> HTTP $code" >&2
+    echo "${RED}cbissues: GET issues -> HTTP $code${NC}" >&2
     jq -r '.message // empty' "$tmp" 2>/dev/null >&2 || true
     return 1
   fi
