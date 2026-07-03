@@ -8,9 +8,10 @@ export const esc = (s: unknown) =>
 export interface MdCtx {
   files: Record<string, unknown>;
   byId: Record<string, unknown>;
+  dirs?: Record<string, unknown>;
 }
 
-export function createMd({ files, byId }: MdCtx) {
+export function createMd({ files, byId, dirs = {} }: MdCtx) {
   /** Resolve a relative link target against a repo-root-relative directory. */
   function resolveRel(dir: string[], target: string): string | null {
     if (/^[a-z][a-z0-9+.-]*:/.test(target) || target.startsWith("#")) return null;
@@ -76,6 +77,7 @@ export function createMd({ files, byId }: MdCtx) {
         const nid = conceptOf(p);
         if (nid) return `<a href="#" data-node="${esc(nid)}">${txt}</a>`;
         if (p && files[p]) return `<a href="#" data-file="${esc(p)}">${txt}</a>`;
+        if (p && dirs[p]) return `<a href="#" data-dir="${esc(p)}">${txt}</a>`;
         if (/^https?:/.test(href)) return `<a href="${esc(href)}" target="_blank" rel="noopener">${txt}</a>`;
         return `<a title="${esc(href)}">${txt}</a>`;
       });

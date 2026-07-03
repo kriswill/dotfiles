@@ -187,6 +187,52 @@ describe("DetailPanel", () => {
     expect(panel.querySelector("table.fm")).toBeNull();
   });
 
+  test("directory view: resource dir link, listing, file click-through", () => {
+    const dirModel = buildModel({
+      nodes: [
+        node("packages/ccglass", "Sub-flake", "ccglass", {
+          fm: { type: "Sub-flake", resource: "flakes/ccglass/" },
+          body: "consumed via [flake](../../flakes/ccglass/)",
+        }),
+      ],
+      edges: [],
+      files: {
+        "flakes/ccglass/flake.nix": { html: "", lines: 12, size: 512, date: "2026-01-02", lang: "nix", refs: ["packages/ccglass"] },
+      },
+      dirs: {
+        "flakes/ccglass": {
+          files: ["flakes/ccglass/flake.nix", "flakes/ccglass/big.bin"],
+          dirs: ["flakes/ccglass/sub"],
+          date: "2026-01-02",
+          refs: ["packages/ccglass"],
+        },
+        "flakes/ccglass/sub": { files: [], dirs: [], date: "2026-01-02", refs: ["packages/ccglass"] },
+      },
+    });
+    const state = createVizState(dirModel);
+    state.selectConcept("packages/ccglass");
+    mountC(DetailPanel, { viz: state, stageEl: stage() });
+    const panel = document.getElementById("panel")!;
+    // fm resource cell links to the directory (body dir links resolve too).
+    const resLink = panel.querySelector('td a[data-dir="flakes/ccglass"]') as HTMLElement;
+    expect(resLink.textContent).toBe("flakes/ccglass/");
+    expect(panel.querySelector('#body-md a[data-dir="flakes/ccglass"]')).not.toBeNull();
+    resLink.click();
+    flushSync();
+    expect(state.sel).toEqual({ kind: "dir", path: "flakes/ccglass" });
+    expect(panel.querySelector("h2")!.textContent).toBe("ccglass/");
+    expect(panel.querySelector(".chip")!.textContent).toContain("directory");
+    expect(panel.querySelector(".back")!.textContent).toContain("ccglass"); // back to the concept
+    const rows = [...panel.querySelectorAll(".dir-list li")];
+    expect(rows).toHaveLength(3); // subdir first, then files
+    expect(panel.querySelector('.dir-list a[data-dir="flakes/ccglass/sub"]')!.textContent).toBe("sub/");
+    expect(rows[2]!.textContent).toContain("big.bin"); // unembedded: listed, unlinked
+    expect(rows[2]!.textContent).toContain("not embedded");
+    (panel.querySelector('.dir-list a[data-file="flakes/ccglass/flake.nix"]') as HTMLElement).click();
+    flushSync();
+    expect(state.sel).toEqual({ kind: "file", path: "flakes/ccglass/flake.nix" });
+  });
+
   test("file view via delegation: back-link, meta, source; close clears", () => {
     const state = createVizState(model());
     state.selectConcept("a");

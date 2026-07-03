@@ -7,6 +7,7 @@ import { createMd, esc } from "./markdown";
 const ctx = {
   files: { "scripts/okf/viz.ts": {}, "modules/dev.nix": {}, "docs/svelt/manual.md": {} },
   byId: { "nvim/architecture": {}, "decisions/other": {} },
+  dirs: { "flakes/ccglass": {} },
 };
 const md = createMd(ctx);
 const from = "decisions/foo"; // bundle-relative concept id
@@ -50,6 +51,16 @@ describe("inline rendering", () => {
 
   test("unresolvable link degrades to title-only anchor", () => {
     expect(md.mdToHtml("[x](../nope.md)", from)).toBe('<p><a title="../nope.md">x</a></p>');
+  });
+
+  test("embedded-directory link resolves to data-dir (trailing slash dropped)", () => {
+    expect(md.mdToHtml("[flake](../../flakes/ccglass/)", from)).toBe(
+      '<p><a href="#" data-dir="flakes/ccglass">flake</a></p>',
+    );
+  });
+
+  test("unembedded directory link degrades to title-only anchor", () => {
+    expect(md.mdToHtml("[x](../../flakes/nope/)", from)).toBe('<p><a title="../../flakes/nope/">x</a></p>');
   });
 });
 

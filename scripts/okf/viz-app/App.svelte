@@ -27,6 +27,7 @@
     currentState = h;
     if (sel.kind === "concept") viz.selectConcept(sel.id, true);
     else if (sel.kind === "file") viz.selectFile(sel.path);
+    else if (sel.kind === "dir") viz.selectDir(sel.path);
     else viz.clearSelection();
   }
 
@@ -59,6 +60,7 @@
   const okf: Record<string, unknown> = {
     select: (id: string, fly = true) => (viz.model.byId[id] ? viz.selectConcept(id, fly) : viz.clearSelection()),
     selectFile: (path: string) => viz.selectFile(path),
+    selectDir: (path: string) => viz.selectDir(path),
     get scene() {
       return sceneRef;
     },

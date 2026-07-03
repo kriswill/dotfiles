@@ -12,14 +12,20 @@
   const { viz, stageEl, resizeSeq = 0 }: Props = $props();
 
   // svelte-ignore state_referenced_locally -- viz's identity never changes
-  const md = createMd({ files: viz.model.files, byId: viz.model.byId });
+  const md = createMd({ files: viz.model.files, byId: viz.model.byId, dirs: viz.model.dirs });
 
   const file = $derived(viz.sel.kind === "file" ? viz.model.files[viz.sel.path] : null);
   const filePath = $derived(viz.sel.kind === "file" ? viz.sel.path : "");
+  const dir = $derived(viz.sel.kind === "dir" ? viz.model.dirs[viz.sel.path] : null);
+  const dirPath = $derived(viz.sel.kind === "dir" ? viz.sel.path : "");
 
   const fmCell = (k: string, v: unknown): string => {
     const val = esc(Array.isArray(v) ? v.join(", ") : v);
-    if (k === "resource" && viz.model.files[v as string]) return `<a href="#" data-file="${esc(v)}">${val}</a>`;
+    if (k === "resource") {
+      const p = String(v).replace(/\/$/, "");
+      if (viz.model.files[p]) return `<a href="#" data-file="${esc(p)}">${val}</a>`;
+      if (viz.model.dirs[p]) return `<a href="#" data-dir="${esc(p)}">${val}</a>`;
+    }
     if (k === "description") return md.autolinkPaths(val);
     return val;
   };
@@ -43,6 +49,12 @@
     if (af) {
       e.preventDefault();
       viz.selectFile(af.dataset.file!);
+      return;
+    }
+    const ad = t.closest("a[data-dir]") as HTMLElement | null;
+    if (ad) {
+      e.preventDefault();
+      viz.selectDir(ad.dataset.dir!);
       return;
     }
     const a = t.closest("a[data-node]") as HTMLElement | null;
@@ -101,12 +113,14 @@
     <!-- Locked header: back link (when a concept referred us here) or a title
          crumb, plus close — always visible while the body scrolls. -->
     <header class="bar">
-      {#if viz.sel.kind === "file" && viz.backConcept}
+      {#if (viz.sel.kind === "file" || viz.sel.kind === "dir") && viz.backConcept}
         <a href="#{encodeHash({ kind: 'concept', id: viz.backConcept.id })}" class="back" data-node={viz.backConcept.id}
           >← {viz.backConcept.title}</a
         >
       {:else if viz.selectedConcept}
         <span class="crumb">{viz.selectedConcept.title}</span>
+      {:else if viz.sel.kind === "dir"}
+        <span class="crumb">{dirPath.split("/").pop()}/</span>
       {:else}
         <span class="crumb">{filePath.split("/").pop()}</span>
       {/if}
@@ -147,6 +161,40 @@
         <div class="backlinks flat"><h4>Referenced by</h4>{@html refList(file.refs)}</div>
         <pre class="src">{@html file.html}</pre>
       {/if}
+    {:else if dir}
+      <h2>{dirPath.split("/").pop()}/</h2>
+      <span class="chip"><span class="dot" style="background:var(--ink-muted)"></span>directory</span>
+      <table class="fm">
+        <tbody>
+          <tr><td>path</td><td>{dirPath}/</td></tr>
+          <tr><td>entries</td><td>{dir.dirs.length + dir.files.length}</td></tr>
+          <tr><td>last commit</td><td>{dir.date}</td></tr>
+        </tbody>
+      </table>
+      <div class="backlinks flat"><h4>Referenced by</h4>{@html refList(dir.refs)}</div>
+      <ul class="dir-list">
+        {#each dir.dirs as d (d)}
+          <li>
+            {#if viz.model.dirs[d]}
+              <a href="#{encodeHash({ kind: 'dir', path: d })}" data-dir={d}>{d.split("/").pop()}/</a>
+            {:else}
+              <span>{d.split("/").pop()}/</span>
+            {/if}
+          </li>
+        {/each}
+        {#each dir.files as f (f)}
+          {@const ef = viz.model.files[f]}
+          <li>
+            {#if ef}
+              <a href="#{encodeHash({ kind: 'file', path: f })}" data-file={f}>{f.split("/").pop()}</a>
+              <span class="meta">{ef.lines} lines · {(ef.size / 1024).toFixed(1)} KB</span>
+            {:else}
+              <span>{f.split("/").pop()}</span>
+              <span class="meta">not embedded</span>
+            {/if}
+          </li>
+        {/each}
+      </ul>
     {/if}
   </section>
 {/if}
@@ -336,6 +384,28 @@
   }
   #body-md :global(a) {
     color: var(--link);
+  }
+  .dir-list {
+    list-style: none;
+    padding: 0;
+    margin-top: 12px;
+    font: 12.5px/1.6 ui-monospace, Menlo, monospace;
+  }
+  .dir-list li {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 3px 6px;
+    border-top: 1px solid var(--grid);
+  }
+  .dir-list li:last-child {
+    border-bottom: 1px solid var(--grid);
+  }
+  .dir-list .meta {
+    color: var(--ink-muted);
+    font-size: 11px;
+    white-space: nowrap;
   }
   .src {
     background: var(--page);
