@@ -196,6 +196,7 @@ export class GraphScene {
 
     new ResizeObserver(() => this.resize()).observe(container);
     this.resize();
+    this.fitToView();
 
     let firstFrame = true;
     const loop = () => {
@@ -323,6 +324,27 @@ export class GraphScene {
         !this.dimmed(i) &&
         (top.has(i) || i === this.selected || i === this.hoverLabel || this.isNeighbor(i));
     });
+  }
+
+  /** Initial placement: aim at the layout centroid and back off until the
+   *  whole bounding sphere fits both the vertical and horizontal FOV. The
+   *  layout is not origin-centered, so a fixed camera leaves the graph small
+   *  and off-center. */
+  private fitToView() {
+    const center = new THREE.Vector3();
+    for (const n of this.nodes) center.add(new THREE.Vector3(n.x, n.y, n.z));
+    center.multiplyScalar(1 / Math.max(1, this.nodes.length));
+    let radius = 60;
+    for (const n of this.nodes) {
+      radius = Math.max(radius, new THREE.Vector3(n.x, n.y, n.z).distanceTo(center) + n.r);
+    }
+    const vFov = (this.camera.fov * Math.PI) / 180;
+    const hFov = 2 * Math.atan(Math.tan(vFov / 2) * this.camera.aspect);
+    const dist = (radius * 1.06) / Math.tan(Math.min(vFov, hFov) / 2);
+    const dir = new THREE.Vector3(0, 0.12, 1).normalize(); // slight elevation, like the old default
+    this.camera.position.copy(center).addScaledVector(dir, dist);
+    this.controls.target.copy(center);
+    this.controls.update();
   }
 
   /* --- public API -------------------------------------------------------- */
