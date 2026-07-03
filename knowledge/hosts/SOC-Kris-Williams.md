@@ -9,7 +9,7 @@ timestamp: '2026-07-03T17:53:43+00:00'
 
 SOC-Kris-Williams - my work Apple M2 Pro, 32GB RAM hostname enforced by IT.
 
-Imports every [darwin module](../modules/index.md); host-selective features
+Imports every [darwin-class module](../modules/index.md); host-selective features
 are opted into below per the
 [host-mounted modules pattern](../patterns/host-mounted-modules.md).
 

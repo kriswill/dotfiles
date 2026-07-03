@@ -3,7 +3,7 @@ type: Decision
 title: Remove Option Gating; Mount Modules Into Hosts
 description: Dropped the kriswill.* namespace and its core.nix mkDefault fan-out — universal modules are ungated, host-selective ones gate on idiomatic programs./services. enables flipped per host, and hosts became modules/hosts/<hostname>/ folders mirroring the nebula-snowglobe layout.
 tags: [nix, module, architecture]
-timestamp: '2026-07-03T10:30:00-07:00'
+timestamp: '2026-07-03T12:00:00-07:00'
 ---
 
 **Status:** active. **Where:** [host-mounted modules pattern](../patterns/host-mounted-modules.md),
@@ -60,6 +60,11 @@ the fan-out of defaults are gone:
 
 Class dirs stay (`modules/darwin/` here, `modules/nixos/` on nebula) so a
 merge drops the trees side by side with zero path collisions.
+
+**Amended 2026-07-03:** the merge landed — `modules/nixos/` is in-tree; nebula
+registers as `modules/hosts/nebula.nix` (flat registry entry through
+snowglobe-lib's `mkNixosHost`) plus a `nebula/` folder of host files, the
+shape `okf scaffold` already recognizes.
 
 ## Consequences
 

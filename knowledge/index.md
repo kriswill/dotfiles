@@ -15,13 +15,14 @@ derived `.codebase-memory/` code graph.
 
 ## Concepts
 
+* [Task Manuals (docs/)](manuals.md) - Entry point to the docs/ manuals layer — task-focused, machine-verified operational references with dated learnings, complementing knowledge/'s durable rationale and catalog.
 * [OKF Profile](okf-profile.md) - This bundle's conventions on top of OKF v0.1 — required fields, link style, resource semantics, type registry, and tooling.
 
 ## Subdirectories
 
 * [decisions](decisions/index.md) - Decision records — why the repository is the way it is.
 * [hosts](hosts/index.md) - The machines this flake configures, and which feature modules each enables.
-* [modules](modules/index.md) - Catalog of nix-darwin feature modules and flake-parts plumbing modules.
+* [modules](modules/index.md) - Catalog of darwin and NixOS feature modules, flake-parts plumbing modules, and nebula's host-specific files.
 * [nvim](nvim/index.md) - The Neovim configuration — plugins, keymaps, LSP, and options for the Lua config tree under `home/nvim/`.
 * [packages](packages/index.md) - Custom packages, nixpkgs overlays, and the self-contained sub-flakes the root flake consumes via relative-path inputs.
 * [patterns](patterns/index.md) - Named architectural patterns this repository is built on.

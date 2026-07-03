@@ -1,14 +1,11 @@
 {
   flake.modules.nixos.tmux =
-    # Kris' tmux.
-    #
-    # The cross-host dotfiles (`main` branch) configure tmux via a home-manager
-    # module. nebula does NOT run home-manager, so this is the plain-NixOS port:
+    # Kris' tmux (NixOS twin of modules/darwin/tmux.nix).
     #
     #  * The static config — tmux.conf and the tmux-which-key `config.yaml` — lives
     #    in the stow tree (home/tmux/.config/tmux/...) and is symlinked into ~ by
-    #    dotfiles-stow.nix, mirroring home-manager's `mkOutOfStoreSymlink` (the live,
-    #    editable repo copy rather than a /nix/store snapshot).
+    #    dotfiles-stow.nix (the live, editable repo copy rather than a /nix/store
+    #    snapshot).
     #  * tmux.conf sources ~/.config/tmux/plugins.conf, which must reference the
     #    tmux-which-key plugin's runtime path in the /nix/store — a value only Nix
     #    knows. That one file can't be a static stow symlink, so we generate it here
@@ -21,7 +18,7 @@
 
       whichKey = pkgs.tmuxPlugins.tmux-which-key;
 
-      # Equivalent to the home-manager module's generated `plugins.conf`.
+      # Identical to the darwin twin's generated `plugins.conf`.
       pluginsConf = pkgs.writeText "tmux-plugins.conf" ''
         set -g @tmux-which-key-xdg-enable 1
         run-shell 'mkdir -p ~/.local/share/tmux/plugins/tmux-which-key && touch ~/.local/share/tmux/plugins/tmux-which-key/init.tmux'
