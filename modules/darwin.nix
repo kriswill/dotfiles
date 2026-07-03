@@ -31,7 +31,7 @@ in
     inputs.darwin.lib.darwinSystem {
       specialArgs = {
         inherit inputs;
-        self = inputs.self;
+        inherit (inputs) self;
         outputs = inputs.self;
         lib = extendedLib;
       };
