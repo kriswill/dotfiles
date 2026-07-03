@@ -51,6 +51,7 @@
               tofu-ls # opentofu/terraform
               pyright
               rust-analyzer # Rust
+              svelte-language-server # Svelte (svelteserver)
               vscode-langservers-extracted # json, HTML, CSS, ESLint
               yaml-language-server # YAML (yamlls)
               ;

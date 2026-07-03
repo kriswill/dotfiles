@@ -12,6 +12,21 @@
       user = "k";
       home = "/home/k";
       stowDir = "${home}/src/dotfiles/home";
+      # home/ is shared with the darwin hosts; these packages are macOS-only
+      # (Homebrew apps, Library/ paths, 1Password agent-socket paths) and must
+      # not be stowed on NixOS. Everything not listed deploys on both OSes —
+      # the right default for cross-platform CLI configs. Mirror list:
+      # modules/darwin/dotfiles-stow.nix.
+      skip = [
+        "glow" # macOS Library/Preferences path
+        "karabiner" # macOS-only hardware remapper
+        "kitty" # not installed on nebula (ghostty is the terminal)
+        "oksh" # not installed on nebula
+        "podman-desktop" # darwin podman stack only
+        "ssh" # IdentityAgent points at the macOS 1Password socket
+        "yazi" # yazi module (plugins/flavor links) not ported to nixos yet
+      ];
+      skipPattern = builtins.concatStringsSep "|" skip;
     in
     {
       environment.systemPackages = [
@@ -42,6 +57,13 @@
           for pkgdir in "${stowDir}"/*/; do
             [ -d "$pkgdir" ] || continue
             pkg="$(${pkgs.coreutils}/bin/basename "$pkgdir")"
+            # Per-OS scoping: skip packages that belong to the other OS.
+            case "$pkg" in
+              ${skipPattern})
+                echo "stow: skipping $pkg (darwin-only)" >&2
+                continue
+                ;;
+            esac
             # Self-heal: drop any target symlink that IS one of this package's files
             # but reaches it through a symlinked (non-canonical) path, so the restow
             # below recreates it canonically instead of conflict-skipping the whole

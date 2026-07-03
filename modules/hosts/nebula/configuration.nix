@@ -73,12 +73,9 @@
       };
 
       environment.systemPackages = [
+        # git + gh/delta/diffnav/difftastic/git-lfs come from modules/nixos/git.nix
         pkgs.cliphist # clipboard history (used with fuzzel --dmenu)
-        pkgs.delta # diff renderer diffnav shells out to (styled via [delta] in git config)
-        pkgs.diffnav # git diff pager with a file tree (git pager.diff/show); wraps delta
-        pkgs.difftastic # structural diff tool for `git difftool` / lazygit dir-diff
         pkgs.fd # fast file finder
-        pkgs.gh # GitHub CLI
         pkgs.gimp # raster image editor
         pkgs.kdePackages.breeze-icons
         pkgs.rose-pine-hyprcursor # native hyprcursor theme (BreezeX shape, Rose Pine palette); selected via HYPRCURSOR_THEME in hyprland.lua
@@ -96,7 +93,8 @@
       systemd.packages = [ pkgs.hyprpolkitagent ];
       systemd.user.services.hyprpolkitagent.wantedBy = [ "graphical-session.target" ];
 
-      programs.ghostty.enable = true;
+      # ghostty comes from modules/nixos/ghostty.nix (install + os.conf half of
+      # the shared stow config).
       programs.alacritty.enable = false;
 
       programs._1password.enable = true;
