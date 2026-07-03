@@ -23,6 +23,12 @@
       )
     ];
 
+    # sops-nix (machinery: modules/darwin/sops.nix; recipients: .sops.yaml).
+    # smoke-test secret proves decryption end-to-end on this host — replace
+    # with real secrets as they arrive; edit with `sops modules/hosts/k/secrets.yaml`.
+    sops.defaultSopsFile = ./secrets.yaml;
+    sops.secrets.sops-smoke-test = { };
+
     # Host-selective features: their modules are imported on every host but
     # ship disabled; enabling here is what mounts them into k.
     services.apple-container.enable = true;

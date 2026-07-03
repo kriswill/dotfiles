@@ -1,7 +1,18 @@
+# Per-host age recipients. NixOS hosts: the sops-nix key derived from the host
+# SSH key (nebula's was generated at install). Darwin hosts: derived from the
+# host SSH key too — run `ssh-to-age < /etc/ssh/ssh_host_ed25519_key.pub` on
+# the machine (ssh-to-age is in the dev shell) and add an anchor + creation
+# rule below. Edit a secrets file with `sops modules/hosts/<host>/secrets.yaml`.
 keys:
   - &nebula age1gduheq5k8trpxduq56qt3yy6g0mveshx4h06nshccejvv6yxp4vq77m3qf
+  - &k age19lm2fsr2ugl0e2m4s84z885vluma0dlg8xv3vua72dn8zmu7paeq7tmqv2
+  # TODO(mini, SOC-Kris-Williams): derive on each machine as described above.
 creation_rules:
   - path_regex: modules/hosts/nebula/secrets.yaml
     key_groups:
       - age:
           - *nebula
+  - path_regex: modules/hosts/k/secrets.yaml
+    key_groups:
+      - age:
+          - *k

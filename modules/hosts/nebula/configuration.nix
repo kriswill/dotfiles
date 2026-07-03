@@ -88,7 +88,7 @@
       programs.batsignal.enable = false;
       programs.gamescope.enableWsi = true;
 
-      programs.gnupg.agent.enable = true;
+      # gpg-agent comes from modules/nixos/gpg.nix (class-wide, mirrors darwin).
 
       systemd.packages = [ pkgs.hyprpolkitagent ];
       systemd.user.services.hyprpolkitagent.wantedBy = [ "graphical-session.target" ];
