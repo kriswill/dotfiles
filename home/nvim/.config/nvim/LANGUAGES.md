@@ -1,9 +1,9 @@
 # Language support matrix
 
 Snapshot of every filetype's LSP, linter, and formatter in this Neovim
-config. Source files referenced below are relative to `config/nvim/`.
-Binaries are provisioned by `modules/home-manager/neovim/default.nix`
-under `programs.neovim.extraPackages`.
+config. Source files referenced below are relative to
+`home/nvim/.config/nvim/`. Binaries are provisioned by
+`modules/darwin/neovim.nix` under `environment.systemPackages`.
 
 LSP registration uses Neovim 0.11+'s native `vim.lsp.config` /
 `vim.lsp.enable` — see `lua/config/lsp.lua`. Each server is configured
@@ -89,9 +89,8 @@ efm, so manual and automatic format paths agree.
 
 ## Linter / formatter binaries in Nix
 
-All binaries are installed via `programs.neovim.extraPackages` in
-`modules/home-manager/neovim/default.nix`. They land on nvim's PATH
-only — not the user's shell PATH — so `which shellcheck` from a normal
-terminal returns nothing. Use `:!which <bin>` inside nvim, or
-`vim.fn.exepath(<bin>)`, to confirm a binary is reachable by the
-server.
+All binaries are installed via `environment.systemPackages` in
+`modules/darwin/neovim.nix` (nix-darwin has no `programs.neovim`, so
+there is no wrapper). They land on the global PATH, so `which
+shellcheck` works from any shell; inside nvim,
+`vim.fn.exepath(<bin>)` confirms what the server will resolve.
