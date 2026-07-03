@@ -73,60 +73,122 @@ const nixFiles = (dir: string) =>
     .filter((f) => !f.startsWith("_") && !f.startsWith("."))
     .sort();
 
-// --- Darwin feature modules -> knowledge/modules/<name>.md ------------------
-const moduleNames = new Set<string>();
-console.log("darwin feature modules:");
-for (const entry of nixFiles("modules/darwin")) {
-  let name: string, srcRel: string;
-  if (entry.endsWith(".nix")) {
-    name = entry.replace(/\.nix$/, "");
-    srcRel = `modules/darwin/${entry}`;
-  } else if (existsSync(join(repo, "modules/darwin", entry, "default.nix"))) {
-    name = entry;
-    srcRel = `modules/darwin/${entry}/default.nix`;
-  } else continue;
-  moduleNames.add(name);
+// --- Feature modules (darwin + nixos classes) -> knowledge/modules/<name>.md
+// A feature present in both class dirs is a cross-OS twin (AGENTS.md): one doc
+// covers both implementations.
+const CLASSES = ["darwin", "nixos"] as const;
+type ClassName = (typeof CLASSES)[number];
+const CLASS_LABEL: Record<ClassName, string> = { darwin: "darwin", nixos: "NixOS" };
+const docType = (cls: ClassName) => (cls === "darwin" ? "Darwin Module" : "NixOS Module");
+const classTag = (cls: ClassName) => `${cls}-module`;
+const featureSrcs = new Map<string, Partial<Record<ClassName, string>>>();
+for (const cls of CLASSES) {
+  for (const entry of nixFiles(`modules/${cls}`)) {
+    let name: string, srcRel: string;
+    if (entry.endsWith(".nix")) {
+      name = entry.replace(/\.nix$/, "");
+      srcRel = `modules/${cls}/${entry}`;
+    } else if (existsSync(join(repo, `modules/${cls}`, entry, "default.nix"))) {
+      name = entry;
+      srcRel = `modules/${cls}/${entry}/default.nix`;
+    } else continue;
+    featureSrcs.set(name, { ...featureSrcs.get(name), [cls]: srcRel });
+  }
+}
+// Feature names, for the host enable-flag filter and host-file slug collision
+// check below (plumbing modules add theirs as they're scanned).
+const moduleNames = new Set(featureSrcs.keys());
 
-  const src = read(srcRel);
+// Per-class gating info — computed per source and NEVER flattened across
+// classes: a twin may be gated on darwin while its nixos twin is universal
+// (the nixos class is all-universal today). Gating detection: an enable
+// option declared in the file itself, or — for sub-flake re-exports whose
+// options live in the re-exported module — a backticked `<ns>.enable = true;`
+// hint anywhere in the file's comments.
+const optionOf = (src: string) =>
+  firstMatch(src, /options\.([A-Za-z0-9_.-]+?)\.enable\s*=/) ??
+  firstMatch(src, /options\.([A-Za-z0-9_.-]+?)\s*=\s*\{\s*\n\s*enable\s*=/) ??
+  firstMatch(src, /`([A-Za-z0-9_.-]+)\.enable = true;?`/);
+const reExportOf = (src: string) => /inputs\.[A-Za-z0-9_-]+\.(darwin|nixos)Modules\./.test(src);
+/** How one class's implementation mounts, as a mid-sentence clause. */
+function mountClause(s: { cls: ClassName; option: string | null; reExport: boolean }): string {
+  if (s.option)
+    return `imported on every ${CLASS_LABEL[s.cls]} host but disabled by default — hosts opt in with \`${s.option}.enable = true;\``;
+  if (s.reExport)
+    return `re-exports a module whose options ship with the re-exported flake, so ${CLASS_LABEL[s.cls]} hosts opt in via its enable option`;
+  return `mounted ungated on every ${CLASS_LABEL[s.cls]} host`;
+}
+
+console.log("feature modules:");
+for (const [name, srcs] of [...featureSrcs].sort(([a], [b]) => a.localeCompare(b))) {
+  const classes = CLASSES.filter((c) => srcs[c]);
+  const twin = classes.length === 2;
+  const sources = classes.map((cls) => {
+    const src = read(srcs[cls]!);
+    return { cls, rel: srcs[cls]!, src, option: optionOf(src) ?? null, reExport: reExportOf(src) };
+  });
+  const primaryRel = sources[0].rel;
   // Leading comment first — `description = "..."` regexes match arbitrary
   // option descriptions (e.g. a settings option's), not the module's purpose.
   const desc =
-    leadingComment(src) ??
-    firstMatch(src, /mkEnableOption\s+"([^"]+)"/) ??
-    firstMatch(src, /description\s*=\s*"([^"]+)"/) ??
-    `Darwin feature module '${name}'`;
-  // Gating detection: an enable option declared in the file itself, or — for
-  // sub-flake re-exports whose options live in the re-exported module — a
-  // backticked `<ns>.enable = true;` hint anywhere in the file's comments.
-  const option =
-    firstMatch(src, /options\.([A-Za-z0-9_.-]+?)\.enable\s*=/) ??
-    firstMatch(src, /options\.([A-Za-z0-9_.-]+?)\s*=\s*\{\s*\n\s*enable\s*=/) ??
-    firstMatch(src, /`([A-Za-z0-9_.-]+)\.enable = true;?`/);
-  const reExport = /inputs\.[A-Za-z0-9_-]+\.darwinModules\./.test(src);
-  const readme = existsSync(join(repo, `modules/darwin/${name}/README.md`))
-    ? `modules/darwin/${name}/README.md`
-    : null;
+    sources.map(({ src }) => leadingComment(src)).find(Boolean) ??
+    sources.map(({ src }) => firstMatch(src, /mkEnableOption\s+"([^"]+)"/)).find(Boolean) ??
+    sources.map(({ src }) => firstMatch(src, /description\s*=\s*"([^"]+)"/)).find(Boolean) ??
+    `Feature module '${name}' (${classes.join(" + ")})`;
+  const readme =
+    classes.map((c) => `modules/${c}/${name}/README.md`).find((r) => existsSync(join(repo, r))) ??
+    null;
   const stow = existsSync(join(repo, "home", name)) ? `home/${name}/` : null;
 
-  const mountLines = option
-    ? [
-        `Imported on every darwin host but disabled by default — hosts opt in with`,
-        `\`${option}.enable = true;\` (see the`,
-        "[host-mounted modules pattern](../patterns/host-mounted-modules.md)); auto-discovered",
-        "via the [Dendritic module layout](../patterns/dendritic-modules.md).",
-      ]
-    : reExport
+  // Twins whose halves gate identically share one sentence; differing halves
+  // are described per class, so a gated darwin module never claims its
+  // universal nixos twin is opt-in (or vice versa).
+  const sameShape =
+    !twin ||
+    (sources[0].option === sources[1].option && sources[0].reExport === sources[1].reExport);
+  const patternSuffix = [
+    "(see the [host-mounted modules pattern](../patterns/host-mounted-modules.md));",
+    "auto-discovered via the [Dendritic module layout](../patterns/dendritic-modules.md).",
+  ];
+  let mountLines: string[];
+  if (sameShape) {
+    const s0 = sources[0];
+    const hostsPhrase = twin ? "every host of both classes" : `every ${CLASS_LABEL[s0.cls]} host`;
+    mountLines = s0.option
       ? [
-          "Re-exports a module whose options ship with the re-exported flake —",
-          "disabled by default; hosts opt in via its enable option (see the",
-          "[host-mounted modules pattern](../patterns/host-mounted-modules.md)); auto-discovered",
-          "via the [Dendritic module layout](../patterns/dendritic-modules.md).",
+          `Imported on ${hostsPhrase} but disabled by default — hosts opt in with`,
+          `\`${s0.option}.enable = true;\``,
+          ...patternSuffix,
         ]
-      : [
-          "Mounted ungated on every darwin host (see the",
-          "[host-mounted modules pattern](../patterns/host-mounted-modules.md)), auto-discovered",
-          "via the [Dendritic module layout](../patterns/dendritic-modules.md).",
-        ];
+      : s0.reExport
+        ? [
+            "Re-exports a module whose options ship with the re-exported flake —",
+            "disabled by default; hosts opt in via its enable option",
+            ...patternSuffix,
+          ]
+        : [`Mounted ungated on ${hostsPhrase}`, ...patternSuffix];
+  } else {
+    const [a, b] = sources;
+    const first = mountClause(a);
+    mountLines = [
+      `${first.charAt(0).toUpperCase()}${first.slice(1)};`,
+      `${mountClause(b)}`,
+      ...patternSuffix,
+    ];
+  }
+  if (twin)
+    mountLines.push(
+      "A cross-OS twin — parallel implementations in each class dir (see the",
+      "[cross-OS module twins pattern](../patterns/cross-os-module-twins.md)).",
+    );
+  const optionLines =
+    twin && !sameShape
+      ? sources
+          .filter((s) => s.option)
+          .map((s) => `- Options under: \`${s.option}\` (${CLASS_LABEL[s.cls]})`)
+      : sources[0].option
+        ? [`- Options under: \`${sources[0].option}\``]
+        : [];
   const lines = [
     mdSafe(sentence(desc)),
     "",
@@ -134,19 +196,28 @@ for (const entry of nixFiles("modules/darwin")) {
     "",
     "## Source",
     "",
-    `- Module: [\`${srcRel}\`](../../${srcRel})`,
+    ...sources.map(
+      ({ cls, rel }) =>
+        `- ${twin ? `${CLASS_LABEL[cls]} module` : "Module"}: [\`${rel}\`](../../${rel})`,
+    ),
+    ...optionLines,
   ];
-  if (option) lines.push(`- Options under: \`${option}\``);
   if (stow) lines.push(`- Stow package: [\`${stow}\`](../../${stow}) — see the [stow tree pattern](../patterns/stow-tree.md)`);
   if (readme) lines.push(`- README: [\`${readme}\`](../../${readme})`);
 
   emit(`modules/${name}.md`, {
-    type: "Darwin Module",
+    type: twin ? "Dual Module" : docType(classes[0]),
     title: titleFromSlug(name),
     description: firstSentence(desc),
-    resource: srcRel,
-    tags: ["darwin-module"],
-    timestamp: gitISO(srcRel),
+    // Twins: resource points at the darwin implementation; the body's Source
+    // section lists both class files (see okf-profile.md).
+    resource: primaryRel,
+    tags: classes.map(classTag),
+    // Newest of the twins' last-commit dates, so a nixos-only change still
+    // moves the doc's freshness.
+    timestamp: sources
+      .map(({ rel }) => gitISO(rel))
+      .reduce((a, b) => (Date.parse(b) > Date.parse(a) ? b : a)),
   }, lines.join("\n"));
 }
 
@@ -187,20 +258,62 @@ for (const entry of nixFiles("modules/hosts")) {
   if (entry.endsWith(".nix")) {
     const name = entry.replace(/\.nix$/, "");
     hosts.push({ name, srcRel: `modules/hosts/${entry}`, src: read(`modules/hosts/${entry}`) });
-  } else if (statSync(join(repo, "modules/hosts", entry)).isDirectory()) {
-    for (const sub of nixFiles(`modules/hosts/${entry}`)) {
-      if (sub === "default.nix") {
-        const srcRel = `modules/hosts/${entry}/default.nix`;
-        hosts.push({ name: entry, srcRel, src: read(srcRel) });
-      } else if (sub.endsWith(".nix")) {
-        const srcRel = `modules/hosts/${entry}/${sub}`;
-        hostFiles.push({ name: sub.replace(/\.nix$/, ""), host: entry, srcRel, src: read(srcRel) });
-      } else if (existsSync(join(repo, "modules/hosts", entry, sub, "default.nix"))) {
-        const srcRel = `modules/hosts/${entry}/${sub}/default.nix`;
-        hostFiles.push({ name: sub, host: entry, srcRel, src: read(srcRel) });
+  } else if (statSync(join(repo, "modules/hosts", entry), { throwIfNoEntry: false })?.isDirectory()) {
+    // Recursive: import-tree discovers .nix files at any depth (e.g.
+    // nebula/users/k/helium.nix), so nested files are host files too, named
+    // by their path (users/k/helium.nix -> users-k-helium).
+    const walk = (relDir: string, prefix: string) => {
+      for (const sub of nixFiles(relDir)) {
+        // statSync follows symlinks — a dangling one must be skipped, not
+        // crash the scaffolder.
+        const st = statSync(join(repo, relDir, sub), { throwIfNoEntry: false });
+        if (!st) {
+          console.log(`  ! ${relDir}/${sub}: unstat-able (dangling symlink?) — skipped`);
+        } else if (st.isDirectory()) {
+          walk(`${relDir}/${sub}`, `${prefix}${sub}-`);
+        } else if (sub === "default.nix") {
+          const srcRel = `${relDir}/default.nix`;
+          if (prefix === "") hosts.push({ name: entry, srcRel, src: read(srcRel) });
+          else hostFiles.push({ name: prefix.slice(0, -1), host: entry, srcRel, src: read(srcRel) });
+        } else if (sub.endsWith(".nix")) {
+          const srcRel = `${relDir}/${sub}`;
+          hostFiles.push({ name: prefix + sub.replace(/\.nix$/, ""), host: entry, srcRel, src: read(srcRel) });
+        }
       }
-    }
+    };
+    walk(`modules/hosts/${entry}`, "");
   }
+}
+// A host's class decides the wording and typing of its docs and its
+// host-specific files' docs. Detected from the actual registration in
+// comment-stripped source — comments here routinely name the other class
+// (nebula.nix's own header mentions its registry), so a raw substring match
+// would misclassify.
+const stripNixComments = (src: string) =>
+  src.replace(/\/\*[\s\S]*?\*\//g, "").replace(/(^|\s)#.*$/gm, "$1");
+const hostClass = new Map<string, ClassName>();
+for (const h of hosts) {
+  const code = stripNixComments(h.src);
+  const cls: ClassName | null = /configurations\.nixos\./.test(code)
+    ? "nixos"
+    : /configurations\.darwin\./.test(code)
+      ? "darwin"
+      : null;
+  if (!cls)
+    console.log(`  ! ${h.srcRel}: no configurations.<class> registration found — assuming darwin`);
+  hostClass.set(h.name, cls ?? "darwin");
+}
+// Host-file docs inherit their directory's class; a dir without a same-named
+// registration is flagged loudly instead of silently defaulting to darwin.
+const dirClass = new Map<string, ClassName>();
+for (const hf of hostFiles) {
+  if (dirClass.has(hf.host)) continue;
+  const cls = hostClass.get(hf.host);
+  if (!cls)
+    console.log(
+      `  ! modules/hosts/${hf.host}: no same-named host registration — class unknown, assuming darwin`,
+    );
+  dirClass.set(hf.host, cls ?? "darwin");
 }
 
 console.log("host-specific files:");
@@ -220,13 +333,14 @@ const hostFileSlug = new Map<string, string>();
 }
 for (const { name, host, srcRel, src } of hostFiles) {
   const slug = hostFileSlug.get(srcRel)!;
+  const cls = dirClass.get(host)!;
   const desc = leadingComment(src) ?? `Host-specific config '${name}' for ${host}`;
   emit(`modules/${slug}.md`, {
-    type: "Darwin Module",
+    type: docType(cls),
     title: titleFromSlug(name),
     description: firstSentence(desc),
     resource: srcRel,
-    tags: ["darwin-module", "host-specific"],
+    tags: [classTag(cls), "host-specific"],
     timestamp: gitISO(srcRel),
   }, [
     mdSafe(sentence(desc)),
@@ -278,11 +392,24 @@ for (const { name, srcRel, src } of hosts) {
   }, [
     mdSafe(sentence(desc)),
     "",
-    "Imports every [darwin module](../modules/index.md); host-selective features",
-    "are opted into below per the",
-    "[host-mounted modules pattern](../patterns/host-mounted-modules.md).",
-    "",
-    "## Host-selective features",
+    // The nixos class is all-universal — its hosts have host-specific files,
+    // not opt-in feature flags, and the doc must not claim otherwise.
+    ...(hostClass.get(name) === "nixos"
+      ? [
+          "Imports every [NixOS module](../modules/index.md) — the nixos class is",
+          "all-universal (no enable gates); the entries below are host-specific",
+          "files merged straight into this host's configuration (see the",
+          "[host-mounted modules pattern](../patterns/host-mounted-modules.md)).",
+          "",
+          "## Host-specific files",
+        ]
+      : [
+          "Imports every [darwin module](../modules/index.md); host-selective features",
+          "are opted into below per the",
+          "[host-mounted modules pattern](../patterns/host-mounted-modules.md).",
+          "",
+          "## Host-selective features",
+        ]),
     "",
     ...(featureLines.length ? featureLines : ["- (universal modules only)"]),
     "",

@@ -2,6 +2,54 @@
 
 ## 2026-07-03
 
+- **Update** — applied all fifteen xhigh code-review findings on the
+  reorientation pass. `okf scaffold` hardened: per-class gating is no longer
+  flattened across a twin's two implementations (a gated darwin module with
+  an ungated nixos twin now gets per-class mount clauses), host class is
+  detected from the comment-stripped registration instead of a raw substring
+  (with loud warnings replacing the silent darwin fallback), twin timestamps
+  take the newer of the two files' commit dates (`resource:` stays on the
+  darwin file — convention recorded in the [profile](okf-profile.md)),
+  dangling symlinks in host dirs are skipped instead of crashing the walk,
+  and NixOS host docs now say "host-specific files" rather than claiming
+  opt-in features. Content fixes: node-runtime's false "no module provides
+  bun on macOS" claim corrected (user-packages carries bun + nodejs_24),
+  cbissue's nonexistent "my-packages overlay" replaced with the real
+  per-package overlays (source comment fixed in place too), the stale
+  home-manager header comment in the nixos tmux twin fixed at source, the
+  mkOrder-1600/tmpfiles link mechanics deduped to the authoritative
+  [store-path configs pattern](patterns/store-path-configs.md), the
+  users-k-helium/noctalia docs now link
+  [snapshot-synced configs](patterns/snapshot-synced-configs.md) instead of
+  restating it, and helium's capture list was corrected everywhere to include
+  Cookies/Login Data — age-encrypted credentials in the repo, not
+  "secrets never enter the repo". Version pins were dropped from
+  [manuals.md](manuals.md) (versions live in the manuals, which lead with
+  verified state).
+
+- **Update** — bundle-wide dual-OS reorientation pass (the merge's knowledge
+  debt): `okf scaffold` now scans `modules/nixos/` alongside `modules/darwin/`
+  (types `NixOS Module` / `Dual Module` added to the
+  [profile registry](okf-profile.md)), detects each host's class instead of
+  assuming darwin, and recurses into nested host files
+  (`nebula/users/k/*.nix`). That surfaced nine uncatalogued components; all
+  were scaffolded and enriched. The 11 cross-OS twins (git, tmux, zsh, nh, …)
+  were retyped `Dual Module` with both sources and their per-OS differences
+  documented; nebula's 12 host-file docs were retyped from the erroneous
+  `Darwin Module` and enriched from source; hosts/nebula.md lost its "imports
+  every darwin module" claim. Three new patterns:
+  [cross-OS module twins](patterns/cross-os-module-twins.md),
+  [snapshot-synced configs](patterns/snapshot-synced-configs.md), and
+  [host registry & realisers](patterns/host-registry-realisers.md); the four
+  existing patterns now speak for both classes. Playbooks gained nixos
+  variants (rebuild/rollback, add-module, add-package, adopt-dotfile); five
+  pre-merge decisions got dated amendments. New
+  [manuals reference](manuals.md) makes the `docs/` layer reachable from the
+  knowledge graph, and module docs now link their manuals. Everything
+  adversarially verified against source (three factual defects found and
+  fixed, incl. AGENTS.md's stale claim that `home/diffnav` deploys
+  everywhere — it is skip-listed on darwin).
+
 - **Creation** — recorded the
   [vesktop pnpm whitelist decision](decisions/vesktop-pnpm-whitelist.md):
   nixpkgs' vesktop deliberately pins the CVE-flagged pnpm-10.29.2 (newer pnpm

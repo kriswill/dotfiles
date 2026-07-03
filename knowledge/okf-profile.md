@@ -24,6 +24,9 @@ tooling disagree, we pick one and record it here.
 - **`resource:`** is a repo-root-relative path to the concept's primary source
   file or directory (e.g. `modules/darwin/nh.nix`) — not a URL, so it survives
   remote renames. Abstract concepts (decisions, playbooks) may omit it.
+  `Dual Module` docs (cross-OS twins) point `resource:` at the darwin
+  implementation; the body's Source section lists both class files, and the
+  scaffolded `timestamp` is the newer of the two twins' last-commit dates.
 - **`timestamp`** is ISO-8601, "last meaningful change" — scaffolded docs use
   the source file's last commit date.
 - **Body section headings are H2** (`## Schema`, `## Examples`,
@@ -42,9 +45,10 @@ tooling disagree, we pick one and record it here.
 ## Type registry
 
 Free-form per the spec; this bundle currently uses: `Pattern`, `Decision`,
-`Playbook`, `Darwin Module`, `Flake-parts Module`, `Host`, `Nix Package`,
-`Overlay`, `Sub-flake`, `Neovim Plugin`, `Neovim Config`, `Reference`. Add
-new types sparingly and list them here.
+`Playbook`, `Darwin Module`, `NixOS Module`, `Dual Module` (a cross-OS twin —
+one doc covering the parallel darwin + nixos implementations), `Flake-parts
+Module`, `Host`, `Nix Package`, `Overlay`, `Sub-flake`, `Neovim Plugin`,
+`Neovim Config`, `Reference`. Add new types sparingly and list them here.
 
 ## Tooling
 

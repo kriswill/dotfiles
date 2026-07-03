@@ -3,7 +3,7 @@ type: Decision
 title: Home-manager Retirement
 description: home-manager was removed entirely — every config is now a darwin module plus the stow tree, one evaluation model instead of two.
 tags: [home-manager, architecture]
-timestamp: '2026-07-02T00:00:00-07:00'
+timestamp: '2026-07-03T12:00:00-07:00'
 ---
 
 **Status:** done (2026). **Where:** repo-wide.
@@ -36,6 +36,12 @@ became nix-darwin `launchd.user.agents`.
 - Plain configs are editable in-place via the stow tree without a rebuild.
 - HM-generator-dependent modules (browser policies, vscode) are gone —
   recoverable from git history if ever wanted.
+
+**Amended 2026-07-03:** since the
+[dual-OS unification](nixos-darwin-unification.md), configs are per-class
+system modules (darwin + nixos twins) plus the shared stow tree; the apply
+step is `darwin-rebuild switch` on Macs and `nixos-rebuild switch` on nebula —
+still exactly one module system per host, still no home-manager.
 
 ## Citations
 

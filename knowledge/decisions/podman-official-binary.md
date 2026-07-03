@@ -4,7 +4,7 @@ title: Podman From the Official Binary, Self-contained
 description: podman is packaged as a fixed-output derivation of the official darwin_arm64 release (nixpkgs' derivation is linux-only) with vfkit + gvproxy bundled into its own libexec.
 resource: pkgs/podman.nix
 tags: [podman, containers, packaging]
-timestamp: '2026-07-02T00:00:00-07:00'
+timestamp: '2026-07-03T12:00:00-07:00'
 ---
 
 **Status:** active. **Where:** [podman](../packages/podman.md),
@@ -34,6 +34,11 @@ doesn't support on darwin.
   `podman-desktop.enable`) because `os.Executable` is not symlink-resolved on
   darwin — invoked via the profile symlink, `$BINDIR` is the profile `bin`,
   so the profile must expose `libexec/podman` too.
+
+**Amended 2026-07-03:** the overlay is now internally platform-guarded
+([`overlays/podman.nix`](../../overlays/podman.nix):
+`if prev.stdenv.isDarwin then … else prev.podman`) because every host on both
+OSes applies the whole overlay set — Linux keeps nixpkgs' podman.
 
 ## Consequences
 

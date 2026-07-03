@@ -4,8 +4,8 @@
     #   cbissue  kriswill/foo "title" "body" -l bug -l "help wanted"   # open an issue
     #   cbissues kriswill/foo [--state open|closed|all] [--plain]      # browse/filter issues
     #
-    # The derivations live in pkgs/cbissue.nix and pkgs/cbissues.nix
-    # (exposed as pkgs.cbissue / pkgs.cbissues via the my-packages overlay). They
+    # The derivations live in pkgs/cbissue.nix and pkgs/cbissues.nix (exposed
+    # as pkgs.cbissue / pkgs.cbissues via the cbissue and cbissues overlays). They
     # install only the commands; the Codeberg API token is fetched at call time
     # from 1Password (`op read`), so nothing secret is stored in the store or this
     # config. The 1Password CLI must be on PATH and unlocked — the same agent that

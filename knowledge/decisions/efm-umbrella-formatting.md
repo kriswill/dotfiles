@@ -3,7 +3,7 @@ type: Decision
 title: Route All Linting and Formatting Through efm-langserver
 description: One umbrella LSP (efm) runs every CLI linter and formatter; format-on-save filters to efm only, so no two tools ever compete over a buffer.
 tags: [nvim, lsp, formatting]
-timestamp: '2026-07-02T00:00:00-07:00'
+timestamp: '2026-07-03T12:00:00-07:00'
 ---
 
 **Status:** active. **Where:** [LSP & Formatting](../nvim/lsp.md).
@@ -44,6 +44,9 @@ efm-langserver became the single authority (PR #5, then conform removal):
   auto-format at all — deliberate, but easy to misread as breakage.
 - efm diagnostics arrive under the `efm/` source prefix; the per-language
   matrix is documented in the config's `LANGUAGES.md`.
+
+**Amended 2026-07-03:** the binary now goes in both neovim twins
+(`modules/{darwin,nixos}/neovim.nix`) — keep the tool lists in sync.
 
 ## Citations
 
