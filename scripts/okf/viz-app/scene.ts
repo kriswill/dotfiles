@@ -122,10 +122,10 @@ export class GraphScene {
     this.lineMat = new LineMaterial({
       vertexColors: true,
       transparent: true,
-      opacity: 0.55,
+      opacity: 0.7,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
-      linewidth: 1.15, // px
+      linewidth: 1.6, // px
     });
     this.lineMat.toneMapped = false;
     this.lines = new LineSegments2(lineGeo, this.lineMat);
@@ -229,7 +229,7 @@ export class GraphScene {
       const active =
         this.selected !== null ? (a === this.selected || b === this.selected) : true;
       const dim = this.dimmed(a) || this.dimmed(b) || !active;
-      const k = dim ? (this.selected !== null && !active ? 0.04 : 0.08) : this.selected !== null ? 0.65 : 0.4;
+      const k = dim ? (this.selected !== null && !active ? 0.04 : 0.08) : this.selected !== null ? 0.75 : 0.5;
       ca.set(this.nodes[a].color).multiplyScalar(k);
       cbCol.set(this.nodes[b].color).multiplyScalar(k);
       edgeColors.set([ca.r, ca.g, ca.b, cbCol.r, cbCol.g, cbCol.b], i * 6);
