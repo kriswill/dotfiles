@@ -1,7 +1,7 @@
 // Three.js scene in the codebase-memory-mcp graph-ui style: one InstancedMesh
 // of spheres whose per-instance colors are boosted past 1.0 so the bloom pass
 // renders the excess as a glow corona; additive edge lines; canvas-texture
-// sprite labels; OrbitControls with eased fly-to and idle auto-rotation.
+// sprite labels; OrbitControls with eased fly-to.
 // Layout is precomputed at generation time — nothing simulates at runtime.
 
 import * as THREE from "three";
@@ -29,7 +29,6 @@ export interface Callbacks {
   onSelect(index: number | null): void;
 }
 
-const IDLE_MS = 45_000;
 const MAX_LABELS = 28;
 
 export class GraphScene {
@@ -47,8 +46,10 @@ export class GraphScene {
   private dimmed: (i: number) => boolean = () => false;
   private selected: number | null = null;
   private theme: Theme;
-  private lastInteraction = Date.now();
-  private anim: { toPos: THREE.Vector3; toTarget: THREE.Vector3; t: number } | null = null;
+  private anim: {
+    fromPos: THREE.Vector3; fromTarget: THREE.Vector3;
+    toPos: THREE.Vector3; toTarget: THREE.Vector3; t: number;
+  } | null = null;
   private labelRank: number[];
   private viewShift = 0;
   private adj: Set<number>[] = [];
@@ -96,7 +97,6 @@ export class GraphScene {
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
     this.controls.enableDamping = true;
     this.controls.dampingFactor = 0.08;
-    this.controls.autoRotateSpeed = 0.35;
 
     // Node spheres
     const geo = new THREE.SphereGeometry(1, 20, 20);
@@ -157,7 +157,6 @@ export class GraphScene {
       return hit && hit.instanceId !== undefined && !this.dimmed(hit.instanceId) ? hit.instanceId : null;
     };
     el.addEventListener("pointermove", (e) => {
-      this.poke();
       if (e.buttons) return;
       const i = pick(e);
       if (i !== hovered) {
@@ -167,14 +166,14 @@ export class GraphScene {
       }
       this.cb.onHover(i, e.clientX, e.clientY);
     });
-    el.addEventListener("pointerdown", (e) => { this.poke(); isDown = true; downX = e.clientX; downY = e.clientY; });
+    // Grabbing the view cancels an in-flight fly-to instead of fighting it.
+    el.addEventListener("pointerdown", (e) => { this.anim = null; isDown = true; downX = e.clientX; downY = e.clientY; });
     el.addEventListener("pointerup", (e) => {
       if (!isDown) return; // ignore synthetic pointerup with no matching down
       isDown = false;
       if (Math.hypot(e.clientX - downX, e.clientY - downY) > 4) return;
       this.cb.onSelect(pick(e));
     });
-    el.addEventListener("wheel", () => this.poke(), { passive: true });
 
     new ResizeObserver(() => this.resize()).observe(container);
     this.resize();
@@ -182,14 +181,11 @@ export class GraphScene {
     const loop = () => {
       requestAnimationFrame(loop);
       this.stepFly();
-      this.controls.autoRotate = Date.now() - this.lastInteraction > IDLE_MS;
       this.controls.update();
       this.composer.render();
     };
     requestAnimationFrame(loop);
   }
-
-  private poke() { this.lastInteraction = Date.now(); }
 
   private hoverLabel: number | null = null;
   private setHoverLabel(i: number | null) {
@@ -319,18 +315,38 @@ export class GraphScene {
     if (i !== null && fly) {
       const n = this.nodes[i];
       const target = new THREE.Vector3(n.x, n.y, n.z);
-      const dir = this.camera.position.clone().sub(this.controls.target).normalize();
-      const toPos = target.clone().add(dir.multiplyScalar(n.r * 12 + 340));
-      this.anim = { toPos, toTarget: target, t: 0 };
+      // Approach from the side opposite the neighbor centroid so the node's
+      // links fan out in view beyond it; fall back to the current view
+      // direction for loners. The slight upward bias keeps the label (below
+      // the node) clear of it.
+      const dir = new THREE.Vector3();
+      const nb = [...this.adj[i]];
+      if (nb.length) {
+        const centroid = new THREE.Vector3();
+        for (const j of nb) centroid.add(new THREE.Vector3(this.nodes[j].x, this.nodes[j].y, this.nodes[j].z));
+        dir.copy(target).sub(centroid.multiplyScalar(1 / nb.length));
+      }
+      if (dir.lengthSq() < 1) dir.copy(this.camera.position).sub(this.controls.target);
+      if (dir.lengthSq() < 1) dir.set(0, 0.2, 1);
+      dir.normalize().setY(dir.y + 0.25).normalize();
+      this.anim = {
+        fromPos: this.camera.position.clone(),
+        fromTarget: this.controls.target.clone(),
+        toPos: target.clone().add(dir.multiplyScalar(n.r * 12 + 340)),
+        toTarget: target,
+        t: 0,
+      };
     }
   }
 
   private stepFly() {
     if (!this.anim) return;
-    this.anim.t = Math.min(1, this.anim.t + 0.025);
+    this.anim.t = Math.min(1, this.anim.t + 0.02);
     const e = 1 - Math.pow(1 - this.anim.t, 3);
-    this.camera.position.lerp(this.anim.toPos, e * 0.12);
-    this.controls.target.lerp(this.anim.toTarget, e * 0.12);
+    // Absolute interpolation lands exactly on the node, so any manual pan
+    // offset is flown out rather than carried over (which clipped labels).
+    this.camera.position.lerpVectors(this.anim.fromPos, this.anim.toPos, e);
+    this.controls.target.lerpVectors(this.anim.fromTarget, this.anim.toTarget, e);
     if (this.anim.t >= 1) this.anim = null;
   }
 

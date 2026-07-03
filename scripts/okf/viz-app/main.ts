@@ -268,4 +268,4 @@ addEventListener("popstate", applyHash);
 applyHash();
 
 // Debug/scripting hook (also used by automated visual checks).
-(window as any).__okf = { select: (id: string, fly = true) => select(byId[id] ?? null, fly), selectFile };
+(window as any).__okf = { select: (id: string, fly = true) => select(byId[id] ?? null, fly), selectFile, scene, nodes };
