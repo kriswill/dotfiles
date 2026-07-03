@@ -7,6 +7,11 @@
   inputs,
   ...
 }:
+let
+  # nixpkgs lib extended with the repo's pure helpers (lib/default.nix:
+  # the kanagawa palette); injected as the darwin evaluation's `lib` below.
+  extendedLib = inputs.nixpkgs.lib.extend (_final: _prev: import ../lib);
+in
 {
   options.configurations.darwin = lib.mkOption {
     type = lib.types.lazyAttrsOf (
@@ -28,9 +33,7 @@
         inherit inputs;
         self = inputs.self;
         outputs = inputs.self;
-        # The repo's extended lib (adds mkProgramOption, kanagawa), matching the
-        # `lib` that the old `mkDarwin` injected.
-        lib = config.kriswill.lib;
+        lib = extendedLib;
       };
       modules = [ module ];
     }

@@ -91,7 +91,6 @@
         programs = {
           fish.enable = true;
           zsh.enable = true;
-          nh.enable = true;
         };
 
         users.users.k.openssh.authorizedKeys.keys = [

@@ -1,24 +1,9 @@
-# This option is missing from nix-darwin config
+# nh (Nix Helper) — nix-darwin has no programs.nh module; just install it.
+# The nrs/nrt rebuild aliases in core.nix invoke it via lib.getExe.
 {
   flake.modules.darwin.nh =
+    { pkgs, ... }:
     {
-      lib,
-      pkgs,
-      config,
-      ...
-    }:
-    let
-      inherit (lib) mkIf mkProgramOption;
-      cfg = config.programs.nh;
-    in
-    {
-      options.programs.nh = mkProgramOption {
-        programName = "nh";
-        description = "Nix Helper";
-        inherit pkgs;
-      };
-      config = mkIf cfg.enable {
-        environment.systemPackages = [ cfg.package ];
-      };
+      environment.systemPackages = [ pkgs.nh ];
     };
 }
