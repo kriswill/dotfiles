@@ -6,9 +6,9 @@
 # are nix's business.
 {
   flake.modules.darwin.oksh =
-    { pkgs, ... }:
+    { lib, pkgs, ... }:
     {
       environment.systemPackages = [ pkgs.oksh ];
-      environment.variables.ENV = "$HOME/.kshrc";
+      environment.variables.ENV = lib.mkDefault "$HOME/.kshrc";
     };
 }

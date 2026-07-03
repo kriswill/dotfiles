@@ -19,16 +19,16 @@
 
         # Larger in-memory history; the on-disk file goes under XDG state so it
         # doesn't litter $HOME. (SAVEHIST is raised further in the user .zshrc.)
-        histSize = 100000;
-        histFile = "$HOME/.local/state/zsh/history";
+        histSize = lib.mkDefault 100000;
+        histFile = lib.mkDefault "$HOME/.local/state/zsh/history";
 
         # Drop the default `prompt suse`; starship is set in ~/.config/zsh/.zshrc.
         promptInit = lib.mkForce "";
 
         # Previously provided by home-manager's programs.zsh; nix-darwin sources
         # both from /etc/zshrc.
-        enableAutosuggestions = true;
-        enableSyntaxHighlighting = true;
+        enableAutosuggestions = lib.mkDefault true;
+        enableSyntaxHighlighting = lib.mkDefault true;
       };
 
       # Tools the user's .zshrc invokes by bare name.
@@ -43,7 +43,7 @@
       };
 
       # Keep `less` history (used by bat / man pagers) out of $HOME as well.
-      environment.variables.LESSHISTFILE = "/Users/k/.local/state/less/history";
+      environment.variables.LESSHISTFILE = lib.mkDefault "/Users/k/.local/state/less/history";
 
       # zsh / less won't create these parent dirs themselves. Order 1600:
       # after dotfiles-stow (1500); run as the user so they aren't root-owned.

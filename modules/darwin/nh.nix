@@ -19,12 +19,11 @@
     let
       nh = lib.getExe pkgs.nh;
       flakeDir = "$HOME/src/dotfiles";
-      nrs = pkgs.writeShellScriptBin "nrs" ''
-        exec env NH_NO_CHECKS=1 ${nh} darwin switch "${flakeDir}" "$@"
-      '';
-      nrb = pkgs.writeShellScriptBin "nrb" ''
-        exec env NH_NO_CHECKS=1 ${nh} darwin build "${flakeDir}" "$@"
-      '';
+      mkNhHelper =
+        name: subcommand:
+        pkgs.writeShellScriptBin name ''
+          exec env NH_NO_CHECKS=1 ${nh} darwin ${subcommand} "${flakeDir}" "$@"
+        '';
       nrt = pkgs.writeShellScriptBin "nrt" ''
         exec darwin-rebuild check --flake "${flakeDir}" "$@"
       '';
@@ -32,8 +31,8 @@
     {
       environment.systemPackages = [
         pkgs.nh
-        nrs
-        nrb
+        (mkNhHelper "nrs" "switch")
+        (mkNhHelper "nrb" "build")
         nrt
       ];
     };

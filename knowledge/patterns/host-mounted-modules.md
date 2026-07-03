@@ -18,9 +18,11 @@ with `builtins.attrValues config.flake.modules.darwin`. Hosts are folders —
 
 Three tiers:
 
-- **Universal** (every darwin host): a plain deferred module, no options, no
-  `lib.mkIf` — the blanket import turns it on everywhere.
-  [tmux](../modules/tmux.md) is the reference shape.
+- **Universal** (every darwin host): a plain deferred module, no enable
+  option, no `lib.mkIf` gate — the blanket import turns it on everywhere.
+  [tmux](../modules/tmux.md) is the reference shape. A behavior *setting* is
+  fine ([direnv-nom](../modules/direnv-nom.md)'s `programs.direnv-nom.diff`);
+  only gating is out.
 
 ```nix
 {
@@ -61,6 +63,13 @@ Three tiers:
 
 Conventions:
 
+- **Overriding a universal module from a host:** override-prone scalars
+  (dnsmasq's enable/bind/addresses, homebrew's enable/onActivation,
+  macos-defaults, neovim's EDITOR/VISUAL/MANPAGER, oksh's ENV, zsh's history
+  settings) carry `lib.mkDefault`, so a host `default.nix` can override them
+  with a plain assignment. Anything else is set at normal module priority —
+  overriding it needs `lib.mkForce` (a bare conflicting value is a hard eval
+  error).
 - Package lists use `builtins.attrValues { inherit (pkgs) ...; }`.
 - One bare `<name>.nix` per feature; a directory only when the module bundles
   adjacent files ([claude-account-selector](../modules/claude-account-selector.md),

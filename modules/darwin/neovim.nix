@@ -7,12 +7,15 @@
 # symlinked into ~ by dotfiles-stow.nix.
 {
   flake.modules.darwin.neovim =
-    { pkgs, ... }:
+    { lib, pkgs, ... }:
     {
       environment.variables = {
-        EDITOR = "nvim";
-        VISUAL = "nvim";
-        MANPAGER = "nvim +Man!";
+        # 900: above mkDefault (1000) — nix-darwin itself sets
+        # `EDITOR = mkDefault "nano"`, and two mkDefaults tie into a hard
+        # conflict — but below a host's plain assignment (100).
+        EDITOR = lib.mkOverride 900 "nvim";
+        VISUAL = lib.mkDefault "nvim";
+        MANPAGER = lib.mkDefault "nvim +Man!";
       };
 
       environment.systemPackages =

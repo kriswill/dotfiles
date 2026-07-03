@@ -70,6 +70,13 @@ merge drops the trees side by side with zero path collisions.
   pre→post was empty for all three hosts; the only launchd delta was the
   intentional `services.apple-container` rename inside an error string. The
   gated-options revision re-verified against the same baseline.
+- Overriding a universal module's setting from a host: override-prone scalars
+  (dnsmasq, homebrew, macos-defaults, neovim env vars, oksh, zsh history)
+  kept `lib.mkDefault`, so a plain host assignment wins; everything else sits
+  at normal module priority and needs `lib.mkForce` from the host.
+- direnv-nom's `diff` enum (nvd/native/none) survived the namespace move as
+  `programs.direnv-nom.diff` — a behavior setting on a universal module, not
+  a gate (an xhigh review caught its accidental removal).
 - Watch out: a new module file must be `git add`ed before `nix build`
   (untracked files are invisible to import-tree, so a feature silently
   vanishes); `okf scaffold` understands the host-folder layout (flat

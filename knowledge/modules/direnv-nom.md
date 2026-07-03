@@ -8,10 +8,12 @@ timestamp: '2026-06-28T18:27:01-07:00'
 ---
 
 Wraps nix-direnv's internal `_nix()` function to pipe build logs through
-nix-output-monitor (nom) during `use flake` in `.envrc`, and shows an nvd
-closure diff after a successful build. The generated `zz-nom-wrapper.sh`
-loads after [direnv](direnv.md)'s `nix-direnv.sh` (alphabetical order) so it
-can redefine `_nix()`.
+nix-output-monitor (nom) during `use flake` in `.envrc`, and shows a closure
+diff after a successful build — selectable via `programs.direnv-nom.diff`
+(`nvd` default, `native` for `nix store diff-closures`, `none` to disable; a
+behavior setting on a universal module, not a gate). The generated
+`zz-nom-wrapper.sh` loads after [direnv](direnv.md)'s `nix-direnv.sh`
+(alphabetical order) so it can redefine `_nix()`.
 
 Mounted ungated on every darwin host (see the [host-mounted modules pattern](../patterns/host-mounted-modules.md)), auto-discovered
 via the [Dendritic module layout](../patterns/dendritic-modules.md).

@@ -2,6 +2,19 @@
 
 ## 2026-07-03
 
+- **Update** — xhigh code-review pass over the de-gating branch fixed seven
+  findings: direnv-nom's diff enum was accidentally removed (restored as
+  `programs.direnv-nom.diff` — a behavior setting on a universal module);
+  override-prone scalars in dnsmasq/homebrew/macos-defaults/neovim/oksh/zsh
+  regained `lib.mkDefault` (with the `lib.mkForce` escape hatch documented in
+  the [pattern](patterns/host-mounted-modules.md)); nrs/nrb share an `mkNhHelper`;
+  and three `okf scaffold` gaps closed — sub-flake re-exports are no longer
+  stamped "mounted ungated" (options detected via the backticked comment
+  hint, with a generic gated fallback for re-exports), attrset-form
+  `programs.<name> = { enable = true; … }` host enables are now detected, and
+  same-basename host-specific files get host-qualified doc names instead of
+  silently colliding.
+
 - **Update** — nrs/nrt became real executables and gained a sibling: the
   [nh](modules/nh.md) module now ships `writeShellScriptBin` helpers `nrs`
   (nh darwin switch), `nrb` (nh darwin build — no root, safe for agent
