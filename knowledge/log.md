@@ -2,6 +2,12 @@
 
 ## 2026-07-02
 
+- **Creation** — viz published as public documentation via GitHub Pages
+  (`.github/workflows/pages.yml`): every push rebuilds `viz.html` from the
+  bundle with `okf viz` and deploys it as the site's `index.html` at
+  <https://kris.net/dotfiles/> — the artifact itself stays gitignored, so
+  the page can never go stale relative to the committed knowledge.
+
 - **Update** — viz palette: all 12 concept types now get distinct colors.
   `TYPE_ORDER` grew 8 → 12 curated slots (`--s1..--s12`, append-only so
   existing types keep their hue families); per-theme palettes were

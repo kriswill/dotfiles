@@ -68,7 +68,9 @@ bun scripts/okf/okf.ts <cmd>   # equivalent, no dev shell needed
 `viz.html` is generated output and gitignored — regenerate at will. Every
 `okf viz` run prints build-phase timings; the page records startup marks on
 `window.__okf.perf`. The viewer app (`scripts/okf/viz-app/`) has bun tests
-(`cd scripts/okf && bun test`).
+(`cd scripts/okf && bun test`). The graph is published as public
+documentation at <https://kris.net/dotfiles/> — rebuilt and deployed by
+GitHub Pages CI (`.github/workflows/pages.yml`) on every push.
 
 ## Citations
 
