@@ -23,30 +23,6 @@
       )
     ];
 
-    services.apple-container.enable = true;
-
-    kriswill = {
-      podman-desktop.enable = true;
-
-      claude-account-selector = {
-        enable = true;
-        defaultProfile = "me";
-        profiles = [
-          "me"
-          "work"
-        ];
-        rules = {
-          "/Users/k/src/perforce" = "work";
-        };
-        # Pin the GUI Claude desktop app to ~/.claude-me (GUI apps can't do the
-        # per-$PWD switching the shell wrapper does). See the module README.
-        desktopProfile = "me";
-      };
-    };
-
-    # codebase-memory-mcp launchd daemon (module: modules/darwin/codebase-memory-mcp.nix).
-    services.codebase-memory-mcp.enable = true;
-
     nixpkgs.hostPlatform = "aarch64-darwin";
     nixpkgs.overlays = builtins.attrValues config.flake.overlays;
   };

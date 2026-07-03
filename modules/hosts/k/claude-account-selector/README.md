@@ -81,12 +81,10 @@ Set `desktopProfile` to pin it. The module then installs a per-user **LaunchAgen
 the desktop app inherits:
 
 ```nix
-kriswill.claude-account-selector = {
-  enable = true;
-  defaultProfile = "me";
-  profiles = [ "me" "work" ];
-  desktopProfile = "me";   # GUI desktop app → ~/.claude-me
-};
+# settings in the let block of ./default.nix
+defaultProfile = "me";
+profiles = [ "me" "work" ];
+desktopProfile = "me";   # GUI desktop app → ~/.claude-me
 ```
 
 ### The terminal-leak scrub
@@ -158,8 +156,8 @@ Resolution order:
 
 The rule table is the union of:
 
-- **Module rules:** the `rules` nix option (default: `~/src/work → work`) — declarative
-  and version-controlled. See [Configuration](#configuration-nix-options).
+- **Module rules:** the `rules` setting in `./default.nix` — declarative
+  and version-controlled. See [Configuration](#configuration).
 - **Your pins:** `$XDG_STATE_HOME/claude/profile-map.tsv` (defaults to
   `~/.local/state/claude/profile-map.tsv`).
 
@@ -173,32 +171,29 @@ The TSV is plain `path<TAB>profile`, one rule per line; edit it by hand or via
 /Users/k/src/work/oss    me
 ```
 
-## Configuration (nix options)
+## Configuration
 
-All inputs are nix options under `kriswill.claude-account-selector`. The module passes them
-to the wrapper as shell variable assignments prepended to it — `wrapper.zsh` stays a plain
-zsh file with built-in fallbacks, so it also runs standalone (e.g. under test).
+All inputs are plain `let`-bindings at the top of `./default.nix` (they were
+`kriswill.claude-account-selector.*` nix options until the module became host-k-only and was
+mounted directly into `configurations.darwin.k.module`). The module passes them to the wrapper
+as shell variable assignments prepended to it — `wrapper.zsh` stays a plain zsh file with
+built-in fallbacks, so it also runs standalone (e.g. under test).
 
-| Option | Type | Default | Purpose |
-|---|---|---|---|
-| `enable` | bool | `false` | Install the `claude` wrapper (see [Enable / disable](#enable--disable)). |
-| `defaultProfile` | str | `"me"` | Profile used when no rule matches. |
-| `profiles` | list of str | `[ "me" "work" ]` | Accepted profile names → `~/.claude-<name>` and keychain `claude-token-<name>`. |
-| `rules` | attrs (path → profile) | `{ "<home>/src/work" = "work"; }` | Built-in path-prefix rules; longest match wins. `{ }` for none. |
-| `desktopProfile` | str or null | `null` | Pin the GUI Claude **desktop app** to `~/.claude-<name>` via a login LaunchAgent. See [Desktop app (GUI)](#desktop-app-gui). |
+| Setting | Type | Purpose |
+|---|---|---|
+| `defaultProfile` | str | Profile used when no rule matches. |
+| `profiles` | list of str | Accepted profile names → `~/.claude-<name>` and keychain `claude-token-<name>`. |
+| `rules` | attrs (path → profile) | Built-in path-prefix rules; longest match wins. `{ }` for none. |
+| `desktopProfile` | str | Pin the GUI Claude **desktop app** to `~/.claude-<name>` via a login LaunchAgent. See [Desktop app (GUI)](#desktop-app-gui). |
 
 ```nix
-# In a darwin host module, set the option directly under `kriswill`
-# (this is a darwin module now; the wrapper itself is system-level):
-kriswill.claude-account-selector = {
-  enable = true;
-  defaultProfile = "me";
-  profiles = [ "me" "work" "oss" ];
-  rules = {
-    "/Users/k/src/work" = "work";
-    "/Users/k/clients"  = "work";
-    "/Users/k/oss"      = "oss";
-  };
+# in the let block of ./default.nix
+defaultProfile = "me";
+profiles = [ "me" "work" "oss" ];
+rules = {
+  "/Users/k/src/work" = "work";
+  "/Users/k/clients"  = "work";
+  "/Users/k/oss"      = "oss";
 };
 ```
 
@@ -219,7 +214,7 @@ cp -a ~/.claude.json  ~/.claude-work/.claude.json   # account/state lives inside
 #    NEW config dir (see "Repairing copied config-dir references" below). The
 #    `cp -a` above carries verbatim e.g. a SessionStart hook command like
 #    "/Users/you/.claude/hooks/...", which would otherwise 404 every session.
-sel=~/src/dotfiles/modules/darwin/claude-account-selector
+sel=~/src/dotfiles/modules/hosts/k/claude-account-selector
 "$sel/fix-config-dir-refs.zsh"          ~/.claude-work   # dry-run: preview changes
 "$sel/fix-config-dir-refs.zsh" --apply  ~/.claude-work   # write (backs up each file)
 
@@ -283,13 +278,12 @@ Run it any time you re-seed a profile from `~/.claude`, not just at first setup.
 
 ## Enable / disable
 
-**Opt-in — disabled by default**, so a `darwin-rebuild switch` never silently redirects your
-existing `claude`. Complete the one-time setup above *first*, then enable it in your host
-module (e.g. `modules/hosts/<host>.nix`):
-
-```nix
-kriswill.claude-account-selector.enable = true;
-```
+The module is **mounted only into host k** (`configurations.darwin.k.module` in
+`./default.nix`) and is active wherever it's mounted — there is no enable flag. Complete the
+one-time setup above *before* mounting it on a new host, since a `darwin-rebuild switch` with
+the module mounted redirects `claude` immediately. To disable, remove (or stop mounting) the
+directory; to adopt it on another host, add a
+`configurations.darwin.<host>.module = …` line alongside k's.
 
 ## Notes & caveats
 
