@@ -6,6 +6,9 @@
 
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import { LineMaterial } from "three/addons/lines/LineMaterial.js";
+import { LineSegments2 } from "three/addons/lines/LineSegments2.js";
+import { LineSegmentsGeometry } from "three/addons/lines/LineSegmentsGeometry.js";
 import { BloomEffect, EffectComposer, EffectPass, RenderPass } from "postprocessing";
 
 export interface SceneNode {
@@ -36,7 +39,8 @@ export class GraphScene {
   private camera: THREE.PerspectiveCamera;
   private controls: OrbitControls;
   private mesh: THREE.InstancedMesh;
-  private lines: THREE.LineSegments;
+  private lines: LineSegments2;
+  private lineMat: LineMaterial;
   private labels: THREE.Sprite[] = [];
   private nodes: SceneNode[];
   private edges: [number, number][];
@@ -105,25 +109,26 @@ export class GraphScene {
     });
     this.scene.add(this.mesh);
 
-    // Edge lines (positions fixed; colors rewritten on state changes)
+    // Edge lines (positions fixed; colors rewritten on state changes).
+    // Fat lines (LineSegments2): WebGL ignores linewidth on basic line
+    // materials, so screen-space width needs the addon material.
     const pos = new Float32Array(edges.length * 6);
     edges.forEach(([a, b], i) => {
       pos.set([nodes[a].x, nodes[a].y, nodes[a].z, nodes[b].x, nodes[b].y, nodes[b].z], i * 6);
     });
-    const lineGeo = new THREE.BufferGeometry();
-    lineGeo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
-    lineGeo.setAttribute("color", new THREE.BufferAttribute(new Float32Array(edges.length * 6), 3));
-    this.lines = new THREE.LineSegments(
-      lineGeo,
-      new THREE.LineBasicMaterial({
-        vertexColors: true,
-        transparent: true,
-        opacity: 0.55,
-        blending: THREE.AdditiveBlending,
-        depthWrite: false,
-        toneMapped: false,
-      }),
-    );
+    const lineGeo = new LineSegmentsGeometry();
+    lineGeo.setPositions(pos);
+    lineGeo.setColors(new Float32Array(edges.length * 6));
+    this.lineMat = new LineMaterial({
+      vertexColors: true,
+      transparent: true,
+      opacity: 0.55,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+      linewidth: 1.15, // px
+    });
+    this.lineMat.toneMapped = false;
+    this.lines = new LineSegments2(lineGeo, this.lineMat);
     this.scene.add(this.lines);
 
     // Labels: rank by degree, show the busiest plus hover/selection
@@ -218,7 +223,7 @@ export class GraphScene {
     });
     this.mesh.instanceColor!.needsUpdate = true;
 
-    const colAttr = this.lines.geometry.getAttribute("color") as THREE.BufferAttribute;
+    const edgeColors = new Float32Array(this.edges.length * 6);
     const ca = new THREE.Color(), cbCol = new THREE.Color();
     this.edges.forEach(([a, b], i) => {
       const active =
@@ -227,9 +232,9 @@ export class GraphScene {
       const k = dim ? (this.selected !== null && !active ? 0.04 : 0.08) : this.selected !== null ? 0.65 : 0.4;
       ca.set(this.nodes[a].color).multiplyScalar(k);
       cbCol.set(this.nodes[b].color).multiplyScalar(k);
-      colAttr.set([ca.r, ca.g, ca.b, cbCol.r, cbCol.g, cbCol.b], i * 6);
+      edgeColors.set([ca.r, ca.g, ca.b, cbCol.r, cbCol.g, cbCol.b], i * 6);
     });
-    colAttr.needsUpdate = true;
+    (this.lines.geometry as LineSegmentsGeometry).setColors(edgeColors);
     this.updateLabelVisibility();
   }
 
@@ -351,5 +356,6 @@ export class GraphScene {
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(w, h);
     this.composer.setSize(w, h);
+    this.lineMat.resolution.set(w, h);
   }
 }

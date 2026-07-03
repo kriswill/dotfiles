@@ -47,7 +47,7 @@ const theme = () => ({ bg: css("--page"), labelInk: css("--ink-2"), labelStroke:
 const stage = document.getElementById("stage")!;
 const sceneNodes = nodes.map((n) => ({
   x: n.x, y: n.y, z: n.z,
-  r: 3.5 + Math.min(6.5, (deg[n.id] || 0) * 0.8),
+  r: (3.5 + Math.min(6.5, (deg[n.id] || 0) * 0.8)) * 0.6,
   color: colorOf(n.type),
   title: n.title,
 }));
