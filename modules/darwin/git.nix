@@ -8,22 +8,14 @@
 # alias and the podman filter) come from modules/darwin/user-packages.nix.
 {
   flake.modules.darwin.git =
+    { pkgs, ... }:
     {
-      lib,
-      pkgs,
-      config,
-      ...
-    }:
-    {
-      options.kriswill.git.enable = lib.mkEnableOption "Kris' git";
-      config = lib.mkIf config.kriswill.git.enable {
-        environment.systemPackages = builtins.attrValues {
-          inherit (pkgs)
-            git
-            gh # github CLI + git credential helper
-            git-lfs # large file storage filters
-            ;
-        };
+      environment.systemPackages = builtins.attrValues {
+        inherit (pkgs)
+          git
+          gh # github CLI + git credential helper
+          git-lfs # large file storage filters
+          ;
       };
     };
 }

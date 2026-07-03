@@ -29,7 +29,6 @@
     kriswill = {
       enable = true;
       alias-en0.enable = true;
-      dnsmasq.enable = true;
       podman-desktop.enable = true;
     };
 

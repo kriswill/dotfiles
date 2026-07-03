@@ -27,7 +27,6 @@
 
     kriswill = {
       enable = true;
-      dnsmasq.enable = true;
       podman-desktop.enable = true;
 
       claude-account-selector = {
