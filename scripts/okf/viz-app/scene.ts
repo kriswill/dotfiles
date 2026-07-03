@@ -229,7 +229,8 @@ export class GraphScene {
       const active =
         this.selected !== null ? (a === this.selected || b === this.selected) : true;
       const dim = this.dimmed(a) || this.dimmed(b) || !active;
-      const k = dim ? (this.selected !== null && !active ? 0.04 : 0.08) : this.selected !== null ? 0.75 : 0.5;
+      // Rest state: a uniform quiet web; edges only assert themselves for a selection.
+      const k = dim ? (this.selected !== null && !active ? 0.04 : 0.08) : this.selected !== null ? 0.75 : 0.28;
       ca.set(this.nodes[a].color).multiplyScalar(k);
       cbCol.set(this.nodes[b].color).multiplyScalar(k);
       edgeColors.set([ca.r, ca.g, ca.b, cbCol.r, cbCol.g, cbCol.b], i * 6);
