@@ -7,7 +7,7 @@
   # take effect. Verify what loaded at chrome://policy after a rebuild + full
   # Helium restart.
   flake.modules.nixos.helium =
-    { ... }:
+    _:
     {
       environment.etc."chromium/policies/managed/helium.json".text = builtins.toJSON {
         # --- Privacy baseline (pure enforcement) ---

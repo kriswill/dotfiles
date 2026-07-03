@@ -1,4 +1,9 @@
-{ writeShellApplication, coreutils, diffutils, procps }:
+{
+  writeShellApplication,
+  coreutils,
+  diffutils,
+  procps,
+}:
 # Snapshot/restore Noctalia's settings.toml between the live state dir
 # (~/.local/state/noctalia, app-owned) and the dotfiles repo, WITHOUT symlinking
 # the live file.
@@ -19,7 +24,11 @@
 #   noctalia-config diff      # show snapshot vs live
 writeShellApplication {
   name = "noctalia-config";
-  runtimeInputs = [ coreutils diffutils procps ];
+  runtimeInputs = [
+    coreutils
+    diffutils
+    procps
+  ];
   text = ''
     set -euo pipefail
 

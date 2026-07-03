@@ -12,7 +12,7 @@
   #     Dark Reader toggle=Alt+Shift+D, addSite=Alt+Shift+A; 1Password
   #     _execute_action=Ctrl+Shift+X, lock=Ctrl+Shift+L; uBlock Origin all unbound.
   flake.modules.nixos.helium =
-    { ... }:
+    _:
     {
       programs.helium.enable = true; # upstream programs.helium module
     };

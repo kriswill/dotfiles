@@ -55,7 +55,7 @@
               vscode-langservers-extracted # json, HTML, CSS, ESLint
               yaml-language-server # YAML (yamlls)
               ;
-            typescript = pkgs.typescript;
+            inherit (pkgs) typescript;
             # LSP wrapper for the vscode typescript extension. Upstream builds
             # against nodejs-slim_22 and drags it into the closure; rebuild against
             # the system node (24+, current LTS) so only one node version is present.
