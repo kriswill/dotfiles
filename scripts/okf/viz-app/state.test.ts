@@ -511,6 +511,21 @@ describe("panel width", () => {
   });
 });
 
+describe("legend collapse", () => {
+  test("defaults to collapsed with no stored choice", () => {
+    const s = createVizState(model());
+    expect(s.legendCollapsed).toBe(true);
+  });
+
+  test("setLegendCollapsed persists and a fresh state picks up the stored value", () => {
+    const s = createVizState(model());
+    s.setLegendCollapsed(false);
+    expect(localStorage.getItem("okfVizLegendCollapsed")).toBe("0");
+    const s2 = createVizState(model());
+    expect(s2.legendCollapsed).toBe(false);
+  });
+});
+
 describe("palette", () => {
   test("unregistered types get stable generated colors", () => {
     const s = createVizState(model());

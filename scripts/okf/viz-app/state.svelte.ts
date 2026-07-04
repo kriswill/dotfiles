@@ -14,6 +14,7 @@ export interface Hover {
 
 const PANEL_KEY = "okfVizPanelW";
 const THEME_KEY = "okfVizTheme";
+const LEGEND_KEY = "okfVizLegendCollapsed";
 
 const cssVar = (k: string) =>
   typeof document === "undefined" ? "" : getComputedStyle(document.documentElement).getPropertyValue(k).trim();
@@ -37,6 +38,7 @@ export function createVizState(model: VizModel) {
   let facetSel = $state<Record<string, string>>(Object.fromEntries(model.facets.map((f) => [f.name, "all"])));
   let hover = $state<Hover | null>(null);
   let panelW = $state(typeof localStorage === "undefined" ? 0 : +(localStorage.getItem(PANEL_KEY) || 0));
+  let legendCollapsed = $state(typeof localStorage === "undefined" ? true : localStorage.getItem(LEGEND_KEY) !== "0");
   let dark = $state(typeof matchMedia === "undefined" ? false : matchMedia("(prefers-color-scheme: dark)").matches);
   let paletteVersion = $state(0);
 
@@ -271,6 +273,14 @@ export function createVizState(model: VizModel) {
     panelPx(stageWidth: number) {
       const max = stageWidth * 0.92;
       return Math.min(panelW || Math.min(460, stageWidth * 0.85), max);
+    },
+
+    get legendCollapsed() {
+      return legendCollapsed;
+    },
+    setLegendCollapsed(v: boolean) {
+      legendCollapsed = v;
+      if (typeof localStorage !== "undefined") localStorage.setItem(LEGEND_KEY, v ? "1" : "0");
     },
 
     get dark() {

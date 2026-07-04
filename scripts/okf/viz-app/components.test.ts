@@ -56,6 +56,8 @@ describe("Legend", () => {
   test("renders type rows with counts; click toggles visibility class", () => {
     const state = createVizState(model());
     mountC(Legend, { viz: state });
+    state.setLegendCollapsed(false);
+    flushSync();
     const rows = [...document.querySelectorAll(".leg")];
     // cfg taxonomy.types slots Pattern before Decision; happy-dom keeps template whitespace.
     expect(rows.map((r) => r.textContent?.replace(/\s+/g, " ").trim())).toEqual(["Pattern 1", "Decision 1"]);
@@ -68,6 +70,8 @@ describe("Legend", () => {
   test("all / none header buttons flip every type at once", () => {
     const state = createVizState(model());
     mountC(Legend, { viz: state });
+    state.setLegendCollapsed(false);
+    flushSync();
     const [all, none] = [...document.querySelectorAll(".leg-head .lnk")] as HTMLElement[];
     expect(all!.textContent).toBe("all");
     none!.click();
@@ -79,9 +83,25 @@ describe("Legend", () => {
     expect(state.hidden.size).toBe(0);
   });
 
+  test("all / none header buttons work while the legend body is collapsed", () => {
+    localStorage.removeItem("okfVizLegendCollapsed"); // isolate from other suites
+    const state = createVizState(model());
+    mountC(Legend, { viz: state });
+    expect(document.querySelectorAll(".leg")).toHaveLength(0); // collapsed by default
+    const [all, none] = [...document.querySelectorAll(".leg-head .lnk")] as HTMLElement[];
+    none!.click();
+    flushSync();
+    expect(state.hidden.size).toBe(2);
+    all!.click();
+    flushSync();
+    expect(state.hidden.size).toBe(0);
+  });
+
   test("alt-click solos a type; alt-click again restores", () => {
     const state = createVizState(model());
     mountC(Legend, { viz: state });
+    state.setLegendCollapsed(false);
+    flushSync();
     const pattern = document.querySelector(".leg") as HTMLElement;
     pattern.dispatchEvent(new MouseEvent("click", { altKey: true, bubbles: true }));
     flushSync();
@@ -95,6 +115,8 @@ describe("Legend", () => {
   test("renders one group header (both fixture types are root ids -> Knowledge)", () => {
     const state = createVizState(model());
     mountC(Legend, { viz: state });
+    state.setLegendCollapsed(false);
+    flushSync();
     const groups = [...document.querySelectorAll(".leg-group")];
     expect(groups.map((g) => g.textContent?.trim())).toEqual(["Knowledge"]);
   });
@@ -111,6 +133,8 @@ describe("Legend", () => {
     });
     const state = createVizState(groupModel);
     mountC(Legend, { viz: state });
+    state.setLegendCollapsed(false);
+    flushSync();
     const headers = [...document.querySelectorAll(".leg-group")] as HTMLElement[];
     expect(headers.map((h) => h.textContent?.trim())).toEqual(["Knowledge", "System"]);
 
@@ -142,6 +166,8 @@ describe("Legend", () => {
     });
     const state = createVizState(groupModel);
     mountC(Legend, { viz: state });
+    state.setLegendCollapsed(false);
+    flushSync();
     const headers = [...document.querySelectorAll(".leg-group")] as HTMLElement[];
     expect(headers.some((h) => h.classList.contains("off"))).toBe(false);
     headers[0]!.click(); // hide Knowledge entirely
@@ -159,6 +185,8 @@ describe("Legend", () => {
     });
     const state = createVizState(flat);
     mountC(Legend, { viz: state });
+    state.setLegendCollapsed(false);
+    flushSync();
     expect(document.querySelectorAll(".leg-group")).toHaveLength(0);
     expect(document.querySelectorAll(".grp")).toHaveLength(0);
     const rows = [...document.querySelectorAll(".leg")];
@@ -166,6 +194,26 @@ describe("Legend", () => {
     (rows[0] as HTMLElement).click(); // rows stay interactive in flat mode
     flushSync();
     expect(state.hidden.has("Decision")).toBe(true);
+  });
+
+  test("starts collapsed by default; the collapse button reveals and re-hides the rows", () => {
+    localStorage.removeItem("okfVizLegendCollapsed"); // isolate from other suites
+    const state = createVizState(model());
+    expect(state.legendCollapsed).toBe(true);
+    mountC(Legend, { viz: state });
+    expect(document.querySelectorAll(".leg")).toHaveLength(0);
+    const btn = document.querySelector(".collapse-btn") as HTMLElement;
+    expect(btn.getAttribute("aria-expanded")).toBe("false");
+    btn.click();
+    flushSync();
+    expect(state.legendCollapsed).toBe(false);
+    expect(btn.getAttribute("aria-expanded")).toBe("true");
+    expect(document.querySelectorAll(".leg")).toHaveLength(2);
+    btn.click();
+    flushSync();
+    expect(state.legendCollapsed).toBe(true);
+    expect(btn.getAttribute("aria-expanded")).toBe("false");
+    expect(document.querySelectorAll(".leg")).toHaveLength(0);
   });
 });
 
