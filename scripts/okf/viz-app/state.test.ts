@@ -522,7 +522,7 @@ describe("palette", () => {
   });
 });
 
-describe("theme slider", () => {
+describe("theme toggle", () => {
   const rootVar = (k: string) => document.documentElement.style.getPropertyValue(k);
   beforeEach(() => document.documentElement.removeAttribute("style"));
   afterEach(() => {
@@ -541,7 +541,7 @@ describe("theme slider", () => {
     const before = s.paletteVersion;
     s.setTheme(1);
     expect(s.themeIndex).toBe(1);
-    expect(rootVar("--page")).toBe("#8b8b86"); // medium
+    expect(rootVar("--page")).toBe("#0d0d0d"); // dark
     expect(localStorage.getItem("okfVizTheme")).toBe("1");
     expect(s.paletteVersion).toBe(before + 1);
     s.setTheme(99); // out of range ignored
@@ -549,18 +549,18 @@ describe("theme slider", () => {
   });
 
   test("stored choice restores and applies on startup", () => {
-    localStorage.setItem("okfVizTheme", "3");
+    localStorage.setItem("okfVizTheme", "1");
     const s = createVizState(model());
-    expect(s.themeIndex).toBe(3);
-    expect(rootVar("--page")).toBe("#0d0d0d"); // black
+    expect(s.themeIndex).toBe(1);
+    expect(rootVar("--page")).toBe("#0d0d0d"); // dark
   });
 
-  test("OS scheme flip moves the slider only while unpicked", () => {
+  test("OS scheme flip moves the toggle only while unpicked", () => {
     const s = createVizState(model());
     s.systemSchemeChanged(true);
-    expect(s.themeIndex).toBe(3);
-    s.setTheme(1);
-    s.systemSchemeChanged(false);
-    expect(s.themeIndex).toBe(1); // explicit pick wins
+    expect(s.themeIndex).toBe(1); // unpicked: follows OS to dark
+    s.setTheme(0); // explicit pick: light, despite OS being dark
+    s.systemSchemeChanged(true); // OS "flips" (stays dark); explicit pick must hold
+    expect(s.themeIndex).toBe(0); // explicit pick wins
   });
 });

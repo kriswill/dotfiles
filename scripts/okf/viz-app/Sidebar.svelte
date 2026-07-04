@@ -5,7 +5,6 @@
   import Legend from "./Legend.svelte";
   import Search from "./Search.svelte";
   import type { VizState } from "./state.svelte";
-  import ThemeSlider from "./ThemeSlider.svelte";
 
   const { viz }: { viz: VizState } = $props();
 </script>
@@ -33,7 +32,6 @@
     <IsolateControl {viz} />
     <ConceptList {viz} />
   </div>
-  <ThemeSlider {viz} />
 </aside>
 
 <style>
