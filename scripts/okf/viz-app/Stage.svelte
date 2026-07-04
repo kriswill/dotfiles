@@ -19,6 +19,10 @@
     onFirstFrame,
   }: Props = $props();
 
+  // Sidebar.svelte's #side is an absolute overlay of the same width — kept
+  // in sync by hand since CSS and JS can't share a literal here.
+  const SIDEBAR_WIDTH = 260;
+
   let el = $state<HTMLElement | null>(null);
   let scene = $state<SceneApi | null>(null);
   // clientWidth is not a signal — the window resize listener below bumps this
@@ -78,7 +82,7 @@
     void resizeSeq;
     const open = viz.sel.kind !== "none";
     const px = viz.panelPx(el?.clientWidth ?? 0);
-    scene?.setViewShift(open ? px : 0);
+    scene?.setViewShift(SIDEBAR_WIDTH, open ? px : 0);
   });
 
   $effect(() => {
@@ -102,7 +106,11 @@
 
 <style>
   #stage {
-    position: relative;
+    /* Full-bleed: the sidebar and detail panel overlay this rather than
+       sharing a grid track, so the three.js scene always has the whole
+       viewport to frame. */
+    position: absolute;
+    inset: 0;
     overflow: hidden;
   }
 </style>

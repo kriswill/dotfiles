@@ -90,13 +90,13 @@ describe("Stage bridges", () => {
     const shifts = () => stub.calls.filter(([m]) => m === "setViewShift");
     state.selectConcept("a");
     flushSync();
-    expect(shifts().at(-1)![1]).toBe(460); // default: min(460, 85% of stage)
+    expect(shifts().at(-1)).toEqual(["setViewShift", 260, 460]); // sidebar px, default: min(460, 85% of stage)
     state.setPanelW(555);
     flushSync();
-    expect(shifts().at(-1)![1]).toBe(555);
+    expect(shifts().at(-1)![2]).toBe(555);
     state.clearSelection();
     flushSync();
-    expect(shifts().at(-1)![1]).toBe(0);
+    expect(shifts().at(-1)![2]).toBe(0);
   });
 
   test("view shift and panel width re-clamp on window resize", () => {
@@ -106,12 +106,12 @@ describe("Stage bridges", () => {
     const shifts = () => stub.calls.filter(([m]) => m === "setViewShift");
     state.selectConcept("a");
     flushSync();
-    expect(shifts().at(-1)![1]).toBe(460);
+    expect(shifts().at(-1)![2]).toBe(460);
     expect((document.getElementById("panel") as HTMLElement).style.width).toBe("460px");
     Object.defineProperty(stage, "clientWidth", { value: 400, configurable: true });
     window.dispatchEvent(new Event("resize"));
     flushSync();
-    expect(shifts().at(-1)![1]).toBe(340); // re-clamped: min(460, 85% of 400)
+    expect(shifts().at(-1)![2]).toBe(340); // re-clamped: min(460, 85% of 400)
     expect((document.getElementById("panel") as HTMLElement).style.width).toBe("340px");
   });
 

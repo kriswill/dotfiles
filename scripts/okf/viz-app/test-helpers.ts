@@ -87,8 +87,8 @@ export const makeStub = (): StubScene => {
     applyTheme() {
       s.calls.push(["applyTheme"]);
     },
-    setViewShift(px) {
-      s.calls.push(["setViewShift", px]);
+    setViewShift(leftInset, rightInset) {
+      s.calls.push(["setViewShift", leftInset, rightInset]);
     },
     resize() {},
   };

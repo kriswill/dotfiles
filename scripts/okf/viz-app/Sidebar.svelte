@@ -36,8 +36,21 @@
 
 <style>
   #side {
+    /* Overlays the full-bleed canvas (Stage.svelte's SIDEBAR_WIDTH constant
+       must match this). */
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 260px;
     border-right: 1px solid var(--grid);
-    background: var(--surface-1);
+    /* Outside (left, screen edge) is fully opaque; inside (right, canvas
+       edge) eases to 90% so the scene reads through faintly at the seam. */
+    background: linear-gradient(
+      to right,
+      var(--surface-1),
+      color-mix(in srgb, var(--surface-1) 90%, transparent)
+    );
     display: flex;
     flex-direction: column;
     overflow: hidden;

@@ -247,7 +247,7 @@ export function buildModel(raw: RawData): VizModel {
     facetById[f.name] = resolved;
   }
 
-  const radii = nodes.map((n) => (3.5 + Math.min(6.5, (deg[n.id] || 0) * 0.8)) * 0.42);
+  const radii = nodes.map((n) => (3.5 + Math.min(6.5, (deg[n.id] || 0) * 0.8)) * 0.2058);
 
   return {
     nodes,

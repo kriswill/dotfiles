@@ -365,7 +365,7 @@ const html = `<!doctype html>
   body {
     font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif;
     color: var(--ink-1); background: var(--page);
-    display: grid; grid-template-columns: 260px 1fr; overflow: hidden;
+    position: relative; overflow: hidden;
   }
   /* Shared sidebar-control primitives (used by the legend head, the facet
      and neighborhood segmented controls) — global so the controls don't each

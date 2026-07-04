@@ -36,7 +36,7 @@ export interface SceneApi {
   setDim(fn: (i: number) => boolean): void;
   setSelected(i: number | null, fly?: boolean): void;
   applyTheme(theme: Theme): void;
-  setViewShift(px: number): void;
+  setViewShift(leftInset: number, rightInset: number): void;
   resize(): void;
 }
 
@@ -234,7 +234,7 @@ export class GraphScene {
           c.multiplyScalar(0.12);
         } else {
           const brightness = (c.r + c.g + c.b) / 3;
-          let boost = 1.2 + brightness * 0.8; // bloom feeds on the >1.0 excess
+          let boost = (1.2 + brightness * 0.8) * 1.875; // bloom feeds on the >1.0 excess
           if (this.selected !== null) {
             if (i === this.selected) boost *= 1.5;      // hero glow
             else if (this.isNeighbor(i)) boost *= 1.15; // linked nodes brighten
@@ -366,7 +366,9 @@ export class GraphScene {
     }
     const vFov = (this.camera.fov * Math.PI) / 180;
     const hFov = 2 * Math.atan(Math.tan(vFov / 2) * this.camera.aspect);
-    const dist = (radius * 1.06) / Math.tan(Math.min(vFov, hFov) / 2);
+    // /1.2 pulls the camera 20% closer than a full-fit frame; distant outliers
+    // may clip out of view at rest, which is fine — orbit/pan still reaches them.
+    const dist = (radius * 1.06) / Math.tan(Math.min(vFov, hFov) / 2) / 1.2;
     const dir = new THREE.Vector3(0, 0.12, 1).normalize(); // slight elevation, like the old default
     this.camera.position.copy(center).addScaledVector(dir, dist);
     this.controls.target.copy(center);
@@ -401,10 +403,35 @@ export class GraphScene {
       if (dir.lengthSq() < 1) dir.copy(this.camera.position).sub(this.controls.target);
       if (dir.lengthSq() < 1) dir.set(0, 0.2, 1);
       dir.normalize().setY(dir.y + 0.25).normalize();
+
+      // Hold the current zoom level rather than flying to a fixed framing
+      // distance; only back off as far as needed to keep every direct
+      // neighbor inside the view cone along the chosen approach direction.
+      // A neighbor's raw 3D distance isn't the right yardstick — an edge
+      // that runs mostly along the view axis (deep into the scene) needs no
+      // pull-back at all, unlike a same-length edge that runs sideways. So
+      // decompose each neighbor offset into axial (along dir) and
+      // perpendicular components and solve for the distance that keeps its
+      // perpendicular offset inside the FOV cone at that depth.
+      const vFov = (this.camera.fov * Math.PI) / 180;
+      const hFov = 2 * Math.atan(Math.tan(vFov / 2) * this.camera.aspect);
+      const tanHalfFov = Math.tan(Math.min(vFov, hFov) / 2);
+      let need = n.r / tanHalfFov;
+      const offset = new THREE.Vector3();
+      for (const j of nb) {
+        const nbNode = this.nodes[j];
+        offset.set(nbNode.x - n.x, nbNode.y - n.y, nbNode.z - n.z);
+        const axial = offset.dot(dir);
+        const perpLen = offset.addScaledVector(dir, -axial).length() + nbNode.r;
+        need = Math.max(need, axial + perpLen / tanHalfFov);
+      }
+      const curDist = this.camera.position.distanceTo(this.controls.target);
+      const dist = Math.max(curDist, need);
+
       this.anim = {
         fromPos: this.camera.position.clone(),
         fromTarget: this.controls.target.clone(),
-        toPos: target.clone().add(dir.multiplyScalar(n.r * 12 + 340)),
+        toPos: target.clone().add(dir.multiplyScalar(dist)),
         toTarget: target,
         t: 0,
       };
@@ -427,7 +454,7 @@ export class GraphScene {
     const bg = new THREE.Color(theme.bg);
     // Linear-space relative luminance; mid gray (~0.26) still counts as light.
     this.darkBg = 0.2126 * bg.r + 0.7152 * bg.g + 0.0722 * bg.b < 0.15;
-    this.bloom.intensity = this.darkBg ? 1.2 : 0.15;
+    this.bloom.intensity = this.darkBg ? 1.95 : 0;
     this.lineMat.blending = this.darkBg ? THREE.AdditiveBlending : THREE.NormalBlending;
     this.lineMat.opacity = this.darkBg ? 0.7 : 1;
     this.lineMat.needsUpdate = true;
@@ -436,10 +463,13 @@ export class GraphScene {
     this.repaint();
   }
 
-  /** Shift the projection center left by px/2 so content centers in the area
-   *  not covered by the detail panel (0 to clear). */
-  setViewShift(px: number) {
-    this.viewShift = px;
+  /** Both side panels overlay the full-bleed canvas rather than sharing
+   *  layout space with it, so the scene itself always spans the whole
+   *  viewport — only the projection center shifts, by half the imbalance
+   *  between the two insets, to keep content centered in the strip that's
+   *  actually clear of both panels. */
+  setViewShift(leftInset: number, rightInset: number) {
+    this.viewShift = rightInset - leftInset;
     this.resize();
   }
 
@@ -447,7 +477,7 @@ export class GraphScene {
     const w = this.container.clientWidth, h = this.container.clientHeight;
     if (!w || !h) return;
     this.camera.aspect = w / h;
-    if (this.viewShift > 0) this.camera.setViewOffset(w, h, this.viewShift / 2, 0, w, h);
+    if (this.viewShift !== 0) this.camera.setViewOffset(w, h, this.viewShift / 2, 0, w, h);
     else this.camera.clearViewOffset();
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(w, h);
