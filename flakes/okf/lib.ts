@@ -27,18 +27,24 @@ export const PROFILE_FIELDS = ["type", "title", "description", "timestamp"];
 // Resolved from the caller's working directory (not import.meta.dir) so the
 // tooling works both from the working tree and from a /nix/store install, and
 // always operates on the repo it's invoked in.
-let repoRootCache: string | null = null;
-
-export function repoRoot(): string {
-  if (repoRootCache) return repoRootCache;
+function computeRepoRoot(): string {
   const r = spawnSync("git", ["rev-parse", "--show-toplevel"], { encoding: "utf8" });
+  if (r.error) {
+    console.error(`okf: could not run git (${r.error.message}) — is it on PATH?`);
+    process.exit(1);
+  }
   const root = (r.stdout ?? "").trim();
   if (r.status !== 0 || !root) {
     console.error("okf: not inside a git repository — run from the repo the bundle lives in");
     process.exit(1);
   }
-  repoRootCache = root;
   return root;
+}
+
+let repoRootCache: string | null = null;
+
+export function repoRoot(): string {
+  return (repoRootCache ??= computeRepoRoot());
 }
 
 export function bundleRoot(): string {
