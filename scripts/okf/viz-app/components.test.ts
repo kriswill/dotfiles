@@ -5,7 +5,9 @@ import { flushSync, mount, unmount } from "svelte";
 import ConceptList from "./ConceptList.svelte";
 import { buildModel } from "./data";
 import DetailPanel from "./DetailPanel.svelte";
+import IsolateControl from "./IsolateControl.svelte";
 import Legend from "./Legend.svelte";
+import PlatformControl from "./PlatformControl.svelte";
 import Search from "./Search.svelte";
 import { createVizState } from "./state.svelte";
 import { node } from "./test-helpers";
@@ -60,6 +62,91 @@ describe("Legend", () => {
     expect(document.querySelector(".leg")!.classList.contains("off")).toBe(true);
     expect(state.hidden.has("Pattern")).toBe(true);
   });
+
+  test("all / none header buttons flip every type at once", () => {
+    const state = createVizState(model());
+    mountC(Legend, { viz: state });
+    const [all, none] = [...document.querySelectorAll(".leg-head .lnk")] as HTMLElement[];
+    expect(all!.textContent).toBe("all");
+    none!.click();
+    flushSync();
+    expect(state.hidden.size).toBe(2);
+    expect(document.querySelectorAll(".leg.off")).toHaveLength(2);
+    all!.click();
+    flushSync();
+    expect(state.hidden.size).toBe(0);
+  });
+
+  test("alt-click solos a type; alt-click again restores", () => {
+    const state = createVizState(model());
+    mountC(Legend, { viz: state });
+    const pattern = document.querySelector(".leg") as HTMLElement;
+    pattern.dispatchEvent(new MouseEvent("click", { altKey: true, bubbles: true }));
+    flushSync();
+    expect(state.hidden.has("Decision")).toBe(true);
+    expect(state.hidden.has("Pattern")).toBe(false);
+    pattern.dispatchEvent(new MouseEvent("click", { altKey: true, bubbles: true }));
+    flushSync();
+    expect(state.hidden.size).toBe(0);
+  });
+
+  test("renders one group header (both fixture types are root ids -> Knowledge)", () => {
+    const state = createVizState(model());
+    mountC(Legend, { viz: state });
+    const groups = [...document.querySelectorAll(".leg-group")];
+    expect(groups.map((g) => g.textContent?.trim())).toEqual(["Knowledge"]);
+  });
+
+  test("group header click toggles every type in the group; alt-click solos the group", () => {
+    const groupModel = buildModel({
+      nodes: [
+        node("decisions/x", "Decision", "X"),
+        node("patterns/y", "Pattern", "Y"),
+        node("modules/z", "Darwin Module", "Z"),
+      ],
+      edges: [],
+    });
+    const state = createVizState(groupModel);
+    mountC(Legend, { viz: state });
+    const headers = [...document.querySelectorAll(".leg-group")] as HTMLElement[];
+    expect(headers.map((h) => h.textContent?.trim())).toEqual(["Knowledge", "System"]);
+
+    headers[0]!.click(); // toggle Knowledge off
+    flushSync();
+    expect(state.hidden.has("Decision")).toBe(true);
+    expect(state.hidden.has("Pattern")).toBe(true);
+    expect(state.hidden.has("Darwin Module")).toBe(false);
+    headers[0]!.click(); // toggle back on
+    flushSync();
+    expect(state.hidden.size).toBe(0);
+
+    headers[0]!.dispatchEvent(new MouseEvent("click", { altKey: true, bubbles: true })); // solo Knowledge
+    flushSync();
+    expect(state.hidden.has("Darwin Module")).toBe(true);
+    expect(state.hidden.has("Decision")).toBe(false);
+    expect(state.hidden.has("Pattern")).toBe(false);
+  });
+
+  test("a fully-hidden group's header dims, matching its child rows", () => {
+    const groupModel = buildModel({
+      nodes: [
+        node("decisions/x", "Decision", "X"),
+        node("patterns/y", "Pattern", "Y"),
+        node("modules/z", "Darwin Module", "Z"),
+      ],
+      edges: [],
+    });
+    const state = createVizState(groupModel);
+    mountC(Legend, { viz: state });
+    const headers = [...document.querySelectorAll(".leg-group")] as HTMLElement[];
+    expect(headers.some((h) => h.classList.contains("off"))).toBe(false);
+    headers[0]!.click(); // hide Knowledge entirely
+    flushSync();
+    const knowledge = [...document.querySelectorAll(".leg-group")].find((h) => h.textContent?.trim() === "Knowledge")!;
+    const system = [...document.querySelectorAll(".leg-group")].find((h) => h.textContent?.trim() === "System")!;
+    expect(knowledge.classList.contains("off")).toBe(true);
+    expect(system.classList.contains("off")).toBe(false);
+  });
 });
 
 describe("ConceptList", () => {
@@ -74,6 +161,22 @@ describe("ConceptList", () => {
     (document.querySelector("#list a") as HTMLElement).click();
     flushSync();
     expect(state.sel).toEqual({ kind: "concept", id: "b" });
+  });
+
+  test("search hits swallowed by a hidden type surface as a note; click restores", () => {
+    const state = createVizState(model());
+    mountC(ConceptList, { viz: state });
+    expect(document.querySelector(".hidden-note")).toBeNull();
+    state.toggleType("Pattern");
+    state.query = "beta";
+    flushSync();
+    expect(document.querySelectorAll("#list a")).toHaveLength(0);
+    const note = document.querySelector(".hidden-note") as HTMLElement;
+    expect(note.textContent?.replace(/\s+/g, " ")).toContain("+1 match hidden by type filters");
+    note.click();
+    flushSync();
+    expect(state.hidden.size).toBe(0);
+    expect([...document.querySelectorAll("#list a")].map((a) => a.textContent)).toEqual(["Beta"]);
   });
 
   test("focused concept is marked, also while its file view is open", () => {
@@ -91,6 +194,96 @@ describe("ConceptList", () => {
     state.clearSelection();
     flushSync();
     expect(document.querySelector("#list a.selected")).toBeNull();
+  });
+});
+
+describe("IsolateControl", () => {
+  test("renders nothing when no concept is selected", () => {
+    const state = createVizState(model());
+    mountC(IsolateControl, { viz: state });
+    expect(document.getElementById("isolate")).toBeNull();
+  });
+
+  test("renders 1-hop/2-hop/off once a concept is selected; buttons drive setIsolate", () => {
+    const state = createVizState(model());
+    state.selectConcept("a");
+    mountC(IsolateControl, { viz: state });
+    const [oneHop, twoHop, off] = [...document.querySelectorAll("#isolate .seg")] as HTMLElement[];
+    expect([oneHop!.textContent?.trim(), twoHop!.textContent?.trim(), off!.textContent?.trim()]).toEqual([
+      "1-hop",
+      "2-hop",
+      "off",
+    ]);
+    expect(off!.classList.contains("active")).toBe(true); // isolateDepth starts at 0
+
+    oneHop!.click();
+    flushSync();
+    expect(state.isolateDepth).toBe(1);
+    expect(oneHop!.classList.contains("active")).toBe(true);
+    expect(state.visibleSorted.map((n) => n.id).sort()).toEqual(["a", "b"]); // a-b are 1-hop neighbors
+
+    oneHop!.click(); // clicking the active depth again turns isolation off
+    flushSync();
+    expect(state.isolateDepth).toBe(0);
+
+    twoHop!.click();
+    flushSync();
+    expect(state.isolateDepth).toBe(2);
+    off!.click();
+    flushSync();
+    expect(state.isolateDepth).toBe(0);
+  });
+
+  test("switching directly between depths, and re-clicking 2-hop while active, both work", () => {
+    const state = createVizState(model());
+    state.selectConcept("a");
+    mountC(IsolateControl, { viz: state });
+    const [oneHop, twoHop] = [...document.querySelectorAll("#isolate .seg")] as HTMLElement[];
+
+    oneHop!.click(); // 0 -> 1
+    flushSync();
+    expect(state.isolateDepth).toBe(1);
+    twoHop!.click(); // 1 -> 2 directly, not via off
+    flushSync();
+    expect(state.isolateDepth).toBe(2);
+    expect(twoHop!.classList.contains("active")).toBe(true);
+    twoHop!.click(); // clicking the active 2-hop button again turns it off
+    flushSync();
+    expect(state.isolateDepth).toBe(0);
+  });
+});
+
+describe("PlatformControl", () => {
+  test("renders all/darwin/nixos segments; active tracks viz.platform; clicks set it", () => {
+    const state = createVizState(model());
+    mountC(PlatformControl, { viz: state });
+    const [all, darwin, nixos] = [...document.querySelectorAll("#platform .seg")] as HTMLElement[];
+    expect([all!.textContent?.trim(), darwin!.textContent?.trim(), nixos!.textContent?.trim()]).toEqual([
+      "all",
+      "darwin",
+      "nixos",
+    ]);
+    expect(all!.classList.contains("active")).toBe(true); // defaults to "all"
+
+    darwin!.click();
+    flushSync();
+    expect(state.platform).toBe("darwin");
+    expect(darwin!.classList.contains("active")).toBe(true);
+    expect(all!.classList.contains("active")).toBe(false);
+
+    nixos!.click();
+    flushSync();
+    expect(state.platform).toBe("nixos");
+
+    all!.click();
+    flushSync();
+    expect(state.platform).toBe("all");
+  });
+
+  test("is always rendered, with or without a selection (unlike IsolateControl)", () => {
+    const state = createVizState(model());
+    mountC(PlatformControl, { viz: state });
+    expect(document.getElementById("platform")).not.toBeNull();
   });
 });
 

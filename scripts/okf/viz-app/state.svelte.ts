@@ -2,7 +2,7 @@
 // Stage.svelte bridges it into the imperative GraphScene.
 import { SvelteSet } from "svelte/reactivity";
 import { nameColor } from "./color";
-import { TYPE_ORDER, type ConceptNode, type VizModel } from "./data";
+import { neighborsWithin, TYPE_ORDER, type ConceptNode, type VizModel } from "./data";
 import type { Selection } from "./hash";
 import { applyThemeVars, defaultThemeIndex, THEMES } from "./themes";
 
@@ -29,6 +29,8 @@ export function createVizState(model: VizModel) {
   let lastConceptId = $state<string | null>(null);
   const hidden = new SvelteSet<string>();
   let query = $state("");
+  let isolateDepth = $state<0 | 1 | 2>(0);
+  let platform = $state<"all" | "darwin" | "nixos">("all");
   let hover = $state<Hover | null>(null);
   let panelW = $state(typeof localStorage === "undefined" ? 0 : +(localStorage.getItem(PANEL_KEY) || 0));
   let dark = $state(typeof matchMedia === "undefined" ? false : matchMedia("(prefers-color-scheme: dark)").matches);
@@ -46,7 +48,11 @@ export function createVizState(model: VizModel) {
 
   const match = $derived.by(() => {
     const q = query.trim().toLowerCase();
-    return q ? (n: ConceptNode) => `${n.title} ${n.id} ${n.desc} ${n.type}`.toLowerCase().includes(q) : null;
+    if (!q) return null;
+    return (n: ConceptNode) => {
+      const tags = Array.isArray(n.fm.tags) ? n.fm.tags.join(" ") : "";
+      return `${n.title} ${n.id} ${n.desc} ${n.type} ${tags}`.toLowerCase().includes(q);
+    };
   });
 
   const computeSlots = () => {
@@ -62,15 +68,35 @@ export function createVizState(model: VizModel) {
     paletteVersion++;
   };
 
-  const visible = (n: ConceptNode) => !hidden.has(n.type) && (!match || match(n));
+  /** Isolate a set of types; solo the same set again to restore all. */
+  const soloTypes = (types: string[]) => {
+    const want = new Set(types);
+    const alone = model.allTypes.every((u) => (want.has(u) ? !hidden.has(u) : hidden.has(u)));
+    hidden.clear();
+    if (!alone) for (const u of model.allTypes) if (!want.has(u)) hidden.add(u);
+  };
+
+  const platformOk = (n: ConceptNode) => {
+    if (platform === "all") return true;
+    const p = model.platformById[n.id];
+    return p === "both" || p === "neutral" || p === platform;
+  };
+  const visible = (n: ConceptNode) =>
+    !hidden.has(n.type) && (!match || match(n)) && (!neighborIds || neighborIds.has(n.id)) && platformOk(n);
   const visibleSorted = $derived(model.nodes.filter(visible).sort((a, b) => a.title.localeCompare(b.title)));
+  // Search hits suppressed by type toggles, surfaced in the list so a hidden
+  // type never silently swallows a match.
+  const hiddenMatchCount = $derived(match ? model.nodes.filter((n) => hidden.has(n.type) && match(n)).length : 0);
 
   const selectedConcept = $derived(sel.kind === "concept" ? (model.byId[sel.id] ?? null) : null);
   const backConcept = $derived(lastConceptId ? (model.byId[lastConceptId] ?? null) : null);
-  const sceneSelectedIndex = $derived.by(() => {
-    const id = sel.kind === "concept" ? sel.id : sel.kind === "file" || sel.kind === "dir" ? lastConceptId : null;
-    return id != null ? (model.indexOf.get(id) ?? null) : null;
-  });
+  const focusedConcept = $derived(selectedConcept ?? backConcept);
+  // Anchored on selectedConcept strictly (not focusedConcept): isolation is
+  // only meaningful while a concept, not a file/dir view, is the selection.
+  const neighborIds = $derived.by(() =>
+    isolateDepth && selectedConcept ? neighborsWithin(model, selectedConcept.id, isolateDepth) : null,
+  );
+  const sceneSelectedIndex = $derived(focusedConcept ? (model.indexOf.get(focusedConcept.id) ?? null) : null);
 
   return {
     model,
@@ -89,6 +115,9 @@ export function createVizState(model: VizModel) {
     },
     get backConcept() {
       return backConcept;
+    },
+    get focusedConcept() {
+      return focusedConcept;
     },
     get sceneSelectedIndex() {
       return sceneSelectedIndex;
@@ -113,11 +142,58 @@ export function createVizState(model: VizModel) {
       lastConceptId = null;
       fly = false;
       selSeq++;
+      isolateDepth = 0;
     },
 
     hidden,
     toggleType(t: string) {
       hidden.has(t) ? hidden.delete(t) : hidden.add(t);
+    },
+    showAllTypes() {
+      hidden.clear();
+    },
+    hideAllTypes() {
+      for (const t of model.allTypes) hidden.add(t);
+    },
+    soloType(t: string) {
+      soloTypes([t]);
+    },
+    toggleGroup(g: string) {
+      const types = model.groupTypes[g] ?? [];
+      const allHidden = types.length > 0 && types.every((t) => hidden.has(t));
+      for (const t of types) allHidden ? hidden.delete(t) : hidden.add(t);
+    },
+    soloGroup(g: string) {
+      soloTypes(model.groupTypes[g] ?? []);
+    },
+    /** Replace the whole filter state (hash navigation). */
+    setFilters(hiddenTypes: string[], q: string, isolate: 0 | 1 | 2 = 0, plat: "all" | "darwin" | "nixos" = "all") {
+      const want = new Set(hiddenTypes);
+      for (const t of [...hidden]) if (!want.has(t)) hidden.delete(t);
+      for (const t of want) hidden.add(t);
+      query = q;
+      isolateDepth = isolate;
+      platform = plat;
+    },
+    get hiddenMatchCount() {
+      return hiddenMatchCount;
+    },
+
+    get isolateDepth() {
+      return isolateDepth;
+    },
+    setIsolate(depth: 0 | 1 | 2) {
+      isolateDepth = depth === 1 || depth === 2 ? depth : 0;
+    },
+    get neighborIds() {
+      return neighborIds;
+    },
+
+    get platform() {
+      return platform;
+    },
+    setPlatform(p: "all" | "darwin" | "nixos") {
+      platform = p === "darwin" || p === "nixos" ? p : "all";
     },
 
     get query() {

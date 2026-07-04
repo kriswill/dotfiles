@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { decodeHash, encodeHash } from "./hash";
+  import { decodeViewHash, encodeViewHash } from "./hash";
   import { installPerf, mark, summary } from "./perf";
   import type { CreateScene, SceneApi } from "./scene";
   import Sidebar from "./Sidebar.svelte";
@@ -13,18 +13,24 @@
   }
   const { viz, createScene }: Props = $props();
 
-  /* --- URL state (hash) — selections survive reload and back/forward ------ */
+  /* --- URL state (hash) — selection + filters survive reload/back/forward - */
   let currentState: string | null = null;
+  const selPart = (h: string) => h.split("?", 1)[0]!;
 
   function applyHash() {
-    // decodeHash owns the (single) decode of the raw hash. currentState always
-    // holds the canonical encodeHash form, so an encoded deep link compares
-    // equal to what the write-effect stores: the URL is applied, never
-    // rewritten (a rewrite pushes a history entry per navigation — Back trap).
-    const sel = decodeHash(location.hash.slice(1), viz.model);
-    const h = encodeHash(sel);
+    // decodeViewHash owns the (single) decode of the raw hash. currentState
+    // always holds the canonical encodeViewHash form, so an encoded deep link
+    // compares equal to what the write-effect stores: the URL is applied,
+    // never rewritten (a rewrite pushes a history entry per navigation —
+    // Back trap). A hash without filter params clears the filters: every
+    // in-app link is click-intercepted, so a bare hash only arrives via
+    // deep link, hand edit, or Back to an unfiltered entry.
+    const view = decodeViewHash(location.hash.slice(1), viz.model);
+    const h = encodeViewHash(view);
     if (h === currentState) return;
     currentState = h;
+    viz.setFilters(view.filters.hidden, view.filters.q, view.filters.isolate, view.filters.platform);
+    const sel = view.sel;
     if (sel.kind === "concept") viz.selectConcept(sel.id, true);
     else if (sel.kind === "file") viz.selectFile(sel.path);
     else if (sel.kind === "dir") viz.selectDir(sel.path);
@@ -32,10 +38,16 @@
   }
 
   $effect(() => {
-    const h = encodeHash(viz.sel);
+    const h = encodeViewHash({
+      sel: viz.sel,
+      filters: { hidden: [...viz.hidden], q: viz.query, isolate: viz.isolateDepth, platform: viz.platform },
+    });
     if (currentState === h) return;
+    const selChanged = currentState == null || selPart(h) !== selPart(currentState);
     currentState = h;
-    if (location.hash.slice(1) !== h) {
+    if (location.hash.slice(1) === h) return;
+    if (selChanged) {
+      // Selection navigations get history entries (Back walks selections).
       if (h) location.hash = h;
       else {
         try {
@@ -43,6 +55,14 @@
         } catch {
           location.hash = "";
         }
+      }
+    } else {
+      // Filter-only change: keep the URL shareable without one history entry
+      // per keystroke/toggle — the current entry is amended in place.
+      try {
+        history.replaceState(null, "", h ? "#" + h : location.pathname + location.search);
+      } catch {
+        location.hash = h;
       }
     }
   });
