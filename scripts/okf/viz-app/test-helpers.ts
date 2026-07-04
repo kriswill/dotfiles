@@ -50,16 +50,16 @@ export const cfg = (over: Record<string, unknown> = {}) => ({
   },
   facet: {
     platform: {
-      values: ["darwin", "nixos"],
+      values: ["macos", "linux"],
       types: {
-        "Darwin Module": "darwin",
-        "NixOS Module": "nixos",
-        Host: "darwin", // replaces host-default
+        "Darwin Module": "macos",
+        "NixOS Module": "linux",
+        Host: "macos", // replaces host-default
       },
-      ids: { "hosts/nebula": "nixos" },
+      ids: { "hosts/nebula": "linux" },
       "nix-packages": {
         file: "modules/packages.nix",
-        guards: { darwin: "darwin", linux: "nixos" },
+        guards: { darwin: "macos", linux: "linux" },
         types: ["Nix Package", "Sub-flake", "Overlay"],
       },
     },

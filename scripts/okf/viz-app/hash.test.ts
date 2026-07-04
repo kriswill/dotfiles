@@ -7,7 +7,7 @@ const model = {
   dirs: { "flakes/ccglass": {} },
   typeCounts: { "Darwin Module": 2, Decision: 1 },
   facets: [
-    { name: "platform", values: ["darwin", "nixos"] },
+    { name: "platform", values: ["macos", "linux"] },
     { name: "status", values: ["draft", "stable"] },
   ],
 };
@@ -69,19 +69,19 @@ describe("encodeViewHash", () => {
   });
 
   test("a facet rides behind '?' as its own name, always emittable (no selection gate)", () => {
-    expect(encodeViewHash({ sel: none, filters: f({ facets: { platform: "darwin" } }) })).toBe("?platform=darwin");
+    expect(encodeViewHash({ sel: none, filters: f({ facets: { platform: "macos" } }) })).toBe("?platform=macos");
     expect(
-      encodeViewHash({ sel: { kind: "file", path: "docs/50%.md" }, filters: f({ facets: { platform: "nixos" } }) }),
-    ).toBe("f/docs/50%25.md?platform=nixos");
+      encodeViewHash({ sel: { kind: "file", path: "docs/50%.md" }, filters: f({ facets: { platform: "linux" } }) }),
+    ).toBe("f/docs/50%25.md?platform=linux");
     expect(encodeViewHash({ sel: none, filters: f({ facets: { platform: "all" } }) })).toBe(""); // "all" omitted
   });
 
   test("multiple active facets all encode; 'all' entries are skipped", () => {
-    expect(encodeViewHash({ sel: none, filters: f({ facets: { platform: "darwin", status: "all" } }) })).toBe(
-      "?platform=darwin",
+    expect(encodeViewHash({ sel: none, filters: f({ facets: { platform: "macos", status: "all" } }) })).toBe(
+      "?platform=macos",
     );
-    expect(encodeViewHash({ sel: none, filters: f({ facets: { platform: "darwin", status: "stable" } }) })).toBe(
-      "?platform=darwin&status=stable",
+    expect(encodeViewHash({ sel: none, filters: f({ facets: { platform: "macos", status: "stable" } }) })).toBe(
+      "?platform=macos&status=stable",
     );
   });
 
@@ -89,9 +89,9 @@ describe("encodeViewHash", () => {
     expect(
       encodeViewHash({
         sel: { kind: "concept", id: "nvim/architecture" },
-        filters: f({ hidden: ["Decision"], q: "arch", isolate: 1, facets: { platform: "darwin", status: "stable" } }),
+        filters: f({ hidden: ["Decision"], q: "arch", isolate: 1, facets: { platform: "macos", status: "stable" } }),
       }),
-    ).toBe("c/nvim/architecture?hide=Decision&q=arch&isolate=1&platform=darwin&status=stable");
+    ).toBe("c/nvim/architecture?hide=Decision&q=arch&isolate=1&platform=macos&status=stable");
   });
 });
 
@@ -104,15 +104,15 @@ describe("decodeViewHash", () => {
       },
       {
         sel: { kind: "none" },
-        filters: { hidden: [], q: "a?b&c=%", isolate: 0, facets: { platform: "darwin", status: "all" } },
+        filters: { hidden: [], q: "a?b&c=%", isolate: 0, facets: { platform: "macos", status: "all" } },
       },
       {
         sel: { kind: "file", path: "docs/50%.md" },
-        filters: { hidden: ["Decision"], q: "tmux", isolate: 0, facets: { platform: "nixos", status: "draft" } },
+        filters: { hidden: ["Decision"], q: "tmux", isolate: 0, facets: { platform: "linux", status: "draft" } },
       },
       {
         sel: { kind: "concept", id: "nvim/architecture" },
-        filters: { hidden: ["Decision"], q: "tmux", isolate: 1, facets: { platform: "darwin", status: "all" } },
+        filters: { hidden: ["Decision"], q: "tmux", isolate: 1, facets: { platform: "macos", status: "all" } },
       },
     ] as const) {
       const decoded = decodeViewHash(encodeViewHash(view as never), model);
@@ -150,32 +150,32 @@ describe("decodeViewHash", () => {
   });
 
   test("only known facet names decode; a param outside a facet's values clamps to 'all'", () => {
-    expect(decodeViewHash("?platform=darwin", model).filters.facets).toEqual({ platform: "darwin", status: "all" });
+    expect(decodeViewHash("?platform=macos", model).filters.facets).toEqual({ platform: "macos", status: "all" });
     expect(decodeViewHash("?platform=bogus", model).filters.facets.platform).toBe("all");
-    expect(decodeViewHash("?nope=darwin", model).filters.facets).toEqual({ platform: "all", status: "all" });
+    expect(decodeViewHash("?nope=macos", model).filters.facets).toEqual({ platform: "all", status: "all" });
   });
 
   test("os= decodes as a legacy alias for a facet literally named 'platform'", () => {
-    expect(decodeViewHash("?os=darwin", model).filters.facets.platform).toBe("darwin");
-    expect(decodeViewHash("f/scripts/okf/viz.ts?os=nixos", model).filters.facets.platform).toBe("nixos");
-    expect(decodeViewHash("d/flakes/ccglass?os=darwin", model).filters.facets.platform).toBe("darwin");
+    expect(decodeViewHash("?os=macos", model).filters.facets.platform).toBe("macos");
+    expect(decodeViewHash("f/scripts/okf/viz.ts?os=linux", model).filters.facets.platform).toBe("linux");
+    expect(decodeViewHash("d/flakes/ccglass?os=macos", model).filters.facets.platform).toBe("macos");
     expect(decodeViewHash("c/nvim/architecture?os=bogus", model).filters.facets.platform).toBe("all");
     expect(decodeViewHash("c/nvim/architecture", model).filters.facets.platform).toBe("all");
   });
 
   test("os= is ignored when no facet is literally named 'platform'", () => {
     const noPlatform = { ...model, facets: [{ name: "status", values: ["draft", "stable"] }] };
-    expect(decodeViewHash("?os=darwin", noPlatform).filters.facets).toEqual({ status: "all" });
+    expect(decodeViewHash("?os=macos", noPlatform).filters.facets).toEqual({ status: "all" });
   });
 
   test("an explicit platform= wins over a simultaneous legacy os=", () => {
-    expect(decodeViewHash("?platform=nixos&os=darwin", model).filters.facets.platform).toBe("nixos");
+    expect(decodeViewHash("?platform=linux&os=macos", model).filters.facets.platform).toBe("linux");
   });
 
   test("a model without configured facets decodes an empty facets record", () => {
     const generic = { ...model, facets: undefined };
-    expect(decodeViewHash("?os=darwin", generic).filters.facets).toEqual({});
-    expect(decodeViewHash("?os=darwin", { ...model, facets: [] }).filters.facets).toEqual({});
+    expect(decodeViewHash("?os=macos", generic).filters.facets).toEqual({});
+    expect(decodeViewHash("?os=macos", { ...model, facets: [] }).filters.facets).toEqual({});
   });
 });
 

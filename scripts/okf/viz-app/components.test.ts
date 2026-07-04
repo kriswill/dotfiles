@@ -296,26 +296,26 @@ describe("IsolateControl", () => {
 });
 
 describe("FacetControls", () => {
-  test("renders all/darwin/nixos segments; active tracks viz.facetSel; clicks set it", () => {
+  test("renders all/macos/linux segments; active tracks viz.facetSel; clicks set it", () => {
     const state = createVizState(model());
     mountC(FacetControls, { viz: state });
-    const [all, darwin, nixos] = [...document.querySelectorAll(".facet .seg")] as HTMLElement[];
-    expect([all!.textContent?.trim(), darwin!.textContent?.trim(), nixos!.textContent?.trim()]).toEqual([
+    const [all, macos, linux] = [...document.querySelectorAll(".facet .seg")] as HTMLElement[];
+    expect([all!.textContent?.trim(), macos!.textContent?.trim(), linux!.textContent?.trim()]).toEqual([
       "all",
-      "darwin",
-      "nixos",
+      "macos",
+      "linux",
     ]);
     expect(all!.classList.contains("active")).toBe(true); // defaults to "all"
 
-    darwin!.click();
+    macos!.click();
     flushSync();
-    expect(state.facetSel.platform).toBe("darwin");
-    expect(darwin!.classList.contains("active")).toBe(true);
+    expect(state.facetSel.platform).toBe("macos");
+    expect(macos!.classList.contains("active")).toBe(true);
     expect(all!.classList.contains("active")).toBe(false);
 
-    nixos!.click();
+    linux!.click();
     flushSync();
-    expect(state.facetSel.platform).toBe("nixos");
+    expect(state.facetSel.platform).toBe("linux");
 
     all!.click();
     flushSync();

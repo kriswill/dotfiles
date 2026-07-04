@@ -324,16 +324,16 @@ describe("parsePackagePlatforms", () => {
   };
 `;
 
-  const GUARDS = { darwin: "darwin", linux: "nixos" };
+  const GUARDS = { darwin: "macos", linux: "linux" };
 
   test("classifies both guarded blocks, no attrs dropped past a \${system} '}'", () => {
     expect(parsePackagePlatforms(nix, GUARDS)).toEqual({
-      "apple-container": "darwin",
-      podman: "darwin",
-      kitten: "darwin",
-      packaged: "darwin",
-      "flatpak-user": "nixos",
-      wowup: "nixos",
+      "apple-container": "macos",
+      podman: "macos",
+      kitten: "macos",
+      packaged: "macos",
+      "flatpak-user": "linux",
+      wowup: "linux",
     });
     // Universal packages (outside any optionalAttrs block) are absent -> "both".
     expect(parsePackagePlatforms(nix, GUARDS)["iv"]).toBeUndefined();
@@ -365,39 +365,39 @@ describe("facetValueOf", () => {
   // node actually hits.
   const facet: FacetConfig = {
     name: "platform",
-    values: ["darwin", "nixos"],
-    types: { "Darwin Module": "darwin", "NixOS Module": "nixos" },
-    ids: { "hosts/nebula": "nixos" },
+    values: ["macos", "linux"],
+    types: { "Darwin Module": "macos", "NixOS Module": "linux" },
+    ids: { "hosts/nebula": "linux" },
     frontmatter: "os",
-    nixPackages: { file: "modules/packages.nix", guards: { darwin: "darwin", linux: "nixos" }, types: ["Nix Package"] },
+    nixPackages: { file: "modules/packages.nix", guards: { darwin: "macos", linux: "linux" }, types: ["Nix Package"] },
   };
-  const nix = { kitten: "darwin", "flatpak-user": "nixos" };
+  const nix = { kitten: "macos", "flatpak-user": "linux" };
 
   test("ids wins over nix-packages, frontmatter, and types", () => {
-    const n = node("hosts/nebula", "Darwin Module", "Nebula", { fm: { os: "darwin" } });
-    expect(facetValueOf(n, facet, nix)).toBe("nixos");
+    const n = node("hosts/nebula", "Darwin Module", "Nebula", { fm: { os: "macos" } });
+    expect(facetValueOf(n, facet, nix)).toBe("linux");
   });
 
   test("nix-packages wins over frontmatter and types when the type is listed", () => {
-    const n = node("packages/kitten", "Nix Package", "kitten", { fm: { os: "nixos" } });
-    expect(facetValueOf(n, facet, nix)).toBe("darwin");
+    const n = node("packages/kitten", "Nix Package", "kitten", { fm: { os: "linux" } });
+    expect(facetValueOf(n, facet, nix)).toBe("macos");
   });
 
   test("a nix-packages miss falls through to frontmatter, then types — it does not resolve to unresolved", () => {
-    const withFm = node("packages/iv", "Nix Package", "iv", { fm: { os: "nixos" } });
-    expect(facetValueOf(withFm, facet, nix)).toBe("nixos");
+    const withFm = node("packages/iv", "Nix Package", "iv", { fm: { os: "linux" } });
+    expect(facetValueOf(withFm, facet, nix)).toBe("linux");
     const bare = node("packages/iv", "Nix Package", "iv", {});
     expect(facetValueOf(bare, facet, nix)).toBeUndefined(); // nix miss, no fm, "Nix Package" unlisted in types
   });
 
   test("frontmatter wins over types when present", () => {
-    const n = node("decisions/x", "Darwin Module", "X", { fm: { os: "nixos" } });
-    expect(facetValueOf(n, facet, {})).toBe("nixos");
+    const n = node("decisions/x", "Darwin Module", "X", { fm: { os: "linux" } });
+    expect(facetValueOf(n, facet, {})).toBe("linux");
   });
 
   test("non-string frontmatter values are ignored, falling through to types", () => {
     const n = node("modules/nh", "Darwin Module", "Nh", { fm: { os: 123 } });
-    expect(facetValueOf(n, facet, {})).toBe("darwin");
+    expect(facetValueOf(n, facet, {})).toBe("macos");
   });
 
   test("a frontmatter value outside an explicit values list is unresolved, no fall-through to types", () => {
@@ -407,7 +407,7 @@ describe("facetValueOf", () => {
 
   test("types is the last resort", () => {
     const n = node("modules/keyring", "NixOS Module", "Keyring", {});
-    expect(facetValueOf(n, facet, {})).toBe("nixos");
+    expect(facetValueOf(n, facet, {})).toBe("linux");
   });
 
   test("an unlisted type with no ids/nix/fm hit resolves to undefined (unresolved, always visible)", () => {
@@ -443,16 +443,16 @@ describe("buildModel facets", () => {
         node("decisions/x", "Decision", "x"), // formerly "neutral" -> unresolved (unlisted type)
       ],
       edges: [],
-      facetMaps: { platform: { kitten: "darwin" } },
+      facetMaps: { platform: { kitten: "macos" } },
       cfg: cfg(),
     });
-    expect(m.facets).toEqual([{ name: "platform", values: ["darwin", "nixos"] }]);
+    expect(m.facets).toEqual([{ name: "platform", values: ["macos", "linux"] }]);
     expect(m.facetById["platform"]).toEqual({
-      "modules/nh": "darwin",
-      "modules/keyring": "nixos",
-      "packages/kitten": "darwin",
-      "hosts/nebula": "nixos", // ids override
-      "hosts/k": "darwin", // types default
+      "modules/nh": "macos",
+      "modules/keyring": "linux",
+      "packages/kitten": "macos",
+      "hosts/nebula": "linux", // ids override
+      "hosts/k": "macos", // types default
     });
     for (const dropped of ["modules/tmux", "packages/iv", "decisions/x"])
       expect(m.facetById["platform"]![dropped]).toBeUndefined();
@@ -483,16 +483,16 @@ describe("buildModel facets", () => {
       edges: [],
       cfg: {
         facet: {
-          platform: { values: ["darwin", "nixos"], types: { "Darwin Module": "darwin" } },
+          platform: { values: ["macos", "linux"], types: { "Darwin Module": "macos" } },
           status: { frontmatter: "status" },
         },
       },
     });
     expect(m.facets).toEqual([
-      { name: "platform", values: ["darwin", "nixos"] },
+      { name: "platform", values: ["macos", "linux"] },
       { name: "status", values: ["stable"] },
     ]);
-    expect(m.facetById["platform"]).toEqual({ a: "darwin" });
+    expect(m.facetById["platform"]).toEqual({ a: "macos" });
     expect(m.facetById["status"]).toEqual({ a: "stable" });
   });
 

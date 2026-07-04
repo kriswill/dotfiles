@@ -405,21 +405,21 @@ describe("facet lenses", () => {
     expect(s.visibleSorted).toHaveLength(4);
   });
 
-  test("darwin lens shows darwin + unresolved concepts, hides nixos-only", () => {
+  test("macos lens shows macos + unresolved concepts, hides linux-only", () => {
     const s = createVizState(platModel());
-    s.setFacet("platform", "darwin");
+    s.setFacet("platform", "macos");
     expect(s.visibleSorted.map((n) => n.id).sort()).toEqual(["decisions/x", "modules/nh", "modules/tmux"]);
   });
 
-  test("nixos lens shows nixos + unresolved concepts, hides darwin-only", () => {
+  test("linux lens shows linux + unresolved concepts, hides macos-only", () => {
     const s = createVizState(platModel());
-    s.setFacet("platform", "nixos");
+    s.setFacet("platform", "linux");
     expect(s.visibleSorted.map((n) => n.id).sort()).toEqual(["decisions/x", "modules/keyring", "modules/tmux"]);
   });
 
   test("composes via AND with type and search filters", () => {
     const s = createVizState(platModel());
-    s.setFacet("platform", "darwin"); // {nh, tmux, x}
+    s.setFacet("platform", "macos"); // {nh, tmux, x}
     s.toggleType("Dual Module"); // remove tmux -> {nh, x}
     expect(s.visibleSorted.map((n) => n.id).sort()).toEqual(["decisions/x", "modules/nh"]);
     s.query = "nh"; // -> {nh}
@@ -434,31 +434,31 @@ describe("facet lenses", () => {
 
   test("setFacet on an unknown facet name is a no-op", () => {
     const s = createVizState(platModel());
-    s.setFacet("nope", "darwin");
+    s.setFacet("nope", "macos");
     expect(s.facetSel).toEqual({ platform: "all" });
   });
 
   test("a generic (no-config) model has no facet lenses at all", () => {
     const s = createVizState(model()); // no cfg -> facets []
     expect(s.facetSel).toEqual({});
-    s.setFacet("platform", "darwin");
+    s.setFacet("platform", "macos");
     expect(s.facetSel).toEqual({});
-    s.setFilters([], "", 0, { platform: "darwin" });
+    s.setFilters([], "", 0, { platform: "macos" });
     expect(s.facetSel).toEqual({});
   });
 
   test("a facet lens is global: it does NOT reset on clearSelection", () => {
     const s = createVizState(platModel());
     s.selectConcept("modules/nh");
-    s.setFacet("platform", "darwin");
+    s.setFacet("platform", "macos");
     s.clearSelection();
-    expect(s.facetSel.platform).toBe("darwin"); // unlike isolate, which resets
+    expect(s.facetSel.platform).toBe("macos"); // unlike isolate, which resets
   });
 
   test("setFilters accepts a facet-selection record (4th arg), defaults to 'all'", () => {
     const s = createVizState(platModel());
-    s.setFilters([], "", 0, { platform: "nixos" });
-    expect(s.facetSel.platform).toBe("nixos");
+    s.setFilters([], "", 0, { platform: "linux" });
+    expect(s.facetSel.platform).toBe("linux");
     s.setFilters([], "");
     expect(s.facetSel.platform).toBe("all");
   });
@@ -473,16 +473,16 @@ describe("facet lenses", () => {
       edges: [],
       cfg: {
         facet: {
-          platform: { values: ["darwin", "nixos"], types: { "Darwin Module": "darwin", "NixOS Module": "nixos" } },
+          platform: { values: ["macos", "linux"], types: { "Darwin Module": "macos", "NixOS Module": "linux" } },
           status: { frontmatter: "status" },
         },
       },
     });
     const s = createVizState(m);
-    s.setFacet("platform", "darwin");
+    s.setFacet("platform", "macos");
     expect(s.visibleSorted.map((n) => n.id).sort()).toEqual(["a", "b"]);
     s.setFacet("status", "stable");
-    expect(s.visibleSorted.map((n) => n.id)).toEqual(["a"]); // must be darwin AND stable
+    expect(s.visibleSorted.map((n) => n.id)).toEqual(["a"]); // must be macos AND stable
   });
 });
 

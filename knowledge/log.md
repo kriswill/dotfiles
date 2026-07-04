@@ -2,6 +2,22 @@
 
 ## 2026-07-04
 
+- **Update** — `okf-viz.toml`'s `platform` facet values renamed
+  `darwin`/`nixos` → `macos`/`linux` (`[facet.platform]` `values`, and the
+  RHS of `.types`/`.ids`/`.nix-packages.guards`) for canonical platform
+  naming — `nixos` is one specific Linux configuration and `darwin` is the
+  macOS kernel name, not a name a non-engineer would use for the OS. Guard
+  **keys** (`darwin`/`linux`, the `optionalAttrs` predicate substrings
+  matched against `modules/packages.nix`) are unchanged, as are the concept
+  *type* taxonomy (`Darwin Module`/`NixOS Module`/`Dual Module`) and tags
+  (`darwin-module`/`nixos-module`) — those name the Nix module class, not
+  the platform, and were kept as-is by design. No `knowledge/*.md`
+  front-matter changed: the facet resolves per concept at viz build time
+  and was never hand-authored. Old deep links (`?platform=darwin|nixos`,
+  legacy `?os=darwin|nixos`) now silently clamp to `all` on decode — accepted,
+  since `knowledge/viz.html` is gitignored and locally regenerated. Verified
+  by the full 232-test `scripts/okf` suite, `okf viz`, and `okf validate`.
+
 - **Creation** — [viz-config-toml](decisions/viz-config-toml.md): every
   repo-specific string and setting in the viz moved out of the code into an
   optional repo-root `okf-viz.toml` (exhaustive scope — display strings, 0..n
