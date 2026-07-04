@@ -283,7 +283,7 @@ export function createVizState(model: VizModel) {
       repaintNow();
     },
     colorOf(t: string) {
-      // Curated slot if registered in TYPE_ORDER; otherwise a stable
+      // Curated slot if registered in cfg.taxonomy.types; otherwise a stable
       // generated color at the theme's lightness/chroma.
       return slots[t] || nameColor(t, THEMES[themeIndex]!.gen);
     },

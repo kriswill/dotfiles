@@ -113,6 +113,32 @@ describe("normalizeVizConfig", () => {
     expect(() => normalizeVizConfig(base, { strict: true })).toThrow(/packages-nix/);
   });
 
+  test("strict: duplicate taxonomy.types / group-order entries rejected", () => {
+    expect(() => normalizeVizConfig({ taxonomy: { types: ["A", "B", "A"] } }, { strict: true })).toThrow(
+      /taxonomy\.types: duplicate/,
+    );
+    expect(() => normalizeVizConfig({ taxonomy: { "group-order": ["G", "G"] } }, { strict: true })).toThrow(
+      /taxonomy\.group-order: duplicate/,
+    );
+  });
+
+  test("path fields drop trailing slashes; '' unsets nullable overrides", () => {
+    const c = normalizeVizConfig(
+      {
+        bundle: { dir: "kb/" },
+        display: { name: "" },
+        repo: { url: "" },
+        platform: { values: ["x"], "packages-nix": "pkgs.nix/", "host-default": "" },
+      },
+      { strict: true },
+    );
+    expect(c.bundle.dir).toBe("kb");
+    expect(c.display.name).toBeNull();
+    expect(c.repo.url).toBeNull();
+    expect(c.platform.packagesNix).toBe("pkgs.nix");
+    expect(c.platform.hostDefault).toBeNull();
+  });
+
   test("strict: >12 taxonomy types warns but does not throw", () => {
     const warnings: string[] = [];
     const types = Array.from({ length: 13 }, (_, i) => "T" + i);
@@ -131,5 +157,8 @@ describe("displayName", () => {
     expect(displayName(cfg(), "kriswill/dotfiles")).toBe("kriswill/dotfiles");
     expect(displayName(cfg(), null)).toBe("OKF bundle");
     expect(displayName(cfg({ "fallback-name": "knowledge/" }), null)).toBe("knowledge/");
+  });
+  test("an empty-string name override means 'derive', not a blank header", () => {
+    expect(displayName(cfg({ name: "" }), "kriswill/dotfiles")).toBe("kriswill/dotfiles");
   });
 });
