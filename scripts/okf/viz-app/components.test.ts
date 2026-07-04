@@ -87,6 +87,64 @@ describe("Legend", () => {
     flushSync();
     expect(state.hidden.size).toBe(0);
   });
+
+  test("renders one group header (both fixture types are root ids -> Knowledge)", () => {
+    const state = createVizState(model());
+    mountC(Legend, { viz: state });
+    const groups = [...document.querySelectorAll(".leg-group")];
+    expect(groups.map((g) => g.textContent?.trim())).toEqual(["Knowledge"]);
+  });
+
+  test("group header click toggles every type in the group; alt-click solos the group", () => {
+    const groupModel = buildModel({
+      nodes: [
+        node("decisions/x", "Decision", "X"),
+        node("patterns/y", "Pattern", "Y"),
+        node("modules/z", "Darwin Module", "Z"),
+      ],
+      edges: [],
+    });
+    const state = createVizState(groupModel);
+    mountC(Legend, { viz: state });
+    const headers = [...document.querySelectorAll(".leg-group")] as HTMLElement[];
+    expect(headers.map((h) => h.textContent?.trim())).toEqual(["Knowledge", "System"]);
+
+    headers[0]!.click(); // toggle Knowledge off
+    flushSync();
+    expect(state.hidden.has("Decision")).toBe(true);
+    expect(state.hidden.has("Pattern")).toBe(true);
+    expect(state.hidden.has("Darwin Module")).toBe(false);
+    headers[0]!.click(); // toggle back on
+    flushSync();
+    expect(state.hidden.size).toBe(0);
+
+    headers[0]!.dispatchEvent(new MouseEvent("click", { altKey: true, bubbles: true })); // solo Knowledge
+    flushSync();
+    expect(state.hidden.has("Darwin Module")).toBe(true);
+    expect(state.hidden.has("Decision")).toBe(false);
+    expect(state.hidden.has("Pattern")).toBe(false);
+  });
+
+  test("a fully-hidden group's header dims, matching its child rows", () => {
+    const groupModel = buildModel({
+      nodes: [
+        node("decisions/x", "Decision", "X"),
+        node("patterns/y", "Pattern", "Y"),
+        node("modules/z", "Darwin Module", "Z"),
+      ],
+      edges: [],
+    });
+    const state = createVizState(groupModel);
+    mountC(Legend, { viz: state });
+    const headers = [...document.querySelectorAll(".leg-group")] as HTMLElement[];
+    expect(headers.some((h) => h.classList.contains("off"))).toBe(false);
+    headers[0]!.click(); // hide Knowledge entirely
+    flushSync();
+    const knowledge = [...document.querySelectorAll(".leg-group")].find((h) => h.textContent?.trim() === "Knowledge")!;
+    const system = [...document.querySelectorAll(".leg-group")].find((h) => h.textContent?.trim() === "System")!;
+    expect(knowledge.classList.contains("off")).toBe(true);
+    expect(system.classList.contains("off")).toBe(false);
+  });
 });
 
 describe("ConceptList", () => {
