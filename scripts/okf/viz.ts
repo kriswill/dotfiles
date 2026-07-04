@@ -6,7 +6,7 @@
 // simulates or jiggles at runtime. The viewer app (viz-app/) is bundled by
 // Bun.build with three + postprocessing and inlined, so the output is still
 // one offline file:// page. Repo-specific strings/settings come from an
-// optional ./viz.toml at the repo root (viz-app/config.ts); absent -> generic.
+// optional ./okf-viz.toml at the repo root (viz-app/config.ts); absent -> generic.
 
 import { existsSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { extname, join } from "node:path";
@@ -39,16 +39,16 @@ const lap = (name: string) => {
 
 const repo = repoRoot();
 
-// Optional repo-root viz.toml, normalized strictly: a malformed or misspelled
+// Optional repo-root okf-viz.toml, normalized strictly: a malformed or misspelled
 // config fails the build rather than silently rendering wrong. Absent file ->
 // generic defaults (no platform filter, alphabetical types, flat legend).
-const cfgPath = join(repo, "viz.toml");
+const cfgPath = join(repo, "okf-viz.toml");
 let cfgRaw: unknown = {};
 if (existsSync(cfgPath)) {
   try {
     cfgRaw = Bun.TOML.parse(readFileSync(cfgPath, "utf8"));
   } catch (e) {
-    console.error(`viz: cannot parse viz.toml — ${e instanceof Error ? e.message : e}`);
+    console.error(`viz: cannot parse okf-viz.toml — ${e instanceof Error ? e.message : e}`);
     process.exit(1);
   }
 }

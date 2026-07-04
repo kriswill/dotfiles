@@ -74,7 +74,7 @@ bun scripts/okf/okf.ts <cmd>   # equivalent, no dev shell needed
 `window.__okf.perf`. The viewer app (`scripts/okf/viz-app/`) has bun tests
 (`cd scripts/okf && bun test`). Repo-specific strings and settings (header,
 platform filter, type taxonomy, legend groups, embed cap, bundle dir) come
-from the optional repo-root [`viz.toml`](../viz.toml) — strict-validated at
+from the optional repo-root [`okf-viz.toml`](../okf-viz.toml) — strict-validated at
 build time; without it the viewer builds with generic fallbacks (see the
 [viz-config-toml](decisions/viz-config-toml.md) decision). The graph is
 published as public documentation at <https://kris.net/dotfiles/> — rebuilt
