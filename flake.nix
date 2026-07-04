@@ -43,6 +43,11 @@
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.flake-parts.follows = "flake-parts";
     };
+    okf = {
+      url = "./flakes/okf";
+      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.flake-parts.follows = "flake-parts";
+    };
     codebase-memory-mcp = {
       url = "github:kriswill/codebase-memory-mcp/nix";
       inputs.nixpkgs.follows = "nixpkgs";

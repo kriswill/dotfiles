@@ -12,12 +12,14 @@ statix, nixfmt-tree, just), the shell puts **`okf`** on `PATH` — a
 `writeShellApplication` wrapper over the knowledge-bundle tooling
 (`okf scaffold|index|validate|viz`, see the
 [OKF Profile](../okf-profile.md)). The wrapper resolves the checkout at call
-time via `git rev-parse --show-toplevel` rather than baking a store copy of
-`scripts/okf/` in, because the tools read and write the working tree.
+time via `git rev-parse --show-toplevel` and runs the **working tree** copy of
+[`flakes/okf/`](../packages/okf.md) — edits are live, no rebuild. The
+nix-built package from that sub-flake is for external consumption; see the
+[okf-subflake](../decisions/okf-subflake.md) decision for the split.
 
 Plumbing layer of the flake — see the [Dendritic module layout](../patterns/dendritic-modules.md).
 
 ## Source
 
 - Module: [`modules/dev.nix`](../../modules/dev.nix)
-- Tooling: [`scripts/okf/`](../../scripts/okf/)
+- Tooling: [`flakes/okf/`](../../flakes/okf/)

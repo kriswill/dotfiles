@@ -3,7 +3,7 @@ import { decodeHash, decodeViewHash, encodeHash, encodeViewHash } from "./hash";
 
 const model = {
   byId: { "nvim/architecture": {} },
-  files: { "scripts/okf/viz.ts": {}, "docs/50%.md": {}, "docs/what?.md": {} },
+  files: { "flakes/okf/viz.ts": {}, "docs/50%.md": {}, "docs/what?.md": {} },
   dirs: { "flakes/ccglass": {} },
   typeCounts: { "Darwin Module": 2, Decision: 1 },
   facets: [
@@ -15,7 +15,7 @@ const model = {
 describe("encodeHash", () => {
   test("concept / file / dir / none", () => {
     expect(encodeHash({ kind: "concept", id: "nvim/architecture" })).toBe("c/nvim/architecture");
-    expect(encodeHash({ kind: "file", path: "scripts/okf/viz.ts" })).toBe("f/scripts/okf/viz.ts");
+    expect(encodeHash({ kind: "file", path: "flakes/okf/viz.ts" })).toBe("f/flakes/okf/viz.ts");
     expect(encodeHash({ kind: "dir", path: "flakes/ccglass" })).toBe("d/flakes/ccglass");
     expect(encodeHash({ kind: "none" })).toBe("");
   });
@@ -141,7 +141,7 @@ describe("decodeViewHash", () => {
 
   test("a stray isolate= on a non-concept selection is dropped on decode", () => {
     expect(decodeViewHash("?isolate=2", model).filters.isolate).toBe(0);
-    expect(decodeViewHash("f/scripts/okf/viz.ts?isolate=1", model).filters.isolate).toBe(0);
+    expect(decodeViewHash("f/flakes/okf/viz.ts?isolate=1", model).filters.isolate).toBe(0);
   });
 
   test("garbage isolate values clamp to 0", () => {
@@ -157,7 +157,7 @@ describe("decodeViewHash", () => {
 
   test("os= decodes as a legacy alias for a facet literally named 'platform'", () => {
     expect(decodeViewHash("?os=macos", model).filters.facets.platform).toBe("macos");
-    expect(decodeViewHash("f/scripts/okf/viz.ts?os=linux", model).filters.facets.platform).toBe("linux");
+    expect(decodeViewHash("f/flakes/okf/viz.ts?os=linux", model).filters.facets.platform).toBe("linux");
     expect(decodeViewHash("d/flakes/ccglass?os=macos", model).filters.facets.platform).toBe("macos");
     expect(decodeViewHash("c/nvim/architecture?os=bogus", model).filters.facets.platform).toBe("all");
     expect(decodeViewHash("c/nvim/architecture", model).filters.facets.platform).toBe("all");
@@ -186,7 +186,7 @@ describe("decodeHash", () => {
   });
 
   test("valid file", () => {
-    expect(decodeHash("f/scripts/okf/viz.ts", model)).toEqual({ kind: "file", path: "scripts/okf/viz.ts" });
+    expect(decodeHash("f/flakes/okf/viz.ts", model)).toEqual({ kind: "file", path: "flakes/okf/viz.ts" });
   });
 
   test("valid dir", () => {

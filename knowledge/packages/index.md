@@ -18,6 +18,7 @@ flake consumes via relative-path inputs.
 * [Iv](iv.md) - A command-line image viewer using terminal graphics.
 * [Kitten](kitten.md) - Kitten - A collection of small, useful programs for the kitty terminal.
 * [Noctalia Config](noctalia-config.md) - Custom Nix package 'noctalia-config'.
+* [okf](okf.md) - okf — CLI for maintaining OKF knowledge bundles (scaffold/index/validate/viz).
 * [Pass Xdg](pass-xdg.md) - pass-xdg — a drop-in `pass` (standard unix password manager) that defaults its store to an XDG-compliant location instead of the upstream default `~/.password-store`.
 * [Podman](podman.md) - Official prebuilt podman remote client for macOS.
 * [Tomato](tomato.md) - CLI to get/set TOML values preserving comments and formatting.

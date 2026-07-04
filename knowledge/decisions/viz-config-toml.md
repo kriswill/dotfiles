@@ -7,8 +7,8 @@ timestamp: '2026-07-04T00:00:00-07:00'
 ---
 
 **Status:** active. **Where:** [../../okf-viz.toml](../../okf-viz.toml), schema in
-[../../scripts/okf/viz-app/config.ts](../../scripts/okf/viz-app/config.ts),
-loaded by [../../scripts/okf/viz.ts](../../scripts/okf/viz.ts).
+[../../flakes/okf/viz-app/config.ts](../../flakes/okf/viz-app/config.ts),
+loaded by [../../flakes/okf/viz.ts](../../flakes/okf/viz.ts).
 
 ## Context
 

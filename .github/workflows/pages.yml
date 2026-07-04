@@ -11,7 +11,7 @@ on:
       - main
     paths:
       - "knowledge/**"
-      - "scripts/okf/**"
+      - "flakes/okf/**"
       - "okf-viz.toml"
       - ".github/workflows/pages.yml"
   workflow_dispatch:
@@ -36,11 +36,11 @@ jobs:
       - uses: oven-sh/setup-bun@v2
 
       - name: Install viewer dependencies
-        working-directory: scripts/okf
+        working-directory: flakes/okf
         run: bun install --frozen-lockfile
 
       - name: Build viz.html
-        run: bun scripts/okf/okf.ts viz
+        run: bun flakes/okf/okf.ts viz
 
       - name: Stage Pages artifact
         run: |
