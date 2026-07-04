@@ -2,7 +2,7 @@
 // Stage.svelte bridges it into the imperative GraphScene.
 import { SvelteSet } from "svelte/reactivity";
 import { nameColor } from "./color";
-import { neighborsWithin, TYPE_ORDER, type ConceptNode, type VizModel } from "./data";
+import { conceptTree, neighborsWithin, treeIds, TYPE_ORDER, type ConceptNode, type ConceptTree, type VizModel } from "./data";
 import type { Selection } from "./hash";
 import { applyThemeVars, defaultThemeIndex, THEMES } from "./themes";
 
@@ -97,6 +97,22 @@ export function createVizState(model: VizModel) {
     isolateDepth && selectedConcept ? neighborsWithin(model, selectedConcept.id, isolateDepth) : null,
   );
   const sceneSelectedIndex = $derived(focusedConcept ? (model.indexOf.get(focusedConcept.id) ?? null) : null);
+  // Pinned sidebar listing: the focused concept at the top with linked nodes
+  // nested beneath by hop distance (full isolation depth while isolation is
+  // active; direct links only otherwise), then the remaining visible nodes
+  // flat. Anchored on focusedConcept — the node the list highlight/scroll
+  // already track — so the pin survives file/dir views, where neighborIds
+  // suspends and the layout falls back to depth-1 + rest. The anchor itself
+  // is always pinned even when it fails the filters, so the list can show
+  // one more row than the "N of M" count.
+  const listing = $derived.by(() => {
+    if (!focusedConcept) return { tree: null as ConceptTree | null, rest: visibleSorted };
+    // neighborIds non-null implies isolateDepth is 1 | 2 (gate at its definition).
+    const tree = conceptTree(model, focusedConcept.id, neighborIds ? (isolateDepth as 1 | 2) : 1, visible);
+    if (!tree) return { tree: null, rest: visibleSorted };
+    const ids = treeIds(tree);
+    return { tree, rest: visibleSorted.filter((n) => !ids.has(n.id)) };
+  });
 
   return {
     model,
@@ -208,6 +224,9 @@ export function createVizState(model: VizModel) {
     visible,
     get visibleSorted() {
       return visibleSorted;
+    },
+    get listing() {
+      return listing;
     },
 
     get hover() {

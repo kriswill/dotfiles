@@ -195,6 +195,28 @@ describe("ConceptList", () => {
     flushSync();
     expect(document.querySelector("#list a.selected")).toBeNull();
   });
+
+  test("nests direct links under the pinned selection; divider only when a rest remains", () => {
+    const state = createVizState(
+      buildModel({
+        nodes: [node("a", "Decision", "Alpha"), node("b", "Pattern", "Beta"), node("c", "Decision", "Gamma")],
+        edges: [{ s: "a", t: "b" }],
+      }),
+    );
+    mountC(ConceptList, { viz: state });
+    expect(document.querySelector(".tree-divider")).toBeNull(); // no selection: flat list
+    expect(document.querySelector("#list .kids")).toBeNull();
+    state.selectConcept("a");
+    flushSync();
+    expect([...document.querySelectorAll("#list a")].map((a) => a.textContent)).toEqual(["Alpha", "Beta", "Gamma"]);
+    expect([...document.querySelectorAll("#list .kids a")].map((a) => a.textContent)).toEqual(["Beta"]);
+    expect(document.querySelector(".tree-divider")).not.toBeNull(); // unlinked Gamma sits below the divider
+    expect((document.querySelector("#list .tnode") as HTMLElement).getAttribute("style")).toContain("--dot:");
+    state.setIsolate(1);
+    flushSync();
+    expect([...document.querySelectorAll("#list a")].map((a) => a.textContent)).toEqual(["Alpha", "Beta"]);
+    expect(document.querySelector(".tree-divider")).toBeNull(); // isolation leaves no rest
+  });
 });
 
 describe("IsolateControl", () => {
