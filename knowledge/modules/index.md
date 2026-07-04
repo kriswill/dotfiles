@@ -16,6 +16,7 @@ interesting ones by hand — scaffolding never overwrites an existing doc.
 * [Console Quiet](console-quiet.md) - Sets boot.consoleLogLevel = 3 so the benign AMD i2c_piix4 SMBus probe-NAK errors stop flashing over the ly greeter; journald still records everything.
 * [Core](core.md) - The always-on darwin system baseline shared by every host — stateVersion, primary user, baseline packages, touch-ID sudo, fonts, shell enables, nix/nixpkgs settings.
 * [Darwin](darwin.md) - Declares `configurations.darwin.<name>` and realises each into a `darwinConfigurations.<name>` flake output (plus a toplevel build check).
+* [Determinate](determinate.md) - Determinate Nix replaces snowglobe-lib's Lix default: snowglobe sets nix.package at priority 1337 (setDefault); the determinate module's plain assignment wins — no fork, no mkForce.
 * [Dev](dev.md) - Development shell (deadnix, statix, nixfmt-tree, just, okf) and formatter.
 * [Diffnav](diffnav.md) - diffnav git diff pager.
 * [Direnv Nom](direnv-nom.md) - Wraps nix-direnv's _nix() to pipe `use flake` build logs through nix-output-monitor, with an nvd closure diff after successful builds; wrapper text shared via lib/direnv-nom-wrapper.nix.

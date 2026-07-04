@@ -2,6 +2,18 @@
 
 ## 2026-07-03
 
+- **Creation** — nebula's Nix implementation swapped from Lix to Determinate
+  Nix via the new [determinate](modules/determinate.md) nixos-class module
+  (imports the determinate flake input's NixOS module; snowglobe-lib unforked —
+  its `setDefault`/1337 `nix.package = lix` loses to the module's plain
+  assignment). Motive: Lix lacks Nix ≥2.26 relative-path input locking
+  (lix#641, Flakes frozen), so the `./flakes/*` sub-flake inputs re-locked to
+  machine-local store paths on every rebuild, churning `flake.lock` twice per
+  `nrs` plus every direnv reload. The lock's sub-flake nodes are now stable
+  relative paths with a `parent` field; lazy trees also stop the dirty-tree
+  store copies. Full rationale:
+  [Replace Lix With Determinate Nix](decisions/lix-to-determinate.md).
+
 - **Update** — viz filter UX, phase C (platform axis), on top of phases A/B.
   A segmented `all | darwin | nixos` control below the legend filters the
   graph by which OS a concept applies to; `darwin` shows darwin + dual +
