@@ -11,7 +11,13 @@
 <aside id="side">
   <div class="scroll">
     <h1>knowledge/ bundle</h1>
-    <div class="sub" id="counts">{viz.model.nodes.length} concepts · {viz.model.edges.length} links</div>
+    <div class="sub" id="counts">
+      {#if viz.hidden.size > 0 || viz.query.trim()}
+        {viz.visibleSorted.length} of {viz.model.nodes.length} concepts · {viz.model.edges.length} links
+      {:else}
+        {viz.model.nodes.length} concepts · {viz.model.edges.length} links
+      {/if}
+    </div>
     <Search {viz} />
     <Legend {viz} />
     <ConceptList {viz} />
