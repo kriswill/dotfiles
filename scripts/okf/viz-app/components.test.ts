@@ -19,7 +19,7 @@ const model = () =>
     nodes: [
       node("a", "Decision", "Alpha", {
         desc: "the alpha decision",
-        fm: { type: "Decision", resource: "scripts/okf/viz.ts", description: "uses scripts/okf/viz.ts" },
+        fm: { title: "Alpha", type: "Decision", resource: "scripts/okf/viz.ts", description: "uses scripts/okf/viz.ts" },
         body: "## Context\nsee [beta](b.md)",
       }),
       node("b", "Pattern", "Beta"),
@@ -437,13 +437,17 @@ describe("DetailPanel", () => {
     state.selectConcept("a");
     mountC(DetailPanel, { viz: state, stageEl: stage() });
     const panel = document.getElementById("panel")!;
-    expect(panel.querySelector("h2")!.textContent).toBe("Alpha");
+    expect(panel.querySelector("h2")).toBeNull();
     expect(panel.querySelector(".bar .crumb")!.textContent).toBe("Alpha"); // locked header crumb
     expect(panel.querySelector(".bar .close")).not.toBeNull();
     expect(panel.querySelector(".chip")!.textContent).toContain("Decision");
     expect(panel.querySelector('td a[data-file="scripts/okf/viz.ts"]')).not.toBeNull();
     expect(panel.querySelector("#body-md h3")!.textContent).toBe("Context");
     expect(panel.querySelector('#body-md a[data-node="b"]')).not.toBeNull();
+    const fmKeys = [...panel.querySelectorAll("table.fm td:first-child")].map((td) => td.textContent);
+    expect(fmKeys).not.toContain("title");
+    expect(fmKeys).not.toContain("type");
+    expect(fmKeys).toContain("description");
     const backlinks = [...panel.querySelectorAll(".backlinks")];
     expect(backlinks[0]!.textContent).toContain("Beta"); // Links to
     expect(backlinks[1]!.textContent).toContain("none"); // Cited by
