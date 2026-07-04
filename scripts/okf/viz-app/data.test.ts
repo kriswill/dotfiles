@@ -1,5 +1,14 @@
 import { describe, expect, test } from "bun:test";
-import { buildModel, dirOf, neighborsWithin, parsePackagePlatforms, platformOf } from "./data";
+import {
+  buildModel,
+  conceptTree,
+  dirOf,
+  neighborsWithin,
+  parsePackagePlatforms,
+  platformOf,
+  treeIds,
+  type ConceptTree,
+} from "./data";
 import { node } from "./test-helpers";
 
 const raw = {
@@ -153,6 +162,102 @@ describe("neighborsWithin", () => {
   test("depth 2 finds no further growth once the 1-hop set is already closed", () => {
     // "b" (middle of a-b-c) already reaches its whole component at depth 1.
     expect(neighborsWithin(nm, "b", 2)).toEqual(new Set(["a", "b", "c"]));
+  });
+});
+
+describe("conceptTree", () => {
+  const all = () => true;
+  // Compact tree shape: leaf -> id, branch -> [id, [child shapes]].
+  const shape = (t: ConceptTree): unknown => (t.children.length ? [t.node.id, t.children.map(shape)] : t.node.id);
+  const chain = buildModel({
+    nodes: [
+      node("a", "Decision", "Alpha"),
+      node("b", "Pattern", "Beta"),
+      node("c", "Pattern", "Gamma"),
+      node("d", "Pattern", "Delta"),
+    ],
+    edges: [
+      { s: "a", t: "b" },
+      { s: "b", t: "c" },
+    ],
+  });
+
+  test("depth 2 nests each BFS layer one level deeper", () => {
+    expect(shape(conceptTree(chain, "a", 2, all)!)).toEqual(["a", [["b", ["c"]]]]);
+  });
+
+  test("depth 1 stops at direct links", () => {
+    expect(shape(conceptTree(chain, "a", 1, all)!)).toEqual(["a", ["b"]]);
+  });
+
+  test("a diamond attaches the shared grandchild under one parent only (alphabetically first)", () => {
+    const diamond = buildModel({
+      nodes: [
+        node("a", "Decision", "Alpha"),
+        node("b", "Pattern", "Beta"),
+        node("c", "Pattern", "Gamma"),
+        node("d", "Pattern", "Delta"),
+      ],
+      edges: [
+        { s: "a", t: "b" },
+        { s: "a", t: "c" },
+        { s: "b", t: "d" },
+        { s: "c", t: "d" },
+      ],
+    });
+    expect(shape(conceptTree(diamond, "a", 2, all)!)).toEqual(["a", [["b", ["d"]], "c"]]);
+  });
+
+  test("duplicate titles tie-break by id, for both sibling order and parent choice", () => {
+    const dup = buildModel({
+      nodes: [
+        node("a", "Decision", "Alpha"),
+        node("m2", "Pattern", "Mid"),
+        node("m1", "Pattern", "Mid"),
+        node("z", "Pattern", "Zed"),
+      ],
+      edges: [
+        { s: "a", t: "m2" },
+        { s: "a", t: "m1" },
+        { s: "m1", t: "z" },
+        { s: "m2", t: "z" },
+      ],
+    });
+    expect(shape(conceptTree(dup, "a", 2, all)!)).toEqual(["a", [["m1", ["z"]], "m2"]]);
+  });
+
+  test("an invisible node is spliced out and its visible descendants promoted", () => {
+    const t = conceptTree(chain, "a", 2, (n) => n.id !== "b")!;
+    expect(shape(t)).toEqual(["a", ["c"]]);
+    expect(treeIds(t)).toEqual(new Set(["a", "c"]));
+  });
+
+  test("the anchor is always included even when it fails visible", () => {
+    expect(shape(conceptTree(chain, "a", 1, (n) => n.id !== "a")!)).toEqual(["a", ["b"]]);
+  });
+
+  test("an edge-less anchor yields a childless root", () => {
+    expect(shape(conceptTree(chain, "d", 2, all)!)).toBe("d");
+  });
+
+  test("an unknown anchor returns null", () => {
+    expect(conceptTree(chain, "nope", 1, all)).toBeNull();
+  });
+
+  test("a cycle emits each node exactly once", () => {
+    const tri = buildModel({
+      nodes: [node("a", "Decision", "Alpha"), node("b", "Pattern", "Beta"), node("c", "Pattern", "Gamma")],
+      edges: [
+        { s: "a", t: "b" },
+        { s: "b", t: "c" },
+        { s: "c", t: "a" },
+      ],
+    });
+    expect(shape(conceptTree(tri, "a", 2, all)!)).toEqual(["a", ["b", "c"]]);
+  });
+
+  test("treeIds collects the anchor and every emitted row", () => {
+    expect(treeIds(conceptTree(chain, "a", 2, all)!)).toEqual(new Set(["a", "b", "c"]));
   });
 });
 

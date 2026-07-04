@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
-import { buildModel } from "./data";
+import { buildModel, type ConceptTree } from "./data";
 import { createVizState } from "./state.svelte";
 import { node } from "./test-helpers";
 
@@ -300,6 +300,75 @@ describe("neighborhood isolation", () => {
     s.selectDir("flakes/ccglass");
     expect(s.neighborIds).toBeNull();
     expect(s.visibleSorted).toHaveLength(3);
+  });
+});
+
+describe("pinned concept listing", () => {
+  // a—b—c chain plus disconnected d (titles: Alpha, Beta, Gamma, Delta).
+  const listModel = () =>
+    buildModel({
+      nodes: [
+        node("a", "Decision", "Alpha"),
+        node("b", "Pattern", "Beta"),
+        node("c", "Pattern", "Gamma"),
+        node("d", "Pattern", "Delta"),
+      ],
+      edges: [
+        { s: "a", t: "b" },
+        { s: "b", t: "c" },
+      ],
+    });
+  const treeShape = (t: ConceptTree | null): unknown =>
+    t === null ? null : t.children.length ? [t.node.id, t.children.map((c) => treeShape(c))] : t.node.id;
+
+  test("no selection keeps the flat alphabetical list", () => {
+    const s = createVizState(listModel());
+    expect(s.listing.tree).toBeNull();
+    expect(s.listing.rest.map((n) => n.id)).toEqual(["a", "b", "d", "c"]); // Alpha, Beta, Delta, Gamma
+  });
+
+  test("selection with isolation off pins the anchor with direct links; rest excludes tree members", () => {
+    const s = createVizState(listModel());
+    s.selectConcept("a");
+    expect(treeShape(s.listing.tree)).toEqual(["a", ["b"]]);
+    expect(s.listing.rest.map((n) => n.id)).toEqual(["d", "c"]); // Delta, Gamma
+  });
+
+  test("isolation depth controls nesting depth and empties the rest", () => {
+    const s = createVizState(listModel());
+    s.selectConcept("a");
+    s.setIsolate(2);
+    expect(treeShape(s.listing.tree)).toEqual(["a", [["b", ["c"]]]]);
+    expect(s.listing.rest).toHaveLength(0);
+    s.setIsolate(1);
+    expect(treeShape(s.listing.tree)).toEqual(["a", ["b"]]);
+    expect(s.listing.rest).toHaveLength(0);
+  });
+
+  test("type filters prune the tree", () => {
+    const s = createVizState(listModel());
+    s.selectConcept("a");
+    s.setIsolate(2);
+    s.toggleType("Pattern"); // hides b and c
+    expect(treeShape(s.listing.tree)).toBe("a");
+    expect(s.listing.rest).toHaveLength(0);
+  });
+
+  test("a file view keeps the pin on the back concept at depth 1 with the rest expanded", () => {
+    const s = createVizState(model());
+    s.selectConcept("a");
+    s.setIsolate(1);
+    s.selectFile("scripts/okf/viz.ts");
+    expect(treeShape(s.listing.tree)).toEqual(["a", ["b"]]); // anchored on backConcept
+    expect(s.listing.rest.map((n) => n.id)).toEqual(["c"]); // isolation suspended: rest reappears
+  });
+
+  test("the anchor stays pinned under a non-matching search", () => {
+    const s = createVizState(listModel());
+    s.selectConcept("a");
+    s.query = "gamma"; // matches only c, two hops away
+    expect(treeShape(s.listing.tree)).toBe("a"); // b fails the search and is spliced out; anchor kept
+    expect(s.listing.rest.map((n) => n.id)).toEqual(["c"]);
   });
 });
 

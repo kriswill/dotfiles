@@ -286,6 +286,78 @@ export function neighborsWithin(model: VizModel, id: string, depth: 1 | 2): Set<
   return seen;
 }
 
+export interface ConceptTree {
+  node: ConceptNode;
+  children: ConceptTree[];
+}
+
+/** BFS tree of `anchorId`'s neighborhood for the pinned sidebar listing.
+ *  Each node attaches to exactly one parent — its alphabetically-first
+ *  (title, then id) neighbor in the previous BFS layer — and siblings sort
+ *  alphabetically, so every reachable node renders exactly once. Invisible
+ *  nodes are spliced out with their visible descendants promoted to the
+ *  nearest visible ancestor. The anchor is always included, even when it
+ *  fails `visible` (it is the selection context). Unknown anchor -> null. */
+export function conceptTree(
+  model: VizModel,
+  anchorId: string,
+  depth: 1 | 2,
+  visible: (n: ConceptNode) => boolean,
+): ConceptTree | null {
+  const anchor = model.byId[anchorId];
+  if (!anchor) return null;
+  const byTitle = (a: ConceptNode, b: ConceptNode) => a.title.localeCompare(b.title) || a.id.localeCompare(b.id);
+
+  const layer = new Map<string, number>([[anchorId, 0]]);
+  const kids = new Map<string, ConceptNode[]>();
+  let frontier = [anchorId];
+  for (let d = 1; d <= depth; d++) {
+    const next: string[] = [];
+    for (const cur of frontier) {
+      for (const nb of model.adjById[cur] ?? []) {
+        if (!layer.has(nb)) {
+          layer.set(nb, d);
+          next.push(nb);
+        }
+      }
+    }
+    for (const id of next) {
+      const parent = [...(model.adjById[id] ?? [])]
+        .filter((p) => layer.get(p) === d - 1)
+        .map((p) => model.byId[p]!)
+        .sort(byTitle)[0]!;
+      const list = kids.get(parent.id);
+      if (list) list.push(model.byId[id]!);
+      else kids.set(parent.id, [model.byId[id]!]);
+    }
+    frontier = next;
+  }
+
+  // An invisible child is spliced out and its visible descendants promoted
+  // into this sibling list; the final sort keeps siblings alphabetical even
+  // after promotion merges two generations.
+  const build = (id: string): ConceptTree[] => {
+    const out: ConceptTree[] = [];
+    for (const c of kids.get(id) ?? []) {
+      if (visible(c)) out.push({ node: c, children: build(c.id) });
+      else out.push(...build(c.id));
+    }
+    return out.sort((a, b) => byTitle(a.node, b.node));
+  };
+  return { node: anchor, children: build(anchorId) };
+}
+
+/** Ids rendered by a conceptTree: the anchor plus every emitted row. */
+export function treeIds(t: ConceptTree): Set<string> {
+  const ids = new Set<string>();
+  const walk = (n: ConceptTree) => {
+    ids.add(n.node.id);
+    n.children.forEach(walk);
+  };
+  walk(t);
+  return ids;
+}
+
 export function loadFromDom(): VizModel {
   return buildModel(JSON.parse(document.getElementById("data")!.textContent!));
 }
