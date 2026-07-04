@@ -1,6 +1,8 @@
 // Immutable data model built once from the #data JSON blob baked in by
 // scripts/okf/viz.ts. Everything here is pure and framework-free.
 
+import { displayName, normalizeVizConfig, type FacetConfig, type VizConfig } from "./config";
+
 export interface ConceptNode {
   id: string;
   type: string;
@@ -42,17 +44,24 @@ export interface RawData {
   repoUrl?: string | null;
   /** Verified commit-hash citations: literal as written -> full oid. */
   commits?: Record<string, string>;
-  /** Package name -> platform for OS-guarded packages (parsed from modules/packages.nix). */
-  pkgPlatforms?: Record<string, "darwin" | "nixos">;
+  /** Facet name -> (package basename -> value), for facets with a
+   *  nix-packages source (parsed from that facet's configured file). */
+  facetMaps?: Record<string, Record<string, string>>;
+  /** Normalized VizConfig embedded by the build (absent: generic viewer). */
+  cfg?: unknown;
 }
-
-export type Platform = "darwin" | "nixos" | "both" | "neutral";
 
 export interface VizModel {
   nodes: ConceptNode[];
   files: Record<string, EmbeddedFile>;
   dirs: Record<string, EmbeddedDir>;
   repoUrl: string | null;
+  /** "owner/repo" display name from repoUrl (null: no GitHub origin). */
+  repoName: string | null;
+  /** Normalized viz configuration (generic defaults when unconfigured). */
+  cfg: VizConfig;
+  /** Header name: cfg.display.name ?? repoName ?? cfg.display.fallbackName. */
+  displayName: string;
   commits: Record<string, string>;
   byId: Record<string, ConceptNode>;
   indexOf: Map<string, number>;
@@ -68,31 +77,20 @@ export interface VizModel {
   typeGroup: Record<string, string>;
   /** Types per legend cluster, in allTypes order. */
   groupTypes: Record<string, string[]>;
-  /** GROUP_ORDER filtered to present clusters, "Other" appended only if non-empty. */
+  /** cfg.taxonomy.groupOrder filtered to present clusters, the "other" bucket
+   *  appended only if non-empty; [] = flat legend without group headers. */
   groupOrder: string[];
-  /** OS a concept applies to, per node id (derived from type/host/package guards). */
-  platformById: Record<string, Platform>;
+  /** Resolved facet definitions: file/array order preserved, `values`
+   *  inferred (alpha-sorted) when the config left them empty; a facet with
+   *  no rule ever resolving anything (still empty after inference) is
+   *  dropped entirely — no sidebar row, never consulted for visibility. */
+  facets: { name: string; values: string[] }[];
+  /** facet name -> node id -> resolved value; a missing entry means
+   *  "unresolved" for that facet — always visible, never hidden by it. */
+  facetById: Record<string, Record<string, string>>;
   /** Scene sphere radius per node (same order as nodes). */
   radii: number[];
 }
-
-// Fixed palette slot order (never cycled): slot N = CSS var --sN in every
-// theme (viz-app/themes.ts). Append-only — existing types keep their colors.
-// Types not listed here get a stable generated color (viz-app/color.ts).
-export const TYPE_ORDER = [
-  "Darwin Module",
-  "Nix Package",
-  "Playbook",
-  "Pattern",
-  "Decision",
-  "Host",
-  "Sub-flake",
-  "Flake-parts Module",
-  "Neovim Config",
-  "Neovim Plugin",
-  "Overlay",
-  "Reference",
-];
 
 // A concept's id is its bundle-relative path minus ".md" (viz.ts) — the
 // top-level path segment is already a stable, zero-maintenance topology
@@ -101,47 +99,25 @@ export function dirOf(id: string): string {
   return id.includes("/") ? id.split("/")[0]! : ".";
 }
 
-// Static, append-only map from a top-level bundle directory to its legend
-// cluster. A directory not listed here buckets into "Other" (buildModel)
-// instead of crashing — a safety net for a future top-level directory.
-export const GROUP_OF_DIR: Record<string, string> = {
-  decisions: "Knowledge",
-  patterns: "Knowledge",
-  playbooks: "Knowledge",
-  ".": "Knowledge",
-  modules: "System",
-  hosts: "System",
-  packages: "Packages",
-  nvim: "Neovim",
-};
-
-export const GROUP_ORDER = ["Knowledge", "System", "Packages", "Neovim"];
-
-// The repo's only nixos host; every other host is darwin. Extend if a second
-// nixos host appears (same maintenance model as GROUP_OF_DIR).
-const NIXOS_HOSTS = new Set(["nebula"]);
-
 const basename = (id: string) => id.split("/").pop() ?? id;
 
 /**
- * Package-name -> OS for the OS-guarded packages in modules/packages.nix.
- * The file has two `lib.optionalAttrs (<pred>) { <attrs> }` blocks — one
- * darwin-guarded, one linux-guarded; everything outside them is universal
- * (absent from the map -> "both"). Brace-depth scan, not a lazy regex: an
- * attr RHS like `inputs.x.packages.${system}.x` contains a `}` that would
- * truncate a non-greedy capture and silently drop later attrs. Any structural
- * change to the file degrades the affected packages to "both" — never throws.
+ * Package-name -> facet value for the OS-guarded packages in a facet's
+ * configured nix-packages file. Each `lib.optionalAttrs (<pred>) { <attrs> }`
+ * block is classified by the first `guards` key found in its predicate text
+ * (e.g. {darwin: "darwin", linux: "nixos"}); everything outside a matched
+ * block is universal (absent from the map -> falls through to the facet's
+ * next resolution stage). Brace-depth scan, not a lazy regex: an attr RHS
+ * like `inputs.x.packages.${system}.x` contains a `}` that would truncate a
+ * non-greedy capture and silently drop later attrs. Any structural change to
+ * the file degrades the affected packages to a fall-through — never throws.
  */
-export function parsePackagePlatforms(nixSource: string): Record<string, "darwin" | "nixos"> {
-  const out: Record<string, "darwin" | "nixos"> = {};
+export function parsePackagePlatforms(nixSource: string, guards: Record<string, string>): Record<string, string> {
+  const out: Record<string, string> = {};
   const re = /optionalAttrs\s*\(([^{]*)\{/g; // predicate text up to the block-opening brace
   for (let m = re.exec(nixSource); m; m = re.exec(nixSource)) {
     const pred = m[1]!;
-    const os: "darwin" | "nixos" | null = pred.includes("darwin")
-      ? "darwin"
-      : pred.includes("linux")
-        ? "nixos"
-        : null;
+    const os = Object.entries(guards).find(([k]) => pred.includes(k))?.[1] ?? null;
     if (!os) continue;
     // Scan from just after the '{' to its matching close (depth 0).
     let depth = 1;
@@ -168,36 +144,44 @@ export function parsePackagePlatforms(nixSource: string): Record<string, "darwin
   return out;
 }
 
-/** OS a concept applies to, derived from its type, id, and the package guards. */
-export function platformOf(type: string, id: string, pkgPlatforms: Record<string, "darwin" | "nixos">): Platform {
-  switch (type) {
-    case "Darwin Module":
-      return "darwin";
-    case "NixOS Module":
-      return "nixos";
-    case "Dual Module":
-    case "Flake-parts Module":
-    case "Neovim Plugin":
-    case "Neovim Config":
-      return "both";
-    case "Host":
-      return NIXOS_HOSTS.has(basename(id)) ? "nixos" : "darwin";
-    case "Nix Package":
-    case "Sub-flake":
-    case "Overlay":
-      return pkgPlatforms[basename(id)] ?? "both";
-    default:
-      // Decision/Pattern/Playbook/Reference and any unknown type: cross-cutting,
-      // never hidden by an OS filter.
-      return "neutral";
+/**
+ * Resolve one concept's value for one facet — first hit wins:
+ * `ids[full-id]` -> the facet's nix-packages map (only when the concept's
+ * type is in `nixPackages.types`, keyed by basename; a miss falls through,
+ * it does not resolve to unresolved) -> a string frontmatter value (an
+ * explicit `values` list makes an out-of-range value unresolved, no further
+ * fall-through — the author explicitly tagged it) -> `types[type]` ->
+ * undefined ("unresolved" — always visible for this facet).
+ */
+export function facetValueOf(node: ConceptNode, facet: FacetConfig, nixMap: Record<string, string>): string | undefined {
+  const id = facet.ids[node.id];
+  if (id !== undefined) return id;
+  if (facet.nixPackages && facet.nixPackages.types.includes(node.type)) {
+    const v = nixMap[basename(node.id)];
+    if (v !== undefined) return v;
   }
+  if (facet.frontmatter) {
+    const fmv = node.fm[facet.frontmatter];
+    if (typeof fmv === "string") return !facet.values.length || facet.values.includes(fmv) ? fmv : undefined;
+  }
+  return facet.types[node.type];
+}
+
+/** "owner/repo" display name from a GitHub URL — https or ssh form, with or
+ *  without ".git" (same shapes lib.ts's githubRemoteUrl accepts, so a manual
+ *  repo.url override behaves like the auto-detected origin). Non-GitHub URLs
+ *  yield null; set display.name for those. */
+export function repoNameFromUrl(url: string | null): string | null {
+  return url?.match(/^(?:https:\/\/|git@)github\.com[/:]([^/]+\/[^/]+?)(?:\.git)?\/?$/)?.[1] ?? null;
 }
 
 export function buildModel(raw: RawData): VizModel {
+  const cfg = normalizeVizConfig(raw.cfg);
   const nodes = raw.nodes;
   const files = raw.files || {};
   const dirs = raw.dirs || {};
   const repoUrl = raw.repoUrl || null;
+  const repoName = repoNameFromUrl(repoUrl);
   const commits = raw.commits || {};
   const byId: Record<string, ConceptNode> = Object.fromEntries(nodes.map((n) => [n.id, n]));
   const indexOf = new Map(nodes.map((n, i) => [n.id, i]));
@@ -218,25 +202,50 @@ export function buildModel(raw: RawData): VizModel {
 
   const typeCounts: Record<string, number> = {};
   for (const n of nodes) typeCounts[n.type] = (typeCounts[n.type] || 0) + 1;
+  const typeOrder = cfg.taxonomy.types;
   const allTypes = [
-    ...TYPE_ORDER.filter((t) => typeCounts[t]),
+    ...typeOrder.filter((t) => typeCounts[t]),
     ...Object.keys(typeCounts)
-      .filter((t) => !TYPE_ORDER.includes(t))
+      .filter((t) => !typeOrder.includes(t))
       .sort(),
   ];
 
   // The profile keeps every type inside one top-level directory, so this is
   // normally unambiguous; if that's ever violated, the first concept of a
-  // type fixes its group (deterministic, not "last write wins").
+  // type fixes its group (deterministic, not "last write wins"). No
+  // dir-groups configured -> no clusters at all (flat legend), not one big
+  // "Other" bucket.
   const typeGroup: Record<string, string> = {};
-  for (const n of nodes) typeGroup[n.type] ??= GROUP_OF_DIR[dirOf(n.id)] ?? "Other";
   const groupTypes: Record<string, string[]> = {};
-  for (const t of allTypes) (groupTypes[typeGroup[t]!] ??= []).push(t);
-  const groupOrder = [...GROUP_ORDER.filter((g) => groupTypes[g]), ...(groupTypes["Other"] ? ["Other"] : [])];
+  let groupOrder: string[] = [];
+  if (Object.keys(cfg.taxonomy.dirGroups).length) {
+    for (const n of nodes) typeGroup[n.type] ??= cfg.taxonomy.dirGroups[dirOf(n.id)] ?? cfg.taxonomy.other;
+    for (const t of allTypes) (groupTypes[typeGroup[t]!] ??= []).push(t);
+    // The other-bucket appends last unless group-order already places it
+    // (listing it there pins the overflow cluster's position).
+    groupOrder = [
+      ...cfg.taxonomy.groupOrder.filter((g) => groupTypes[g]),
+      ...(groupTypes[cfg.taxonomy.other] && !cfg.taxonomy.groupOrder.includes(cfg.taxonomy.other)
+        ? [cfg.taxonomy.other]
+        : []),
+    ];
+  }
 
-  const pkgPlatforms = raw.pkgPlatforms ?? {};
-  const platformById: Record<string, Platform> = {};
-  for (const n of nodes) platformById[n.id] = platformOf(n.type, n.id, pkgPlatforms);
+  const facetMaps = raw.facetMaps ?? {};
+  const facets: { name: string; values: string[] }[] = [];
+  const facetById: Record<string, Record<string, string>> = {};
+  for (const f of cfg.facets) {
+    const nixMap = f.nixPackages ? (facetMaps[f.name] ?? {}) : {};
+    const resolved: Record<string, string> = {};
+    for (const n of nodes) {
+      const v = facetValueOf(n, f, nixMap);
+      if (v !== undefined) resolved[n.id] = v;
+    }
+    const values = f.values.length ? f.values : [...new Set(Object.values(resolved))].sort();
+    if (!values.length) continue; // never resolved anything and no explicit values: no-op, drop the lens
+    facets.push({ name: f.name, values });
+    facetById[f.name] = resolved;
+  }
 
   const radii = nodes.map((n) => (3.5 + Math.min(6.5, (deg[n.id] || 0) * 0.8)) * 0.42);
 
@@ -245,6 +254,9 @@ export function buildModel(raw: RawData): VizModel {
     files,
     dirs,
     repoUrl,
+    repoName,
+    cfg,
+    displayName: displayName(cfg, repoName),
     commits,
     byId,
     indexOf,
@@ -258,7 +270,8 @@ export function buildModel(raw: RawData): VizModel {
     typeGroup,
     groupTypes,
     groupOrder,
-    platformById,
+    facets,
+    facetById,
     radii,
   };
 }

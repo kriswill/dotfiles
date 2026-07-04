@@ -7,7 +7,7 @@ import { flushSync, mount, unmount } from "svelte";
 import App from "./App.svelte";
 import { buildModel } from "./data";
 import { createVizState } from "./state.svelte";
-import { makeStub, node } from "./test-helpers";
+import { cfg, makeStub, node } from "./test-helpers";
 
 const model = () =>
   buildModel({
@@ -16,6 +16,7 @@ const model = () =>
     // The '%' in this path is the double-decode regression case: decoding its
     // (once-encoded) hash a second time throws URIError.
     files: { "docs/50%.md": { html: "", md: "# hi", lines: 1, size: 5, date: "", lang: "markdown", refs: [] } },
+    cfg: cfg(),
   });
 
 let cleanup: (() => void) | null = null;
@@ -100,9 +101,9 @@ describe("App filter persistence", () => {
     viz.setIsolate(1);
     flushSync();
     expect(location.hash).toBe("#c/nvim/architecture?hide=Reference&q=arch&isolate=1");
-    viz.setPlatform("darwin");
+    viz.setFacet("platform", "darwin");
     flushSync();
-    expect(location.hash).toBe("#c/nvim/architecture?hide=Reference&q=arch&isolate=1&os=darwin");
+    expect(location.hash).toBe("#c/nvim/architecture?hide=Reference&q=arch&isolate=1&platform=darwin");
     viz.setFilters([], "");
     flushSync();
     expect(location.hash).toBe("#c/nvim/architecture");
@@ -138,13 +139,25 @@ describe("App filter persistence", () => {
     expect(location.hash).toBe("#f/docs/50%25.md?hide=Reference&q=arch"); // applied, never rewritten
   });
 
-  test("a deep link with os= applies the platform lens on mount (any selection kind)", () => {
+  test("a canonical ?platform= deep link applies the facet lens on mount (any selection kind)", () => {
+    location.hash = "#c/nvim/architecture?platform=nixos";
+    const viz = createVizState(model());
+    mountApp(viz);
+    expect(viz.sel).toEqual({ kind: "concept", id: "nvim/architecture" });
+    expect(viz.facetSel.platform).toBe("nixos");
+    expect(location.hash).toBe("#c/nvim/architecture?platform=nixos"); // applied, never rewritten
+  });
+
+  test("legacy ?os= deep link: applies the lens, hash is NOT rewritten on load, next interaction re-encodes as platform=", () => {
     location.hash = "#c/nvim/architecture?os=nixos";
     const viz = createVizState(model());
     mountApp(viz);
     expect(viz.sel).toEqual({ kind: "concept", id: "nvim/architecture" });
-    expect(viz.platform).toBe("nixos");
-    expect(location.hash).toBe("#c/nvim/architecture?os=nixos"); // applied, never rewritten
+    expect(viz.facetSel.platform).toBe("nixos");
+    expect(location.hash).toBe("#c/nvim/architecture?os=nixos"); // applied, never rewritten on load
+    viz.setFacet("platform", "darwin"); // any subsequent interaction re-encodes canonically
+    flushSync();
+    expect(location.hash).toBe("#c/nvim/architecture?platform=darwin");
   });
 
   test("a platform-only change amends the URL in place (replaceState, no selection churn)", () => {
@@ -155,16 +168,16 @@ describe("App filter persistence", () => {
     // Spy AFTER the selection settles so we observe only the filter-only write.
     const replace = spyOn(history, "replaceState");
     const push = spyOn(history, "pushState");
-    viz.setPlatform("darwin");
+    viz.setFacet("platform", "darwin");
     flushSync();
-    expect(location.hash).toBe("#c/nvim/architecture?os=darwin");
+    expect(location.hash).toBe("#c/nvim/architecture?platform=darwin");
     // The load-bearing guarantee: a filter-only change amends the current entry
     // (replaceState) rather than pushing a new one (the documented Back trap).
     expect(replace).toHaveBeenCalledTimes(1);
     expect(push).not.toHaveBeenCalled();
     replace.mockRestore();
     push.mockRestore();
-    viz.setPlatform("all");
+    viz.setFacet("platform", "all");
     flushSync();
     expect(location.hash).toBe("#c/nvim/architecture");
   });

@@ -14,6 +14,21 @@
   const groupOff = (g: string) => viz.model.groupTypes[g]!.every((t) => viz.hidden.has(t));
 </script>
 
+{#snippet typeRow(t: string)}
+  <div
+    class="leg"
+    class:off={viz.hidden.has(t)}
+    role="button"
+    tabindex="0"
+    title="click toggles · alt-click isolates"
+    onclick={(e) => toggle(t, e.altKey)}
+    onkeydown={onActivateKey((alt) => toggle(t, alt))}
+  >
+    <span class="dot" style="background:{viz.colorOf(t)}"></span>{t}
+    <span class="n">{viz.model.typeCounts[t]}</span>
+  </div>
+{/snippet}
+
 <div id="legend">
   <div class="leg-head">
     <span class="hint">types</span>
@@ -35,20 +50,14 @@
         {g}
       </div>
       {#each viz.model.groupTypes[g] as t (t)}
-        <div
-          class="leg"
-          class:off={viz.hidden.has(t)}
-          role="button"
-          tabindex="0"
-          title="click toggles · alt-click isolates"
-          onclick={(e) => toggle(t, e.altKey)}
-          onkeydown={onActivateKey((alt) => toggle(t, alt))}
-        >
-          <span class="dot" style="background:{viz.colorOf(t)}"></span>{t}
-          <span class="n">{viz.model.typeCounts[t]}</span>
-        </div>
+        {@render typeRow(t)}
       {/each}
     </div>
+  {:else}
+    <!-- No configured dir-groups: flat type list without cluster headers. -->
+    {#each viz.model.allTypes as t (t)}
+      {@render typeRow(t)}
+    {/each}
   {/each}
 </div>
 

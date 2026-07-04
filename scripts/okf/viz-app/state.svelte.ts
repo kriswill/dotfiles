@@ -2,7 +2,7 @@
 // Stage.svelte bridges it into the imperative GraphScene.
 import { SvelteSet } from "svelte/reactivity";
 import { nameColor } from "./color";
-import { conceptTree, neighborsWithin, treeIds, TYPE_ORDER, type ConceptNode, type ConceptTree, type VizModel } from "./data";
+import { conceptTree, neighborsWithin, treeIds, type ConceptNode, type ConceptTree, type VizModel } from "./data";
 import type { Selection } from "./hash";
 import { applyThemeVars, defaultThemeIndex, THEMES } from "./themes";
 
@@ -30,7 +30,11 @@ export function createVizState(model: VizModel) {
   const hidden = new SvelteSet<string>();
   let query = $state("");
   let isolateDepth = $state<0 | 1 | 2>(0);
-  let platform = $state<"all" | "darwin" | "nixos">("all");
+  // facet name -> "all" or one of that facet's values; keyed in model.facets
+  // order (load-bearing: hash.ts's encode walks this same order). Always
+  // replaced wholesale (never mutated in place) so effects tracking the
+  // getter (`void viz.facetSel`) re-run on every change.
+  let facetSel = $state<Record<string, string>>(Object.fromEntries(model.facets.map((f) => [f.name, "all"])));
   let hover = $state<Hover | null>(null);
   let panelW = $state(typeof localStorage === "undefined" ? 0 : +(localStorage.getItem(PANEL_KEY) || 0));
   let dark = $state(typeof matchMedia === "undefined" ? false : matchMedia("(prefers-color-scheme: dark)").matches);
@@ -57,7 +61,9 @@ export function createVizState(model: VizModel) {
 
   const computeSlots = () => {
     const m: Record<string, string> = {};
-    TYPE_ORDER.forEach((t, i) => (m[t] = cssVar("--s" + (i + 1))));
+    // Slot N = --sN; the themes ship 12 slots, overflow types fall through to
+    // nameColor in colorOf (missing CSS var -> "" -> falsy).
+    model.cfg.taxonomy.types.slice(0, 12).forEach((t, i) => (m[t] = cssVar("--s" + (i + 1))));
     return m;
   };
   // Re-read on repaint() — the CSS custom properties flip with the color scheme.
@@ -76,17 +82,23 @@ export function createVizState(model: VizModel) {
     if (!alone) for (const u of model.allTypes) if (!want.has(u)) hidden.add(u);
   };
 
-  const platformOk = (n: ConceptNode) => {
-    if (platform === "all") return true;
-    const p = model.platformById[n.id];
-    return p === "both" || p === "neutral" || p === platform;
-  };
+  // AND across facets; a facet with no selection ("all") or where this
+  // concept is unresolved never restricts visibility.
+  const facetOk = (n: ConceptNode) =>
+    model.facets.every((f) => {
+      const want = facetSel[f.name];
+      if (!want || want === "all") return true;
+      const v = model.facetById[f.name]?.[n.id];
+      return v === undefined || v === want;
+    });
   const visible = (n: ConceptNode) =>
-    !hidden.has(n.type) && (!match || match(n)) && (!neighborIds || neighborIds.has(n.id)) && platformOk(n);
+    !hidden.has(n.type) && (!match || match(n)) && (!neighborIds || neighborIds.has(n.id)) && facetOk(n);
   const visibleSorted = $derived(model.nodes.filter(visible).sort((a, b) => a.title.localeCompare(b.title)));
   // Search hits suppressed by type toggles, surfaced in the list so a hidden
   // type never silently swallows a match.
   const hiddenMatchCount = $derived(match ? model.nodes.filter((n) => hidden.has(n.type) && match(n)).length : 0);
+  // Any facet lens engaged (Sidebar's counts-line gate).
+  const facetActive = $derived(Object.values(facetSel).some((v) => v !== "all"));
 
   const selectedConcept = $derived(sel.kind === "concept" ? (model.byId[sel.id] ?? null) : null);
   const backConcept = $derived(lastConceptId ? (model.byId[lastConceptId] ?? null) : null);
@@ -183,13 +195,18 @@ export function createVizState(model: VizModel) {
       soloTypes(model.groupTypes[g] ?? []);
     },
     /** Replace the whole filter state (hash navigation). */
-    setFilters(hiddenTypes: string[], q: string, isolate: 0 | 1 | 2 = 0, plat: "all" | "darwin" | "nixos" = "all") {
+    setFilters(hiddenTypes: string[], q: string, isolate: 0 | 1 | 2 = 0, sel: Record<string, string> = {}) {
       const want = new Set(hiddenTypes);
       for (const t of [...hidden]) if (!want.has(t)) hidden.delete(t);
       for (const t of want) hidden.add(t);
       query = q;
       isolateDepth = isolate;
-      platform = plat;
+      facetSel = Object.fromEntries(
+        model.facets.map((f) => {
+          const v = sel[f.name];
+          return [f.name, v && f.values.includes(v) ? v : "all"];
+        }),
+      );
     },
     get hiddenMatchCount() {
       return hiddenMatchCount;
@@ -205,11 +222,16 @@ export function createVizState(model: VizModel) {
       return neighborIds;
     },
 
-    get platform() {
-      return platform;
+    get facetSel() {
+      return facetSel;
     },
-    setPlatform(p: "all" | "darwin" | "nixos") {
-      platform = p === "darwin" || p === "nixos" ? p : "all";
+    get facetActive() {
+      return facetActive;
+    },
+    setFacet(name: string, v: string) {
+      const f = model.facets.find((f) => f.name === name);
+      if (!f) return;
+      facetSel = { ...facetSel, [name]: f.values.includes(v) ? v : "all" };
     },
 
     get query() {
@@ -280,7 +302,7 @@ export function createVizState(model: VizModel) {
       repaintNow();
     },
     colorOf(t: string) {
-      // Curated slot if registered in TYPE_ORDER; otherwise a stable
+      // Curated slot if registered in cfg.taxonomy.types; otherwise a stable
       // generated color at the theme's lightness/chroma.
       return slots[t] || nameColor(t, THEMES[themeIndex]!.gen);
     },

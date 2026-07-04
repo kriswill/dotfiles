@@ -5,12 +5,13 @@ import { flushSync, mount, unmount } from "svelte";
 import ConceptList from "./ConceptList.svelte";
 import { buildModel } from "./data";
 import DetailPanel from "./DetailPanel.svelte";
+import FacetControls from "./FacetControls.svelte";
 import IsolateControl from "./IsolateControl.svelte";
 import Legend from "./Legend.svelte";
-import PlatformControl from "./PlatformControl.svelte";
 import Search from "./Search.svelte";
+import Sidebar from "./Sidebar.svelte";
 import { createVizState } from "./state.svelte";
-import { node } from "./test-helpers";
+import { cfg, node } from "./test-helpers";
 import Tooltip from "./Tooltip.svelte";
 
 const model = () =>
@@ -24,6 +25,7 @@ const model = () =>
       node("b", "Pattern", "Beta"),
     ],
     edges: [{ s: "a", t: "b" }],
+    cfg: cfg(),
     files: {
       "scripts/okf/viz.ts": { html: "<span class=\"tok-k\">const</span>", lines: 3, size: 2048, date: "2026-01-01", lang: "ts", refs: ["a"] },
       "docs/notes.md": {
@@ -55,7 +57,7 @@ describe("Legend", () => {
     const state = createVizState(model());
     mountC(Legend, { viz: state });
     const rows = [...document.querySelectorAll(".leg")];
-    // TYPE_ORDER slots Pattern before Decision; happy-dom keeps template whitespace.
+    // cfg taxonomy.types slots Pattern before Decision; happy-dom keeps template whitespace.
     expect(rows.map((r) => r.textContent?.replace(/\s+/g, " ").trim())).toEqual(["Pattern 1", "Decision 1"]);
     (rows[0] as HTMLElement).click();
     flushSync();
@@ -105,6 +107,7 @@ describe("Legend", () => {
         node("modules/z", "Darwin Module", "Z"),
       ],
       edges: [],
+      cfg: cfg(),
     });
     const state = createVizState(groupModel);
     mountC(Legend, { viz: state });
@@ -135,6 +138,7 @@ describe("Legend", () => {
         node("modules/z", "Darwin Module", "Z"),
       ],
       edges: [],
+      cfg: cfg(),
     });
     const state = createVizState(groupModel);
     mountC(Legend, { viz: state });
@@ -146,6 +150,22 @@ describe("Legend", () => {
     const system = [...document.querySelectorAll(".leg-group")].find((h) => h.textContent?.trim() === "System")!;
     expect(knowledge.classList.contains("off")).toBe(true);
     expect(system.classList.contains("off")).toBe(false);
+  });
+
+  test("no configured dir-groups: flat alphabetical type list without group headers", () => {
+    const flat = buildModel({
+      nodes: [node("decisions/x", "Decision", "X"), node("patterns/y", "Pattern", "Y")],
+      edges: [],
+    });
+    const state = createVizState(flat);
+    mountC(Legend, { viz: state });
+    expect(document.querySelectorAll(".leg-group")).toHaveLength(0);
+    expect(document.querySelectorAll(".grp")).toHaveLength(0);
+    const rows = [...document.querySelectorAll(".leg")];
+    expect(rows.map((r) => r.textContent?.replace(/\s+/g, " ").trim())).toEqual(["Decision 1", "Pattern 1"]);
+    (rows[0] as HTMLElement).click(); // rows stay interactive in flat mode
+    flushSync();
+    expect(state.hidden.has("Decision")).toBe(true);
   });
 });
 
@@ -275,11 +295,11 @@ describe("IsolateControl", () => {
   });
 });
 
-describe("PlatformControl", () => {
-  test("renders all/darwin/nixos segments; active tracks viz.platform; clicks set it", () => {
+describe("FacetControls", () => {
+  test("renders all/darwin/nixos segments; active tracks viz.facetSel; clicks set it", () => {
     const state = createVizState(model());
-    mountC(PlatformControl, { viz: state });
-    const [all, darwin, nixos] = [...document.querySelectorAll("#platform .seg")] as HTMLElement[];
+    mountC(FacetControls, { viz: state });
+    const [all, darwin, nixos] = [...document.querySelectorAll(".facet .seg")] as HTMLElement[];
     expect([all!.textContent?.trim(), darwin!.textContent?.trim(), nixos!.textContent?.trim()]).toEqual([
       "all",
       "darwin",
@@ -289,23 +309,65 @@ describe("PlatformControl", () => {
 
     darwin!.click();
     flushSync();
-    expect(state.platform).toBe("darwin");
+    expect(state.facetSel.platform).toBe("darwin");
     expect(darwin!.classList.contains("active")).toBe(true);
     expect(all!.classList.contains("active")).toBe(false);
 
     nixos!.click();
     flushSync();
-    expect(state.platform).toBe("nixos");
+    expect(state.facetSel.platform).toBe("nixos");
 
     all!.click();
     flushSync();
-    expect(state.platform).toBe("all");
+    expect(state.facetSel.platform).toBe("all");
   });
 
-  test("is always rendered, with or without a selection (unlike IsolateControl)", () => {
+  test("is rendered when facets are configured (unaffected by selection — no selection-dependent rendering)", () => {
     const state = createVizState(model());
-    mountC(PlatformControl, { viz: state });
-    expect(document.getElementById("platform")).not.toBeNull();
+    mountC(FacetControls, { viz: state });
+    expect(document.querySelector(".facet")).not.toBeNull();
+    state.selectConcept("a");
+    flushSync();
+    expect(document.querySelector(".facet")).not.toBeNull();
+  });
+
+  test("segments come from the config's facet values; hidden when unconfigured", () => {
+    const custom = createVizState(
+      buildModel({
+        nodes: [node("a", "Decision", "Alpha")],
+        edges: [],
+        cfg: { facet: { platform: { values: ["home", "work"] } } },
+      }),
+    );
+    mountC(FacetControls, { viz: custom });
+    expect([...document.querySelectorAll(".facet .seg")].map((b) => b.textContent?.trim())).toEqual([
+      "all",
+      "home",
+      "work",
+    ]);
+    cleanup?.();
+    cleanup = null;
+    document.body.innerHTML = "";
+
+    const generic = createVizState(buildModel({ nodes: [node("a", "Decision", "Alpha")], edges: [] }));
+    mountC(FacetControls, { viz: generic });
+    expect(document.querySelector(".facet")).toBeNull();
+  });
+
+  test("multi-facet rows render independently, each with its own name hint", () => {
+    const multi = createVizState(
+      buildModel({
+        nodes: [node("a", "Decision", "Alpha", { fm: { status: "stable" } })],
+        edges: [],
+        cfg: { facet: { platform: { values: ["home", "work"] }, status: { frontmatter: "status" } } },
+      }),
+    );
+    mountC(FacetControls, { viz: multi });
+    const rows = [...document.querySelectorAll(".facet")];
+    expect(rows).toHaveLength(2);
+    expect(rows.map((r) => r.querySelector(".hint")!.textContent)).toEqual(["platform", "status"]);
+    expect([...rows[0]!.querySelectorAll(".seg")].map((b) => b.textContent?.trim())).toEqual(["all", "home", "work"]);
+    expect([...rows[1]!.querySelectorAll(".seg")].map((b) => b.textContent?.trim())).toEqual(["all", "stable"]);
   });
 });
 
@@ -467,5 +529,46 @@ describe("DetailPanel", () => {
     flushSync();
     expect(state.sel).toEqual({ kind: "none" });
     expect(document.getElementById("panel")).toBeNull();
+  });
+});
+
+describe("Sidebar", () => {
+  test("header names the repo's OKF viz with an explanatory (?) bubble", () => {
+    const state = createVizState(
+      buildModel({ nodes: [node("a", "Decision", "Alpha")], edges: [], repoUrl: "https://github.com/kriswill/dotfiles" }),
+    );
+    mountC(Sidebar, { viz: state });
+    const h1 = document.querySelector("#side h1")!;
+    expect(h1.textContent!.replace(/\s+/g, " ")).toContain("kriswill/dotfiles OKF viz");
+    expect(h1.querySelector(".bubble")!.textContent).toContain("Open Knowledge Format");
+  });
+
+  test("header name, badge, and about bubble come from the config", () => {
+    const state = createVizState(
+      buildModel({
+        nodes: [node("a", "Decision", "Alpha")],
+        edges: [],
+        cfg: { display: { name: "my/kb", badge: "KB map", "about-html": "custom <b>about</b>" } },
+      }),
+    );
+    mountC(Sidebar, { viz: state });
+    const h1 = document.querySelector("#side h1")!;
+    expect(h1.textContent!.replace(/\s+/g, " ")).toContain("my/kb KB map");
+    expect(h1.querySelector(".bubble")!.innerHTML).toContain("custom <b>about</b>");
+  });
+
+  test("header falls back to the configured fallback-name, else the generic one", () => {
+    const configured = createVizState(
+      buildModel({ nodes: [node("a", "Decision", "Alpha")], edges: [], cfg: { display: { "fallback-name": "knowledge/" } } }),
+    );
+    mountC(Sidebar, { viz: configured });
+    expect(document.querySelector("#side h1")!.textContent!.replace(/\s+/g, " ")).toContain("knowledge/ OKF viz");
+    cleanup?.();
+    cleanup = null;
+    document.body.innerHTML = "";
+
+    const generic = createVizState(buildModel({ nodes: [node("a", "Decision", "Alpha")], edges: [] }));
+    mountC(Sidebar, { viz: generic });
+    expect(document.querySelector("#side h1")!.textContent!.replace(/\s+/g, " ")).toContain("OKF bundle OKF viz");
   });
 });
