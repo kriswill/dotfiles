@@ -1,6 +1,6 @@
 # okf-viz.toml — repo-specific settings for `okf viz` (scripts/okf/viz.ts).
 # Schema + validation: scripts/okf/viz-app/config.ts. Without this file the
-# viewer still builds with generic fallbacks: no platform filter, alphabetical
+# viewer still builds with generic fallbacks: no facet filters, alphabetical
 # types with generated colors, flat legend, generic header/about text.
 
 [bundle]
@@ -51,29 +51,21 @@ hosts = "System"
 packages = "Packages"
 nvim = "Neovim"
 
-[platform]
-values = ["darwin", "nixos"]          # filter segments after "all"; section absent -> filter hidden
-packages-nix = "modules/packages.nix" # Nix file whose optionalAttrs OS guards classify packages
-host-default = "darwin"               # Host concepts not listed in [platform.hosts]
+[facet.platform] # 0..n [facet.<name>] filter lenses; file order = sidebar control order
+values = ["darwin", "nixos"] # segments after "all"; section absent -> no lens at all
 
-[platform.nix-guards] # optionalAttrs predicate substring -> platform value
-darwin = "darwin"
-linux = "nixos"
-
-[platform.types] # type -> value | "both" | "neutral" | "hosts" | "packages"; unlisted -> "neutral"
+[facet.platform.types] # concept type -> value; unlisted types are unaffected (always visible)
 "Darwin Module" = "darwin"
 "NixOS Module" = "nixos"
-"Dual Module" = "both"
-"Flake-parts Module" = "both"
-"Neovim Plugin" = "both"
-"Neovim Config" = "both"
-"Host" = "hosts"          # look up basename in [platform.hosts], else host-default
-"Nix Package" = "packages" # look up basename in the packages-nix guard map, else "both"
-"Sub-flake" = "packages"
-"Overlay" = "packages"
+"Host" = "darwin" # default for Host concepts not overridden below
 
-[platform.hosts]
-nebula = "nixos"
+[facet.platform.ids] # per-concept overrides (full concept id) — highest precedence
+"hosts/nebula" = "nixos"
+
+[facet.platform.nix-packages] # opt-in build-side source: optionalAttrs guard parse
+file = "modules/packages.nix" # Nix file whose optionalAttrs OS guards classify packages
+guards = { darwin = "darwin", linux = "nixos" } # optionalAttrs predicate substring -> value
+types = ["Nix Package", "Sub-flake", "Overlay"] # types that consult the map (by basename); a miss falls through unresolved
 
 # [repo]
 # url = "https://github.com/kriswill/dotfiles" # optional override of the git-origin detection

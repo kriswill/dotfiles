@@ -64,7 +64,7 @@
     void viz.hidden.size;
     void viz.isolateDepth;
     void viz.sel;
-    void viz.platform;
+    void viz.facetSel;
     scene?.setDim((i) => !viz.visible(viz.model.nodes[i]!));
   });
 

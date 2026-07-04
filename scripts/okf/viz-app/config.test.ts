@@ -1,7 +1,9 @@
 import { describe, expect, test } from "bun:test";
 import { displayName, normalizeVizConfig, VizConfigError } from "./config";
 
-/** A dotfiles-shaped raw config in TOML (kebab-case) spelling. */
+/** A dotfiles-shaped raw config in TOML (kebab-case) spelling, with two
+ *  facets exercising every FacetConfig field (incl. nested nulls both ways:
+ *  platform has nix-packages but no frontmatter, status the reverse). */
 const rawCfg = () => ({
   bundle: { dir: "knowledge", out: "viz.html" },
   display: {
@@ -16,16 +18,20 @@ const rawCfg = () => ({
     "group-order": ["Knowledge", "System"],
     "dir-groups": { decisions: "Knowledge", modules: "System" } as Record<string, string>,
   },
-  platform: {
-    values: ["darwin", "nixos"],
-    "packages-nix": "modules/packages.nix",
-    "host-default": "darwin",
-    "nix-guards": { darwin: "darwin", linux: "nixos" },
-    types: { "Darwin Module": "darwin", Host: "hosts", "Nix Package": "packages", Decision: "neutral" } as Record<
-      string,
-      string
-    >,
-    hosts: { nebula: "nixos" },
+  facet: {
+    platform: {
+      values: ["darwin", "nixos"],
+      types: { "Darwin Module": "darwin", "NixOS Module": "nixos", Host: "darwin" } as Record<string, string>,
+      ids: { "hosts/nebula": "nixos" } as Record<string, string>,
+      "nix-packages": {
+        file: "modules/packages.nix",
+        guards: { darwin: "darwin", linux: "nixos" } as Record<string, string>,
+        types: ["Nix Package"],
+      },
+    },
+    status: {
+      frontmatter: "status",
+    },
   },
 });
 
@@ -40,8 +46,7 @@ describe("normalizeVizConfig", () => {
       expect(c.display.aboutHtml).toContain("Open Knowledge Format");
       expect(c.embed.maxBytes).toBe(200_000);
       expect(c.taxonomy).toEqual({ types: [], dirGroups: {}, groupOrder: [], other: "Other" });
-      expect(c.platform.values).toEqual([]);
-      expect(c.platform.packagesNix).toBeNull();
+      expect(c.facets).toEqual([]);
       expect(c.repo.url).toBeNull();
     }
   });
@@ -53,9 +58,28 @@ describe("normalizeVizConfig", () => {
     expect(c.embed.maxBytes).toBe(100);
     expect(c.taxonomy.groupOrder).toEqual(["Knowledge", "System"]);
     expect(c.taxonomy.dirGroups).toEqual({ decisions: "Knowledge", modules: "System" });
-    expect(c.platform.packagesNix).toBe("modules/packages.nix");
-    expect(c.platform.hostDefault).toBe("darwin");
-    expect(c.platform.nixGuards).toEqual({ darwin: "darwin", linux: "nixos" });
+    expect(c.facets).toHaveLength(2);
+    expect(c.facets[0]).toEqual({
+      name: "platform",
+      values: ["darwin", "nixos"],
+      types: { "Darwin Module": "darwin", "NixOS Module": "nixos", Host: "darwin" },
+      ids: { "hosts/nebula": "nixos" },
+      frontmatter: null,
+      nixPackages: { file: "modules/packages.nix", guards: { darwin: "darwin", linux: "nixos" }, types: ["Nix Package"] },
+    });
+    expect(c.facets[1]).toEqual({
+      name: "status",
+      values: [],
+      types: {},
+      ids: {},
+      frontmatter: "status",
+      nixPackages: null,
+    });
+  });
+
+  test("facet declaration order (TOML file order) is preserved", () => {
+    const c = normalizeVizConfig(rawCfg(), { strict: true });
+    expect(c.facets.map((f) => f.name)).toEqual(["platform", "status"]);
   });
 
   test("idempotent: normalizing a JSON round-trip of its own output is identity", () => {
@@ -69,6 +93,9 @@ describe("normalizeVizConfig", () => {
     expect(() => normalizeVizConfig({ display: { bagde: "x" } }, { strict: true })).toThrow(
       /display\.bagde: unknown key/,
     );
+    expect(() => normalizeVizConfig({ facet: { platform: { bogus: 1 } } }, { strict: true })).toThrow(
+      /facet\.platform\.bogus: unknown key/,
+    );
   });
 
   test("strict: type mismatches error; lenient keeps defaults", () => {
@@ -76,28 +103,119 @@ describe("normalizeVizConfig", () => {
     expect(normalizeVizConfig({ embed: { "max-bytes": "big" } }).embed.maxBytes).toBe(200_000);
   });
 
-  test("strict: reserved platform value names rejected", () => {
-    expect(() => normalizeVizConfig({ platform: { values: ["darwin", "both"] } }, { strict: true })).toThrow(
-      /"both" is reserved/,
+  test('"both" is now a legal ordinary facet value — no reserved rule sentinels', () => {
+    const c = normalizeVizConfig(
+      { facet: { platform: { values: ["both", "darwin"], types: { "Dual Module": "both" } } } },
+      { strict: true },
+    );
+    expect(c.facets[0]!.values).toEqual(["both", "darwin"]);
+    expect(c.facets[0]!.types).toEqual({ "Dual Module": "both" });
+  });
+
+  test('strict: reserved facet value "all" rejected', () => {
+    expect(() => normalizeVizConfig({ facet: { platform: { values: ["darwin", "all"] } } }, { strict: true })).toThrow(
+      /"all" is reserved/,
     );
   });
 
-  test("strict: dangling platform.types / hosts / host-default refs rejected", () => {
-    const base = rawCfg();
-    base.platform.types["Windows Module"] = "windows";
-    expect(() => normalizeVizConfig(base, { strict: true })).toThrow(/Windows Module/);
-    const base2 = rawCfg();
-    base2.platform.hosts.nebula = "bsd";
-    expect(() => normalizeVizConfig(base2, { strict: true })).toThrow(/hosts\.nebula/);
-    const base3 = rawCfg();
-    base3.platform["host-default"] = "bsd";
-    expect(() => normalizeVizConfig(base3, { strict: true })).toThrow(/host-default/);
+  test("strict: facet.values duplicates/empty rejected", () => {
+    expect(() =>
+      normalizeVizConfig({ facet: { platform: { values: ["darwin", "darwin"] } } }, { strict: true }),
+    ).toThrow(/facet\.platform\.values: duplicate/);
+    expect(() => normalizeVizConfig({ facet: { platform: { values: ["darwin", ""] } } }, { strict: true })).toThrow(
+      /facet\.platform\.values: empty string/,
+    );
   });
 
-  test("strict: platform rules without values rejected", () => {
+  test("strict: facet name must match ^[a-z][a-z0-9-]*$", () => {
+    expect(() => normalizeVizConfig({ facet: { Platform: {} } }, { strict: true })).toThrow(/name must match/);
+    expect(() => normalizeVizConfig({ facet: { "1nvalid": {} } }, { strict: true })).toThrow(/name must match/);
+    expect(() => normalizeVizConfig({ facet: { "with_underscore": {} } }, { strict: true })).toThrow(
+      /name must match/,
+    );
+  });
+
+  test("strict: reserved facet names rejected (hash-param collisions)", () => {
+    for (const name of ["hide", "q", "isolate", "os", "all"]) {
+      expect(() => normalizeVizConfig({ facet: { [name]: {} } }, { strict: true })).toThrow(/reserved name/);
+    }
+  });
+
+  test("strict: duplicate facet names rejected (array shape)", () => {
     expect(() =>
-      normalizeVizConfig({ platform: { types: { Host: "hosts" } } }, { strict: true }),
-    ).toThrow(/platform\.values: required/);
+      normalizeVizConfig({ facets: [{ name: "platform" }, { name: "platform" }] }, { strict: true }),
+    ).toThrow(/duplicate facet names/);
+  });
+
+  test("strict: facet (table) and facets (array) are mutually exclusive", () => {
+    expect(() =>
+      normalizeVizConfig({ facet: { platform: {} }, facets: [{ name: "platform" }] }, { strict: true }),
+    ).toThrow(/cannot specify both/);
+  });
+
+  test("strict: dangling facet.types / ids / nix-packages.guards refs rejected", () => {
+    const base = () => ({
+      facet: {
+        platform: {
+          values: ["darwin", "nixos"],
+          types: {} as Record<string, string>,
+          ids: {} as Record<string, string>,
+          "nix-packages": { file: "modules/packages.nix", guards: {} as Record<string, string>, types: ["Nix Package"] },
+        },
+      },
+    });
+    const b1 = base();
+    b1.facet.platform.types["Windows Module"] = "windows";
+    expect(() => normalizeVizConfig(b1, { strict: true })).toThrow(/facet\.platform\.types\."Windows Module"/);
+    const b2 = base();
+    b2.facet.platform.ids["hosts/bsd"] = "bsd";
+    expect(() => normalizeVizConfig(b2, { strict: true })).toThrow(/facet\.platform\.ids\."hosts\/bsd"/);
+    const b3 = base();
+    b3.facet.platform["nix-packages"].guards["win"] = "windows";
+    expect(() => normalizeVizConfig(b3, { strict: true })).toThrow(/facet\.platform\.nix-packages\.guards\.win/);
+  });
+
+  test("strict: nix-packages requires file/guards/types", () => {
+    expect(() =>
+      normalizeVizConfig({ facet: { platform: { values: ["darwin"], "nix-packages": {} } } }, { strict: true }),
+    ).toThrow(/nix-packages\.file: required/);
+    expect(() =>
+      normalizeVizConfig(
+        { facet: { platform: { values: ["darwin"], "nix-packages": { file: "x.nix" } } } },
+        { strict: true },
+      ),
+    ).toThrow(/nix-packages\.guards: required/);
+    expect(() =>
+      normalizeVizConfig(
+        { facet: { platform: { values: ["darwin"], "nix-packages": { file: "x.nix", guards: { a: "darwin" } } } } },
+        { strict: true },
+      ),
+    ).toThrow(/nix-packages\.types: required/);
+  });
+
+  test("strict: nix-packages.file path escape rejected", () => {
+    expect(() =>
+      normalizeVizConfig(
+        {
+          facet: {
+            platform: {
+              values: ["darwin"],
+              "nix-packages": { file: "/etc/passwd", guards: { a: "darwin" }, types: ["X"] },
+            },
+          },
+        },
+        { strict: true },
+      ),
+    ).toThrow(/nix-packages\.file: must be a relative path/);
+  });
+
+  test("strict: a rule-less facet with values warns (no-op lens)", () => {
+    const warnings: string[] = [];
+    normalizeVizConfig(
+      { facet: { platform: { values: ["darwin", "nixos"] } } },
+      { strict: true, warn: (m) => warnings.push(m) },
+    );
+    expect(warnings.join()).toContain("no resolution rule");
   });
 
   test("strict: dir-groups referencing a group missing from group-order rejected", () => {
@@ -108,9 +226,6 @@ describe("normalizeVizConfig", () => {
 
   test("strict: path escapes rejected", () => {
     expect(() => normalizeVizConfig({ bundle: { dir: "../elsewhere" } }, { strict: true })).toThrow(/bundle\.dir/);
-    const base = rawCfg();
-    base.platform["packages-nix"] = "/etc/passwd";
-    expect(() => normalizeVizConfig(base, { strict: true })).toThrow(/packages-nix/);
   });
 
   test("strict: duplicate taxonomy.types / group-order entries rejected", () => {
@@ -128,15 +243,14 @@ describe("normalizeVizConfig", () => {
         bundle: { dir: "kb/" },
         display: { name: "" },
         repo: { url: "" },
-        platform: { values: ["x"], "packages-nix": "pkgs.nix/", "host-default": "" },
+        facet: { platform: { values: ["x"], "nix-packages": { file: "pkgs.nix/", guards: { a: "x" }, types: ["T"] } } },
       },
       { strict: true },
     );
     expect(c.bundle.dir).toBe("kb");
     expect(c.display.name).toBeNull();
     expect(c.repo.url).toBeNull();
-    expect(c.platform.packagesNix).toBe("pkgs.nix");
-    expect(c.platform.hostDefault).toBeNull();
+    expect(c.facets[0]!.nixPackages!.file).toBe("pkgs.nix");
   });
 
   test("strict: >12 taxonomy types warns but does not throw", () => {

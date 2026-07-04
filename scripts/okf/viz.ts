@@ -41,7 +41,7 @@ const repo = repoRoot();
 
 // Optional repo-root okf-viz.toml, normalized strictly: a malformed or misspelled
 // config fails the build rather than silently rendering wrong. Absent file ->
-// generic defaults (no platform filter, alphabetical types, flat legend).
+// generic defaults (no facet filters, alphabetical types, flat legend).
 const cfgPath = join(repo, "okf-viz.toml");
 let cfgRaw: unknown = {};
 if (existsSync(cfgPath)) {
@@ -272,13 +272,28 @@ for (const n of nodes) for (const m of n.body.matchAll(HASH_SPAN)) hashCandidate
 for (const f of Object.values(files)) if (f.md) for (const m of f.md.matchAll(HASH_SPAN)) hashCandidates.add(m[1]);
 const repoUrl = cfg.repo.url ?? githubRemoteUrl();
 const commits = repoUrl ? resolveCommits([...hashCandidates]) : {};
-// OS guards for the platform filter: parse the configured packages-nix file's
-// `optionalAttrs` blocks (unconfigured or absent -> {} -> every package "both").
-const packagesNix = cfg.platform.packagesNix ? join(repo, cfg.platform.packagesNix) : null;
-const pkgPlatforms =
-  packagesNix && existsSync(packagesNix)
-    ? parsePackagePlatforms(readFileSync(packagesNix, "utf8"), cfg.platform.nixGuards)
-    : {};
+// Nix-package guards: for each facet with a nix-packages source, parse its
+// configured file's `optionalAttrs` blocks (missing file -> {} -> every
+// package of that facet's nix-packages.types falls through unresolved).
+const facetMaps: Record<string, Record<string, string>> = {};
+for (const f of cfg.facets) {
+  if (!f.nixPackages) continue;
+  const file = join(repo, f.nixPackages.file);
+  facetMaps[f.name] = existsSync(file) ? parsePackagePlatforms(readFileSync(file, "utf8"), f.nixPackages.guards) : {};
+}
+// A concept explicitly frontmatter-tagged with a value outside its facet's
+// declared `values` is unresolved (data.ts's facetValueOf), not a silent
+// typo — warn at build time (buildModel runs app-side and never warns).
+for (const f of cfg.facets) {
+  if (!f.frontmatter || !f.values.length) continue;
+  for (const n of nodes) {
+    const v = n.fm[f.frontmatter];
+    if (typeof v === "string" && !f.values.includes(v))
+      console.warn(
+        `viz: warning: ${n.id}: facet.${f.name}.frontmatter "${f.frontmatter}" = "${v}" is not in facet.${f.name}.values — unresolved`,
+      );
+  }
+}
 lap("sources");
 
 // --- Frozen 3D layout ---------------------------------------------------------
@@ -318,7 +333,7 @@ for (const o of build.outputs) if (o.path.endsWith(".css")) appCss += await o.te
 appCss = appCss.replace(/<\/style/gi, "<\\/style");
 lap("bundle");
 
-const data = JSON.stringify({ nodes, edges: dedupedEdges, files, dirs, repoUrl, commits, pkgPlatforms, cfg }).replace(
+const data = JSON.stringify({ nodes, edges: dedupedEdges, files, dirs, repoUrl, commits, facetMaps, cfg }).replace(
   /<\//g,
   "<\\/",
 );
@@ -352,7 +367,7 @@ const html = `<!doctype html>
     color: var(--ink-1); background: var(--page);
     display: grid; grid-template-columns: 260px 1fr; overflow: hidden;
   }
-  /* Shared sidebar-control primitives (used by the legend head, the platform
+  /* Shared sidebar-control primitives (used by the legend head, the facet
      and neighborhood segmented controls) — global so the controls don't each
      re-declare an identical scoped copy. */
   .hint {

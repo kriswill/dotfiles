@@ -1,8 +1,8 @@
 <script lang="ts">
   import ConceptList from "./ConceptList.svelte";
+  import FacetControls from "./FacetControls.svelte";
   import IsolateControl from "./IsolateControl.svelte";
   import Legend from "./Legend.svelte";
-  import PlatformControl from "./PlatformControl.svelte";
   import Search from "./Search.svelte";
   import type { VizState } from "./state.svelte";
   import ThemeSlider from "./ThemeSlider.svelte";
@@ -21,7 +21,7 @@
         </span></span>
     </h1>
     <div class="sub" id="counts">
-      {#if viz.hidden.size > 0 || viz.query.trim() || viz.neighborIds || viz.platform !== "all"}
+      {#if viz.hidden.size > 0 || viz.query.trim() || viz.neighborIds || viz.facetActive}
         {viz.visibleSorted.length} of {viz.model.nodes.length} concepts · {viz.model.edges.length} links
       {:else}
         {viz.model.nodes.length} concepts · {viz.model.edges.length} links
@@ -29,7 +29,7 @@
     </div>
     <Search {viz} />
     <Legend {viz} />
-    <PlatformControl {viz} />
+    <FacetControls {viz} />
     <IsolateControl {viz} />
     <ConceptList {viz} />
   </div>

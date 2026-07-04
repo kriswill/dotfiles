@@ -1,7 +1,7 @@
 // Immutable data model built once from the #data JSON blob baked in by
 // scripts/okf/viz.ts. Everything here is pure and framework-free.
 
-import { displayName, normalizeVizConfig, type VizConfig } from "./config";
+import { displayName, normalizeVizConfig, type FacetConfig, type VizConfig } from "./config";
 
 export interface ConceptNode {
   id: string;
@@ -44,15 +44,12 @@ export interface RawData {
   repoUrl?: string | null;
   /** Verified commit-hash citations: literal as written -> full oid. */
   commits?: Record<string, string>;
-  /** Package name -> platform value for OS-guarded packages (parsed from the
-   *  config's platform.packages-nix file). */
-  pkgPlatforms?: Record<string, string>;
+  /** Facet name -> (package basename -> value), for facets with a
+   *  nix-packages source (parsed from that facet's configured file). */
+  facetMaps?: Record<string, Record<string, string>>;
   /** Normalized VizConfig embedded by the build (absent: generic viewer). */
   cfg?: unknown;
 }
-
-/** A config-defined platform value, or the reserved "both" / "neutral". */
-export type Platform = string;
 
 export interface VizModel {
   nodes: ConceptNode[];
@@ -65,8 +62,6 @@ export interface VizModel {
   cfg: VizConfig;
   /** Header name: cfg.display.name ?? repoName ?? cfg.display.fallbackName. */
   displayName: string;
-  /** Platform filter segments after "all" (cfg.platform.values; [] = hidden). */
-  platforms: string[];
   commits: Record<string, string>;
   byId: Record<string, ConceptNode>;
   indexOf: Map<string, number>;
@@ -85,8 +80,14 @@ export interface VizModel {
   /** cfg.taxonomy.groupOrder filtered to present clusters, the "other" bucket
    *  appended only if non-empty; [] = flat legend without group headers. */
   groupOrder: string[];
-  /** OS a concept applies to, per node id (derived from type/host/package guards). */
-  platformById: Record<string, Platform>;
+  /** Resolved facet definitions: file/array order preserved, `values`
+   *  inferred (alpha-sorted) when the config left them empty; a facet with
+   *  no rule ever resolving anything (still empty after inference) is
+   *  dropped entirely — no sidebar row, never consulted for visibility. */
+  facets: { name: string; values: string[] }[];
+  /** facet name -> node id -> resolved value; a missing entry means
+   *  "unresolved" for that facet — always visible, never hidden by it. */
+  facetById: Record<string, Record<string, string>>;
   /** Scene sphere radius per node (same order as nodes). */
   radii: number[];
 }
@@ -101,15 +102,15 @@ export function dirOf(id: string): string {
 const basename = (id: string) => id.split("/").pop() ?? id;
 
 /**
- * Package-name -> platform value for the OS-guarded packages in the config's
- * platform.packages-nix file. Each `lib.optionalAttrs (<pred>) { <attrs> }`
+ * Package-name -> facet value for the OS-guarded packages in a facet's
+ * configured nix-packages file. Each `lib.optionalAttrs (<pred>) { <attrs> }`
  * block is classified by the first `guards` key found in its predicate text
  * (e.g. {darwin: "darwin", linux: "nixos"}); everything outside a matched
- * block is universal (absent from the map -> "both"). Brace-depth scan, not a
- * lazy regex: an attr RHS like `inputs.x.packages.${system}.x` contains a `}`
- * that would truncate a non-greedy capture and silently drop later attrs. Any
- * structural change to the file degrades the affected packages to "both" —
- * never throws.
+ * block is universal (absent from the map -> falls through to the facet's
+ * next resolution stage). Brace-depth scan, not a lazy regex: an attr RHS
+ * like `inputs.x.packages.${system}.x` contains a `}` that would truncate a
+ * non-greedy capture and silently drop later attrs. Any structural change to
+ * the file degrades the affected packages to a fall-through — never throws.
  */
 export function parsePackagePlatforms(nixSource: string, guards: Record<string, string>): Record<string, string> {
   const out: Record<string, string> = {};
@@ -143,19 +144,27 @@ export function parsePackagePlatforms(nixSource: string, guards: Record<string, 
   return out;
 }
 
-/** Platform a concept applies to, from the config's platform.types rule table.
- *  "hosts"/"packages" rules indirect through the host list / package guards;
- *  unlisted types are "neutral" (cross-cutting, never hidden by the filter). */
-export function platformOf(
-  type: string,
-  id: string,
-  pkgPlatforms: Record<string, string>,
-  platform: VizConfig["platform"],
-): Platform {
-  const rule = platform.types[type] ?? "neutral";
-  if (rule === "hosts") return platform.hosts[basename(id)] ?? platform.hostDefault ?? "neutral";
-  if (rule === "packages") return pkgPlatforms[basename(id)] ?? "both";
-  return rule;
+/**
+ * Resolve one concept's value for one facet — first hit wins:
+ * `ids[full-id]` -> the facet's nix-packages map (only when the concept's
+ * type is in `nixPackages.types`, keyed by basename; a miss falls through,
+ * it does not resolve to unresolved) -> a string frontmatter value (an
+ * explicit `values` list makes an out-of-range value unresolved, no further
+ * fall-through — the author explicitly tagged it) -> `types[type]` ->
+ * undefined ("unresolved" — always visible for this facet).
+ */
+export function facetValueOf(node: ConceptNode, facet: FacetConfig, nixMap: Record<string, string>): string | undefined {
+  const id = facet.ids[node.id];
+  if (id !== undefined) return id;
+  if (facet.nixPackages && facet.nixPackages.types.includes(node.type)) {
+    const v = nixMap[basename(node.id)];
+    if (v !== undefined) return v;
+  }
+  if (facet.frontmatter) {
+    const fmv = node.fm[facet.frontmatter];
+    if (typeof fmv === "string") return !facet.values.length || facet.values.includes(fmv) ? fmv : undefined;
+  }
+  return facet.types[node.type];
 }
 
 /** "owner/repo" display name from a GitHub URL — https or ssh form, with or
@@ -222,9 +231,21 @@ export function buildModel(raw: RawData): VizModel {
     ];
   }
 
-  const pkgPlatforms = raw.pkgPlatforms ?? {};
-  const platformById: Record<string, Platform> = {};
-  for (const n of nodes) platformById[n.id] = platformOf(n.type, n.id, pkgPlatforms, cfg.platform);
+  const facetMaps = raw.facetMaps ?? {};
+  const facets: { name: string; values: string[] }[] = [];
+  const facetById: Record<string, Record<string, string>> = {};
+  for (const f of cfg.facets) {
+    const nixMap = f.nixPackages ? (facetMaps[f.name] ?? {}) : {};
+    const resolved: Record<string, string> = {};
+    for (const n of nodes) {
+      const v = facetValueOf(n, f, nixMap);
+      if (v !== undefined) resolved[n.id] = v;
+    }
+    const values = f.values.length ? f.values : [...new Set(Object.values(resolved))].sort();
+    if (!values.length) continue; // never resolved anything and no explicit values: no-op, drop the lens
+    facets.push({ name: f.name, values });
+    facetById[f.name] = resolved;
+  }
 
   const radii = nodes.map((n) => (3.5 + Math.min(6.5, (deg[n.id] || 0) * 0.8)) * 0.42);
 
@@ -236,7 +257,6 @@ export function buildModel(raw: RawData): VizModel {
     repoName,
     cfg,
     displayName: displayName(cfg, repoName),
-    platforms: cfg.platform.values,
     commits,
     byId,
     indexOf,
@@ -250,7 +270,8 @@ export function buildModel(raw: RawData): VizModel {
     typeGroup,
     groupTypes,
     groupOrder,
-    platformById,
+    facets,
+    facetById,
     radii,
   };
 }

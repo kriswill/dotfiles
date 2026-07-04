@@ -43,33 +43,48 @@ export interface VizConfig {
     /** Bucket label for dirs missing from dirGroups. */
     other: string;
   };
-  platform: {
-    /** Ordered filter segments after "all". Empty: filter hidden, every
-     *  concept "neutral". */
-    values: string[];
-    /** Concept type -> value | "both" | "neutral" | "hosts" | "packages";
-     *  unlisted types are "neutral". */
-    types: Record<string, string>;
-    /** Host concept basename -> value (for the "hosts" rule). */
-    hosts: Record<string, string>;
-    /** Value for Host concepts not in `hosts` (null: neutral). */
-    hostDefault: string | null;
-    /** Repo-relative Nix file whose optionalAttrs OS guards classify
-     *  packages (null: skip, all packages "both"). */
-    packagesNix: string | null;
-    /** optionalAttrs predicate substring -> value (for packagesNix). */
-    nixGuards: Record<string, string>;
-  };
   repo: {
     /** Override of the git-origin detection (null: derive from `origin`). */
     url: string | null;
   };
+  /** 0..n independent filter lenses; file order (TOML) / array order (JSON)
+   *  is the sidebar control order. */
+  facets: FacetConfig[];
 }
 
-/** Sentinels usable as [platform.types] values besides the platform values
- *  themselves — and therefore reserved as platform value names. */
-export const PLATFORM_RULES = ["both", "neutral", "hosts", "packages"] as const;
-const RESERVED_VALUES = new Set(["all", ...PLATFORM_RULES]);
+export interface FacetConfig {
+  /** Segmented-control label and hash-param name; `^[a-z][a-z0-9-]*$`, not
+   *  one of the reserved names, unique across facets. */
+  name: string;
+  /** Ordered filter segments after "all". Empty: inferred from observed
+   *  resolutions across all concepts, alpha-sorted. */
+  values: string[];
+  /** Concept type -> value; unlisted types are unaffected by this facet
+   *  (always visible, i.e. "unresolved"). */
+  types: Record<string, string>;
+  /** Full concept id -> value; highest-precedence override. */
+  ids: Record<string, string>;
+  /** Frontmatter key read as this facet's value (string values only; null:
+   *  no frontmatter source). */
+  frontmatter: string | null;
+  /** Opt-in build-side source: classify concepts of the given types by the
+   *  optionalAttrs guard block enclosing their basename in `file` (null:
+   *  skip — this facet has no Nix-guard source). */
+  nixPackages: {
+    /** Repo-relative Nix file to parse. */
+    file: string;
+    /** optionalAttrs predicate substring -> value. */
+    guards: Record<string, string>;
+    /** Concept types (matched by basename) that consult this map; a miss
+     *  (or a type outside this list) falls through unresolved. */
+    types: string[];
+  } | null;
+}
+
+/** Facet names reserved because they collide with hash-param names or the
+ *  "all" sentinel value. */
+const RESERVED_FACET_NAMES = new Set(["hide", "q", "isolate", "os", "all"]);
+const FACET_NAME_RE = /^[a-z][a-z0-9-]*$/;
 
 export class VizConfigError extends Error {}
 
@@ -93,8 +108,8 @@ const defaults = (): VizConfig => ({
   },
   embed: { maxBytes: 200_000 },
   taxonomy: { types: [], dirGroups: {}, groupOrder: [], other: "Other" },
-  platform: { values: [], types: {}, hosts: {}, hostDefault: null, packagesNix: null, nixGuards: {} },
   repo: { url: null },
+  facets: [],
 });
 
 /** Header name: config override, else git-derived owner/repo, else fallback. */
@@ -183,45 +198,100 @@ export function normalizeVizConfig(raw: unknown, opts?: { strict?: boolean; warn
         field(s, "taxonomy", "groupOrder", asStrArr((v) => (cfg.taxonomy.groupOrder = v)));
         field(s, "taxonomy", "other", asStr((v) => (cfg.taxonomy.other = v)));
       });
-      section("platform", (s) => {
-        field(s, "platform", "values", asStrArr((v) => (cfg.platform.values = v)));
-        field(s, "platform", "types", asStrMap((v) => (cfg.platform.types = v)));
-        field(s, "platform", "hosts", asStrMap((v) => (cfg.platform.hosts = v)));
-        field(s, "platform", "hostDefault", asStr((v) => (cfg.platform.hostDefault = v || null)));
-        field(s, "platform", "packagesNix", asStr((v) => (cfg.platform.packagesNix = stripSlash(v) || null)));
-        field(s, "platform", "nixGuards", asStrMap((v) => (cfg.platform.nixGuards = v)));
-      });
       section("repo", (s) => {
         field(s, "repo", "url", asStr((v) => (cfg.repo.url = v || null)));
       });
+
+      // Facets: name-keyed [facet.<name>] TOML tables, or this file's own
+      // `facets` array output (re-normalizing an embedded cfg) — never both,
+      // so the two shapes can't ambiguously merge into one facet list.
+      const facetTable = top["facet"];
+      const facetsArr = top["facets"];
+      delete top["facet"];
+      delete top["facets"];
+      const present = (v: unknown) => v !== undefined && v !== null;
+      if (present(facetTable) && present(facetsArr))
+        bad("facet", "cannot specify both facet (table) and facets (array)");
+      let facetEntries: { name: string; raw: Record<string, unknown> }[] = [];
+      if (present(facetsArr)) {
+        if (Array.isArray(facetsArr))
+          facetEntries = facetsArr.filter(isObj).map((v) => {
+            const { name, ...rest } = v as Record<string, unknown>;
+            return { name: typeof name === "string" ? name : "", raw: rest };
+          });
+        else bad("facets", "expected an array");
+      } else if (present(facetTable)) {
+        if (!isObj(facetTable)) bad("facet", "expected a table");
+        else facetEntries = Object.entries(facetTable).map(([name, v]) => ({ name, raw: isObj(v) ? { ...v } : {} }));
+      }
+      cfg.facets = facetEntries.map(({ name, raw: fraw }) => {
+        const s = { ...fraw };
+        const path = `facet.${name || "?"}`;
+        const f: FacetConfig = { name, values: [], types: {}, ids: {}, frontmatter: null, nixPackages: null };
+        field(s, path, "values", asStrArr((v) => (f.values = v)));
+        field(s, path, "types", asStrMap((v) => (f.types = v)));
+        field(s, path, "ids", asStrMap((v) => (f.ids = v)));
+        field(s, path, "frontmatter", asStr((v) => (f.frontmatter = v || null)));
+        field(s, path, "nixPackages", (v, p) => {
+          if (!isObj(v)) return bad(p, "expected a table");
+          const np = { ...v };
+          let file: string | null = null;
+          let guards: Record<string, string> = {};
+          let types: string[] = [];
+          field(np, p, "file", asStr((x) => (file = stripSlash(x) || null)));
+          field(np, p, "guards", asStrMap((x) => (guards = x)));
+          field(np, p, "types", asStrArr((x) => (types = x)));
+          for (const k of Object.keys(np)) bad(`${p}.${k}`, "unknown key");
+          if (file) f.nixPackages = { file, guards, types };
+          else bad(`${p}.file`, "required");
+        });
+        for (const k of Object.keys(s)) bad(`${path}.${k}`, "unknown key");
+        return f;
+      });
+
       for (const k of Object.keys(top)) bad(k, "unknown key");
     }
   }
 
   // Cross-field validation (strict only — lenient input is our own output).
   if (strict) {
-    const vals = cfg.platform.values;
-    if (new Set(vals).size !== vals.length) errors.push("platform.values: duplicate values");
-    for (const v of vals) {
-      if (!v) errors.push("platform.values: empty string");
-      else if (RESERVED_VALUES.has(v)) errors.push(`platform.values: "${v}" is reserved`);
+    const facetNames = cfg.facets.map((f) => f.name);
+    if (new Set(facetNames).size !== facetNames.length) errors.push("facet: duplicate facet names");
+    for (const f of cfg.facets) {
+      const path = `facet.${f.name}`;
+      if (!FACET_NAME_RE.test(f.name)) errors.push(`${path}: name must match ^[a-z][a-z0-9-]*$`);
+      else if (RESERVED_FACET_NAMES.has(f.name)) errors.push(`${path}: "${f.name}" is a reserved name`);
+      const vals = f.values;
+      if (new Set(vals).size !== vals.length) errors.push(`${path}.values: duplicate values`);
+      for (const v of vals) {
+        if (!v) errors.push(`${path}.values: empty string`);
+        else if (v === "all") errors.push(`${path}.values: "all" is reserved`);
+      }
+      if (vals.length) {
+        const known = new Set(vals);
+        for (const [t, v] of Object.entries(f.types))
+          if (!known.has(v)) errors.push(`${path}.types."${t}": "${v}" is not in ${path}.values`);
+        for (const [id, v] of Object.entries(f.ids))
+          if (!known.has(v)) errors.push(`${path}.ids."${id}": "${v}" is not in ${path}.values`);
+        if (f.nixPackages)
+          for (const [g, v] of Object.entries(f.nixPackages.guards))
+            if (!known.has(v)) errors.push(`${path}.nix-packages.guards.${g}: "${v}" is not in ${path}.values`);
+      }
+      if (f.nixPackages) {
+        if (!Object.keys(f.nixPackages.guards).length) errors.push(`${path}.nix-packages.guards: required`);
+        if (!f.nixPackages.types.length) errors.push(`${path}.nix-packages.types: required`);
+      }
+      if (vals.length && !Object.keys(f.types).length && !Object.keys(f.ids).length && !f.nixPackages && !f.frontmatter)
+        warn(`${path}: has values but no resolution rule (types/ids/nix-packages/frontmatter) — every concept unresolved, filter is a no-op`);
     }
-    const known = new Set([...vals, ...PLATFORM_RULES]);
-    for (const [t, v] of Object.entries(cfg.platform.types))
-      if (!known.has(v)) errors.push(`platform.types."${t}": "${v}" is not in platform.values or ${PLATFORM_RULES.join("/")}`);
-    for (const [h, v] of Object.entries(cfg.platform.hosts))
-      if (!vals.includes(v)) errors.push(`platform.hosts.${h}: "${v}" is not in platform.values`);
-    if (cfg.platform.hostDefault !== null && !vals.includes(cfg.platform.hostDefault))
-      errors.push(`platform.host-default: "${cfg.platform.hostDefault}" is not in platform.values`);
-    for (const [g, v] of Object.entries(cfg.platform.nixGuards))
-      if (!vals.includes(v)) errors.push(`platform.nix-guards.${g}: "${v}" is not in platform.values`);
-    if (vals.length === 0 && (Object.keys(cfg.platform.types).length || cfg.platform.packagesNix))
-      errors.push("platform.values: required when [platform] rules are configured");
-    for (const [p, why] of [
+    const pathFields: [string, string][] = [
       [cfg.bundle.dir, "bundle.dir"],
       [cfg.bundle.out, "bundle.out"],
-      [cfg.platform.packagesNix ?? "x", "platform.packages-nix"],
-    ] as const) {
+      ...cfg.facets
+        .filter((f) => f.nixPackages)
+        .map((f): [string, string] => [f.nixPackages!.file, `facet.${f.name}.nix-packages.file`]),
+    ];
+    for (const [p, why] of pathFields) {
       if (!p) errors.push(`${why}: must not be empty`);
       else if (p.split("/").includes("..") || p.startsWith("/")) errors.push(`${why}: must be a relative path without ".."`);
     }
