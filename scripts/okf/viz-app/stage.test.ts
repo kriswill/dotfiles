@@ -48,6 +48,23 @@ describe("Stage bridges", () => {
     expect(stub.dimFn!(0)).toBe(false);
   });
 
+  test("dim bridge re-pushes when a facet selection changes (immutable facetSel replacement)", () => {
+    const withFacet = createVizState(
+      buildModel({
+        nodes: [node("a", "Decision", "Alpha"), node("b", "Pattern", "Beta")],
+        edges: [{ s: "a", t: "b" }],
+        cfg: { facet: { kind: { types: { Decision: "x", Pattern: "y" } } } },
+      }),
+    );
+    const { stub, state } = mountStage(withFacet);
+    const before = stub.calls.filter(([m]) => m === "setDim").length;
+    state.setFacet("kind", "x");
+    flushSync();
+    expect(stub.calls.filter(([m]) => m === "setDim").length).toBe(before + 1);
+    expect(stub.dimFn!(0)).toBe(false); // Alpha (Decision -> "x") stays
+    expect(stub.dimFn!(1)).toBe(true); // Beta (Pattern -> "y") dimmed
+  });
+
   test("selection bridge flies to concepts, keeps emphasis in file view, re-fires on reselect", () => {
     const { stub, state } = mountStage();
     state.selectConcept("a");

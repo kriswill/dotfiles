@@ -1,12 +1,12 @@
 import { describe, expect, test } from "bun:test";
-import { normalizeVizConfig } from "./config";
+import type { FacetConfig } from "./config";
 import {
   buildModel,
   conceptTree,
   dirOf,
+  facetValueOf,
   neighborsWithin,
   parsePackagePlatforms,
-  platformOf,
   repoNameFromUrl,
   treeIds,
   type ConceptTree,
@@ -359,75 +359,147 @@ describe("parsePackagePlatforms", () => {
   });
 });
 
-describe("platformOf", () => {
-  const pkg = { kitten: "darwin", "flatpak-user": "nixos" } as const;
-  const platform = normalizeVizConfig(cfg()).platform;
+describe("facetValueOf", () => {
+  // Layered fixture: every stage of the pipeline has a live rule, so each
+  // test isolates one precedence hop by choosing which stages the fixture
+  // node actually hits.
+  const facet: FacetConfig = {
+    name: "platform",
+    values: ["darwin", "nixos"],
+    types: { "Darwin Module": "darwin", "NixOS Module": "nixos" },
+    ids: { "hosts/nebula": "nixos" },
+    frontmatter: "os",
+    nixPackages: { file: "modules/packages.nix", guards: { darwin: "darwin", linux: "nixos" }, types: ["Nix Package"] },
+  };
+  const nix = { kitten: "darwin", "flatpak-user": "nixos" };
 
-  test("modules derive from the type rule table", () => {
-    expect(platformOf("Darwin Module", "modules/nh", {}, platform)).toBe("darwin");
-    expect(platformOf("NixOS Module", "modules/keyring", {}, platform)).toBe("nixos");
-    expect(platformOf("Dual Module", "modules/tmux", {}, platform)).toBe("both");
-    expect(platformOf("Flake-parts Module", "modules/flake-parts", {}, platform)).toBe("both");
+  test("ids wins over nix-packages, frontmatter, and types", () => {
+    const n = node("hosts/nebula", "Darwin Module", "Nebula", { fm: { os: "darwin" } });
+    expect(facetValueOf(n, facet, nix)).toBe("nixos");
   });
 
-  test("neovim is universal, knowledge is neutral", () => {
-    expect(platformOf("Neovim Plugin", "nvim/plugins/blink", {}, platform)).toBe("both");
-    expect(platformOf("Neovim Config", "nvim/keymaps", {}, platform)).toBe("both");
-    expect(platformOf("Decision", "decisions/x", {}, platform)).toBe("neutral");
-    expect(platformOf("Reference", "okf-profile", {}, platform)).toBe("neutral");
+  test("nix-packages wins over frontmatter and types when the type is listed", () => {
+    const n = node("packages/kitten", "Nix Package", "kitten", { fm: { os: "nixos" } });
+    expect(facetValueOf(n, facet, nix)).toBe("darwin");
   });
 
-  test("hosts look up the configured host list, else host-default", () => {
-    expect(platformOf("Host", "hosts/nebula", {}, platform)).toBe("nixos");
-    expect(platformOf("Host", "hosts/k", {}, platform)).toBe("darwin");
-    expect(platformOf("Host", "hosts/SOC-Kris-Williams", {}, platform)).toBe("darwin");
+  test("a nix-packages miss falls through to frontmatter, then types — it does not resolve to unresolved", () => {
+    const withFm = node("packages/iv", "Nix Package", "iv", { fm: { os: "nixos" } });
+    expect(facetValueOf(withFm, facet, nix)).toBe("nixos");
+    const bare = node("packages/iv", "Nix Package", "iv", {});
+    expect(facetValueOf(bare, facet, nix)).toBeUndefined(); // nix miss, no fm, "Nix Package" unlisted in types
   });
 
-  test("packages/sub-flakes/overlays look up the guard by basename, default both", () => {
-    expect(platformOf("Nix Package", "packages/kitten", pkg, platform)).toBe("darwin");
-    expect(platformOf("Nix Package", "packages/flatpak-user", pkg, platform)).toBe("nixos");
-    expect(platformOf("Nix Package", "packages/iv", pkg, platform)).toBe("both"); // universal
-    expect(platformOf("Sub-flake", "packages/ccglass", pkg, platform)).toBe("both");
-    expect(platformOf("Overlay", "packages/direnv", pkg, platform)).toBe("both");
+  test("frontmatter wins over types when present", () => {
+    const n = node("decisions/x", "Darwin Module", "X", { fm: { os: "nixos" } });
+    expect(facetValueOf(n, facet, {})).toBe("nixos");
   });
 
-  test("unknown types default to neutral (never hidden by an OS filter)", () => {
-    expect(platformOf("Some Future Type", "x/y", {}, platform)).toBe("neutral");
+  test("non-string frontmatter values are ignored, falling through to types", () => {
+    const n = node("modules/nh", "Darwin Module", "Nh", { fm: { os: 123 } });
+    expect(facetValueOf(n, facet, {})).toBe("darwin");
   });
 
-  test("an unconfigured platform section makes everything neutral", () => {
-    const bare = normalizeVizConfig({}).platform;
-    expect(platformOf("Darwin Module", "modules/nh", {}, bare)).toBe("neutral");
-    expect(platformOf("Host", "hosts/nebula", {}, bare)).toBe("neutral");
+  test("a frontmatter value outside an explicit values list is unresolved, no fall-through to types", () => {
+    const n = node("modules/nh", "Darwin Module", "Nh", { fm: { os: "bsd" } });
+    expect(facetValueOf(n, facet, {})).toBeUndefined();
+  });
+
+  test("types is the last resort", () => {
+    const n = node("modules/keyring", "NixOS Module", "Keyring", {});
+    expect(facetValueOf(n, facet, {})).toBe("nixos");
+  });
+
+  test("an unlisted type with no ids/nix/fm hit resolves to undefined (unresolved, always visible)", () => {
+    const n = node("decisions/x", "Decision", "X", {});
+    expect(facetValueOf(n, facet, {})).toBeUndefined();
+  });
+
+  test("a facet with no explicit values accepts any frontmatter string (inference source)", () => {
+    const inferFacet: FacetConfig = {
+      name: "status",
+      values: [],
+      types: {},
+      ids: {},
+      frontmatter: "status",
+      nixPackages: null,
+    };
+    const n = node("x", "Decision", "X", { fm: { status: "draft" } });
+    expect(facetValueOf(n, inferFacet, {})).toBe("draft");
   });
 });
 
-describe("buildModel.platformById", () => {
-  test("derives a platform for every node from type/host/package guards", () => {
+describe("buildModel facets", () => {
+  test("dotfiles-parity: matches the old platformOf resolution, minus former both/neutral nodes", () => {
     const m = buildModel({
       nodes: [
         node("modules/nh", "Darwin Module", "nh"),
         node("modules/keyring", "NixOS Module", "keyring"),
+        node("modules/tmux", "Dual Module", "tmux"), // formerly "both" -> unresolved (unlisted type)
         node("packages/kitten", "Nix Package", "kitten"),
-        node("packages/iv", "Nix Package", "iv"),
-        node("decisions/x", "Decision", "X"),
+        node("packages/iv", "Nix Package", "iv"), // formerly "both" -> unresolved (nix miss, no fm/types entry)
+        node("hosts/nebula", "Host", "nebula"),
+        node("hosts/k", "Host", "k"),
+        node("decisions/x", "Decision", "x"), // formerly "neutral" -> unresolved (unlisted type)
       ],
       edges: [],
-      pkgPlatforms: { kitten: "darwin" },
+      facetMaps: { platform: { kitten: "darwin" } },
       cfg: cfg(),
     });
-    expect(m.platformById).toEqual({
+    expect(m.facets).toEqual([{ name: "platform", values: ["darwin", "nixos"] }]);
+    expect(m.facetById["platform"]).toEqual({
       "modules/nh": "darwin",
       "modules/keyring": "nixos",
       "packages/kitten": "darwin",
-      "packages/iv": "both",
-      "decisions/x": "neutral",
+      "hosts/nebula": "nixos", // ids override
+      "hosts/k": "darwin", // types default
     });
+    for (const dropped of ["modules/tmux", "packages/iv", "decisions/x"])
+      expect(m.facetById["platform"]![dropped]).toBeUndefined();
   });
 
-  test("missing pkgPlatforms defaults every package to both", () => {
+  test("missing facetMaps: nix-packages concepts fall through (unresolved here, no fm/types entry)", () => {
     const m = buildModel({ nodes: [node("packages/kitten", "Nix Package", "kitten")], edges: [], cfg: cfg() });
-    expect(m.platformById["packages/kitten"]).toBe("both");
+    expect(m.facetById["platform"]!["packages/kitten"]).toBeUndefined();
+  });
+
+  test("values inference: a frontmatter-driven facet with no explicit values alpha-sorts observed values", () => {
+    const m = buildModel({
+      nodes: [
+        node("a", "Decision", "A", { fm: { status: "stable" } }),
+        node("b", "Decision", "B", { fm: { status: "draft" } }),
+        node("c", "Decision", "C", {}), // no status -> unresolved, doesn't contribute a value
+      ],
+      edges: [],
+      cfg: { facet: { status: { frontmatter: "status" } } },
+    });
+    expect(m.facets).toEqual([{ name: "status", values: ["draft", "stable"] }]);
+    expect(m.facetById["status"]).toEqual({ a: "stable", b: "draft" });
+  });
+
+  test("multiple facets resolve independently", () => {
+    const m = buildModel({
+      nodes: [node("a", "Darwin Module", "A", { fm: { status: "stable" } })],
+      edges: [],
+      cfg: {
+        facet: {
+          platform: { values: ["darwin", "nixos"], types: { "Darwin Module": "darwin" } },
+          status: { frontmatter: "status" },
+        },
+      },
+    });
+    expect(m.facets).toEqual([
+      { name: "platform", values: ["darwin", "nixos"] },
+      { name: "status", values: ["stable"] },
+    ]);
+    expect(m.facetById["platform"]).toEqual({ a: "darwin" });
+    expect(m.facetById["status"]).toEqual({ a: "stable" });
+  });
+
+  test("a facet with no rule and no explicit values is dropped entirely (no-op lens)", () => {
+    const m = buildModel({ nodes: [node("a", "Decision", "A")], edges: [], cfg: { facet: { empty: {} } } });
+    expect(m.facets).toEqual([]);
+    expect(m.facetById["empty"]).toBeUndefined();
   });
 });
 
@@ -453,9 +525,9 @@ describe("generic (no-config) mode", () => {
     expect(m.typeGroup).toEqual({});
   });
 
-  test("platform filter disabled: no values, every concept neutral", () => {
-    expect(m.platforms).toEqual([]);
-    expect(new Set(Object.values(m.platformById))).toEqual(new Set(["neutral"]));
+  test("no facets configured: no lenses at all, nothing hidden by any facet", () => {
+    expect(m.facets).toEqual([]);
+    expect(m.facetById).toEqual({});
   });
 
   test("display falls back to the git-derived name and generic strings", () => {

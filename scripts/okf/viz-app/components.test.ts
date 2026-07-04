@@ -5,9 +5,9 @@ import { flushSync, mount, unmount } from "svelte";
 import ConceptList from "./ConceptList.svelte";
 import { buildModel } from "./data";
 import DetailPanel from "./DetailPanel.svelte";
+import FacetControls from "./FacetControls.svelte";
 import IsolateControl from "./IsolateControl.svelte";
 import Legend from "./Legend.svelte";
-import PlatformControl from "./PlatformControl.svelte";
 import Search from "./Search.svelte";
 import Sidebar from "./Sidebar.svelte";
 import { createVizState } from "./state.svelte";
@@ -295,11 +295,11 @@ describe("IsolateControl", () => {
   });
 });
 
-describe("PlatformControl", () => {
-  test("renders all/darwin/nixos segments; active tracks viz.platform; clicks set it", () => {
+describe("FacetControls", () => {
+  test("renders all/darwin/nixos segments; active tracks viz.facetSel; clicks set it", () => {
     const state = createVizState(model());
-    mountC(PlatformControl, { viz: state });
-    const [all, darwin, nixos] = [...document.querySelectorAll("#platform .seg")] as HTMLElement[];
+    mountC(FacetControls, { viz: state });
+    const [all, darwin, nixos] = [...document.querySelectorAll(".facet .seg")] as HTMLElement[];
     expect([all!.textContent?.trim(), darwin!.textContent?.trim(), nixos!.textContent?.trim()]).toEqual([
       "all",
       "darwin",
@@ -309,29 +309,38 @@ describe("PlatformControl", () => {
 
     darwin!.click();
     flushSync();
-    expect(state.platform).toBe("darwin");
+    expect(state.facetSel.platform).toBe("darwin");
     expect(darwin!.classList.contains("active")).toBe(true);
     expect(all!.classList.contains("active")).toBe(false);
 
     nixos!.click();
     flushSync();
-    expect(state.platform).toBe("nixos");
+    expect(state.facetSel.platform).toBe("nixos");
 
     all!.click();
     flushSync();
-    expect(state.platform).toBe("all");
+    expect(state.facetSel.platform).toBe("all");
   });
 
-  test("is rendered with or without a selection, but not without configured platforms", () => {
+  test("is rendered when facets are configured (unaffected by selection — no selection-dependent rendering)", () => {
     const state = createVizState(model());
-    mountC(PlatformControl, { viz: state });
-    expect(document.getElementById("platform")).not.toBeNull();
+    mountC(FacetControls, { viz: state });
+    expect(document.querySelector(".facet")).not.toBeNull();
+    state.selectConcept("a");
+    flushSync();
+    expect(document.querySelector(".facet")).not.toBeNull();
   });
 
-  test("segments come from the config's platform values; hidden when unconfigured", () => {
-    const custom = createVizState(buildModel({ nodes: [node("a", "Decision", "Alpha")], edges: [], cfg: { platform: { values: ["home", "work"] } } }));
-    mountC(PlatformControl, { viz: custom });
-    expect([...document.querySelectorAll("#platform .seg")].map((b) => b.textContent?.trim())).toEqual([
+  test("segments come from the config's facet values; hidden when unconfigured", () => {
+    const custom = createVizState(
+      buildModel({
+        nodes: [node("a", "Decision", "Alpha")],
+        edges: [],
+        cfg: { facet: { platform: { values: ["home", "work"] } } },
+      }),
+    );
+    mountC(FacetControls, { viz: custom });
+    expect([...document.querySelectorAll(".facet .seg")].map((b) => b.textContent?.trim())).toEqual([
       "all",
       "home",
       "work",
@@ -341,8 +350,24 @@ describe("PlatformControl", () => {
     document.body.innerHTML = "";
 
     const generic = createVizState(buildModel({ nodes: [node("a", "Decision", "Alpha")], edges: [] }));
-    mountC(PlatformControl, { viz: generic });
-    expect(document.getElementById("platform")).toBeNull();
+    mountC(FacetControls, { viz: generic });
+    expect(document.querySelector(".facet")).toBeNull();
+  });
+
+  test("multi-facet rows render independently, each with its own name hint", () => {
+    const multi = createVizState(
+      buildModel({
+        nodes: [node("a", "Decision", "Alpha", { fm: { status: "stable" } })],
+        edges: [],
+        cfg: { facet: { platform: { values: ["home", "work"] }, status: { frontmatter: "status" } } },
+      }),
+    );
+    mountC(FacetControls, { viz: multi });
+    const rows = [...document.querySelectorAll(".facet")];
+    expect(rows).toHaveLength(2);
+    expect(rows.map((r) => r.querySelector(".hint")!.textContent)).toEqual(["platform", "status"]);
+    expect([...rows[0]!.querySelectorAll(".seg")].map((b) => b.textContent?.trim())).toEqual(["all", "home", "work"]);
+    expect([...rows[1]!.querySelectorAll(".seg")].map((b) => b.textContent?.trim())).toEqual(["all", "stable"]);
   });
 });
 

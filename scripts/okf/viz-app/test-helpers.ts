@@ -18,7 +18,8 @@ export const node = (id: string, type: string, title = id, extra: Partial<Concep
 });
 
 /** Dotfiles-shaped raw viz config (TOML kebab spelling) for RawData.cfg —
- *  reproduces the pre-okf-viz.toml hardcoded taxonomy/platform behavior. */
+ *  reproduces the pre-okf-viz.toml hardcoded taxonomy/platform behavior,
+ *  now as a single `platform` facet mirroring the repo's okf-viz.toml. */
 export const cfg = (over: Record<string, unknown> = {}) => ({
   taxonomy: {
     types: [
@@ -47,23 +48,21 @@ export const cfg = (over: Record<string, unknown> = {}) => ({
       nvim: "Neovim",
     },
   },
-  platform: {
-    values: ["darwin", "nixos"],
-    "host-default": "darwin",
-    types: {
-      "Darwin Module": "darwin",
-      "NixOS Module": "nixos",
-      "Dual Module": "both",
-      "Flake-parts Module": "both",
-      "Neovim Plugin": "both",
-      "Neovim Config": "both",
-      Host: "hosts",
-      "Nix Package": "packages",
-      "Sub-flake": "packages",
-      Overlay: "packages",
+  facet: {
+    platform: {
+      values: ["darwin", "nixos"],
+      types: {
+        "Darwin Module": "darwin",
+        "NixOS Module": "nixos",
+        Host: "darwin", // replaces host-default
+      },
+      ids: { "hosts/nebula": "nixos" },
+      "nix-packages": {
+        file: "modules/packages.nix",
+        guards: { darwin: "darwin", linux: "nixos" },
+        types: ["Nix Package", "Sub-flake", "Overlay"],
+      },
     },
-    hosts: { nebula: "nixos" },
-    "nix-guards": { darwin: "darwin", linux: "nixos" },
   },
   ...over,
 });

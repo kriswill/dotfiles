@@ -386,74 +386,103 @@ describe("focusedConcept", () => {
   });
 });
 
-describe("platform axis", () => {
+describe("facet lenses", () => {
   const platModel = () =>
     buildModel({
       nodes: [
         node("modules/nh", "Darwin Module", "Nh"),
         node("modules/keyring", "NixOS Module", "Keyring"),
-        node("modules/tmux", "Dual Module", "Tmux"),
-        node("decisions/x", "Decision", "Decide"),
+        node("modules/tmux", "Dual Module", "Tmux"), // unlisted type -> unresolved, always visible
+        node("decisions/x", "Decision", "Decide"), // unlisted type -> unresolved, always visible
       ],
       edges: [],
       cfg: cfg(),
     });
 
-  test("default is 'all' — every node visible", () => {
+  test("default is 'all' for every facet — every node visible", () => {
     const s = createVizState(platModel());
-    expect(s.platform).toBe("all");
+    expect(s.facetSel).toEqual({ platform: "all" });
     expect(s.visibleSorted).toHaveLength(4);
   });
 
-  test("darwin lens shows darwin + both + neutral, hides nixos-only", () => {
+  test("darwin lens shows darwin + unresolved concepts, hides nixos-only", () => {
     const s = createVizState(platModel());
-    s.setPlatform("darwin");
+    s.setFacet("platform", "darwin");
     expect(s.visibleSorted.map((n) => n.id).sort()).toEqual(["decisions/x", "modules/nh", "modules/tmux"]);
   });
 
-  test("nixos lens shows nixos + both + neutral, hides darwin-only", () => {
+  test("nixos lens shows nixos + unresolved concepts, hides darwin-only", () => {
     const s = createVizState(platModel());
-    s.setPlatform("nixos");
+    s.setFacet("platform", "nixos");
     expect(s.visibleSorted.map((n) => n.id).sort()).toEqual(["decisions/x", "modules/keyring", "modules/tmux"]);
   });
 
   test("composes via AND with type and search filters", () => {
     const s = createVizState(platModel());
-    s.setPlatform("darwin"); // {nh, tmux, x}
+    s.setFacet("platform", "darwin"); // {nh, tmux, x}
     s.toggleType("Dual Module"); // remove tmux -> {nh, x}
     expect(s.visibleSorted.map((n) => n.id).sort()).toEqual(["decisions/x", "modules/nh"]);
     s.query = "nh"; // -> {nh}
     expect(s.visibleSorted.map((n) => n.id)).toEqual(["modules/nh"]);
   });
 
-  test("setPlatform clamps values outside the configured platforms to 'all'", () => {
+  test("setFacet clamps values outside the facet's configured values to 'all'", () => {
     const s = createVizState(platModel());
-    s.setPlatform("bogus");
-    expect(s.platform).toBe("all");
+    s.setFacet("platform", "bogus");
+    expect(s.facetSel.platform).toBe("all");
   });
 
-  test("a generic (no-config) model has no platform lens at all", () => {
-    const s = createVizState(model()); // no cfg -> platforms []
-    s.setPlatform("darwin");
-    expect(s.platform).toBe("all");
-    s.setFilters([], "", 0, "darwin");
-    expect(s.platform).toBe("all");
+  test("setFacet on an unknown facet name is a no-op", () => {
+    const s = createVizState(platModel());
+    s.setFacet("nope", "darwin");
+    expect(s.facetSel).toEqual({ platform: "all" });
   });
 
-  test("platform is a global lens: it does NOT reset on clearSelection", () => {
+  test("a generic (no-config) model has no facet lenses at all", () => {
+    const s = createVizState(model()); // no cfg -> facets []
+    expect(s.facetSel).toEqual({});
+    s.setFacet("platform", "darwin");
+    expect(s.facetSel).toEqual({});
+    s.setFilters([], "", 0, { platform: "darwin" });
+    expect(s.facetSel).toEqual({});
+  });
+
+  test("a facet lens is global: it does NOT reset on clearSelection", () => {
     const s = createVizState(platModel());
     s.selectConcept("modules/nh");
-    s.setPlatform("darwin");
+    s.setFacet("platform", "darwin");
     s.clearSelection();
-    expect(s.platform).toBe("darwin"); // unlike isolate, which resets
+    expect(s.facetSel.platform).toBe("darwin"); // unlike isolate, which resets
   });
 
-  test("setFilters accepts a platform (4th arg), defaults to 'all'", () => {
+  test("setFilters accepts a facet-selection record (4th arg), defaults to 'all'", () => {
     const s = createVizState(platModel());
-    s.setFilters([], "", 0, "nixos");
-    expect(s.platform).toBe("nixos");
+    s.setFilters([], "", 0, { platform: "nixos" });
+    expect(s.facetSel.platform).toBe("nixos");
     s.setFilters([], "");
-    expect(s.platform).toBe("all");
+    expect(s.facetSel.platform).toBe("all");
+  });
+
+  test("multi-facet AND visibility: a concept must match every active facet's selection", () => {
+    const m = buildModel({
+      nodes: [
+        node("a", "Darwin Module", "A", { fm: { status: "stable" } }),
+        node("b", "Darwin Module", "B", { fm: { status: "draft" } }),
+        node("c", "NixOS Module", "C", { fm: { status: "stable" } }),
+      ],
+      edges: [],
+      cfg: {
+        facet: {
+          platform: { values: ["darwin", "nixos"], types: { "Darwin Module": "darwin", "NixOS Module": "nixos" } },
+          status: { frontmatter: "status" },
+        },
+      },
+    });
+    const s = createVizState(m);
+    s.setFacet("platform", "darwin");
+    expect(s.visibleSorted.map((n) => n.id).sort()).toEqual(["a", "b"]);
+    s.setFacet("status", "stable");
+    expect(s.visibleSorted.map((n) => n.id)).toEqual(["a"]); // must be darwin AND stable
   });
 });
 

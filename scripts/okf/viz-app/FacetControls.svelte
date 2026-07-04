@@ -4,18 +4,22 @@
   const { viz }: { viz: VizState } = $props();
 </script>
 
-{#if viz.model.platforms.length}
-  <div id="platform">
-    <span class="hint">platform</span>
-    {#each ["all", ...viz.model.platforms] as p (p)}
-      <button class="seg" class:active={viz.platform === p} onclick={() => viz.setPlatform(p)}>{p}</button>
+{#each viz.model.facets as facet (facet.name)}
+  <div class="facet">
+    <span class="hint">{facet.name}</span>
+    {#each ["all", ...facet.values] as v (v)}
+      <button
+        class="seg"
+        class:active={viz.facetSel[facet.name] === v}
+        onclick={() => viz.setFacet(facet.name, v)}>{v}</button
+      >
     {/each}
   </div>
-{/if}
+{/each}
 
 <style>
   /* .hint / .seg are global primitives (viz.ts) shared with the other controls. */
-  #platform {
+  .facet {
     display: flex;
     align-items: center;
     gap: 5px;
