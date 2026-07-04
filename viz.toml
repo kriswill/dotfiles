@@ -1,0 +1,79 @@
+# viz.toml — repo-specific settings for `okf viz` (scripts/okf/viz.ts).
+# Schema + validation: scripts/okf/viz-app/config.ts. Without this file the
+# viewer still builds with generic fallbacks: no platform filter, alphabetical
+# types with generated colors, flat legend, generic header/about text.
+
+[bundle]
+dir = "knowledge" # OKF bundle root, repo-relative
+out = "viz.html"  # output file, relative to the bundle dir
+
+[display]
+title = "OKF knowledge graph" # <title> = "<name> — <title>"
+badge = "OKF viz"             # sidebar h1 suffix label
+fallback-name = "knowledge/"  # header name when no GitHub origin
+# name = "..."                # optional hard override of the git-derived owner/repo
+about-html = """A navigable map of this repository's <b>knowledge/</b> bundle — architecture patterns, \
+decision records, playbooks, and a catalog of every module, package, and host, authored in the \
+<a href="https://github.com/GoogleCloudPlatform/knowledge-catalog/blob/main/okf/SPEC.md" \
+target="_blank" rel="noopener">Open Knowledge Format</a> and cross-linked into a graph. \
+Click a node to read its document."""
+
+[embed]
+max-bytes = 200000 # per-file source-embed cap
+
+[taxonomy]
+# Palette slot order: entry N -> CSS var --sN (12 theme slots; overflow types
+# get stable generated colors). Append-only — existing types keep their colors.
+types = [
+  "Darwin Module",
+  "Nix Package",
+  "Playbook",
+  "Pattern",
+  "Decision",
+  "Host",
+  "Sub-flake",
+  "Flake-parts Module",
+  "Neovim Config",
+  "Neovim Plugin",
+  "Overlay",
+  "Reference",
+]
+group-order = ["Knowledge", "System", "Packages", "Neovim"]
+# other = "Other"             # label for concepts in unmapped directories
+
+[taxonomy.dir-groups] # top-level bundle dir -> legend cluster ("." = root docs)
+decisions = "Knowledge"
+patterns = "Knowledge"
+playbooks = "Knowledge"
+"." = "Knowledge"
+modules = "System"
+hosts = "System"
+packages = "Packages"
+nvim = "Neovim"
+
+[platform]
+values = ["darwin", "nixos"]          # filter segments after "all"; section absent -> filter hidden
+packages-nix = "modules/packages.nix" # Nix file whose optionalAttrs OS guards classify packages
+host-default = "darwin"               # Host concepts not listed in [platform.hosts]
+
+[platform.nix-guards] # optionalAttrs predicate substring -> platform value
+darwin = "darwin"
+linux = "nixos"
+
+[platform.types] # type -> value | "both" | "neutral" | "hosts" | "packages"; unlisted -> "neutral"
+"Darwin Module" = "darwin"
+"NixOS Module" = "nixos"
+"Dual Module" = "both"
+"Flake-parts Module" = "both"
+"Neovim Plugin" = "both"
+"Neovim Config" = "both"
+"Host" = "hosts"          # look up basename in [platform.hosts], else host-default
+"Nix Package" = "packages" # look up basename in the packages-nix guard map, else "both"
+"Sub-flake" = "packages"
+"Overlay" = "packages"
+
+[platform.hosts]
+nebula = "nixos"
+
+# [repo]
+# url = "https://github.com/kriswill/dotfiles" # optional override of the git-origin detection

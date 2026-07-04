@@ -55,6 +55,17 @@ describe("inline rendering", () => {
     );
   });
 
+  test("concept links resolve under a non-default bundleDir (no hardcoded 'knowledge/' offsets)", () => {
+    const kb = createMd({ ...ctx, bundleDir: "kb" });
+    expect(kb.mdToHtml("[arch](../nvim/architecture.md)", from)).toBe(
+      '<p><a href="#" data-node="nvim/architecture">arch</a></p>',
+    );
+    // Repo-file links resolve one level up from kb/<id>, not knowledge/<id>.
+    expect(kb.mdToHtml("[viz](../../scripts/okf/viz.ts)", from)).toBe(
+      '<p><a href="#" data-file="scripts/okf/viz.ts">viz</a></p>',
+    );
+  });
+
   test("repo-file link resolves to data-file", () => {
     expect(md.mdToHtml("[viz](../../scripts/okf/viz.ts)", from)).toBe(
       '<p><a href="#" data-file="scripts/okf/viz.ts">viz</a></p>',

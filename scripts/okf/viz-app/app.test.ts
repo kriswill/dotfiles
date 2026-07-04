@@ -7,7 +7,7 @@ import { flushSync, mount, unmount } from "svelte";
 import App from "./App.svelte";
 import { buildModel } from "./data";
 import { createVizState } from "./state.svelte";
-import { makeStub, node } from "./test-helpers";
+import { cfg, makeStub, node } from "./test-helpers";
 
 const model = () =>
   buildModel({
@@ -16,6 +16,7 @@ const model = () =>
     // The '%' in this path is the double-decode regression case: decoding its
     // (once-encoded) hash a second time throws URIError.
     files: { "docs/50%.md": { html: "", md: "# hi", lines: 1, size: 5, date: "", lang: "markdown", refs: [] } },
+    cfg: cfg(),
   });
 
 let cleanup: (() => void) | null = null;

@@ -6,6 +6,7 @@ const model = {
   files: { "scripts/okf/viz.ts": {}, "docs/50%.md": {}, "docs/what?.md": {} },
   dirs: { "flakes/ccglass": {} },
   typeCounts: { "Darwin Module": 2, Decision: 1 },
+  platforms: ["darwin", "nixos"],
 };
 
 describe("encodeHash", () => {
@@ -27,11 +28,11 @@ describe("encodeHash", () => {
 
 describe("encodeViewHash", () => {
   const none = { kind: "none" } as const;
-  const f = (o: Partial<{ hidden: string[]; q: string; isolate: 0 | 1 | 2; platform: "all" | "darwin" | "nixos" }>) => ({
+  const f = (o: Partial<{ hidden: string[]; q: string; isolate: 0 | 1 | 2; platform: string }>) => ({
     hidden: [],
     q: "",
     isolate: 0 as const,
-    platform: "all" as const,
+    platform: "all",
     ...o,
   });
 
@@ -127,12 +128,18 @@ describe("decodeViewHash", () => {
     expect(decodeViewHash("c/nvim/architecture?isolate=abc", model).filters.isolate).toBe(0);
   });
 
-  test("os= decodes for any selection kind; invalid values clamp to 'all'", () => {
+  test("os= decodes for any selection kind; values outside model.platforms clamp to 'all'", () => {
     expect(decodeViewHash("?os=darwin", model).filters.platform).toBe("darwin");
     expect(decodeViewHash("f/scripts/okf/viz.ts?os=nixos", model).filters.platform).toBe("nixos");
     expect(decodeViewHash("d/flakes/ccglass?os=darwin", model).filters.platform).toBe("darwin");
     expect(decodeViewHash("c/nvim/architecture?os=bogus", model).filters.platform).toBe("all");
     expect(decodeViewHash("c/nvim/architecture", model).filters.platform).toBe("all");
+  });
+
+  test("a model without configured platforms clamps every os= to 'all'", () => {
+    const generic = { ...model, platforms: undefined };
+    expect(decodeViewHash("?os=darwin", generic).filters.platform).toBe("all");
+    expect(decodeViewHash("?os=darwin", { ...model, platforms: [] }).filters.platform).toBe("all");
   });
 });
 

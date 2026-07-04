@@ -4,12 +4,14 @@
   const { viz }: { viz: VizState } = $props();
 </script>
 
-<div id="platform">
-  <span class="hint">platform</span>
-  <button class="seg" class:active={viz.platform === "all"} onclick={() => viz.setPlatform("all")}>all</button>
-  <button class="seg" class:active={viz.platform === "darwin"} onclick={() => viz.setPlatform("darwin")}>darwin</button>
-  <button class="seg" class:active={viz.platform === "nixos"} onclick={() => viz.setPlatform("nixos")}>nixos</button>
-</div>
+{#if viz.model.platforms.length}
+  <div id="platform">
+    <span class="hint">platform</span>
+    {#each ["all", ...viz.model.platforms] as p (p)}
+      <button class="seg" class:active={viz.platform === p} onclick={() => viz.setPlatform(p)}>{p}</button>
+    {/each}
+  </div>
+{/if}
 
 <style>
   /* .hint / .seg are global primitives (viz.ts) shared with the other controls. */

@@ -2,7 +2,7 @@
 // Stage.svelte bridges it into the imperative GraphScene.
 import { SvelteSet } from "svelte/reactivity";
 import { nameColor } from "./color";
-import { conceptTree, neighborsWithin, treeIds, TYPE_ORDER, type ConceptNode, type ConceptTree, type VizModel } from "./data";
+import { conceptTree, neighborsWithin, treeIds, type ConceptNode, type ConceptTree, type VizModel } from "./data";
 import type { Selection } from "./hash";
 import { applyThemeVars, defaultThemeIndex, THEMES } from "./themes";
 
@@ -30,7 +30,8 @@ export function createVizState(model: VizModel) {
   const hidden = new SvelteSet<string>();
   let query = $state("");
   let isolateDepth = $state<0 | 1 | 2>(0);
-  let platform = $state<"all" | "darwin" | "nixos">("all");
+  // "all" or one of model.platforms (the config's platform.values).
+  let platform = $state("all");
   let hover = $state<Hover | null>(null);
   let panelW = $state(typeof localStorage === "undefined" ? 0 : +(localStorage.getItem(PANEL_KEY) || 0));
   let dark = $state(typeof matchMedia === "undefined" ? false : matchMedia("(prefers-color-scheme: dark)").matches);
@@ -57,7 +58,9 @@ export function createVizState(model: VizModel) {
 
   const computeSlots = () => {
     const m: Record<string, string> = {};
-    TYPE_ORDER.forEach((t, i) => (m[t] = cssVar("--s" + (i + 1))));
+    // Slot N = --sN; the themes ship 12 slots, overflow types fall through to
+    // nameColor in colorOf (missing CSS var -> "" -> falsy).
+    model.cfg.taxonomy.types.slice(0, 12).forEach((t, i) => (m[t] = cssVar("--s" + (i + 1))));
     return m;
   };
   // Re-read on repaint() — the CSS custom properties flip with the color scheme.
@@ -183,13 +186,13 @@ export function createVizState(model: VizModel) {
       soloTypes(model.groupTypes[g] ?? []);
     },
     /** Replace the whole filter state (hash navigation). */
-    setFilters(hiddenTypes: string[], q: string, isolate: 0 | 1 | 2 = 0, plat: "all" | "darwin" | "nixos" = "all") {
+    setFilters(hiddenTypes: string[], q: string, isolate: 0 | 1 | 2 = 0, plat = "all") {
       const want = new Set(hiddenTypes);
       for (const t of [...hidden]) if (!want.has(t)) hidden.delete(t);
       for (const t of want) hidden.add(t);
       query = q;
       isolateDepth = isolate;
-      platform = plat;
+      platform = model.platforms.includes(plat) ? plat : "all";
     },
     get hiddenMatchCount() {
       return hiddenMatchCount;
@@ -208,8 +211,8 @@ export function createVizState(model: VizModel) {
     get platform() {
       return platform;
     },
-    setPlatform(p: "all" | "darwin" | "nixos") {
-      platform = p === "darwin" || p === "nixos" ? p : "all";
+    setPlatform(p: string) {
+      platform = model.platforms.includes(p) ? p : "all";
     },
 
     get query() {

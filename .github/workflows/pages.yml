@@ -12,6 +12,7 @@ on:
     paths:
       - "knowledge/**"
       - "scripts/okf/**"
+      - "viz.toml"
       - ".github/workflows/pages.yml"
   workflow_dispatch:
 
