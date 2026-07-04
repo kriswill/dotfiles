@@ -12,11 +12,11 @@
       "locked": {
         "lastModified": 1,
         "narHash": "sha256-oF7ePUzG3FUj8+FjJpqejJGxS4m12PMkG+kKVAVdpFg=",
-        "path": "/nix/store/pxba4qhxnvm5ca0d0wqliayjf44mm51h-source/flakes/apple-container",
+        "path": "/nix/store/75z4bvhi5x55a3msirk4x8na41pgkjp2-source/flakes/apple-container",
         "type": "path"
       },
       "original": {
-        "path": "/nix/store/pxba4qhxnvm5ca0d0wqliayjf44mm51h-source/flakes/apple-container",
+        "path": "/nix/store/75z4bvhi5x55a3msirk4x8na41pgkjp2-source/flakes/apple-container",
         "type": "path"
       }
     },
@@ -65,11 +65,11 @@
       "locked": {
         "lastModified": 1,
         "narHash": "sha256-k+D5eoHetKXSXud82d/48IVRQb8U0PBxez5g6V7JwX0=",
-        "path": "/nix/store/pxba4qhxnvm5ca0d0wqliayjf44mm51h-source/flakes/ccglass",
+        "path": "/nix/store/75z4bvhi5x55a3msirk4x8na41pgkjp2-source/flakes/ccglass",
         "type": "path"
       },
       "original": {
-        "path": "/nix/store/pxba4qhxnvm5ca0d0wqliayjf44mm51h-source/flakes/ccglass",
+        "path": "/nix/store/75z4bvhi5x55a3msirk4x8na41pgkjp2-source/flakes/ccglass",
         "type": "path"
       }
     },
