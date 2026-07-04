@@ -29,31 +29,57 @@ describe("encodeViewHash", () => {
   const none = { kind: "none" } as const;
 
   test("empty filters add nothing", () => {
-    expect(encodeViewHash({ sel: none, filters: { hidden: [], q: "" } })).toBe("");
+    expect(encodeViewHash({ sel: none, filters: { hidden: [], q: "", isolate: 0 } })).toBe("");
     expect(
-      encodeViewHash({ sel: { kind: "concept", id: "nvim/architecture" }, filters: { hidden: [], q: "" } }),
+      encodeViewHash({ sel: { kind: "concept", id: "nvim/architecture" }, filters: { hidden: [], q: "", isolate: 0 } }),
     ).toBe("c/nvim/architecture");
   });
 
   test("filters ride behind '?', hidden types sorted for a canonical form", () => {
-    expect(encodeViewHash({ sel: none, filters: { hidden: ["Decision", "Darwin Module"], q: "" } })).toBe(
+    expect(encodeViewHash({ sel: none, filters: { hidden: ["Decision", "Darwin Module"], q: "", isolate: 0 } })).toBe(
       "?hide=Darwin+Module%2CDecision",
     );
-    expect(encodeViewHash({ sel: none, filters: { hidden: ["Darwin Module", "Decision"], q: "" } })).toBe(
+    expect(encodeViewHash({ sel: none, filters: { hidden: ["Darwin Module", "Decision"], q: "", isolate: 0 } })).toBe(
       "?hide=Darwin+Module%2CDecision",
     );
     expect(
-      encodeViewHash({ sel: { kind: "concept", id: "nvim/architecture" }, filters: { hidden: [], q: "tmux conf" } }),
+      encodeViewHash({
+        sel: { kind: "concept", id: "nvim/architecture" },
+        filters: { hidden: [], q: "tmux conf", isolate: 0 },
+      }),
     ).toBe("c/nvim/architecture?q=tmux+conf");
+  });
+
+  test("isolate rides behind '?' only for a concept selection and a nonzero depth", () => {
+    expect(
+      encodeViewHash({ sel: { kind: "concept", id: "nvim/architecture" }, filters: { hidden: [], q: "", isolate: 2 } }),
+    ).toBe("c/nvim/architecture?isolate=2");
+    expect(
+      encodeViewHash({ sel: { kind: "concept", id: "nvim/architecture" }, filters: { hidden: [], q: "", isolate: 0 } }),
+    ).toBe("c/nvim/architecture");
+    expect(encodeViewHash({ sel: none, filters: { hidden: [], q: "", isolate: 2 } })).toBe(""); // no selection -> never emitted
+  });
+
+  test("isolate is ordered after hide and q in the query string", () => {
+    expect(
+      encodeViewHash({
+        sel: { kind: "concept", id: "nvim/architecture" },
+        filters: { hidden: ["Decision"], q: "arch", isolate: 1 },
+      }),
+    ).toBe("c/nvim/architecture?hide=Decision&q=arch&isolate=1");
   });
 });
 
 describe("decodeViewHash", () => {
   test("selection + filters round-trip, including '%' paths", () => {
     for (const view of [
-      { sel: { kind: "concept", id: "nvim/architecture" }, filters: { hidden: ["Darwin Module", "Decision"], q: "" } },
-      { sel: { kind: "none" }, filters: { hidden: [], q: "a?b&c=%" } },
-      { sel: { kind: "file", path: "docs/50%.md" }, filters: { hidden: ["Decision"], q: "tmux" } },
+      {
+        sel: { kind: "concept", id: "nvim/architecture" },
+        filters: { hidden: ["Darwin Module", "Decision"], q: "", isolate: 0 },
+      },
+      { sel: { kind: "none" }, filters: { hidden: [], q: "a?b&c=%", isolate: 0 } },
+      { sel: { kind: "file", path: "docs/50%.md" }, filters: { hidden: ["Decision"], q: "tmux", isolate: 0 } },
+      { sel: { kind: "concept", id: "nvim/architecture" }, filters: { hidden: ["Decision"], q: "tmux", isolate: 1 } },
     ] as const) {
       const decoded = decodeViewHash(encodeViewHash(view as never), model);
       expect(decoded.sel).toEqual(view.sel);
@@ -64,7 +90,7 @@ describe("decodeViewHash", () => {
   test("bare selection hashes decode with empty filters (old links stay valid)", () => {
     expect(decodeViewHash("c/nvim/architecture", model)).toEqual({
       sel: { kind: "concept", id: "nvim/architecture" },
-      filters: { hidden: [], q: "" },
+      filters: { hidden: [], q: "", isolate: 0 },
     });
   });
 
@@ -77,6 +103,16 @@ describe("decodeViewHash", () => {
       kind: "concept",
       id: "nvim/architecture",
     });
+  });
+
+  test("a stray isolate= on a non-concept selection is dropped on decode", () => {
+    expect(decodeViewHash("?isolate=2", model).filters.isolate).toBe(0);
+    expect(decodeViewHash("f/scripts/okf/viz.ts?isolate=1", model).filters.isolate).toBe(0);
+  });
+
+  test("garbage isolate values clamp to 0", () => {
+    expect(decodeViewHash("c/nvim/architecture?isolate=3", model).filters.isolate).toBe(0);
+    expect(decodeViewHash("c/nvim/architecture?isolate=abc", model).filters.isolate).toBe(0);
   });
 });
 

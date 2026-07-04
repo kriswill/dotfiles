@@ -4,9 +4,7 @@
 
   const { viz }: { viz: VizState } = $props();
 
-  // The focused concept: the selected one, or the referrer while a file view
-  // is open (matches the scene's emphasis).
-  const focusedId = $derived((viz.selectedConcept ?? viz.backConcept)?.id ?? null);
+  const focusedId = $derived(viz.focusedConcept?.id ?? null);
 
   let nav: HTMLElement | null = $state(null);
   $effect(() => {

@@ -97,6 +97,9 @@ describe("App filter persistence", () => {
     viz.query = "arch";
     flushSync();
     expect(location.hash).toBe("#c/nvim/architecture?hide=Reference&q=arch");
+    viz.setIsolate(1);
+    flushSync();
+    expect(location.hash).toBe("#c/nvim/architecture?hide=Reference&q=arch&isolate=1");
     viz.setFilters([], "");
     flushSync();
     expect(location.hash).toBe("#c/nvim/architecture");
@@ -112,6 +115,26 @@ describe("App filter persistence", () => {
     expect(location.hash).toBe("#c/nvim/architecture?hide=Reference&q=arch"); // applied, never rewritten
   });
 
+  test("a deep link with an isolate param applies it on mount", () => {
+    location.hash = "#c/nvim/architecture?hide=Reference&q=arch&isolate=1";
+    const viz = createVizState(model());
+    mountApp(viz);
+    expect(viz.sel).toEqual({ kind: "concept", id: "nvim/architecture" });
+    expect(viz.isolateDepth).toBe(1);
+    expect(location.hash).toBe("#c/nvim/architecture?hide=Reference&q=arch&isolate=1"); // applied, never rewritten
+  });
+
+  test("a deep link combining a file selection with hide=/q= still applies both (isolate stays 0, not a concept)", () => {
+    location.hash = "#f/docs/50%25.md?hide=Reference&q=arch";
+    const viz = createVizState(model());
+    mountApp(viz);
+    expect(viz.sel).toEqual({ kind: "file", path: "docs/50%.md" });
+    expect([...viz.hidden]).toEqual(["Reference"]);
+    expect(viz.query).toBe("arch");
+    expect(viz.isolateDepth).toBe(0);
+    expect(location.hash).toBe("#f/docs/50%25.md?hide=Reference&q=arch"); // applied, never rewritten
+  });
+
   test("selection navigation keeps active filters; Back to a bare hash clears them", () => {
     const viz = createVizState(model());
     mountApp(viz);
@@ -121,10 +144,14 @@ describe("App filter persistence", () => {
     viz.selectConcept("nvim/architecture");
     flushSync();
     expect(location.hash).toBe("#c/nvim/architecture?hide=Reference");
+    viz.setIsolate(2);
+    flushSync();
+    expect(location.hash).toBe("#c/nvim/architecture?hide=Reference&isolate=2");
     location.hash = "#c/nvim/architecture"; // simulate Back to an unfiltered entry
     window.dispatchEvent(new Event("hashchange"));
     flushSync();
     expect(viz.hidden.size).toBe(0);
+    expect(viz.isolateDepth).toBe(0);
     expect(viz.sel).toEqual({ kind: "concept", id: "nvim/architecture" });
   });
 });

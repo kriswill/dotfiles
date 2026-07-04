@@ -5,6 +5,7 @@ import { flushSync, mount, unmount } from "svelte";
 import ConceptList from "./ConceptList.svelte";
 import { buildModel } from "./data";
 import DetailPanel from "./DetailPanel.svelte";
+import IsolateControl from "./IsolateControl.svelte";
 import Legend from "./Legend.svelte";
 import Search from "./Search.svelte";
 import { createVizState } from "./state.svelte";
@@ -192,6 +193,62 @@ describe("ConceptList", () => {
     state.clearSelection();
     flushSync();
     expect(document.querySelector("#list a.selected")).toBeNull();
+  });
+});
+
+describe("IsolateControl", () => {
+  test("renders nothing when no concept is selected", () => {
+    const state = createVizState(model());
+    mountC(IsolateControl, { viz: state });
+    expect(document.getElementById("isolate")).toBeNull();
+  });
+
+  test("renders 1-hop/2-hop/off once a concept is selected; buttons drive setIsolate", () => {
+    const state = createVizState(model());
+    state.selectConcept("a");
+    mountC(IsolateControl, { viz: state });
+    const [oneHop, twoHop, off] = [...document.querySelectorAll("#isolate .seg")] as HTMLElement[];
+    expect([oneHop!.textContent?.trim(), twoHop!.textContent?.trim(), off!.textContent?.trim()]).toEqual([
+      "1-hop",
+      "2-hop",
+      "off",
+    ]);
+    expect(off!.classList.contains("active")).toBe(true); // isolateDepth starts at 0
+
+    oneHop!.click();
+    flushSync();
+    expect(state.isolateDepth).toBe(1);
+    expect(oneHop!.classList.contains("active")).toBe(true);
+    expect(state.visibleSorted.map((n) => n.id).sort()).toEqual(["a", "b"]); // a-b are 1-hop neighbors
+
+    oneHop!.click(); // clicking the active depth again turns isolation off
+    flushSync();
+    expect(state.isolateDepth).toBe(0);
+
+    twoHop!.click();
+    flushSync();
+    expect(state.isolateDepth).toBe(2);
+    off!.click();
+    flushSync();
+    expect(state.isolateDepth).toBe(0);
+  });
+
+  test("switching directly between depths, and re-clicking 2-hop while active, both work", () => {
+    const state = createVizState(model());
+    state.selectConcept("a");
+    mountC(IsolateControl, { viz: state });
+    const [oneHop, twoHop] = [...document.querySelectorAll("#isolate .seg")] as HTMLElement[];
+
+    oneHop!.click(); // 0 -> 1
+    flushSync();
+    expect(state.isolateDepth).toBe(1);
+    twoHop!.click(); // 1 -> 2 directly, not via off
+    flushSync();
+    expect(state.isolateDepth).toBe(2);
+    expect(twoHop!.classList.contains("active")).toBe(true);
+    twoHop!.click(); // clicking the active 2-hop button again turns it off
+    flushSync();
+    expect(state.isolateDepth).toBe(0);
   });
 });
 

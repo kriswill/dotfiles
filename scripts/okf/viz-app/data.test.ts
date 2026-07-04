@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { buildModel, dirOf } from "./data";
+import { buildModel, dirOf, neighborsWithin } from "./data";
 import { node } from "./test-helpers";
 
 const raw = {
@@ -121,5 +121,37 @@ describe("grouping", () => {
       edges: [],
     });
     expect(reversed.typeGroup["Nix Package"]).toBe("Other"); // still the FIRST node's group, not overwritten by the second
+  });
+});
+
+describe("neighborsWithin", () => {
+  const nRaw = {
+    nodes: [node("a", "Decision", "A"), node("b", "Pattern", "B"), node("c", "Pattern", "C"), node("d", "Pattern", "D")],
+    edges: [
+      { s: "a", t: "b" },
+      { s: "b", t: "c" },
+    ],
+  };
+  const nm = buildModel(nRaw);
+
+  test("1-hop includes the origin and direct neighbors only", () => {
+    expect(neighborsWithin(nm, "a", 1)).toEqual(new Set(["a", "b"]));
+  });
+
+  test("2-hop reaches through one more edge", () => {
+    expect(neighborsWithin(nm, "a", 2)).toEqual(new Set(["a", "b", "c"]));
+  });
+
+  test("a disconnected node returns just itself", () => {
+    expect(neighborsWithin(nm, "d", 1)).toEqual(new Set(["d"]));
+  });
+
+  test("an unknown id returns an empty set", () => {
+    expect(neighborsWithin(nm, "nope", 1)).toEqual(new Set());
+  });
+
+  test("depth 2 finds no further growth once the 1-hop set is already closed", () => {
+    // "b" (middle of a-b-c) already reaches its whole component at depth 1.
+    expect(neighborsWithin(nm, "b", 2)).toEqual(new Set(["a", "b", "c"]));
   });
 });

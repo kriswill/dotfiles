@@ -1,5 +1,6 @@
 <script lang="ts">
   import ConceptList from "./ConceptList.svelte";
+  import IsolateControl from "./IsolateControl.svelte";
   import Legend from "./Legend.svelte";
   import Search from "./Search.svelte";
   import type { VizState } from "./state.svelte";
@@ -12,7 +13,7 @@
   <div class="scroll">
     <h1>knowledge/ bundle</h1>
     <div class="sub" id="counts">
-      {#if viz.hidden.size > 0 || viz.query.trim()}
+      {#if viz.hidden.size > 0 || viz.query.trim() || viz.neighborIds}
         {viz.visibleSorted.length} of {viz.model.nodes.length} concepts · {viz.model.edges.length} links
       {:else}
         {viz.model.nodes.length} concepts · {viz.model.edges.length} links
@@ -20,6 +21,7 @@
     </div>
     <Search {viz} />
     <Legend {viz} />
+    <IsolateControl {viz} />
     <ConceptList {viz} />
   </div>
   <ThemeSlider {viz} />

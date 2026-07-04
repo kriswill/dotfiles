@@ -56,6 +56,8 @@ export interface VizModel {
   edgeIdx: [number, number][];
   deg: Record<string, number>;
   inLinks: Record<string, string[]>;
+  /** Undirected adjacency by id, for neighborhood isolation. */
+  adjById: Record<string, Set<string>>;
   typeCounts: Record<string, number>;
   allTypes: string[];
   /** Legend cluster per type, derived from each type's concepts' top-level bundle directory. */
@@ -122,10 +124,14 @@ export function buildModel(raw: RawData): VizModel {
 
   const deg: Record<string, number> = {};
   const inLinks: Record<string, string[]> = {};
+  const adjById: Record<string, Set<string>> = {};
+  for (const n of nodes) adjById[n.id] = new Set();
   for (const e of edges) {
     deg[e.s] = (deg[e.s] || 0) + 1;
     deg[e.t] = (deg[e.t] || 0) + 1;
     (inLinks[e.t] = inLinks[e.t] || []).push(e.s);
+    adjById[e.s]!.add(e.t);
+    adjById[e.t]!.add(e.s);
   }
 
   const typeCounts: Record<string, number> = {};
@@ -160,6 +166,7 @@ export function buildModel(raw: RawData): VizModel {
     edgeIdx,
     deg,
     inLinks,
+    adjById,
     typeCounts,
     allTypes,
     typeGroup,
@@ -167,6 +174,29 @@ export function buildModel(raw: RawData): VizModel {
     groupOrder,
     radii,
   };
+}
+
+/** BFS neighbor set within `depth` hops of `id`, including `id` itself so the
+ *  origin never vanishes from its own filtered view. An id absent from the
+ *  model returns an empty set; a real but edge-less node returns itself. */
+export function neighborsWithin(model: VizModel, id: string, depth: 1 | 2): Set<string> {
+  const seen = new Set<string>();
+  if (!model.adjById[id]) return seen;
+  seen.add(id);
+  let frontier = [id];
+  for (let d = 0; d < depth; d++) {
+    const next: string[] = [];
+    for (const cur of frontier) {
+      for (const nb of model.adjById[cur] ?? []) {
+        if (!seen.has(nb)) {
+          seen.add(nb);
+          next.push(nb);
+        }
+      }
+    }
+    frontier = next;
+  }
+  return seen;
 }
 
 export function loadFromDom(): VizModel {
