@@ -11,6 +11,7 @@ import { existsSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { extname, join } from "node:path";
 import { bundleRoot, extractLinks, gitISO, gitTrackedFiles, githubRemoteUrl, isExternal, parseDoc, repoRoot, resolveCommits, resolveLink, walkMd, RESERVED } from "./lib";
 import { layout3d } from "./layout3d";
+import { parsePackagePlatforms } from "./viz-app/data";
 import { esc } from "./viz-app/markdown";
 import { THEMES } from "./viz-app/themes";
 
@@ -244,6 +245,10 @@ for (const n of nodes) for (const m of n.body.matchAll(HASH_SPAN)) hashCandidate
 for (const f of Object.values(files)) if (f.md) for (const m of f.md.matchAll(HASH_SPAN)) hashCandidates.add(m[1]);
 const repoUrl = githubRemoteUrl();
 const commits = repoUrl ? resolveCommits([...hashCandidates]) : {};
+// OS guards for the platform filter: parse the darwin/linux `optionalAttrs`
+// blocks in modules/packages.nix (absent file -> {} -> every package "both").
+const packagesNix = join(repo, "modules", "packages.nix");
+const pkgPlatforms = existsSync(packagesNix) ? parsePackagePlatforms(readFileSync(packagesNix, "utf8")) : {};
 lap("sources");
 
 // --- Frozen 3D layout ---------------------------------------------------------
@@ -283,7 +288,10 @@ for (const o of build.outputs) if (o.path.endsWith(".css")) appCss += await o.te
 appCss = appCss.replace(/<\/style/gi, "<\\/style");
 lap("bundle");
 
-const data = JSON.stringify({ nodes, edges: dedupedEdges, files, dirs, repoUrl, commits }).replace(/<\//g, "<\\/");
+const data = JSON.stringify({ nodes, edges: dedupedEdges, files, dirs, repoUrl, commits, pkgPlatforms }).replace(
+  /<\//g,
+  "<\\/",
+);
 
 /** :root custom-property block for a named theme stop, from the app's THEMES. */
 const themeCss = (name: string) =>
@@ -313,6 +321,24 @@ const html = `<!doctype html>
     font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif;
     color: var(--ink-1); background: var(--page);
     display: grid; grid-template-columns: 260px 1fr; overflow: hidden;
+  }
+  /* Shared sidebar-control primitives (used by the legend head, the platform
+     and neighborhood segmented controls) — global so the controls don't each
+     re-declare an identical scoped copy. */
+  .hint {
+    margin-right: auto;
+    color: var(--ink-muted); font-size: 11px;
+    text-transform: uppercase; letter-spacing: 0.05em;
+  }
+  .seg {
+    padding: 2px 6px; font: inherit; font-size: 12px;
+    color: var(--ink-muted); background: none;
+    border: 1px solid transparent; border-radius: 5px; cursor: pointer;
+  }
+  .seg:hover { color: var(--ink-1); }
+  .seg.active {
+    color: var(--ink-1); border-color: var(--grid);
+    background: var(--page); font-weight: 600;
   }
 </style>
 <style>${appCss}</style>

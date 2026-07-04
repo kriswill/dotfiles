@@ -314,6 +314,68 @@ describe("focusedConcept", () => {
   });
 });
 
+describe("platform axis", () => {
+  const platModel = () =>
+    buildModel({
+      nodes: [
+        node("modules/nh", "Darwin Module", "Nh"),
+        node("modules/keyring", "NixOS Module", "Keyring"),
+        node("modules/tmux", "Dual Module", "Tmux"),
+        node("decisions/x", "Decision", "Decide"),
+      ],
+      edges: [],
+    });
+
+  test("default is 'all' — every node visible", () => {
+    const s = createVizState(platModel());
+    expect(s.platform).toBe("all");
+    expect(s.visibleSorted).toHaveLength(4);
+  });
+
+  test("darwin lens shows darwin + both + neutral, hides nixos-only", () => {
+    const s = createVizState(platModel());
+    s.setPlatform("darwin");
+    expect(s.visibleSorted.map((n) => n.id).sort()).toEqual(["decisions/x", "modules/nh", "modules/tmux"]);
+  });
+
+  test("nixos lens shows nixos + both + neutral, hides darwin-only", () => {
+    const s = createVizState(platModel());
+    s.setPlatform("nixos");
+    expect(s.visibleSorted.map((n) => n.id).sort()).toEqual(["decisions/x", "modules/keyring", "modules/tmux"]);
+  });
+
+  test("composes via AND with type and search filters", () => {
+    const s = createVizState(platModel());
+    s.setPlatform("darwin"); // {nh, tmux, x}
+    s.toggleType("Dual Module"); // remove tmux -> {nh, x}
+    expect(s.visibleSorted.map((n) => n.id).sort()).toEqual(["decisions/x", "modules/nh"]);
+    s.query = "nh"; // -> {nh}
+    expect(s.visibleSorted.map((n) => n.id)).toEqual(["modules/nh"]);
+  });
+
+  test("setPlatform clamps invalid values to 'all'", () => {
+    const s = createVizState(platModel());
+    s.setPlatform("bogus" as never);
+    expect(s.platform).toBe("all");
+  });
+
+  test("platform is a global lens: it does NOT reset on clearSelection", () => {
+    const s = createVizState(platModel());
+    s.selectConcept("modules/nh");
+    s.setPlatform("darwin");
+    s.clearSelection();
+    expect(s.platform).toBe("darwin"); // unlike isolate, which resets
+  });
+
+  test("setFilters accepts a platform (4th arg), defaults to 'all'", () => {
+    const s = createVizState(platModel());
+    s.setFilters([], "", 0, "nixos");
+    expect(s.platform).toBe("nixos");
+    s.setFilters([], "");
+    expect(s.platform).toBe("all");
+  });
+});
+
 describe("panel width", () => {
   test("default clamp: min(460, 85%) capped at 92%", () => {
     const s = createVizState(model());

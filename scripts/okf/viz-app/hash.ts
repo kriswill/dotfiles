@@ -1,8 +1,9 @@
 // URL-hash codec for viewer state. The selection is the path segment
 // (`c/<concept-id>` | `f/<file-path>` | `d/<dir-path>`); view filters ride
 // behind a `?` as query params (`hide=<type,type,…>` + `q=<search>` +
-// `isolate=<1|2>`, the last only meaningful for a concept selection), so a
-// shared link reproduces the whole lens, not just the selection.
+// `isolate=<1|2>`, the last only meaningful for a concept selection, +
+// `os=<darwin|nixos>`), so a shared link reproduces the whole lens, not just
+// the selection.
 // Pure — validation against the data model is injected by the caller.
 
 export type Selection =
@@ -18,6 +19,8 @@ export interface ViewFilters {
   q: string;
   /** Neighborhood isolation depth (0 = off); only meaningful for a concept selection. */
   isolate: 0 | 1 | 2;
+  /** OS lens ("all" = off). */
+  platform: "all" | "darwin" | "nixos";
 }
 
 export interface ViewState {
@@ -53,6 +56,8 @@ export function encodeViewHash(view: ViewState): string {
   if (view.filters.hidden.length) p.set("hide", [...view.filters.hidden].sort().join(","));
   if (view.filters.q) p.set("q", view.filters.q);
   if (view.sel.kind === "concept" && view.filters.isolate) p.set("isolate", String(view.filters.isolate));
+  const plat = view.filters.platform ?? "all";
+  if (plat !== "all") p.set("os", plat);
   const qs = p.toString();
   return encodeHash(view.sel) + (qs ? "?" + qs : "");
 }
@@ -74,7 +79,7 @@ export function decodeViewHash(raw: string, model: HashModel): ViewState {
   const bare = raw.replace(/^#/, "");
   const qi = bare.indexOf("?");
   const sel = decodeHash(qi < 0 ? bare : bare.slice(0, qi), model);
-  const filters: ViewFilters = { hidden: [], q: "", isolate: 0 };
+  const filters: ViewFilters = { hidden: [], q: "", isolate: 0, platform: "all" };
   if (qi >= 0) {
     const p = new URLSearchParams(bare.slice(qi + 1));
     const hide = p.get("hide");
@@ -82,6 +87,8 @@ export function decodeViewHash(raw: string, model: HashModel): ViewState {
     filters.q = p.get("q") ?? "";
     const iv = p.get("isolate");
     filters.isolate = sel.kind !== "concept" ? 0 : iv === "1" ? 1 : iv === "2" ? 2 : 0;
+    const os = p.get("os");
+    filters.platform = os === "darwin" || os === "nixos" ? os : "all";
   }
   return { sel, filters };
 }

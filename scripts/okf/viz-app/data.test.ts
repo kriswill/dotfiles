@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { buildModel, dirOf, neighborsWithin } from "./data";
+import { buildModel, dirOf, neighborsWithin, parsePackagePlatforms, platformOf } from "./data";
 import { node } from "./test-helpers";
 
 const raw = {
@@ -153,5 +153,121 @@ describe("neighborsWithin", () => {
   test("depth 2 finds no further growth once the 1-hop set is already closed", () => {
     // "b" (middle of a-b-c) already reaches its whole component at depth 1.
     expect(neighborsWithin(nm, "b", 2)).toEqual(new Set(["a", "b", "c"]));
+  });
+});
+
+describe("parsePackagePlatforms", () => {
+  // Mirrors modules/packages.nix's shape: a `${system}` interpolation (whose '}'
+  // would truncate a lazy regex, dropping later attrs) plus inline `{ }` callPackage args.
+  const nix = `
+  packages = {
+    iv = pkgs.callPackage ../pkgs/iv.nix { };
+    tomato = pkgs.callPackage ../pkgs/tomato.nix { tomato-src = inputs.tomato; };
+    ccglass = inputs.ccglass.packages.\${system}.ccglass;
+  }
+  // lib.optionalAttrs (system == "aarch64-darwin") {
+    apple-container = inputs.apple-container.packages.\${system}.apple-container;
+    podman = pkgs.callPackage ../pkgs/podman.nix { };
+    kitten = pkgs.callPackage ../pkgs/kitten.nix { };
+    // A guarded package with a MULTI-LINE nested arg: its own-line \`packaged-src =\`
+    // must NOT be captured as a top-level package (depth-aware extraction).
+    packaged = pkgs.callPackage ../pkgs/packaged.nix {
+      packaged-src = inputs.packaged;
+    };
+  }
+  // lib.optionalAttrs (lib.hasSuffix "linux" system) {
+    flatpak-user = pkgs.callPackage ../pkgs/flatpak-user.nix { };
+    wowup = pkgs.callPackage ../pkgs/wowup.nix { };
+  };
+`;
+
+  test("classifies both guarded blocks, no attrs dropped past a \${system} '}'", () => {
+    expect(parsePackagePlatforms(nix)).toEqual({
+      "apple-container": "darwin",
+      podman: "darwin",
+      kitten: "darwin",
+      packaged: "darwin",
+      "flatpak-user": "nixos",
+      wowup: "nixos",
+    });
+    // Universal packages (outside any optionalAttrs block) are absent -> "both".
+    expect(parsePackagePlatforms(nix)["iv"]).toBeUndefined();
+    // A nested callPackage-arg attr on its own line is NOT captured as a package.
+    expect(parsePackagePlatforms(nix)["packaged-src"]).toBeUndefined();
+    // The tomato-src nested arg in the universal block is likewise never scanned.
+    expect(parsePackagePlatforms(nix)["tomato-src"]).toBeUndefined();
+  });
+
+  test("absent/garbage input yields an empty map (packages default to both)", () => {
+    expect(parsePackagePlatforms("")).toEqual({});
+    expect(parsePackagePlatforms("no optionalAttrs here { just: braces }")).toEqual({});
+  });
+
+  test("an unbalanced (truncated) block bails instead of misclassifying", () => {
+    expect(parsePackagePlatforms('// lib.optionalAttrs (system == "aarch64-darwin") { podman = x;')).toEqual({});
+  });
+});
+
+describe("platformOf", () => {
+  const pkg = { kitten: "darwin", "flatpak-user": "nixos" } as const;
+
+  test("modules derive from type", () => {
+    expect(platformOf("Darwin Module", "modules/nh", {})).toBe("darwin");
+    expect(platformOf("NixOS Module", "modules/keyring", {})).toBe("nixos");
+    expect(platformOf("Dual Module", "modules/tmux", {})).toBe("both");
+    expect(platformOf("Flake-parts Module", "modules/flake-parts", {})).toBe("both");
+  });
+
+  test("neovim is universal, knowledge is neutral", () => {
+    expect(platformOf("Neovim Plugin", "nvim/plugins/blink", {})).toBe("both");
+    expect(platformOf("Neovim Config", "nvim/keymaps", {})).toBe("both");
+    expect(platformOf("Decision", "decisions/x", {})).toBe("neutral");
+    expect(platformOf("Reference", "okf-profile", {})).toBe("neutral");
+  });
+
+  test("hosts derive from host id (only nebula is nixos)", () => {
+    expect(platformOf("Host", "hosts/nebula", {})).toBe("nixos");
+    expect(platformOf("Host", "hosts/k", {})).toBe("darwin");
+    expect(platformOf("Host", "hosts/SOC-Kris-Williams", {})).toBe("darwin");
+  });
+
+  test("packages/sub-flakes/overlays look up the guard by basename, default both", () => {
+    expect(platformOf("Nix Package", "packages/kitten", pkg)).toBe("darwin");
+    expect(platformOf("Nix Package", "packages/flatpak-user", pkg)).toBe("nixos");
+    expect(platformOf("Nix Package", "packages/iv", pkg)).toBe("both"); // universal
+    expect(platformOf("Sub-flake", "packages/ccglass", pkg)).toBe("both");
+    expect(platformOf("Overlay", "packages/direnv", pkg)).toBe("both");
+  });
+
+  test("unknown types default to neutral (never hidden by an OS filter)", () => {
+    expect(platformOf("Some Future Type", "x/y", {})).toBe("neutral");
+  });
+});
+
+describe("buildModel.platformById", () => {
+  test("derives a platform for every node from type/host/package guards", () => {
+    const m = buildModel({
+      nodes: [
+        node("modules/nh", "Darwin Module", "nh"),
+        node("modules/keyring", "NixOS Module", "keyring"),
+        node("packages/kitten", "Nix Package", "kitten"),
+        node("packages/iv", "Nix Package", "iv"),
+        node("decisions/x", "Decision", "X"),
+      ],
+      edges: [],
+      pkgPlatforms: { kitten: "darwin" },
+    });
+    expect(m.platformById).toEqual({
+      "modules/nh": "darwin",
+      "modules/keyring": "nixos",
+      "packages/kitten": "darwin",
+      "packages/iv": "both",
+      "decisions/x": "neutral",
+    });
+  });
+
+  test("missing pkgPlatforms defaults every package to both", () => {
+    const m = buildModel({ nodes: [node("packages/kitten", "Nix Package", "kitten")], edges: [] });
+    expect(m.platformById["packages/kitten"]).toBe("both");
   });
 });

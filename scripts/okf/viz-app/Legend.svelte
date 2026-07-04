@@ -59,13 +59,7 @@
     gap: 5px;
     padding: 0 4px 3px;
   }
-  .leg-head .hint {
-    margin-right: auto;
-    color: var(--ink-muted);
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-  }
+  /* .hint is a global primitive (viz.ts), shared with the sidebar controls. */
   .leg-head .sep {
     color: var(--ink-muted);
     font-size: 12px;

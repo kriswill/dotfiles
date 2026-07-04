@@ -7,6 +7,7 @@ import { buildModel } from "./data";
 import DetailPanel from "./DetailPanel.svelte";
 import IsolateControl from "./IsolateControl.svelte";
 import Legend from "./Legend.svelte";
+import PlatformControl from "./PlatformControl.svelte";
 import Search from "./Search.svelte";
 import { createVizState } from "./state.svelte";
 import { node } from "./test-helpers";
@@ -249,6 +250,40 @@ describe("IsolateControl", () => {
     twoHop!.click(); // clicking the active 2-hop button again turns it off
     flushSync();
     expect(state.isolateDepth).toBe(0);
+  });
+});
+
+describe("PlatformControl", () => {
+  test("renders all/darwin/nixos segments; active tracks viz.platform; clicks set it", () => {
+    const state = createVizState(model());
+    mountC(PlatformControl, { viz: state });
+    const [all, darwin, nixos] = [...document.querySelectorAll("#platform .seg")] as HTMLElement[];
+    expect([all!.textContent?.trim(), darwin!.textContent?.trim(), nixos!.textContent?.trim()]).toEqual([
+      "all",
+      "darwin",
+      "nixos",
+    ]);
+    expect(all!.classList.contains("active")).toBe(true); // defaults to "all"
+
+    darwin!.click();
+    flushSync();
+    expect(state.platform).toBe("darwin");
+    expect(darwin!.classList.contains("active")).toBe(true);
+    expect(all!.classList.contains("active")).toBe(false);
+
+    nixos!.click();
+    flushSync();
+    expect(state.platform).toBe("nixos");
+
+    all!.click();
+    flushSync();
+    expect(state.platform).toBe("all");
+  });
+
+  test("is always rendered, with or without a selection (unlike IsolateControl)", () => {
+    const state = createVizState(model());
+    mountC(PlatformControl, { viz: state });
+    expect(document.getElementById("platform")).not.toBeNull();
   });
 });
 
