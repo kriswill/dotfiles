@@ -2,6 +2,15 @@
 
 ## 2026-07-03
 
+- **Creation** — gh's `config.yml` moved from the stow tree (`home/gh/`,
+  deleted) to the `config/` snapshot pattern with a new
+  [gh-config](packages/gh-config.md) CLI (capture/restore/diff), because gh
+  rewrites its config via atomic rename — the same save pattern as
+  Helium/Noctalia — which had broken the stow link and silently skipped the
+  gh package on every rebuild. First cross-platform snapshot app: the CLI
+  ships via the [git](modules/git.md) twins on both OSes; `hosts.yml` (auth)
+  stays untracked. Fresh machines run `gh-config restore` once.
+
 - **Creation** — nebula's Nix implementation swapped from Lix to Determinate
   Nix via the new [determinate](modules/determinate.md) nixos-class module
   (imports the determinate flake input's NixOS module; snowglobe-lib unforked —

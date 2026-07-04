@@ -1,0 +1,10 @@
+# GitHub CLI config — SNAPSHOT of ~/.config/gh/config.yml, synced with the
+# gh-config CLI (capture/restore/diff; see config/README.md). Not symlinked:
+# gh rewrites config.yml via atomic rename, which breaks stow links. Auth
+# (hosts.yml) is gh-owned per machine and never tracked. Note gh drops these
+# comments the first time it rewrites the live file.
+aliases:
+  co: pr checkout
+editor: ''
+git_protocol: https
+version: '1'

@@ -28,6 +28,7 @@
         # would break stow links). See config/README.md.
         noctalia-config = pkgs.callPackage ../pkgs/noctalia-config.nix { };
         helium-config = pkgs.callPackage ../pkgs/helium-config.nix { };
+        gh-config = pkgs.callPackage ../pkgs/gh-config.nix { };
         # ccglass is built by its own flake (./flakes/ccglass); re-export it here.
         ccglass = inputs.ccglass.packages.${system}.ccglass;
         # codebase-memory-mcp comes from our kriswill/codebase-memory-mcp `nix` fork.

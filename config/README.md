@@ -35,12 +35,19 @@ Currently snapshotted here:
 |---|---|---|---|---|
 | `noctalia/` | Noctalia shell | `~/.local/state/noctalia/settings.toml` | `noctalia-config` | plaintext |
 | `helium/` | Helium browser | `~/.config/net.imput.helium/` | `helium-config` | **age-encrypted (`*.age`)** |
+| `gh/` | GitHub CLI | `~/.config/gh/config.yml` | `gh-config` | plaintext |
+
+Noctalia and Helium are nebula-only; `gh` is **cross-platform** (its CLI ships
+via the `git` module twins on both OSes — on a fresh machine run
+`gh-config restore` once to materialize the live file). `hosts.yml` (gh auth)
+is deliberately never captured.
 
 ## How the snapshots are captured
 
 Each app has a `*-config` CLI (built from `pkgs/<app>-config.nix`, put on
-`k`'s PATH by `modules/hosts/nebula/users/k/<app>.nix`). They all expose the same
-three verbs:
+`k`'s PATH by `modules/hosts/nebula/users/k/<app>.nix` — or, for a
+cross-platform app like gh, by the feature's module twins). They all expose
+the same three verbs:
 
 ```sh
 <app>-config capture   # live  -> repo snapshot   (run after you change settings)

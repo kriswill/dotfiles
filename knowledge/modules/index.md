@@ -28,7 +28,7 @@ interesting ones by hand — scaffolding never overwrites an existing doc.
 * [Flake Parts](flake-parts.md) - Top-level flake-parts wiring for the Dendritic pattern.
 * [Flatpak Repo User](flatpak-repo-user.md) - Masks snowglobe's system flatpak-repo service and replaces it with a per-user oneshot that registers Flathub in ~/.local/share/flatpak at login, gated on a DNS ExecCondition so offline logins skip cleanly.
 * [Ghostty](ghostty.md) - Ghostty terminal — each OS installs it its own way and generates its half of the split config (`config-file = ?os.conf`); the shared config is stowed.
-* [Git](git.md) - Installs the binaries the stow-managed git/gh config invokes by bare name (git, gh, git-lfs, difftastic, …); the config itself — including 1Password SSH signing — is stow, not nix.
+* [Git](git.md) - Installs the binaries the stow-managed git config invokes by bare name (git, gh, gh-config, git-lfs, difftastic, …); the config itself — including 1Password SSH signing — is stow, not nix.
 * [Gpg](gpg.md) - gpg-agent on both OSes with enableSSHSupport deliberately false — 1Password owns SSH_AUTH_SOCK; gpg only backs `pass` and ad-hoc gpg use.
 * [Gtk Dark](gtk-dark.md) - Forces GTK apps to Adwaita's dark variant via one session variable (GTK_THEME=Adwaita:dark) — a bare Hyprland session has no settings daemon to broadcast prefer-dark.
 * [Hardware Configuration](hardware-configuration.md) - nixos-generate-config output in the two-line dendritic wrapper: initrd kernel modules, kvm-amd, x86_64-linux hostPlatform, and AMD microcode updates.
