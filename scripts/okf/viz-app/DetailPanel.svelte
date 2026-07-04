@@ -125,7 +125,7 @@
           >← {viz.backConcept.title}</a
         >
       {:else if viz.selectedConcept}
-        <span class="crumb">{viz.selectedConcept.title}</span>
+        <span class="crumb title">{viz.selectedConcept.title}</span>
       {:else if viz.sel.kind === "dir"}
         <span class="crumb">{dirPath.split("/").pop()}/</span>
       {:else}
@@ -135,11 +135,10 @@
     </header>
     {#if viz.selectedConcept}
       {@const n = viz.selectedConcept}
-      <h2>{n.title}</h2>
       <span class="chip"><span class="dot" style="background:{viz.colorOf(n.type)}"></span>{n.type}</span>
       <table class="fm">
         <tbody>
-          {#each Object.entries(n.fm) as [k, v] (k)}
+          {#each Object.entries(n.fm).filter(([k]) => k !== "title" && k !== "type") as [k, v] (k)}
             <tr><td>{k}</td><td>{@html fmCell(k, v)}</td></tr>
           {/each}
         </tbody>
@@ -254,6 +253,11 @@
   }
   .bar .crumb {
     color: var(--ink-muted);
+  }
+  .bar .crumb.title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--ink-1);
   }
   .bar .close {
     margin-left: auto;
