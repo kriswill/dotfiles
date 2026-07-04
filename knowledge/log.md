@@ -2,6 +2,31 @@
 
 ## 2026-07-03
 
+- **Update** — viz filter UX, phase B (grouped legend + neighborhood
+  isolation), on top of phase A. The 14-type legend clusters into 4 groups
+  (Knowledge/System/Packages/Neovim) derived from each concept's bundle
+  directory (a new `dirOf`/`GROUP_OF_DIR` map, zero hand-authored per-type
+  taxonomy) — group headers get their own toggle-whole-cluster / alt-click-
+  solo-cluster, alongside the existing per-type controls. Selecting a
+  concept now shows a 1-hop/2-hop/off control that restricts the sidebar
+  (and the 3D scene's dimming) to its graph neighborhood, ANDed with the
+  type/search filters, sticky across concept-to-concept clicks but
+  suspended while a file/dir view is open; `?isolate=1|2` joins `hide=`/`q=`
+  in the URL. Implemented directly (the two commits are too interdependent
+  for parallel-agent authorship) but verified and reviewed through two
+  multi-agent workflow passes — one per commit, each running svelte-check +
+  a real headless-Chrome interaction drive in parallel with a 3-dimension
+  adversarial code review. Both passes found genuine issues before commit:
+  phase's first pass caught a dormant non-deterministic bug (a type's
+  legend group depended on node array order) and an undetected regression
+  risk in the group-toggle logic; the second caught a misleading sidebar
+  count during sticky-but-inactive isolation, a real high-severity test gap
+  (no test drove opening a file view while isolated), a duplicated
+  id-resolution derivation, and a component class name collision — all
+  fixed, with tests pinning the corrected behavior. Deferred: the platform
+  (darwin/nixos/dual) facet, collapsible legend groups, an isolation-
+  suppressed-matches note parallel to phase A's type-filter one.
+
 - **Update** — viz filter UX, phase A (quick wins). The legend gains
   all/none header links and alt-click-to-isolate (one click instead of
   N−1 toggles); the search haystack now includes frontmatter `tags` and the
