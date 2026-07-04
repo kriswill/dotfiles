@@ -208,6 +208,112 @@ describe("filtering", () => {
   });
 });
 
+describe("neighborhood isolation", () => {
+  const isoModel = () =>
+    buildModel({
+      nodes: [
+        node("a", "Decision", "Alpha"),
+        node("b", "Pattern", "Beta"),
+        node("c", "Pattern", "Gamma"),
+        node("d", "Pattern", "Delta"),
+      ],
+      edges: [
+        { s: "a", t: "b" },
+        { s: "b", t: "c" },
+      ],
+    });
+
+  test("setIsolate(1) restricts visibleSorted to the selection's 1-hop neighborhood", () => {
+    const s = createVizState(isoModel());
+    s.selectConcept("a");
+    s.setIsolate(1);
+    expect(s.visibleSorted.map((n) => n.id).sort()).toEqual(["a", "b"]);
+  });
+
+  test("setIsolate(2) reaches one more hop", () => {
+    const s = createVizState(isoModel());
+    s.selectConcept("a");
+    s.setIsolate(2);
+    expect(s.visibleSorted.map((n) => n.id).sort()).toEqual(["a", "b", "c"]);
+  });
+
+  test("isolation ANDs with type-hidden filters", () => {
+    const s = createVizState(isoModel());
+    s.selectConcept("a");
+    s.setIsolate(2);
+    s.toggleType("Pattern");
+    expect(s.visibleSorted.map((n) => n.id)).toEqual(["a"]); // b, c are Pattern, hidden by type too
+  });
+
+  test("clearSelection resets isolation", () => {
+    const s = createVizState(isoModel());
+    s.selectConcept("a");
+    s.setIsolate(2);
+    s.clearSelection();
+    expect(s.isolateDepth).toBe(0);
+    expect(s.visibleSorted).toHaveLength(4);
+  });
+
+  test("isolation is sticky across concept-to-concept navigation, re-rooting on the new selection", () => {
+    const s = createVizState(isoModel());
+    s.selectConcept("a");
+    s.setIsolate(1);
+    s.selectConcept("c");
+    expect(s.isolateDepth).toBe(1);
+    expect(s.visibleSorted.map((n) => n.id).sort()).toEqual(["b", "c"]);
+  });
+
+  test("setIsolate clamps invalid depths to 0", () => {
+    const s = createVizState(isoModel());
+    s.selectConcept("a");
+    s.setIsolate(3 as never);
+    expect(s.isolateDepth).toBe(0);
+  });
+
+  test("hiddenMatchCount ignores matches suppressed only by isolation, not type", () => {
+    const s = createVizState(isoModel());
+    s.selectConcept("a");
+    s.setIsolate(1); // neighborhood = {a, b}; c and d are isolation-hidden, no type hidden
+    s.query = "gamma"; // matches c, which is Pattern (not type-hidden) but outside the 1-hop neighborhood
+    expect(s.visibleSorted).toHaveLength(0); // c matches but isn't in the neighborhood
+    expect(s.hiddenMatchCount).toBe(0); // hiddenMatchCount only tracks type-hidden suppression
+  });
+
+  test("setFilters accepts an isolate depth, defaults to 0 for existing 2-arg calls", () => {
+    const s = createVizState(isoModel());
+    s.selectConcept("a");
+    s.setFilters(["Pattern"], "");
+    expect(s.isolateDepth).toBe(0);
+    s.setFilters([], "", 2);
+    expect(s.isolateDepth).toBe(2);
+  });
+
+  test("opening a file/dir view suspends isolation (anchored on selectedConcept, not focusedConcept)", () => {
+    const s = createVizState(model()); // a-b edge, plus a file and a dir to select
+    s.selectConcept("a");
+    s.setIsolate(1);
+    expect(s.visibleSorted.map((n) => n.id).sort()).toEqual(["a", "b"]);
+    s.selectFile("scripts/okf/viz.ts");
+    expect(s.isolateDepth).toBe(1); // sticky: not reset by selectFile
+    expect(s.neighborIds).toBeNull(); // but inactive: selectedConcept is null while a file view is open
+    expect(s.visibleSorted).toHaveLength(3); // isolation stops restricting the list
+    s.selectDir("flakes/ccglass");
+    expect(s.neighborIds).toBeNull();
+    expect(s.visibleSorted).toHaveLength(3);
+  });
+});
+
+describe("focusedConcept", () => {
+  test("is the selection, or the last concept while a file/dir view is open", () => {
+    const s = createVizState(model());
+    expect(s.focusedConcept).toBeNull();
+    s.selectConcept("a");
+    expect(s.focusedConcept?.id).toBe("a");
+    s.selectFile("scripts/okf/viz.ts");
+    expect(s.focusedConcept?.id).toBe("a");
+  });
+});
+
 describe("panel width", () => {
   test("default clamp: min(460, 85%) capped at 92%", () => {
     const s = createVizState(model());

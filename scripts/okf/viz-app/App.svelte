@@ -29,7 +29,7 @@
     const h = encodeViewHash(view);
     if (h === currentState) return;
     currentState = h;
-    viz.setFilters(view.filters.hidden, view.filters.q);
+    viz.setFilters(view.filters.hidden, view.filters.q, view.filters.isolate);
     const sel = view.sel;
     if (sel.kind === "concept") viz.selectConcept(sel.id, true);
     else if (sel.kind === "file") viz.selectFile(sel.path);
@@ -38,7 +38,7 @@
   }
 
   $effect(() => {
-    const h = encodeViewHash({ sel: viz.sel, filters: { hidden: [...viz.hidden], q: viz.query } });
+    const h = encodeViewHash({ sel: viz.sel, filters: { hidden: [...viz.hidden], q: viz.query, isolate: viz.isolateDepth } });
     if (currentState === h) return;
     const selChanged = currentState == null || selPart(h) !== selPart(currentState);
     currentState = h;

@@ -2,7 +2,7 @@
 // Stage.svelte bridges it into the imperative GraphScene.
 import { SvelteSet } from "svelte/reactivity";
 import { nameColor } from "./color";
-import { TYPE_ORDER, type ConceptNode, type VizModel } from "./data";
+import { neighborsWithin, TYPE_ORDER, type ConceptNode, type VizModel } from "./data";
 import type { Selection } from "./hash";
 import { applyThemeVars, defaultThemeIndex, THEMES } from "./themes";
 
@@ -29,6 +29,7 @@ export function createVizState(model: VizModel) {
   let lastConceptId = $state<string | null>(null);
   const hidden = new SvelteSet<string>();
   let query = $state("");
+  let isolateDepth = $state<0 | 1 | 2>(0);
   let hover = $state<Hover | null>(null);
   let panelW = $state(typeof localStorage === "undefined" ? 0 : +(localStorage.getItem(PANEL_KEY) || 0));
   let dark = $state(typeof matchMedia === "undefined" ? false : matchMedia("(prefers-color-scheme: dark)").matches);
@@ -74,7 +75,8 @@ export function createVizState(model: VizModel) {
     if (!alone) for (const u of model.allTypes) if (!want.has(u)) hidden.add(u);
   };
 
-  const visible = (n: ConceptNode) => !hidden.has(n.type) && (!match || match(n));
+  const visible = (n: ConceptNode) =>
+    !hidden.has(n.type) && (!match || match(n)) && (!neighborIds || neighborIds.has(n.id));
   const visibleSorted = $derived(model.nodes.filter(visible).sort((a, b) => a.title.localeCompare(b.title)));
   // Search hits suppressed by type toggles, surfaced in the list so a hidden
   // type never silently swallows a match.
@@ -82,10 +84,13 @@ export function createVizState(model: VizModel) {
 
   const selectedConcept = $derived(sel.kind === "concept" ? (model.byId[sel.id] ?? null) : null);
   const backConcept = $derived(lastConceptId ? (model.byId[lastConceptId] ?? null) : null);
-  const sceneSelectedIndex = $derived.by(() => {
-    const id = sel.kind === "concept" ? sel.id : sel.kind === "file" || sel.kind === "dir" ? lastConceptId : null;
-    return id != null ? (model.indexOf.get(id) ?? null) : null;
-  });
+  const focusedConcept = $derived(selectedConcept ?? backConcept);
+  // Anchored on selectedConcept strictly (not focusedConcept): isolation is
+  // only meaningful while a concept, not a file/dir view, is the selection.
+  const neighborIds = $derived.by(() =>
+    isolateDepth && selectedConcept ? neighborsWithin(model, selectedConcept.id, isolateDepth) : null,
+  );
+  const sceneSelectedIndex = $derived(focusedConcept ? (model.indexOf.get(focusedConcept.id) ?? null) : null);
 
   return {
     model,
@@ -104,6 +109,9 @@ export function createVizState(model: VizModel) {
     },
     get backConcept() {
       return backConcept;
+    },
+    get focusedConcept() {
+      return focusedConcept;
     },
     get sceneSelectedIndex() {
       return sceneSelectedIndex;
@@ -128,6 +136,7 @@ export function createVizState(model: VizModel) {
       lastConceptId = null;
       fly = false;
       selSeq++;
+      isolateDepth = 0;
     },
 
     hidden,
@@ -152,14 +161,25 @@ export function createVizState(model: VizModel) {
       soloTypes(model.groupTypes[g] ?? []);
     },
     /** Replace the whole filter state (hash navigation). */
-    setFilters(hiddenTypes: string[], q: string) {
+    setFilters(hiddenTypes: string[], q: string, isolate: 0 | 1 | 2 = 0) {
       const want = new Set(hiddenTypes);
       for (const t of [...hidden]) if (!want.has(t)) hidden.delete(t);
       for (const t of want) hidden.add(t);
       query = q;
+      isolateDepth = isolate;
     },
     get hiddenMatchCount() {
       return hiddenMatchCount;
+    },
+
+    get isolateDepth() {
+      return isolateDepth;
+    },
+    setIsolate(depth: 0 | 1 | 2) {
+      isolateDepth = depth === 1 || depth === 2 ? depth : 0;
+    },
+    get neighborIds() {
+      return neighborIds;
     },
 
     get query() {
