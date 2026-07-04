@@ -1,12 +1,12 @@
 ---
 type: Decision
-title: Viz Config — Repo Specifics in a Root viz.toml
-description: Move every dotfiles-specific string and setting out of the viz code into an optional repo-root viz.toml (strict-parsed at build, embedded normalized in the #data blob); without it okf viz builds a generic viewer with no platform filter, alphabetical types, and a flat legend.
+title: Viz Config — Repo Specifics in a Root okf-viz.toml
+description: Move every dotfiles-specific string and setting out of the viz code into an optional repo-root okf-viz.toml (strict-parsed at build, embedded normalized in the #data blob); without it okf viz builds a generic viewer with no platform filter, alphabetical types, and a flat legend.
 tags: [viz, tooling, config]
 timestamp: '2026-07-04T00:00:00-07:00'
 ---
 
-**Status:** active. **Where:** [../../viz.toml](../../viz.toml), schema in
+**Status:** active. **Where:** [../../okf-viz.toml](../../okf-viz.toml), schema in
 [../../scripts/okf/viz-app/config.ts](../../scripts/okf/viz-app/config.ts),
 loaded by [../../scripts/okf/viz.ts](../../scripts/okf/viz.ts).
 
@@ -24,7 +24,7 @@ their own OKF bundles.
 
 ## Decision
 
-All of it moves to an **optional `viz.toml` at the repo root** (exhaustive
+All of it moves to an **optional `okf-viz.toml` at the repo root** (exhaustive
 scope, deliberate): `[bundle]` dir/out, `[display]` title/badge/
 fallback-name/name/about-html, `[embed]` max-bytes, `[taxonomy]`
 types/group-order/dir-groups/other, `[platform]`
@@ -42,11 +42,11 @@ Mechanics, all in one shared module (`viz-app/config.ts`):
   which is also what gives test fixtures and config-less bundles a working
   viewer. Normalization accepts kebab-case (TOML) and camelCase (its own
   output), making it idempotent — a test enforces this.
-- **Generic fallbacks without viz.toml:** no platform control (every concept
+- **Generic fallbacks without okf-viz.toml:** no platform control (every concept
   "neutral", foreign `os=` hash params clamp to "all"), alphabetical types
   with generated colors, a flat legend without cluster headers, generic
   header ("OKF bundle") and about text. The dotfiles behavior now lives
-  entirely in the checked-in viz.toml; the built output with it is
+  entirely in the checked-in okf-viz.toml; the built output with it is
   functionally identical to before.
 - **Stable palette slots over re-slotting:** `taxonomy.types` entry N maps to
   CSS var `--sN` (12 theme slots); overflow types get stable generated colors
@@ -64,13 +64,13 @@ prefix, theme stop names, and the `/commit/` outbound-URL shape.
 ## Consequences
 
 - Revises [viz-svelte-rebuild](viz-svelte-rebuild.md)'s "no config files
-  beyond tsconfig/bunfig" stance: viz.toml is authored repo *content* the
+  beyond tsconfig/bunfig" stance: okf-viz.toml is authored repo *content* the
   pipeline reads, not build-tool configuration; the one-shot `Bun.build` and
   single-file output are untouched.
 - `parsePackagePlatforms` takes the guard map as an argument and only runs
   when `platform.packages-nix` is configured; `platformOf` is a config-driven
   rule table; the `Platform` type is a plain string.
-- `.github/workflows/pages.yml` triggers on `viz.toml` changes so config
+- `.github/workflows/pages.yml` triggers on `okf-viz.toml` changes so config
   edits redeploy the published graph.
 - Follow-ups for true external consumption: `repoRoot()` is still
   script-relative (two levels up), and scaffold/index/validate still use the

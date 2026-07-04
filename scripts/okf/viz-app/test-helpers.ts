@@ -18,7 +18,7 @@ export const node = (id: string, type: string, title = id, extra: Partial<Concep
 });
 
 /** Dotfiles-shaped raw viz config (TOML kebab spelling) for RawData.cfg —
- *  reproduces the pre-viz.toml hardcoded taxonomy/platform behavior. */
+ *  reproduces the pre-okf-viz.toml hardcoded taxonomy/platform behavior. */
 export const cfg = (over: Record<string, unknown> = {}) => ({
   taxonomy: {
     types: [
