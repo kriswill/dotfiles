@@ -2,6 +2,21 @@
 
 ## 2026-07-04
 
+- **Creation** — [okf-subflake](decisions/okf-subflake.md): okf moved
+  `scripts/okf/` → `flakes/okf/` (`git mv`, history preserved) and became a
+  real sub-flake: `packages.<system>.okf` ships sources + vendored
+  `node_modules` (fixed-output `bun install`, one hash for all systems) under
+  a `bun run --no-install` wrapper; `checks.<system>.test` runs the 238
+  viewer tests offline. `lib.ts` `repoRoot()` is now cwd-based
+  (`git rev-parse --show-toplevel`) so the store binary operates on the
+  caller's repo — the only generalization taken now. Dev shell keeps the
+  impure working-tree wrapper (fast iteration unchanged); the Pages workflow
+  stays bun-native with paths repointed. Root wiring per the house pattern
+  (relative-path input + follows, packages.nix re-exports incl.
+  aarch64-linux; no overlay). New [okf](packages/okf.md) catalog concept;
+  `scripts/okf` references swept across AGENTS.md/README/skills/knowledge
+  (log history left as-is).
+
 - **Update** — `okf-viz.toml`'s `platform` facet values renamed
   `darwin`/`nixos` → `macos`/`linux` (`[facet.platform]` `values`, and the
   RHS of `.types`/`.ids`/`.nix-packages.guards`) for canonical platform

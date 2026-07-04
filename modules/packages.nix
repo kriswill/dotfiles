@@ -31,6 +31,9 @@
         gh-config = pkgs.callPackage ../pkgs/gh-config.nix { };
         # ccglass is built by its own flake (./flakes/ccglass); re-export it here.
         ccglass = inputs.ccglass.packages.${system}.ccglass;
+        # okf (the knowledge-bundle CLI) is built by its own flake (./flakes/okf);
+        # the dev shell wraps the working tree instead — see modules/dev.nix.
+        okf = inputs.okf.packages.${system}.okf;
         # codebase-memory-mcp comes from our kriswill/codebase-memory-mcp `nix` fork.
         codebase-memory-mcp = inputs.codebase-memory-mcp.packages.${system}.codebase-memory-mcp;
       }
@@ -60,5 +63,6 @@
   flake.packages.aarch64-linux = {
     ccglass = inputs.ccglass.packages.aarch64-linux.ccglass;
     codebase-memory-mcp = inputs.codebase-memory-mcp.packages.aarch64-linux.codebase-memory-mcp;
+    okf = inputs.okf.packages.aarch64-linux.okf;
   };
 }

@@ -992,6 +992,25 @@
         "type": "github"
       }
     },
+    "okf": {
+      "inputs": {
+        "flake-parts": [
+          "flake-parts"
+        ],
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "path": "./flakes/okf",
+        "type": "path"
+      },
+      "original": {
+        "path": "./flakes/okf",
+        "type": "path"
+      },
+      "parent": []
+    },
     "pre-commit-hooks": {
       "inputs": {
         "flake-compat": "flake-compat_2",
@@ -1028,6 +1047,7 @@
         "import-tree": "import-tree",
         "nixpkgs": "nixpkgs_3",
         "noctalia": "noctalia",
+        "okf": "okf",
         "snowglobe-lib": "snowglobe-lib",
         "sops-nix": "sops-nix",
         "tomato": "tomato",

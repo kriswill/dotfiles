@@ -11,10 +11,10 @@ graph. It exists so rationale survives outside commit bodies and chat
 history — **keep it current as part of any change, not as an afterthought.**
 All conventions live in `knowledge/okf-profile.md`; read it before authoring.
 
-## Commands (zero-dep bun, in scripts/okf/)
+## Commands (zero-dep bun, in flakes/okf/)
 
 In the dev shell (`nix develop` / direnv) these are on `PATH` as `okf <cmd>`;
-outside it, run `bun scripts/okf/okf.ts <cmd>`:
+outside it, run `bun flakes/okf/okf.ts <cmd>`:
 
 ```sh
 okf scaffold   # stub catalog docs for new modules/packages/hosts/nvim-plugins (never overwrites)

@@ -20,7 +20,7 @@ const raw = {
     { s: "c", t: "b" },
     { s: "a", t: "ghost" }, // dangling — must be dropped
   ],
-  files: { "scripts/okf/viz.ts": { html: "", lines: 1, size: 10, date: "", lang: "ts", refs: [] } },
+  files: { "flakes/okf/viz.ts": { html: "", lines: 1, size: 10, date: "", lang: "ts", refs: [] } },
   cfg: cfg(),
 };
 
