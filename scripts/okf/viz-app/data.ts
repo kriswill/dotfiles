@@ -158,9 +158,12 @@ export function platformOf(
   return rule;
 }
 
-/** "owner/repo" display name from a githubRemoteUrl()-shaped URL. */
+/** "owner/repo" display name from a GitHub URL — https or ssh form, with or
+ *  without ".git" (same shapes lib.ts's githubRemoteUrl accepts, so a manual
+ *  repo.url override behaves like the auto-detected origin). Non-GitHub URLs
+ *  yield null; set display.name for those. */
 export function repoNameFromUrl(url: string | null): string | null {
-  return url?.replace(/^https:\/\/github\.com\//, "") ?? null;
+  return url?.match(/^(?:https:\/\/|git@)github\.com[/:]([^/]+\/[^/]+?)(?:\.git)?\/?$/)?.[1] ?? null;
 }
 
 export function buildModel(raw: RawData): VizModel {
@@ -209,9 +212,13 @@ export function buildModel(raw: RawData): VizModel {
   if (Object.keys(cfg.taxonomy.dirGroups).length) {
     for (const n of nodes) typeGroup[n.type] ??= cfg.taxonomy.dirGroups[dirOf(n.id)] ?? cfg.taxonomy.other;
     for (const t of allTypes) (groupTypes[typeGroup[t]!] ??= []).push(t);
+    // The other-bucket appends last unless group-order already places it
+    // (listing it there pins the overflow cluster's position).
     groupOrder = [
       ...cfg.taxonomy.groupOrder.filter((g) => groupTypes[g]),
-      ...(groupTypes[cfg.taxonomy.other] ? [cfg.taxonomy.other] : []),
+      ...(groupTypes[cfg.taxonomy.other] && !cfg.taxonomy.groupOrder.includes(cfg.taxonomy.other)
+        ? [cfg.taxonomy.other]
+        : []),
     ];
   }
 

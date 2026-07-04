@@ -7,6 +7,7 @@ import {
   neighborsWithin,
   parsePackagePlatforms,
   platformOf,
+  repoNameFromUrl,
   treeIds,
   type ConceptTree,
 } from "./data";
@@ -69,6 +70,20 @@ describe("buildModel", () => {
   });
 });
 
+describe("repoNameFromUrl", () => {
+  test("accepts the same shapes as githubRemoteUrl: https/ssh, with or without .git", () => {
+    expect(repoNameFromUrl("https://github.com/o/r")).toBe("o/r");
+    expect(repoNameFromUrl("https://github.com/o/r.git")).toBe("o/r");
+    expect(repoNameFromUrl("git@github.com:o/r.git")).toBe("o/r");
+    expect(repoNameFromUrl("git@github.com:o/r")).toBe("o/r");
+  });
+
+  test("null and non-GitHub URLs yield null (display.name covers those)", () => {
+    expect(repoNameFromUrl(null)).toBeNull();
+    expect(repoNameFromUrl("https://gitlab.com/o/r")).toBeNull();
+  });
+});
+
 describe("grouping", () => {
   const groupedRaw = {
     nodes: [
@@ -127,6 +142,17 @@ describe("grouping", () => {
       cfg: cfg(),
     });
     expect(partial.groupOrder).toEqual(["Knowledge", "Other"]); // System/Packages/Neovim absent, not phantom-included
+  });
+
+  test("listing the other bucket in group-order pins it without duplicating it", () => {
+    const pinnedCfg = cfg();
+    pinnedCfg.taxonomy["group-order"] = ["Other", ...pinnedCfg.taxonomy["group-order"]];
+    const pinned = buildModel({
+      nodes: [node("decisions/x", "Decision", "X"), node("mystery/m", "Mystery Type", "M")],
+      edges: [],
+      cfg: pinnedCfg,
+    });
+    expect(pinned.groupOrder).toEqual(["Other", "Knowledge"]); // pinned first, no trailing duplicate
   });
 
   test("typeGroup is stable: the first node of a type fixes its group, not the last", () => {

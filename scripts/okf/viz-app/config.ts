@@ -73,6 +73,9 @@ const RESERVED_VALUES = new Set(["all", ...PLATFORM_RULES]);
 
 export class VizConfigError extends Error {}
 
+/** Generic bundle dir — also the default for markdown.ts's createMd. */
+export const DEFAULT_BUNDLE_DIR = "knowledge";
+
 const GENERIC_ABOUT =
   'A navigable map of this repository’s OKF knowledge bundle — concepts authored in the ' +
   '<a href="https://github.com/GoogleCloudPlatform/knowledge-catalog/blob/main/okf/SPEC.md" ' +
@@ -80,7 +83,7 @@ const GENERIC_ABOUT =
   "Click a node to read its document.";
 
 const defaults = (): VizConfig => ({
-  bundle: { dir: "knowledge", out: "viz.html" },
+  bundle: { dir: DEFAULT_BUNDLE_DIR, out: "viz.html" },
   display: {
     title: "OKF knowledge graph",
     badge: "OKF viz",
@@ -156,15 +159,19 @@ export function normalizeVizConfig(raw: unknown, opts?: { strict?: boolean; warn
         for (const k of Object.keys(s)) bad(`${name}.${k}`, "unknown key");
       };
 
+      // Path fields drop trailing slashes (viz.ts and markdown.ts build
+      // `dir + "/"` prefixes); nullable overrides treat "" as unset — TOML
+      // has no null, so "" is the natural way to say "derive it".
+      const stripSlash = (v: string) => v.replace(/\/+$/, "");
       section("bundle", (s) => {
-        field(s, "bundle", "dir", asStr((v) => (cfg.bundle.dir = v)));
-        field(s, "bundle", "out", asStr((v) => (cfg.bundle.out = v)));
+        field(s, "bundle", "dir", asStr((v) => (cfg.bundle.dir = stripSlash(v))));
+        field(s, "bundle", "out", asStr((v) => (cfg.bundle.out = stripSlash(v))));
       });
       section("display", (s) => {
         field(s, "display", "title", asStr((v) => (cfg.display.title = v)));
         field(s, "display", "badge", asStr((v) => (cfg.display.badge = v)));
         field(s, "display", "fallbackName", asStr((v) => (cfg.display.fallbackName = v)));
-        field(s, "display", "name", asStr((v) => (cfg.display.name = v)));
+        field(s, "display", "name", asStr((v) => (cfg.display.name = v || null)));
         field(s, "display", "aboutHtml", asStr((v) => (cfg.display.aboutHtml = v)));
       });
       section("embed", (s) => {
@@ -180,12 +187,12 @@ export function normalizeVizConfig(raw: unknown, opts?: { strict?: boolean; warn
         field(s, "platform", "values", asStrArr((v) => (cfg.platform.values = v)));
         field(s, "platform", "types", asStrMap((v) => (cfg.platform.types = v)));
         field(s, "platform", "hosts", asStrMap((v) => (cfg.platform.hosts = v)));
-        field(s, "platform", "hostDefault", asStr((v) => (cfg.platform.hostDefault = v)));
-        field(s, "platform", "packagesNix", asStr((v) => (cfg.platform.packagesNix = v)));
+        field(s, "platform", "hostDefault", asStr((v) => (cfg.platform.hostDefault = v || null)));
+        field(s, "platform", "packagesNix", asStr((v) => (cfg.platform.packagesNix = stripSlash(v) || null)));
         field(s, "platform", "nixGuards", asStrMap((v) => (cfg.platform.nixGuards = v)));
       });
       section("repo", (s) => {
-        field(s, "repo", "url", asStr((v) => (cfg.repo.url = v)));
+        field(s, "repo", "url", asStr((v) => (cfg.repo.url = v || null)));
       });
       for (const k of Object.keys(top)) bad(k, "unknown key");
     }
@@ -218,6 +225,11 @@ export function normalizeVizConfig(raw: unknown, opts?: { strict?: boolean; warn
       if (!p) errors.push(`${why}: must not be empty`);
       else if (p.split("/").includes("..") || p.startsWith("/")) errors.push(`${why}: must be a relative path without ".."`);
     }
+    for (const [list, label] of [
+      [cfg.taxonomy.types, "taxonomy.types"],
+      [cfg.taxonomy.groupOrder, "taxonomy.group-order"],
+    ] as const)
+      if (new Set(list).size !== list.length) errors.push(`${label}: duplicate entries`);
     for (const [d, g] of Object.entries(cfg.taxonomy.dirGroups))
       if (!cfg.taxonomy.groupOrder.includes(g))
         errors.push(`taxonomy.dir-groups."${d}": "${g}" is not in taxonomy.group-order`);
