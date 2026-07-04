@@ -188,6 +188,38 @@ export function gitTrackedFiles(): string[] {
   return (r.stdout ?? "").split("\n").filter(Boolean);
 }
 
+/** The origin remote as a https://github.com/owner/repo URL, or null. */
+export function githubRemoteUrl(): string | null {
+  const r = spawnSync("git", ["remote", "get-url", "origin"], { cwd: repoRoot(), encoding: "utf8" });
+  const m = (r.stdout ?? "").trim().match(/^(?:https:\/\/|git@)github\.com[/:]([^/]+\/[^/]+?)(?:\.git)?$/);
+  return m ? `https://github.com/${m[1]}` : null;
+}
+
+/**
+ * Map candidate (possibly abbreviated) commit hashes to their full oids in
+ * one `git cat-file --batch-check` spawn. Candidates that don't resolve to a
+ * commit in this repo (doc examples, other repos' revs, ambiguous prefixes)
+ * are dropped.
+ */
+export function resolveCommits(candidates: string[]): Record<string, string> {
+  if (!candidates.length) return {};
+  const r = spawnSync("git", ["cat-file", "--batch-check"], {
+    cwd: repoRoot(),
+    encoding: "utf8",
+    input: candidates.map((c) => `${c}^{commit}`).join("\n"),
+    maxBuffer: 16 * 1024 * 1024,
+  });
+  // One output line per input line, order preserved: `<oid> commit <size>`
+  // on success, `<input> missing|ambiguous` otherwise.
+  const lines = (r.stdout ?? "").trimEnd().split("\n");
+  const out: Record<string, string> = {};
+  candidates.forEach((c, i) => {
+    const parts = (lines[i] ?? "").split(" ");
+    if (parts[1] === "commit") out[c] = parts[0];
+  });
+  return out;
+}
+
 export function fileExists(p: string): boolean {
   return existsSync(p);
 }

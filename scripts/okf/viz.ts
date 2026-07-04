@@ -9,7 +9,7 @@
 
 import { existsSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { extname, join } from "node:path";
-import { bundleRoot, extractLinks, gitISO, gitTrackedFiles, isExternal, parseDoc, repoRoot, resolveLink, walkMd, RESERVED } from "./lib";
+import { bundleRoot, extractLinks, gitISO, gitTrackedFiles, githubRemoteUrl, isExternal, parseDoc, repoRoot, resolveCommits, resolveLink, walkMd, RESERVED } from "./lib";
 import { layout3d } from "./layout3d";
 import { esc } from "./viz-app/markdown";
 import { THEMES } from "./viz-app/themes";
@@ -233,6 +233,17 @@ for (const n of nodes) {
     addFile(m[1].replace(/^\.\//, ""), n.id);
   }
 }
+// --- Commit-hash outbound links ---------------------------------------------
+// `abc1234` code spans (the profile's citation convention) become outbound
+// GitHub commit links. Every candidate is verified against the local repo, so
+// doc examples and other repos' revs stay plain code; verified hashes link by
+// full oid (stable even if the abbreviation later becomes ambiguous).
+const HASH_SPAN = /`([0-9a-f]{7,40})`/g;
+const hashCandidates = new Set<string>();
+for (const n of nodes) for (const m of n.body.matchAll(HASH_SPAN)) hashCandidates.add(m[1]);
+for (const f of Object.values(files)) if (f.md) for (const m of f.md.matchAll(HASH_SPAN)) hashCandidates.add(m[1]);
+const repoUrl = githubRemoteUrl();
+const commits = repoUrl ? resolveCommits([...hashCandidates]) : {};
 lap("sources");
 
 // --- Frozen 3D layout ---------------------------------------------------------
@@ -272,7 +283,7 @@ for (const o of build.outputs) if (o.path.endsWith(".css")) appCss += await o.te
 appCss = appCss.replace(/<\/style/gi, "<\\/style");
 lap("bundle");
 
-const data = JSON.stringify({ nodes, edges: dedupedEdges, files, dirs }).replace(/<\//g, "<\\/");
+const data = JSON.stringify({ nodes, edges: dedupedEdges, files, dirs, repoUrl, commits }).replace(/<\//g, "<\\/");
 
 /** :root custom-property block for a named theme stop, from the app's THEMES. */
 const themeCss = (name: string) =>
@@ -319,7 +330,7 @@ lap("write");
 const fmtMs = (ms: number) => (ms < 10 ? ms.toFixed(1) : String(Math.round(ms))) + "ms";
 console.log(`viz build: ${phases.map(([n, ms]) => `${n} ${fmtMs(ms)}`).join(" · ")}`);
 console.log(
-  `viz: ${nodes.length} nodes, ${dedupedEdges.length} edges, ${Object.keys(files).length} files, ${Object.keys(dirs).length} dirs -> ${out} (${(html.length / 1024).toFixed(0)} KB)`,
+  `viz: ${nodes.length} nodes, ${dedupedEdges.length} edges, ${Object.keys(files).length} files, ${Object.keys(dirs).length} dirs, ${Object.keys(commits).length}/${hashCandidates.size} commit links -> ${out} (${(html.length / 1024).toFixed(0)} KB)`,
 );
 
 // --perf: measure viewer startup in headless Chrome against the file we just wrote.

@@ -9,9 +9,13 @@ export interface MdCtx {
   files: Record<string, unknown>;
   byId: Record<string, unknown>;
   dirs?: Record<string, unknown>;
+  /** https://github.com/owner/repo, enables outbound commit links. */
+  repoUrl?: string | null;
+  /** Verified commit-hash citations: literal as written -> full oid. */
+  commits?: Record<string, string>;
 }
 
-export function createMd({ files, byId, dirs = {} }: MdCtx) {
+export function createMd({ files, byId, dirs = {}, repoUrl = null, commits = {} }: MdCtx) {
   /** Resolve a relative link target against a repo-root-relative directory. */
   function resolveRel(dir: string[], target: string): string | null {
     if (/^[a-z][a-z0-9+.-]*:/.test(target) || target.startsWith("#")) return null;
@@ -69,7 +73,13 @@ export function createMd({ files, byId, dirs = {} }: MdCtx) {
         /&lt;(https?:\/\/(?:[^&\s]|&amp;)+)&gt;/g,
         '<a href="$1" target="_blank" rel="noopener">$1</a>',
       )
-      .replace(/`([^`]+)`/g, "<code>$1</code>")
+      .replace(/`([^`]+)`/g, (_m, code) => {
+        // Verified commit-hash citations (`abc1234`) link out to GitHub.
+        const oid = repoUrl && commits[code];
+        return oid
+          ? `<code><a href="${repoUrl}/commit/${oid}" target="_blank" rel="noopener">${code}</a></code>`
+          : `<code>${code}</code>`;
+      })
       .replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>")
       .replace(/(?<![\w*])\*(\S(?:[^*\n]*\S)?)\*(?![\w*])/g, "<em>$1</em>")
       .replace(/(?<!!)\[([^\]]*)\]\(([^)\s]+)\)/g, (_m, txt, href) => {

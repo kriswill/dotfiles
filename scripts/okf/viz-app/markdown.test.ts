@@ -8,6 +8,8 @@ const ctx = {
   files: { "scripts/okf/viz.ts": {}, "modules/dev.nix": {}, "docs/svelt/manual.md": {} },
   byId: { "nvim/architecture": {}, "decisions/other": {} },
   dirs: { "flakes/ccglass": {} },
+  repoUrl: "https://github.com/kriswill/dotfiles",
+  commits: { abc1234: "abc1234def5678901234567890123456789012ab" },
 };
 const md = createMd(ctx);
 const from = "decisions/foo"; // bundle-relative concept id
@@ -23,6 +25,22 @@ describe("inline rendering", () => {
     expect(md.mdToHtml("has `code` **bold** *em* text", from)).toBe(
       "<p>has <code>code</code> <b>bold</b> <em>em</em> text</p>",
     );
+  });
+
+  test("verified commit-hash code span links out to GitHub by full oid", () => {
+    expect(md.mdToHtml("landed in `abc1234` upstream", from)).toBe(
+      '<p>landed in <code><a href="https://github.com/kriswill/dotfiles/commit/abc1234def5678901234567890123456789012ab"' +
+        ' target="_blank" rel="noopener">abc1234</a></code> upstream</p>',
+    );
+  });
+
+  test("unverified hex code span stays plain code", () => {
+    expect(md.mdToHtml("nixpkgs rev `b5aa0fb`", from)).toBe("<p>nixpkgs rev <code>b5aa0fb</code></p>");
+  });
+
+  test("commit spans stay plain without a repoUrl", () => {
+    const bare = createMd({ files: {}, byId: {}, commits: { abc1234: "abc1234def" } });
+    expect(bare.mdToHtml("`abc1234`", from)).toBe("<p><code>abc1234</code></p>");
   });
 
   test("<https://…> autolink", () => {

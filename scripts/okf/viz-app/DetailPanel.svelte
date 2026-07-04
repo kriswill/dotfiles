@@ -12,7 +12,13 @@
   const { viz, stageEl, resizeSeq = 0 }: Props = $props();
 
   // svelte-ignore state_referenced_locally -- viz's identity never changes
-  const md = createMd({ files: viz.model.files, byId: viz.model.byId, dirs: viz.model.dirs });
+  const md = createMd({
+    files: viz.model.files,
+    byId: viz.model.byId,
+    dirs: viz.model.dirs,
+    repoUrl: viz.model.repoUrl,
+    commits: viz.model.commits,
+  });
 
   const file = $derived(viz.sel.kind === "file" ? viz.model.files[viz.sel.path] : null);
   const filePath = $derived(viz.sel.kind === "file" ? viz.sel.path : "");
