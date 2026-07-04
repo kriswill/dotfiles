@@ -86,3 +86,45 @@ describe("App hash handling", () => {
     expect(viz.sel).toEqual({ kind: "concept", id: "nvim/architecture" });
   });
 });
+
+describe("App filter persistence", () => {
+  test("filter changes land in the URL without touching the selection part", () => {
+    const viz = createVizState(model());
+    mountApp(viz);
+    viz.selectConcept("nvim/architecture");
+    flushSync();
+    viz.toggleType("Reference");
+    viz.query = "arch";
+    flushSync();
+    expect(location.hash).toBe("#c/nvim/architecture?hide=Reference&q=arch");
+    viz.setFilters([], "");
+    flushSync();
+    expect(location.hash).toBe("#c/nvim/architecture");
+  });
+
+  test("a deep link with filters applies them on mount", () => {
+    location.hash = "#c/nvim/architecture?hide=Reference&q=arch";
+    const viz = createVizState(model());
+    mountApp(viz);
+    expect(viz.sel).toEqual({ kind: "concept", id: "nvim/architecture" });
+    expect([...viz.hidden]).toEqual(["Reference"]);
+    expect(viz.query).toBe("arch");
+    expect(location.hash).toBe("#c/nvim/architecture?hide=Reference&q=arch"); // applied, never rewritten
+  });
+
+  test("selection navigation keeps active filters; Back to a bare hash clears them", () => {
+    const viz = createVizState(model());
+    mountApp(viz);
+    viz.toggleType("Reference");
+    flushSync();
+    expect(location.hash).toBe("#?hide=Reference");
+    viz.selectConcept("nvim/architecture");
+    flushSync();
+    expect(location.hash).toBe("#c/nvim/architecture?hide=Reference");
+    location.hash = "#c/nvim/architecture"; // simulate Back to an unfiltered entry
+    window.dispatchEvent(new Event("hashchange"));
+    flushSync();
+    expect(viz.hidden.size).toBe(0);
+    expect(viz.sel).toEqual({ kind: "concept", id: "nvim/architecture" });
+  });
+});

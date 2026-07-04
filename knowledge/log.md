@@ -2,6 +2,20 @@
 
 ## 2026-07-03
 
+- **Update** — viz filter UX, phase A (quick wins). The legend gains
+  all/none header links and alt-click-to-isolate (one click instead of
+  N−1 toggles); the search haystack now includes frontmatter `tags` and the
+  placeholder says what it filters (title/type/tag — it always also matched
+  id and description); the counts line goes live ("42 of 131 concepts")
+  whenever a filter is active; search hits suppressed by a hidden type
+  surface as a clickable "+n hidden by type filters" note instead of
+  silently vanishing; and the whole lens (hidden types + query) now rides
+  the URL hash behind the selection (`c/<id>?hide=A,B&q=…`) — filter-only
+  changes amend the history entry via `replaceState`, selection changes
+  still push, so Back walks selections and shared links reproduce the view.
+  Phase B (grouped legend matching the bundle topology, neighborhood
+  isolation) is planned separately.
+
 - **Update** — `okf viz` links commit-hash citations to GitHub. `` `abc1234` ``
   code spans (the profile's citation convention) in concept bodies and
   embedded markdown now render as outbound `github.com/…/commit/<full-oid>`

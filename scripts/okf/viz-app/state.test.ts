@@ -6,7 +6,7 @@ import { node } from "./test-helpers";
 const model = () =>
   buildModel({
     nodes: [
-      node("a", "Decision", "Alpha", { desc: "first decision" }),
+      node("a", "Decision", "Alpha", { desc: "first decision", fm: { tags: ["stow", "symlinks"] } }),
       node("b", "Pattern", "Beta"),
       node("c", "Decision", "Gamma"),
     ],
@@ -75,13 +75,15 @@ describe("filtering", () => {
     expect(s.visibleSorted).toHaveLength(3);
   });
 
-  test("query matches title/id/desc/type, case-insensitive", () => {
+  test("query matches title/id/desc/type/tags, case-insensitive", () => {
     const s = createVizState(model());
     s.query = "ALPHA";
     expect(s.visibleSorted.map((n) => n.id)).toEqual(["a"]);
     s.query = "pattern";
     expect(s.visibleSorted.map((n) => n.id)).toEqual(["b"]);
     s.query = "first decision";
+    expect(s.visibleSorted.map((n) => n.id)).toEqual(["a"]);
+    s.query = "symlink";
     expect(s.visibleSorted.map((n) => n.id)).toEqual(["a"]);
     s.query = "";
     expect(s.visibleSorted).toHaveLength(3);
@@ -90,6 +92,49 @@ describe("filtering", () => {
   test("visibleSorted sorts by title", () => {
     const s = createVizState(model());
     expect(s.visibleSorted.map((n) => n.title)).toEqual(["Alpha", "Beta", "Gamma"]);
+  });
+
+  test("showAllTypes / hideAllTypes", () => {
+    const s = createVizState(model());
+    s.hideAllTypes();
+    expect(s.visibleSorted).toHaveLength(0);
+    expect(s.hidden.size).toBe(2); // Decision + Pattern
+    s.showAllTypes();
+    expect(s.visibleSorted).toHaveLength(3);
+  });
+
+  test("soloType isolates, re-solo restores, solo elsewhere switches", () => {
+    const s = createVizState(model());
+    s.soloType("Decision");
+    expect(s.visibleSorted.map((n) => n.id)).toEqual(["a", "c"]);
+    s.soloType("Pattern"); // switch the solo, not additive
+    expect(s.visibleSorted.map((n) => n.id)).toEqual(["b"]);
+    s.soloType("Pattern"); // solo again = restore all
+    expect(s.visibleSorted).toHaveLength(3);
+  });
+
+  test("setFilters replaces hidden set and query wholesale", () => {
+    const s = createVizState(model());
+    s.toggleType("Pattern");
+    s.setFilters(["Decision"], "gamma");
+    expect([...s.hidden]).toEqual(["Decision"]);
+    expect(s.query).toBe("gamma");
+    s.setFilters([], "");
+    expect(s.hidden.size).toBe(0);
+    expect(s.visibleSorted).toHaveLength(3);
+  });
+
+  test("hiddenMatchCount counts search hits suppressed by type toggles", () => {
+    const s = createVizState(model());
+    expect(s.hiddenMatchCount).toBe(0);
+    s.toggleType("Decision");
+    expect(s.hiddenMatchCount).toBe(0); // no query — nothing "swallowed"
+    s.query = "gamma";
+    expect(s.visibleSorted).toHaveLength(0);
+    expect(s.hiddenMatchCount).toBe(1);
+    s.showAllTypes();
+    expect(s.hiddenMatchCount).toBe(0);
+    expect(s.visibleSorted.map((n) => n.id)).toEqual(["c"]);
   });
 });
 

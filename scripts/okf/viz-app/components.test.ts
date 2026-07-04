@@ -60,6 +60,33 @@ describe("Legend", () => {
     expect(document.querySelector(".leg")!.classList.contains("off")).toBe(true);
     expect(state.hidden.has("Pattern")).toBe(true);
   });
+
+  test("all / none header buttons flip every type at once", () => {
+    const state = createVizState(model());
+    mountC(Legend, { viz: state });
+    const [all, none] = [...document.querySelectorAll(".leg-head .lnk")] as HTMLElement[];
+    expect(all!.textContent).toBe("all");
+    none!.click();
+    flushSync();
+    expect(state.hidden.size).toBe(2);
+    expect(document.querySelectorAll(".leg.off")).toHaveLength(2);
+    all!.click();
+    flushSync();
+    expect(state.hidden.size).toBe(0);
+  });
+
+  test("alt-click solos a type; alt-click again restores", () => {
+    const state = createVizState(model());
+    mountC(Legend, { viz: state });
+    const pattern = document.querySelector(".leg") as HTMLElement;
+    pattern.dispatchEvent(new MouseEvent("click", { altKey: true, bubbles: true }));
+    flushSync();
+    expect(state.hidden.has("Decision")).toBe(true);
+    expect(state.hidden.has("Pattern")).toBe(false);
+    pattern.dispatchEvent(new MouseEvent("click", { altKey: true, bubbles: true }));
+    flushSync();
+    expect(state.hidden.size).toBe(0);
+  });
 });
 
 describe("ConceptList", () => {
@@ -74,6 +101,22 @@ describe("ConceptList", () => {
     (document.querySelector("#list a") as HTMLElement).click();
     flushSync();
     expect(state.sel).toEqual({ kind: "concept", id: "b" });
+  });
+
+  test("search hits swallowed by a hidden type surface as a note; click restores", () => {
+    const state = createVizState(model());
+    mountC(ConceptList, { viz: state });
+    expect(document.querySelector(".hidden-note")).toBeNull();
+    state.toggleType("Pattern");
+    state.query = "beta";
+    flushSync();
+    expect(document.querySelectorAll("#list a")).toHaveLength(0);
+    const note = document.querySelector(".hidden-note") as HTMLElement;
+    expect(note.textContent?.replace(/\s+/g, " ")).toContain("+1 match hidden by type filters");
+    note.click();
+    flushSync();
+    expect(state.hidden.size).toBe(0);
+    expect([...document.querySelectorAll("#list a")].map((a) => a.textContent)).toEqual(["Beta"]);
   });
 
   test("focused concept is marked, also while its file view is open", () => {

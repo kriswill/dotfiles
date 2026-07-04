@@ -28,6 +28,12 @@
       }}><span class="dot" style="background:{viz.colorOf(n.type)}"></span>{n.title}</a
     >
   {/each}
+  {#if viz.hiddenMatchCount > 0}
+    <button class="hidden-note" onclick={() => viz.showAllTypes()}>
+      +{viz.hiddenMatchCount}
+      {viz.hiddenMatchCount === 1 ? "match" : "matches"} hidden by type filters — show all
+    </button>
+  {/if}
 </nav>
 
 <style>
@@ -66,5 +72,22 @@
     border-radius: 50%;
     margin-right: 7px;
     vertical-align: 1px;
+  }
+  .hidden-note {
+    display: block;
+    width: 100%;
+    padding: 4px;
+    font: inherit;
+    font-size: 12px;
+    text-align: left;
+    color: var(--ink-muted);
+    background: none;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  .hidden-note:hover {
+    background: var(--page);
+    color: var(--ink-1);
   }
 </style>

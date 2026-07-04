@@ -46,7 +46,11 @@ export function createVizState(model: VizModel) {
 
   const match = $derived.by(() => {
     const q = query.trim().toLowerCase();
-    return q ? (n: ConceptNode) => `${n.title} ${n.id} ${n.desc} ${n.type}`.toLowerCase().includes(q) : null;
+    if (!q) return null;
+    return (n: ConceptNode) => {
+      const tags = Array.isArray(n.fm.tags) ? n.fm.tags.join(" ") : "";
+      return `${n.title} ${n.id} ${n.desc} ${n.type} ${tags}`.toLowerCase().includes(q);
+    };
   });
 
   const computeSlots = () => {
@@ -64,6 +68,9 @@ export function createVizState(model: VizModel) {
 
   const visible = (n: ConceptNode) => !hidden.has(n.type) && (!match || match(n));
   const visibleSorted = $derived(model.nodes.filter(visible).sort((a, b) => a.title.localeCompare(b.title)));
+  // Search hits suppressed by type toggles, surfaced in the list so a hidden
+  // type never silently swallows a match.
+  const hiddenMatchCount = $derived(match ? model.nodes.filter((n) => hidden.has(n.type) && match(n)).length : 0);
 
   const selectedConcept = $derived(sel.kind === "concept" ? (model.byId[sel.id] ?? null) : null);
   const backConcept = $derived(lastConceptId ? (model.byId[lastConceptId] ?? null) : null);
@@ -118,6 +125,28 @@ export function createVizState(model: VizModel) {
     hidden,
     toggleType(t: string) {
       hidden.has(t) ? hidden.delete(t) : hidden.add(t);
+    },
+    showAllTypes() {
+      hidden.clear();
+    },
+    hideAllTypes() {
+      for (const t of model.allTypes) hidden.add(t);
+    },
+    /** Isolate one type; solo it again to restore all. */
+    soloType(t: string) {
+      const alone = !hidden.has(t) && hidden.size === model.allTypes.length - 1;
+      hidden.clear();
+      if (!alone) for (const u of model.allTypes) u !== t && hidden.add(u);
+    },
+    /** Replace the whole filter state (hash navigation). */
+    setFilters(hiddenTypes: string[], q: string) {
+      const want = new Set(hiddenTypes);
+      for (const t of [...hidden]) if (!want.has(t)) hidden.delete(t);
+      for (const t of want) hidden.add(t);
+      query = q;
+    },
+    get hiddenMatchCount() {
+      return hiddenMatchCount;
     },
 
     get query() {
