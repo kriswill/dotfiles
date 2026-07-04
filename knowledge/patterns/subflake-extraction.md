@@ -24,6 +24,11 @@ standalone-buildable, or headed for its own repo — lives under
 Extraction to a separate repo later is just swapping the input URL
 `"./flakes/<name>"` → `"github:owner/<name>"` — nothing else moves.
 
+Relative-path inputs need Nix ≥2.26 to lock stably (a relative `path` node
+with a `parent` field); under Lix they re-locked to machine-local store paths
+on every tree edit, churning `flake.lock` — the reason nebula moved to
+Determinate Nix ([Replace Lix With Determinate Nix](../decisions/lix-to-determinate.md)).
+
 Worked examples: [ccglass](../packages/ccglass.md) and
 [apple-container](../packages/apple-container.md) (which also exports a
 darwin module). Simple packages stay in `pkgs/` per the
