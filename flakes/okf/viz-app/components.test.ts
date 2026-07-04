@@ -19,7 +19,7 @@ const model = () =>
     nodes: [
       node("a", "Decision", "Alpha", {
         desc: "the alpha decision",
-        fm: { title: "Alpha", type: "Decision", resource: "scripts/okf/viz.ts", description: "uses scripts/okf/viz.ts" },
+        fm: { title: "Alpha", type: "Decision", resource: "flakes/okf/viz.ts", description: "uses flakes/okf/viz.ts" },
         body: "## Context\nsee [beta](b.md)",
       }),
       node("b", "Pattern", "Beta"),
@@ -27,10 +27,10 @@ const model = () =>
     edges: [{ s: "a", t: "b" }],
     cfg: cfg(),
     files: {
-      "scripts/okf/viz.ts": { html: "<span class=\"tok-k\">const</span>", lines: 3, size: 2048, date: "2026-01-01", lang: "ts", refs: ["a"] },
+      "flakes/okf/viz.ts": { html: "<span class=\"tok-k\">const</span>", lines: 3, size: 2048, date: "2026-01-01", lang: "ts", refs: ["a"] },
       "docs/notes.md": {
         html: "",
-        md: "# Notes\nsee [beta](../knowledge/b.md) and [viz](../scripts/okf/viz.ts)",
+        md: "# Notes\nsee [beta](../knowledge/b.md) and [viz](../flakes/okf/viz.ts)",
         lines: 2,
         size: 64,
         date: "2026-01-01",
@@ -256,7 +256,7 @@ describe("ConceptList", () => {
     const sel = document.querySelector("#list a.selected")!;
     expect(sel.textContent).toBe("Alpha");
     expect(sel.getAttribute("aria-current")).toBe("true");
-    state.selectFile("scripts/okf/viz.ts"); // file view keeps the referrer marked
+    state.selectFile("flakes/okf/viz.ts"); // file view keeps the referrer marked
     flushSync();
     expect(document.querySelector("#list a.selected")!.textContent).toBe("Alpha");
     state.clearSelection();
@@ -511,7 +511,7 @@ describe("DetailPanel", () => {
     expect(panel.querySelector(".bar .crumb")!.textContent).toBe("Alpha"); // locked header crumb
     expect(panel.querySelector(".bar .close")).not.toBeNull();
     expect(panel.querySelector(".chip")!.textContent).toContain("Decision");
-    expect(panel.querySelector('td a[data-file="scripts/okf/viz.ts"]')).not.toBeNull();
+    expect(panel.querySelector('td a[data-file="flakes/okf/viz.ts"]')).not.toBeNull();
     expect(panel.querySelector("#body-md h3")!.textContent).toBe("Context");
     expect(panel.querySelector('#body-md a[data-node="b"]')).not.toBeNull();
     const fmKeys = [...panel.querySelectorAll("table.fm td:first-child")].map((td) => td.textContent);
@@ -533,7 +533,7 @@ describe("DetailPanel", () => {
     const body = panel.querySelector("#body-md.md-doc")!;
     expect(body.querySelector("h3")!.textContent).toBe("Notes");
     expect(body.querySelector('a[data-node="b"]')).not.toBeNull(); // file-relative into knowledge/
-    expect(body.querySelector('a[data-file="scripts/okf/viz.ts"]')).not.toBeNull();
+    expect(body.querySelector('a[data-file="flakes/okf/viz.ts"]')).not.toBeNull();
     expect(panel.querySelector("pre.src")).toBeNull();
     expect(panel.querySelector("table.fm")).toBeNull();
   });
@@ -588,10 +588,10 @@ describe("DetailPanel", () => {
     const state = createVizState(model());
     state.selectConcept("a");
     mountC(DetailPanel, { viz: state, stageEl: stage() });
-    (document.querySelector('#panel a[data-file="scripts/okf/viz.ts"]') as HTMLElement).click();
+    (document.querySelector('#panel a[data-file="flakes/okf/viz.ts"]') as HTMLElement).click();
     flushSync();
     const panel = document.getElementById("panel")!;
-    expect(state.sel).toEqual({ kind: "file", path: "scripts/okf/viz.ts" });
+    expect(state.sel).toEqual({ kind: "file", path: "flakes/okf/viz.ts" });
     expect(panel.querySelector("h2")!.textContent).toBe("viz.ts");
     expect(panel.querySelector(".back")!.textContent).toContain("Alpha");
     expect(panel.querySelector(".src .tok-k")!.textContent).toBe("const");

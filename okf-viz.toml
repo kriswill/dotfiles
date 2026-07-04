@@ -1,5 +1,5 @@
-# okf-viz.toml — repo-specific settings for `okf viz` (scripts/okf/viz.ts).
-# Schema + validation: scripts/okf/viz-app/config.ts. Without this file the
+# okf-viz.toml — repo-specific settings for `okf viz` (flakes/okf/viz.ts).
+# Schema + validation: flakes/okf/viz-app/config.ts. Without this file the
 # viewer still builds with generic fallbacks: no facet filters, alphabetical
 # types with generated colors, flat legend, generic header/about text.
 
