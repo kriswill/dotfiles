@@ -1,17 +1,19 @@
-// Render the knowledge/ bundle as a self-contained interactive 3D graph
-// (knowledge/viz.html, gitignored — regenerate any time), in the style of
+// Render the OKF bundle as a self-contained interactive 3D graph
+// (<bundle>/viz.html, gitignored — regenerate any time), in the style of
 // codebase-memory-mcp's graph-ui: Three.js instanced glow spheres + bloom,
 // additive edge lines, orbit camera. The force layout runs HERE at generation
 // time (layout3d.ts) so the viewer renders frozen positions — nothing ever
 // simulates or jiggles at runtime. The viewer app (viz-app/) is bundled by
 // Bun.build with three + postprocessing and inlined, so the output is still
-// one offline file:// page.
+// one offline file:// page. Repo-specific strings/settings come from an
+// optional ./okf-viz.toml at the repo root (viz-app/config.ts); absent -> generic.
 
 import { existsSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { extname, join } from "node:path";
-import { bundleRoot, extractLinks, gitISO, gitTrackedFiles, githubRemoteUrl, isExternal, parseDoc, repoRoot, resolveCommits, resolveLink, walkMd, RESERVED } from "./lib";
+import { extractLinks, gitISO, gitTrackedFiles, githubRemoteUrl, isExternal, parseDoc, repoRoot, resolveCommits, resolveLink, walkMd, RESERVED } from "./lib";
 import { layout3d } from "./layout3d";
-import { parsePackagePlatforms } from "./viz-app/data";
+import { displayName, normalizeVizConfig, VizConfigError, type VizConfig } from "./viz-app/config";
+import { parsePackagePlatforms, repoNameFromUrl } from "./viz-app/data";
 import { esc } from "./viz-app/markdown";
 import { THEMES } from "./viz-app/themes";
 
@@ -35,7 +37,33 @@ const lap = (name: string) => {
   phaseT0 = performance.now();
 };
 
-const bundle = bundleRoot();
+const repo = repoRoot();
+
+// Optional repo-root okf-viz.toml, normalized strictly: a malformed or misspelled
+// config fails the build rather than silently rendering wrong. Absent file ->
+// generic defaults (no facet filters, alphabetical types, flat legend).
+const cfgPath = join(repo, "okf-viz.toml");
+let cfgRaw: unknown = {};
+if (existsSync(cfgPath)) {
+  try {
+    cfgRaw = Bun.TOML.parse(readFileSync(cfgPath, "utf8"));
+  } catch (e) {
+    console.error(`viz: cannot parse okf-viz.toml — ${e instanceof Error ? e.message : e}`);
+    process.exit(1);
+  }
+}
+let cfg: VizConfig;
+try {
+  cfg = normalizeVizConfig(cfgRaw, { strict: true, warn: (m) => console.warn(`viz: warning: ${m}`) });
+} catch (e) {
+  if (e instanceof VizConfigError) {
+    console.error(`viz: ${e.message}`);
+    process.exit(1);
+  }
+  throw e;
+}
+
+const bundle = join(repo, cfg.bundle.dir);
 
 interface Node {
   id: string; type: string; title: string; desc: string;
@@ -145,7 +173,6 @@ function highlight(src: string, lang: string): string {
   return out + esc(src.slice(last));
 }
 
-const repo = repoRoot();
 interface Embedded { html: string; lang: string; lines: number; size: number; date: string; refs: string[]; md?: string }
 const files: Record<string, Embedded> = {};
 
@@ -159,7 +186,7 @@ function addFile(rel: string, ref: string) {
   const abs = join(repo, rel);
   if (!existsSync(abs) || !statSync(abs).isFile()) return;
   const size = statSync(abs).size;
-  if (size > 200_000) return;
+  if (size > cfg.embed.maxBytes) return;
   const text = readFileSync(abs, "utf8");
   if (text.includes("\u0000")) return;
   const lang = LANG_BY_EXT[extname(rel)] ?? "text";
@@ -225,8 +252,8 @@ for (const n of nodes) {
   for (const target of extractLinks(n.body)) {
     if (isExternal(target)) continue;
     if (resolveLink(bundle, n.id + ".md", target)) continue; // stays inside the bundle
-    const inRepo = resolveLink(repo, join("knowledge", n.id + ".md"), target);
-    if (inRepo && !inRepo.startsWith("knowledge/")) addRepoPath(inRepo, n.id);
+    const inRepo = resolveLink(repo, join(cfg.bundle.dir, n.id + ".md"), target);
+    if (inRepo && !inRepo.startsWith(cfg.bundle.dir + "/")) addRepoPath(inRepo, n.id);
   }
   // Bare repo-path mentions in prose (e.g. "./flakes/x/darwin-module.nix")
   // get embedded too, so the runtime autolinker has something to open.
@@ -243,12 +270,30 @@ const HASH_SPAN = /`([0-9a-f]{7,40})`/g;
 const hashCandidates = new Set<string>();
 for (const n of nodes) for (const m of n.body.matchAll(HASH_SPAN)) hashCandidates.add(m[1]);
 for (const f of Object.values(files)) if (f.md) for (const m of f.md.matchAll(HASH_SPAN)) hashCandidates.add(m[1]);
-const repoUrl = githubRemoteUrl();
+const repoUrl = cfg.repo.url ?? githubRemoteUrl();
 const commits = repoUrl ? resolveCommits([...hashCandidates]) : {};
-// OS guards for the platform filter: parse the darwin/linux `optionalAttrs`
-// blocks in modules/packages.nix (absent file -> {} -> every package "both").
-const packagesNix = join(repo, "modules", "packages.nix");
-const pkgPlatforms = existsSync(packagesNix) ? parsePackagePlatforms(readFileSync(packagesNix, "utf8")) : {};
+// Nix-package guards: for each facet with a nix-packages source, parse its
+// configured file's `optionalAttrs` blocks (missing file -> {} -> every
+// package of that facet's nix-packages.types falls through unresolved).
+const facetMaps: Record<string, Record<string, string>> = {};
+for (const f of cfg.facets) {
+  if (!f.nixPackages) continue;
+  const file = join(repo, f.nixPackages.file);
+  facetMaps[f.name] = existsSync(file) ? parsePackagePlatforms(readFileSync(file, "utf8"), f.nixPackages.guards) : {};
+}
+// A concept explicitly frontmatter-tagged with a value outside its facet's
+// declared `values` is unresolved (data.ts's facetValueOf), not a silent
+// typo — warn at build time (buildModel runs app-side and never warns).
+for (const f of cfg.facets) {
+  if (!f.frontmatter || !f.values.length) continue;
+  for (const n of nodes) {
+    const v = n.fm[f.frontmatter];
+    if (typeof v === "string" && !f.values.includes(v))
+      console.warn(
+        `viz: warning: ${n.id}: facet.${f.name}.frontmatter "${f.frontmatter}" = "${v}" is not in facet.${f.name}.values — unresolved`,
+      );
+  }
+}
 lap("sources");
 
 // --- Frozen 3D layout ---------------------------------------------------------
@@ -288,7 +333,7 @@ for (const o of build.outputs) if (o.path.endsWith(".css")) appCss += await o.te
 appCss = appCss.replace(/<\/style/gi, "<\\/style");
 lap("bundle");
 
-const data = JSON.stringify({ nodes, edges: dedupedEdges, files, dirs, repoUrl, commits, pkgPlatforms }).replace(
+const data = JSON.stringify({ nodes, edges: dedupedEdges, files, dirs, repoUrl, commits, facetMaps, cfg }).replace(
   /<\//g,
   "<\\/",
 );
@@ -304,7 +349,7 @@ const html = `<!doctype html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>knowledge/ — OKF bundle graph</title>
+<title>${esc(displayName(cfg, repoNameFromUrl(repoUrl)))} — ${esc(cfg.display.title)}</title>
 <style>
   /* Un-picked defaults: the "light" and "black" stops from viz-app/themes.ts,
      inlined at build time so the pre-hydration paint can never drift. */
@@ -322,7 +367,7 @@ const html = `<!doctype html>
     color: var(--ink-1); background: var(--page);
     display: grid; grid-template-columns: 260px 1fr; overflow: hidden;
   }
-  /* Shared sidebar-control primitives (used by the legend head, the platform
+  /* Shared sidebar-control primitives (used by the legend head, the facet
      and neighborhood segmented controls) — global so the controls don't each
      re-declare an identical scoped copy. */
   .hint {
@@ -350,7 +395,7 @@ const html = `<!doctype html>
 </html>
 `;
 
-const out = join(bundle, "viz.html");
+const out = join(bundle, cfg.bundle.out);
 writeFileSync(out, html);
 lap("write");
 const fmtMs = (ms: number) => (ms < 10 ? ms.toFixed(1) : String(Math.round(ms))) + "ms";

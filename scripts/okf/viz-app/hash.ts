@@ -1,9 +1,9 @@
 // URL-hash codec for viewer state. The selection is the path segment
 // (`c/<concept-id>` | `f/<file-path>` | `d/<dir-path>`); view filters ride
 // behind a `?` as query params (`hide=<type,type,…>` + `q=<search>` +
-// `isolate=<1|2>`, the last only meaningful for a concept selection, +
-// `os=<darwin|nixos>`), so a shared link reproduces the whole lens, not just
-// the selection.
+// `isolate=<1|2>`, the last only meaningful for a concept selection, + one
+// `<facet-name>=<value>` param per configured facet), so a shared link
+// reproduces the whole lens, not just the selection.
 // Pure — validation against the data model is injected by the caller.
 
 export type Selection =
@@ -19,8 +19,8 @@ export interface ViewFilters {
   q: string;
   /** Neighborhood isolation depth (0 = off); only meaningful for a concept selection. */
   isolate: 0 | 1 | 2;
-  /** OS lens ("all" = off). */
-  platform: "all" | "darwin" | "nixos";
+  /** Facet name -> "all" (encodes to nothing) or one of that facet's values. */
+  facets: Record<string, string>;
 }
 
 export interface ViewState {
@@ -34,6 +34,9 @@ export interface HashModel {
   dirs: Record<string, unknown>;
   /** When present, unknown types in `hide=` are dropped on decode. */
   typeCounts?: Record<string, number>;
+  /** Configured facets: names gate which query params decode, and each
+   *  facet's values gate what its param decodes to (else "all"). */
+  facets?: { name: string; values: string[] }[];
 }
 
 // '%' breaks the decode round-trip and '?' would read as the filter
@@ -49,15 +52,15 @@ export function encodeHash(sel: Selection): string {
   return "";
 }
 
-/** Canonical form: hidden types sorted, empty filters omitted entirely. */
+/** Canonical form: hidden types sorted, empty filters omitted entirely,
+ *  facet params in `view.filters.facets`' own (caller-supplied) order. */
 export function encodeViewHash(view: ViewState): string {
   const p = new URLSearchParams();
   // Type names contain no ','; the registry (okf-profile.md) keeps it that way.
   if (view.filters.hidden.length) p.set("hide", [...view.filters.hidden].sort().join(","));
   if (view.filters.q) p.set("q", view.filters.q);
   if (view.sel.kind === "concept" && view.filters.isolate) p.set("isolate", String(view.filters.isolate));
-  const plat = view.filters.platform ?? "all";
-  if (plat !== "all") p.set("os", plat);
+  for (const [name, v] of Object.entries(view.filters.facets)) if (v && v !== "all") p.set(name, v);
   const qs = p.toString();
   return encodeHash(view.sel) + (qs ? "?" + qs : "");
 }
@@ -79,16 +82,19 @@ export function decodeViewHash(raw: string, model: HashModel): ViewState {
   const bare = raw.replace(/^#/, "");
   const qi = bare.indexOf("?");
   const sel = decodeHash(qi < 0 ? bare : bare.slice(0, qi), model);
-  const filters: ViewFilters = { hidden: [], q: "", isolate: 0, platform: "all" };
-  if (qi >= 0) {
-    const p = new URLSearchParams(bare.slice(qi + 1));
-    const hide = p.get("hide");
-    if (hide) filters.hidden = hide.split(",").filter((t) => t && (!model.typeCounts || t in model.typeCounts));
-    filters.q = p.get("q") ?? "";
-    const iv = p.get("isolate");
-    filters.isolate = sel.kind !== "concept" ? 0 : iv === "1" ? 1 : iv === "2" ? 2 : 0;
-    const os = p.get("os");
-    filters.platform = os === "darwin" || os === "nixos" ? os : "all";
+  const p = new URLSearchParams(qi >= 0 ? bare.slice(qi + 1) : "");
+  const hide = p.get("hide");
+  const hidden = hide ? hide.split(",").filter((t) => t && (!model.typeCounts || t in model.typeCounts)) : [];
+  const q = p.get("q") ?? "";
+  const iv = p.get("isolate");
+  const isolate: 0 | 1 | 2 = sel.kind !== "concept" ? 0 : iv === "1" ? 1 : iv === "2" ? 2 : 0;
+  const facets: Record<string, string> = {};
+  for (const f of model.facets ?? []) {
+    // Legacy alias: pre-facets links used `os=`. Read it only for a facet
+    // literally named "platform" and only when `platform=` itself is
+    // absent — encode never emits `os=` again, so this is read-only.
+    const v = p.get(f.name) ?? (f.name === "platform" && !p.has("platform") ? p.get("os") : null);
+    facets[f.name] = v && f.values.includes(v) ? v : "all";
   }
-  return { sel, filters };
+  return { sel, filters: { hidden, q, isolate, facets } };
 }
