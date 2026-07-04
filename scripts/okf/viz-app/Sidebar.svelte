@@ -10,7 +10,7 @@
 </script>
 
 <aside id="side">
-  <div class="scroll">
+  <div class="top">
     <h1>
       {viz.model.displayName} <span class="okf">{viz.model.cfg.display.badge}</span>
       <!-- svelte-ignore a11y_no_noninteractive_tabindex -- ARIA tooltip pattern:
@@ -28,9 +28,13 @@
     </div>
     <Search {viz} />
     <Legend {viz} />
+  </div>
+  <div class="scroll">
+    <ConceptList {viz} />
+  </div>
+  <div class="bottom">
     <FacetControls {viz} />
     <IsolateControl {viz} />
-    <ConceptList {viz} />
   </div>
 </aside>
 
@@ -56,10 +60,23 @@
     overflow: hidden;
     z-index: 2;
   }
+  .top {
+    flex: none;
+    padding: 14px 14px 6px;
+  }
   .scroll {
     flex: 1;
+    min-height: 0; /* required: without it a flex column child with overflow
+                      won't actually shrink/scroll — it'll push .bottom out
+                      of the visible area instead */
     overflow-y: auto;
-    padding: 14px;
+    padding: 0 14px 6px;
+  }
+  .bottom {
+    /* No border-top of its own — FacetControls' .facet rule already draws
+       one, which now sits right at this panel's top edge. */
+    flex: none;
+    padding: 0 14px 14px;
   }
   #side h1 {
     position: relative;

@@ -56,7 +56,6 @@
 
 <style>
   #list {
-    margin-top: 14px;
     border-top: 1px solid var(--grid);
     padding-top: 10px;
     /* Connector geometry: dot center sits at x=8px (4px link padding + half
