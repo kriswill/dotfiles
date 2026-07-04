@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { buildModel, type ConceptTree } from "./data";
 import { createVizState } from "./state.svelte";
-import { node } from "./test-helpers";
+import { cfg, node } from "./test-helpers";
 
 const model = () =>
   buildModel({
@@ -133,6 +133,7 @@ describe("filtering", () => {
           node("modules/z", "Darwin Module", "Z"),
         ],
         edges: [],
+        cfg: cfg(),
       });
     const s = createVizState(groupModel());
     s.toggleGroup("Knowledge"); // Decision + Pattern
@@ -155,6 +156,7 @@ describe("filtering", () => {
           node("modules/z", "Darwin Module", "Z"),
         ],
         edges: [],
+        cfg: cfg(),
       });
     const s = createVizState(groupModel());
     s.toggleType("Decision"); // mixed state: Decision hidden, Pattern visible, both in Knowledge
@@ -172,6 +174,7 @@ describe("filtering", () => {
           node("packages/p", "Nix Package", "P"),
         ],
         edges: [],
+        cfg: cfg(),
       });
     const s = createVizState(threeGroupModel());
     s.soloGroup("Knowledge");
@@ -393,6 +396,7 @@ describe("platform axis", () => {
         node("decisions/x", "Decision", "Decide"),
       ],
       edges: [],
+      cfg: cfg(),
     });
 
   test("default is 'all' — every node visible", () => {
@@ -422,9 +426,17 @@ describe("platform axis", () => {
     expect(s.visibleSorted.map((n) => n.id)).toEqual(["modules/nh"]);
   });
 
-  test("setPlatform clamps invalid values to 'all'", () => {
+  test("setPlatform clamps values outside the configured platforms to 'all'", () => {
     const s = createVizState(platModel());
-    s.setPlatform("bogus" as never);
+    s.setPlatform("bogus");
+    expect(s.platform).toBe("all");
+  });
+
+  test("a generic (no-config) model has no platform lens at all", () => {
+    const s = createVizState(model()); // no cfg -> platforms []
+    s.setPlatform("darwin");
+    expect(s.platform).toBe("all");
+    s.setFilters([], "", 0, "darwin");
     expect(s.platform).toBe("all");
   });
 

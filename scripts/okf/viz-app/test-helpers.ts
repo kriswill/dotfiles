@@ -17,6 +17,57 @@ export const node = (id: string, type: string, title = id, extra: Partial<Concep
   ...extra,
 });
 
+/** Dotfiles-shaped raw viz config (TOML kebab spelling) for RawData.cfg —
+ *  reproduces the pre-viz.toml hardcoded taxonomy/platform behavior. */
+export const cfg = (over: Record<string, unknown> = {}) => ({
+  taxonomy: {
+    types: [
+      "Darwin Module",
+      "Nix Package",
+      "Playbook",
+      "Pattern",
+      "Decision",
+      "Host",
+      "Sub-flake",
+      "Flake-parts Module",
+      "Neovim Config",
+      "Neovim Plugin",
+      "Overlay",
+      "Reference",
+    ],
+    "group-order": ["Knowledge", "System", "Packages", "Neovim"],
+    "dir-groups": {
+      decisions: "Knowledge",
+      patterns: "Knowledge",
+      playbooks: "Knowledge",
+      ".": "Knowledge",
+      modules: "System",
+      hosts: "System",
+      packages: "Packages",
+      nvim: "Neovim",
+    },
+  },
+  platform: {
+    values: ["darwin", "nixos"],
+    "host-default": "darwin",
+    types: {
+      "Darwin Module": "darwin",
+      "NixOS Module": "nixos",
+      "Dual Module": "both",
+      "Flake-parts Module": "both",
+      "Neovim Plugin": "both",
+      "Neovim Config": "both",
+      Host: "hosts",
+      "Nix Package": "packages",
+      "Sub-flake": "packages",
+      Overlay: "packages",
+    },
+    hosts: { nebula: "nixos" },
+    "nix-guards": { darwin: "darwin", linux: "nixos" },
+  },
+  ...over,
+});
+
 /** Recording stand-in for the WebGL GraphScene. */
 export interface StubScene extends SceneApi {
   calls: [string, ...unknown[]][];

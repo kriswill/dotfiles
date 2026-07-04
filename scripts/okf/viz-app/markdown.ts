@@ -13,9 +13,11 @@ export interface MdCtx {
   repoUrl?: string | null;
   /** Verified commit-hash citations: literal as written -> full oid. */
   commits?: Record<string, string>;
+  /** Repo-relative OKF bundle directory (cfg.bundle.dir). */
+  bundleDir?: string;
 }
 
-export function createMd({ files, byId, dirs = {}, repoUrl = null, commits = {} }: MdCtx) {
+export function createMd({ files, byId, dirs = {}, repoUrl = null, commits = {}, bundleDir = "knowledge" }: MdCtx) {
   /** Resolve a relative link target against a repo-root-relative directory. */
   function resolveRel(dir: string[], target: string): string | null {
     if (/^[a-z][a-z0-9+.-]*:/.test(target) || target.startsWith("#")) return null;
@@ -28,12 +30,16 @@ export function createMd({ files, byId, dirs = {}, repoUrl = null, commits = {} 
     return base.join("/");
   }
 
+  const bundlePrefix = bundleDir + "/";
+
   /** Directory (repo-relative) a concept's links resolve against. */
-  const conceptDir = (fromId: string) => ("knowledge/" + fromId).split("/").slice(0, -1);
+  const conceptDir = (fromId: string) => (bundlePrefix + fromId).split("/").slice(0, -1);
 
   /** Concept id if a repo-relative path is a bundle document, else null. */
   const conceptOf = (p: string | null) =>
-    p && p.startsWith("knowledge/") && p.endsWith(".md") && byId[p.slice(10, -3)] ? p.slice(10, -3) : null;
+    p && p.startsWith(bundlePrefix) && p.endsWith(".md") && byId[p.slice(bundlePrefix.length, -3)]
+      ? p.slice(bundlePrefix.length, -3)
+      : null;
 
   function resolveMd(fromId: string, target: string): string | null {
     return conceptOf(resolveRel(conceptDir(fromId), target));

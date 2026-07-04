@@ -1,6 +1,8 @@
 // Immutable data model built once from the #data JSON blob baked in by
 // scripts/okf/viz.ts. Everything here is pure and framework-free.
 
+import { displayName, normalizeVizConfig, type VizConfig } from "./config";
+
 export interface ConceptNode {
   id: string;
   type: string;
@@ -42,17 +44,29 @@ export interface RawData {
   repoUrl?: string | null;
   /** Verified commit-hash citations: literal as written -> full oid. */
   commits?: Record<string, string>;
-  /** Package name -> platform for OS-guarded packages (parsed from modules/packages.nix). */
-  pkgPlatforms?: Record<string, "darwin" | "nixos">;
+  /** Package name -> platform value for OS-guarded packages (parsed from the
+   *  config's platform.packages-nix file). */
+  pkgPlatforms?: Record<string, string>;
+  /** Normalized VizConfig embedded by the build (absent: generic viewer). */
+  cfg?: unknown;
 }
 
-export type Platform = "darwin" | "nixos" | "both" | "neutral";
+/** A config-defined platform value, or the reserved "both" / "neutral". */
+export type Platform = string;
 
 export interface VizModel {
   nodes: ConceptNode[];
   files: Record<string, EmbeddedFile>;
   dirs: Record<string, EmbeddedDir>;
   repoUrl: string | null;
+  /** "owner/repo" display name from repoUrl (null: no GitHub origin). */
+  repoName: string | null;
+  /** Normalized viz configuration (generic defaults when unconfigured). */
+  cfg: VizConfig;
+  /** Header name: cfg.display.name ?? repoName ?? cfg.display.fallbackName. */
+  displayName: string;
+  /** Platform filter segments after "all" (cfg.platform.values; [] = hidden). */
+  platforms: string[];
   commits: Record<string, string>;
   byId: Record<string, ConceptNode>;
   indexOf: Map<string, number>;
@@ -68,31 +82,14 @@ export interface VizModel {
   typeGroup: Record<string, string>;
   /** Types per legend cluster, in allTypes order. */
   groupTypes: Record<string, string[]>;
-  /** GROUP_ORDER filtered to present clusters, "Other" appended only if non-empty. */
+  /** cfg.taxonomy.groupOrder filtered to present clusters, the "other" bucket
+   *  appended only if non-empty; [] = flat legend without group headers. */
   groupOrder: string[];
   /** OS a concept applies to, per node id (derived from type/host/package guards). */
   platformById: Record<string, Platform>;
   /** Scene sphere radius per node (same order as nodes). */
   radii: number[];
 }
-
-// Fixed palette slot order (never cycled): slot N = CSS var --sN in every
-// theme (viz-app/themes.ts). Append-only — existing types keep their colors.
-// Types not listed here get a stable generated color (viz-app/color.ts).
-export const TYPE_ORDER = [
-  "Darwin Module",
-  "Nix Package",
-  "Playbook",
-  "Pattern",
-  "Decision",
-  "Host",
-  "Sub-flake",
-  "Flake-parts Module",
-  "Neovim Config",
-  "Neovim Plugin",
-  "Overlay",
-  "Reference",
-];
 
 // A concept's id is its bundle-relative path minus ".md" (viz.ts) — the
 // top-level path segment is already a stable, zero-maintenance topology
@@ -101,47 +98,25 @@ export function dirOf(id: string): string {
   return id.includes("/") ? id.split("/")[0]! : ".";
 }
 
-// Static, append-only map from a top-level bundle directory to its legend
-// cluster. A directory not listed here buckets into "Other" (buildModel)
-// instead of crashing — a safety net for a future top-level directory.
-export const GROUP_OF_DIR: Record<string, string> = {
-  decisions: "Knowledge",
-  patterns: "Knowledge",
-  playbooks: "Knowledge",
-  ".": "Knowledge",
-  modules: "System",
-  hosts: "System",
-  packages: "Packages",
-  nvim: "Neovim",
-};
-
-export const GROUP_ORDER = ["Knowledge", "System", "Packages", "Neovim"];
-
-// The repo's only nixos host; every other host is darwin. Extend if a second
-// nixos host appears (same maintenance model as GROUP_OF_DIR).
-const NIXOS_HOSTS = new Set(["nebula"]);
-
 const basename = (id: string) => id.split("/").pop() ?? id;
 
 /**
- * Package-name -> OS for the OS-guarded packages in modules/packages.nix.
- * The file has two `lib.optionalAttrs (<pred>) { <attrs> }` blocks — one
- * darwin-guarded, one linux-guarded; everything outside them is universal
- * (absent from the map -> "both"). Brace-depth scan, not a lazy regex: an
- * attr RHS like `inputs.x.packages.${system}.x` contains a `}` that would
- * truncate a non-greedy capture and silently drop later attrs. Any structural
- * change to the file degrades the affected packages to "both" — never throws.
+ * Package-name -> platform value for the OS-guarded packages in the config's
+ * platform.packages-nix file. Each `lib.optionalAttrs (<pred>) { <attrs> }`
+ * block is classified by the first `guards` key found in its predicate text
+ * (e.g. {darwin: "darwin", linux: "nixos"}); everything outside a matched
+ * block is universal (absent from the map -> "both"). Brace-depth scan, not a
+ * lazy regex: an attr RHS like `inputs.x.packages.${system}.x` contains a `}`
+ * that would truncate a non-greedy capture and silently drop later attrs. Any
+ * structural change to the file degrades the affected packages to "both" —
+ * never throws.
  */
-export function parsePackagePlatforms(nixSource: string): Record<string, "darwin" | "nixos"> {
-  const out: Record<string, "darwin" | "nixos"> = {};
+export function parsePackagePlatforms(nixSource: string, guards: Record<string, string>): Record<string, string> {
+  const out: Record<string, string> = {};
   const re = /optionalAttrs\s*\(([^{]*)\{/g; // predicate text up to the block-opening brace
   for (let m = re.exec(nixSource); m; m = re.exec(nixSource)) {
     const pred = m[1]!;
-    const os: "darwin" | "nixos" | null = pred.includes("darwin")
-      ? "darwin"
-      : pred.includes("linux")
-        ? "nixos"
-        : null;
+    const os = Object.entries(guards).find(([k]) => pred.includes(k))?.[1] ?? null;
     if (!os) continue;
     // Scan from just after the '{' to its matching close (depth 0).
     let depth = 1;
@@ -168,36 +143,33 @@ export function parsePackagePlatforms(nixSource: string): Record<string, "darwin
   return out;
 }
 
-/** OS a concept applies to, derived from its type, id, and the package guards. */
-export function platformOf(type: string, id: string, pkgPlatforms: Record<string, "darwin" | "nixos">): Platform {
-  switch (type) {
-    case "Darwin Module":
-      return "darwin";
-    case "NixOS Module":
-      return "nixos";
-    case "Dual Module":
-    case "Flake-parts Module":
-    case "Neovim Plugin":
-    case "Neovim Config":
-      return "both";
-    case "Host":
-      return NIXOS_HOSTS.has(basename(id)) ? "nixos" : "darwin";
-    case "Nix Package":
-    case "Sub-flake":
-    case "Overlay":
-      return pkgPlatforms[basename(id)] ?? "both";
-    default:
-      // Decision/Pattern/Playbook/Reference and any unknown type: cross-cutting,
-      // never hidden by an OS filter.
-      return "neutral";
-  }
+/** Platform a concept applies to, from the config's platform.types rule table.
+ *  "hosts"/"packages" rules indirect through the host list / package guards;
+ *  unlisted types are "neutral" (cross-cutting, never hidden by the filter). */
+export function platformOf(
+  type: string,
+  id: string,
+  pkgPlatforms: Record<string, string>,
+  platform: VizConfig["platform"],
+): Platform {
+  const rule = platform.types[type] ?? "neutral";
+  if (rule === "hosts") return platform.hosts[basename(id)] ?? platform.hostDefault ?? "neutral";
+  if (rule === "packages") return pkgPlatforms[basename(id)] ?? "both";
+  return rule;
+}
+
+/** "owner/repo" display name from a githubRemoteUrl()-shaped URL. */
+export function repoNameFromUrl(url: string | null): string | null {
+  return url?.replace(/^https:\/\/github\.com\//, "") ?? null;
 }
 
 export function buildModel(raw: RawData): VizModel {
+  const cfg = normalizeVizConfig(raw.cfg);
   const nodes = raw.nodes;
   const files = raw.files || {};
   const dirs = raw.dirs || {};
   const repoUrl = raw.repoUrl || null;
+  const repoName = repoNameFromUrl(repoUrl);
   const commits = raw.commits || {};
   const byId: Record<string, ConceptNode> = Object.fromEntries(nodes.map((n) => [n.id, n]));
   const indexOf = new Map(nodes.map((n, i) => [n.id, i]));
@@ -218,25 +190,34 @@ export function buildModel(raw: RawData): VizModel {
 
   const typeCounts: Record<string, number> = {};
   for (const n of nodes) typeCounts[n.type] = (typeCounts[n.type] || 0) + 1;
+  const typeOrder = cfg.taxonomy.types;
   const allTypes = [
-    ...TYPE_ORDER.filter((t) => typeCounts[t]),
+    ...typeOrder.filter((t) => typeCounts[t]),
     ...Object.keys(typeCounts)
-      .filter((t) => !TYPE_ORDER.includes(t))
+      .filter((t) => !typeOrder.includes(t))
       .sort(),
   ];
 
   // The profile keeps every type inside one top-level directory, so this is
   // normally unambiguous; if that's ever violated, the first concept of a
-  // type fixes its group (deterministic, not "last write wins").
+  // type fixes its group (deterministic, not "last write wins"). No
+  // dir-groups configured -> no clusters at all (flat legend), not one big
+  // "Other" bucket.
   const typeGroup: Record<string, string> = {};
-  for (const n of nodes) typeGroup[n.type] ??= GROUP_OF_DIR[dirOf(n.id)] ?? "Other";
   const groupTypes: Record<string, string[]> = {};
-  for (const t of allTypes) (groupTypes[typeGroup[t]!] ??= []).push(t);
-  const groupOrder = [...GROUP_ORDER.filter((g) => groupTypes[g]), ...(groupTypes["Other"] ? ["Other"] : [])];
+  let groupOrder: string[] = [];
+  if (Object.keys(cfg.taxonomy.dirGroups).length) {
+    for (const n of nodes) typeGroup[n.type] ??= cfg.taxonomy.dirGroups[dirOf(n.id)] ?? cfg.taxonomy.other;
+    for (const t of allTypes) (groupTypes[typeGroup[t]!] ??= []).push(t);
+    groupOrder = [
+      ...cfg.taxonomy.groupOrder.filter((g) => groupTypes[g]),
+      ...(groupTypes[cfg.taxonomy.other] ? [cfg.taxonomy.other] : []),
+    ];
+  }
 
   const pkgPlatforms = raw.pkgPlatforms ?? {};
   const platformById: Record<string, Platform> = {};
-  for (const n of nodes) platformById[n.id] = platformOf(n.type, n.id, pkgPlatforms);
+  for (const n of nodes) platformById[n.id] = platformOf(n.type, n.id, pkgPlatforms, cfg.platform);
 
   const radii = nodes.map((n) => (3.5 + Math.min(6.5, (deg[n.id] || 0) * 0.8)) * 0.42);
 
@@ -245,6 +226,10 @@ export function buildModel(raw: RawData): VizModel {
     files,
     dirs,
     repoUrl,
+    repoName,
+    cfg,
+    displayName: displayName(cfg, repoName),
+    platforms: cfg.platform.values,
     commits,
     byId,
     indexOf,

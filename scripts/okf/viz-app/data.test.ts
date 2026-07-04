@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+import { normalizeVizConfig } from "./config";
 import {
   buildModel,
   conceptTree,
@@ -9,7 +10,7 @@ import {
   treeIds,
   type ConceptTree,
 } from "./data";
-import { node } from "./test-helpers";
+import { cfg, node } from "./test-helpers";
 
 const raw = {
   nodes: [node("a", "Decision", "Alpha"), node("b", "Zeta Type", "Beta"), node("c", "Darwin Module", "Gamma")],
@@ -19,6 +20,7 @@ const raw = {
     { s: "a", t: "ghost" }, // dangling — must be dropped
   ],
   files: { "scripts/okf/viz.ts": { html: "", lines: 1, size: 10, date: "", lang: "ts", refs: [] } },
+  cfg: cfg(),
 };
 
 describe("buildModel", () => {
@@ -37,7 +39,7 @@ describe("buildModel", () => {
     expect(m.inLinks).toEqual({ b: ["a", "c"] });
   });
 
-  test("type counts and TYPE_ORDER-first ordering with alpha overflow", () => {
+  test("type counts and taxonomy-types-first ordering with alpha overflow", () => {
     expect(m.typeCounts).toEqual({ Decision: 1, "Zeta Type": 1, "Darwin Module": 1 });
     expect(m.allTypes).toEqual(["Darwin Module", "Decision", "Zeta Type"]);
   });
@@ -57,7 +59,13 @@ describe("buildModel", () => {
     expect(empty.files).toEqual({});
     expect(empty.dirs).toEqual({});
     expect(empty.repoUrl).toBeNull();
+    expect(empty.repoName).toBeNull();
     expect(empty.commits).toEqual({});
+  });
+
+  test("repoName derives owner/repo from repoUrl", () => {
+    const named = buildModel({ ...raw, repoUrl: "https://github.com/kriswill/dotfiles" });
+    expect(named.repoName).toBe("kriswill/dotfiles");
   });
 });
 
@@ -73,6 +81,7 @@ describe("grouping", () => {
       node("mystery/m", "Mystery Type", "M"), // unmapped dir -> Other
     ],
     edges: [],
+    cfg: cfg(),
   };
   const gm = buildModel(groupedRaw);
 
@@ -93,11 +102,11 @@ describe("grouping", () => {
     });
   });
 
-  test("groupOrder is GROUP_ORDER filtered to present groups, Other trailing", () => {
+  test("groupOrder is the configured group-order filtered to present groups, Other trailing", () => {
     expect(gm.groupOrder).toEqual(["Knowledge", "System", "Packages", "Neovim", "Other"]);
   });
 
-  test("groupTypes lists member types in allTypes (TYPE_ORDER-first) order", () => {
+  test("groupTypes lists member types in allTypes (taxonomy-types-first) order", () => {
     expect(gm.groupTypes["Knowledge"]).toEqual(["Pattern", "Decision"]);
     expect(gm.groupTypes["System"]).toEqual(["Darwin Module", "Host"]);
     expect(gm.groupTypes["Packages"]).toEqual(["Nix Package"]);
@@ -106,7 +115,7 @@ describe("grouping", () => {
   });
 
   test("a bundle with no unmapped directory has no Other group", () => {
-    const clean = buildModel({ nodes: [node("decisions/x", "Decision", "X")], edges: [] });
+    const clean = buildModel({ nodes: [node("decisions/x", "Decision", "X")], edges: [], cfg: cfg() });
     expect(clean.groupOrder).toEqual(["Knowledge"]);
     expect(clean.groupTypes["Other"]).toBeUndefined();
   });
@@ -115,6 +124,7 @@ describe("grouping", () => {
     const partial = buildModel({
       nodes: [node("decisions/x", "Decision", "X"), node("mystery/m", "Mystery Type", "M")],
       edges: [],
+      cfg: cfg(),
     });
     expect(partial.groupOrder).toEqual(["Knowledge", "Other"]); // System/Packages/Neovim absent, not phantom-included
   });
@@ -123,11 +133,13 @@ describe("grouping", () => {
     const firstWins = buildModel({
       nodes: [node("packages/a", "Nix Package", "A"), node("flakes/b", "Nix Package", "B")],
       edges: [],
+      cfg: cfg(),
     });
     expect(firstWins.typeGroup["Nix Package"]).toBe("Packages");
     const reversed = buildModel({
       nodes: [node("flakes/b", "Nix Package", "B"), node("packages/a", "Nix Package", "A")],
       edges: [],
+      cfg: cfg(),
     });
     expect(reversed.typeGroup["Nix Package"]).toBe("Other"); // still the FIRST node's group, not overwritten by the second
   });
@@ -286,8 +298,10 @@ describe("parsePackagePlatforms", () => {
   };
 `;
 
+  const GUARDS = { darwin: "darwin", linux: "nixos" };
+
   test("classifies both guarded blocks, no attrs dropped past a \${system} '}'", () => {
-    expect(parsePackagePlatforms(nix)).toEqual({
+    expect(parsePackagePlatforms(nix, GUARDS)).toEqual({
       "apple-container": "darwin",
       podman: "darwin",
       kitten: "darwin",
@@ -296,56 +310,69 @@ describe("parsePackagePlatforms", () => {
       wowup: "nixos",
     });
     // Universal packages (outside any optionalAttrs block) are absent -> "both".
-    expect(parsePackagePlatforms(nix)["iv"]).toBeUndefined();
+    expect(parsePackagePlatforms(nix, GUARDS)["iv"]).toBeUndefined();
     // A nested callPackage-arg attr on its own line is NOT captured as a package.
-    expect(parsePackagePlatforms(nix)["packaged-src"]).toBeUndefined();
+    expect(parsePackagePlatforms(nix, GUARDS)["packaged-src"]).toBeUndefined();
     // The tomato-src nested arg in the universal block is likewise never scanned.
-    expect(parsePackagePlatforms(nix)["tomato-src"]).toBeUndefined();
+    expect(parsePackagePlatforms(nix, GUARDS)["tomato-src"]).toBeUndefined();
   });
 
   test("absent/garbage input yields an empty map (packages default to both)", () => {
-    expect(parsePackagePlatforms("")).toEqual({});
-    expect(parsePackagePlatforms("no optionalAttrs here { just: braces }")).toEqual({});
+    expect(parsePackagePlatforms("", GUARDS)).toEqual({});
+    expect(parsePackagePlatforms("no optionalAttrs here { just: braces }", GUARDS)).toEqual({});
   });
 
   test("an unbalanced (truncated) block bails instead of misclassifying", () => {
-    expect(parsePackagePlatforms('// lib.optionalAttrs (system == "aarch64-darwin") { podman = x;')).toEqual({});
+    expect(parsePackagePlatforms('// lib.optionalAttrs (system == "aarch64-darwin") { podman = x;', GUARDS)).toEqual(
+      {},
+    );
+  });
+
+  test("empty guards classify nothing", () => {
+    expect(parsePackagePlatforms(nix, {})).toEqual({});
   });
 });
 
 describe("platformOf", () => {
   const pkg = { kitten: "darwin", "flatpak-user": "nixos" } as const;
+  const platform = normalizeVizConfig(cfg()).platform;
 
-  test("modules derive from type", () => {
-    expect(platformOf("Darwin Module", "modules/nh", {})).toBe("darwin");
-    expect(platformOf("NixOS Module", "modules/keyring", {})).toBe("nixos");
-    expect(platformOf("Dual Module", "modules/tmux", {})).toBe("both");
-    expect(platformOf("Flake-parts Module", "modules/flake-parts", {})).toBe("both");
+  test("modules derive from the type rule table", () => {
+    expect(platformOf("Darwin Module", "modules/nh", {}, platform)).toBe("darwin");
+    expect(platformOf("NixOS Module", "modules/keyring", {}, platform)).toBe("nixos");
+    expect(platformOf("Dual Module", "modules/tmux", {}, platform)).toBe("both");
+    expect(platformOf("Flake-parts Module", "modules/flake-parts", {}, platform)).toBe("both");
   });
 
   test("neovim is universal, knowledge is neutral", () => {
-    expect(platformOf("Neovim Plugin", "nvim/plugins/blink", {})).toBe("both");
-    expect(platformOf("Neovim Config", "nvim/keymaps", {})).toBe("both");
-    expect(platformOf("Decision", "decisions/x", {})).toBe("neutral");
-    expect(platformOf("Reference", "okf-profile", {})).toBe("neutral");
+    expect(platformOf("Neovim Plugin", "nvim/plugins/blink", {}, platform)).toBe("both");
+    expect(platformOf("Neovim Config", "nvim/keymaps", {}, platform)).toBe("both");
+    expect(platformOf("Decision", "decisions/x", {}, platform)).toBe("neutral");
+    expect(platformOf("Reference", "okf-profile", {}, platform)).toBe("neutral");
   });
 
-  test("hosts derive from host id (only nebula is nixos)", () => {
-    expect(platformOf("Host", "hosts/nebula", {})).toBe("nixos");
-    expect(platformOf("Host", "hosts/k", {})).toBe("darwin");
-    expect(platformOf("Host", "hosts/SOC-Kris-Williams", {})).toBe("darwin");
+  test("hosts look up the configured host list, else host-default", () => {
+    expect(platformOf("Host", "hosts/nebula", {}, platform)).toBe("nixos");
+    expect(platformOf("Host", "hosts/k", {}, platform)).toBe("darwin");
+    expect(platformOf("Host", "hosts/SOC-Kris-Williams", {}, platform)).toBe("darwin");
   });
 
   test("packages/sub-flakes/overlays look up the guard by basename, default both", () => {
-    expect(platformOf("Nix Package", "packages/kitten", pkg)).toBe("darwin");
-    expect(platformOf("Nix Package", "packages/flatpak-user", pkg)).toBe("nixos");
-    expect(platformOf("Nix Package", "packages/iv", pkg)).toBe("both"); // universal
-    expect(platformOf("Sub-flake", "packages/ccglass", pkg)).toBe("both");
-    expect(platformOf("Overlay", "packages/direnv", pkg)).toBe("both");
+    expect(platformOf("Nix Package", "packages/kitten", pkg, platform)).toBe("darwin");
+    expect(platformOf("Nix Package", "packages/flatpak-user", pkg, platform)).toBe("nixos");
+    expect(platformOf("Nix Package", "packages/iv", pkg, platform)).toBe("both"); // universal
+    expect(platformOf("Sub-flake", "packages/ccglass", pkg, platform)).toBe("both");
+    expect(platformOf("Overlay", "packages/direnv", pkg, platform)).toBe("both");
   });
 
   test("unknown types default to neutral (never hidden by an OS filter)", () => {
-    expect(platformOf("Some Future Type", "x/y", {})).toBe("neutral");
+    expect(platformOf("Some Future Type", "x/y", {}, platform)).toBe("neutral");
+  });
+
+  test("an unconfigured platform section makes everything neutral", () => {
+    const bare = normalizeVizConfig({}).platform;
+    expect(platformOf("Darwin Module", "modules/nh", {}, bare)).toBe("neutral");
+    expect(platformOf("Host", "hosts/nebula", {}, bare)).toBe("neutral");
   });
 });
 
@@ -361,6 +388,7 @@ describe("buildModel.platformById", () => {
       ],
       edges: [],
       pkgPlatforms: { kitten: "darwin" },
+      cfg: cfg(),
     });
     expect(m.platformById).toEqual({
       "modules/nh": "darwin",
@@ -372,7 +400,41 @@ describe("buildModel.platformById", () => {
   });
 
   test("missing pkgPlatforms defaults every package to both", () => {
-    const m = buildModel({ nodes: [node("packages/kitten", "Nix Package", "kitten")], edges: [] });
+    const m = buildModel({ nodes: [node("packages/kitten", "Nix Package", "kitten")], edges: [], cfg: cfg() });
     expect(m.platformById["packages/kitten"]).toBe("both");
+  });
+});
+
+describe("generic (no-config) mode", () => {
+  const m = buildModel({
+    nodes: [
+      node("decisions/x", "Decision", "X"),
+      node("modules/z", "Darwin Module", "Z"),
+      node("hosts/nebula", "Host", "Nebula"),
+    ],
+    edges: [],
+    repoUrl: "https://github.com/kriswill/dotfiles",
+  });
+
+  test("types sort alphabetically (no configured slot order)", () => {
+    expect(m.allTypes).toEqual(["Darwin Module", "Decision", "Host"]);
+    expect(m.cfg.taxonomy.types).toEqual([]);
+  });
+
+  test("no legend groups at all (flat legend), not one big Other bucket", () => {
+    expect(m.groupOrder).toEqual([]);
+    expect(m.groupTypes).toEqual({});
+    expect(m.typeGroup).toEqual({});
+  });
+
+  test("platform filter disabled: no values, every concept neutral", () => {
+    expect(m.platforms).toEqual([]);
+    expect(new Set(Object.values(m.platformById))).toEqual(new Set(["neutral"]));
+  });
+
+  test("display falls back to the git-derived name and generic strings", () => {
+    expect(m.displayName).toBe("kriswill/dotfiles");
+    expect(m.cfg.display.badge).toBe("OKF viz");
+    expect(buildModel({ nodes: [], edges: [] }).displayName).toBe("OKF bundle");
   });
 });

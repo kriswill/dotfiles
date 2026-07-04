@@ -2,8 +2,8 @@
 // (`c/<concept-id>` | `f/<file-path>` | `d/<dir-path>`); view filters ride
 // behind a `?` as query params (`hide=<type,type,…>` + `q=<search>` +
 // `isolate=<1|2>`, the last only meaningful for a concept selection, +
-// `os=<darwin|nixos>`), so a shared link reproduces the whole lens, not just
-// the selection.
+// `os=<platform value>` from the config's platform.values), so a shared link
+// reproduces the whole lens, not just the selection.
 // Pure — validation against the data model is injected by the caller.
 
 export type Selection =
@@ -19,8 +19,8 @@ export interface ViewFilters {
   q: string;
   /** Neighborhood isolation depth (0 = off); only meaningful for a concept selection. */
   isolate: 0 | 1 | 2;
-  /** OS lens ("all" = off). */
-  platform: "all" | "darwin" | "nixos";
+  /** Platform lens: "all" (off) or one of the model's platform values. */
+  platform: string;
 }
 
 export interface ViewState {
@@ -34,6 +34,8 @@ export interface HashModel {
   dirs: Record<string, unknown>;
   /** When present, unknown types in `hide=` are dropped on decode. */
   typeCounts?: Record<string, number>;
+  /** Valid `os=` values; anything else (or absent list) decodes to "all". */
+  platforms?: string[];
 }
 
 // '%' breaks the decode round-trip and '?' would read as the filter
@@ -88,7 +90,7 @@ export function decodeViewHash(raw: string, model: HashModel): ViewState {
     const iv = p.get("isolate");
     filters.isolate = sel.kind !== "concept" ? 0 : iv === "1" ? 1 : iv === "2" ? 2 : 0;
     const os = p.get("os");
-    filters.platform = os === "darwin" || os === "nixos" ? os : "all";
+    filters.platform = os && model.platforms?.includes(os) ? os : "all";
   }
   return { sel, filters };
 }

@@ -18,6 +18,7 @@
     dirs: viz.model.dirs,
     repoUrl: viz.model.repoUrl,
     commits: viz.model.commits,
+    bundleDir: viz.model.cfg.bundle.dir,
   });
 
   const file = $derived(viz.sel.kind === "file" ? viz.model.files[viz.sel.path] : null);
