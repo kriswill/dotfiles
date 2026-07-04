@@ -10,14 +10,15 @@
         ]
       },
       "locked": {
-        "path": "./flakes/apple-container",
+        "lastModified": 1,
+        "narHash": "sha256-oF7ePUzG3FUj8+FjJpqejJGxS4m12PMkG+kKVAVdpFg=",
+        "path": "/nix/store/pxba4qhxnvm5ca0d0wqliayjf44mm51h-source/flakes/apple-container",
         "type": "path"
       },
       "original": {
-        "path": "./flakes/apple-container",
+        "path": "/nix/store/pxba4qhxnvm5ca0d0wqliayjf44mm51h-source/flakes/apple-container",
         "type": "path"
-      },
-      "parent": []
+      }
     },
     "aquamarine": {
       "inputs": {
@@ -62,14 +63,15 @@
         ]
       },
       "locked": {
-        "path": "./flakes/ccglass",
+        "lastModified": 1,
+        "narHash": "sha256-k+D5eoHetKXSXud82d/48IVRQb8U0PBxez5g6V7JwX0=",
+        "path": "/nix/store/pxba4qhxnvm5ca0d0wqliayjf44mm51h-source/flakes/ccglass",
         "type": "path"
       },
       "original": {
-        "path": "./flakes/ccglass",
+        "path": "/nix/store/pxba4qhxnvm5ca0d0wqliayjf44mm51h-source/flakes/ccglass",
         "type": "path"
-      },
-      "parent": []
+      }
     },
     "codebase-memory-mcp": {
       "inputs": {
