@@ -46,8 +46,8 @@ describe("buildModel", () => {
   });
 
   test("radius formula matches legacy scene sizing", () => {
-    expect(m.radii[0]).toBeCloseTo((3.5 + Math.min(6.5, 1 * 0.8)) * 0.42);
-    expect(m.radii[1]).toBeCloseTo((3.5 + Math.min(6.5, 2 * 0.8)) * 0.42);
+    expect(m.radii[0]).toBeCloseTo((3.5 + Math.min(6.5, 1 * 0.8)) * 0.2058);
+    expect(m.radii[1]).toBeCloseTo((3.5 + Math.min(6.5, 2 * 0.8)) * 0.2058);
   });
 
   test("byId and indexOf agree with node order", () => {

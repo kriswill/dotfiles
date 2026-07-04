@@ -212,7 +212,13 @@
     right: 0;
     bottom: 0;
     width: min(460px, 85%);
-    background: var(--surface-1);
+    /* Inside (left, canvas edge) eases from 90% so the scene reads through
+       faintly at the seam; outside (right, screen edge) is fully opaque. */
+    background: linear-gradient(
+      to right,
+      color-mix(in srgb, var(--surface-1) 90%, transparent),
+      var(--surface-1)
+    );
     border-left: 1px solid var(--grid);
     padding: 0 18px 18px;
     overflow-y: auto;
