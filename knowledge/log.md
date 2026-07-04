@@ -2,6 +2,30 @@
 
 ## 2026-07-03
 
+- **Update** — viz filter UX, phase D (pinned sidebar tree), on top of phases
+  A–C. Selecting a concept now pins it at the top of the sidebar list with
+  its linked concepts nested beneath by hop distance — direct links one
+  indent in, 2-hop isolation adds a second level, and with isolation off a
+  divider separates the remaining visible concepts (flat, alphabetical) —
+  replacing the flat alphabetical reshuffle that let the focused node float
+  around under filter changes. The nesting is a deterministic BFS tree
+  (`conceptTree`/`treeIds` in `viz-app/data.ts`): each node attaches to its
+  alphabetically-first previous-layer neighbor (title then id tie-break),
+  siblings sort alphabetically, filtered-out intermediates are spliced out
+  with their visible descendants promoted to the nearest visible ancestor,
+  and the anchor stays pinned even when it fails the active filters. Rows
+  connect dot-to-dot with quarter-circle CSS elbows (border-radius
+  pseudo-elements on the row wrappers, no SVG) in each child row's own type
+  color, plus muted `color-mix` rails continuing to later siblings — the
+  first `{#snippet}`/recursive-render use in the viewer. Anchored on
+  `focusedConcept`, so the pin survives file/dir views (isolation suspends
+  there and the layout falls back to direct-links + rest). `visibleSorted`
+  is untouched (sidebar counter and existing tests unaffected); a new
+  `listing = { tree, rest }` derived feeds `ConceptList` only. Verified by
+  174 bun tests (16 new across data/state/components), `okf viz --check`,
+  and a headless-Chrome drive (structural snapshots at off/1-hop/2-hop +
+  light/dark close-ups of the connector geometry).
+
 - **Creation** — [gh-op](packages/gh-op.md) overlay: on Linux, gh is wrapped
   to source `GH_TOKEN` from 1Password at runtime (`op read` of the "GitHub gh
   CLI token" item), and the plain-text oauth token was removed from
