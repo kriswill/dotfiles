@@ -43,9 +43,11 @@ describe("buildModel", () => {
     expect(m.indexOf.get("c")).toBe(2);
   });
 
-  test("missing files/dirs keys default to empty records", () => {
+  test("missing files/dirs/repoUrl/commits keys default to empty", () => {
     const empty = buildModel({ nodes: raw.nodes, edges: [] });
     expect(empty.files).toEqual({});
     expect(empty.dirs).toEqual({});
+    expect(empty.repoUrl).toBeNull();
+    expect(empty.commits).toEqual({});
   });
 });

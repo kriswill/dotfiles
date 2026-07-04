@@ -2,6 +2,15 @@
 
 ## 2026-07-03
 
+- **Update** — `okf viz` links commit-hash citations to GitHub. `` `abc1234` ``
+  code spans (the profile's citation convention) in concept bodies and
+  embedded markdown now render as outbound `github.com/…/commit/<full-oid>`
+  links. Every candidate is verified against the local repo in one
+  `git cat-file --batch-check` pass, so doc examples, other repos' revs
+  (nixpkgs, snowglobe-lib, noctalia pins), and commits purged by the helium
+  history rewrite stay plain code instead of 404ing (31 of 40 spans link
+  today). No GitHub origin → everything degrades to plain code.
+
 - **Update** — `okf viz` learned directories. Concept links and `resource:`
   paths that point at a git-tracked directory (sub-flakes like
   `flakes/ccglass/`, stow packages like `home/git/`, nvim spec trees)

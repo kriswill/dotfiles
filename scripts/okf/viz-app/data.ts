@@ -38,12 +38,18 @@ export interface RawData {
   edges: { s: string; t: string }[];
   files?: Record<string, EmbeddedFile>;
   dirs?: Record<string, EmbeddedDir>;
+  /** https://github.com/owner/repo, for outbound commit links (null: no GitHub origin). */
+  repoUrl?: string | null;
+  /** Verified commit-hash citations: literal as written -> full oid. */
+  commits?: Record<string, string>;
 }
 
 export interface VizModel {
   nodes: ConceptNode[];
   files: Record<string, EmbeddedFile>;
   dirs: Record<string, EmbeddedDir>;
+  repoUrl: string | null;
+  commits: Record<string, string>;
   byId: Record<string, ConceptNode>;
   indexOf: Map<string, number>;
   edges: { s: string; t: string }[];
@@ -78,6 +84,8 @@ export function buildModel(raw: RawData): VizModel {
   const nodes = raw.nodes;
   const files = raw.files || {};
   const dirs = raw.dirs || {};
+  const repoUrl = raw.repoUrl || null;
+  const commits = raw.commits || {};
   const byId: Record<string, ConceptNode> = Object.fromEntries(nodes.map((n) => [n.id, n]));
   const indexOf = new Map(nodes.map((n, i) => [n.id, i]));
   const edges = raw.edges.filter((e) => byId[e.s] && byId[e.t]);
@@ -102,7 +110,7 @@ export function buildModel(raw: RawData): VizModel {
 
   const radii = nodes.map((n) => (3.5 + Math.min(6.5, (deg[n.id] || 0) * 0.8)) * 0.42);
 
-  return { nodes, files, dirs, byId, indexOf, edges, edgeIdx, deg, inLinks, typeCounts, allTypes, radii };
+  return { nodes, files, dirs, repoUrl, commits, byId, indexOf, edges, edgeIdx, deg, inLinks, typeCounts, allTypes, radii };
 }
 
 export function loadFromDom(): VizModel {
