@@ -124,6 +124,76 @@ describe("filtering", () => {
     expect(s.visibleSorted).toHaveLength(3);
   });
 
+  test("toggleGroup/soloGroup act across every type in the group, leaving other groups untouched", () => {
+    const groupModel = () =>
+      buildModel({
+        nodes: [
+          node("decisions/x", "Decision", "X"),
+          node("patterns/y", "Pattern", "Y"),
+          node("modules/z", "Darwin Module", "Z"),
+        ],
+        edges: [],
+      });
+    const s = createVizState(groupModel());
+    s.toggleGroup("Knowledge"); // Decision + Pattern
+    expect(s.visibleSorted.map((n) => n.id)).toEqual(["modules/z"]);
+    s.toggleGroup("Knowledge");
+    expect(s.visibleSorted).toHaveLength(3);
+
+    s.soloGroup("Knowledge"); // hides every other group's types (System here)
+    expect(s.visibleSorted.map((n) => n.id).sort()).toEqual(["decisions/x", "patterns/y"]);
+    s.soloGroup("Knowledge"); // solo again restores all
+    expect(s.visibleSorted).toHaveLength(3);
+  });
+
+  test("toggleGroup escalates a partially-hidden group to fully hidden, never un-hides", () => {
+    const groupModel = () =>
+      buildModel({
+        nodes: [
+          node("decisions/x", "Decision", "X"),
+          node("patterns/y", "Pattern", "Y"),
+          node("modules/z", "Darwin Module", "Z"),
+        ],
+        edges: [],
+      });
+    const s = createVizState(groupModel());
+    s.toggleType("Decision"); // mixed state: Decision hidden, Pattern visible, both in Knowledge
+    s.toggleGroup("Knowledge");
+    expect(s.hidden.has("Decision")).toBe(true); // stays hidden
+    expect(s.hidden.has("Pattern")).toBe(true); // escalates to fully hidden, not un-hidden
+  });
+
+  test("soloGroup hides every other group when 3+ groups are present", () => {
+    const threeGroupModel = () =>
+      buildModel({
+        nodes: [
+          node("decisions/x", "Decision", "X"),
+          node("modules/z", "Darwin Module", "Z"),
+          node("packages/p", "Nix Package", "P"),
+        ],
+        edges: [],
+      });
+    const s = createVizState(threeGroupModel());
+    s.soloGroup("Knowledge");
+    expect(s.hidden.has("Darwin Module")).toBe(true);
+    expect(s.hidden.has("Nix Package")).toBe(true);
+    expect(s.hidden.has("Decision")).toBe(false);
+    s.soloGroup("Knowledge"); // restore
+    expect(s.hidden.size).toBe(0);
+  });
+
+  test("toggleGroup on an absent group name is a no-op", () => {
+    const s = createVizState(model());
+    s.toggleGroup("NoSuchGroup");
+    expect(s.hidden.size).toBe(0);
+  });
+
+  test("soloGroup on an absent group name hides everything (soloing an empty set shows nothing)", () => {
+    const s = createVizState(model());
+    s.soloGroup("NoSuchGroup");
+    expect(s.visibleSorted).toHaveLength(0);
+  });
+
   test("hiddenMatchCount counts search hits suppressed by type toggles", () => {
     const s = createVizState(model());
     expect(s.hiddenMatchCount).toBe(0);

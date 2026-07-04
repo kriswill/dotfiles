@@ -66,6 +66,14 @@ export function createVizState(model: VizModel) {
     paletteVersion++;
   };
 
+  /** Isolate a set of types; solo the same set again to restore all. */
+  const soloTypes = (types: string[]) => {
+    const want = new Set(types);
+    const alone = model.allTypes.every((u) => (want.has(u) ? !hidden.has(u) : hidden.has(u)));
+    hidden.clear();
+    if (!alone) for (const u of model.allTypes) if (!want.has(u)) hidden.add(u);
+  };
+
   const visible = (n: ConceptNode) => !hidden.has(n.type) && (!match || match(n));
   const visibleSorted = $derived(model.nodes.filter(visible).sort((a, b) => a.title.localeCompare(b.title)));
   // Search hits suppressed by type toggles, surfaced in the list so a hidden
@@ -132,11 +140,16 @@ export function createVizState(model: VizModel) {
     hideAllTypes() {
       for (const t of model.allTypes) hidden.add(t);
     },
-    /** Isolate one type; solo it again to restore all. */
     soloType(t: string) {
-      const alone = !hidden.has(t) && hidden.size === model.allTypes.length - 1;
-      hidden.clear();
-      if (!alone) for (const u of model.allTypes) u !== t && hidden.add(u);
+      soloTypes([t]);
+    },
+    toggleGroup(g: string) {
+      const types = model.groupTypes[g] ?? [];
+      const allHidden = types.length > 0 && types.every((t) => hidden.has(t));
+      for (const t of types) allHidden ? hidden.delete(t) : hidden.add(t);
+    },
+    soloGroup(g: string) {
+      soloTypes(model.groupTypes[g] ?? []);
     },
     /** Replace the whole filter state (hash navigation). */
     setFilters(hiddenTypes: string[], q: string) {

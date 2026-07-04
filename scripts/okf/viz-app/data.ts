@@ -58,6 +58,12 @@ export interface VizModel {
   inLinks: Record<string, string[]>;
   typeCounts: Record<string, number>;
   allTypes: string[];
+  /** Legend cluster per type, derived from each type's concepts' top-level bundle directory. */
+  typeGroup: Record<string, string>;
+  /** Types per legend cluster, in allTypes order. */
+  groupTypes: Record<string, string[]>;
+  /** GROUP_ORDER filtered to present clusters, "Other" appended only if non-empty. */
+  groupOrder: string[];
   /** Scene sphere radius per node (same order as nodes). */
   radii: number[];
 }
@@ -79,6 +85,29 @@ export const TYPE_ORDER = [
   "Overlay",
   "Reference",
 ];
+
+// A concept's id is its bundle-relative path minus ".md" (viz.ts) — the
+// top-level path segment is already a stable, zero-maintenance topology
+// signal. Root docs (no '/') group as ".".
+export function dirOf(id: string): string {
+  return id.includes("/") ? id.split("/")[0]! : ".";
+}
+
+// Static, append-only map from a top-level bundle directory to its legend
+// cluster. A directory not listed here buckets into "Other" (buildModel)
+// instead of crashing — a safety net for a future top-level directory.
+export const GROUP_OF_DIR: Record<string, string> = {
+  decisions: "Knowledge",
+  patterns: "Knowledge",
+  playbooks: "Knowledge",
+  ".": "Knowledge",
+  modules: "System",
+  hosts: "System",
+  packages: "Packages",
+  nvim: "Neovim",
+};
+
+export const GROUP_ORDER = ["Knowledge", "System", "Packages", "Neovim"];
 
 export function buildModel(raw: RawData): VizModel {
   const nodes = raw.nodes;
@@ -108,9 +137,36 @@ export function buildModel(raw: RawData): VizModel {
       .sort(),
   ];
 
+  // The profile keeps every type inside one top-level directory, so this is
+  // normally unambiguous; if that's ever violated, the first concept of a
+  // type fixes its group (deterministic, not "last write wins").
+  const typeGroup: Record<string, string> = {};
+  for (const n of nodes) typeGroup[n.type] ??= GROUP_OF_DIR[dirOf(n.id)] ?? "Other";
+  const groupTypes: Record<string, string[]> = {};
+  for (const t of allTypes) (groupTypes[typeGroup[t]!] ??= []).push(t);
+  const groupOrder = [...GROUP_ORDER.filter((g) => groupTypes[g]), ...(groupTypes["Other"] ? ["Other"] : [])];
+
   const radii = nodes.map((n) => (3.5 + Math.min(6.5, (deg[n.id] || 0) * 0.8)) * 0.42);
 
-  return { nodes, files, dirs, repoUrl, commits, byId, indexOf, edges, edgeIdx, deg, inLinks, typeCounts, allTypes, radii };
+  return {
+    nodes,
+    files,
+    dirs,
+    repoUrl,
+    commits,
+    byId,
+    indexOf,
+    edges,
+    edgeIdx,
+    deg,
+    inLinks,
+    typeCounts,
+    allTypes,
+    typeGroup,
+    groupTypes,
+    groupOrder,
+    radii,
+  };
 }
 
 export function loadFromDom(): VizModel {
