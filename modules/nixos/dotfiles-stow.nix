@@ -34,6 +34,22 @@
         skipReason = "darwin-only";
         runAsUser = "${pkgs.util-linux}/bin/runuser -u ${user} -- env HOME=${home}";
       };
+      # Restow churn (self-heal rm + recreate) kills Hyprland's inotify watch on
+      # the deleted link, so it never sees the file return and shows a stale
+      # "cannot open" error banner. Reload any running instance to clear it.
+      hyprReload = ''
+        (
+        for sock in /run/user/*/hypr/*/.socket.sock; do
+          [ -S "$sock" ] || continue
+          rundir="''${sock%/hypr/*}"
+          sig="''${sock%/.socket.sock}"; sig="''${sig##*/}"
+          if XDG_RUNTIME_DIR="$rundir" HYPRLAND_INSTANCE_SIGNATURE="$sig" \
+               ${pkgs.hyprland}/bin/hyprctl reload >/dev/null 2>&1; then
+            echo "stow: reloaded hyprland ($sig)" >&2
+          fi
+        done
+        )
+      '';
     in
     {
       environment.systemPackages = [
@@ -43,7 +59,7 @@
 
       system.activationScripts.stowDotfiles = {
         deps = [ "users" ]; # run after user k exists
-        text = stowScript;
+        text = stowScript + hyprReload;
       };
     };
 }
