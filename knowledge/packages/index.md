@@ -13,6 +13,7 @@ flake consumes via relative-path inputs.
 * [Dots Adopt](dots-adopt.md) - Custom Nix package 'dots-adopt'.
 * [Flatpak User](flatpak-user.md) - A drop-in `flatpak` that defaults the CLI to the per-user installation.
 * [Gh Config](gh-config.md) - Snapshot/restore gh's config.yml between ~/.config/gh (app-owned) and config/gh/ — gh's atomic-rename saves break stow symlinks, so it left the stow tree for the snapshot pattern.
+* [gh-op](gh-op.md) - Linux-only gh wrapper sourcing GH_TOKEN from 1Password at runtime, so ~/.config/gh/hosts.yml holds no plain-text token on nebula's unencrypted disk.
 * [Helium Config](helium-config.md) - Custom Nix package 'helium-config'.
 * [Iv](iv.md) - A command-line image viewer using terminal graphics.
 * [Kitten](kitten.md) - Kitten - A collection of small, useful programs for the kitty terminal.

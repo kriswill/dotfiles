@@ -2,6 +2,14 @@
 
 ## 2026-07-03
 
+- **Creation** — [gh-op](packages/gh-op.md) overlay: on Linux, gh is wrapped
+  to source `GH_TOKEN` from 1Password at runtime (`op read` of the "GitHub gh
+  CLI token" item), and the plain-text oauth token was removed from
+  `~/.config/gh/hosts.yml` (`gh auth logout`) — no gh secret at rest on
+  nebula's unencrypted disk. One wrapper covers both the CLI and git's
+  `!gh auth git-credential` helper; darwin passes through untouched. `op` is
+  called by bare name so it resolves to the NixOS setgid wrapper.
+
 - **Update** — [nebula](hosts/nebula.md) gained a "Firmware quirks" section:
   the warm-reboot DRAM-training hang (debug code 44 + yellow DRAM LED on BIOS
   2.A02; userspace shutdown was clean, the firmware stalled re-training DDR5 —
