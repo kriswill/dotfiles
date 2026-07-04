@@ -105,7 +105,7 @@ const basename = (id: string) => id.split("/").pop() ?? id;
  * Package-name -> facet value for the OS-guarded packages in a facet's
  * configured nix-packages file. Each `lib.optionalAttrs (<pred>) { <attrs> }`
  * block is classified by the first `guards` key found in its predicate text
- * (e.g. {darwin: "darwin", linux: "nixos"}); everything outside a matched
+ * (e.g. {darwin: "macos", linux: "linux"}); everything outside a matched
  * block is universal (absent from the map -> falls through to the facet's
  * next resolution stage). Brace-depth scan, not a lazy regex: an attr RHS
  * like `inputs.x.packages.${system}.x` contains a `}` that would truncate a

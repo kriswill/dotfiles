@@ -52,19 +52,19 @@ packages = "Packages"
 nvim = "Neovim"
 
 [facet.platform] # 0..n [facet.<name>] filter lenses; file order = sidebar control order
-values = ["darwin", "nixos"] # segments after "all"; section absent -> no lens at all
+values = ["macos", "linux"] # segments after "all"; section absent -> no lens at all
 
 [facet.platform.types] # concept type -> value; unlisted types are unaffected (always visible)
-"Darwin Module" = "darwin"
-"NixOS Module" = "nixos"
-"Host" = "darwin" # default for Host concepts not overridden below
+"Darwin Module" = "macos"
+"NixOS Module" = "linux"
+"Host" = "macos" # default for Host concepts not overridden below
 
 [facet.platform.ids] # per-concept overrides (full concept id) — highest precedence
-"hosts/nebula" = "nixos"
+"hosts/nebula" = "linux"
 
 [facet.platform.nix-packages] # opt-in build-side source: optionalAttrs guard parse
 file = "modules/packages.nix" # Nix file whose optionalAttrs OS guards classify packages
-guards = { darwin = "darwin", linux = "nixos" } # optionalAttrs predicate substring -> value
+guards = { darwin = "macos", linux = "linux" } # optionalAttrs predicate substring -> value
 types = ["Nix Package", "Sub-flake", "Overlay"] # types that consult the map (by basename); a miss falls through unresolved
 
 # [repo]

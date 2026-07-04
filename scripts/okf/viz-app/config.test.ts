@@ -20,12 +20,12 @@ const rawCfg = () => ({
   },
   facet: {
     platform: {
-      values: ["darwin", "nixos"],
-      types: { "Darwin Module": "darwin", "NixOS Module": "nixos", Host: "darwin" } as Record<string, string>,
-      ids: { "hosts/nebula": "nixos" } as Record<string, string>,
+      values: ["macos", "linux"],
+      types: { "Darwin Module": "macos", "NixOS Module": "linux", Host: "macos" } as Record<string, string>,
+      ids: { "hosts/nebula": "linux" } as Record<string, string>,
       "nix-packages": {
         file: "modules/packages.nix",
-        guards: { darwin: "darwin", linux: "nixos" } as Record<string, string>,
+        guards: { darwin: "macos", linux: "linux" } as Record<string, string>,
         types: ["Nix Package"],
       },
     },
@@ -61,11 +61,11 @@ describe("normalizeVizConfig", () => {
     expect(c.facets).toHaveLength(2);
     expect(c.facets[0]).toEqual({
       name: "platform",
-      values: ["darwin", "nixos"],
-      types: { "Darwin Module": "darwin", "NixOS Module": "nixos", Host: "darwin" },
-      ids: { "hosts/nebula": "nixos" },
+      values: ["macos", "linux"],
+      types: { "Darwin Module": "macos", "NixOS Module": "linux", Host: "macos" },
+      ids: { "hosts/nebula": "linux" },
       frontmatter: null,
-      nixPackages: { file: "modules/packages.nix", guards: { darwin: "darwin", linux: "nixos" }, types: ["Nix Package"] },
+      nixPackages: { file: "modules/packages.nix", guards: { darwin: "macos", linux: "linux" }, types: ["Nix Package"] },
     });
     expect(c.facets[1]).toEqual({
       name: "status",
@@ -105,24 +105,24 @@ describe("normalizeVizConfig", () => {
 
   test('"both" is now a legal ordinary facet value — no reserved rule sentinels', () => {
     const c = normalizeVizConfig(
-      { facet: { platform: { values: ["both", "darwin"], types: { "Dual Module": "both" } } } },
+      { facet: { platform: { values: ["both", "macos"], types: { "Dual Module": "both" } } } },
       { strict: true },
     );
-    expect(c.facets[0]!.values).toEqual(["both", "darwin"]);
+    expect(c.facets[0]!.values).toEqual(["both", "macos"]);
     expect(c.facets[0]!.types).toEqual({ "Dual Module": "both" });
   });
 
   test('strict: reserved facet value "all" rejected', () => {
-    expect(() => normalizeVizConfig({ facet: { platform: { values: ["darwin", "all"] } } }, { strict: true })).toThrow(
+    expect(() => normalizeVizConfig({ facet: { platform: { values: ["macos", "all"] } } }, { strict: true })).toThrow(
       /"all" is reserved/,
     );
   });
 
   test("strict: facet.values duplicates/empty rejected", () => {
     expect(() =>
-      normalizeVizConfig({ facet: { platform: { values: ["darwin", "darwin"] } } }, { strict: true }),
+      normalizeVizConfig({ facet: { platform: { values: ["macos", "macos"] } } }, { strict: true }),
     ).toThrow(/facet\.platform\.values: duplicate/);
-    expect(() => normalizeVizConfig({ facet: { platform: { values: ["darwin", ""] } } }, { strict: true })).toThrow(
+    expect(() => normalizeVizConfig({ facet: { platform: { values: ["macos", ""] } } }, { strict: true })).toThrow(
       /facet\.platform\.values: empty string/,
     );
   });
@@ -157,7 +157,7 @@ describe("normalizeVizConfig", () => {
     const base = () => ({
       facet: {
         platform: {
-          values: ["darwin", "nixos"],
+          values: ["macos", "linux"],
           types: {} as Record<string, string>,
           ids: {} as Record<string, string>,
           "nix-packages": { file: "modules/packages.nix", guards: {} as Record<string, string>, types: ["Nix Package"] },
@@ -177,17 +177,17 @@ describe("normalizeVizConfig", () => {
 
   test("strict: nix-packages requires file/guards/types", () => {
     expect(() =>
-      normalizeVizConfig({ facet: { platform: { values: ["darwin"], "nix-packages": {} } } }, { strict: true }),
+      normalizeVizConfig({ facet: { platform: { values: ["macos"], "nix-packages": {} } } }, { strict: true }),
     ).toThrow(/nix-packages\.file: required/);
     expect(() =>
       normalizeVizConfig(
-        { facet: { platform: { values: ["darwin"], "nix-packages": { file: "x.nix" } } } },
+        { facet: { platform: { values: ["macos"], "nix-packages": { file: "x.nix" } } } },
         { strict: true },
       ),
     ).toThrow(/nix-packages\.guards: required/);
     expect(() =>
       normalizeVizConfig(
-        { facet: { platform: { values: ["darwin"], "nix-packages": { file: "x.nix", guards: { a: "darwin" } } } } },
+        { facet: { platform: { values: ["macos"], "nix-packages": { file: "x.nix", guards: { a: "macos" } } } } },
         { strict: true },
       ),
     ).toThrow(/nix-packages\.types: required/);
@@ -199,8 +199,8 @@ describe("normalizeVizConfig", () => {
         {
           facet: {
             platform: {
-              values: ["darwin"],
-              "nix-packages": { file: "/etc/passwd", guards: { a: "darwin" }, types: ["X"] },
+              values: ["macos"],
+              "nix-packages": { file: "/etc/passwd", guards: { a: "macos" }, types: ["X"] },
             },
           },
         },
@@ -212,7 +212,7 @@ describe("normalizeVizConfig", () => {
   test("strict: a rule-less facet with values warns (no-op lens)", () => {
     const warnings: string[] = [];
     normalizeVizConfig(
-      { facet: { platform: { values: ["darwin", "nixos"] } } },
+      { facet: { platform: { values: ["macos", "linux"] } } },
       { strict: true, warn: (m) => warnings.push(m) },
     );
     expect(warnings.join()).toContain("no resolution rule");

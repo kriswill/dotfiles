@@ -101,9 +101,9 @@ describe("App filter persistence", () => {
     viz.setIsolate(1);
     flushSync();
     expect(location.hash).toBe("#c/nvim/architecture?hide=Reference&q=arch&isolate=1");
-    viz.setFacet("platform", "darwin");
+    viz.setFacet("platform", "macos");
     flushSync();
-    expect(location.hash).toBe("#c/nvim/architecture?hide=Reference&q=arch&isolate=1&platform=darwin");
+    expect(location.hash).toBe("#c/nvim/architecture?hide=Reference&q=arch&isolate=1&platform=macos");
     viz.setFilters([], "");
     flushSync();
     expect(location.hash).toBe("#c/nvim/architecture");
@@ -140,24 +140,24 @@ describe("App filter persistence", () => {
   });
 
   test("a canonical ?platform= deep link applies the facet lens on mount (any selection kind)", () => {
-    location.hash = "#c/nvim/architecture?platform=nixos";
+    location.hash = "#c/nvim/architecture?platform=linux";
     const viz = createVizState(model());
     mountApp(viz);
     expect(viz.sel).toEqual({ kind: "concept", id: "nvim/architecture" });
-    expect(viz.facetSel.platform).toBe("nixos");
-    expect(location.hash).toBe("#c/nvim/architecture?platform=nixos"); // applied, never rewritten
+    expect(viz.facetSel.platform).toBe("linux");
+    expect(location.hash).toBe("#c/nvim/architecture?platform=linux"); // applied, never rewritten
   });
 
   test("legacy ?os= deep link: applies the lens, hash is NOT rewritten on load, next interaction re-encodes as platform=", () => {
-    location.hash = "#c/nvim/architecture?os=nixos";
+    location.hash = "#c/nvim/architecture?os=linux";
     const viz = createVizState(model());
     mountApp(viz);
     expect(viz.sel).toEqual({ kind: "concept", id: "nvim/architecture" });
-    expect(viz.facetSel.platform).toBe("nixos");
-    expect(location.hash).toBe("#c/nvim/architecture?os=nixos"); // applied, never rewritten on load
-    viz.setFacet("platform", "darwin"); // any subsequent interaction re-encodes canonically
+    expect(viz.facetSel.platform).toBe("linux");
+    expect(location.hash).toBe("#c/nvim/architecture?os=linux"); // applied, never rewritten on load
+    viz.setFacet("platform", "macos"); // any subsequent interaction re-encodes canonically
     flushSync();
-    expect(location.hash).toBe("#c/nvim/architecture?platform=darwin");
+    expect(location.hash).toBe("#c/nvim/architecture?platform=macos");
   });
 
   test("a platform-only change amends the URL in place (replaceState, no selection churn)", () => {
@@ -168,9 +168,9 @@ describe("App filter persistence", () => {
     // Spy AFTER the selection settles so we observe only the filter-only write.
     const replace = spyOn(history, "replaceState");
     const push = spyOn(history, "pushState");
-    viz.setFacet("platform", "darwin");
+    viz.setFacet("platform", "macos");
     flushSync();
-    expect(location.hash).toBe("#c/nvim/architecture?platform=darwin");
+    expect(location.hash).toBe("#c/nvim/architecture?platform=macos");
     // The load-bearing guarantee: a filter-only change amends the current entry
     // (replaceState) rather than pushing a new one (the documented Back trap).
     expect(replace).toHaveBeenCalledTimes(1);

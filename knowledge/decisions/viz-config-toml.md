@@ -112,3 +112,12 @@ prefix, theme stop names, and the `/commit/` outbound-URL shape.
   script-relative (two levels up), and scaffold/index/validate still use the
   hardcoded `bundleRoot()`; both stay in-repo assumptions until a second
   consumer exists.
+
+## Addendum (2026-07-04)
+
+The `platform` facet's **values** were renamed `darwin`/`nixos` →
+`macos`/`linux` for canonical platform naming (log entry same date). The
+`darwin`/`nixos` strings in this record's Context/Decision prose above are
+historical — they describe the mechanism, not the current segment labels.
+Guard **keys** (`darwin`/`linux`, matched against `modules/packages.nix`
+predicates) are unaffected by that rename.
