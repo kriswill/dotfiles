@@ -2,6 +2,31 @@
 
 ## 2026-07-03
 
+- **Update** — viz filter UX, phase C (platform axis), on top of phases A/B.
+  A segmented `all | darwin | nixos` control below the legend filters the
+  graph by which OS a concept applies to; `darwin` shows darwin + dual +
+  neutral concepts (hiding nixos-only), `nixos` the mirror, `all` everything —
+  composed via AND with the type/search/neighborhood filters, riding the URL
+  as `?os=darwin|nixos`. The platform of each concept is **derived from repo
+  structure**, not hand-authored: modules by `type` (Darwin/NixOS/Dual/
+  Flake-parts), hosts by host-id (nebula = nixos, rest = darwin), nvim = both,
+  knowledge = neutral, and packages by parsing the darwin/linux
+  `lib.optionalAttrs` guards in `modules/packages.nix` (a brace-depth,
+  depth-aware scan baked into the graph at build time by `viz.ts`). Known
+  limitation: `noctalia-config`/`helium-config` build unconditionally
+  (file-copy scripts) so they classify `both` despite being Linux-desktop
+  tools — the direct consequence of deriving from build structure. Verified
+  and reviewed through a multi-agent workflow (svelte-check + a headless-Chrome
+  drive incl. a 3D-scene-dim probe, in parallel with a 3-dimension adversarial
+  review); the review found no correctness bugs — the four confirmed
+  low-severity findings (a stale hash header comment, an unexercised parser
+  edge, a not-quite-pinned replaceState test, and `.seg`/`.hint` CSS
+  duplicated across the two segmented controls) were all fixed: the parser is
+  now depth-aware against nested `callPackage` args, and the shared control
+  primitives were hoisted into the global stylesheet. Still deferred: a
+  `platform:` frontmatter field, knowledge-doc platform lean, and a
+  platform-suppressed-matches note.
+
 - **Update** — viz filter UX, phase B (grouped legend + neighborhood
   isolation), on top of phase A. The 14-type legend clusters into 4 groups
   (Knowledge/System/Packages/Neovim) derived from each concept's bundle

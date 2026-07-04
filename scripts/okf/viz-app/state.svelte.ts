@@ -30,6 +30,7 @@ export function createVizState(model: VizModel) {
   const hidden = new SvelteSet<string>();
   let query = $state("");
   let isolateDepth = $state<0 | 1 | 2>(0);
+  let platform = $state<"all" | "darwin" | "nixos">("all");
   let hover = $state<Hover | null>(null);
   let panelW = $state(typeof localStorage === "undefined" ? 0 : +(localStorage.getItem(PANEL_KEY) || 0));
   let dark = $state(typeof matchMedia === "undefined" ? false : matchMedia("(prefers-color-scheme: dark)").matches);
@@ -75,8 +76,13 @@ export function createVizState(model: VizModel) {
     if (!alone) for (const u of model.allTypes) if (!want.has(u)) hidden.add(u);
   };
 
+  const platformOk = (n: ConceptNode) => {
+    if (platform === "all") return true;
+    const p = model.platformById[n.id];
+    return p === "both" || p === "neutral" || p === platform;
+  };
   const visible = (n: ConceptNode) =>
-    !hidden.has(n.type) && (!match || match(n)) && (!neighborIds || neighborIds.has(n.id));
+    !hidden.has(n.type) && (!match || match(n)) && (!neighborIds || neighborIds.has(n.id)) && platformOk(n);
   const visibleSorted = $derived(model.nodes.filter(visible).sort((a, b) => a.title.localeCompare(b.title)));
   // Search hits suppressed by type toggles, surfaced in the list so a hidden
   // type never silently swallows a match.
@@ -161,12 +167,13 @@ export function createVizState(model: VizModel) {
       soloTypes(model.groupTypes[g] ?? []);
     },
     /** Replace the whole filter state (hash navigation). */
-    setFilters(hiddenTypes: string[], q: string, isolate: 0 | 1 | 2 = 0) {
+    setFilters(hiddenTypes: string[], q: string, isolate: 0 | 1 | 2 = 0, plat: "all" | "darwin" | "nixos" = "all") {
       const want = new Set(hiddenTypes);
       for (const t of [...hidden]) if (!want.has(t)) hidden.delete(t);
       for (const t of want) hidden.add(t);
       query = q;
       isolateDepth = isolate;
+      platform = plat;
     },
     get hiddenMatchCount() {
       return hiddenMatchCount;
@@ -180,6 +187,13 @@ export function createVizState(model: VizModel) {
     },
     get neighborIds() {
       return neighborIds;
+    },
+
+    get platform() {
+      return platform;
+    },
+    setPlatform(p: "all" | "darwin" | "nixos") {
+      platform = p === "darwin" || p === "nixos" ? p : "all";
     },
 
     get query() {

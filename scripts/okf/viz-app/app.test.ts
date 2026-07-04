@@ -2,7 +2,7 @@
 // decodeHash raw (decoded exactly once), and malformed hashes must not throw
 // during mount — pre-decoding in App used to crash component setup whenever a
 // once-decoded hash still contained a literal '%'.
-import { afterEach, describe, expect, test } from "bun:test";
+import { afterEach, describe, expect, spyOn, test } from "bun:test";
 import { flushSync, mount, unmount } from "svelte";
 import App from "./App.svelte";
 import { buildModel } from "./data";
@@ -100,6 +100,9 @@ describe("App filter persistence", () => {
     viz.setIsolate(1);
     flushSync();
     expect(location.hash).toBe("#c/nvim/architecture?hide=Reference&q=arch&isolate=1");
+    viz.setPlatform("darwin");
+    flushSync();
+    expect(location.hash).toBe("#c/nvim/architecture?hide=Reference&q=arch&isolate=1&os=darwin");
     viz.setFilters([], "");
     flushSync();
     expect(location.hash).toBe("#c/nvim/architecture");
@@ -133,6 +136,37 @@ describe("App filter persistence", () => {
     expect(viz.query).toBe("arch");
     expect(viz.isolateDepth).toBe(0);
     expect(location.hash).toBe("#f/docs/50%25.md?hide=Reference&q=arch"); // applied, never rewritten
+  });
+
+  test("a deep link with os= applies the platform lens on mount (any selection kind)", () => {
+    location.hash = "#c/nvim/architecture?os=nixos";
+    const viz = createVizState(model());
+    mountApp(viz);
+    expect(viz.sel).toEqual({ kind: "concept", id: "nvim/architecture" });
+    expect(viz.platform).toBe("nixos");
+    expect(location.hash).toBe("#c/nvim/architecture?os=nixos"); // applied, never rewritten
+  });
+
+  test("a platform-only change amends the URL in place (replaceState, no selection churn)", () => {
+    const viz = createVizState(model());
+    mountApp(viz);
+    viz.selectConcept("nvim/architecture");
+    flushSync();
+    // Spy AFTER the selection settles so we observe only the filter-only write.
+    const replace = spyOn(history, "replaceState");
+    const push = spyOn(history, "pushState");
+    viz.setPlatform("darwin");
+    flushSync();
+    expect(location.hash).toBe("#c/nvim/architecture?os=darwin");
+    // The load-bearing guarantee: a filter-only change amends the current entry
+    // (replaceState) rather than pushing a new one (the documented Back trap).
+    expect(replace).toHaveBeenCalledTimes(1);
+    expect(push).not.toHaveBeenCalled();
+    replace.mockRestore();
+    push.mockRestore();
+    viz.setPlatform("all");
+    flushSync();
+    expect(location.hash).toBe("#c/nvim/architecture");
   });
 
   test("selection navigation keeps active filters; Back to a bare hash clears them", () => {

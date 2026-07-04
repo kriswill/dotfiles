@@ -2,6 +2,7 @@
   import ConceptList from "./ConceptList.svelte";
   import IsolateControl from "./IsolateControl.svelte";
   import Legend from "./Legend.svelte";
+  import PlatformControl from "./PlatformControl.svelte";
   import Search from "./Search.svelte";
   import type { VizState } from "./state.svelte";
   import ThemeSlider from "./ThemeSlider.svelte";
@@ -13,7 +14,7 @@
   <div class="scroll">
     <h1>knowledge/ bundle</h1>
     <div class="sub" id="counts">
-      {#if viz.hidden.size > 0 || viz.query.trim() || viz.neighborIds}
+      {#if viz.hidden.size > 0 || viz.query.trim() || viz.neighborIds || viz.platform !== "all"}
         {viz.visibleSorted.length} of {viz.model.nodes.length} concepts · {viz.model.edges.length} links
       {:else}
         {viz.model.nodes.length} concepts · {viz.model.edges.length} links
@@ -21,6 +22,7 @@
     </div>
     <Search {viz} />
     <Legend {viz} />
+    <PlatformControl {viz} />
     <IsolateControl {viz} />
     <ConceptList {viz} />
   </div>
