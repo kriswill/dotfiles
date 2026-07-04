@@ -398,24 +398,46 @@ describe("Tooltip", () => {
   });
 });
 
-describe("ThemeSlider", () => {
-  test("slider drives viz.setTheme and shows the stop name", async () => {
-    const { default: ThemeSlider } = await import("./ThemeSlider.svelte");
+describe("ThemeToggle", () => {
+  const stage = () => {
+    const el = document.createElement("main");
+    document.body.appendChild(el);
+    return el;
+  };
+
+  test("button toggles viz.themeIndex and swaps icon/label", async () => {
+    const { default: ThemeToggle } = await import("./ThemeToggle.svelte");
     localStorage.removeItem("okfVizTheme"); // isolate from other suites
     document.documentElement.removeAttribute("style");
     const state = createVizState(model());
-    mountC(ThemeSlider, { viz: state });
-    const input = document.getElementById("theme-slider") as HTMLInputElement;
-    expect(input.value).toBe("0");
-    expect(input.max).toBe("3");
-    expect(document.querySelector(".theme-bar .name")!.textContent).toBe("light");
-    input.value = "2";
-    input.dispatchEvent(new Event("input", { bubbles: true }));
+    mountC(ThemeToggle, { viz: state, stageEl: stage() });
+    const btn = document.getElementById("theme-toggle") as HTMLButtonElement;
+    expect(btn.textContent).toBe("☾");
+    expect(btn.getAttribute("aria-label")).toBe("Switch to dark theme");
+    expect(btn.style.right).toBe("16px"); // no panel open
+    btn.click();
     flushSync();
-    expect(state.themeIndex).toBe(2);
-    expect(document.querySelector(".theme-bar .name")!.textContent).toBe("dark");
+    expect(state.themeIndex).toBe(1);
+    expect(btn.textContent).toBe("☀");
+    expect(btn.getAttribute("aria-label")).toBe("Switch to light theme");
     localStorage.removeItem("okfVizTheme");
     document.documentElement.removeAttribute("style");
+  });
+
+  test("hugs the detail panel's left edge instead of the stage's while it's open", async () => {
+    const { default: ThemeToggle } = await import("./ThemeToggle.svelte");
+    const state = createVizState(model());
+    const el = stage();
+    Object.defineProperty(el, "clientWidth", { value: 1000, configurable: true });
+    mountC(ThemeToggle, { viz: state, stageEl: el });
+    const btn = document.getElementById("theme-toggle") as HTMLButtonElement;
+    expect(btn.style.right).toBe("16px");
+    state.selectConcept("a");
+    flushSync();
+    expect(btn.style.right).toBe("476px"); // default panel width (460) + 16
+    state.clearSelection();
+    flushSync();
+    expect(btn.style.right).toBe("16px");
   });
 });
 

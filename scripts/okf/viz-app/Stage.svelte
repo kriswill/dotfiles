@@ -2,6 +2,7 @@
   import DetailPanel from "./DetailPanel.svelte";
   import { GraphScene, type CreateScene, type SceneApi, type SceneNode } from "./scene";
   import type { VizState } from "./state.svelte";
+  import ThemeToggle from "./ThemeToggle.svelte";
   import Tooltip from "./Tooltip.svelte";
 
   interface Props {
@@ -96,6 +97,7 @@
 <main id="stage" bind:this={el} {@attach attach}>
   <Tooltip {viz} />
   <DetailPanel {viz} stageEl={el} {resizeSeq} />
+  <ThemeToggle {viz} stageEl={el} {resizeSeq} />
 </main>
 
 <style>

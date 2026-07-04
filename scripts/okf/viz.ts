@@ -351,11 +351,11 @@ const html = `<!doctype html>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${esc(displayName(cfg, repoNameFromUrl(repoUrl)))} — ${esc(cfg.display.title)}</title>
 <style>
-  /* Un-picked defaults: the "light" and "black" stops from viz-app/themes.ts,
+  /* Un-picked defaults: the "light" and "dark" stops from viz-app/themes.ts,
      inlined at build time so the pre-hydration paint can never drift. */
   :root { ${themeCss("light")} }
   @media (prefers-color-scheme: dark) {
-    :root { ${themeCss("black")} }
+    :root { ${themeCss("dark")} }
   }
   * { box-sizing: border-box; margin: 0; }
   a { color: var(--link); text-underline-offset: 2px;

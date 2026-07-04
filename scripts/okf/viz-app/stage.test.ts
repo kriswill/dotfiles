@@ -115,6 +115,20 @@ describe("Stage bridges", () => {
     expect((document.getElementById("panel") as HTMLElement).style.width).toBe("340px");
   });
 
+  test("theme toggle button hugs the panel's left edge when open", () => {
+    const { state } = mountStage();
+    const stage = document.getElementById("stage")!;
+    Object.defineProperty(stage, "clientWidth", { value: 1000, configurable: true });
+    const btn = document.getElementById("theme-toggle") as HTMLButtonElement;
+    expect(btn.style.right).toBe("16px");
+    state.selectConcept("a");
+    flushSync();
+    expect(btn.style.right).toBe("476px"); // default panel width (460) + 16
+    state.clearSelection();
+    flushSync();
+    expect(btn.style.right).toBe("16px");
+  });
+
   test("theme bridge reapplies on dark flip and repaint", () => {
     const { stub, state } = mountStage();
     const before = stub.calls.filter(([m]) => m === "applyTheme").length;

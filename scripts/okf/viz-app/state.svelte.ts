@@ -40,7 +40,7 @@ export function createVizState(model: VizModel) {
   let dark = $state(typeof matchMedia === "undefined" ? false : matchMedia("(prefers-color-scheme: dark)").matches);
   let paletteVersion = $state(0);
 
-  // Theme slider: an explicit pick is persisted and overrides the OS scheme
+  // Theme toggle: an explicit pick is persisted and overrides the OS scheme
   // (inline :root vars beat the media block); otherwise follow the scheme.
   const storedTheme = typeof localStorage === "undefined" ? null : localStorage.getItem(THEME_KEY);
   let themeIndex = $state(
@@ -293,7 +293,7 @@ export function createVizState(model: VizModel) {
       if (typeof localStorage !== "undefined") localStorage.setItem(THEME_KEY, String(i));
       repaintNow();
     },
-    /** OS scheme flip: move the slider only while the user hasn't picked. */
+    /** OS scheme flip: move the toggle only while the user hasn't picked. */
     systemSchemeChanged(isDark: boolean) {
       dark = isDark;
       if (typeof localStorage === "undefined" || localStorage.getItem(THEME_KEY) == null) {
