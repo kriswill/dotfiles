@@ -11,7 +11,7 @@ const model = () =>
       node("c", "Decision", "Gamma"),
     ],
     edges: [{ s: "a", t: "b" }],
-    files: { "scripts/okf/viz.ts": { html: "", lines: 1, size: 10, date: "", lang: "ts", refs: ["a"] } },
+    files: { "flakes/okf/viz.ts": { html: "", lines: 1, size: 10, date: "", lang: "ts", refs: ["a"] } },
     dirs: { "flakes/ccglass": { files: ["flakes/ccglass/flake.nix"], dirs: [], date: "2026-01-01", refs: ["a"] } },
   });
 
@@ -38,8 +38,8 @@ describe("selection", () => {
   test("file view keeps scene emphasis and back-link on last concept", () => {
     const s = createVizState(model());
     s.selectConcept("a");
-    s.selectFile("scripts/okf/viz.ts");
-    expect(s.sel).toEqual({ kind: "file", path: "scripts/okf/viz.ts" });
+    s.selectFile("flakes/okf/viz.ts");
+    expect(s.sel).toEqual({ kind: "file", path: "flakes/okf/viz.ts" });
     expect(s.selectedConcept).toBeNull();
     expect(s.backConcept?.id).toBe("a");
     expect(s.sceneSelectedIndex).toBe(0);
@@ -296,7 +296,7 @@ describe("neighborhood isolation", () => {
     s.selectConcept("a");
     s.setIsolate(1);
     expect(s.visibleSorted.map((n) => n.id).sort()).toEqual(["a", "b"]);
-    s.selectFile("scripts/okf/viz.ts");
+    s.selectFile("flakes/okf/viz.ts");
     expect(s.isolateDepth).toBe(1); // sticky: not reset by selectFile
     expect(s.neighborIds).toBeNull(); // but inactive: selectedConcept is null while a file view is open
     expect(s.visibleSorted).toHaveLength(3); // isolation stops restricting the list
@@ -361,7 +361,7 @@ describe("pinned concept listing", () => {
     const s = createVizState(model());
     s.selectConcept("a");
     s.setIsolate(1);
-    s.selectFile("scripts/okf/viz.ts");
+    s.selectFile("flakes/okf/viz.ts");
     expect(treeShape(s.listing.tree)).toEqual(["a", ["b"]]); // anchored on backConcept
     expect(s.listing.rest.map((n) => n.id)).toEqual(["c"]); // isolation suspended: rest reappears
   });
@@ -381,7 +381,7 @@ describe("focusedConcept", () => {
     expect(s.focusedConcept).toBeNull();
     s.selectConcept("a");
     expect(s.focusedConcept?.id).toBe("a");
-    s.selectFile("scripts/okf/viz.ts");
+    s.selectFile("flakes/okf/viz.ts");
     expect(s.focusedConcept?.id).toBe("a");
   });
 });

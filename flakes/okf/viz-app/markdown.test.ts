@@ -5,7 +5,7 @@ import { describe, expect, test } from "bun:test";
 import { createMd, esc } from "./markdown";
 
 const ctx = {
-  files: { "scripts/okf/viz.ts": {}, "modules/dev.nix": {}, "docs/svelt/manual.md": {} },
+  files: { "flakes/okf/viz.ts": {}, "modules/dev.nix": {}, "docs/svelt/manual.md": {} },
   byId: { "nvim/architecture": {}, "decisions/other": {} },
   dirs: { "flakes/ccglass": {} },
   repoUrl: "https://github.com/kriswill/dotfiles",
@@ -61,14 +61,14 @@ describe("inline rendering", () => {
       '<p><a href="#" data-node="nvim/architecture">arch</a></p>',
     );
     // Repo-file links resolve one level up from kb/<id>, not knowledge/<id>.
-    expect(kb.mdToHtml("[viz](../../scripts/okf/viz.ts)", from)).toBe(
-      '<p><a href="#" data-file="scripts/okf/viz.ts">viz</a></p>',
+    expect(kb.mdToHtml("[viz](../../flakes/okf/viz.ts)", from)).toBe(
+      '<p><a href="#" data-file="flakes/okf/viz.ts">viz</a></p>',
     );
   });
 
   test("repo-file link resolves to data-file", () => {
-    expect(md.mdToHtml("[viz](../../scripts/okf/viz.ts)", from)).toBe(
-      '<p><a href="#" data-file="scripts/okf/viz.ts">viz</a></p>',
+    expect(md.mdToHtml("[viz](../../flakes/okf/viz.ts)", from)).toBe(
+      '<p><a href="#" data-file="flakes/okf/viz.ts">viz</a></p>',
     );
   });
 
@@ -95,8 +95,8 @@ describe("inline rendering", () => {
 
 describe("bare path autolinking", () => {
   test("bare embedded path becomes a data-file link", () => {
-    expect(md.mdToHtml("see scripts/okf/viz.ts here", from)).toBe(
-      '<p>see <a href="#" data-file="scripts/okf/viz.ts">scripts/okf/viz.ts</a> here</p>',
+    expect(md.mdToHtml("see flakes/okf/viz.ts here", from)).toBe(
+      '<p>see <a href="#" data-file="flakes/okf/viz.ts">flakes/okf/viz.ts</a> here</p>',
     );
   });
 
@@ -105,8 +105,8 @@ describe("bare path autolinking", () => {
   });
 
   test("text inside an existing anchor is not re-linked", () => {
-    expect(md.mdToHtml("[scripts/okf/viz.ts](https://example.com)", from)).toBe(
-      '<p><a href="https://example.com" target="_blank" rel="noopener">scripts/okf/viz.ts</a></p>',
+    expect(md.mdToHtml("[flakes/okf/viz.ts](https://example.com)", from)).toBe(
+      '<p><a href="https://example.com" target="_blank" rel="noopener">flakes/okf/viz.ts</a></p>',
     );
   });
 });
@@ -134,8 +134,8 @@ describe("mdFileToHtml (embedded markdown files)", () => {
   });
 
   test("bare repo paths still autolink", () => {
-    expect(md.mdFileToHtml("see scripts/okf/viz.ts here", fromFile)).toBe(
-      '<p>see <a href="#" data-file="scripts/okf/viz.ts">scripts/okf/viz.ts</a> here</p>',
+    expect(md.mdFileToHtml("see flakes/okf/viz.ts here", fromFile)).toBe(
+      '<p>see <a href="#" data-file="flakes/okf/viz.ts">flakes/okf/viz.ts</a> here</p>',
     );
   });
 });

@@ -2,7 +2,7 @@
 
 Catalog of darwin and NixOS feature modules, flake-parts plumbing modules,
 and nebula's host-specific files. Stubs
-are scaffolded from source by `bun scripts/okf/okf.ts scaffold`; enrich the
+are scaffolded from source by `bun flakes/okf/okf.ts scaffold`; enrich the
 interesting ones by hand — scaffolding never overwrites an existing doc.
 
 ## Concepts

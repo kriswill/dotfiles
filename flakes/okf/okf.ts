@@ -1,5 +1,5 @@
 // CLI for the knowledge/ OKF bundle. Run `okf help` (dev shell) or
-// `bun scripts/okf/okf.ts help` for usage; conventions live in
+// `bun flakes/okf/okf.ts help` for usage; conventions live in
 // knowledge/okf-profile.md. The dev-shell wrapper (modules/dev.nix) sets
 // OKF_PROG so usage shows the name you actually typed.
 
@@ -47,7 +47,7 @@ const commands: Record<string, Cmd> = {
   },
 };
 
-const prog = process.env.OKF_PROG ?? "bun scripts/okf/okf.ts";
+const prog = process.env.OKF_PROG ?? "bun flakes/okf/okf.ts";
 
 function wrap(text: string, indent: number, width = 78): string {
   const words = text.split(" ");
