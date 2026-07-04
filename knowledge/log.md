@@ -1,5 +1,35 @@
 # Log
 
+## 2026-07-04
+
+- **Creation** — [viz-config-toml](decisions/viz-config-toml.md): every
+  repo-specific string and setting in the viz moved out of the code into an
+  optional repo-root `viz.toml` (exhaustive scope — display strings, the
+  darwin/nixos platform filter incl. the `modules/packages.nix` guard parse
+  and host list, the type/legend taxonomy, embed cap, bundle dir, output
+  name, repo-URL override) — the first step toward other projects consuming
+  the viewer for their own OKF bundles. One shared module
+  (`viz-app/config.ts`) normalizes strictly at build (`Bun.TOML.parse`,
+  unknown keys/dangling refs fail with their key path) and leniently in the
+  app off the `#data` blob; without viz.toml the viewer builds generic (no
+  platform control, alphabetical types with generated colors, flat legend,
+  "OKF bundle" header). `TYPE_ORDER`/`GROUP_OF_DIR`/`GROUP_ORDER`/
+  `NIXOS_HOSTS` deleted from `data.ts`; `markdown.ts` lost its hardcoded
+  `knowledge/` prefix + `slice(10)` offsets; pages CI now also triggers on
+  `viz.toml`. Verified by 202 bun tests (25 new incl. a config suite and
+  generic-mode coverage), `okf viz --check` clean, parity build with the
+  checked-in viz.toml, a generic build with it moved aside, and a headless-
+  Chrome `--perf` boot of the built page.
+
+- **Update** — viz header now says what the page is: the sidebar h1 reads
+  "`owner/repo` OKF viz" (derived in `buildModel` from the embedded GitHub
+  `repoUrl` via `repoNameFromUrl`; falls back to "knowledge/ OKF viz" without
+  an origin) with a small focusable (?) whose hover bubble explains the bundle
+  and links the OKF spec, and the document `<title>` matches
+  ("kriswill/dotfiles — OKF knowledge graph"). Verified by 177 bun tests
+  (3 new: repoName derivation + Sidebar header/fallback mounts) and
+  `okf viz --check`.
+
 ## 2026-07-03
 
 - **Update** — viz filter UX, phase D (pinned sidebar tree), on top of phases
