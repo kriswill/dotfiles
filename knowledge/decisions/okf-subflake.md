@@ -62,4 +62,4 @@ not just moved files:
 
 ## Citations
 
-- Commits: pending (this change)
+- Commit `4e0b5bc` — the move, sub-flake, root wiring, and reference sweep
