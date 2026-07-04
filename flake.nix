@@ -49,6 +49,10 @@
     };
 
     ### nixos
+    # Determinate Nix on nebula (replaces snowglobe-lib's Lix default; the Macs
+    # are already on Determinate, installer-managed). Deliberately NO nixpkgs
+    # follows: upstream recommends against it (FlakeHub cache misses).
+    determinate.url = "https://flakehub.com/f/DeterminateSystems/determinate/3";
     snowglobe-lib = {
       # Host builder (mkNixosHost), snowglobe-lib.profiles/desktop options.
       url = "git+https://codeberg.org/earthgman/snowglobe-lib?ref=unstable";
