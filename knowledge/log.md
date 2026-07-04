@@ -2,6 +2,70 @@
 
 ## 2026-07-03
 
+- **Update** — viz filter UX, phase C (platform axis), on top of phases A/B.
+  A segmented `all | darwin | nixos` control below the legend filters the
+  graph by which OS a concept applies to; `darwin` shows darwin + dual +
+  neutral concepts (hiding nixos-only), `nixos` the mirror, `all` everything —
+  composed via AND with the type/search/neighborhood filters, riding the URL
+  as `?os=darwin|nixos`. The platform of each concept is **derived from repo
+  structure**, not hand-authored: modules by `type` (Darwin/NixOS/Dual/
+  Flake-parts), hosts by host-id (nebula = nixos, rest = darwin), nvim = both,
+  knowledge = neutral, and packages by parsing the darwin/linux
+  `lib.optionalAttrs` guards in `modules/packages.nix` (a brace-depth,
+  depth-aware scan baked into the graph at build time by `viz.ts`). Known
+  limitation: `noctalia-config`/`helium-config` build unconditionally
+  (file-copy scripts) so they classify `both` despite being Linux-desktop
+  tools — the direct consequence of deriving from build structure. Verified
+  and reviewed through a multi-agent workflow (svelte-check + a headless-Chrome
+  drive incl. a 3D-scene-dim probe, in parallel with a 3-dimension adversarial
+  review); the review found no correctness bugs — the four confirmed
+  low-severity findings (a stale hash header comment, an unexercised parser
+  edge, a not-quite-pinned replaceState test, and `.seg`/`.hint` CSS
+  duplicated across the two segmented controls) were all fixed: the parser is
+  now depth-aware against nested `callPackage` args, and the shared control
+  primitives were hoisted into the global stylesheet. Still deferred: a
+  `platform:` frontmatter field, knowledge-doc platform lean, and a
+  platform-suppressed-matches note.
+
+- **Update** — viz filter UX, phase B (grouped legend + neighborhood
+  isolation), on top of phase A. The 14-type legend clusters into 4 groups
+  (Knowledge/System/Packages/Neovim) derived from each concept's bundle
+  directory (a new `dirOf`/`GROUP_OF_DIR` map, zero hand-authored per-type
+  taxonomy) — group headers get their own toggle-whole-cluster / alt-click-
+  solo-cluster, alongside the existing per-type controls. Selecting a
+  concept now shows a 1-hop/2-hop/off control that restricts the sidebar
+  (and the 3D scene's dimming) to its graph neighborhood, ANDed with the
+  type/search filters, sticky across concept-to-concept clicks but
+  suspended while a file/dir view is open; `?isolate=1|2` joins `hide=`/`q=`
+  in the URL. Implemented directly (the two commits are too interdependent
+  for parallel-agent authorship) but verified and reviewed through two
+  multi-agent workflow passes — one per commit, each running svelte-check +
+  a real headless-Chrome interaction drive in parallel with a 3-dimension
+  adversarial code review. Both passes found genuine issues before commit:
+  phase's first pass caught a dormant non-deterministic bug (a type's
+  legend group depended on node array order) and an undetected regression
+  risk in the group-toggle logic; the second caught a misleading sidebar
+  count during sticky-but-inactive isolation, a real high-severity test gap
+  (no test drove opening a file view while isolated), a duplicated
+  id-resolution derivation, and a component class name collision — all
+  fixed, with tests pinning the corrected behavior. Deferred: the platform
+  (darwin/nixos/dual) facet, collapsible legend groups, an isolation-
+  suppressed-matches note parallel to phase A's type-filter one.
+
+- **Update** — viz filter UX, phase A (quick wins). The legend gains
+  all/none header links and alt-click-to-isolate (one click instead of
+  N−1 toggles); the search haystack now includes frontmatter `tags` and the
+  placeholder says what it filters (title/type/tag — it always also matched
+  id and description); the counts line goes live ("42 of 131 concepts")
+  whenever a filter is active; search hits suppressed by a hidden type
+  surface as a clickable "+n hidden by type filters" note instead of
+  silently vanishing; and the whole lens (hidden types + query) now rides
+  the URL hash behind the selection (`c/<id>?hide=A,B&q=…`) — filter-only
+  changes amend the history entry via `replaceState`, selection changes
+  still push, so Back walks selections and shared links reproduce the view.
+  Phase B (grouped legend matching the bundle topology, neighborhood
+  isolation) is planned separately.
+
 - **Update** — `okf viz` links commit-hash citations to GitHub. `` `abc1234` ``
   code spans (the profile's citation convention) in concept bodies and
   embedded markdown now render as outbound `github.com/…/commit/<full-oid>`

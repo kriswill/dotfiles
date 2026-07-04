@@ -6,7 +6,7 @@ import { node } from "./test-helpers";
 const model = () =>
   buildModel({
     nodes: [
-      node("a", "Decision", "Alpha", { desc: "first decision" }),
+      node("a", "Decision", "Alpha", { desc: "first decision", fm: { tags: ["stow", "symlinks"] } }),
       node("b", "Pattern", "Beta"),
       node("c", "Decision", "Gamma"),
     ],
@@ -75,13 +75,15 @@ describe("filtering", () => {
     expect(s.visibleSorted).toHaveLength(3);
   });
 
-  test("query matches title/id/desc/type, case-insensitive", () => {
+  test("query matches title/id/desc/type/tags, case-insensitive", () => {
     const s = createVizState(model());
     s.query = "ALPHA";
     expect(s.visibleSorted.map((n) => n.id)).toEqual(["a"]);
     s.query = "pattern";
     expect(s.visibleSorted.map((n) => n.id)).toEqual(["b"]);
     s.query = "first decision";
+    expect(s.visibleSorted.map((n) => n.id)).toEqual(["a"]);
+    s.query = "symlink";
     expect(s.visibleSorted.map((n) => n.id)).toEqual(["a"]);
     s.query = "";
     expect(s.visibleSorted).toHaveLength(3);
@@ -90,6 +92,287 @@ describe("filtering", () => {
   test("visibleSorted sorts by title", () => {
     const s = createVizState(model());
     expect(s.visibleSorted.map((n) => n.title)).toEqual(["Alpha", "Beta", "Gamma"]);
+  });
+
+  test("showAllTypes / hideAllTypes", () => {
+    const s = createVizState(model());
+    s.hideAllTypes();
+    expect(s.visibleSorted).toHaveLength(0);
+    expect(s.hidden.size).toBe(2); // Decision + Pattern
+    s.showAllTypes();
+    expect(s.visibleSorted).toHaveLength(3);
+  });
+
+  test("soloType isolates, re-solo restores, solo elsewhere switches", () => {
+    const s = createVizState(model());
+    s.soloType("Decision");
+    expect(s.visibleSorted.map((n) => n.id)).toEqual(["a", "c"]);
+    s.soloType("Pattern"); // switch the solo, not additive
+    expect(s.visibleSorted.map((n) => n.id)).toEqual(["b"]);
+    s.soloType("Pattern"); // solo again = restore all
+    expect(s.visibleSorted).toHaveLength(3);
+  });
+
+  test("setFilters replaces hidden set and query wholesale", () => {
+    const s = createVizState(model());
+    s.toggleType("Pattern");
+    s.setFilters(["Decision"], "gamma");
+    expect([...s.hidden]).toEqual(["Decision"]);
+    expect(s.query).toBe("gamma");
+    s.setFilters([], "");
+    expect(s.hidden.size).toBe(0);
+    expect(s.visibleSorted).toHaveLength(3);
+  });
+
+  test("toggleGroup/soloGroup act across every type in the group, leaving other groups untouched", () => {
+    const groupModel = () =>
+      buildModel({
+        nodes: [
+          node("decisions/x", "Decision", "X"),
+          node("patterns/y", "Pattern", "Y"),
+          node("modules/z", "Darwin Module", "Z"),
+        ],
+        edges: [],
+      });
+    const s = createVizState(groupModel());
+    s.toggleGroup("Knowledge"); // Decision + Pattern
+    expect(s.visibleSorted.map((n) => n.id)).toEqual(["modules/z"]);
+    s.toggleGroup("Knowledge");
+    expect(s.visibleSorted).toHaveLength(3);
+
+    s.soloGroup("Knowledge"); // hides every other group's types (System here)
+    expect(s.visibleSorted.map((n) => n.id).sort()).toEqual(["decisions/x", "patterns/y"]);
+    s.soloGroup("Knowledge"); // solo again restores all
+    expect(s.visibleSorted).toHaveLength(3);
+  });
+
+  test("toggleGroup escalates a partially-hidden group to fully hidden, never un-hides", () => {
+    const groupModel = () =>
+      buildModel({
+        nodes: [
+          node("decisions/x", "Decision", "X"),
+          node("patterns/y", "Pattern", "Y"),
+          node("modules/z", "Darwin Module", "Z"),
+        ],
+        edges: [],
+      });
+    const s = createVizState(groupModel());
+    s.toggleType("Decision"); // mixed state: Decision hidden, Pattern visible, both in Knowledge
+    s.toggleGroup("Knowledge");
+    expect(s.hidden.has("Decision")).toBe(true); // stays hidden
+    expect(s.hidden.has("Pattern")).toBe(true); // escalates to fully hidden, not un-hidden
+  });
+
+  test("soloGroup hides every other group when 3+ groups are present", () => {
+    const threeGroupModel = () =>
+      buildModel({
+        nodes: [
+          node("decisions/x", "Decision", "X"),
+          node("modules/z", "Darwin Module", "Z"),
+          node("packages/p", "Nix Package", "P"),
+        ],
+        edges: [],
+      });
+    const s = createVizState(threeGroupModel());
+    s.soloGroup("Knowledge");
+    expect(s.hidden.has("Darwin Module")).toBe(true);
+    expect(s.hidden.has("Nix Package")).toBe(true);
+    expect(s.hidden.has("Decision")).toBe(false);
+    s.soloGroup("Knowledge"); // restore
+    expect(s.hidden.size).toBe(0);
+  });
+
+  test("toggleGroup on an absent group name is a no-op", () => {
+    const s = createVizState(model());
+    s.toggleGroup("NoSuchGroup");
+    expect(s.hidden.size).toBe(0);
+  });
+
+  test("soloGroup on an absent group name hides everything (soloing an empty set shows nothing)", () => {
+    const s = createVizState(model());
+    s.soloGroup("NoSuchGroup");
+    expect(s.visibleSorted).toHaveLength(0);
+  });
+
+  test("hiddenMatchCount counts search hits suppressed by type toggles", () => {
+    const s = createVizState(model());
+    expect(s.hiddenMatchCount).toBe(0);
+    s.toggleType("Decision");
+    expect(s.hiddenMatchCount).toBe(0); // no query — nothing "swallowed"
+    s.query = "gamma";
+    expect(s.visibleSorted).toHaveLength(0);
+    expect(s.hiddenMatchCount).toBe(1);
+    s.showAllTypes();
+    expect(s.hiddenMatchCount).toBe(0);
+    expect(s.visibleSorted.map((n) => n.id)).toEqual(["c"]);
+  });
+});
+
+describe("neighborhood isolation", () => {
+  const isoModel = () =>
+    buildModel({
+      nodes: [
+        node("a", "Decision", "Alpha"),
+        node("b", "Pattern", "Beta"),
+        node("c", "Pattern", "Gamma"),
+        node("d", "Pattern", "Delta"),
+      ],
+      edges: [
+        { s: "a", t: "b" },
+        { s: "b", t: "c" },
+      ],
+    });
+
+  test("setIsolate(1) restricts visibleSorted to the selection's 1-hop neighborhood", () => {
+    const s = createVizState(isoModel());
+    s.selectConcept("a");
+    s.setIsolate(1);
+    expect(s.visibleSorted.map((n) => n.id).sort()).toEqual(["a", "b"]);
+  });
+
+  test("setIsolate(2) reaches one more hop", () => {
+    const s = createVizState(isoModel());
+    s.selectConcept("a");
+    s.setIsolate(2);
+    expect(s.visibleSorted.map((n) => n.id).sort()).toEqual(["a", "b", "c"]);
+  });
+
+  test("isolation ANDs with type-hidden filters", () => {
+    const s = createVizState(isoModel());
+    s.selectConcept("a");
+    s.setIsolate(2);
+    s.toggleType("Pattern");
+    expect(s.visibleSorted.map((n) => n.id)).toEqual(["a"]); // b, c are Pattern, hidden by type too
+  });
+
+  test("clearSelection resets isolation", () => {
+    const s = createVizState(isoModel());
+    s.selectConcept("a");
+    s.setIsolate(2);
+    s.clearSelection();
+    expect(s.isolateDepth).toBe(0);
+    expect(s.visibleSorted).toHaveLength(4);
+  });
+
+  test("isolation is sticky across concept-to-concept navigation, re-rooting on the new selection", () => {
+    const s = createVizState(isoModel());
+    s.selectConcept("a");
+    s.setIsolate(1);
+    s.selectConcept("c");
+    expect(s.isolateDepth).toBe(1);
+    expect(s.visibleSorted.map((n) => n.id).sort()).toEqual(["b", "c"]);
+  });
+
+  test("setIsolate clamps invalid depths to 0", () => {
+    const s = createVizState(isoModel());
+    s.selectConcept("a");
+    s.setIsolate(3 as never);
+    expect(s.isolateDepth).toBe(0);
+  });
+
+  test("hiddenMatchCount ignores matches suppressed only by isolation, not type", () => {
+    const s = createVizState(isoModel());
+    s.selectConcept("a");
+    s.setIsolate(1); // neighborhood = {a, b}; c and d are isolation-hidden, no type hidden
+    s.query = "gamma"; // matches c, which is Pattern (not type-hidden) but outside the 1-hop neighborhood
+    expect(s.visibleSorted).toHaveLength(0); // c matches but isn't in the neighborhood
+    expect(s.hiddenMatchCount).toBe(0); // hiddenMatchCount only tracks type-hidden suppression
+  });
+
+  test("setFilters accepts an isolate depth, defaults to 0 for existing 2-arg calls", () => {
+    const s = createVizState(isoModel());
+    s.selectConcept("a");
+    s.setFilters(["Pattern"], "");
+    expect(s.isolateDepth).toBe(0);
+    s.setFilters([], "", 2);
+    expect(s.isolateDepth).toBe(2);
+  });
+
+  test("opening a file/dir view suspends isolation (anchored on selectedConcept, not focusedConcept)", () => {
+    const s = createVizState(model()); // a-b edge, plus a file and a dir to select
+    s.selectConcept("a");
+    s.setIsolate(1);
+    expect(s.visibleSorted.map((n) => n.id).sort()).toEqual(["a", "b"]);
+    s.selectFile("scripts/okf/viz.ts");
+    expect(s.isolateDepth).toBe(1); // sticky: not reset by selectFile
+    expect(s.neighborIds).toBeNull(); // but inactive: selectedConcept is null while a file view is open
+    expect(s.visibleSorted).toHaveLength(3); // isolation stops restricting the list
+    s.selectDir("flakes/ccglass");
+    expect(s.neighborIds).toBeNull();
+    expect(s.visibleSorted).toHaveLength(3);
+  });
+});
+
+describe("focusedConcept", () => {
+  test("is the selection, or the last concept while a file/dir view is open", () => {
+    const s = createVizState(model());
+    expect(s.focusedConcept).toBeNull();
+    s.selectConcept("a");
+    expect(s.focusedConcept?.id).toBe("a");
+    s.selectFile("scripts/okf/viz.ts");
+    expect(s.focusedConcept?.id).toBe("a");
+  });
+});
+
+describe("platform axis", () => {
+  const platModel = () =>
+    buildModel({
+      nodes: [
+        node("modules/nh", "Darwin Module", "Nh"),
+        node("modules/keyring", "NixOS Module", "Keyring"),
+        node("modules/tmux", "Dual Module", "Tmux"),
+        node("decisions/x", "Decision", "Decide"),
+      ],
+      edges: [],
+    });
+
+  test("default is 'all' — every node visible", () => {
+    const s = createVizState(platModel());
+    expect(s.platform).toBe("all");
+    expect(s.visibleSorted).toHaveLength(4);
+  });
+
+  test("darwin lens shows darwin + both + neutral, hides nixos-only", () => {
+    const s = createVizState(platModel());
+    s.setPlatform("darwin");
+    expect(s.visibleSorted.map((n) => n.id).sort()).toEqual(["decisions/x", "modules/nh", "modules/tmux"]);
+  });
+
+  test("nixos lens shows nixos + both + neutral, hides darwin-only", () => {
+    const s = createVizState(platModel());
+    s.setPlatform("nixos");
+    expect(s.visibleSorted.map((n) => n.id).sort()).toEqual(["decisions/x", "modules/keyring", "modules/tmux"]);
+  });
+
+  test("composes via AND with type and search filters", () => {
+    const s = createVizState(platModel());
+    s.setPlatform("darwin"); // {nh, tmux, x}
+    s.toggleType("Dual Module"); // remove tmux -> {nh, x}
+    expect(s.visibleSorted.map((n) => n.id).sort()).toEqual(["decisions/x", "modules/nh"]);
+    s.query = "nh"; // -> {nh}
+    expect(s.visibleSorted.map((n) => n.id)).toEqual(["modules/nh"]);
+  });
+
+  test("setPlatform clamps invalid values to 'all'", () => {
+    const s = createVizState(platModel());
+    s.setPlatform("bogus" as never);
+    expect(s.platform).toBe("all");
+  });
+
+  test("platform is a global lens: it does NOT reset on clearSelection", () => {
+    const s = createVizState(platModel());
+    s.selectConcept("modules/nh");
+    s.setPlatform("darwin");
+    s.clearSelection();
+    expect(s.platform).toBe("darwin"); // unlike isolate, which resets
+  });
+
+  test("setFilters accepts a platform (4th arg), defaults to 'all'", () => {
+    const s = createVizState(platModel());
+    s.setFilters([], "", 0, "nixos");
+    expect(s.platform).toBe("nixos");
+    s.setFilters([], "");
+    expect(s.platform).toBe("all");
   });
 });
 

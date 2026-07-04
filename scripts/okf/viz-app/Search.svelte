@@ -4,7 +4,13 @@
   const { viz }: { viz: VizState } = $props();
 </script>
 
-<input id="q" type="search" placeholder="Search concepts…" aria-label="Search concepts" bind:value={viz.query} />
+<input
+  id="q"
+  type="search"
+  placeholder="Filter by title, type, tag…"
+  aria-label="Filter concepts by title, type, or tag"
+  bind:value={viz.query}
+/>
 
 <style>
   #q {

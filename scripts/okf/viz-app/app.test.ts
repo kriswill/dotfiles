@@ -2,7 +2,7 @@
 // decodeHash raw (decoded exactly once), and malformed hashes must not throw
 // during mount — pre-decoding in App used to crash component setup whenever a
 // once-decoded hash still contained a literal '%'.
-import { afterEach, describe, expect, test } from "bun:test";
+import { afterEach, describe, expect, spyOn, test } from "bun:test";
 import { flushSync, mount, unmount } from "svelte";
 import App from "./App.svelte";
 import { buildModel } from "./data";
@@ -83,6 +83,109 @@ describe("App hash handling", () => {
     location.hash = "#c/nvim/architecture";
     window.dispatchEvent(new Event("hashchange"));
     flushSync();
+    expect(viz.sel).toEqual({ kind: "concept", id: "nvim/architecture" });
+  });
+});
+
+describe("App filter persistence", () => {
+  test("filter changes land in the URL without touching the selection part", () => {
+    const viz = createVizState(model());
+    mountApp(viz);
+    viz.selectConcept("nvim/architecture");
+    flushSync();
+    viz.toggleType("Reference");
+    viz.query = "arch";
+    flushSync();
+    expect(location.hash).toBe("#c/nvim/architecture?hide=Reference&q=arch");
+    viz.setIsolate(1);
+    flushSync();
+    expect(location.hash).toBe("#c/nvim/architecture?hide=Reference&q=arch&isolate=1");
+    viz.setPlatform("darwin");
+    flushSync();
+    expect(location.hash).toBe("#c/nvim/architecture?hide=Reference&q=arch&isolate=1&os=darwin");
+    viz.setFilters([], "");
+    flushSync();
+    expect(location.hash).toBe("#c/nvim/architecture");
+  });
+
+  test("a deep link with filters applies them on mount", () => {
+    location.hash = "#c/nvim/architecture?hide=Reference&q=arch";
+    const viz = createVizState(model());
+    mountApp(viz);
+    expect(viz.sel).toEqual({ kind: "concept", id: "nvim/architecture" });
+    expect([...viz.hidden]).toEqual(["Reference"]);
+    expect(viz.query).toBe("arch");
+    expect(location.hash).toBe("#c/nvim/architecture?hide=Reference&q=arch"); // applied, never rewritten
+  });
+
+  test("a deep link with an isolate param applies it on mount", () => {
+    location.hash = "#c/nvim/architecture?hide=Reference&q=arch&isolate=1";
+    const viz = createVizState(model());
+    mountApp(viz);
+    expect(viz.sel).toEqual({ kind: "concept", id: "nvim/architecture" });
+    expect(viz.isolateDepth).toBe(1);
+    expect(location.hash).toBe("#c/nvim/architecture?hide=Reference&q=arch&isolate=1"); // applied, never rewritten
+  });
+
+  test("a deep link combining a file selection with hide=/q= still applies both (isolate stays 0, not a concept)", () => {
+    location.hash = "#f/docs/50%25.md?hide=Reference&q=arch";
+    const viz = createVizState(model());
+    mountApp(viz);
+    expect(viz.sel).toEqual({ kind: "file", path: "docs/50%.md" });
+    expect([...viz.hidden]).toEqual(["Reference"]);
+    expect(viz.query).toBe("arch");
+    expect(viz.isolateDepth).toBe(0);
+    expect(location.hash).toBe("#f/docs/50%25.md?hide=Reference&q=arch"); // applied, never rewritten
+  });
+
+  test("a deep link with os= applies the platform lens on mount (any selection kind)", () => {
+    location.hash = "#c/nvim/architecture?os=nixos";
+    const viz = createVizState(model());
+    mountApp(viz);
+    expect(viz.sel).toEqual({ kind: "concept", id: "nvim/architecture" });
+    expect(viz.platform).toBe("nixos");
+    expect(location.hash).toBe("#c/nvim/architecture?os=nixos"); // applied, never rewritten
+  });
+
+  test("a platform-only change amends the URL in place (replaceState, no selection churn)", () => {
+    const viz = createVizState(model());
+    mountApp(viz);
+    viz.selectConcept("nvim/architecture");
+    flushSync();
+    // Spy AFTER the selection settles so we observe only the filter-only write.
+    const replace = spyOn(history, "replaceState");
+    const push = spyOn(history, "pushState");
+    viz.setPlatform("darwin");
+    flushSync();
+    expect(location.hash).toBe("#c/nvim/architecture?os=darwin");
+    // The load-bearing guarantee: a filter-only change amends the current entry
+    // (replaceState) rather than pushing a new one (the documented Back trap).
+    expect(replace).toHaveBeenCalledTimes(1);
+    expect(push).not.toHaveBeenCalled();
+    replace.mockRestore();
+    push.mockRestore();
+    viz.setPlatform("all");
+    flushSync();
+    expect(location.hash).toBe("#c/nvim/architecture");
+  });
+
+  test("selection navigation keeps active filters; Back to a bare hash clears them", () => {
+    const viz = createVizState(model());
+    mountApp(viz);
+    viz.toggleType("Reference");
+    flushSync();
+    expect(location.hash).toBe("#?hide=Reference");
+    viz.selectConcept("nvim/architecture");
+    flushSync();
+    expect(location.hash).toBe("#c/nvim/architecture?hide=Reference");
+    viz.setIsolate(2);
+    flushSync();
+    expect(location.hash).toBe("#c/nvim/architecture?hide=Reference&isolate=2");
+    location.hash = "#c/nvim/architecture"; // simulate Back to an unfiltered entry
+    window.dispatchEvent(new Event("hashchange"));
+    flushSync();
+    expect(viz.hidden.size).toBe(0);
+    expect(viz.isolateDepth).toBe(0);
     expect(viz.sel).toEqual({ kind: "concept", id: "nvim/architecture" });
   });
 });
