@@ -12,6 +12,7 @@ flake consumes via relative-path inputs.
 * [Direnv](direnv.md) - Nixpkgs overlay 'direnv'.
 * [Dots Adopt](dots-adopt.md) - Custom Nix package 'dots-adopt'.
 * [Flatpak User](flatpak-user.md) - A drop-in `flatpak` that defaults the CLI to the per-user installation.
+* [Gh Config](gh-config.md) - Snapshot/restore gh's config.yml between ~/.config/gh (app-owned) and config/gh/ — gh's atomic-rename saves break stow symlinks, so it left the stow tree for the snapshot pattern.
 * [Helium Config](helium-config.md) - Custom Nix package 'helium-config'.
 * [Iv](iv.md) - A command-line image viewer using terminal graphics.
 * [Kitten](kitten.md) - Kitten - A collection of small, useful programs for the kitty terminal.

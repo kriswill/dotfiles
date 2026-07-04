@@ -15,6 +15,7 @@
     cbissue = import ../overlays/cbissue.nix;
     cbissues = import ../overlays/cbissues.nix;
     flatpak-user = import ../overlays/flatpak-user.nix;
+    gh-config = import ../overlays/gh-config.nix;
     helium-config = import ../overlays/helium-config.nix;
     noctalia-config = import ../overlays/noctalia-config.nix;
     pass-xdg = import ../overlays/pass-xdg.nix;

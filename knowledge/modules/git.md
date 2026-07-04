@@ -1,16 +1,19 @@
 ---
 type: Dual Module
 title: Git
-description: 'Installs the binaries the stow-managed git/gh config invokes by bare name (git, gh, git-lfs, difftastic, …); the config itself — including 1Password SSH signing — is stow, not nix.'
+description: 'Installs the binaries the stow-managed git config invokes by bare name (git, gh, gh-config, git-lfs, difftastic, …); the config itself — including 1Password SSH signing — is stow, not nix.'
 resource: modules/darwin/git.nix
 tags: [darwin-module, nixos-module]
 timestamp: '2026-07-03T12:00:00-07:00'
 ---
 
-Binaries-only module: it installs what the stow-managed git and gh configs
-(`home/git/`, `home/gh/`) invoke by bare name. The config itself — including
+Binaries-only module: it installs what the stow-managed git config
+(`home/git/`) invokes by bare name. The config itself — including
 SSH-format commit signing through the 1Password agent, OS-branched via
 `includeIf gitdir:/Users/ | /home/` — lives in the stow tree, not in nix.
+gh's `config.yml` is NOT stowed: gh rewrites it via atomic rename, so it's a
+`config/gh/` snapshot synced with [gh-config](../packages/gh-config.md)
+(shipped by this module on both OSes).
 git-lfs and difftastic back the corresponding config sections; ripgrep and jq
 (used by aliases/hooks) come from
 [user-packages](user-packages.md)/hacker-mode, not here.
