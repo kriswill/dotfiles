@@ -33,6 +33,7 @@
 {
   configurations.nixos.nebula.module =
     {
+      lib,
       pkgs,
       inputs,
       ...
@@ -68,7 +69,8 @@
         # pkgs/tomato.nix.
         pkgs.tomato
 
-        # noctalia-config — snapshot/restore settings.toml into the dotfiles repo
+        # noctalia-config — snapshot/restore settings.toml into the dotfiles repo (see
+        # the auto-capture path unit below)
         # (config/noctalia/settings.toml) without symlinking the live file.
         # noctalia rewrites settings.toml via atomic rename, which breaks a stow
         # symlink on the first GUI save; and a dir-symlink would put the whole
@@ -78,5 +80,22 @@
         # See pkgs/noctalia-config.nix and docs/noctalia.md.
         pkgs.noctalia-config
       ];
+
+      # Auto-capture: noctalia saves settings.toml via atomic rename; a path
+      # unit runs `noctalia-config capture` after each save (repo working tree
+      # only — review + commit stays manual). Debounce is the sleep (path
+      # triggers are suppressed while the service runs); no TriggerLimit* —
+      # exceeding it would fail the path unit and stop the watching.
+      systemd.user.paths.noctalia-config-capture = {
+        wantedBy = [ "paths.target" ];
+        pathConfig.PathChanged = "%h/.local/state/noctalia/settings.toml";
+      };
+      systemd.user.services.noctalia-config-capture = {
+        serviceConfig.Type = "oneshot";
+        serviceConfig.ExecStart = pkgs.writeShellScript "noctalia-config-capture" ''
+          sleep 5
+          exec ${lib.getExe pkgs.noctalia-config} capture
+        '';
+      };
     };
 }

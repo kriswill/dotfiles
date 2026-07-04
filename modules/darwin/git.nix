@@ -9,8 +9,28 @@
 # alias and the podman filter) come from modules/darwin/user-packages.nix.
 {
   flake.modules.darwin.git =
-    { pkgs, ... }:
     {
+      config,
+      lib,
+      pkgs,
+      ...
+    }:
+    {
+      # Auto-capture twin of the systemd path unit in modules/nixos/git.nix.
+      # launchd's kqueue file-watches are inode-based and gh replaces config.yml
+      # via atomic rename, so watch the directory (also catches hosts.yml churn;
+      # capture of an unchanged config.yml is a git no-op). ThrottleInterval
+      # coalesces bursts without the systemd TriggerLimit failed-state footgun.
+      launchd.user.agents.gh-config-capture.serviceConfig = {
+        WatchPaths = [ "/Users/${config.system.primaryUser}/.config/gh" ];
+        ProgramArguments = [
+          (lib.getExe pkgs.gh-config)
+          "capture"
+        ];
+        RunAtLoad = false;
+        ThrottleInterval = 10;
+      };
+
       environment.systemPackages = builtins.attrValues {
         inherit (pkgs)
           git
