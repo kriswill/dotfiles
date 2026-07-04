@@ -7,8 +7,28 @@
 # alias and the podman filter) come from the hacker-mode profile / user packages.
 {
   flake.modules.nixos.git =
-    { pkgs, ... }:
+    { lib, pkgs, ... }:
     {
+      # Auto-capture: gh rewrites config.yml via atomic rename; a path unit
+      # (inotify; systemd also watches the parent dirs, so the watch survives
+      # the inode swap) runs `gh-config capture` after each save. Capture only
+      # updates the repo working tree — review + commit stays manual. Debounce
+      # is a sleep in the service (path triggers are suppressed while it runs);
+      # deliberately NOT TriggerLimit*, which puts the path unit into a failed,
+      # no-longer-watching state when exceeded. Darwin twin: launchd WatchPaths
+      # agent in modules/darwin/git.nix.
+      systemd.user.paths.gh-config-capture = {
+        wantedBy = [ "paths.target" ];
+        pathConfig.PathChanged = "%h/.config/gh/config.yml";
+      };
+      systemd.user.services.gh-config-capture = {
+        serviceConfig.Type = "oneshot";
+        serviceConfig.ExecStart = pkgs.writeShellScript "gh-config-capture" ''
+          sleep 5
+          exec ${lib.getExe pkgs.gh-config} capture
+        '';
+      };
+
       environment.systemPackages = builtins.attrValues {
         inherit (pkgs)
           git

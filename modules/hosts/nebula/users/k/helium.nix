@@ -15,8 +15,38 @@
 # See pkgs/helium-config.nix.
 {
   configurations.nixos.nebula.module =
-    { pkgs, ... }:
+    { lib, pkgs, ... }:
     {
       users.users.k.packages = [ pkgs.helium-config ];
+
+      # Auto-capture on the allowlisted files (see pkgs/helium-config.sh).
+      # Guarded: while Helium runs, Cookies/Login Data (live SQLite) could
+      # snapshot torn, so the service skips — Chromium rewrites Preferences/
+      # Local State on clean exit, and THOSE events fire the real capture once
+      # the browser is gone. Debounce is the sleep (path triggers are
+      # suppressed while the service runs); no TriggerLimit* — exceeding it
+      # would fail the path unit and stop the watching.
+      systemd.user.paths.helium-config-capture = {
+        wantedBy = [ "paths.target" ];
+        pathConfig.PathChanged = [
+          "%h/.config/net.imput.helium/Default/Bookmarks"
+          "%h/.config/net.imput.helium/Default/Preferences"
+          "%h/.config/net.imput.helium/Local State"
+          "%h/.config/net.imput.helium/Default/Cookies"
+          "%h/.config/net.imput.helium/Default/Login Data"
+        ];
+      };
+      systemd.user.services.helium-config-capture = {
+        path = [ pkgs.procps ];
+        serviceConfig.Type = "oneshot";
+        serviceConfig.ExecStart = pkgs.writeShellScript "helium-config-capture" ''
+          sleep 30
+          if pgrep -x helium >/dev/null 2>&1; then
+            echo "helium running — skipping capture (exit-time writes will re-trigger)"
+            exit 0
+          fi
+          exec ${lib.getExe pkgs.helium-config} capture
+        '';
+      };
     };
 }

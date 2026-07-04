@@ -58,6 +58,16 @@ the same three verbs:
 - **`capture`** copies an **allowlist** of files from the live location into the
   matching path under `config/<app>/`. It does *not* commit — it prints the
   `git diff` command so you can review and commit yourself.
+
+  On nebula, capture is **automatic**: a systemd user `.path` unit per app
+  (`<app>-config-capture.path`, defined next to the app's package wiring)
+  watches the live files via inotify — `PathChanged=` catches the apps'
+  atomic-rename saves — and runs `<app>-config capture` a few seconds later.
+  Helium's unit skips while the browser runs (live SQLite could snapshot torn;
+  Chromium's exit-time writes re-trigger it). The Macs have a launchd
+  `WatchPaths` twin for gh (`modules/darwin/git.nix`). Committing remains
+  manual by design — the automation only keeps the working-tree snapshot
+  fresh, so drift shows up in `git status` instead of being forgotten.
 - **`restore`** writes the snapshot back over the live files via the same atomic
   rename the app uses, re-hardening permissions (e.g. `0600`), after backing up
   the current live file. It **refuses to run while the app is running** (a live
