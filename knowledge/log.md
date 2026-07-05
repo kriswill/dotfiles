@@ -2,6 +2,15 @@
 
 ## 2026-07-04
 
+- **Update** — [okf](packages/okf.md): `okf viz` detail-panel dates are now
+  human-friendly, driven by a new `display.date-format` in `okf-viz.toml`
+  (`"iso"` default = as written, `"us"` "Jul 3, 2026", `"international"`
+  "3 Jul 2026"; this repo sets `"us"`). Applies to date-shaped frontmatter
+  values (full-match only — prose containing a date is untouched) and the
+  file/dir "last commit" rows. Formatting reads the literal Y-M-D, never a
+  `Date()` timezone conversion, so `2026-07-04T00:00:00-07:00` shows Jul 4
+  for every viewer (helper: `flakes/okf/viz-app/dates.ts`).
+
 - **Update** — [podman](packages/podman.md),
   [podman-desktop](modules/podman-desktop.md): both upgraded from stubs to
   the quality bar. New load-bearing context: the primary workload is
@@ -182,8 +191,8 @@
 
 - **Update** — [nebula](hosts/nebula.md) gained a "Firmware quirks" section:
   the warm-reboot DRAM-training hang (debug code 44 + yellow DRAM LED on BIOS
-  2.A02; userspace shutdown was clean, the firmware stalled re-training DDR5 —
-  cold cycle clears it; fix = BIOS update past 2.A02 or Memory Context
+  `2.A02`; userspace shutdown was clean, the firmware stalled re-training DDR5
+  — cold cycle clears it; fix = BIOS update past `2.A02` or Memory Context
   Restore), plus the standing `Wake Up Event By = OS` suspend fact with the
   reminder that a BIOS flash resets it.
 
