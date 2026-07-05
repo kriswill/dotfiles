@@ -92,12 +92,15 @@ Module`, `Host`, `Nix Package`, `Overlay`, `Sub-flake`, `Neovim Plugin`,
 All bun/TypeScript in [`flakes/okf/`](../flakes/okf/) — the CLI itself is
 dependency-free; the viz viewer is a Svelte 5 app bundling three +
 postprocessing (deps in `flakes/okf/package.json`, `bun install`ed on
-demand). In
+demand). This repo's scaffold passes live bundle-adjacent in
+[`knowledge/_okf-scaffold/`](_okf-scaffold/main.ts) — the `_` prefix hides
+them from okf's walkers, so the bundle itself stays pure markdown
+([okf-scaffold-split](decisions/okf-scaffold-split.md)). In
 the dev shell (`nix develop` / direnv) it's on `PATH` as **`okf`** via the
 [dev](modules/dev.md) module; outside it, invoke with bun directly:
 
 ```sh
-okf scaffold [--force]   # run this repo's scaffolder (scripts/okf-scaffold.ts via okf.toml [scaffold]; idempotent; --force overwrites)
+okf scaffold [--force]   # run this repo's scaffolder (knowledge/_okf-scaffold/main.ts via okf.toml [scaffold]; idempotent; --force overwrites)
 okf index               # regenerate index.md listings
 okf validate [--strict]  # spec + profile conformance; --strict fails on warnings too
 okf viz [--check|--perf] # render knowledge/viz.html (Svelte 5 viewer); --check runs svelte-check, --perf measures startup in headless Chrome

@@ -33,10 +33,13 @@ full-tree fileset with git in the sandbox, so the gitProvider tests
 
 okf is generic (the [okf-toml-unified-config](../decisions/okf-toml-unified-config.md)
 arc); this repo's scaffolding logic lives outside the flake in
-[`scripts/okf-scaffold.ts`](../../scripts/okf-scaffold.ts), dynamically
-imported by `okf scaffold` per `okf.toml [scaffold] script` and driven
-through the injected `ScaffoldContext` API
-([okf-scaffold-hook](../decisions/okf-scaffold-hook.md)).
+[`knowledge/_okf-scaffold/`](../_okf-scaffold/main.ts) — one pass file per
+scaffolded type (`modules.ts`, `hosts.ts`, `packages.ts`, `nvim.ts`) behind
+a `main.ts` entry — dynamically imported by `okf scaffold` per
+`okf.toml [scaffold] script` and driven through the injected
+`ScaffoldContext` API
+([okf-scaffold-hook](../decisions/okf-scaffold-hook.md),
+[okf-scaffold-split](../decisions/okf-scaffold-split.md)).
 
 No `bun build --compile`: `okf viz` bundles the
 [Svelte](../svelte-language.md) viewer with `Bun.build`

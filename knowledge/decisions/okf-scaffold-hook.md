@@ -9,9 +9,10 @@ timestamp: '2026-07-04T00:00:00-07:00'
 **Status:** active. **Where:**
 [../../flakes/okf/scaffold-api.ts](../../flakes/okf/scaffold-api.ts)
 (injected API), [../../flakes/okf/scaffold.ts](../../flakes/okf/scaffold.ts)
-(generic driver), [../../scripts/okf-scaffold.ts](../../scripts/okf-scaffold.ts)
-(this repo's pass). Part of the okf generalization arc
-([okf-toml-unified-config](okf-toml-unified-config.md)).
+(generic driver), [../_okf-scaffold/main.ts](../_okf-scaffold/main.ts)
+(this repo's pass — since split per type and moved bundle-adjacent, see
+[okf-scaffold-split](okf-scaffold-split.md)). Part of the okf generalization
+arc ([okf-toml-unified-config](okf-toml-unified-config.md)).
 
 ## Context
 
@@ -68,5 +69,6 @@ port** — same emit calls, same strings.
 - `okf scaffold` with nothing configured prints guidance and exits 0, so a
   fresh bundle without hooks isn't an error.
 - Component-scan changes (new source dirs, doc types, cross-links) are now
-  edits to `scripts/okf-scaffold.ts`, not to the flake — flakes/okf/ has no
-  dotfiles knowledge left in its scaffold path.
+  edits to the repo-side pass (today `knowledge/_okf-scaffold/`, per
+  [okf-scaffold-split](okf-scaffold-split.md)), not to the flake —
+  flakes/okf/ has no dotfiles knowledge left in its scaffold path.
