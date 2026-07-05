@@ -25,10 +25,10 @@ providers, scaffold hooks) builds on.
 
 ## Decision
 
-- **`okf-viz.toml` → `okf.toml`** (`git mv`; the old name still loads with a
-  deprecation warning until the generalization arc completes). The name
-  change is semantic: it is no longer viz settings, it is the okf workspace
-  config.
+- **`okf-viz.toml` → `okf.toml`** (`git mv`; the old name loaded with a
+  deprecation warning during the arc — support removed at arc completion,
+  see [okf-generalization](okf-generalization.md)). The name change is
+  semantic: it is no longer viz settings, it is the okf workspace config.
 - **One build-side loader, `flakes/okf/config-cli.ts`**, exposing a cached
   `loadContext()` → `{ root, bundle, cfg }`. It parses the TOML, will consume
   CLI-only sections as they land (`[profile]`, `[vcs]`, `[scaffold]`,

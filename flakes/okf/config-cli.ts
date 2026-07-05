@@ -14,9 +14,6 @@ import { createProvider, gitRoot, type VcsProvider } from "./vcs";
 import { normalizeVizConfig, VizConfigError, type VizConfig } from "./viz-app/config";
 
 export const CONFIG_FILE = "okf.toml";
-/** Pre-rename spelling, still honored with a warning; dropped after the
- *  generalization arc completes. */
-const LEGACY_CONFIG_FILE = "okf-viz.toml";
 
 export class OkfConfigError extends Error {}
 
@@ -283,7 +280,7 @@ export function splitCliSections(raw: unknown): {
  *  its directory + name, or null. Exported for tests. */
 export function findConfigUp(
   start: string,
-  names: string[] = [CONFIG_FILE, LEGACY_CONFIG_FILE],
+  names: string[] = [CONFIG_FILE],
 ): { dir: string; file: string } | null {
   let dir = resolve(start);
   for (;;) {
@@ -345,8 +342,6 @@ export function loadContext(): OkfContext {
     );
     process.exit(1);
   }
-  if (found?.file === LEGACY_CONFIG_FILE)
-    console.warn(`okf: warning: ${LEGACY_CONFIG_FILE} is deprecated — rename it to ${CONFIG_FILE}`);
   let raw: unknown = {};
   if (found) {
     try {

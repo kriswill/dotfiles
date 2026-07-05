@@ -60,11 +60,28 @@ inputs.okf = {
 };
 ```
 
-then re-export `inputs.okf.packages.${system}.okf` (see `modules/packages.nix`).
-`follows` makes the parent build against the parent's nixpkgs; the lock here
-only governs standalone builds (`nix build ./flakes/okf#okf`), so drv paths may
-legitimately differ between the two. Promoting okf to its own repository is a
-one-line swap to `github:owner/okf` — consumers change nothing else.
+then re-export `inputs.okf.packages.${system}.okf` from the parent's packages
+module. `follows` makes the parent build against the parent's nixpkgs; the
+lock here only governs standalone builds (`nix build ./flakes/okf#okf`), so
+drv paths may legitimately differ between the two. Promoting okf to its own
+repository is a one-line swap to `github:owner/okf` — consumers change
+nothing else.
+
+## Adopting okf in any repo (no Nix required)
+
+okf is plain bun — copy or clone this directory anywhere (or vendor it), then:
+
+```sh
+cd path/to/okf && bun install    # once; vendors the viz viewer deps
+cd ~/src/your-project
+bun path/to/okf/okf.ts init      # starter okf.toml + bundle skeleton
+bun path/to/okf/okf.ts validate && bun path/to/okf/okf.ts viz
+```
+
+Any language, any domain, git or no VCS at all (`[vcs] provider = "none"`).
+Wire your own metadata pass via `[scaffold]` (script with the injected
+`ScaffoldContext` API, any-language `command`, or declarative
+`[[scaffold.collect]]` globs).
 
 ## Dependency vendoring (the FOD hash)
 
@@ -80,8 +97,9 @@ hash mismatch), refresh it:
 
 ## Development
 
-The dotfiles dev shell provides `okf` as an impure wrapper over this working
-tree (`modules/dev.nix`) — edits are live, no rebuild. Standalone:
+A parent repo's dev shell may provide `okf` as an impure wrapper over this
+working tree (this repo does, via its dev module) — edits are live, no
+rebuild. Standalone:
 
 ```sh
 nix develop ./flakes/okf   # or rely on the parent dev shell's bun
