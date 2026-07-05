@@ -15,28 +15,44 @@
 let
   # Explicit include-list: nix plumbing stays out (nix-only edits don't rebuild
   # the package) and node_modules can never leak in however the source reaches us.
+  sources = lib.fileset.unions [
+    ./okf.ts
+    ./init.ts
+    ./lib.ts
+    ./config-cli.ts
+    ./vcs
+    ./scaffold.ts
+    ./scaffold-api.ts
+    ./index-gen.ts
+    ./validate.ts
+    ./viz.ts
+    ./viz-perf.ts
+    ./layout3d.ts
+    ./tsconfig.json
+    ./package.json
+    ./bun.lock
+    ./bunfig.toml
+    ./viz-app
+    ./test
+  ];
+
+  # Tests stay out of the shipped package: bun's test scanner follows the
+  # `result` symlink `nix build` leaves in the flake root, so any *.test.ts
+  # under $out would run as a stale second copy of the suite.
   src = lib.fileset.toSource {
     root = ./.;
-    fileset = lib.fileset.unions [
-      ./okf.ts
-      ./init.ts
-      ./lib.ts
-      ./config-cli.ts
-      ./vcs
-      ./scaffold.ts
-      ./scaffold-api.ts
-      ./index-gen.ts
-      ./validate.ts
-      ./viz.ts
-      ./viz-perf.ts
-      ./layout3d.ts
-      ./tsconfig.json
-      ./package.json
-      ./bun.lock
-      ./bunfig.toml
-      ./viz-app
-      ./test
-    ];
+    fileset = lib.fileset.difference sources (
+      lib.fileset.unions [
+        ./test
+        (lib.fileset.fileFilter (file: lib.hasSuffix ".test.ts" file.name) ./viz-app)
+      ]
+    );
+  };
+
+  # Full tree including the tests — only checks.test builds from this.
+  testSrc = lib.fileset.toSource {
+    root = ./.;
+    fileset = sources;
   };
 
   # The lock is pure JS — no os/cpu-conditional packages, no install scripts —
@@ -120,10 +136,15 @@ stdenvNoCC.mkDerivation {
   passthru = {
     inherit node_modules;
     # `bun test` offline against the vendored deps; surfaced as checks.test.
+    # git matches the runtime wrapper's PATH and lets the gitProvider tests
+    # run instead of skipIf-skipping.
     tests.unit = stdenvNoCC.mkDerivation {
       name = "okf-tests";
-      inherit src;
-      nativeBuildInputs = [ bun ];
+      src = testSrc;
+      nativeBuildInputs = [
+        bun
+        git
+      ];
       dontConfigure = true;
       buildPhase = ''
         runHook preBuild
