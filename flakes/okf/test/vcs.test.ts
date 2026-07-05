@@ -1,7 +1,7 @@
 // VCS provider unit tests: pure remote-URL normalization, the filesystem
 // ("none") provider against tempdir fixtures, and provider auto-selection.
-// Git-dependent cases skip when no git binary is available (the nix check
-// sandbox has bun only).
+// The nix check sandbox provides git (matching the runtime wrapper's PATH);
+// skipIf(!hasGit) only guards against ad-hoc git-less environments.
 
 import { describe, expect, test } from "bun:test";
 import { spawnSync } from "node:child_process";
