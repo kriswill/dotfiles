@@ -8,7 +8,7 @@ import { spawnSync } from "node:child_process";
 import { mkdirSync, mkdtempSync, utimesSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { normalizeRemoteUrl } from "../vcs/git";
+import { gitProvider, normalizeRemoteUrl } from "../vcs/git";
 import { createProvider } from "../vcs";
 import { noneProvider } from "../vcs/none";
 
@@ -82,6 +82,51 @@ describe("noneProvider", () => {
     expect(p.revisionPattern).toBeNull();
     expect(p.resolveRevisions(["abc1234"])).toEqual({});
     expect(p.remoteUrl()).toBeNull();
+  });
+});
+
+describe("gitProvider", () => {
+  test.skipIf(!hasGit)("lastModified: file introduced BY a merge gets the merge date; cleanly-merged files keep their own commit date", () => {
+    const root = mkdtempSync(join(tmpdir(), "okf-gitlog-"));
+    const git = (date: string, ...args: string[]) => {
+      const r = spawnSync("git", args, {
+        cwd: root,
+        encoding: "utf8",
+        env: {
+          ...process.env,
+          GIT_AUTHOR_NAME: "t",
+          GIT_AUTHOR_EMAIL: "t@t",
+          GIT_COMMITTER_NAME: "t",
+          GIT_COMMITTER_EMAIL: "t@t",
+          GIT_AUTHOR_DATE: date,
+          GIT_COMMITTER_DATE: date,
+        },
+      });
+      expect(r.status).toBe(0);
+    };
+    git("", "init", "-q", "-b", "main");
+    writeFileSync(join(root, "base.txt"), "base\n");
+    git("2026-01-01T10:00:00+01:00", "add", "base.txt");
+    git("2026-01-01T10:00:00+01:00", "commit", "-qm", "base");
+    git("", "checkout", "-qb", "feat");
+    writeFileSync(join(root, "feat.txt"), "feat\n");
+    git("2026-01-02T10:00:00+01:00", "add", "feat.txt");
+    git("2026-01-02T10:00:00+01:00", "commit", "-qm", "feat");
+    git("", "checkout", "-q", "main");
+    writeFileSync(join(root, "main.txt"), "main\n");
+    git("2026-01-03T10:00:00+01:00", "add", "main.txt");
+    git("2026-01-03T10:00:00+01:00", "commit", "-qm", "main");
+    // Evil merge: evil.txt exists in NEITHER parent, only in the merge itself.
+    git("", "merge", "-q", "--no-ff", "--no-commit", "feat");
+    writeFileSync(join(root, "evil.txt"), "evil\n");
+    git("2026-01-04T10:00:00+01:00", "add", "evil.txt");
+    git("2026-01-04T10:00:00+01:00", "commit", "-qm", "merge feat");
+
+    const p = gitProvider(root);
+    expect(p.lastModified("evil.txt")).toBe("2026-01-04T10:00:00+01:00"); // null before --diff-merges=c
+    expect(p.lastModified("feat.txt")).toBe("2026-01-02T10:00:00+01:00"); // NOT rewritten to the merge date
+    expect(p.lastModified("base.txt")).toBe("2026-01-01T10:00:00+01:00");
+    expect(p.lastModified("main.txt")).toBe("2026-01-03T10:00:00+01:00");
   });
 });
 

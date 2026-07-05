@@ -31,15 +31,22 @@ export function normalizeRemoteUrl(raw: string): string | null {
 
 export function gitProvider(root: string): VcsProvider {
   // One batched `git log --name-only` pass (newest first) instead of a git
-  // subprocess per lastModified() call.
+  // subprocess per lastModified() call. --diff-merges=c makes merge commits
+  // list the files they changed relative to ALL parents, so a file introduced
+  // by conflict resolution in a merge (no other touching commit) still gets a
+  // date; clean merges list nothing, leaving every other file's date alone.
   let dates: Map<string, string> | null = null;
   const loadDates = (): Map<string, string> => {
     const map = new Map<string, string>();
-    const r = spawnSync("git", ["-c", "core.quotepath=off", "log", "--format=%x00%cI", "--name-only"], {
-      cwd: root,
-      encoding: "utf8",
-      maxBuffer: 64 * 1024 * 1024,
-    });
+    const r = spawnSync(
+      "git",
+      ["-c", "core.quotepath=off", "log", "--format=%x00%cI", "--name-only", "--diff-merges=c"],
+      {
+        cwd: root,
+        encoding: "utf8",
+        maxBuffer: 64 * 1024 * 1024,
+      },
+    );
     let date = "";
     for (const line of (r.stdout ?? "").split("\n")) {
       if (line.charCodeAt(0) === 0) date = line.slice(1); // NUL from %x00 marks a commit line

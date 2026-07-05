@@ -2,6 +2,16 @@
 
 ## 2026-07-04
 
+- **Update** — [okf-vcs-provider](decisions/okf-vcs-provider.md): the git
+  provider's batched date pass adds `--diff-merges=c` — files introduced
+  during merge conflict resolution (11 in this repo, e.g. `pkgs/cbissue.nix`
+  from the `76a05ff` evil merge) had no `lastModified` and fell back to
+  `nowISO()`, making `scaffold --force` nondeterministic. Combined diff
+  dates them with the merge that created them while clean merges list
+  nothing (`first-parent` rejected: it would restamp entire PRs with the
+  merge date). Evil-merge fixture test added; two scaffold runs verified
+  byte-identical.
+
 - **Decision** — [okf-generalization](decisions/okf-generalization.md):
   the okf generalization arc is **complete** — extraction-readiness sweep
   (flake source free of dotfiles assumptions, test fixtures neutralized,
