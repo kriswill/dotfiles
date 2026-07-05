@@ -2,6 +2,21 @@
 
 ## 2026-07-04
 
+- **Update** — [podman](packages/podman.md),
+  [podman-desktop](modules/podman-desktop.md): both upgraded from stubs to
+  the quality bar. New load-bearing context: the primary workload is
+  **minikube's podman driver for work Kubernetes** (minikube itself is not
+  nix-managed; k9s rides along per host). podman gains the packaging
+  rationale summary (FOD of the official darwin_arm64 zip, dontFixup for
+  the adhoc signature, bundled vfkit/gvproxy, applehv-over-libkrun
+  backend), podman-desktop the thin-module explanation (`/libexec`
+  pathsToLink because `os.Executable` isn't symlink-resolved) and the
+  settings.json stow-with-git-filter twist (in-place rewrite, verified
+  live symlink, contrasted with
+  [snapshot-synced configs](patterns/snapshot-synced-configs.md)). Both
+  cite official sites + the minikube podman-driver docs and link the
+  enabling hosts.
+
 - **Creation** — [svelte-language](svelte-language.md),
   [markdown-language](markdown-language.md): the last two language
   References. Svelte: the viz-app is the one Svelte codebase (Svelte 5
