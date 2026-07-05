@@ -35,6 +35,28 @@ export interface EmbeddedDir {
   refs: string[];
 }
 
+/** Build-time size breakdown of the emitted page, baked in by viz.ts for the
+ *  About modal. Absent on embeds generated before this existed. */
+export interface BuildStats {
+  /** UTC ISO timestamp of the generating run. */
+  generatedAt: string;
+  /** Exact byte length of the finished HTML file (viz.ts solves the
+   *  self-reference — this blob is inside the file it measures — by fixed
+   *  point on the digit count). */
+  totalBytes: number;
+  /** Bytes each section occupies in the file, as written (post-escaping).
+   *  The remainder up to totalBytes is page shell: template CSS/markup,
+   *  repo/commit metadata, facet maps, embedded config, and this blob. */
+  bytes: {
+    nodes: number;
+    edges: number;
+    files: number;
+    dirs: number;
+    appJs: number;
+    appCss: number;
+  };
+}
+
 export interface RawData {
   nodes: ConceptNode[];
   edges: { s: string; t: string }[];
@@ -52,6 +74,8 @@ export interface RawData {
   facetMaps?: Record<string, Record<string, string>>;
   /** Normalized VizConfig embedded by the build (absent: generic viewer). */
   cfg?: unknown;
+  /** Build-time size breakdown (absent: pre-stats embed). */
+  stats?: BuildStats;
 }
 
 export interface VizModel {
@@ -95,6 +119,8 @@ export interface VizModel {
   facetById: Record<string, Record<string, string>>;
   /** Scene sphere radius per node (same order as nodes). */
   radii: number[];
+  /** Build-time size breakdown (null: pre-stats embed — About modal hides it). */
+  stats: BuildStats | null;
 }
 
 // A concept's id is its bundle-relative path minus ".md" (viz.ts) — the
@@ -282,6 +308,7 @@ export function buildModel(raw: RawData): VizModel {
     facets,
     facetById,
     radii,
+    stats: raw.stats ?? null,
   };
 }
 

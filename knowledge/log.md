@@ -2,6 +2,26 @@
 
 ## 2026-07-04
 
+- **Update** — [okf](packages/okf.md): `okf viz` now bakes a build-time
+  size breakdown into the page and shows it in an About modal, opened by
+  the sidebar `?` button (now right-aligned in the header and enlarged;
+  it replaces the old hover pop-over — the about text lives in the modal,
+  dismissed by ✕, Escape, or clicking outside). viz.ts
+  measures each section as the exact UTF-8 bytes written into the output
+  (concept nodes, edges, embedded files, dir listings, viewer JS/CSS) and
+  embeds a `stats` blob in the `#data` JSON. `totalBytes` is
+  self-referential — the blob sits inside the file it measures — so the
+  page is assembled with a `0` placeholder and the real total solved by
+  fixed point on its digit count, then verified against the emitted byte
+  length (mismatch aborts the build). First cut compared JS string
+  length; the bundle's multi-byte characters made it lie by ~9 KB —
+  `Buffer.byteLength` everywhere now, and the CLI summary line reports
+  true bytes too. New `AboutModal.svelte`: largest-first table with
+  counts/size/share, a derived "page shell & metadata" remainder row so
+  rows always sum to the total, and a `Generated` stamp honoring
+  `display.date-format`; pre-stats embeds render the modal without the
+  table. 7 new tests (296 total).
+
 - **Update** — [okf](packages/okf.md): post-review fixes on the
   generalization PR. Three bugs: collect-tier `output` templates now
   reject `{repo}`/`{description}`/`{description-sentence}` at config load

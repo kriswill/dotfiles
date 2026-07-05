@@ -2,8 +2,9 @@
 // there — see docs/svelt/learnings.md 2026-07-02).
 import { afterEach, describe, expect, test } from "bun:test";
 import { flushSync, mount, unmount } from "svelte";
+import AboutModal from "./AboutModal.svelte";
 import ConceptList from "./ConceptList.svelte";
-import { buildModel } from "./data";
+import { buildModel, type BuildStats } from "./data";
 import DetailPanel from "./DetailPanel.svelte";
 import FacetControls from "./FacetControls.svelte";
 import IsolateControl from "./IsolateControl.svelte";
@@ -632,17 +633,19 @@ describe("DetailPanel", () => {
 });
 
 describe("Sidebar", () => {
-  test("header names the repo's OKF viz with an explanatory (?) bubble", () => {
+  test("header names the repo's OKF viz; the (?) opens the modal with the explainer", () => {
     const state = createVizState(
       buildModel({ nodes: [node("a", "Decision", "Alpha")], edges: [], repoUrl: "https://github.com/acme/widgets" }),
     );
     mountC(Sidebar, { viz: state });
     const h1 = document.querySelector("#side h1")!;
     expect(h1.textContent!.replace(/\s+/g, " ")).toContain("acme/widgets OKF viz");
-    expect(h1.querySelector(".bubble")!.textContent).toContain("Open Knowledge Format");
+    (h1.querySelector(".help") as HTMLElement).click();
+    flushSync();
+    expect(document.querySelector("[role=dialog] .about")!.textContent).toContain("Open Knowledge Format");
   });
 
-  test("header name, badge, and about bubble come from the config", () => {
+  test("header name, badge, and the modal's about text come from the config", () => {
     const state = createVizState(
       buildModel({
         nodes: [node("a", "Decision", "Alpha")],
@@ -653,7 +656,9 @@ describe("Sidebar", () => {
     mountC(Sidebar, { viz: state });
     const h1 = document.querySelector("#side h1")!;
     expect(h1.textContent!.replace(/\s+/g, " ")).toContain("my/kb KB map");
-    expect(h1.querySelector(".bubble")!.innerHTML).toContain("custom <b>about</b>");
+    (h1.querySelector(".help") as HTMLElement).click();
+    flushSync();
+    expect(document.querySelector("[role=dialog] .about")!.innerHTML).toContain("custom <b>about</b>");
   });
 
   test("header falls back to the configured fallback-name, else the generic one", () => {
@@ -669,5 +674,83 @@ describe("Sidebar", () => {
     const generic = createVizState(buildModel({ nodes: [node("a", "Decision", "Alpha")], edges: [] }));
     mountC(Sidebar, { viz: generic });
     expect(document.querySelector("#side h1")!.textContent!.replace(/\s+/g, " ")).toContain("OKF bundle OKF viz");
+  });
+
+  test("clicking the (?) opens the About modal; Escape closes it", () => {
+    const state = createVizState(statsModel());
+    mountC(Sidebar, { viz: state });
+    expect(document.querySelector("[role=dialog]")).toBeNull();
+    (document.querySelector(".help") as HTMLElement).click();
+    flushSync();
+    expect(document.querySelector("[role=dialog]")).not.toBeNull();
+    window.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
+    flushSync();
+    expect(document.querySelector("[role=dialog]")).toBeNull();
+  });
+});
+
+// Build-time size breakdown fixture: listed rows sum to 2,678,000, leaving
+// 222,000 for the derived "Page shell & metadata" remainder.
+const stats: BuildStats = {
+  generatedAt: "2026-07-04T20:14:33+00:00",
+  totalBytes: 2_900_000,
+  bytes: { nodes: 300_000, edges: 30_000, files: 1_600_000, dirs: 8_000, appJs: 700_000, appCss: 40_000 },
+};
+const statsModel = (over: Record<string, unknown> = {}) =>
+  buildModel({
+    nodes: [node("a", "Decision", "Alpha"), node("b", "Pattern", "Beta")],
+    edges: [{ s: "a", t: "b" }],
+    files: { "x.ts": { html: "", lines: 1, size: 10, date: "2026-01-01", lang: "ts", refs: ["a"] } },
+    stats,
+    ...over,
+  });
+
+describe("AboutModal", () => {
+  const rows = () =>
+    [...document.querySelectorAll("tbody tr")].map((tr) =>
+      [...tr.querySelectorAll("td")].map((td) => td.textContent!.trim()),
+    );
+
+  test("renders the size breakdown largest-first with counts, sizes, share, and total", () => {
+    mountC(AboutModal, { viz: createVizState(statsModel()), onClose: () => {} });
+    const r = rows();
+    expect(r[0]).toEqual(["Embedded source files", "1", "1.53 MB", "55%"]);
+    expect(r[1]).toEqual(["Viewer app (JS)", "", "683.6 KB", "24%"]);
+    expect(r[2]).toEqual(["Concept documents", "2", "293.0 KB", "10%"]);
+    // Sub-1% rows show "<1%" instead of a misleading "0%".
+    expect(r.find((x) => x[0] === "Directory listings")).toEqual(["Directory listings", "0", "7.8 KB", "<1%"]);
+    // The derived remainder closes the table and the tfoot totals it.
+    expect(r.at(-1)).toEqual(["Page shell & metadata", "", "216.8 KB", "8%"]);
+    const foot = [...document.querySelectorAll("tfoot td")].map((td) => td.textContent!.trim());
+    expect(foot).toEqual(["Total", "", "2.77 MB", ""]);
+    expect(document.querySelector(".gen")!.textContent).toContain("Generated 2026-07-04 · 20:14 UTC");
+  });
+
+  test("generated stamp respects the configured date format", () => {
+    mountC(AboutModal, {
+      viz: createVizState(statsModel({ cfg: { display: { "date-format": "us" } } })),
+      onClose: () => {},
+    });
+    expect(document.querySelector(".gen")!.textContent).toContain("Generated Jul 4, 2026 · 20:14 UTC");
+  });
+
+  test("a pre-stats embed gets the about text and counts but no table", () => {
+    mountC(AboutModal, {
+      viz: createVizState(buildModel({ nodes: [node("a", "Decision", "Alpha")], edges: [] })),
+      onClose: () => {},
+    });
+    expect(document.querySelector(".about")!.textContent).toContain("Open Knowledge Format");
+    expect(document.querySelector(".counts")!.textContent).toContain("1 concepts");
+    expect(document.querySelector("table")).toBeNull();
+  });
+
+  test("close button and backdrop dismiss; clicks inside the dialog don't", () => {
+    let closed = 0;
+    mountC(AboutModal, { viz: createVizState(statsModel()), onClose: () => closed++ });
+    (document.querySelector(".modal") as HTMLElement).click();
+    expect(closed).toBe(0);
+    (document.querySelector(".close") as HTMLElement).click();
+    (document.querySelector(".overlay") as HTMLElement).click();
+    expect(closed).toBe(2);
   });
 });

@@ -63,6 +63,17 @@ describe("buildModel", () => {
     expect(empty.commitUrl).toBeNull();
     expect(empty.repoName).toBeNull();
     expect(empty.commits).toEqual({});
+    expect(empty.stats).toBeNull();
+  });
+
+  test("build stats pass through untouched (null on pre-stats embeds)", () => {
+    const stats = {
+      generatedAt: "2026-07-04T20:14:33+00:00",
+      totalBytes: 1000,
+      bytes: { nodes: 1, edges: 2, files: 3, dirs: 4, appJs: 5, appCss: 6 },
+    };
+    expect(buildModel({ ...raw, stats }).stats).toEqual(stats);
+    expect(m.stats).toBeNull();
   });
 
   test("repoName derives owner/repo from repoUrl; commitUrl passes through", () => {
