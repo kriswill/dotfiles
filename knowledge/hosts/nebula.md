@@ -42,14 +42,14 @@ Non-declarative BIOS facts, invisible to the flake:
 - **`Wake Up Event By = OS`** — required for S3 suspend to hold (see
   [docs/suspend.md](../../docs/suspend.md)); lost on CMOS reset **and on any
   BIOS flash**, so re-set it after either.
-- **Warm-reboot DRAM-training hang** (observed 2026-07-03 on BIOS 2.A02):
+- **Warm-reboot DRAM-training hang** (observed 2026-07-03 on BIOS `2.A02`):
   `reboot` stalls at debug code 44 with the yellow DRAM EZ-Debug LED. The
   journal proved userspace shutdown completed cleanly in ~1s through
   systemd-shutdown's final sync — the hang is the firmware re-training DDR5
   (64GB) after the warm reset, a known AM5/AGESA quirk. A cold power cycle
   clears it. Note `reboot` is a warm reset: fans/LEDs staying on is normal;
-  the stuck code is the anomaly. If it recurs, update the BIOS past 2.A02
-  (newest at the time: 2.AC3, 2026-06-26, AGESA 1.3.0.1b Patch A — the
+  the stuck code is the anomaly. If it recurs, update the BIOS past `2.A02`
+  (newest at the time: `2.AC3`, 2026-06-26, AGESA 1.3.0.1b Patch A — the
   intervening releases carry EXPO and memory-compatibility fixes) and/or
   enable **Memory Context Restore** in the DRAM settings to skip retraining
   on reboot. systemd also arms the SP5100 hardware watchdog (10-min timeout)
