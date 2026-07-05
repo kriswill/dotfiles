@@ -11,7 +11,7 @@ import { cfg, makeStub, node } from "./test-helpers";
 
 const model = () =>
   buildModel({
-    nodes: [node("nvim/architecture", "Reference", "Arch")],
+    nodes: [node("wiki/architecture", "Reference", "Arch")],
     edges: [],
     // The '%' in this path is the double-decode regression case: decoding its
     // (once-encoded) hash a second time throws URIError.
@@ -48,9 +48,9 @@ describe("App hash handling", () => {
     location.hash = "#f/docs/50%25.md";
     const viz = createVizState(model());
     mountApp(viz);
-    viz.selectConcept("nvim/architecture");
+    viz.selectConcept("wiki/architecture");
     flushSync();
-    expect(location.hash).toBe("#c/nvim/architecture");
+    expect(location.hash).toBe("#c/wiki/architecture");
     location.hash = "#f/docs/50%25.md"; // simulate Back
     window.dispatchEvent(new Event("hashchange"));
     flushSync();
@@ -81,10 +81,10 @@ describe("App hash handling", () => {
   test("hashchange applies a new selection", () => {
     const viz = createVizState(model());
     mountApp(viz);
-    location.hash = "#c/nvim/architecture";
+    location.hash = "#c/wiki/architecture";
     window.dispatchEvent(new Event("hashchange"));
     flushSync();
-    expect(viz.sel).toEqual({ kind: "concept", id: "nvim/architecture" });
+    expect(viz.sel).toEqual({ kind: "concept", id: "wiki/architecture" });
   });
 });
 
@@ -92,40 +92,40 @@ describe("App filter persistence", () => {
   test("filter changes land in the URL without touching the selection part", () => {
     const viz = createVizState(model());
     mountApp(viz);
-    viz.selectConcept("nvim/architecture");
+    viz.selectConcept("wiki/architecture");
     flushSync();
     viz.toggleType("Reference");
     viz.query = "arch";
     flushSync();
-    expect(location.hash).toBe("#c/nvim/architecture?hide=Reference&q=arch");
+    expect(location.hash).toBe("#c/wiki/architecture?hide=Reference&q=arch");
     viz.setIsolate(1);
     flushSync();
-    expect(location.hash).toBe("#c/nvim/architecture?hide=Reference&q=arch&isolate=1");
+    expect(location.hash).toBe("#c/wiki/architecture?hide=Reference&q=arch&isolate=1");
     viz.setFacet("platform", "macos");
     flushSync();
-    expect(location.hash).toBe("#c/nvim/architecture?hide=Reference&q=arch&isolate=1&platform=macos");
+    expect(location.hash).toBe("#c/wiki/architecture?hide=Reference&q=arch&isolate=1&platform=macos");
     viz.setFilters([], "");
     flushSync();
-    expect(location.hash).toBe("#c/nvim/architecture");
+    expect(location.hash).toBe("#c/wiki/architecture");
   });
 
   test("a deep link with filters applies them on mount", () => {
-    location.hash = "#c/nvim/architecture?hide=Reference&q=arch";
+    location.hash = "#c/wiki/architecture?hide=Reference&q=arch";
     const viz = createVizState(model());
     mountApp(viz);
-    expect(viz.sel).toEqual({ kind: "concept", id: "nvim/architecture" });
+    expect(viz.sel).toEqual({ kind: "concept", id: "wiki/architecture" });
     expect([...viz.hidden]).toEqual(["Reference"]);
     expect(viz.query).toBe("arch");
-    expect(location.hash).toBe("#c/nvim/architecture?hide=Reference&q=arch"); // applied, never rewritten
+    expect(location.hash).toBe("#c/wiki/architecture?hide=Reference&q=arch"); // applied, never rewritten
   });
 
   test("a deep link with an isolate param applies it on mount", () => {
-    location.hash = "#c/nvim/architecture?hide=Reference&q=arch&isolate=1";
+    location.hash = "#c/wiki/architecture?hide=Reference&q=arch&isolate=1";
     const viz = createVizState(model());
     mountApp(viz);
-    expect(viz.sel).toEqual({ kind: "concept", id: "nvim/architecture" });
+    expect(viz.sel).toEqual({ kind: "concept", id: "wiki/architecture" });
     expect(viz.isolateDepth).toBe(1);
-    expect(location.hash).toBe("#c/nvim/architecture?hide=Reference&q=arch&isolate=1"); // applied, never rewritten
+    expect(location.hash).toBe("#c/wiki/architecture?hide=Reference&q=arch&isolate=1"); // applied, never rewritten
   });
 
   test("a deep link combining a file selection with hide=/q= still applies both (isolate stays 0, not a concept)", () => {
@@ -140,37 +140,37 @@ describe("App filter persistence", () => {
   });
 
   test("a canonical ?platform= deep link applies the facet lens on mount (any selection kind)", () => {
-    location.hash = "#c/nvim/architecture?platform=linux";
+    location.hash = "#c/wiki/architecture?platform=linux";
     const viz = createVizState(model());
     mountApp(viz);
-    expect(viz.sel).toEqual({ kind: "concept", id: "nvim/architecture" });
+    expect(viz.sel).toEqual({ kind: "concept", id: "wiki/architecture" });
     expect(viz.facetSel.platform).toBe("linux");
-    expect(location.hash).toBe("#c/nvim/architecture?platform=linux"); // applied, never rewritten
+    expect(location.hash).toBe("#c/wiki/architecture?platform=linux"); // applied, never rewritten
   });
 
   test("legacy ?os= deep link: applies the lens, hash is NOT rewritten on load, next interaction re-encodes as platform=", () => {
-    location.hash = "#c/nvim/architecture?os=linux";
+    location.hash = "#c/wiki/architecture?os=linux";
     const viz = createVizState(model());
     mountApp(viz);
-    expect(viz.sel).toEqual({ kind: "concept", id: "nvim/architecture" });
+    expect(viz.sel).toEqual({ kind: "concept", id: "wiki/architecture" });
     expect(viz.facetSel.platform).toBe("linux");
-    expect(location.hash).toBe("#c/nvim/architecture?os=linux"); // applied, never rewritten on load
+    expect(location.hash).toBe("#c/wiki/architecture?os=linux"); // applied, never rewritten on load
     viz.setFacet("platform", "macos"); // any subsequent interaction re-encodes canonically
     flushSync();
-    expect(location.hash).toBe("#c/nvim/architecture?platform=macos");
+    expect(location.hash).toBe("#c/wiki/architecture?platform=macos");
   });
 
   test("a platform-only change amends the URL in place (replaceState, no selection churn)", () => {
     const viz = createVizState(model());
     mountApp(viz);
-    viz.selectConcept("nvim/architecture");
+    viz.selectConcept("wiki/architecture");
     flushSync();
     // Spy AFTER the selection settles so we observe only the filter-only write.
     const replace = spyOn(history, "replaceState");
     const push = spyOn(history, "pushState");
     viz.setFacet("platform", "macos");
     flushSync();
-    expect(location.hash).toBe("#c/nvim/architecture?platform=macos");
+    expect(location.hash).toBe("#c/wiki/architecture?platform=macos");
     // The load-bearing guarantee: a filter-only change amends the current entry
     // (replaceState) rather than pushing a new one (the documented Back trap).
     expect(replace).toHaveBeenCalledTimes(1);
@@ -179,7 +179,7 @@ describe("App filter persistence", () => {
     push.mockRestore();
     viz.setFacet("platform", "all");
     flushSync();
-    expect(location.hash).toBe("#c/nvim/architecture");
+    expect(location.hash).toBe("#c/wiki/architecture");
   });
 
   test("selection navigation keeps active filters; Back to a bare hash clears them", () => {
@@ -188,17 +188,17 @@ describe("App filter persistence", () => {
     viz.toggleType("Reference");
     flushSync();
     expect(location.hash).toBe("#?hide=Reference");
-    viz.selectConcept("nvim/architecture");
+    viz.selectConcept("wiki/architecture");
     flushSync();
-    expect(location.hash).toBe("#c/nvim/architecture?hide=Reference");
+    expect(location.hash).toBe("#c/wiki/architecture?hide=Reference");
     viz.setIsolate(2);
     flushSync();
-    expect(location.hash).toBe("#c/nvim/architecture?hide=Reference&isolate=2");
-    location.hash = "#c/nvim/architecture"; // simulate Back to an unfiltered entry
+    expect(location.hash).toBe("#c/wiki/architecture?hide=Reference&isolate=2");
+    location.hash = "#c/wiki/architecture"; // simulate Back to an unfiltered entry
     window.dispatchEvent(new Event("hashchange"));
     flushSync();
     expect(viz.hidden.size).toBe(0);
     expect(viz.isolateDepth).toBe(0);
-    expect(viz.sel).toEqual({ kind: "concept", id: "nvim/architecture" });
+    expect(viz.sel).toEqual({ kind: "concept", id: "wiki/architecture" });
   });
 });

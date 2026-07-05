@@ -238,7 +238,7 @@ for (const n of nodes) {
     const inRepo = resolveLink(repo, join(cfg.bundle.dir, n.id + ".md"), target);
     if (inRepo && !inRepo.startsWith(cfg.bundle.dir + "/")) addRepoPath(inRepo, n.id);
   }
-  // Bare repo-path mentions in prose (e.g. "./flakes/x/darwin-module.nix")
+  // Bare repo-path mentions in prose (e.g. "./src/lib/parser.py")
   // get embedded too, so the runtime autolinker has something to open.
   for (const m of n.body.matchAll(/(?:^|[\s(`])((?:\.\/)?(?:[A-Za-z0-9_.-]+\/)+[A-Za-z0-9_.-]+\.[A-Za-z0-9]{1,6})/g)) {
     addFile(m[1].replace(/^\.\//, ""), n.id);

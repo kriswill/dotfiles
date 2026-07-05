@@ -139,6 +139,7 @@ stdenvNoCC.mkDerivation {
 
   meta = {
     description = "CLI for maintaining OKF knowledge bundles (scaffold/index/validate/viz)";
+    # TODO(extraction): flips to the standalone repo URL when okf moves out.
     homepage = "https://github.com/kriswill/dotfiles/tree/main/flakes/okf";
     mainProgram = "okf";
     platforms = [

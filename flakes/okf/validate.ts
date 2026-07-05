@@ -1,5 +1,5 @@
-// Validate the knowledge/ bundle against OKF v0.1 conformance (SPEC.md §9)
-// plus this repo's stricter profile (see knowledge/okf-profile.md):
+// Validate the bundle against OKF v0.1 conformance (SPEC.md §9) plus the
+// workspace's profile policy (okf.toml [profile]; defaults in config-cli.ts):
 //   errors   — frontmatter must parse; `type` must be non-empty; reserved
 //              filenames must not carry concept frontmatter; links must be
 //              file-relative (no /-rooted paths — they break GitHub rendering)

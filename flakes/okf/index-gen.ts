@@ -1,4 +1,4 @@
-// Regenerate index.md files throughout the knowledge/ bundle (OKF SPEC §6:
+// Regenerate index.md files throughout the bundle (OKF SPEC §6:
 // progressive disclosure — one directory level at a time).
 //
 // Hand-maintained parts are preserved on regeneration:

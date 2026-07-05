@@ -2,6 +2,15 @@
 
 ## 2026-07-04
 
+- **Decision** — [okf-generalization](decisions/okf-generalization.md):
+  the okf generalization arc is **complete** — extraction-readiness sweep
+  (flake source free of dotfiles assumptions, test fixtures neutralized,
+  okf-viz.toml fallback removed, generic README with a no-Nix adoption
+  section) verified by a three-way second-repo smoke: a fresh non-Nix
+  Python repo through git provider, no-VCS provider, and a standalone
+  bun-installed okf copy — init/scaffold/index/validate/viz all green in
+  each. Splitting okf to its own repository remains a one-line input swap.
+
 - **Update** — [okf](packages/okf.md): new `okf init [--dir=<d>]`
   bootstraps a fresh workspace (commented starter okf.toml + bundle
   skeleton; never overwrites, no-op when initialized), and `okf help` is

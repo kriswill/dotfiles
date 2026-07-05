@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { displayName, normalizeVizConfig, VizConfigError } from "./config";
 
-/** A dotfiles-shaped raw config in TOML (kebab-case) spelling, with two
+/** A repo-shaped raw config in TOML (kebab-case) spelling, with two
  *  facets exercising every FacetConfig field (incl. nested nulls both ways:
  *  platform has a classifier but no frontmatter, status the reverse).
  *  Deliberately uses the LEGACY `nix-packages` spelling — normalizing it
@@ -18,15 +18,15 @@ const rawCfg = () => ({
   },
   embed: { "max-bytes": 100 },
   taxonomy: {
-    types: ["Darwin Module", "Decision"],
+    types: ["Alpha Module", "Decision"],
     "group-order": ["Knowledge", "System"],
     "dir-groups": { decisions: "Knowledge", modules: "System" } as Record<string, string>,
   },
   facet: {
     platform: {
       values: ["macos", "linux"],
-      types: { "Darwin Module": "macos", "NixOS Module": "linux", Host: "macos" } as Record<string, string>,
-      ids: { "hosts/nebula": "linux" } as Record<string, string>,
+      types: { "Alpha Module": "macos", "Beta Module": "linux", Host: "macos" } as Record<string, string>,
+      ids: { "hosts/europa": "linux" } as Record<string, string>,
       "nix-packages": {
         file: "modules/packages.nix",
         guards: { darwin: "macos", linux: "linux" } as Record<string, string>,
@@ -68,8 +68,8 @@ describe("normalizeVizConfig", () => {
     expect(c.facets[0]).toEqual({
       name: "platform",
       values: ["macos", "linux"],
-      types: { "Darwin Module": "macos", "NixOS Module": "linux", Host: "macos" },
-      ids: { "hosts/nebula": "linux" },
+      types: { "Alpha Module": "macos", "Beta Module": "linux", Host: "macos" },
+      ids: { "hosts/europa": "linux" },
       frontmatter: null,
       classify: {
         provider: "nix-optional-attrs",
@@ -296,8 +296,8 @@ describe("normalizeVizConfig", () => {
 
   test("strict: dir-groups referencing a group missing from group-order rejected", () => {
     const base = rawCfg();
-    base.taxonomy["dir-groups"].nvim = "Neovim";
-    expect(() => normalizeVizConfig(base, { strict: true })).toThrow(/nvim.*Neovim.*group-order/s);
+    base.taxonomy["dir-groups"].wiki = "Wiki";
+    expect(() => normalizeVizConfig(base, { strict: true })).toThrow(/wiki.*Wiki.*group-order/s);
   });
 
   test("strict: path escapes rejected", () => {
@@ -370,14 +370,14 @@ describe("normalizeVizConfig", () => {
 describe("displayName", () => {
   const cfg = (over: Record<string, unknown> = {}) => normalizeVizConfig({ display: over });
   test("config name overrides git-derived name", () => {
-    expect(displayName(cfg({ name: "my/repo" }), "kriswill/dotfiles")).toBe("my/repo");
+    expect(displayName(cfg({ name: "my/repo" }), "acme/widgets")).toBe("my/repo");
   });
   test("falls back to git-derived name, then fallback-name", () => {
-    expect(displayName(cfg(), "kriswill/dotfiles")).toBe("kriswill/dotfiles");
+    expect(displayName(cfg(), "acme/widgets")).toBe("acme/widgets");
     expect(displayName(cfg(), null)).toBe("OKF bundle");
     expect(displayName(cfg({ "fallback-name": "knowledge/" }), null)).toBe("knowledge/");
   });
   test("an empty-string name override means 'derive', not a blank header", () => {
-    expect(displayName(cfg({ name: "" }), "kriswill/dotfiles")).toBe("kriswill/dotfiles");
+    expect(displayName(cfg({ name: "" }), "acme/widgets")).toBe("acme/widgets");
   });
 });
