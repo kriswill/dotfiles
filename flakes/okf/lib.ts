@@ -47,10 +47,6 @@ export function repoRoot(): string {
   return (repoRootCache ??= computeRepoRoot());
 }
 
-export function bundleRoot(): string {
-  return join(repoRoot(), "knowledge");
-}
-
 /** All .md files under root, as sorted bundle-relative paths. */
 export function walkMd(root: string): string[] {
   const out: string[] = [];

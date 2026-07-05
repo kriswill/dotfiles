@@ -9,14 +9,14 @@
 
 import { existsSync } from "node:fs";
 import { join } from "node:path";
+import { loadContext } from "./config-cli";
 import {
-  bundleRoot, c, extractLinks, isExternal, parseDoc, repoRoot, resolveLink,
+  c, extractLinks, isExternal, parseDoc, resolveLink,
   walkMd, PROFILE_FIELDS, RESERVED,
 } from "./lib";
 
 const STRICT = process.argv.includes("--strict");
-const bundle = bundleRoot();
-const repo = repoRoot();
+const { root: repo, bundle, cfg } = loadContext();
 
 const errors: string[] = [];
 const warnings: string[] = [];
@@ -62,7 +62,7 @@ for (const rel of files) {
         warnings.push(`${rel}: dangling bundle link '${target}'`);
     } else {
       // Escapes the bundle — allowed (points into the repo), but verify it resolves.
-      const inRepo = resolveLink(repo, join("knowledge", rel), target);
+      const inRepo = resolveLink(repo, join(cfg.viz.bundle.dir, rel), target);
       if (inRepo === null) errors.push(`${rel}: link '${target}' escapes the repository`);
       else if (!existsSync(join(repo, inRepo)))
         warnings.push(`${rel}: dangling repo link '${target}'`);
