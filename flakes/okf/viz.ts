@@ -21,12 +21,19 @@ import { THEMES } from "./viz-app/themes";
 const argv = process.argv.slice(2);
 
 // --check: typecheck the viewer app (svelte-check) instead of building.
+// TS diagnostics come from tsgo (@typescript/native-preview) via svelte-check's
+// experimental API — in-process, no `node` spawn, no disk artifacts, ~2x faster
+// than the tsc path. Drop the flag to fall back to tsc (typescript stays a
+// devDependency: svelte-check requires it regardless).
 if (argv.includes("--check")) {
-  const r = Bun.spawnSync(["bunx", "svelte-check", "--tsconfig", "./tsconfig.json"], {
-    cwd: import.meta.dir,
-    stdout: "inherit",
-    stderr: "inherit",
-  });
+  const r = Bun.spawnSync(
+    ["bunx", "svelte-check", "--tsconfig", "./tsconfig.json", "--tsgo-experimental-api"],
+    {
+      cwd: import.meta.dir,
+      stdout: "inherit",
+      stderr: "inherit",
+    },
+  );
   process.exit(r.exitCode ?? 1);
 }
 

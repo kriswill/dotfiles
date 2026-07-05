@@ -20,7 +20,11 @@ scripts), and [ccglass](packages/ccglass.md)'s patched upstream are all TS.
 
 **There is no tsc build step anywhere** — bun transpiles on execution, so
 types are documentation-plus-editor-tooling by default. Typechecking is
-opt-in and targeted: `okf viz --check` runs svelte-check over the viewer.
+opt-in and targeted: `okf viz --check` runs svelte-check with TS
+diagnostics from tsgo (`@typescript/native-preview`, the native Go
+compiler) via its experimental API; for plain-TS iteration
+`bunx tsgo --noEmit -p tsconfig.json` in `flakes/okf/` checks everything
+but `.svelte` files in ~0.2s.
 
 **Editor tooling** splits by file type ([nvim LSP](nvim/lsp.md)): vtsls
 serves plain `.ts`/`.tsx` (workspace TypeScript SDK, inlay hints) while the

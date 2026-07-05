@@ -55,9 +55,10 @@ let
     fileset = sources;
   };
 
-  # The lock is pure JS — no os/cpu-conditional packages, no install scripts —
-  # so one hash serves every platform; --cpu/--os="*" keeps that true if a
-  # future dep adds conditionals. NOT --production: `okf viz` needs svelte +
+  # One hash serves every platform: --cpu/--os="*" makes bun install every
+  # platform variant of os/cpu-conditional packages (@typescript/native-preview
+  # ships a ~26M tsgo binary per platform — the bulk of this output's size).
+  # No install scripts run. NOT --production: `okf viz` needs svelte +
   # bun-plugin-svelte (devDependencies) at CLI runtime, the tests happy-dom.
   # Refresh the hash (bun.lock or nixpkgs bun changes): set lib.fakeHash, then
   # `nix build ./flakes/okf#okf.node_modules` and copy the "got:" value.
@@ -98,7 +99,7 @@ let
     # Fixup would patch shebangs into store paths — forbidden in a fixed-output
     # derivation.
     dontFixup = true;
-    outputHash = "sha256-bkxkmTnRRePRqyHN3pq/TNW8CjqkQCLaJm5y55ri2OA=";
+    outputHash = "sha256-NBnA/LycPFkpSkvkpZCv6dmK8v6Da6OAI5ADYq7TuAI=";
     outputHashAlgo = "sha256";
     outputHashMode = "recursive";
   };

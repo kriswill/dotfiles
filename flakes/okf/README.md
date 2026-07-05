@@ -108,9 +108,16 @@ bun test
 bun okf.ts help
 ```
 
-**Dev-tree only** (not available from the nix-built package, whose
-`node_modules` is a read-only store path):
+**Dev-tree only** (not available from the nix-built package):
 
-- `okf viz --check` — spawns `bunx svelte-check`, which writes
-  `node_modules/.svelte2tsx-language-server-files` at startup.
 - `okf viz --perf` — needs a locally installed Chrome (puppeteer-core).
+
+`okf viz --check` typechecks with tsgo (`@typescript/native-preview`) through
+svelte-check's `--tsgo-experimental-api` — in-process and artifact-free, so it
+works from the nix-built package too (the tsc path wrote
+`node_modules/.svelte2tsx-language-server-files`, impossible on a read-only
+store path). Plain-TS iteration is fastest with tsgo directly:
+`bunx tsgo --noEmit -p tsconfig.json` (checks everything but `.svelte` files).
+Known upstream gap: svelte-check 4.7.1's non-API `--tsgo` flag points at
+`bin/tsgo.js`, which current native-preview builds no longer ship — it exits 0
+without checking anything; don't use it.

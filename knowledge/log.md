@@ -35,6 +35,18 @@
   `display.date-format`; pre-stats embeds render the modal without the
   table. 7 new tests (296 total).
 
+- **Update** — [okf](packages/okf.md): `okf viz --check` typechecks on tsgo
+  (`@typescript/native-preview` devDependency) via svelte-check's
+  `--tsgo-experimental-api` — ~2x faster than the tsc path, in-process and
+  artifact-free, so the check now also works from the nix-built package
+  (the tsc path wrote into read-only `node_modules`). `typescript` stays
+  (svelte-check requires it); svelte-check 4.7.1's non-API `--tsgo` flag is
+  silently broken upstream (spawns a `bin/tsgo.js` that native-preview no
+  longer ships, parses the MODULE_NOT_FOUND stderr as zero diagnostics,
+  exits 0). node_modules FOD grows ~180M (7 platform tsgo binaries under
+  `--cpu/--os="*"`); hash refreshed. Plain-TS iteration:
+  `bunx tsgo --noEmit -p tsconfig.json` (~0.2s vs tsc's ~1.2s).
+
 - **Update** — [okf](packages/okf.md): post-review fixes on the
   generalization PR. Three bugs: collect-tier `output` templates now
   reject `{repo}`/`{description}`/`{description-sentence}` at config load

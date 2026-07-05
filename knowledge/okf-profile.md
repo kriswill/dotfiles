@@ -100,7 +100,7 @@ the dev shell (`nix develop` / direnv) it's on `PATH` as **`okf`** via the
 okf scaffold [--force]   # run this repo's scaffolder (scripts/okf-scaffold.ts via okf.toml [scaffold]; idempotent; --force overwrites)
 okf index               # regenerate index.md listings
 okf validate [--strict]  # spec + profile conformance; --strict fails on warnings too
-okf viz [--check|--perf] # render knowledge/viz.html (Svelte 5 viewer); --check runs svelte-check, --perf measures startup in headless Chrome
+okf viz [--check|--perf] # render knowledge/viz.html (Svelte 5 viewer); --check runs svelte-check on tsgo, --perf measures startup in headless Chrome
 okf help [command]      # full usage, per-command flags, docs pointers
 
 bun flakes/okf/okf.ts <cmd>   # equivalent, no dev shell needed

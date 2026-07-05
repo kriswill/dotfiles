@@ -17,7 +17,7 @@ reactivity with **runes** (`$state`, `$derived`, `$effect`).
 graph viewer — rebuilt in Svelte 5 from a vanilla-TS canvas prototype (see
 the [viz-svelte-rebuild decision](decisions/viz-svelte-rebuild.md)). It is
 bundled at CLI runtime by `Bun.build` + bun-plugin-svelte
-([Bun runtime](bun-runtime.md)), typechecked by svelte-check
+([Bun runtime](bun-runtime.md)), typechecked by svelte-check on tsgo
 (`okf viz --check`), and tested under `bun test`.
 
 **The house Svelte knowledge lives in
