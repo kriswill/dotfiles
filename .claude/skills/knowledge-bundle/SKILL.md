@@ -23,6 +23,13 @@ okf validate  # conformance + link check; must exit 0 before committing
 okf viz      # regenerate knowledge/viz.html interactive graph (gitignored; Svelte 5 viewer — --check typechecks, --perf measures startup)
 ```
 
+The okf CLI itself is generic; THIS repo's scaffolding logic (module
+classes, twins, gating, hosts, nvim plugins) lives in
+`scripts/okf-scaffold.ts`, wired via `okf.toml [scaffold] script` and run
+through the injected `ScaffoldContext` API (`flakes/okf/scaffold-api.ts`).
+Component-scan changes (new source dirs, new doc types, cross-link targets)
+are edits to that script, not to flakes/okf/.
+
 ## When to update what
 
 | Change you just made | Bundle action |

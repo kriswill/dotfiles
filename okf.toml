@@ -8,6 +8,15 @@
 dir = "knowledge" # OKF bundle root, repo-relative
 out = "viz.html"  # output file, relative to the bundle dir
 
+[scaffold]
+script = "scripts/okf-scaffold.ts" # repo-owned metadata pass, run by `okf scaffold`
+# command = ["python3", "tools/scaffold.py"]  # non-JS alternative (OKF_* env); exclusive with script
+# [[scaffold.collect]]                        # declarative tier for simple cases (glob + templates)
+# glob = "src/services/*.py"
+# type = "Service"
+# output = "services/{name}.md"
+# comment = "#"
+
 [display]
 title = "OKF knowledge graph" # <title> = "<name> — <title>"
 badge = "OKF viz"             # sidebar h1 suffix label

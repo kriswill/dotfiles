@@ -23,6 +23,7 @@ let
       ./config-cli.ts
       ./vcs
       ./scaffold.ts
+      ./scaffold-api.ts
       ./index-gen.ts
       ./validate.ts
       ./viz.ts

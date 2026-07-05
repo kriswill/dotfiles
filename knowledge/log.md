@@ -2,6 +2,15 @@
 
 ## 2026-07-04
 
+- **Decision** — [okf-scaffold-hook](decisions/okf-scaffold-hook.md):
+  `okf scaffold` is now a generic driver; the dotfiles metadata pass moved
+  out of the flake to `scripts/okf-scaffold.ts` (mechanical port,
+  parity-diffed byte-identical), invoked via `okf.toml [scaffold] script`
+  with an injected `ScaffoldContext` API (emit/timestamp/leadingComment/…;
+  type-only imports, so vendored or store okf both work). Simple repos can
+  use declarative `[[scaffold.collect]]` glob+template entries instead;
+  `command` is the non-JS escape hatch.
+
 - **Decision** — [okf-facet-classify](decisions/okf-facet-classify.md):
   the facet build-side source generalizes from `nix-packages` to
   `[facet.<n>.classify]` with `provider = "nix-optional-attrs"` (existing

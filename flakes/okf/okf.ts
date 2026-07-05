@@ -17,8 +17,8 @@ const commands: Record<string, Cmd> = {
   scaffold: {
     file: "./scaffold.ts",
     args: "[--force]",
-    brief: "stub catalog docs for new modules/packages/hosts/nvim-plugins",
-    summary: "Stub catalog docs (modules/hosts/packages/nvim-plugins) from the repo sources. Idempotent: existing docs are never touched, so hand enrichment survives re-runs.",
+    brief: "stub concept docs from the workspace sources",
+    summary: "Run the workspace's scaffold hooks from okf.toml [scaffold]: a repo-owned script (dynamically imported with the ScaffoldContext API) and/or command (spawned with OKF_* env), then the declarative [[scaffold.collect]] entries (glob + templates). Idempotent: existing docs are never touched, so hand enrichment survives re-runs.",
     flags: [["--force", "overwrite existing docs with fresh stubs (discards enrichment)"]],
   },
   index: {
