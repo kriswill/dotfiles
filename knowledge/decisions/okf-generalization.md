@@ -59,7 +59,9 @@ input-URL swap per the [sub-flake pattern](../patterns/subflake-extraction.md).
   every step, scaffold 0-written/100-skipped, viz commit links 33/42 and
   the platform facet map (5 entries) byte-stable, 285 bun tests, the store
   package green including its git-less sandbox test check.
-- Remaining known gaps, tracked separately: merge-added files fall back to
-  now() timestamps in the git provider (`git log --name-only` omits
-  merges); the syntax-highlighter language table is small (unknown
-  extensions degrade to plain text gracefully).
+- ~~Merge-added files fall back to now() timestamps in the git provider.~~
+  Closed same day: `--diff-merges=c` on the batched date pass (see
+  [okf-vcs-provider](okf-vcs-provider.md)) — `scaffold --force` is now
+  fully deterministic.
+- Remaining known gap: the syntax-highlighter language table is small
+  (unknown extensions degrade to plain text gracefully).
