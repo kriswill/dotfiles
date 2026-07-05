@@ -6,8 +6,8 @@ tags: [viz, svelte, tooling]
 timestamp: '2026-07-02T00:00:00-07:00'
 ---
 
-**Status:** active. **Where:** `flakes/okf/viz-app/`, built by
-[../../flakes/okf/viz.ts](../../flakes/okf/viz.ts).
+**Status:** active. **Where:** okflight's `viz-app/`, built by
+[`viz.ts`](https://github.com/kriswill/okflight/blob/main/viz.ts).
 
 ## Context
 

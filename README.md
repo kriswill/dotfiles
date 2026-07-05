@@ -32,7 +32,8 @@ Repo knowledge lives in two places:
   alone. Start at the [index](knowledge/index.md).
 
 The published site is the same bundle rendered by `okf viz`
-(`flakes/okf/`), so it can never drift from what's committed.
+([kriswill/okflight](https://github.com/kriswill/okflight)), so it can never
+drift from what's committed.
 
 ## MacOS
 

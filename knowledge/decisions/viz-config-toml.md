@@ -13,8 +13,8 @@ timestamp: '2026-07-04T00:00:00-07:00'
 source described below is now the `classify` union (legacy spelling still
 accepted).
 **Where:** [../../okf.toml](../../okf.toml), viewer schema in
-[../../flakes/okf/viz-app/config.ts](../../flakes/okf/viz-app/config.ts),
-loaded by [../../flakes/okf/config-cli.ts](../../flakes/okf/config-cli.ts).
+[`viz-app/config.ts`](https://github.com/kriswill/okflight/blob/main/viz-app/config.ts),
+loaded by [`config-cli.ts`](https://github.com/kriswill/okflight/blob/main/config-cli.ts).
 `okf-viz.toml` below is the file's original name (historical prose).
 
 ## Context

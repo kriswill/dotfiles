@@ -7,8 +7,8 @@ timestamp: '2026-07-04T00:00:00-07:00'
 ---
 
 **Status:** active. **Where:**
-[../../flakes/okf/scaffold-api.ts](../../flakes/okf/scaffold-api.ts)
-(injected API), [../../flakes/okf/scaffold.ts](../../flakes/okf/scaffold.ts)
+[`scaffold-api.ts`](https://github.com/kriswill/okflight/blob/main/scaffold-api.ts)
+(injected API), [`scaffold.ts`](https://github.com/kriswill/okflight/blob/main/scaffold.ts)
 (generic driver), [../_okf-scaffold/main.ts](../_okf-scaffold/main.ts)
 (this repo's pass — since split per type and moved bundle-adjacent, see
 [okf-scaffold-split](okf-scaffold-split.md)). Part of the okf generalization

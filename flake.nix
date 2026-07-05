@@ -43,8 +43,10 @@
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.flake-parts.follows = "flake-parts";
     };
+    # okf lives in its own (private, for now) repo — nix consumers need a
+    # GitHub token (`access-tokens = github.com=<token>` in nix.conf).
     okf = {
-      url = "./flakes/okf";
+      url = "github:kriswill/okflight";
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.flake-parts.follows = "flake-parts";
     };

@@ -1002,14 +1002,18 @@
         ]
       },
       "locked": {
-        "path": "./flakes/okf",
-        "type": "path"
+        "lastModified": 1783284665,
+        "narHash": "sha256-SwL2bVby+JCOJmjL/IHpfcWKswhzoOl5izUlfAwVWvE=",
+        "owner": "kriswill",
+        "repo": "okflight",
+        "rev": "7dbd00951b3d214f2832624396600491f0465f94",
+        "type": "github"
       },
       "original": {
-        "path": "./flakes/okf",
-        "type": "path"
-      },
-      "parent": []
+        "owner": "kriswill",
+        "repo": "okflight",
+        "type": "github"
+      }
     },
     "pre-commit-hooks": {
       "inputs": {

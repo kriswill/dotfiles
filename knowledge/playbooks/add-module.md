@@ -35,5 +35,6 @@ timestamp: '2026-07-03T12:00:00-07:00'
    pre-hardware gate from a Mac is
    `nix eval .#nixosConfigurations.nebula.config.system.build.toplevel.drvPath`.
 
-Afterwards: run `bun flakes/okf/okf.ts scaffold` to stub the module's
-catalog doc in this bundle, and `bun flakes/okf/okf.ts index` to list it.
+Afterwards: run `okf scaffold` to stub the module's catalog doc in this
+bundle, and `okf index` to list it (dev-shell PATH; outside it,
+`nix run .#okf -- <cmd>`).

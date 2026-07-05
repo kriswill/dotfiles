@@ -7,7 +7,7 @@
 // host-specific file; `moduleNames` comes from the modules pass (enable-flag
 // filter + doc-slug collision check).
 
-import type { ScaffoldContext } from "../../flakes/okf/scaffold-api";
+import type { ScaffoldContext } from "./okf-scaffold-api";
 import { classTag, docType, type ClassName, type Repo } from "./lib";
 
 export function scaffoldHosts(

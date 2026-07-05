@@ -25,5 +25,5 @@ standalone-buildable, future separate repo), use the
 [sub-flake extraction pattern](../patterns/subflake-extraction.md) instead —
 the `derivation-to-flake` skill automates it.
 
-Afterwards: `bun flakes/okf/okf.ts scaffold && bun flakes/okf/okf.ts index`
-to add the catalog doc here.
+Afterwards: `okf scaffold && okf index` to add the catalog doc here
+(dev-shell PATH; outside it, `nix run .#okf -- <cmd>`).

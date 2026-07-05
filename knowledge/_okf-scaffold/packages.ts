@@ -1,7 +1,7 @@
 // Scaffold pass: custom packages (pkgs/), overlay-only entries (no pkgs/
 // counterpart), and sub-flakes (flakes/) -> knowledge/packages/<name>.md.
 
-import type { ScaffoldContext } from "../../flakes/okf/scaffold-api";
+import type { ScaffoldContext } from "./okf-scaffold-api";
 import type { Repo } from "./lib";
 
 export function scaffoldPackages(ctx: ScaffoldContext, repo: Repo): void {

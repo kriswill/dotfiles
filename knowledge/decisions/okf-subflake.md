@@ -6,8 +6,10 @@ tags: [sub-flake, okf, bun]
 timestamp: '2026-07-04T23:20:00+00:00'
 ---
 
-**Status:** active. **Where:** [okf](../packages/okf.md),
-[dev](../modules/dev.md), [`flakes/okf/`](../../flakes/okf/).
+**Status:** superseded by [okflight-extraction](okflight-extraction.md)
+(2026-07-05) — the sub-flake moved to its own repository. **Where:**
+[okf](../packages/okf.md),
+[dev](../modules/dev.md), [`flakes/okf/`](https://github.com/kriswill/okflight).
 
 ## Context
 
@@ -53,7 +55,7 @@ not just moved files:
   swap away.
 - The FOD hash must be refreshed when `bun.lock` changes or a nixpkgs bump
   changes bun's install layout (loud hash-mismatch failure; procedure in
-  [`flakes/okf/README.md`](../../flakes/okf/README.md)).
+  [`flakes/okf/README.md`](https://github.com/kriswill/okflight/blob/main/README.md)).
 - `okf viz --check` / `--perf` are dev-tree-only: svelte-check writes into
   `node_modules` (read-only in the store) and `--perf` needs local Chrome.
 - The sub-flake's `checks.<system>.test` runs the 238 viewer tests offline

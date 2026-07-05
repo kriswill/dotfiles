@@ -2,7 +2,7 @@
 // Each spec file under lua/plugins/ (or dir with init.lua) is one plugin,
 // dispatched by lua/config/pack.lua — see knowledge/nvim/architecture.md.
 
-import type { ScaffoldContext } from "../../flakes/okf/scaffold-api";
+import type { ScaffoldContext } from "./okf-scaffold-api";
 import type { Repo } from "./lib";
 
 export function scaffoldNvim(ctx: ScaffoldContext, repo: Repo): void {
