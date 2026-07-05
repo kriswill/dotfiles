@@ -14,8 +14,9 @@ Consumed by the root flake as a relative-path input — see the
 `scripts/okf/` until the [okf-subflake](../decisions/okf-subflake.md) move
 (2026-07-04). Two consumption modes, deliberately split:
 
-- **Dev shell** ([dev](../modules/dev.md)) wraps the **working tree** via bun —
-  edits are live, no rebuild; `viz --check`/`--perf` only work here.
+- **Dev shell** ([dev](../modules/dev.md)) wraps the **working tree** via
+  [bun](../bun-runtime.md) — edits are live, no rebuild;
+  `viz --check`/`--perf` only work here.
 - **`packages.<system>.okf`** runs from the store: sources + vendored
   `node_modules` (fixed-output `bun install` keyed on `bun.lock` — refresh
   procedure in the README) + a `bun run --no-install` wrapper. The repo it

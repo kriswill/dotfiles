@@ -54,7 +54,7 @@ interesting ones by hand — scaffolding never overwrites an existing doc.
 * [Sops](sops.md) - sops-nix on macOS — universal machinery, inert until a host defines secrets.
 * [Sudo 1password](sudo-1password.md) - sudo authentication via the 1Password SSH agent — pam_ssh_agent_auth installed as auth-sufficient on the sudo stack only, with the trusted key materialized via tmpfiles to pass StrictModes and gcr-ssh-agent disabled so the 1Password socket wins.
 * [Tmux](tmux.md) - Installs tmux and generates plugins.conf — the one tmux file that must embed a /nix/store path (tmux-which-key's rtp); tmux.conf and which-key's config.yaml are stowed.
-* [User Packages](user-packages.md) - Darwin feature module 'user-packages'.
+* [User Packages](user-packages.md) - The primary user's per-user CLI toolbox on darwin (users.users.k.packages) — everyday tools from bat/fzf/ripgrep to lazygit and uv, and the darwin provisioner of the Bun and Node runtimes.
 * [Users K Helium](users-k-helium.md) - Installs pkgs.helium-config for user k — the snapshot/restore CLI that syncs Helium's user settings into config/helium/ without symlinking the live Chromium profile.
 * [Users K Noctalia](users-k-noctalia.md) - Installs the Noctalia v5 desktop shell (native C++ Wayland binary) for user k plus its support tooling — ddcutil + i2c for DDC/CI monitor brightness, tomato, noctalia-config snapshots — and the upower/power-profiles-daemon/bluetooth services its widgets read.
 * [Users K](users-k.md) - Defines user k — sops-managed password (neededForUsers), authorized SSH key from snowglobe's keyring, wheel/networkmanager/libvirtd groups, and pkgs.flatpak-user shadowing the system flatpak via PATH.
