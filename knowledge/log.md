@@ -2,6 +2,16 @@
 
 ## 2026-07-05
 
+- **Decision** — [okf-scaffold-split](decisions/okf-scaffold-split.md): the
+  repo scaffolder left `scripts/` for bundle-adjacent
+  `knowledge/_okf-scaffold/`, split from one 520-line monolith into a
+  `main.ts` entry plus one pass file per scaffolded type (`modules.ts`,
+  `hosts.ts`, `packages.ts`, `nvim.ts`) over a shared `lib.ts`. The `_`
+  prefix keeps the directory out of walkMd/index-gen, so the bundle stays
+  pure markdown — OKF v0.1 conformance only governs `.md` files.
+  Parity-verified with a capture-emit harness (100 docs byte-identical old
+  vs new); live `okf scaffold`: 0 written, 100 skipped.
+
 - **Update** — [okf](packages/okf.md): the nix package no longer ships the
   test suite (`test/` and `viz-app/*.test.ts` excluded from the runtime
   fileset; a separate full-tree fileset feeds `checks.test`) — bun's test
