@@ -75,6 +75,34 @@ describe("splitCliSections: [scaffold]", () => {
     ).toThrow(/frontmatter\.team: unknown placeholder \{owner\}/);
   });
 
+  test("output templates reject placeholders unavailable at path-expansion time", () => {
+    // {repo} is derived FROM the output path (circular) and the description
+    // pair is computed after it — allowing them silently emitted filenames
+    // like "widget-{description}.md" or "widget-.md" before this guard.
+    for (const bad of ["{repo}", "{description}", "{description-sentence}"])
+      expect(() =>
+        splitCliSections({
+          scaffold: { collect: [{ glob: "*", type: "T", output: `x/{name}-${bad}.md` }] },
+        }),
+      ).toThrow(/is not available in output templates/);
+    // …while the path-safe set stays legal in output, and the full set stays
+    // legal in the late-expanded fields.
+    const { scaffold } = splitCliSections({
+      scaffold: {
+        collect: [
+          {
+            glob: "*",
+            type: "T",
+            output: "x/{dir}/{name}-{Title}-{timestamp}.md",
+            body: "{description-sentence} at {repo}/{path}",
+            title: "{description}",
+          },
+        ],
+      },
+    });
+    expect(scaffold.collect[0]!.output).toBe("x/{dir}/{name}-{Title}-{timestamp}.md");
+  });
+
   test("unknown keys error with paths", () => {
     expect(() => splitCliSections({ scaffold: { scrpit: "x.ts" } })).toThrow(/scaffold\.scrpit: unknown key/);
     expect(() =>

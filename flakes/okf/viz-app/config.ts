@@ -67,7 +67,7 @@ export interface VizConfig {
  *  guard blocks of a Nix file; "command" runs an argv at the workspace root
  *  that prints the map as JSON. The legacy `nix-packages` table spelling
  *  normalizes to the nix-optional-attrs provider. */
-export type FacetClassify =
+type FacetClassify =
   | {
       provider: "nix-optional-attrs";
       /** Repo-relative Nix file to parse. */
@@ -142,7 +142,25 @@ export function displayName(cfg: VizConfig, repoName: string | null): string {
   return cfg.display.name ?? repoName ?? cfg.display.fallbackName;
 }
 
-const isObj = (v: unknown): v is Record<string, unknown> => typeof v === "object" && v !== null && !Array.isArray(v);
+/** Table check shared with the CLI loader (config-cli.ts) — one copy only. */
+export const isObj = (v: unknown): v is Record<string, unknown> =>
+  typeof v === "object" && v !== null && !Array.isArray(v);
+
+/** Consume one config field by camelCase or kebab-case spelling: call `set`
+ *  with the value (null = "unset", kept as default), then delete the key so
+ *  the caller's unknown-key sweep sees only leftovers. The one kebab/camel
+ *  rule for the whole config surface — shared with config-cli.ts. */
+export const fieldIn =
+  (section: Record<string, unknown>, sectionName: string) =>
+  (camel: string, set: (v: unknown, path: string) => void) => {
+    const kebab = camel.replace(/[A-Z]/g, (c) => "-" + c.toLowerCase());
+    for (const key of camel === kebab ? [camel] : [camel, kebab]) {
+      if (key in section) {
+        if (section[key] !== null) set(section[key], `${sectionName}.${key}`);
+        delete section[key];
+      }
+    }
+  };
 
 export function normalizeVizConfig(raw: unknown, opts?: { strict?: boolean; warn?: (msg: string) => void }): VizConfig {
   const strict = opts?.strict ?? false;
@@ -154,23 +172,14 @@ export function normalizeVizConfig(raw: unknown, opts?: { strict?: boolean; warn
     // lenient: keep the default silently
   };
 
-  // One field spec per canonical key: TOML kebab spelling + a checked setter.
-  // `take` consumes both spellings so the unknown-key sweep sees leftovers.
+  // One field spec per canonical key: TOML kebab spelling + a checked setter
+  // (fieldIn consumes both spellings so the unknown-key sweep sees leftovers).
   const field = (
     section: Record<string, unknown>,
     sectionName: string,
     camel: string,
     set: (v: unknown, path: string) => void,
-  ) => {
-    const kebab = camel.replace(/[A-Z]/g, (c) => "-" + c.toLowerCase());
-    for (const key of camel === kebab ? [camel] : [camel, kebab]) {
-      if (key in section) {
-        // null = "unset" (JSON round-trips of our own output), keep the default.
-        if (section[key] !== null) set(section[key], `${sectionName}.${key}`);
-        delete section[key];
-      }
-    }
-  };
+  ) => fieldIn(section, sectionName)(camel, set);
   const asStr = (assign: (s: string) => void) => (v: unknown, path: string) =>
     typeof v === "string" ? assign(v) : bad(path, "expected a string");
   const asNum = (assign: (n: number) => void) => (v: unknown, path: string) =>

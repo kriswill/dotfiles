@@ -90,6 +90,11 @@ describe("repoNameFromUrl", () => {
     expect(repoNameFromUrl("ssh://git@sr.ht/~o/r")).toBe("~o/r");
   });
 
+  test("explicit ports are dropped, not captured into the name (manual vcs.url overrides never pass through normalizeRemoteUrl)", () => {
+    expect(repoNameFromUrl("https://git.internal:8080/team/repo")).toBe("team/repo");
+    expect(repoNameFromUrl("ssh://git@git.example.com:2222/o/r.git")).toBe("o/r");
+  });
+
   test("null and underivable shapes yield null (display.name covers those)", () => {
     expect(repoNameFromUrl(null)).toBeNull();
     expect(repoNameFromUrl("not a url")).toBeNull();

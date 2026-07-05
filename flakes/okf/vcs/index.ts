@@ -29,7 +29,9 @@ export function createProvider(kind: "auto" | "git" | "none", root: string, igno
     throw new Error(
       top
         ? `[vcs] provider = "git" but the workspace root (${root}) is not the git toplevel (${top})`
-        : `[vcs] provider = "git" but ${root} is not inside a git repository`,
+        : Bun.which("git")
+          ? `[vcs] provider = "git" but ${root} is not inside a git repository`
+          : `[vcs] provider = "git" but git is not installed (or not on PATH)`,
     );
   return noneProvider(root, ignore);
 }

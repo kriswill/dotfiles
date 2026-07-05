@@ -11,7 +11,7 @@ import { join, resolve, dirname } from "node:path";
 
 export type FM = Record<string, string | string[]>;
 
-export interface ConceptDoc {
+interface ConceptDoc {
   rel: string; // path relative to bundle root, e.g. "modules/nh.md"
   abs: string;
   fm: FM | null;

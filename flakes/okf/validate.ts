@@ -42,8 +42,11 @@ for (const rel of files) {
     if (doc.fmError) errors.push(`${rel}: frontmatter error — ${doc.fmError}`);
     else if (!doc.fm) errors.push(`${rel}: missing frontmatter (every concept needs at least 'type')`);
     else {
+      // "Empty" must cover both frontmatter value shapes: "" and [] (an
+      // empty array is truthy, so a bare falsy check silently passes it).
+      const empty = (v: unknown) => !v || v === "" || (Array.isArray(v) && !v.length);
       for (const f of requiredFields)
-        if (!doc.fm[f] || doc.fm[f] === "") errors.push(`${rel}: empty or missing '${f}'`);
+        if (empty(doc.fm[f])) errors.push(`${rel}: empty or missing '${f}'`);
       for (const f of recommendedFields)
         if (!doc.fm[f]) warnings.push(`${rel}: missing recommended field '${f}'`);
       const ts = doc.fm.timestamp;

@@ -174,11 +174,12 @@ export function facetValueOf(node: ConceptNode, facet: FacetConfig, classifyMap:
 
 /** "owner/repo"-style display name from any forge URL — the full repo path
  *  (so GitLab subgroups keep their group chain), https or ssh form, with or
- *  without ".git" (same shapes vcs/git.ts's normalizeRemoteUrl emits, so a
- *  manual vcs.url override behaves like an auto-detected origin). Underivable
- *  shapes yield null; set display.name for those. */
+ *  without ".git", explicit ports dropped (a manual vcs.url override never
+ *  passes through vcs/git.ts's normalizeRemoteUrl, so the port must be
+ *  handled here too). Underivable shapes yield null; set display.name for
+ *  those. */
 export function repoNameFromUrl(url: string | null): string | null {
-  return url?.match(/^(?:https?:\/\/|ssh:\/\/(?:[^@/]+@)?|[^@/:]+@)([^/:]+)[/:](.+?)(?:\.git)?\/?$/)?.[2] ?? null;
+  return url?.match(/^(?:https?:\/\/|ssh:\/\/(?:[^@/]+@)?|[^@/:]+@)([^/:]+)(?::\d+)?[/:](.+?)(?:\.git)?\/?$/)?.[2] ?? null;
 }
 
 export function buildModel(raw: RawData): VizModel {

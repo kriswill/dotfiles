@@ -114,4 +114,10 @@ describe("splitCliSections: [vcs] (mixed section)", () => {
     expect(() => splitCliSections({ vcs: { provider: "p4" } })).toThrow(/vcs\.provider: expected one of: auto, git, none/);
     expect(() => splitCliSections({ vcs: { ignore: "dist" } })).toThrow(/vcs\.ignore/);
   });
+
+  test("non-table vcs is self-validated, like [profile]/[scaffold]", () => {
+    // Previously left silently in `rest` for the viz normalizer to catch —
+    // this function's own contract shouldn't depend on that downstream pass.
+    expect(() => splitCliSections({ vcs: "git" })).toThrow(/vcs: expected a table/);
+  });
 });

@@ -8,7 +8,7 @@
 
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import type { OkfConfig, OkfContext } from "./config-cli";
+import { PLACEHOLDER_RE, type OkfConfig, type OkfContext } from "./config-cli";
 import { fmToYaml, nowISO, parseFrontmatter, titleFromSlug, type FM } from "./lib";
 import type { VcsProvider } from "./vcs";
 
@@ -137,7 +137,8 @@ export function createScaffoldContext(ctx: OkfContext, force: boolean): Scaffold
 }
 
 /** Expand collect-entry template placeholders. Unknown placeholders were
- *  rejected at config load; expansion is a plain replace. */
+ *  rejected at config load (same PLACEHOLDER_RE grammar — validation and
+ *  expansion can't drift); expansion is a plain replace. */
 export function expandTemplate(tpl: string, env: Record<string, string>): string {
-  return tpl.replace(/\{([A-Za-z][A-Za-z-]*)\}/g, (m, k: string) => env[k] ?? m);
+  return tpl.replace(PLACEHOLDER_RE, (m, k: string) => env[k] ?? m);
 }
