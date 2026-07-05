@@ -7,7 +7,8 @@ tags: [nvim, architecture]
 timestamp: '2026-07-02T00:00:00-07:00'
 ---
 
-The whole config is plain Lua on Neovim ≥ 0.12 nightly features: native
+The whole config is plain [Lua](../lua-language.md) on Neovim ≥ 0.12
+nightly features: native
 `vim.pack` for plugins (no lazy.nvim — see the [decision
 record](../decisions/native-vim-pack.md)) and native `vim.lsp` for language
 servers (see [LSP](lsp.md)). There is no plugin-manager bootstrap and no

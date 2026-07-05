@@ -23,7 +23,8 @@ Consumed by the root flake as a relative-path input — see the
   operates on is resolved from the caller's cwd (`git rev-parse
   --show-toplevel`), so the same binary serves any consuming repo.
 
-No `bun build --compile`: `okf viz` bundles the Svelte viewer with `Bun.build`
+No `bun build --compile`: `okf viz` bundles the
+[Svelte](../svelte-language.md) viewer with `Bun.build`
 + bun-plugin-svelte at CLI runtime, so the bun runtime and node_modules must be
 present. The GitHub Pages workflow (`.github/workflows/pages.yml`) builds
 `viz.html` bun-natively from this tree — no nix on CI.
