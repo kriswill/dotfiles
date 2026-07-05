@@ -59,6 +59,19 @@ no version control at all, and link to any forge.
   and enabling monorepo sub-bundles); without one, the git toplevel with
   full defaults — the original zero-config behavior. Neither -> exit 1
   with guidance.
+- **Merge commits date their own changes** (`--diff-merges=c` on the
+  batched `git log --name-only` pass): git suppresses merge diffs by
+  default, so a file introduced during merge conflict resolution — in
+  neither parent, e.g. the `pkgs/{cbissue,cbissues,flatpak-user,pass-xdg}.nix`
+  quartet added by the `76a05ff` evil merge — had no date at all and fell
+  through to the callers' `nowISO()` fallback, making `scaffold --force`
+  output nondeterministic. Combined diff lists only paths whose merge
+  result differs from **all** parents: evil merges date exactly what they
+  introduced, clean merges list nothing, regular commits are unchanged.
+  `--diff-merges=first-parent` was rejected — every merge into main
+  re-lists everything its branch brought in, so the newest-first map would
+  restamp whole PRs with the merge date (and these four files would get the
+  later PR-merge date `0b8a629`, not the merge that actually created them).
 
 ## Consequences
 
@@ -77,3 +90,10 @@ no version control at all, and link to any forge.
   git removed from PATH; unit fixtures cover the walk/ignore/mtime
   semantics and auto-selection (git-dependent cases skip in the git-less
   nix check sandbox, which stays green).
+- `--diff-merges=c` verified against this repo's history: 11 files gain a
+  date (all merge-introduced, previously `nowISO()`), 9 shift to the merge
+  date (all genuinely rewritten by `76a05ff`'s conflict resolution — the
+  merge *is* their newest content change), everything else identical; two
+  `scaffold --force` runs in a scratch worktree now produce byte-identical
+  trees. A `gitProvider` fixture test (evil merge) locks in both the fix
+  and the cleanly-merged-files-keep-their-dates property.
