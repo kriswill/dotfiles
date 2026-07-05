@@ -1,11 +1,21 @@
-# okf-viz.toml — repo-specific settings for `okf viz` (flakes/okf/viz.ts).
-# Schema + validation: flakes/okf/viz-app/config.ts. Without this file the
-# viewer still builds with generic fallbacks: no facet filters, alphabetical
-# types with generated colors, flat legend, generic header/about text.
+# okf.toml — repo-specific settings for the okf CLI (all commands; loaded by
+# flakes/okf/config-cli.ts, viewer schema in flakes/okf/viz-app/config.ts).
+# Without this file okf still works with generic fallbacks: knowledge/ bundle
+# dir, no facet filters, alphabetical types with generated colors, flat
+# legend, generic header/about text.
 
 [bundle]
 dir = "knowledge" # OKF bundle root, repo-relative
 out = "viz.html"  # output file, relative to the bundle dir
+
+[scaffold]
+script = "scripts/okf-scaffold.ts" # repo-owned metadata pass, run by `okf scaffold`
+# command = ["python3", "tools/scaffold.py"]  # non-JS alternative (OKF_* env); exclusive with script
+# [[scaffold.collect]]                        # declarative tier for simple cases (glob + templates)
+# glob = "src/services/*.py"
+# type = "Service"
+# output = "services/{name}.md"
+# comment = "#"
 
 [display]
 title = "OKF knowledge graph" # <title> = "<name> — <title>"
@@ -63,10 +73,13 @@ values = ["macos", "linux"] # segments after "all"; section absent -> no lens at
 [facet.platform.ids] # per-concept overrides (full concept id) — highest precedence
 "hosts/nebula" = "linux"
 
-[facet.platform.nix-packages] # opt-in build-side source: optionalAttrs guard parse
+[facet.platform.classify] # opt-in build-side classifier: name -> value map for the listed types
+provider = "nix-optional-attrs" # optionalAttrs guard parse ("command" = argv printing a JSON map instead)
 file = "modules/packages.nix" # Nix file whose optionalAttrs OS guards classify packages
 guards = { darwin = "macos", linux = "linux" } # optionalAttrs predicate substring -> value
-types = ["Nix Package", "Sub-flake", "Overlay"] # types that consult the map (by basename); a miss falls through unresolved
+types = ["Nix Package", "Sub-flake", "Overlay"] # types that consult the map; a miss falls through unresolved
+# key = "basename"            # map key per concept: "basename" (default) | "id"
 
-# [repo]
-# url = "https://github.com/kriswill/dotfiles" # optional override of the git-origin detection
+# [vcs]
+# url = "https://github.com/kriswill/dotfiles"   # optional override of the remote detection (any forge)
+# commit-url-template = "{url}/commit/{hash}"    # outbound revision links; GitLab: "{url}/-/commit/{hash}"

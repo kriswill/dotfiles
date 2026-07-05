@@ -1,9 +1,12 @@
 import { describe, expect, test } from "bun:test";
 import { displayName, normalizeVizConfig, VizConfigError } from "./config";
 
-/** A dotfiles-shaped raw config in TOML (kebab-case) spelling, with two
+/** A repo-shaped raw config in TOML (kebab-case) spelling, with two
  *  facets exercising every FacetConfig field (incl. nested nulls both ways:
- *  platform has nix-packages but no frontmatter, status the reverse). */
+ *  platform has a classifier but no frontmatter, status the reverse).
+ *  Deliberately uses the LEGACY `nix-packages` spelling — normalizing it
+ *  must yield the classify union (provider tag + default key), and the
+ *  idempotence test then round-trips the canonical `classify` output. */
 const rawCfg = () => ({
   bundle: { dir: "knowledge", out: "viz.html" },
   display: {
@@ -15,15 +18,15 @@ const rawCfg = () => ({
   },
   embed: { "max-bytes": 100 },
   taxonomy: {
-    types: ["Darwin Module", "Decision"],
+    types: ["Alpha Module", "Decision"],
     "group-order": ["Knowledge", "System"],
     "dir-groups": { decisions: "Knowledge", modules: "System" } as Record<string, string>,
   },
   facet: {
     platform: {
       values: ["macos", "linux"],
-      types: { "Darwin Module": "macos", "NixOS Module": "linux", Host: "macos" } as Record<string, string>,
-      ids: { "hosts/nebula": "linux" } as Record<string, string>,
+      types: { "Alpha Module": "macos", "Beta Module": "linux", Host: "macos" } as Record<string, string>,
+      ids: { "hosts/europa": "linux" } as Record<string, string>,
       "nix-packages": {
         file: "modules/packages.nix",
         guards: { darwin: "macos", linux: "linux" } as Record<string, string>,
@@ -49,7 +52,7 @@ describe("normalizeVizConfig", () => {
       expect(c.embed.maxBytes).toBe(200_000);
       expect(c.taxonomy).toEqual({ types: [], dirGroups: {}, groupOrder: [], other: "Other" });
       expect(c.facets).toEqual([]);
-      expect(c.repo.url).toBeNull();
+      expect(c.vcs.url).toBeNull();
     }
   });
 
@@ -65,10 +68,16 @@ describe("normalizeVizConfig", () => {
     expect(c.facets[0]).toEqual({
       name: "platform",
       values: ["macos", "linux"],
-      types: { "Darwin Module": "macos", "NixOS Module": "linux", Host: "macos" },
-      ids: { "hosts/nebula": "linux" },
+      types: { "Alpha Module": "macos", "Beta Module": "linux", Host: "macos" },
+      ids: { "hosts/europa": "linux" },
       frontmatter: null,
-      nixPackages: { file: "modules/packages.nix", guards: { darwin: "macos", linux: "linux" }, types: ["Nix Package"] },
+      classify: {
+        provider: "nix-optional-attrs",
+        file: "modules/packages.nix",
+        guards: { darwin: "macos", linux: "linux" },
+        types: ["Nix Package"],
+        key: "basename",
+      },
     });
     expect(c.facets[1]).toEqual({
       name: "status",
@@ -76,7 +85,7 @@ describe("normalizeVizConfig", () => {
       types: {},
       ids: {},
       frontmatter: "status",
-      nixPackages: null,
+      classify: null,
     });
   });
 
@@ -165,7 +174,7 @@ describe("normalizeVizConfig", () => {
     ).toThrow(/cannot specify both/);
   });
 
-  test("strict: dangling facet.types / ids / nix-packages.guards refs rejected", () => {
+  test("strict: dangling facet.types / ids / classify.guards refs rejected", () => {
     const base = () => ({
       facet: {
         platform: {
@@ -184,28 +193,28 @@ describe("normalizeVizConfig", () => {
     expect(() => normalizeVizConfig(b2, { strict: true })).toThrow(/facet\.platform\.ids\."hosts\/bsd"/);
     const b3 = base();
     b3.facet.platform["nix-packages"].guards["win"] = "windows";
-    expect(() => normalizeVizConfig(b3, { strict: true })).toThrow(/facet\.platform\.nix-packages\.guards\.win/);
+    expect(() => normalizeVizConfig(b3, { strict: true })).toThrow(/facet\.platform\.classify\.guards\.win/);
   });
 
-  test("strict: nix-packages requires file/guards/types", () => {
+  test("strict: nix-optional-attrs classifier requires file/guards/types (either spelling)", () => {
     expect(() =>
       normalizeVizConfig({ facet: { platform: { values: ["macos"], "nix-packages": {} } } }, { strict: true }),
     ).toThrow(/nix-packages\.file: required/);
     expect(() =>
       normalizeVizConfig(
-        { facet: { platform: { values: ["macos"], "nix-packages": { file: "x.nix" } } } },
+        { facet: { platform: { values: ["macos"], classify: { provider: "nix-optional-attrs", file: "x.nix" } } } },
         { strict: true },
       ),
-    ).toThrow(/nix-packages\.guards: required/);
+    ).toThrow(/classify\.guards: required/);
     expect(() =>
       normalizeVizConfig(
         { facet: { platform: { values: ["macos"], "nix-packages": { file: "x.nix", guards: { a: "macos" } } } } },
         { strict: true },
       ),
-    ).toThrow(/nix-packages\.types: required/);
+    ).toThrow(/classify\.types: required/);
   });
 
-  test("strict: nix-packages.file path escape rejected", () => {
+  test("strict: classify.file path escape rejected", () => {
     expect(() =>
       normalizeVizConfig(
         {
@@ -218,7 +227,62 @@ describe("normalizeVizConfig", () => {
         },
         { strict: true },
       ),
-    ).toThrow(/nix-packages\.file: must be a relative path/);
+    ).toThrow(/classify\.file: must be a relative path/);
+  });
+
+  test("classify command provider: argv required, keys can't mix, key enum checked", () => {
+    const c = normalizeVizConfig(
+      {
+        facet: {
+          platform: {
+            values: ["macos"],
+            classify: { provider: "command", command: ["bun", "x.ts"], types: ["T"], key: "id" },
+          },
+        },
+      },
+      { strict: true },
+    );
+    expect(c.facets[0]!.classify).toEqual({ provider: "command", command: ["bun", "x.ts"], types: ["T"], key: "id" });
+    expect(() =>
+      normalizeVizConfig(
+        { facet: { p: { classify: { provider: "command", types: ["T"] } } } },
+        { strict: true },
+      ),
+    ).toThrow(/classify\.command: required/);
+    expect(() =>
+      normalizeVizConfig(
+        { facet: { p: { classify: { provider: "command", command: ["x"], file: "y.nix", types: ["T"] } } } },
+        { strict: true },
+      ),
+    ).toThrow(/file\/guards only apply/);
+    expect(() =>
+      normalizeVizConfig(
+        { facet: { p: { classify: { provider: "wasm", types: ["T"] } } } },
+        { strict: true },
+      ),
+    ).toThrow(/expected "nix-optional-attrs" or "command"/);
+    expect(() =>
+      normalizeVizConfig(
+        { facet: { p: { classify: { provider: "command", command: ["x"], types: ["T"], key: "path" } } } },
+        { strict: true },
+      ),
+    ).toThrow(/expected "basename" or "id"/);
+  });
+
+  test("strict: classify and nix-packages together rejected", () => {
+    expect(() =>
+      normalizeVizConfig(
+        {
+          facet: {
+            p: {
+              classify: { provider: "command", command: ["x"], types: ["T"] },
+              "nix-packages": { file: "x.nix", guards: { a: "v" }, types: ["T"] },
+            },
+          },
+        },
+        { strict: true },
+      ),
+    ).toThrow(/cannot specify both classify and nix-packages/);
   });
 
   test("strict: a rule-less facet with values warns (no-op lens)", () => {
@@ -232,8 +296,8 @@ describe("normalizeVizConfig", () => {
 
   test("strict: dir-groups referencing a group missing from group-order rejected", () => {
     const base = rawCfg();
-    base.taxonomy["dir-groups"].nvim = "Neovim";
-    expect(() => normalizeVizConfig(base, { strict: true })).toThrow(/nvim.*Neovim.*group-order/s);
+    base.taxonomy["dir-groups"].wiki = "Wiki";
+    expect(() => normalizeVizConfig(base, { strict: true })).toThrow(/wiki.*Wiki.*group-order/s);
   });
 
   test("strict: path escapes rejected", () => {
@@ -261,8 +325,9 @@ describe("normalizeVizConfig", () => {
     );
     expect(c.bundle.dir).toBe("kb");
     expect(c.display.name).toBeNull();
-    expect(c.repo.url).toBeNull();
-    expect(c.facets[0]!.nixPackages!.file).toBe("pkgs.nix");
+    expect(c.vcs.url).toBeNull();
+    const cl = c.facets[0]!.classify;
+    expect(cl?.provider === "nix-optional-attrs" ? cl.file : null).toBe("pkgs.nix");
   });
 
   test("strict: >12 taxonomy types warns but does not throw", () => {
@@ -272,19 +337,47 @@ describe("normalizeVizConfig", () => {
     expect(c.taxonomy.types).toHaveLength(13);
     expect(warnings.join()).toContain("12 palette slots");
   });
+
+  test("[vcs]: url + commit-url-template, kebab and camel", () => {
+    const kebab = normalizeVizConfig(
+      { vcs: { url: "https://gitlab.com/o/r", "commit-url-template": "{url}/-/commit/{hash}" } },
+      { strict: true },
+    );
+    expect(kebab.vcs.url).toBe("https://gitlab.com/o/r");
+    expect(kebab.vcs.commitUrlTemplate).toBe("{url}/-/commit/{hash}");
+    const camel = normalizeVizConfig({ vcs: { commitUrlTemplate: "{url}/-/commit/{hash}" } });
+    expect(camel.vcs.commitUrlTemplate).toBe("{url}/-/commit/{hash}");
+  });
+
+  test("[vcs] default template; legacy [repo] url still lands in vcs.url, [vcs] wins over it", () => {
+    const c = normalizeVizConfig({ repo: { url: "https://github.com/o/r" } }, { strict: true });
+    expect(c.vcs.url).toBe("https://github.com/o/r");
+    expect(c.vcs.commitUrlTemplate).toBe("{url}/commit/{hash}");
+    const both = normalizeVizConfig(
+      { repo: { url: "https://old.example/o/r" }, vcs: { url: "https://new.example/o/r" } },
+      { strict: true },
+    );
+    expect(both.vcs.url).toBe("https://new.example/o/r");
+  });
+
+  test("strict: commit-url-template without {hash} fails", () => {
+    expect(() =>
+      normalizeVizConfig({ vcs: { "commit-url-template": "{url}/commit/" } }, { strict: true }),
+    ).toThrow(/vcs\.commit-url-template: must contain "\{hash\}"/);
+  });
 });
 
 describe("displayName", () => {
   const cfg = (over: Record<string, unknown> = {}) => normalizeVizConfig({ display: over });
   test("config name overrides git-derived name", () => {
-    expect(displayName(cfg({ name: "my/repo" }), "kriswill/dotfiles")).toBe("my/repo");
+    expect(displayName(cfg({ name: "my/repo" }), "acme/widgets")).toBe("my/repo");
   });
   test("falls back to git-derived name, then fallback-name", () => {
-    expect(displayName(cfg(), "kriswill/dotfiles")).toBe("kriswill/dotfiles");
+    expect(displayName(cfg(), "acme/widgets")).toBe("acme/widgets");
     expect(displayName(cfg(), null)).toBe("OKF bundle");
     expect(displayName(cfg({ "fallback-name": "knowledge/" }), null)).toBe("knowledge/");
   });
   test("an empty-string name override means 'derive', not a blank header", () => {
-    expect(displayName(cfg({ name: "" }), "kriswill/dotfiles")).toBe("kriswill/dotfiles");
+    expect(displayName(cfg({ name: "" }), "acme/widgets")).toBe("acme/widgets");
   });
 });

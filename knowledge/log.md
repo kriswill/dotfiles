@@ -2,6 +2,107 @@
 
 ## 2026-07-04
 
+- **Update** — [okf](packages/okf.md): post-review fixes on the
+  generalization PR. Three bugs: collect-tier `output` templates now
+  reject `{repo}`/`{description}`/`{description-sentence}` at config load
+  (they were expanded before those values existed, silently emitting
+  filenames like `widget-{description}.md`); `validate` now flags an empty
+  array as an empty required field (arrays are truthy, so the falsy check
+  passed `tags: []`); `repoNameFromUrl` drops explicit ports (a manual
+  `[vcs] url` with `:8080` corrupted the header name). Plus: git-missing
+  vs not-a-repo error messages distinguished again, `[vcs]` non-table
+  self-validated, `isObj`/`fieldIn` and the placeholder regex now shared
+  single copies, none-provider directory dates memoized, dead exports
+  trimmed. Three new regression tests (289 total).
+
+- **Update** — [okf-vcs-provider](decisions/okf-vcs-provider.md): the git
+  provider's batched date pass adds `--diff-merges=c` — files introduced
+  during merge conflict resolution (11 in this repo, e.g. `pkgs/cbissue.nix`
+  from the `76a05ff` evil merge) had no `lastModified` and fell back to
+  `nowISO()`, making `scaffold --force` nondeterministic. Combined diff
+  dates them with the merge that created them while clean merges list
+  nothing (`first-parent` rejected: it would restamp entire PRs with the
+  merge date). Evil-merge fixture test added; two scaffold runs verified
+  byte-identical.
+
+- **Decision** — [okf-generalization](decisions/okf-generalization.md):
+  the okf generalization arc is **complete** — extraction-readiness sweep
+  (flake source free of dotfiles assumptions, test fixtures neutralized,
+  okf-viz.toml fallback removed, generic README with a no-Nix adoption
+  section) verified by a three-way second-repo smoke: a fresh non-Nix
+  Python repo through git provider, no-VCS provider, and a standalone
+  bun-installed okf copy — init/scaffold/index/validate/viz all green in
+  each. Splitting okf to its own repository remains a one-line input swap.
+
+- **Update** — [okf](packages/okf.md): new `okf init [--dir=<d>]`
+  bootstraps a fresh workspace (commented starter okf.toml + bundle
+  skeleton; never overwrites, no-op when initialized), and `okf help` is
+  now config-aware — the bundle dir, viz output path, and the profile-doc
+  pointer derive from the workspace's okf.toml via a quiet loader (a
+  broken config can never break help). The repo-specific skill pointer
+  left the footer.
+
+- **Decision** — [okf-scaffold-hook](decisions/okf-scaffold-hook.md):
+  `okf scaffold` is now a generic driver; the dotfiles metadata pass moved
+  out of the flake to `scripts/okf-scaffold.ts` (mechanical port,
+  parity-diffed byte-identical), invoked via `okf.toml [scaffold] script`
+  with an injected `ScaffoldContext` API (emit/timestamp/leadingComment/…;
+  type-only imports, so vendored or store okf both work). Simple repos can
+  use declarative `[[scaffold.collect]]` glob+template entries instead;
+  `command` is the non-JS escape hatch.
+
+- **Decision** — [okf-facet-classify](decisions/okf-facet-classify.md):
+  the facet build-side source generalizes from `nix-packages` to
+  `[facet.<n>.classify]` with `provider = "nix-optional-attrs"` (existing
+  parser, still built-in) or `provider = "command"` (any argv printing a
+  JSON name→value map — non-Nix repos can classify by anything). Legacy
+  spelling still accepted; plus `key = "basename"|"id"`. Platform map
+  verified byte-identical to baseline (5 entries).
+
+- **Update** — [okf-vcs-provider](decisions/okf-vcs-provider.md): okf now
+  runs **without version control**: `[vcs] provider = "auto"|"git"|"none"`
+  (auto = git only at a git toplevel), the `none` provider walks the
+  filesystem (junk names + `[vcs] ignore` globs skipped, mtime timestamps,
+  no commit links), and the workspace root is discovered config-first —
+  nearest `okf.toml` at or above cwd, else the git toplevel. Verified with
+  git removed from PATH.
+
+- **Decision** — [okf-vcs-provider](decisions/okf-vcs-provider.md): all
+  version-control access now sits behind a `VcsProvider` interface
+  (`flakes/okf/vcs/`); git is the first provider (batched implementations
+  moved verbatim from lib.ts, which is now pure text helpers). Outbound
+  revision links are forge-agnostic: `[vcs] commit-url-template`
+  (`"{url}/commit/{hash}"` default, GitLab `"{url}/-/commit/{hash}"`),
+  remote detection accepts any https/scp/ssh origin, and the viewer fills
+  `{hash}` without knowing what GitHub is. `[repo]` remains as a
+  deprecated alias of `[vcs]`.
+
+- **Update** — [okf](packages/okf.md) +
+  [okf-profile](okf-profile.md): validation policy moved from
+  code into `okf.toml [profile]` (`required-fields` — `type` always
+  enforced, `recommended-fields`, `reserved-files`, `rooted-links`,
+  `repo-links`). Defaults reproduce the previous hardcoded
+  `RESERVED`/`PROFILE_FIELDS` behavior exactly (this repo's okf.toml sets
+  nothing); other bundles can now tune the profile without touching okf.
+  New pure-normalizer tests in `flakes/okf/test/config-cli.test.ts`.
+
+- **Decision** —
+  [okf-toml-unified-config](decisions/okf-toml-unified-config.md):
+  `okf-viz.toml` renamed to **`okf.toml`** — no longer viz settings but the
+  okf workspace config, read by every command (legacy name still loads with
+  a deprecation warning; pages CI trigger updated in the same commit).
+  First step of the okf generalization arc: upcoming sections `[profile]`,
+  `[vcs]`, `[scaffold]`, `[index]` and facet `classify` providers will all
+  live here.
+
+- **Update** — [okf](packages/okf.md): all four commands now read their
+  config through one shared strict loader (`flakes/okf/config-cli.ts`);
+  `bundle.dir` is honored everywhere (previously `validate`/`index`/
+  `scaffold` hardcoded `knowledge/` while only `viz` respected the config).
+  Behavior change: a malformed config file now fails every command loudly
+  instead of being ignored by the non-viz commands. First step of the okf
+  generalization arc (decision record lands with the `okf.toml` rename).
+
 - **Update** — [okf](packages/okf.md): `okf viz` detail-panel dates are now
   human-friendly, driven by a new `display.date-format` in `okf-viz.toml`
   (`"iso"` default = as written, `"us"` "Jul 3, 2026", `"international"`

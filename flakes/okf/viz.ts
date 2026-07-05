@@ -6,13 +6,14 @@
 // simulates or jiggles at runtime. The viewer app (viz-app/) is bundled by
 // Bun.build with three + postprocessing and inlined, so the output is still
 // one offline file:// page. Repo-specific strings/settings come from an
-// optional ./okf-viz.toml at the repo root (viz-app/config.ts); absent -> generic.
+// optional ./okf.toml at the repo root (config-cli.ts); absent -> generic.
 
 import { existsSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { extname, join } from "node:path";
-import { extractLinks, gitISO, gitTrackedFiles, githubRemoteUrl, isExternal, parseDoc, repoRoot, resolveCommits, resolveLink, walkMd, RESERVED } from "./lib";
+import { loadContext } from "./config-cli";
+import { extractLinks, isExternal, nowISO, parseDoc, resolveLink, walkMd } from "./lib";
 import { layout3d } from "./layout3d";
-import { displayName, normalizeVizConfig, VizConfigError, type VizConfig } from "./viz-app/config";
+import { displayName } from "./viz-app/config";
 import { parsePackagePlatforms, repoNameFromUrl } from "./viz-app/data";
 import { esc } from "./viz-app/markdown";
 import { THEMES } from "./viz-app/themes";
@@ -37,33 +38,15 @@ const lap = (name: string) => {
   phaseT0 = performance.now();
 };
 
-const repo = repoRoot();
-
-// Optional repo-root okf-viz.toml, normalized strictly: a malformed or misspelled
-// config fails the build rather than silently rendering wrong. Absent file ->
-// generic defaults (no facet filters, alphabetical types, flat legend).
-const cfgPath = join(repo, "okf-viz.toml");
-let cfgRaw: unknown = {};
-if (existsSync(cfgPath)) {
-  try {
-    cfgRaw = Bun.TOML.parse(readFileSync(cfgPath, "utf8"));
-  } catch (e) {
-    console.error(`viz: cannot parse okf-viz.toml — ${e instanceof Error ? e.message : e}`);
-    process.exit(1);
-  }
-}
-let cfg: VizConfig;
-try {
-  cfg = normalizeVizConfig(cfgRaw, { strict: true, warn: (m) => console.warn(`viz: warning: ${m}`) });
-} catch (e) {
-  if (e instanceof VizConfigError) {
-    console.error(`viz: ${e.message}`);
-    process.exit(1);
-  }
-  throw e;
-}
-
-const bundle = join(repo, cfg.bundle.dir);
+// Config comes from the shared loader (config-cli.ts): optional repo-root
+// TOML, normalized strictly — a malformed or misspelled config fails the
+// build rather than silently rendering wrong. Absent file -> generic
+// defaults (no facet filters, alphabetical types, flat legend).
+const { root: repo, bundle, cfg: okfCfg, vcs } = loadContext();
+const cfg = okfCfg.viz;
+const reserved = new Set(okfCfg.profile.reservedFiles);
+/** Last-modified date (YYYY-MM-DD) for embedded file/dir panels. */
+const isoDate = (rel: string) => (vcs.lastModified(rel) ?? nowISO()).slice(0, 10);
 
 interface Node {
   id: string; type: string; title: string; desc: string;
@@ -76,7 +59,7 @@ const edges: { s: string; t: string }[] = [];
 const ids = new Set<string>();
 
 for (const rel of walkMd(bundle)) {
-  if (RESERVED.has(rel.split("/").pop()!)) continue;
+  if (reserved.has(rel.split("/").pop()!)) continue;
   const doc = parseDoc(bundle, rel);
   const id = rel.replace(/\.md$/, "");
   ids.add(id);
@@ -198,7 +181,7 @@ function addFile(rel: string, ref: string) {
     lang,
     lines: text.split("\n").length,
     size,
-    date: gitISO(rel).slice(0, 10),
+    date: isoDate(rel),
     refs: [ref],
   };
 }
@@ -211,7 +194,7 @@ const dirs: Record<string, EmbeddedDir> = {};
 
 const childFiles = new Map<string, string[]>();
 const childDirs = new Map<string, Set<string>>();
-for (const f of gitTrackedFiles()) {
+for (const f of vcs.trackedFiles()) {
   const parts = f.split("/");
   for (let i = 0; i < parts.length - 1; i++) {
     const dir = parts.slice(0, i + 1).join("/");
@@ -234,7 +217,7 @@ function addDir(rel: string, ref: string) {
   const fs = (childFiles.get(rel) ?? []).slice().sort();
   const ds = [...(childDirs.get(rel) ?? [])].sort();
   if (!fs.length && !ds.length) return; // not a tracked directory
-  dirs[rel] = { files: fs, dirs: ds, date: gitISO(rel).slice(0, 10), refs: [ref] };
+  dirs[rel] = { files: fs, dirs: ds, date: isoDate(rel), refs: [ref] };
   for (const f of fs) addFile(f, ref);
   for (const d of ds) addDir(d, ref);
 }
@@ -255,31 +238,68 @@ for (const n of nodes) {
     const inRepo = resolveLink(repo, join(cfg.bundle.dir, n.id + ".md"), target);
     if (inRepo && !inRepo.startsWith(cfg.bundle.dir + "/")) addRepoPath(inRepo, n.id);
   }
-  // Bare repo-path mentions in prose (e.g. "./flakes/x/darwin-module.nix")
+  // Bare repo-path mentions in prose (e.g. "./src/lib/parser.py")
   // get embedded too, so the runtime autolinker has something to open.
   for (const m of n.body.matchAll(/(?:^|[\s(`])((?:\.\/)?(?:[A-Za-z0-9_.-]+\/)+[A-Za-z0-9_.-]+\.[A-Za-z0-9]{1,6})/g)) {
     addFile(m[1].replace(/^\.\//, ""), n.id);
   }
 }
-// --- Commit-hash outbound links ---------------------------------------------
-// `abc1234` code spans (the profile's citation convention) become outbound
-// GitHub commit links. Every candidate is verified against the local repo, so
-// doc examples and other repos' revs stay plain code; verified hashes link by
-// full oid (stable even if the abbreviation later becomes ambiguous).
-const HASH_SPAN = /`([0-9a-f]{7,40})`/g;
+// --- Revision-citation outbound links ----------------------------------------
+// Provider-defined citation spans (git: `abc1234` code spans, the profile's
+// convention) become outbound forge links via vcs.commit-url-template. Every
+// candidate is verified against the local workspace, so doc examples and
+// other repos' revs stay plain code; verified citations link by full id
+// (stable even if the abbreviation later becomes ambiguous).
 const hashCandidates = new Set<string>();
-for (const n of nodes) for (const m of n.body.matchAll(HASH_SPAN)) hashCandidates.add(m[1]);
-for (const f of Object.values(files)) if (f.md) for (const m of f.md.matchAll(HASH_SPAN)) hashCandidates.add(m[1]);
-const repoUrl = cfg.repo.url ?? githubRemoteUrl();
-const commits = repoUrl ? resolveCommits([...hashCandidates]) : {};
-// Nix-package guards: for each facet with a nix-packages source, parse its
-// configured file's `optionalAttrs` blocks (missing file -> {} -> every
-// package of that facet's nix-packages.types falls through unresolved).
+if (vcs.revisionPattern) {
+  for (const n of nodes) for (const m of n.body.matchAll(vcs.revisionPattern)) hashCandidates.add(m[1]);
+  for (const f of Object.values(files)) if (f.md) for (const m of f.md.matchAll(vcs.revisionPattern)) hashCandidates.add(m[1]);
+}
+const repoUrl = cfg.vcs.url ?? vcs.remoteUrl();
+const commits = repoUrl ? vcs.resolveRevisions([...hashCandidates]) : {};
+// The template pre-substituted with the resolved URL; the viewer only fills
+// {hash}. Null: no URL -> citations render as plain code.
+const commitUrl = repoUrl ? cfg.vcs.commitUrlTemplate.split("{url}").join(repoUrl) : null;
+// Facet classifiers: for each facet with a classify source, build its
+// name -> value map. "nix-optional-attrs" parses the configured file's
+// `optionalAttrs` guard blocks (missing file -> {} -> every concept of that
+// facet's classify.types falls through unresolved); "command" runs the
+// configured argv at the workspace root and must print a JSON object of
+// string values — any failure or out-of-range value fails the build
+// (strict-config philosophy: silent misclassification is worse).
 const facetMaps: Record<string, Record<string, string>> = {};
 for (const f of cfg.facets) {
-  if (!f.nixPackages) continue;
-  const file = join(repo, f.nixPackages.file);
-  facetMaps[f.name] = existsSync(file) ? parsePackagePlatforms(readFileSync(file, "utf8"), f.nixPackages.guards) : {};
+  const cl = f.classify;
+  if (!cl) continue;
+  if (cl.provider === "nix-optional-attrs") {
+    const file = join(repo, cl.file);
+    facetMaps[f.name] = existsSync(file) ? parsePackagePlatforms(readFileSync(file, "utf8"), cl.guards) : {};
+    continue;
+  }
+  const r = Bun.spawnSync({ cmd: cl.command, cwd: repo, stdout: "pipe", stderr: "inherit" });
+  if (r.exitCode !== 0) {
+    console.error(`viz: facet.${f.name}.classify command failed (exit ${r.exitCode}): ${cl.command.join(" ")}`);
+    process.exit(1);
+  }
+  let map: unknown;
+  try {
+    map = JSON.parse(r.stdout.toString());
+  } catch {
+    console.error(`viz: facet.${f.name}.classify command did not print valid JSON: ${cl.command.join(" ")}`);
+    process.exit(1);
+  }
+  if (typeof map !== "object" || map === null || Array.isArray(map) || Object.values(map).some((v) => typeof v !== "string")) {
+    console.error(`viz: facet.${f.name}.classify command must print a JSON object of string values`);
+    process.exit(1);
+  }
+  const m = map as Record<string, string>;
+  if (f.values.length)
+    for (const [k, v] of Object.entries(m))
+      if (!f.values.includes(v)) {
+        console.error(`viz: facet.${f.name}.classify: "${k}" = "${v}" is not in facet.${f.name}.values`);
+        process.exit(1);
+      }
+  facetMaps[f.name] = m;
 }
 // A concept explicitly frontmatter-tagged with a value outside its facet's
 // declared `values` is unresolved (data.ts's facetValueOf), not a silent
@@ -333,7 +353,7 @@ for (const o of build.outputs) if (o.path.endsWith(".css")) appCss += await o.te
 appCss = appCss.replace(/<\/style/gi, "<\\/style");
 lap("bundle");
 
-const data = JSON.stringify({ nodes, edges: dedupedEdges, files, dirs, repoUrl, commits, facetMaps, cfg }).replace(
+const data = JSON.stringify({ nodes, edges: dedupedEdges, files, dirs, repoUrl, commitUrl, commits, facetMaps, cfg }).replace(
   /<\//g,
   "<\\/",
 );

@@ -14,7 +14,7 @@ import {
 import { cfg, node } from "./test-helpers";
 
 const raw = {
-  nodes: [node("a", "Decision", "Alpha"), node("b", "Zeta Type", "Beta"), node("c", "Darwin Module", "Gamma")],
+  nodes: [node("a", "Decision", "Alpha"), node("b", "Zeta Type", "Beta"), node("c", "Alpha Module", "Gamma")],
   edges: [
     { s: "a", t: "b" },
     { s: "c", t: "b" },
@@ -41,8 +41,8 @@ describe("buildModel", () => {
   });
 
   test("type counts and taxonomy-types-first ordering with alpha overflow", () => {
-    expect(m.typeCounts).toEqual({ Decision: 1, "Zeta Type": 1, "Darwin Module": 1 });
-    expect(m.allTypes).toEqual(["Darwin Module", "Decision", "Zeta Type"]);
+    expect(m.typeCounts).toEqual({ Decision: 1, "Zeta Type": 1, "Alpha Module": 1 });
+    expect(m.allTypes).toEqual(["Alpha Module", "Decision", "Zeta Type"]);
   });
 
   test("radius formula matches legacy scene sizing", () => {
@@ -55,32 +55,49 @@ describe("buildModel", () => {
     expect(m.indexOf.get("c")).toBe(2);
   });
 
-  test("missing files/dirs/repoUrl/commits keys default to empty", () => {
+  test("missing files/dirs/repoUrl/commitUrl/commits keys default to empty", () => {
     const empty = buildModel({ nodes: raw.nodes, edges: [] });
     expect(empty.files).toEqual({});
     expect(empty.dirs).toEqual({});
     expect(empty.repoUrl).toBeNull();
+    expect(empty.commitUrl).toBeNull();
     expect(empty.repoName).toBeNull();
     expect(empty.commits).toEqual({});
   });
 
-  test("repoName derives owner/repo from repoUrl", () => {
-    const named = buildModel({ ...raw, repoUrl: "https://github.com/kriswill/dotfiles" });
-    expect(named.repoName).toBe("kriswill/dotfiles");
+  test("repoName derives owner/repo from repoUrl; commitUrl passes through", () => {
+    const named = buildModel({
+      ...raw,
+      repoUrl: "https://github.com/acme/widgets",
+      commitUrl: "https://github.com/acme/widgets/commit/{hash}",
+    });
+    expect(named.repoName).toBe("acme/widgets");
+    expect(named.commitUrl).toBe("https://github.com/acme/widgets/commit/{hash}");
   });
 });
 
 describe("repoNameFromUrl", () => {
-  test("accepts the same shapes as githubRemoteUrl: https/ssh, with or without .git", () => {
+  test("https/ssh shapes, with or without .git", () => {
     expect(repoNameFromUrl("https://github.com/o/r")).toBe("o/r");
     expect(repoNameFromUrl("https://github.com/o/r.git")).toBe("o/r");
     expect(repoNameFromUrl("git@github.com:o/r.git")).toBe("o/r");
     expect(repoNameFromUrl("git@github.com:o/r")).toBe("o/r");
   });
 
-  test("null and non-GitHub URLs yield null (display.name covers those)", () => {
+  test("forge-agnostic: any host works, subgroup paths kept whole", () => {
+    expect(repoNameFromUrl("https://codeberg.org/earthgman/snowglobe-lib")).toBe("earthgman/snowglobe-lib");
+    expect(repoNameFromUrl("https://gitlab.com/group/sub/repo.git")).toBe("group/sub/repo");
+    expect(repoNameFromUrl("ssh://git@sr.ht/~o/r")).toBe("~o/r");
+  });
+
+  test("explicit ports are dropped, not captured into the name (manual vcs.url overrides never pass through normalizeRemoteUrl)", () => {
+    expect(repoNameFromUrl("https://git.internal:8080/team/repo")).toBe("team/repo");
+    expect(repoNameFromUrl("ssh://git@git.example.com:2222/o/r.git")).toBe("o/r");
+  });
+
+  test("null and underivable shapes yield null (display.name covers those)", () => {
     expect(repoNameFromUrl(null)).toBeNull();
-    expect(repoNameFromUrl("https://gitlab.com/o/r")).toBeNull();
+    expect(repoNameFromUrl("not a url")).toBeNull();
   });
 });
 
@@ -89,10 +106,10 @@ describe("grouping", () => {
     nodes: [
       node("decisions/x", "Decision", "X"),
       node("patterns/y", "Pattern", "Y"),
-      node("modules/z", "Darwin Module", "Z"),
+      node("modules/z", "Alpha Module", "Z"),
       node("hosts/w", "Host", "W"),
       node("packages/p", "Nix Package", "P"),
-      node("nvim/n", "Neovim Plugin", "N"),
+      node("wiki/n", "Wiki Plugin", "N"),
       node("mystery/m", "Mystery Type", "M"), // unmapped dir -> Other
     ],
     edges: [],
@@ -109,23 +126,23 @@ describe("grouping", () => {
     expect(gm.typeGroup).toEqual({
       Decision: "Knowledge",
       Pattern: "Knowledge",
-      "Darwin Module": "System",
+      "Alpha Module": "System",
       Host: "System",
       "Nix Package": "Packages",
-      "Neovim Plugin": "Neovim",
+      "Wiki Plugin": "Wiki",
       "Mystery Type": "Other",
     });
   });
 
   test("groupOrder is the configured group-order filtered to present groups, Other trailing", () => {
-    expect(gm.groupOrder).toEqual(["Knowledge", "System", "Packages", "Neovim", "Other"]);
+    expect(gm.groupOrder).toEqual(["Knowledge", "System", "Packages", "Wiki", "Other"]);
   });
 
   test("groupTypes lists member types in allTypes (taxonomy-types-first) order", () => {
     expect(gm.groupTypes["Knowledge"]).toEqual(["Pattern", "Decision"]);
-    expect(gm.groupTypes["System"]).toEqual(["Darwin Module", "Host"]);
+    expect(gm.groupTypes["System"]).toEqual(["Alpha Module", "Host"]);
     expect(gm.groupTypes["Packages"]).toEqual(["Nix Package"]);
-    expect(gm.groupTypes["Neovim"]).toEqual(["Neovim Plugin"]);
+    expect(gm.groupTypes["Wiki"]).toEqual(["Wiki Plugin"]);
     expect(gm.groupTypes["Other"]).toEqual(["Mystery Type"]);
   });
 
@@ -141,7 +158,7 @@ describe("grouping", () => {
       edges: [],
       cfg: cfg(),
     });
-    expect(partial.groupOrder).toEqual(["Knowledge", "Other"]); // System/Packages/Neovim absent, not phantom-included
+    expect(partial.groupOrder).toEqual(["Knowledge", "Other"]); // System/Packages/Wiki absent, not phantom-included
   });
 
   test("listing the other bucket in group-order pins it without duplicating it", () => {
@@ -366,47 +383,63 @@ describe("facetValueOf", () => {
   const facet: FacetConfig = {
     name: "platform",
     values: ["macos", "linux"],
-    types: { "Darwin Module": "macos", "NixOS Module": "linux" },
-    ids: { "hosts/nebula": "linux" },
+    types: { "Alpha Module": "macos", "Beta Module": "linux" },
+    ids: { "hosts/europa": "linux" },
     frontmatter: "os",
-    nixPackages: { file: "modules/packages.nix", guards: { darwin: "macos", linux: "linux" }, types: ["Nix Package"] },
+    classify: {
+      provider: "nix-optional-attrs",
+      file: "modules/packages.nix",
+      guards: { darwin: "macos", linux: "linux" },
+      types: ["Nix Package"],
+      key: "basename",
+    },
   };
   const nix = { kitten: "macos", "flatpak-user": "linux" };
 
-  test("ids wins over nix-packages, frontmatter, and types", () => {
-    const n = node("hosts/nebula", "Darwin Module", "Nebula", { fm: { os: "macos" } });
+  test("ids wins over classify, frontmatter, and types", () => {
+    const n = node("hosts/europa", "Alpha Module", "Europa", { fm: { os: "macos" } });
     expect(facetValueOf(n, facet, nix)).toBe("linux");
   });
 
-  test("nix-packages wins over frontmatter and types when the type is listed", () => {
+  test("classify wins over frontmatter and types when the type is listed", () => {
     const n = node("packages/kitten", "Nix Package", "kitten", { fm: { os: "linux" } });
     expect(facetValueOf(n, facet, nix)).toBe("macos");
   });
 
-  test("a nix-packages miss falls through to frontmatter, then types — it does not resolve to unresolved", () => {
+  test("a classify miss falls through to frontmatter, then types — it does not resolve to unresolved", () => {
     const withFm = node("packages/iv", "Nix Package", "iv", { fm: { os: "linux" } });
     expect(facetValueOf(withFm, facet, nix)).toBe("linux");
     const bare = node("packages/iv", "Nix Package", "iv", {});
-    expect(facetValueOf(bare, facet, nix)).toBeUndefined(); // nix miss, no fm, "Nix Package" unlisted in types
+    expect(facetValueOf(bare, facet, nix)).toBeUndefined(); // classify miss, no fm, "Nix Package" unlisted in types
+  });
+
+  test('classify key = "id" looks up by full concept id instead of basename', () => {
+    const byId: FacetConfig = {
+      ...facet,
+      classify: { provider: "command", command: ["x"], types: ["Nix Package"], key: "id" },
+    };
+    const n = node("packages/kitten", "Nix Package", "kitten", {});
+    expect(facetValueOf(n, byId, { "packages/kitten": "linux" })).toBe("linux");
+    expect(facetValueOf(n, byId, { kitten: "linux" })).toBeUndefined();
   });
 
   test("frontmatter wins over types when present", () => {
-    const n = node("decisions/x", "Darwin Module", "X", { fm: { os: "linux" } });
+    const n = node("decisions/x", "Alpha Module", "X", { fm: { os: "linux" } });
     expect(facetValueOf(n, facet, {})).toBe("linux");
   });
 
   test("non-string frontmatter values are ignored, falling through to types", () => {
-    const n = node("modules/nh", "Darwin Module", "Nh", { fm: { os: 123 } });
+    const n = node("modules/nh", "Alpha Module", "Nh", { fm: { os: 123 } });
     expect(facetValueOf(n, facet, {})).toBe("macos");
   });
 
   test("a frontmatter value outside an explicit values list is unresolved, no fall-through to types", () => {
-    const n = node("modules/nh", "Darwin Module", "Nh", { fm: { os: "bsd" } });
+    const n = node("modules/nh", "Alpha Module", "Nh", { fm: { os: "bsd" } });
     expect(facetValueOf(n, facet, {})).toBeUndefined();
   });
 
   test("types is the last resort", () => {
-    const n = node("modules/keyring", "NixOS Module", "Keyring", {});
+    const n = node("modules/keyring", "Beta Module", "Keyring", {});
     expect(facetValueOf(n, facet, {})).toBe("linux");
   });
 
@@ -422,7 +455,7 @@ describe("facetValueOf", () => {
       types: {},
       ids: {},
       frontmatter: "status",
-      nixPackages: null,
+      classify: null,
     };
     const n = node("x", "Decision", "X", { fm: { status: "draft" } });
     expect(facetValueOf(n, inferFacet, {})).toBe("draft");
@@ -430,15 +463,15 @@ describe("facetValueOf", () => {
 });
 
 describe("buildModel facets", () => {
-  test("dotfiles-parity: matches the old platformOf resolution, minus former both/neutral nodes", () => {
+  test("legacy-parity: matches the old platformOf resolution, minus former both/neutral nodes", () => {
     const m = buildModel({
       nodes: [
-        node("modules/nh", "Darwin Module", "nh"),
-        node("modules/keyring", "NixOS Module", "keyring"),
+        node("modules/nh", "Alpha Module", "nh"),
+        node("modules/keyring", "Beta Module", "keyring"),
         node("modules/tmux", "Dual Module", "tmux"), // formerly "both" -> unresolved (unlisted type)
         node("packages/kitten", "Nix Package", "kitten"),
         node("packages/iv", "Nix Package", "iv"), // formerly "both" -> unresolved (nix miss, no fm/types entry)
-        node("hosts/nebula", "Host", "nebula"),
+        node("hosts/europa", "Host", "europa"),
         node("hosts/k", "Host", "k"),
         node("decisions/x", "Decision", "x"), // formerly "neutral" -> unresolved (unlisted type)
       ],
@@ -451,14 +484,14 @@ describe("buildModel facets", () => {
       "modules/nh": "macos",
       "modules/keyring": "linux",
       "packages/kitten": "macos",
-      "hosts/nebula": "linux", // ids override
+      "hosts/europa": "linux", // ids override
       "hosts/k": "macos", // types default
     });
     for (const dropped of ["modules/tmux", "packages/iv", "decisions/x"])
       expect(m.facetById["platform"]![dropped]).toBeUndefined();
   });
 
-  test("missing facetMaps: nix-packages concepts fall through (unresolved here, no fm/types entry)", () => {
+  test("missing facetMaps: classify concepts fall through (unresolved here, no fm/types entry)", () => {
     const m = buildModel({ nodes: [node("packages/kitten", "Nix Package", "kitten")], edges: [], cfg: cfg() });
     expect(m.facetById["platform"]!["packages/kitten"]).toBeUndefined();
   });
@@ -479,11 +512,11 @@ describe("buildModel facets", () => {
 
   test("multiple facets resolve independently", () => {
     const m = buildModel({
-      nodes: [node("a", "Darwin Module", "A", { fm: { status: "stable" } })],
+      nodes: [node("a", "Alpha Module", "A", { fm: { status: "stable" } })],
       edges: [],
       cfg: {
         facet: {
-          platform: { values: ["macos", "linux"], types: { "Darwin Module": "macos" } },
+          platform: { values: ["macos", "linux"], types: { "Alpha Module": "macos" } },
           status: { frontmatter: "status" },
         },
       },
@@ -507,15 +540,15 @@ describe("generic (no-config) mode", () => {
   const m = buildModel({
     nodes: [
       node("decisions/x", "Decision", "X"),
-      node("modules/z", "Darwin Module", "Z"),
-      node("hosts/nebula", "Host", "Nebula"),
+      node("modules/z", "Alpha Module", "Z"),
+      node("hosts/europa", "Host", "Europa"),
     ],
     edges: [],
-    repoUrl: "https://github.com/kriswill/dotfiles",
+    repoUrl: "https://github.com/acme/widgets",
   });
 
   test("types sort alphabetically (no configured slot order)", () => {
-    expect(m.allTypes).toEqual(["Darwin Module", "Decision", "Host"]);
+    expect(m.allTypes).toEqual(["Alpha Module", "Decision", "Host"]);
     expect(m.cfg.taxonomy.types).toEqual([]);
   });
 
@@ -531,7 +564,7 @@ describe("generic (no-config) mode", () => {
   });
 
   test("display falls back to the git-derived name and generic strings", () => {
-    expect(m.displayName).toBe("kriswill/dotfiles");
+    expect(m.displayName).toBe("acme/widgets");
     expect(m.cfg.display.badge).toBe("OKF viz");
     expect(buildModel({ nodes: [], edges: [] }).displayName).toBe("OKF bundle");
   });

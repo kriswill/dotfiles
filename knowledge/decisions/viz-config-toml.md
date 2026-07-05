@@ -6,9 +6,16 @@ tags: [viz, tooling, config]
 timestamp: '2026-07-04T00:00:00-07:00'
 ---
 
-**Status:** active. **Where:** [../../okf-viz.toml](../../okf-viz.toml), schema in
+**Status:** active, extended by
+[okf-toml-unified-config](okf-toml-unified-config.md) — the file is now
+**`okf.toml`**, read by every okf command through a shared loader — and by
+[okf-facet-classify](okf-facet-classify.md) — the `nix-packages` facet
+source described below is now the `classify` union (legacy spelling still
+accepted).
+**Where:** [../../okf.toml](../../okf.toml), viewer schema in
 [../../flakes/okf/viz-app/config.ts](../../flakes/okf/viz-app/config.ts),
-loaded by [../../flakes/okf/viz.ts](../../flakes/okf/viz.ts).
+loaded by [../../flakes/okf/config-cli.ts](../../flakes/okf/config-cli.ts).
+`okf-viz.toml` below is the file's original name (historical prose).
 
 ## Context
 
@@ -108,10 +115,10 @@ prefix, theme stop names, and the `/commit/` outbound-URL shape.
   reserved.
 - `.github/workflows/pages.yml` triggers on `okf-viz.toml` changes so config
   edits redeploy the published graph.
-- Follow-ups for true external consumption: `repoRoot()` is still
-  script-relative (two levels up), and scaffold/index/validate still use the
-  hardcoded `bundleRoot()`; both stay in-repo assumptions until a second
-  consumer exists.
+- ~~Follow-ups for true external consumption: scaffold/index/validate still
+  use the hardcoded `bundleRoot()`.~~ Resolved by
+  [okf-toml-unified-config](okf-toml-unified-config.md) (2026-07-04): all
+  commands share one strict loader and honor `bundle.dir`.
 
 ## Addendum (2026-07-04)
 

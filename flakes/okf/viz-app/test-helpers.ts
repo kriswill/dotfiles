@@ -17,13 +17,13 @@ export const node = (id: string, type: string, title = id, extra: Partial<Concep
   ...extra,
 });
 
-/** Dotfiles-shaped raw viz config (TOML kebab spelling) for RawData.cfg —
- *  reproduces the pre-okf-viz.toml hardcoded taxonomy/platform behavior,
- *  now as a single `platform` facet mirroring the repo's okf-viz.toml. */
+/** Repo-shaped raw viz config (TOML kebab spelling) for RawData.cfg —
+ *  reproduces the pre-config-file hardcoded taxonomy/platform behavior,
+ *  now as a single `platform` facet mirroring the repo's okf.toml. */
 export const cfg = (over: Record<string, unknown> = {}) => ({
   taxonomy: {
     types: [
-      "Darwin Module",
+      "Alpha Module",
       "Nix Package",
       "Playbook",
       "Pattern",
@@ -31,12 +31,12 @@ export const cfg = (over: Record<string, unknown> = {}) => ({
       "Host",
       "Sub-flake",
       "Flake-parts Module",
-      "Neovim Config",
-      "Neovim Plugin",
+      "Wiki Config",
+      "Wiki Plugin",
       "Overlay",
       "Reference",
     ],
-    "group-order": ["Knowledge", "System", "Packages", "Neovim"],
+    "group-order": ["Knowledge", "System", "Packages", "Wiki"],
     "dir-groups": {
       decisions: "Knowledge",
       patterns: "Knowledge",
@@ -45,19 +45,20 @@ export const cfg = (over: Record<string, unknown> = {}) => ({
       modules: "System",
       hosts: "System",
       packages: "Packages",
-      nvim: "Neovim",
+      wiki: "Wiki",
     },
   },
   facet: {
     platform: {
       values: ["macos", "linux"],
       types: {
-        "Darwin Module": "macos",
-        "NixOS Module": "linux",
+        "Alpha Module": "macos",
+        "Beta Module": "linux",
         Host: "macos", // replaces host-default
       },
-      ids: { "hosts/nebula": "linux" },
-      "nix-packages": {
+      ids: { "hosts/europa": "linux" },
+      classify: {
+        provider: "nix-optional-attrs",
         file: "modules/packages.nix",
         guards: { darwin: "macos", linux: "linux" },
         types: ["Nix Package", "Sub-flake", "Overlay"],

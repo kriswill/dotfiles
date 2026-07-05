@@ -12,15 +12,24 @@ tooling disagree, we pick one and record it here.
 
 ## Profile rules
 
-- **Required frontmatter:** `type`, `title`, `description`, `timestamp` on
-  every concept (the spec requires only `type`; this matches the reference
-  tooling's stricter validator). `resource` and `tags` are recommended.
+These rules are enforced from `okf.toml`'s `[profile]` section (defaults in
+`flakes/okf/config-cli.ts` reproduce exactly the rules below — this repo's
+`okf.toml` therefore sets nothing; another bundle can tune
+`required-fields`/`recommended-fields`/`reserved-files`/`rooted-links`/
+`repo-links` without touching okf).
+
+- **Required frontmatter:** `type` (hard error when missing/empty; the only
+  spec-mandated field, always enforced). `title`, `description`, `timestamp`
+  are recommended — warnings, promoted to errors by `okf validate --strict`
+  (this matches the reference tooling's stricter validator). `resource` and
+  `tags` are encouraged but unchecked.
 - **Links are file-relative** (`../modules/nh.md`), never `/`-rooted — the
   spec recommends bundle-absolute links, but they break GitHub rendering, and
-  Google's own tooling forbids them. The validator errors on `/`-rooted links.
+  Google's own tooling forbids them. The validator errors on `/`-rooted links
+  (`rooted-links = "error"`).
 - **Links may escape the bundle** into the repository (`../../modules/...`) to
-  point at source files. The validator checks these resolve; links outside the
-  repository must be full URLs.
+  point at source files. The validator checks these resolve
+  (`repo-links = "check"`); links outside the repository must be full URLs.
 - **`resource:`** is a repo-root-relative path to the concept's primary source
   file or directory (e.g. `modules/darwin/nh.nix`) — not a URL, so it survives
   remote renames. Abstract concepts (decisions, playbooks) may omit it.
@@ -88,7 +97,7 @@ the dev shell (`nix develop` / direnv) it's on `PATH` as **`okf`** via the
 [dev](modules/dev.md) module; outside it, invoke with bun directly:
 
 ```sh
-okf scaffold [--force]   # stub catalog docs from the repo (idempotent; --force overwrites)
+okf scaffold [--force]   # run this repo's scaffolder (scripts/okf-scaffold.ts via okf.toml [scaffold]; idempotent; --force overwrites)
 okf index               # regenerate index.md listings
 okf validate [--strict]  # spec + profile conformance; --strict fails on warnings too
 okf viz [--check|--perf] # render knowledge/viz.html (Svelte 5 viewer); --check runs svelte-check, --perf measures startup in headless Chrome
@@ -103,9 +112,11 @@ bun flakes/okf/okf.ts <cmd>   # equivalent, no dev shell needed
 (`cd flakes/okf && bun test`). Repo-specific strings and settings (header,
 facet filters (0..n `[facet.<name>]` lenses), type taxonomy, legend groups,
 embed cap, bundle dir) come from the optional repo-root
-[`okf-viz.toml`](../okf-viz.toml) — strict-validated at build time; without
-it the viewer builds with generic fallbacks (see the
-[viz-config-toml](decisions/viz-config-toml.md) decision). The graph is
+[`okf.toml`](../okf.toml) — one config file read by **all** okf commands
+(loaded by `flakes/okf/config-cli.ts`, strict-validated; a malformed file
+fails every command); without it okf works with generic fallbacks (see the
+[viz-config-toml](decisions/viz-config-toml.md) and
+[okf-toml-unified-config](decisions/okf-toml-unified-config.md) decisions). The graph is
 published as public documentation at <https://kris.net/dotfiles/> — rebuilt
 and deployed by GitHub Pages CI (`.github/workflows/pages.yml`) on every
 push.
