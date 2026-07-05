@@ -69,5 +69,6 @@ file = "modules/packages.nix" # Nix file whose optionalAttrs OS guards classify 
 guards = { darwin = "macos", linux = "linux" } # optionalAttrs predicate substring -> value
 types = ["Nix Package", "Sub-flake", "Overlay"] # types that consult the map (by basename); a miss falls through unresolved
 
-# [repo]
-# url = "https://github.com/kriswill/dotfiles" # optional override of the git-origin detection
+# [vcs]
+# url = "https://github.com/kriswill/dotfiles"   # optional override of the remote detection (any forge)
+# commit-url-template = "{url}/commit/{hash}"    # outbound revision links; GitLab: "{url}/-/commit/{hash}"

@@ -21,6 +21,7 @@ let
       ./okf.ts
       ./lib.ts
       ./config-cli.ts
+      ./vcs
       ./scaffold.ts
       ./index-gen.ts
       ./validate.ts

@@ -11,7 +11,7 @@
 import { existsSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { extname, join } from "node:path";
 import { loadContext } from "./config-cli";
-import { extractLinks, gitISO, gitTrackedFiles, githubRemoteUrl, isExternal, parseDoc, resolveCommits, resolveLink, walkMd } from "./lib";
+import { extractLinks, isExternal, nowISO, parseDoc, resolveLink, walkMd } from "./lib";
 import { layout3d } from "./layout3d";
 import { displayName } from "./viz-app/config";
 import { parsePackagePlatforms, repoNameFromUrl } from "./viz-app/data";
@@ -42,9 +42,11 @@ const lap = (name: string) => {
 // TOML, normalized strictly — a malformed or misspelled config fails the
 // build rather than silently rendering wrong. Absent file -> generic
 // defaults (no facet filters, alphabetical types, flat legend).
-const { root: repo, bundle, cfg: okfCfg } = loadContext();
+const { root: repo, bundle, cfg: okfCfg, vcs } = loadContext();
 const cfg = okfCfg.viz;
 const reserved = new Set(okfCfg.profile.reservedFiles);
+/** Last-modified date (YYYY-MM-DD) for embedded file/dir panels. */
+const isoDate = (rel: string) => (vcs.lastModified(rel) ?? nowISO()).slice(0, 10);
 
 interface Node {
   id: string; type: string; title: string; desc: string;
@@ -179,7 +181,7 @@ function addFile(rel: string, ref: string) {
     lang,
     lines: text.split("\n").length,
     size,
-    date: gitISO(rel).slice(0, 10),
+    date: isoDate(rel),
     refs: [ref],
   };
 }
@@ -192,7 +194,7 @@ const dirs: Record<string, EmbeddedDir> = {};
 
 const childFiles = new Map<string, string[]>();
 const childDirs = new Map<string, Set<string>>();
-for (const f of gitTrackedFiles()) {
+for (const f of vcs.trackedFiles()) {
   const parts = f.split("/");
   for (let i = 0; i < parts.length - 1; i++) {
     const dir = parts.slice(0, i + 1).join("/");
@@ -215,7 +217,7 @@ function addDir(rel: string, ref: string) {
   const fs = (childFiles.get(rel) ?? []).slice().sort();
   const ds = [...(childDirs.get(rel) ?? [])].sort();
   if (!fs.length && !ds.length) return; // not a tracked directory
-  dirs[rel] = { files: fs, dirs: ds, date: gitISO(rel).slice(0, 10), refs: [ref] };
+  dirs[rel] = { files: fs, dirs: ds, date: isoDate(rel), refs: [ref] };
   for (const f of fs) addFile(f, ref);
   for (const d of ds) addDir(d, ref);
 }
@@ -242,17 +244,22 @@ for (const n of nodes) {
     addFile(m[1].replace(/^\.\//, ""), n.id);
   }
 }
-// --- Commit-hash outbound links ---------------------------------------------
-// `abc1234` code spans (the profile's citation convention) become outbound
-// GitHub commit links. Every candidate is verified against the local repo, so
-// doc examples and other repos' revs stay plain code; verified hashes link by
-// full oid (stable even if the abbreviation later becomes ambiguous).
-const HASH_SPAN = /`([0-9a-f]{7,40})`/g;
+// --- Revision-citation outbound links ----------------------------------------
+// Provider-defined citation spans (git: `abc1234` code spans, the profile's
+// convention) become outbound forge links via vcs.commit-url-template. Every
+// candidate is verified against the local workspace, so doc examples and
+// other repos' revs stay plain code; verified citations link by full id
+// (stable even if the abbreviation later becomes ambiguous).
 const hashCandidates = new Set<string>();
-for (const n of nodes) for (const m of n.body.matchAll(HASH_SPAN)) hashCandidates.add(m[1]);
-for (const f of Object.values(files)) if (f.md) for (const m of f.md.matchAll(HASH_SPAN)) hashCandidates.add(m[1]);
-const repoUrl = cfg.repo.url ?? githubRemoteUrl();
-const commits = repoUrl ? resolveCommits([...hashCandidates]) : {};
+if (vcs.revisionPattern) {
+  for (const n of nodes) for (const m of n.body.matchAll(vcs.revisionPattern)) hashCandidates.add(m[1]);
+  for (const f of Object.values(files)) if (f.md) for (const m of f.md.matchAll(vcs.revisionPattern)) hashCandidates.add(m[1]);
+}
+const repoUrl = cfg.vcs.url ?? vcs.remoteUrl();
+const commits = repoUrl ? vcs.resolveRevisions([...hashCandidates]) : {};
+// The template pre-substituted with the resolved URL; the viewer only fills
+// {hash}. Null: no URL -> citations render as plain code.
+const commitUrl = repoUrl ? cfg.vcs.commitUrlTemplate.split("{url}").join(repoUrl) : null;
 // Nix-package guards: for each facet with a nix-packages source, parse its
 // configured file's `optionalAttrs` blocks (missing file -> {} -> every
 // package of that facet's nix-packages.types falls through unresolved).
@@ -314,7 +321,7 @@ for (const o of build.outputs) if (o.path.endsWith(".css")) appCss += await o.te
 appCss = appCss.replace(/<\/style/gi, "<\\/style");
 lap("bundle");
 
-const data = JSON.stringify({ nodes, edges: dedupedEdges, files, dirs, repoUrl, commits, facetMaps, cfg }).replace(
+const data = JSON.stringify({ nodes, edges: dedupedEdges, files, dirs, repoUrl, commitUrl, commits, facetMaps, cfg }).replace(
   /<\//g,
   "<\\/",
 );

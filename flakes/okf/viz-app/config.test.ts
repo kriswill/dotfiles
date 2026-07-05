@@ -49,7 +49,7 @@ describe("normalizeVizConfig", () => {
       expect(c.embed.maxBytes).toBe(200_000);
       expect(c.taxonomy).toEqual({ types: [], dirGroups: {}, groupOrder: [], other: "Other" });
       expect(c.facets).toEqual([]);
-      expect(c.repo.url).toBeNull();
+      expect(c.vcs.url).toBeNull();
     }
   });
 
@@ -261,7 +261,7 @@ describe("normalizeVizConfig", () => {
     );
     expect(c.bundle.dir).toBe("kb");
     expect(c.display.name).toBeNull();
-    expect(c.repo.url).toBeNull();
+    expect(c.vcs.url).toBeNull();
     expect(c.facets[0]!.nixPackages!.file).toBe("pkgs.nix");
   });
 
@@ -271,6 +271,34 @@ describe("normalizeVizConfig", () => {
     const c = normalizeVizConfig({ taxonomy: { types } }, { strict: true, warn: (m) => warnings.push(m) });
     expect(c.taxonomy.types).toHaveLength(13);
     expect(warnings.join()).toContain("12 palette slots");
+  });
+
+  test("[vcs]: url + commit-url-template, kebab and camel", () => {
+    const kebab = normalizeVizConfig(
+      { vcs: { url: "https://gitlab.com/o/r", "commit-url-template": "{url}/-/commit/{hash}" } },
+      { strict: true },
+    );
+    expect(kebab.vcs.url).toBe("https://gitlab.com/o/r");
+    expect(kebab.vcs.commitUrlTemplate).toBe("{url}/-/commit/{hash}");
+    const camel = normalizeVizConfig({ vcs: { commitUrlTemplate: "{url}/-/commit/{hash}" } });
+    expect(camel.vcs.commitUrlTemplate).toBe("{url}/-/commit/{hash}");
+  });
+
+  test("[vcs] default template; legacy [repo] url still lands in vcs.url, [vcs] wins over it", () => {
+    const c = normalizeVizConfig({ repo: { url: "https://github.com/o/r" } }, { strict: true });
+    expect(c.vcs.url).toBe("https://github.com/o/r");
+    expect(c.vcs.commitUrlTemplate).toBe("{url}/commit/{hash}");
+    const both = normalizeVizConfig(
+      { repo: { url: "https://old.example/o/r" }, vcs: { url: "https://new.example/o/r" } },
+      { strict: true },
+    );
+    expect(both.vcs.url).toBe("https://new.example/o/r");
+  });
+
+  test("strict: commit-url-template without {hash} fails", () => {
+    expect(() =>
+      normalizeVizConfig({ vcs: { "commit-url-template": "{url}/commit/" } }, { strict: true }),
+    ).toThrow(/vcs\.commit-url-template: must contain "\{hash\}"/);
   });
 });
 

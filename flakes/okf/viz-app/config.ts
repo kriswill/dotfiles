@@ -48,9 +48,13 @@ export interface VizConfig {
     /** Bucket label for dirs missing from dirGroups. */
     other: string;
   };
-  repo: {
-    /** Override of the git-origin detection (null: derive from `origin`). */
+  vcs: {
+    /** Web URL of the repo (null: derive from the VCS remote, any forge). */
     url: string | null;
+    /** Outbound revision-link template; `{url}` and `{hash}` substitute the
+     *  resolved repo URL and the full revision id. GitLab canonical form is
+     *  "{url}/-/commit/{hash}", Bitbucket "{url}/commits/{hash}". */
+    commitUrlTemplate: string;
   };
   /** 0..n independent filter lenses; file order (TOML) / array order (JSON)
    *  is the sidebar control order. */
@@ -114,7 +118,7 @@ const defaults = (): VizConfig => ({
   },
   embed: { maxBytes: 200_000 },
   taxonomy: { types: [], dirGroups: {}, groupOrder: [], other: "Other" },
-  repo: { url: null },
+  vcs: { url: null, commitUrlTemplate: "{url}/commit/{hash}" },
   facets: [],
 });
 
@@ -209,8 +213,15 @@ export function normalizeVizConfig(raw: unknown, opts?: { strict?: boolean; warn
         field(s, "taxonomy", "groupOrder", asStrArr((v) => (cfg.taxonomy.groupOrder = v)));
         field(s, "taxonomy", "other", asStr((v) => (cfg.taxonomy.other = v)));
       });
+      // Legacy [repo] url — the pre-[vcs] spelling; normalizes into vcs.url
+      // so old embeds and copied configs keep working. Processed first so a
+      // config carrying both spellings resolves to the canonical [vcs].
       section("repo", (s) => {
-        field(s, "repo", "url", asStr((v) => (cfg.repo.url = v || null)));
+        field(s, "repo", "url", asStr((v) => (cfg.vcs.url = v || null)));
+      });
+      section("vcs", (s) => {
+        field(s, "vcs", "url", asStr((v) => (cfg.vcs.url = v || null)));
+        field(s, "vcs", "commitUrlTemplate", asStr((v) => (cfg.vcs.commitUrlTemplate = v)));
       });
 
       // Facets: name-keyed [facet.<name>] TOML tables, or this file's own
@@ -314,6 +325,8 @@ export function normalizeVizConfig(raw: unknown, opts?: { strict?: boolean; warn
     for (const [d, g] of Object.entries(cfg.taxonomy.dirGroups))
       if (!cfg.taxonomy.groupOrder.includes(g))
         errors.push(`taxonomy.dir-groups."${d}": "${g}" is not in taxonomy.group-order`);
+    if (!cfg.vcs.commitUrlTemplate.includes("{hash}"))
+      errors.push('vcs.commit-url-template: must contain "{hash}"');
     if (cfg.taxonomy.types.length > 12)
       warn(`taxonomy.types: ${cfg.taxonomy.types.length} entries but only 12 palette slots — overflow types get generated colors`);
     if (errors.length) throw new VizConfigError("invalid okf.toml:\n  " + errors.join("\n  "));

@@ -8,7 +8,7 @@ const ctx = {
   files: { "flakes/okf/viz.ts": {}, "modules/dev.nix": {}, "docs/svelt/manual.md": {} },
   byId: { "nvim/architecture": {}, "decisions/other": {} },
   dirs: { "flakes/ccglass": {} },
-  repoUrl: "https://github.com/kriswill/dotfiles",
+  commitUrl: "https://github.com/kriswill/dotfiles/commit/{hash}",
   commits: { abc1234: "abc1234def5678901234567890123456789012ab" },
 };
 const md = createMd(ctx);
@@ -38,9 +38,21 @@ describe("inline rendering", () => {
     expect(md.mdToHtml("nixpkgs rev `b5aa0fb`", from)).toBe("<p>nixpkgs rev <code>b5aa0fb</code></p>");
   });
 
-  test("commit spans stay plain without a repoUrl", () => {
+  test("commit spans stay plain without a commitUrl template", () => {
     const bare = createMd({ files: {}, byId: {}, commits: { abc1234: "abc1234def" } });
     expect(bare.mdToHtml("`abc1234`", from)).toBe("<p><code>abc1234</code></p>");
+  });
+
+  test("non-GitHub commit-url template shapes the outbound link", () => {
+    const gl = createMd({
+      files: {},
+      byId: {},
+      commitUrl: "https://gitlab.com/o/r/-/commit/{hash}",
+      commits: { abc1234: "abc1234def" },
+    });
+    expect(gl.mdToHtml("`abc1234`", from)).toBe(
+      '<p><code><a href="https://gitlab.com/o/r/-/commit/abc1234def" target="_blank" rel="noopener">abc1234</a></code></p>',
+    );
   });
 
   test("<https://…> autolink", () => {
