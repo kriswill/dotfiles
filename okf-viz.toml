@@ -11,6 +11,7 @@ out = "viz.html"  # output file, relative to the bundle dir
 title = "OKF knowledge graph" # <title> = "<name> — <title>"
 badge = "OKF viz"             # sidebar h1 suffix label
 fallback-name = "knowledge/"  # header name when no GitHub origin
+date-format = "us"            # panel dates: "iso" (as written) | "us" (Jul 3, 2026) | "international" (3 Jul 2026)
 # name = "..."                # optional hard override of the git-derived owner/repo
 about-html = """A navigable map of this repository's <b>knowledge/</b> bundle — architecture patterns, \
 decision records, playbooks, and a catalog of every module, package, and host, authored in the \

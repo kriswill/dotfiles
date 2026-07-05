@@ -523,6 +523,31 @@ describe("DetailPanel", () => {
     expect(backlinks[1]!.textContent).toContain("none"); // Cited by
   });
 
+  test("display.date-format humanizes fm timestamps and last-commit dates from the literal day", () => {
+    const usModel = buildModel({
+      nodes: [
+        node("a", "Decision", "Alpha", {
+          // Placeholder-midnight timestamp: a timezone conversion east of the
+          // author would render Jul 5 — the written day must survive.
+          fm: { type: "Decision", timestamp: "2026-07-04T00:00:00-07:00", description: "not a date: 2026-07-04 noon" },
+        }),
+      ],
+      edges: [],
+      cfg: cfg({ display: { "date-format": "us" } }),
+      files: { "flakes/okf/viz.ts": { html: "", lines: 1, size: 10, date: "2026-01-02", lang: "ts", refs: ["a"] } },
+    });
+    const state = createVizState(usModel);
+    state.selectConcept("a");
+    mountC(DetailPanel, { viz: state, stageEl: stage() });
+    const panel = document.getElementById("panel")!;
+    const fm = [...panel.querySelectorAll("table.fm tr")].map((tr) => tr.textContent);
+    expect(fm.find((t) => t?.startsWith("timestamp"))).toContain("Jul 4, 2026");
+    expect(fm.find((t) => t?.startsWith("description"))).toContain("not a date: 2026-07-04 noon"); // prose untouched
+    state.selectFile("flakes/okf/viz.ts");
+    flushSync();
+    expect(panel.textContent).toContain("Jan 2, 2026"); // last commit row
+  });
+
   test("markdown files render as documents, not source views", () => {
     const state = createVizState(model());
     state.selectConcept("a");
