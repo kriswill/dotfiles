@@ -61,6 +61,31 @@ export interface VizConfig {
   facets: FacetConfig[];
 }
 
+/** Opt-in build-side classifier producing a name -> value map that concepts
+ *  of the listed `types` consult (keyed by `key`; a miss falls through
+ *  unresolved). Providers: "nix-optional-attrs" parses the optionalAttrs
+ *  guard blocks of a Nix file; "command" runs an argv at the workspace root
+ *  that prints the map as JSON. The legacy `nix-packages` table spelling
+ *  normalizes to the nix-optional-attrs provider. */
+export type FacetClassify =
+  | {
+      provider: "nix-optional-attrs";
+      /** Repo-relative Nix file to parse. */
+      file: string;
+      /** optionalAttrs predicate substring -> value. */
+      guards: Record<string, string>;
+      types: string[];
+      key: "basename" | "id";
+    }
+  | {
+      provider: "command";
+      /** Argv run at the workspace root; stdout must be a JSON object of
+       *  string values. Failure fails the viz build. */
+      command: string[];
+      types: string[];
+      key: "basename" | "id";
+    };
+
 export interface FacetConfig {
   /** Segmented-control label and hash-param name; `^[a-z][a-z0-9-]*$`, not
    *  one of the reserved names, unique across facets. */
@@ -76,18 +101,8 @@ export interface FacetConfig {
   /** Frontmatter key read as this facet's value (string values only; null:
    *  no frontmatter source). */
   frontmatter: string | null;
-  /** Opt-in build-side source: classify concepts of the given types by the
-   *  optionalAttrs guard block enclosing their basename in `file` (null:
-   *  skip — this facet has no Nix-guard source). */
-  nixPackages: {
-    /** Repo-relative Nix file to parse. */
-    file: string;
-    /** optionalAttrs predicate substring -> value. */
-    guards: Record<string, string>;
-    /** Concept types (matched by basename) that consult this map; a miss
-     *  (or a type outside this list) falls through unresolved. */
-    types: string[];
-  } | null;
+  /** Build-side classifier source (null: none for this facet). */
+  classify: FacetClassify | null;
 }
 
 /** Facet names reserved because they collide with hash-param names or the
@@ -249,23 +264,49 @@ export function normalizeVizConfig(raw: unknown, opts?: { strict?: boolean; warn
       cfg.facets = facetEntries.map(({ name, raw: fraw }) => {
         const s = { ...fraw };
         const path = `facet.${name || "?"}`;
-        const f: FacetConfig = { name, values: [], types: {}, ids: {}, frontmatter: null, nixPackages: null };
+        const f: FacetConfig = { name, values: [], types: {}, ids: {}, frontmatter: null, classify: null };
         field(s, path, "values", asStrArr((v) => (f.values = v)));
         field(s, path, "types", asStrMap((v) => (f.types = v)));
         field(s, path, "ids", asStrMap((v) => (f.ids = v)));
         field(s, path, "frontmatter", asStr((v) => (f.frontmatter = v || null)));
-        field(s, path, "nixPackages", (v, p) => {
+        // `legacyProvider` set = the old [facet.<n>.nix-packages] spelling,
+        // which implies the nix-optional-attrs provider and has no provider key.
+        const parseClassify = (v: unknown, p: string, legacyProvider: "nix-optional-attrs" | null) => {
           if (!isObj(v)) return bad(p, "expected a table");
-          const np = { ...v };
+          const cl = { ...v };
+          let provider: string = legacyProvider ?? "";
           let file: string | null = null;
           let guards: Record<string, string> = {};
+          let command: string[] = [];
           let types: string[] = [];
-          field(np, p, "file", asStr((x) => (file = stripSlash(x) || null)));
-          field(np, p, "guards", asStrMap((x) => (guards = x)));
-          field(np, p, "types", asStrArr((x) => (types = x)));
-          for (const k of Object.keys(np)) bad(`${p}.${k}`, "unknown key");
-          if (file) f.nixPackages = { file, guards, types };
-          else bad(`${p}.file`, "required");
+          let key: "basename" | "id" = "basename";
+          if (!legacyProvider)
+            field(cl, p, "provider", (x, pp) => {
+              if (x === "nix-optional-attrs" || x === "command") provider = x;
+              else bad(pp, 'expected "nix-optional-attrs" or "command"');
+            });
+          field(cl, p, "file", asStr((x) => (file = stripSlash(x) || null)));
+          field(cl, p, "guards", asStrMap((x) => (guards = x)));
+          field(cl, p, "command", asStrArr((x) => (command = x)));
+          field(cl, p, "types", asStrArr((x) => (types = x)));
+          field(cl, p, "key", (x, pp) => {
+            if (x === "basename" || x === "id") key = x;
+            else bad(pp, 'expected "basename" or "id"');
+          });
+          for (const k of Object.keys(cl)) bad(`${p}.${k}`, "unknown key");
+          if (provider === "command") {
+            if (file || Object.keys(guards).length) bad(p, "file/guards only apply to the nix-optional-attrs provider");
+            f.classify = { provider, command, types, key };
+          } else if (provider === "nix-optional-attrs") {
+            if (command.length) bad(p, "command only applies to the command provider");
+            if (file) f.classify = { provider, file, guards, types, key };
+            else bad(`${p}.file`, "required");
+          } else bad(`${p}.provider`, "required");
+        };
+        field(s, path, "classify", (v, p) => parseClassify(v, p, null));
+        field(s, path, "nixPackages", (v, p) => {
+          if (f.classify) return bad(p, "cannot specify both classify and nix-packages");
+          parseClassify(v, p, "nix-optional-attrs");
         });
         for (const k of Object.keys(s)) bad(`${path}.${k}`, "unknown key");
         return f;
@@ -295,23 +336,26 @@ export function normalizeVizConfig(raw: unknown, opts?: { strict?: boolean; warn
           if (!known.has(v)) errors.push(`${path}.types."${t}": "${v}" is not in ${path}.values`);
         for (const [id, v] of Object.entries(f.ids))
           if (!known.has(v)) errors.push(`${path}.ids."${id}": "${v}" is not in ${path}.values`);
-        if (f.nixPackages)
-          for (const [g, v] of Object.entries(f.nixPackages.guards))
-            if (!known.has(v)) errors.push(`${path}.nix-packages.guards.${g}: "${v}" is not in ${path}.values`);
+        if (f.classify?.provider === "nix-optional-attrs")
+          for (const [g, v] of Object.entries(f.classify.guards))
+            if (!known.has(v)) errors.push(`${path}.classify.guards.${g}: "${v}" is not in ${path}.values`);
       }
-      if (f.nixPackages) {
-        if (!Object.keys(f.nixPackages.guards).length) errors.push(`${path}.nix-packages.guards: required`);
-        if (!f.nixPackages.types.length) errors.push(`${path}.nix-packages.types: required`);
+      if (f.classify) {
+        if (!f.classify.types.length) errors.push(`${path}.classify.types: required`);
+        if (f.classify.provider === "nix-optional-attrs" && !Object.keys(f.classify.guards).length)
+          errors.push(`${path}.classify.guards: required`);
+        if (f.classify.provider === "command" && !f.classify.command.length)
+          errors.push(`${path}.classify.command: required`);
       }
-      if (vals.length && !Object.keys(f.types).length && !Object.keys(f.ids).length && !f.nixPackages && !f.frontmatter)
-        warn(`${path}: has values but no resolution rule (types/ids/nix-packages/frontmatter) — every concept unresolved, filter is a no-op`);
+      if (vals.length && !Object.keys(f.types).length && !Object.keys(f.ids).length && !f.classify && !f.frontmatter)
+        warn(`${path}: has values but no resolution rule (types/ids/classify/frontmatter) — every concept unresolved, filter is a no-op`);
     }
     const pathFields: [string, string][] = [
       [cfg.bundle.dir, "bundle.dir"],
       [cfg.bundle.out, "bundle.out"],
-      ...cfg.facets
-        .filter((f) => f.nixPackages)
-        .map((f): [string, string] => [f.nixPackages!.file, `facet.${f.name}.nix-packages.file`]),
+      ...cfg.facets.flatMap((f): [string, string][] =>
+        f.classify?.provider === "nix-optional-attrs" ? [[f.classify.file, `facet.${f.name}.classify.file`]] : [],
+      ),
     ];
     for (const [p, why] of pathFields) {
       if (!p) errors.push(`${why}: must not be empty`);

@@ -260,14 +260,46 @@ const commits = repoUrl ? vcs.resolveRevisions([...hashCandidates]) : {};
 // The template pre-substituted with the resolved URL; the viewer only fills
 // {hash}. Null: no URL -> citations render as plain code.
 const commitUrl = repoUrl ? cfg.vcs.commitUrlTemplate.split("{url}").join(repoUrl) : null;
-// Nix-package guards: for each facet with a nix-packages source, parse its
-// configured file's `optionalAttrs` blocks (missing file -> {} -> every
-// package of that facet's nix-packages.types falls through unresolved).
+// Facet classifiers: for each facet with a classify source, build its
+// name -> value map. "nix-optional-attrs" parses the configured file's
+// `optionalAttrs` guard blocks (missing file -> {} -> every concept of that
+// facet's classify.types falls through unresolved); "command" runs the
+// configured argv at the workspace root and must print a JSON object of
+// string values — any failure or out-of-range value fails the build
+// (strict-config philosophy: silent misclassification is worse).
 const facetMaps: Record<string, Record<string, string>> = {};
 for (const f of cfg.facets) {
-  if (!f.nixPackages) continue;
-  const file = join(repo, f.nixPackages.file);
-  facetMaps[f.name] = existsSync(file) ? parsePackagePlatforms(readFileSync(file, "utf8"), f.nixPackages.guards) : {};
+  const cl = f.classify;
+  if (!cl) continue;
+  if (cl.provider === "nix-optional-attrs") {
+    const file = join(repo, cl.file);
+    facetMaps[f.name] = existsSync(file) ? parsePackagePlatforms(readFileSync(file, "utf8"), cl.guards) : {};
+    continue;
+  }
+  const r = Bun.spawnSync({ cmd: cl.command, cwd: repo, stdout: "pipe", stderr: "inherit" });
+  if (r.exitCode !== 0) {
+    console.error(`viz: facet.${f.name}.classify command failed (exit ${r.exitCode}): ${cl.command.join(" ")}`);
+    process.exit(1);
+  }
+  let map: unknown;
+  try {
+    map = JSON.parse(r.stdout.toString());
+  } catch {
+    console.error(`viz: facet.${f.name}.classify command did not print valid JSON: ${cl.command.join(" ")}`);
+    process.exit(1);
+  }
+  if (typeof map !== "object" || map === null || Array.isArray(map) || Object.values(map).some((v) => typeof v !== "string")) {
+    console.error(`viz: facet.${f.name}.classify command must print a JSON object of string values`);
+    process.exit(1);
+  }
+  const m = map as Record<string, string>;
+  if (f.values.length)
+    for (const [k, v] of Object.entries(m))
+      if (!f.values.includes(v)) {
+        console.error(`viz: facet.${f.name}.classify: "${k}" = "${v}" is not in facet.${f.name}.values`);
+        process.exit(1);
+      }
+  facetMaps[f.name] = m;
 }
 // A concept explicitly frontmatter-tagged with a value outside its facet's
 // declared `values` is unresolved (data.ts's facetValueOf), not a silent

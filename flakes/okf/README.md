@@ -21,7 +21,10 @@ config fails the command): `[bundle] dir` sets the bundle root (default
 `repo-links = "check"|"ignore"|"forbid"` — defaults reproduce the stock
 OKF-plus-reference-tooling behavior), `[vcs]` adds `url` and
 `commit-url-template = "{url}/commit/{hash}"` for forge-agnostic revision
-links, and the remaining sections drive the viz viewer. It is a bun/TypeScript
+links, and the remaining sections drive the viz viewer. Facet filter lenses
+can classify concepts via `[facet.<name>.classify]` — the built-in
+`nix-optional-attrs` parser or `provider = "command"` running any repo
+script that prints a JSON name→value map. It is a bun/TypeScript
 project run from source — no compile step.
 
 ## Outputs

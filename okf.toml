@@ -64,10 +64,12 @@ values = ["macos", "linux"] # segments after "all"; section absent -> no lens at
 [facet.platform.ids] # per-concept overrides (full concept id) — highest precedence
 "hosts/nebula" = "linux"
 
-[facet.platform.nix-packages] # opt-in build-side source: optionalAttrs guard parse
+[facet.platform.classify] # opt-in build-side classifier: name -> value map for the listed types
+provider = "nix-optional-attrs" # optionalAttrs guard parse ("command" = argv printing a JSON map instead)
 file = "modules/packages.nix" # Nix file whose optionalAttrs OS guards classify packages
 guards = { darwin = "macos", linux = "linux" } # optionalAttrs predicate substring -> value
-types = ["Nix Package", "Sub-flake", "Overlay"] # types that consult the map (by basename); a miss falls through unresolved
+types = ["Nix Package", "Sub-flake", "Overlay"] # types that consult the map; a miss falls through unresolved
+# key = "basename"            # map key per concept: "basename" (default) | "id"
 
 # [vcs]
 # url = "https://github.com/kriswill/dotfiles"   # optional override of the remote detection (any forge)
