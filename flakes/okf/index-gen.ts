@@ -10,17 +10,18 @@
 import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { basename, join } from "node:path";
 import { loadContext } from "./config-cli";
-import { fmToYaml, parseDoc, parseFrontmatter, titleFromSlug, RESERVED, type FM } from "./lib";
+import { fmToYaml, parseDoc, parseFrontmatter, titleFromSlug, type FM } from "./lib";
 
 const { bundle, cfg } = loadContext();
 const bundleName = basename(cfg.viz.bundle.dir);
+const reserved = new Set(cfg.profile.reservedFiles);
 
 interface DirInfo { rel: string; blurb: string; }
 
 function listDir(absDir: string) {
   const entries = readdirSync(absDir).filter((e) => !e.startsWith(".") && !e.startsWith("_")).sort();
   const dirs = entries.filter((e) => statSync(join(absDir, e)).isDirectory());
-  const mds = entries.filter((e) => e.endsWith(".md") && !RESERVED.has(e));
+  const mds = entries.filter((e) => e.endsWith(".md") && !reserved.has(e));
   return { dirs, mds };
 }
 

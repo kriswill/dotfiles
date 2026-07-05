@@ -18,11 +18,9 @@ export interface ConceptDoc {
   raw: string;
 }
 
-export const RESERVED = new Set(["index.md", "log.md"]);
-
-// Fields our profile requires beyond the spec's bare `type`
-// (matches the reference tooling's OKFDocument.validate()).
-export const PROFILE_FIELDS = ["type", "title", "description", "timestamp"];
+// Reserved filenames and required/recommended frontmatter fields are profile
+// policy, configured via okf.toml's [profile] section (defaults in
+// config-cli.ts) — commands read them from the loaded context.
 
 // Resolved from the caller's working directory (not import.meta.dir) so the
 // tooling works both from the working tree and from a /nix/store install, and
