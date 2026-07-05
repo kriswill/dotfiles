@@ -16,8 +16,92 @@ export const CONFIG_FILE = "okf.toml";
  *  generalization arc completes. */
 const LEGACY_CONFIG_FILE = "okf-viz.toml";
 
+export class OkfConfigError extends Error {}
+
+export interface OkfProfile {
+  /** Frontmatter fields that must be present and non-empty (errors).
+   *  `type` is always enforced — the OKF spec requires it — and is prepended
+   *  if a config omits it. */
+  requiredFields: string[];
+  /** Fields whose absence is a warning (`--strict` promotes to errors). */
+  recommendedFields: string[];
+  /** Basenames that carry no concept frontmatter and are skipped as concepts
+   *  (index listings, viz nodes). */
+  reservedFiles: string[];
+  /** Policy for /-rooted link targets: reject, or skip checking. */
+  rootedLinks: "error" | "allow";
+  /** Policy for links escaping the bundle into the repo: verify they
+   *  resolve, don't check, or reject outright (self-contained bundles). */
+  repoLinks: "check" | "ignore" | "forbid";
+}
+
+const profileDefaults = (): OkfProfile => ({
+  requiredFields: ["type"],
+  recommendedFields: ["title", "description", "timestamp"],
+  reservedFiles: ["index.md", "log.md"],
+  rootedLinks: "error",
+  repoLinks: "check",
+});
+
 export interface OkfConfig {
   viz: VizConfig;
+  profile: OkfProfile;
+}
+
+const isObj = (v: unknown): v is Record<string, unknown> => typeof v === "object" && v !== null && !Array.isArray(v);
+
+/**
+ * Consume + normalize the CLI-only sections ([profile]; [vcs]/[scaffold]/
+ * [index] as they land) out of the raw parsed TOML, returning them plus the
+ * remainder for normalizeVizConfig — which strict-rejects unknown keys, so
+ * CLI sections must never reach it (nor the viewer's #data embed). Always
+ * strict: throws OkfConfigError listing every offending key path. Accepts
+ * kebab (TOML) and camel spellings like the viz normalizer.
+ */
+export function splitCliSections(raw: unknown): { profile: OkfProfile; rest: unknown } {
+  const profile = profileDefaults();
+  // Non-table top levels fall through untouched — normalizeVizConfig owns
+  // that error so the message stays consistent.
+  if (!isObj(raw)) return { profile, rest: raw };
+  const top = { ...raw };
+  const errors: string[] = [];
+
+  const section = top["profile"];
+  delete top["profile"];
+  if (section !== undefined && section !== null) {
+    if (!isObj(section)) errors.push("profile: expected a table");
+    else {
+      const s = { ...section };
+      const field = (camel: string, set: (v: unknown, path: string) => void) => {
+        const kebab = camel.replace(/[A-Z]/g, (c) => "-" + c.toLowerCase());
+        for (const key of camel === kebab ? [camel] : [camel, kebab]) {
+          if (key in s) {
+            if (s[key] !== null) set(s[key], `profile.${key}`);
+            delete s[key];
+          }
+        }
+      };
+      const asStrArr = (assign: (a: string[]) => void) => (v: unknown, path: string) => {
+        if (Array.isArray(v) && v.every((x) => typeof x === "string" && x !== "")) assign(v as string[]);
+        else errors.push(`${path}: expected an array of non-empty strings`);
+      };
+      const asEnum =
+        <T extends string>(allowed: readonly T[], assign: (e: T) => void) =>
+        (v: unknown, path: string) => {
+          if (typeof v === "string" && (allowed as readonly string[]).includes(v)) assign(v as T);
+          else errors.push(`${path}: expected one of: ${allowed.join(", ")}`);
+        };
+      field("requiredFields", asStrArr((a) => (profile.requiredFields = a)));
+      field("recommendedFields", asStrArr((a) => (profile.recommendedFields = a)));
+      field("reservedFiles", asStrArr((a) => (profile.reservedFiles = a)));
+      field("rootedLinks", asEnum(["error", "allow"] as const, (e) => (profile.rootedLinks = e)));
+      field("repoLinks", asEnum(["check", "ignore", "forbid"] as const, (e) => (profile.repoLinks = e)));
+      for (const k of Object.keys(s)) errors.push(`profile.${k}: unknown key`);
+    }
+  }
+  if (!profile.requiredFields.includes("type")) profile.requiredFields = ["type", ...profile.requiredFields];
+  if (errors.length) throw new OkfConfigError("invalid okf.toml:\n  " + errors.join("\n  "));
+  return { profile, rest: top };
 }
 
 export interface OkfContext {
@@ -52,15 +136,18 @@ export function loadContext(): OkfContext {
     }
   }
   let viz: VizConfig;
+  let profile: OkfProfile;
   try {
-    viz = normalizeVizConfig(raw, { strict: true, warn: (m) => console.warn(`okf: warning: ${m}`) });
+    const split = splitCliSections(raw);
+    profile = split.profile;
+    viz = normalizeVizConfig(split.rest, { strict: true, warn: (m) => console.warn(`okf: warning: ${m}`) });
   } catch (e) {
-    if (e instanceof VizConfigError) {
+    if (e instanceof VizConfigError || e instanceof OkfConfigError) {
       console.error(`okf: ${e.message}`);
       process.exit(1);
     }
     throw e;
   }
-  ctxCache = { root, bundle: join(root, viz.bundle.dir), cfg: { viz } };
+  ctxCache = { root, bundle: join(root, viz.bundle.dir), cfg: { viz, profile } };
   return ctxCache;
 }

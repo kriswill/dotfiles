@@ -11,7 +11,7 @@
 import { existsSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { extname, join } from "node:path";
 import { loadContext } from "./config-cli";
-import { extractLinks, gitISO, gitTrackedFiles, githubRemoteUrl, isExternal, parseDoc, resolveCommits, resolveLink, walkMd, RESERVED } from "./lib";
+import { extractLinks, gitISO, gitTrackedFiles, githubRemoteUrl, isExternal, parseDoc, resolveCommits, resolveLink, walkMd } from "./lib";
 import { layout3d } from "./layout3d";
 import { displayName } from "./viz-app/config";
 import { parsePackagePlatforms, repoNameFromUrl } from "./viz-app/data";
@@ -44,6 +44,7 @@ const lap = (name: string) => {
 // defaults (no facet filters, alphabetical types, flat legend).
 const { root: repo, bundle, cfg: okfCfg } = loadContext();
 const cfg = okfCfg.viz;
+const reserved = new Set(okfCfg.profile.reservedFiles);
 
 interface Node {
   id: string; type: string; title: string; desc: string;
@@ -56,7 +57,7 @@ const edges: { s: string; t: string }[] = [];
 const ids = new Set<string>();
 
 for (const rel of walkMd(bundle)) {
-  if (RESERVED.has(rel.split("/").pop()!)) continue;
+  if (reserved.has(rel.split("/").pop()!)) continue;
   const doc = parseDoc(bundle, rel);
   const id = rel.replace(/\.md$/, "");
   ids.add(id);

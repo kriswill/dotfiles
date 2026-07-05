@@ -10,9 +10,12 @@ around Three.js glow spheres, bundled at generation time by `Bun.build`).
 okf operates on the git repository containing the **current working directory**
 (`git rev-parse --show-toplevel`). All commands read one optional config file,
 `<repo>/okf.toml` (strict-validated; malformed config fails the command):
-`[bundle] dir` sets the bundle root (default `knowledge/`), the remaining
-sections drive the viz viewer. It is a bun/TypeScript project run from
-source — no compile step.
+`[bundle] dir` sets the bundle root (default `knowledge/`), `[profile]` tunes
+validation policy (`required-fields`, `recommended-fields`, `reserved-files`,
+`rooted-links = "error"|"allow"`, `repo-links = "check"|"ignore"|"forbid"` —
+defaults reproduce the stock OKF-plus-reference-tooling behavior), and the
+remaining sections drive the viz viewer. It is a bun/TypeScript project run
+from source — no compile step.
 
 ## Outputs
 

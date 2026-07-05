@@ -2,6 +2,15 @@
 
 ## 2026-07-04
 
+- **Update** — [okf](packages/okf.md) +
+  [okf-profile](okf-profile.md): validation policy moved from
+  code into `okf.toml [profile]` (`required-fields` — `type` always
+  enforced, `recommended-fields`, `reserved-files`, `rooted-links`,
+  `repo-links`). Defaults reproduce the previous hardcoded
+  `RESERVED`/`PROFILE_FIELDS` behavior exactly (this repo's okf.toml sets
+  nothing); other bundles can now tune the profile without touching okf.
+  New pure-normalizer tests in `flakes/okf/test/config-cli.test.ts`.
+
 - **Decision** —
   [okf-toml-unified-config](decisions/okf-toml-unified-config.md):
   `okf-viz.toml` renamed to **`okf.toml`** — no longer viz settings but the
