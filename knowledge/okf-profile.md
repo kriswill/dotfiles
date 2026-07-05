@@ -90,8 +90,8 @@ Module`, `Host`, `Nix Package`, `Overlay`, `Sub-flake`, `Neovim Plugin`,
 ## Tooling
 
 okf is bun/TypeScript living in its own repository —
-[kriswill/okflight](https://github.com/kriswill/okflight), private for now
-(nix consumers need a GitHub token in `access-tokens`) — consumed here as
+[kriswill/okflight](https://github.com/kriswill/okflight), private for now,
+fetched over git+ssh (auth rides the SSH agent; here, 1Password) — consumed here as
 the `okf` flake input, re-exported as `packages.<system>.okf`, and advanced
 with `nix flake update okf`
 ([okflight-extraction](decisions/okflight-extraction.md)). This repo's

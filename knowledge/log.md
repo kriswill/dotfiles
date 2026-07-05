@@ -12,8 +12,9 @@
   package (live hacking moved to a checkout); pages CI checks out okflight
   at the flake.lock-pinned rev via a read-only deploy key; the
   `_okf-scaffold` passes' type-only import is satisfied by a vendored
-  `okf-scaffold-api.d.ts`. Private-repo tax: nix consumers need a GitHub
-  token in `access-tokens` (nebula: pending).
+  `okf-scaffold-api.d.ts`. Private-repo fetches ride `git+ssh` through the
+  1Password SSH agent (the signing key re-registered on GitHub as an
+  **Authentication** key; no token at rest; nebula auth: pending).
 
 - **Decision** — [okf-scaffold-split](decisions/okf-scaffold-split.md): the
   repo scaffolder left `scripts/` for bundle-adjacent

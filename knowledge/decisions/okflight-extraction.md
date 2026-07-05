@@ -21,9 +21,10 @@ that promotion would be a one-line input-URL swap.
 
 ## Decision
 
-Create **`github:kriswill/okflight`** (private for now) and swap
-`inputs.okf.url` from `"./flakes/okf"` to `"github:kriswill/okflight"` —
-input name, `follows`, and all consumers unchanged, as the pattern promised.
+Create **`kriswill/okflight`** (private for now) and swap `inputs.okf.url`
+from `"./flakes/okf"` to
+`"git+ssh://git@github.com/kriswill/okflight.git"` — input name, `follows`,
+and all consumers unchanged, as the pattern promised.
 
 - **Name** — *okflight* parses three ways at once: *OK-flight* (flying
   around the 3D viz), *OKF-light* (the glow-sphere starlight), *OKF-flight*.
@@ -46,15 +47,28 @@ input name, `follows`, and all consumers unchanged, as the pattern promised.
   read-only deploy key (`OKFLIGHT_DEPLOY_KEY` secret), so the published
   graph is always built by the okf this repo pins, not okflight HEAD.
   Trigger path `flakes/okf/**` became `flake.lock`.
+- **Auth: git+ssh through the 1Password agent** — `nix.conf` is static
+  (no command/credential-helper hook for `access-tokens`), so instead of a
+  token at rest the input uses `git+ssh://`: nix shells out to git → ssh →
+  `IdentityAgent` (the 1Password socket, `Host *` in `~/.ssh/config`), and
+  every private fetch is enclave-gated per 1Password policy. Required
+  registering the existing 1Password ed25519 public key on GitHub a second
+  time as an **Authentication** key — GitHub stores auth and signing
+  registrations separately, and signing-only keys are refused server-side
+  before any agent signature is requested (diagnosable via the empty
+  <https://github.com/kriswill.keys>). An interim plaintext
+  `access-tokens` entry (from `gh auth token`) was removed the same day.
+  Evaluation must run as the key-holding user — `nrs` (nh) does.
 
 ## Consequences
 
 - okf gains its own issues/PRs/releases and can be consumed by other repos;
   okf bumps here become explicit `nix flake update okf` lock changes.
-- **Private-repo tax** until it goes public: every nix consumer needs
-  `access-tokens = github.com=<token>` in `nix.conf` (this Mac: done, via
-  `gh auth token`; **nebula needs the same** before its next rebuild —
-  root's nix config, since `sudo nixos-rebuild` evaluates as root), and
+- **Private-repo tax** until it goes public: every nix consumer needs an
+  SSH key authorized for the repo visible to its evaluation (**nebula is
+  pending** — the `home/ssh` stow package is macOS-only, so it needs its
+  own agent/key wiring or a temporary `access-tokens` token before its
+  next rebuild; `nrs` = `nh os switch` evaluates as user there too), and
   public clones of this repo cannot evaluate the flake (the lock references
   a repo they can't fetch). Going public erases both costs; consumers
   change nothing.
