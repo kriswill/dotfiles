@@ -13,7 +13,8 @@ Node.js replacement, plus a package manager (`bun install`), bundler
 
 ## How this repo uses it
 
-**House rule: bun + TypeScript is the default for repo tooling** — skill
+**House rule: bun + [TypeScript](typescript-language.md) is the default
+for repo tooling** — skill
 drivers and helper scripts (`.claude/skills/patch-ccglass/driver.ts`,
 `derivation-to-flake`'s inventory/scaffold/verify scripts) are bun-run TS,
 preferred over bash or python.

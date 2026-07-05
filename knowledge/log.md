@@ -2,6 +2,31 @@
 
 ## 2026-07-04
 
+- **Creation** — [svelte-language](svelte-language.md),
+  [markdown-language](markdown-language.md): the last two language
+  References. Svelte: the viz-app is the one Svelte codebase (Svelte 5
+  runes, Bun.build-bundled, svelte-check + bun test), with the
+  `docs/svelt/` manual's "always write runes, translate Svelte-4 content"
+  ground rule surfaced; backlinked from [nvim LSP](nvim/lsp.md),
+  [typescript-language](typescript-language.md), [okf](packages/okf.md),
+  and [manuals](manuals.md). Markdown: the documentation language —
+  OKF-profile dialect rules (H2 bodies, file-relative links for GitHub),
+  rumdl via efm with the load-bearing MD013-disabled rationale from
+  `rumdl.toml`, glow + viz-app rendering paths.
+
+- **Creation** — [typescript-language](typescript-language.md),
+  [lua-language](lua-language.md), [bash-language](bash-language.md):
+  the language-Reference series continues from
+  [nix-language](nix-language.md). TypeScript: default tooling language,
+  bun-executed with no tsc step, vtsls/svelte-server file ownership split,
+  biome formatting. Lua: exclusively the Neovim config (LuaJIT / 5.1
+  dialect), stylua + lua-ls/lazydev. Bash: the glue layer bounded by zsh
+  (interactive) and bun+TS (new tooling), strict mode + shellcheck both
+  in-editor and at build time inside `writeShellApplication`. Backlinked
+  from [nvim LSP](nvim/lsp.md) (per-server bullets),
+  [nvim architecture](nvim/architecture.md), and
+  [bun-runtime](bun-runtime.md).
+
 - **Creation** — [bun-runtime](bun-runtime.md): root-level Reference
   concept for Bun — the repo's default script runtime (house rule: bun + TS
   over bash/python for tooling), per-OS provisioning
