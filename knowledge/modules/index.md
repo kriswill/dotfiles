@@ -22,7 +22,7 @@ interesting ones by hand — scaffolding never overwrites an existing doc.
 * [Direnv Nom](direnv-nom.md) - Wraps nix-direnv's _nix() to pipe `use flake` build logs through nix-output-monitor, with an nvd closure diff after successful builds; wrapper text shared via lib/direnv-nom-wrapper.nix.
 * [Direnv](direnv.md) - direnv + nix-direnv on both OSes; links nix-direnv's stdlib into ~/.config/direnv/lib so `use flake` works, with a filename that deliberately sorts before direnv-nom's wrapper.
 * [Disko](disko.md) - Declarative disko layout for the NixOS NVMe — GPT with a 1M bios-boot partition, a 512M vfat ESP at /boot, and an unencrypted ext4 root filling the rest.
-* [Dnsmasq](dnsmasq.md) - dnsmasq local DNS service.
+* [Dnsmasq](dnsmasq.md) - dnsmasq — lightweight DNS forwarder/cache, configured here as a loopback-bound local resolver for custom hostnames like `p4c`.
 * [Dotfiles Stow](dotfiles-stow.md) - Restows every home/ package into $HOME on each rebuild via the shared lib/stow-restow-script.nix builder — live-repo symlinks, self-healing, per-OS skip lists.
 * [Fastfetch](fastfetch.md) - Kris' fastfetch.
 * [Flake Parts](flake-parts.md) - Top-level flake-parts wiring for the Dendritic pattern.

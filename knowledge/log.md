@@ -2,6 +2,13 @@
 
 ## 2026-07-04
 
+- **Update** — [dnsmasq](modules/dnsmasq.md): filled in the previously
+  stub description with what dnsmasq actually is (lightweight DNS
+  forwarder/cache + DHCP/router-advertisement/network-boot infra) and how
+  this repo uses it (loopback-bound local resolver for `localhost`/`p4c`,
+  not a network-facing server); added `## Citations` linking the upstream
+  docs, man page, and the nix-darwin `services.dnsmasq` option reference.
+
 - **Creation** — [okf-subflake](decisions/okf-subflake.md): okf moved
   `scripts/okf/` → `flakes/okf/` (`git mv`, history preserved) and became a
   real sub-flake: `packages.<system>.okf` ships sources + vendored
