@@ -1,4 +1,5 @@
 <script lang="ts">
+  import AboutModal from "./AboutModal.svelte";
   import ConceptList from "./ConceptList.svelte";
   import FacetControls from "./FacetControls.svelte";
   import IsolateControl from "./IsolateControl.svelte";
@@ -7,17 +8,14 @@
   import type { VizState } from "./state.svelte";
 
   const { viz }: { viz: VizState } = $props();
+  let aboutOpen = $state(false);
 </script>
 
 <aside id="side">
   <div class="top">
     <h1>
-      {viz.model.displayName} <span class="okf">{viz.model.cfg.display.badge}</span>
-      <!-- svelte-ignore a11y_no_noninteractive_tabindex -- ARIA tooltip pattern:
-           focusable trigger, and a <button> can't host the bubble's link -->
-      <span class="help" tabindex="0" aria-label="What is this?">?<span class="bubble" role="tooltip">
-          {@html viz.model.cfg.display.aboutHtml}
-        </span></span>
+      <span class="name">{viz.model.displayName} <span class="okf">{viz.model.cfg.display.badge}</span></span>
+      <button class="help" aria-label="About this page" aria-haspopup="dialog" onclick={() => (aboutOpen = true)}>?</button>
     </h1>
     <div class="sub" id="counts">
       {#if viz.hidden.size > 0 || viz.query.trim() || viz.neighborIds || viz.facetActive}
@@ -37,6 +35,10 @@
     <IsolateControl {viz} />
   </div>
 </aside>
+
+{#if aboutOpen}
+  <AboutModal {viz} onClose={() => (aboutOpen = false)} />
+{/if}
 
 <style>
   #side {
@@ -79,64 +81,45 @@
     padding: 0 14px 14px;
   }
   #side h1 {
-    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
     font-size: 15px;
     margin-bottom: 2px;
+  }
+  #side h1 .name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
   #side h1 .okf {
     color: var(--ink-muted);
     font-weight: 500;
   }
   .help {
+    flex: none;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 15px;
-    height: 15px;
+    width: 22px;
+    height: 22px;
+    padding: 0;
     border: 1px solid var(--grid);
     border-radius: 50%;
+    background: none;
     color: var(--ink-muted);
-    font-size: 10px;
+    font: inherit;
+    font-size: 13px;
     font-weight: 600;
-    vertical-align: 2px;
-    cursor: help;
+    cursor: pointer;
   }
   .help:hover,
   .help:focus-visible {
     color: var(--ink-1);
     border-color: var(--ink-muted);
+    background: color-mix(in srgb, var(--ink-muted) 12%, transparent);
     outline: none;
-  }
-  .bubble {
-    display: none;
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: calc(100% + 6px);
-    background: var(--surface-1);
-    border: 1px solid var(--grid);
-    border-radius: 8px;
-    padding: 8px 10px;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
-    z-index: 4;
-    color: var(--ink-2);
-    font-size: 12px;
-    font-weight: 400;
-    line-height: 1.45;
-  }
-  /* Invisible bridge over the gap (6px + the icon's line-box descent) so
-     hover survives the transit from the (?) down into the bubble. */
-  .bubble::before {
-    content: "";
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: -18px;
-    height: 18px;
-  }
-  .help:hover .bubble,
-  .help:focus-within .bubble {
-    display: block;
   }
   #side .sub {
     color: var(--ink-muted);

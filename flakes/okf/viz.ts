@@ -14,7 +14,7 @@ import { loadContext } from "./config-cli";
 import { extractLinks, isExternal, nowISO, parseDoc, resolveLink, walkMd } from "./lib";
 import { layout3d } from "./layout3d";
 import { displayName } from "./viz-app/config";
-import { parsePackagePlatforms, repoNameFromUrl } from "./viz-app/data";
+import { parsePackagePlatforms, repoNameFromUrl, type BuildStats } from "./viz-app/data";
 import { esc } from "./viz-app/markdown";
 import { THEMES } from "./viz-app/themes";
 
@@ -353,10 +353,24 @@ for (const o of build.outputs) if (o.path.endsWith(".css")) appCss += await o.te
 appCss = appCss.replace(/<\/style/gi, "<\\/style");
 lap("bundle");
 
-const data = JSON.stringify({ nodes, edges: dedupedEdges, files, dirs, repoUrl, commitUrl, commits, facetMaps, cfg }).replace(
-  /<\//g,
-  "<\\/",
-);
+// --- Build-time size breakdown (About modal) ---------------------------------
+// Each section is measured as the exact text written into the page (i.e. after
+// the </ escape below; appJs/appCss were already escaped) — in UTF-8 bytes,
+// not string length: the embedded docs are full of multi-byte characters.
+// totalBytes is self-referential — the stats blob sits inside the file it
+// measures — so the page is assembled once with a 0 placeholder and the real
+// total solved by fixed point: only the (ASCII) digit count of totalBytes
+// feeds back into the length.
+const szOf = (v: unknown) => Buffer.byteLength(JSON.stringify(v).replace(/<\//g, "<\\/"));
+const generatedAt = nowISO();
+const sectionBytes: BuildStats["bytes"] = {
+  nodes: szOf(nodes),
+  edges: szOf(dedupedEdges),
+  files: szOf(files),
+  dirs: szOf(dirs),
+  appJs: Buffer.byteLength(appJs),
+  appCss: Buffer.byteLength(appCss),
+};
 
 /** :root custom-property block for a named theme stop, from the app's THEMES. */
 const themeCss = (name: string) =>
@@ -364,7 +378,13 @@ const themeCss = (name: string) =>
     .map(([k, v]) => `${k}: ${v};`)
     .join(" ");
 
-const html = `<!doctype html>
+const assemble = (totalBytes: number) => {
+  const stats: BuildStats = { generatedAt, totalBytes, bytes: sectionBytes };
+  const data = JSON.stringify({ nodes, edges: dedupedEdges, files, dirs, repoUrl, commitUrl, commits, facetMaps, cfg, stats }).replace(
+    /<\//g,
+    "<\\/",
+  );
+  return `<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -414,6 +434,21 @@ const html = `<!doctype html>
 </body>
 </html>
 `;
+};
+
+// Fixed point for totalBytes: base is the page byte length without the
+// placeholder digit; adding the real number back only changes the length by
+// its digit count, so two iterations always converge (digit-boundary
+// crossings included).
+const base = Buffer.byteLength(assemble(0)) - 1;
+let total = base;
+for (let i = 0; i < 3; i++) total = base + String(total).length;
+const html = assemble(total);
+const actual = Buffer.byteLength(html);
+if (actual !== total) {
+  console.error(`viz: totalBytes fixed point failed (${actual} != ${total}) — stats would lie, refusing to write`);
+  process.exit(1);
+}
 
 const out = join(bundle, cfg.bundle.out);
 writeFileSync(out, html);
@@ -421,7 +456,7 @@ lap("write");
 const fmtMs = (ms: number) => (ms < 10 ? ms.toFixed(1) : String(Math.round(ms))) + "ms";
 console.log(`viz build: ${phases.map(([n, ms]) => `${n} ${fmtMs(ms)}`).join(" · ")}`);
 console.log(
-  `viz: ${nodes.length} nodes, ${dedupedEdges.length} edges, ${Object.keys(files).length} files, ${Object.keys(dirs).length} dirs, ${Object.keys(commits).length}/${hashCandidates.size} commit links -> ${out} (${(html.length / 1024).toFixed(0)} KB)`,
+  `viz: ${nodes.length} nodes, ${dedupedEdges.length} edges, ${Object.keys(files).length} files, ${Object.keys(dirs).length} dirs, ${Object.keys(commits).length}/${hashCandidates.size} commit links -> ${out} (${(total / 1024).toFixed(0)} KB)`,
 );
 
 // --perf: measure viewer startup in headless Chrome against the file we just wrote.
