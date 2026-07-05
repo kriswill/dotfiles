@@ -2,10 +2,10 @@ import { describe, expect, test } from "bun:test";
 import { decodeHash, decodeViewHash, encodeHash, encodeViewHash } from "./hash";
 
 const model = {
-  byId: { "nvim/architecture": {} },
+  byId: { "wiki/architecture": {} },
   files: { "flakes/okf/viz.ts": {}, "docs/50%.md": {}, "docs/what?.md": {} },
   dirs: { "flakes/ccglass": {} },
-  typeCounts: { "Darwin Module": 2, Decision: 1 },
+  typeCounts: { "Alpha Module": 2, Decision: 1 },
   facets: [
     { name: "platform", values: ["macos", "linux"] },
     { name: "status", values: ["draft", "stable"] },
@@ -14,7 +14,7 @@ const model = {
 
 describe("encodeHash", () => {
   test("concept / file / dir / none", () => {
-    expect(encodeHash({ kind: "concept", id: "nvim/architecture" })).toBe("c/nvim/architecture");
+    expect(encodeHash({ kind: "concept", id: "wiki/architecture" })).toBe("c/wiki/architecture");
     expect(encodeHash({ kind: "file", path: "flakes/okf/viz.ts" })).toBe("f/flakes/okf/viz.ts");
     expect(encodeHash({ kind: "dir", path: "flakes/ccglass" })).toBe("d/flakes/ccglass");
     expect(encodeHash({ kind: "none" })).toBe("");
@@ -41,29 +41,29 @@ describe("encodeViewHash", () => {
 
   test("empty filters add nothing", () => {
     expect(encodeViewHash({ sel: none, filters: f({}) })).toBe("");
-    expect(encodeViewHash({ sel: { kind: "concept", id: "nvim/architecture" }, filters: f({}) })).toBe(
-      "c/nvim/architecture",
+    expect(encodeViewHash({ sel: { kind: "concept", id: "wiki/architecture" }, filters: f({}) })).toBe(
+      "c/wiki/architecture",
     );
   });
 
   test("filters ride behind '?', hidden types sorted for a canonical form", () => {
-    expect(encodeViewHash({ sel: none, filters: f({ hidden: ["Decision", "Darwin Module"] }) })).toBe(
-      "?hide=Darwin+Module%2CDecision",
+    expect(encodeViewHash({ sel: none, filters: f({ hidden: ["Decision", "Alpha Module"] }) })).toBe(
+      "?hide=Alpha+Module%2CDecision",
     );
-    expect(encodeViewHash({ sel: none, filters: f({ hidden: ["Darwin Module", "Decision"] }) })).toBe(
-      "?hide=Darwin+Module%2CDecision",
+    expect(encodeViewHash({ sel: none, filters: f({ hidden: ["Alpha Module", "Decision"] }) })).toBe(
+      "?hide=Alpha+Module%2CDecision",
     );
-    expect(encodeViewHash({ sel: { kind: "concept", id: "nvim/architecture" }, filters: f({ q: "tmux conf" }) })).toBe(
-      "c/nvim/architecture?q=tmux+conf",
+    expect(encodeViewHash({ sel: { kind: "concept", id: "wiki/architecture" }, filters: f({ q: "tmux conf" }) })).toBe(
+      "c/wiki/architecture?q=tmux+conf",
     );
   });
 
   test("isolate rides behind '?' only for a concept selection and a nonzero depth", () => {
-    expect(encodeViewHash({ sel: { kind: "concept", id: "nvim/architecture" }, filters: f({ isolate: 2 }) })).toBe(
-      "c/nvim/architecture?isolate=2",
+    expect(encodeViewHash({ sel: { kind: "concept", id: "wiki/architecture" }, filters: f({ isolate: 2 }) })).toBe(
+      "c/wiki/architecture?isolate=2",
     );
-    expect(encodeViewHash({ sel: { kind: "concept", id: "nvim/architecture" }, filters: f({ isolate: 0 }) })).toBe(
-      "c/nvim/architecture",
+    expect(encodeViewHash({ sel: { kind: "concept", id: "wiki/architecture" }, filters: f({ isolate: 0 }) })).toBe(
+      "c/wiki/architecture",
     );
     expect(encodeViewHash({ sel: none, filters: f({ isolate: 2 }) })).toBe(""); // no selection -> never emitted
   });
@@ -88,10 +88,10 @@ describe("encodeViewHash", () => {
   test("hide, q, isolate, then facets appear in that order", () => {
     expect(
       encodeViewHash({
-        sel: { kind: "concept", id: "nvim/architecture" },
+        sel: { kind: "concept", id: "wiki/architecture" },
         filters: f({ hidden: ["Decision"], q: "arch", isolate: 1, facets: { platform: "macos", status: "stable" } }),
       }),
-    ).toBe("c/nvim/architecture?hide=Decision&q=arch&isolate=1&platform=macos&status=stable");
+    ).toBe("c/wiki/architecture?hide=Decision&q=arch&isolate=1&platform=macos&status=stable");
   });
 });
 
@@ -99,8 +99,8 @@ describe("decodeViewHash", () => {
   test("selection + filters round-trip, including '%' paths", () => {
     for (const view of [
       {
-        sel: { kind: "concept", id: "nvim/architecture" },
-        filters: { hidden: ["Darwin Module", "Decision"], q: "", isolate: 0, facets: { platform: "all", status: "all" } },
+        sel: { kind: "concept", id: "wiki/architecture" },
+        filters: { hidden: ["Alpha Module", "Decision"], q: "", isolate: 0, facets: { platform: "all", status: "all" } },
       },
       {
         sel: { kind: "none" },
@@ -111,7 +111,7 @@ describe("decodeViewHash", () => {
         filters: { hidden: ["Decision"], q: "tmux", isolate: 0, facets: { platform: "linux", status: "draft" } },
       },
       {
-        sel: { kind: "concept", id: "nvim/architecture" },
+        sel: { kind: "concept", id: "wiki/architecture" },
         filters: { hidden: ["Decision"], q: "tmux", isolate: 1, facets: { platform: "macos", status: "all" } },
       },
     ] as const) {
@@ -122,8 +122,8 @@ describe("decodeViewHash", () => {
   });
 
   test("bare selection hashes decode with empty filters, every facet 'all' (old links stay valid)", () => {
-    expect(decodeViewHash("c/nvim/architecture", model)).toEqual({
-      sel: { kind: "concept", id: "nvim/architecture" },
+    expect(decodeViewHash("c/wiki/architecture", model)).toEqual({
+      sel: { kind: "concept", id: "wiki/architecture" },
       filters: { hidden: [], q: "", isolate: 0, facets: { platform: "all", status: "all" } },
     });
   });
@@ -133,9 +133,9 @@ describe("decodeViewHash", () => {
   });
 
   test("junk filter params fall back to empty filters", () => {
-    expect(decodeViewHash("c/nvim/architecture?%%%", model).sel).toEqual({
+    expect(decodeViewHash("c/wiki/architecture?%%%", model).sel).toEqual({
       kind: "concept",
-      id: "nvim/architecture",
+      id: "wiki/architecture",
     });
   });
 
@@ -145,8 +145,8 @@ describe("decodeViewHash", () => {
   });
 
   test("garbage isolate values clamp to 0", () => {
-    expect(decodeViewHash("c/nvim/architecture?isolate=3", model).filters.isolate).toBe(0);
-    expect(decodeViewHash("c/nvim/architecture?isolate=abc", model).filters.isolate).toBe(0);
+    expect(decodeViewHash("c/wiki/architecture?isolate=3", model).filters.isolate).toBe(0);
+    expect(decodeViewHash("c/wiki/architecture?isolate=abc", model).filters.isolate).toBe(0);
   });
 
   test("only known facet names decode; a param outside a facet's values clamps to 'all'", () => {
@@ -159,8 +159,8 @@ describe("decodeViewHash", () => {
     expect(decodeViewHash("?os=macos", model).filters.facets.platform).toBe("macos");
     expect(decodeViewHash("f/flakes/okf/viz.ts?os=linux", model).filters.facets.platform).toBe("linux");
     expect(decodeViewHash("d/flakes/ccglass?os=macos", model).filters.facets.platform).toBe("macos");
-    expect(decodeViewHash("c/nvim/architecture?os=bogus", model).filters.facets.platform).toBe("all");
-    expect(decodeViewHash("c/nvim/architecture", model).filters.facets.platform).toBe("all");
+    expect(decodeViewHash("c/wiki/architecture?os=bogus", model).filters.facets.platform).toBe("all");
+    expect(decodeViewHash("c/wiki/architecture", model).filters.facets.platform).toBe("all");
   });
 
   test("os= is ignored when no facet is literally named 'platform'", () => {
@@ -181,8 +181,8 @@ describe("decodeViewHash", () => {
 
 describe("decodeHash", () => {
   test("valid concept, with and without leading #", () => {
-    expect(decodeHash("c/nvim/architecture", model)).toEqual({ kind: "concept", id: "nvim/architecture" });
-    expect(decodeHash("#c/nvim/architecture", model)).toEqual({ kind: "concept", id: "nvim/architecture" });
+    expect(decodeHash("c/wiki/architecture", model)).toEqual({ kind: "concept", id: "wiki/architecture" });
+    expect(decodeHash("#c/wiki/architecture", model)).toEqual({ kind: "concept", id: "wiki/architecture" });
   });
 
   test("valid file", () => {
@@ -194,7 +194,7 @@ describe("decodeHash", () => {
   });
 
   test("percent-encoded hashes decode", () => {
-    expect(decodeHash("c/nvim%2Farchitecture", model)).toEqual({ kind: "concept", id: "nvim/architecture" });
+    expect(decodeHash("c/wiki%2Farchitecture", model)).toEqual({ kind: "concept", id: "wiki/architecture" });
   });
 
   test("unknown targets and junk fall back to none", () => {
@@ -206,7 +206,7 @@ describe("decodeHash", () => {
   });
 
   test("round-trips", () => {
-    const sel = { kind: "concept", id: "nvim/architecture" } as const;
+    const sel = { kind: "concept", id: "wiki/architecture" } as const;
     expect(decodeHash(encodeHash(sel), model)).toEqual(sel);
     const pct = { kind: "file", path: "docs/50%.md" } as const;
     expect(decodeHash(encodeHash(pct), model)).toEqual(pct);

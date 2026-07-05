@@ -6,9 +6,9 @@ import { createMd, esc } from "./markdown";
 
 const ctx = {
   files: { "flakes/okf/viz.ts": {}, "modules/dev.nix": {}, "docs/svelt/manual.md": {} },
-  byId: { "nvim/architecture": {}, "decisions/other": {} },
+  byId: { "wiki/architecture": {}, "decisions/other": {} },
   dirs: { "flakes/ccglass": {} },
-  repoUrl: "https://github.com/kriswill/dotfiles",
+  commitUrl: "https://github.com/acme/widgets/commit/{hash}",
   commits: { abc1234: "abc1234def5678901234567890123456789012ab" },
 };
 const md = createMd(ctx);
@@ -29,7 +29,7 @@ describe("inline rendering", () => {
 
   test("verified commit-hash code span links out to GitHub by full oid", () => {
     expect(md.mdToHtml("landed in `abc1234` upstream", from)).toBe(
-      '<p>landed in <code><a href="https://github.com/kriswill/dotfiles/commit/abc1234def5678901234567890123456789012ab"' +
+      '<p>landed in <code><a href="https://github.com/acme/widgets/commit/abc1234def5678901234567890123456789012ab"' +
         ' target="_blank" rel="noopener">abc1234</a></code> upstream</p>',
     );
   });
@@ -38,9 +38,21 @@ describe("inline rendering", () => {
     expect(md.mdToHtml("nixpkgs rev `b5aa0fb`", from)).toBe("<p>nixpkgs rev <code>b5aa0fb</code></p>");
   });
 
-  test("commit spans stay plain without a repoUrl", () => {
+  test("commit spans stay plain without a commitUrl template", () => {
     const bare = createMd({ files: {}, byId: {}, commits: { abc1234: "abc1234def" } });
     expect(bare.mdToHtml("`abc1234`", from)).toBe("<p><code>abc1234</code></p>");
+  });
+
+  test("non-GitHub commit-url template shapes the outbound link", () => {
+    const gl = createMd({
+      files: {},
+      byId: {},
+      commitUrl: "https://gitlab.com/o/r/-/commit/{hash}",
+      commits: { abc1234: "abc1234def" },
+    });
+    expect(gl.mdToHtml("`abc1234`", from)).toBe(
+      '<p><code><a href="https://gitlab.com/o/r/-/commit/abc1234def" target="_blank" rel="noopener">abc1234</a></code></p>',
+    );
   });
 
   test("<https://…> autolink", () => {
@@ -50,15 +62,15 @@ describe("inline rendering", () => {
   });
 
   test("concept link resolves to data-node", () => {
-    expect(md.mdToHtml("[arch](../nvim/architecture.md)", from)).toBe(
-      '<p><a href="#" data-node="nvim/architecture">arch</a></p>',
+    expect(md.mdToHtml("[arch](../wiki/architecture.md)", from)).toBe(
+      '<p><a href="#" data-node="wiki/architecture">arch</a></p>',
     );
   });
 
   test("concept links resolve under a non-default bundleDir (no hardcoded 'knowledge/' offsets)", () => {
     const kb = createMd({ ...ctx, bundleDir: "kb" });
-    expect(kb.mdToHtml("[arch](../nvim/architecture.md)", from)).toBe(
-      '<p><a href="#" data-node="nvim/architecture">arch</a></p>',
+    expect(kb.mdToHtml("[arch](../wiki/architecture.md)", from)).toBe(
+      '<p><a href="#" data-node="wiki/architecture">arch</a></p>',
     );
     // Repo-file links resolve one level up from kb/<id>, not knowledge/<id>.
     expect(kb.mdToHtml("[viz](../../flakes/okf/viz.ts)", from)).toBe(
@@ -121,8 +133,8 @@ describe("mdFileToHtml (embedded markdown files)", () => {
   });
 
   test("links into knowledge/ resolve to concepts", () => {
-    expect(md.mdFileToHtml("[arch](../../knowledge/nvim/architecture.md)", fromFile)).toBe(
-      '<p><a href="#" data-node="nvim/architecture">arch</a></p>',
+    expect(md.mdFileToHtml("[arch](../../knowledge/wiki/architecture.md)", fromFile)).toBe(
+      '<p><a href="#" data-node="wiki/architecture">arch</a></p>',
     );
   });
 

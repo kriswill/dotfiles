@@ -1,4 +1,4 @@
-// Regenerate index.md files throughout the knowledge/ bundle (OKF SPEC §6:
+// Regenerate index.md files throughout the bundle (OKF SPEC §6:
 // progressive disclosure — one directory level at a time).
 //
 // Hand-maintained parts are preserved on regeneration:
@@ -8,17 +8,20 @@
 // Everything from the first heading down is regenerated.
 
 import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
-import { bundleRoot, fmToYaml, parseDoc, parseFrontmatter, titleFromSlug, RESERVED, type FM } from "./lib";
+import { basename, join } from "node:path";
+import { loadContext } from "./config-cli";
+import { fmToYaml, parseDoc, parseFrontmatter, titleFromSlug, type FM } from "./lib";
 
-const bundle = bundleRoot();
+const { bundle, cfg } = loadContext();
+const bundleName = basename(cfg.viz.bundle.dir);
+const reserved = new Set(cfg.profile.reservedFiles);
 
 interface DirInfo { rel: string; blurb: string; }
 
 function listDir(absDir: string) {
   const entries = readdirSync(absDir).filter((e) => !e.startsWith(".") && !e.startsWith("_")).sort();
   const dirs = entries.filter((e) => statSync(join(absDir, e)).isDirectory());
-  const mds = entries.filter((e) => e.endsWith(".md") && !RESERVED.has(e));
+  const mds = entries.filter((e) => e.endsWith(".md") && !reserved.has(e));
   return { dirs, mds };
 }
 
@@ -56,14 +59,14 @@ function genDir(relDir: string): DirInfo {
     // The root frontmatter is preserved verbatim — if it won't parse, bail
     // rather than silently overwrite it with a stub.
     if (fmError) {
-      console.error(`index-gen: knowledge/index.md frontmatter is malformed (${fmError}); fix it and re-run`);
+      console.error(`index-gen: ${cfg.viz.bundle.dir}/index.md frontmatter is malformed (${fmError}); fix it and re-run`);
       process.exit(1);
     }
     const rootFm = fm ?? { okf_version: "0.1" };
     if (!rootFm.okf_version) rootFm.okf_version = "0.1";
     parts.push(fmToYaml(rootFm));
   }
-  parts.push(`# ${isRoot ? "knowledge" : relDir.split("/").pop()!}\n`);
+  parts.push(`# ${isRoot ? bundleName : relDir.split("/").pop()!}\n`);
   if (blurb) parts.push(blurb + "\n");
   if (conceptLines.length) parts.push(`## Concepts\n\n${conceptLines.join("\n")}\n`);
   if (dirLines.length) parts.push(`## Subdirectories\n\n${dirLines.join("\n")}\n`);

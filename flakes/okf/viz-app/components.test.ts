@@ -126,7 +126,7 @@ describe("Legend", () => {
       nodes: [
         node("decisions/x", "Decision", "X"),
         node("patterns/y", "Pattern", "Y"),
-        node("modules/z", "Darwin Module", "Z"),
+        node("modules/z", "Alpha Module", "Z"),
       ],
       edges: [],
       cfg: cfg(),
@@ -142,14 +142,14 @@ describe("Legend", () => {
     flushSync();
     expect(state.hidden.has("Decision")).toBe(true);
     expect(state.hidden.has("Pattern")).toBe(true);
-    expect(state.hidden.has("Darwin Module")).toBe(false);
+    expect(state.hidden.has("Alpha Module")).toBe(false);
     headers[0]!.click(); // toggle back on
     flushSync();
     expect(state.hidden.size).toBe(0);
 
     headers[0]!.dispatchEvent(new MouseEvent("click", { altKey: true, bubbles: true })); // solo Knowledge
     flushSync();
-    expect(state.hidden.has("Darwin Module")).toBe(true);
+    expect(state.hidden.has("Alpha Module")).toBe(true);
     expect(state.hidden.has("Decision")).toBe(false);
     expect(state.hidden.has("Pattern")).toBe(false);
   });
@@ -159,7 +159,7 @@ describe("Legend", () => {
       nodes: [
         node("decisions/x", "Decision", "X"),
         node("patterns/y", "Pattern", "Y"),
-        node("modules/z", "Darwin Module", "Z"),
+        node("modules/z", "Alpha Module", "Z"),
       ],
       edges: [],
       cfg: cfg(),
@@ -634,11 +634,11 @@ describe("DetailPanel", () => {
 describe("Sidebar", () => {
   test("header names the repo's OKF viz with an explanatory (?) bubble", () => {
     const state = createVizState(
-      buildModel({ nodes: [node("a", "Decision", "Alpha")], edges: [], repoUrl: "https://github.com/kriswill/dotfiles" }),
+      buildModel({ nodes: [node("a", "Decision", "Alpha")], edges: [], repoUrl: "https://github.com/acme/widgets" }),
     );
     mountC(Sidebar, { viz: state });
     const h1 = document.querySelector("#side h1")!;
-    expect(h1.textContent!.replace(/\s+/g, " ")).toContain("kriswill/dotfiles OKF viz");
+    expect(h1.textContent!.replace(/\s+/g, " ")).toContain("acme/widgets OKF viz");
     expect(h1.querySelector(".bubble")!.textContent).toContain("Open Knowledge Format");
   });
 

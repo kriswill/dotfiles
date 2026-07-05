@@ -130,7 +130,7 @@ describe("filtering", () => {
         nodes: [
           node("decisions/x", "Decision", "X"),
           node("patterns/y", "Pattern", "Y"),
-          node("modules/z", "Darwin Module", "Z"),
+          node("modules/z", "Alpha Module", "Z"),
         ],
         edges: [],
         cfg: cfg(),
@@ -153,7 +153,7 @@ describe("filtering", () => {
         nodes: [
           node("decisions/x", "Decision", "X"),
           node("patterns/y", "Pattern", "Y"),
-          node("modules/z", "Darwin Module", "Z"),
+          node("modules/z", "Alpha Module", "Z"),
         ],
         edges: [],
         cfg: cfg(),
@@ -170,7 +170,7 @@ describe("filtering", () => {
       buildModel({
         nodes: [
           node("decisions/x", "Decision", "X"),
-          node("modules/z", "Darwin Module", "Z"),
+          node("modules/z", "Alpha Module", "Z"),
           node("packages/p", "Nix Package", "P"),
         ],
         edges: [],
@@ -178,7 +178,7 @@ describe("filtering", () => {
       });
     const s = createVizState(threeGroupModel());
     s.soloGroup("Knowledge");
-    expect(s.hidden.has("Darwin Module")).toBe(true);
+    expect(s.hidden.has("Alpha Module")).toBe(true);
     expect(s.hidden.has("Nix Package")).toBe(true);
     expect(s.hidden.has("Decision")).toBe(false);
     s.soloGroup("Knowledge"); // restore
@@ -390,8 +390,8 @@ describe("facet lenses", () => {
   const platModel = () =>
     buildModel({
       nodes: [
-        node("modules/nh", "Darwin Module", "Nh"),
-        node("modules/keyring", "NixOS Module", "Keyring"),
+        node("modules/nh", "Alpha Module", "Nh"),
+        node("modules/keyring", "Beta Module", "Keyring"),
         node("modules/tmux", "Dual Module", "Tmux"), // unlisted type -> unresolved, always visible
         node("decisions/x", "Decision", "Decide"), // unlisted type -> unresolved, always visible
       ],
@@ -466,14 +466,14 @@ describe("facet lenses", () => {
   test("multi-facet AND visibility: a concept must match every active facet's selection", () => {
     const m = buildModel({
       nodes: [
-        node("a", "Darwin Module", "A", { fm: { status: "stable" } }),
-        node("b", "Darwin Module", "B", { fm: { status: "draft" } }),
-        node("c", "NixOS Module", "C", { fm: { status: "stable" } }),
+        node("a", "Alpha Module", "A", { fm: { status: "stable" } }),
+        node("b", "Alpha Module", "B", { fm: { status: "draft" } }),
+        node("c", "Beta Module", "C", { fm: { status: "stable" } }),
       ],
       edges: [],
       cfg: {
         facet: {
-          platform: { values: ["macos", "linux"], types: { "Darwin Module": "macos", "NixOS Module": "linux" } },
+          platform: { values: ["macos", "linux"], types: { "Alpha Module": "macos", "Beta Module": "linux" } },
           status: { frontmatter: "status" },
         },
       },

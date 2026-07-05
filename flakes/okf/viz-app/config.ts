@@ -1,6 +1,6 @@
 // Shared viz configuration: schema, generic defaults, and normalization.
-// Browser-safe (no bun/node imports). The build side (viz.ts) parses the
-// repo-root okf-viz.toml with Bun.TOML.parse, normalizes STRICTLY (misconfig
+// Browser-safe (no bun/node imports). The build side (config-cli.ts) parses
+// the repo-root okf.toml with Bun.TOML.parse, normalizes STRICTLY (misconfig
 // fails the build), and embeds the normalized result in the #data blob; the
 // app re-normalizes LENIENTLY in buildModel (defaults-fill, never throws),
 // which is also what gives test fixtures and no-config bundles a working
@@ -48,14 +48,43 @@ export interface VizConfig {
     /** Bucket label for dirs missing from dirGroups. */
     other: string;
   };
-  repo: {
-    /** Override of the git-origin detection (null: derive from `origin`). */
+  vcs: {
+    /** Web URL of the repo (null: derive from the VCS remote, any forge). */
     url: string | null;
+    /** Outbound revision-link template; `{url}` and `{hash}` substitute the
+     *  resolved repo URL and the full revision id. GitLab canonical form is
+     *  "{url}/-/commit/{hash}", Bitbucket "{url}/commits/{hash}". */
+    commitUrlTemplate: string;
   };
   /** 0..n independent filter lenses; file order (TOML) / array order (JSON)
    *  is the sidebar control order. */
   facets: FacetConfig[];
 }
+
+/** Opt-in build-side classifier producing a name -> value map that concepts
+ *  of the listed `types` consult (keyed by `key`; a miss falls through
+ *  unresolved). Providers: "nix-optional-attrs" parses the optionalAttrs
+ *  guard blocks of a Nix file; "command" runs an argv at the workspace root
+ *  that prints the map as JSON. The legacy `nix-packages` table spelling
+ *  normalizes to the nix-optional-attrs provider. */
+type FacetClassify =
+  | {
+      provider: "nix-optional-attrs";
+      /** Repo-relative Nix file to parse. */
+      file: string;
+      /** optionalAttrs predicate substring -> value. */
+      guards: Record<string, string>;
+      types: string[];
+      key: "basename" | "id";
+    }
+  | {
+      provider: "command";
+      /** Argv run at the workspace root; stdout must be a JSON object of
+       *  string values. Failure fails the viz build. */
+      command: string[];
+      types: string[];
+      key: "basename" | "id";
+    };
 
 export interface FacetConfig {
   /** Segmented-control label and hash-param name; `^[a-z][a-z0-9-]*$`, not
@@ -72,18 +101,8 @@ export interface FacetConfig {
   /** Frontmatter key read as this facet's value (string values only; null:
    *  no frontmatter source). */
   frontmatter: string | null;
-  /** Opt-in build-side source: classify concepts of the given types by the
-   *  optionalAttrs guard block enclosing their basename in `file` (null:
-   *  skip — this facet has no Nix-guard source). */
-  nixPackages: {
-    /** Repo-relative Nix file to parse. */
-    file: string;
-    /** optionalAttrs predicate substring -> value. */
-    guards: Record<string, string>;
-    /** Concept types (matched by basename) that consult this map; a miss
-     *  (or a type outside this list) falls through unresolved. */
-    types: string[];
-  } | null;
+  /** Build-side classifier source (null: none for this facet). */
+  classify: FacetClassify | null;
 }
 
 /** Facet names reserved because they collide with hash-param names or the
@@ -114,7 +133,7 @@ const defaults = (): VizConfig => ({
   },
   embed: { maxBytes: 200_000 },
   taxonomy: { types: [], dirGroups: {}, groupOrder: [], other: "Other" },
-  repo: { url: null },
+  vcs: { url: null, commitUrlTemplate: "{url}/commit/{hash}" },
   facets: [],
 });
 
@@ -123,7 +142,25 @@ export function displayName(cfg: VizConfig, repoName: string | null): string {
   return cfg.display.name ?? repoName ?? cfg.display.fallbackName;
 }
 
-const isObj = (v: unknown): v is Record<string, unknown> => typeof v === "object" && v !== null && !Array.isArray(v);
+/** Table check shared with the CLI loader (config-cli.ts) — one copy only. */
+export const isObj = (v: unknown): v is Record<string, unknown> =>
+  typeof v === "object" && v !== null && !Array.isArray(v);
+
+/** Consume one config field by camelCase or kebab-case spelling: call `set`
+ *  with the value (null = "unset", kept as default), then delete the key so
+ *  the caller's unknown-key sweep sees only leftovers. The one kebab/camel
+ *  rule for the whole config surface — shared with config-cli.ts. */
+export const fieldIn =
+  (section: Record<string, unknown>, sectionName: string) =>
+  (camel: string, set: (v: unknown, path: string) => void) => {
+    const kebab = camel.replace(/[A-Z]/g, (c) => "-" + c.toLowerCase());
+    for (const key of camel === kebab ? [camel] : [camel, kebab]) {
+      if (key in section) {
+        if (section[key] !== null) set(section[key], `${sectionName}.${key}`);
+        delete section[key];
+      }
+    }
+  };
 
 export function normalizeVizConfig(raw: unknown, opts?: { strict?: boolean; warn?: (msg: string) => void }): VizConfig {
   const strict = opts?.strict ?? false;
@@ -135,23 +172,14 @@ export function normalizeVizConfig(raw: unknown, opts?: { strict?: boolean; warn
     // lenient: keep the default silently
   };
 
-  // One field spec per canonical key: TOML kebab spelling + a checked setter.
-  // `take` consumes both spellings so the unknown-key sweep sees leftovers.
+  // One field spec per canonical key: TOML kebab spelling + a checked setter
+  // (fieldIn consumes both spellings so the unknown-key sweep sees leftovers).
   const field = (
     section: Record<string, unknown>,
     sectionName: string,
     camel: string,
     set: (v: unknown, path: string) => void,
-  ) => {
-    const kebab = camel.replace(/[A-Z]/g, (c) => "-" + c.toLowerCase());
-    for (const key of camel === kebab ? [camel] : [camel, kebab]) {
-      if (key in section) {
-        // null = "unset" (JSON round-trips of our own output), keep the default.
-        if (section[key] !== null) set(section[key], `${sectionName}.${key}`);
-        delete section[key];
-      }
-    }
-  };
+  ) => fieldIn(section, sectionName)(camel, set);
   const asStr = (assign: (s: string) => void) => (v: unknown, path: string) =>
     typeof v === "string" ? assign(v) : bad(path, "expected a string");
   const asNum = (assign: (n: number) => void) => (v: unknown, path: string) =>
@@ -167,7 +195,7 @@ export function normalizeVizConfig(raw: unknown, opts?: { strict?: boolean; warn
 
   if (raw !== undefined && raw !== null) {
     if (!isObj(raw)) {
-      if (strict) throw new VizConfigError("okf-viz.toml: top level must be a table");
+      if (strict) throw new VizConfigError("okf.toml: top level must be a table");
     } else {
       const top = { ...raw };
       const section = (name: string, fill: (s: Record<string, unknown>) => void) => {
@@ -209,8 +237,15 @@ export function normalizeVizConfig(raw: unknown, opts?: { strict?: boolean; warn
         field(s, "taxonomy", "groupOrder", asStrArr((v) => (cfg.taxonomy.groupOrder = v)));
         field(s, "taxonomy", "other", asStr((v) => (cfg.taxonomy.other = v)));
       });
+      // Legacy [repo] url — the pre-[vcs] spelling; normalizes into vcs.url
+      // so old embeds and copied configs keep working. Processed first so a
+      // config carrying both spellings resolves to the canonical [vcs].
       section("repo", (s) => {
-        field(s, "repo", "url", asStr((v) => (cfg.repo.url = v || null)));
+        field(s, "repo", "url", asStr((v) => (cfg.vcs.url = v || null)));
+      });
+      section("vcs", (s) => {
+        field(s, "vcs", "url", asStr((v) => (cfg.vcs.url = v || null)));
+        field(s, "vcs", "commitUrlTemplate", asStr((v) => (cfg.vcs.commitUrlTemplate = v)));
       });
 
       // Facets: name-keyed [facet.<name>] TOML tables, or this file's own
@@ -238,23 +273,49 @@ export function normalizeVizConfig(raw: unknown, opts?: { strict?: boolean; warn
       cfg.facets = facetEntries.map(({ name, raw: fraw }) => {
         const s = { ...fraw };
         const path = `facet.${name || "?"}`;
-        const f: FacetConfig = { name, values: [], types: {}, ids: {}, frontmatter: null, nixPackages: null };
+        const f: FacetConfig = { name, values: [], types: {}, ids: {}, frontmatter: null, classify: null };
         field(s, path, "values", asStrArr((v) => (f.values = v)));
         field(s, path, "types", asStrMap((v) => (f.types = v)));
         field(s, path, "ids", asStrMap((v) => (f.ids = v)));
         field(s, path, "frontmatter", asStr((v) => (f.frontmatter = v || null)));
-        field(s, path, "nixPackages", (v, p) => {
+        // `legacyProvider` set = the old [facet.<n>.nix-packages] spelling,
+        // which implies the nix-optional-attrs provider and has no provider key.
+        const parseClassify = (v: unknown, p: string, legacyProvider: "nix-optional-attrs" | null) => {
           if (!isObj(v)) return bad(p, "expected a table");
-          const np = { ...v };
+          const cl = { ...v };
+          let provider: string = legacyProvider ?? "";
           let file: string | null = null;
           let guards: Record<string, string> = {};
+          let command: string[] = [];
           let types: string[] = [];
-          field(np, p, "file", asStr((x) => (file = stripSlash(x) || null)));
-          field(np, p, "guards", asStrMap((x) => (guards = x)));
-          field(np, p, "types", asStrArr((x) => (types = x)));
-          for (const k of Object.keys(np)) bad(`${p}.${k}`, "unknown key");
-          if (file) f.nixPackages = { file, guards, types };
-          else bad(`${p}.file`, "required");
+          let key: "basename" | "id" = "basename";
+          if (!legacyProvider)
+            field(cl, p, "provider", (x, pp) => {
+              if (x === "nix-optional-attrs" || x === "command") provider = x;
+              else bad(pp, 'expected "nix-optional-attrs" or "command"');
+            });
+          field(cl, p, "file", asStr((x) => (file = stripSlash(x) || null)));
+          field(cl, p, "guards", asStrMap((x) => (guards = x)));
+          field(cl, p, "command", asStrArr((x) => (command = x)));
+          field(cl, p, "types", asStrArr((x) => (types = x)));
+          field(cl, p, "key", (x, pp) => {
+            if (x === "basename" || x === "id") key = x;
+            else bad(pp, 'expected "basename" or "id"');
+          });
+          for (const k of Object.keys(cl)) bad(`${p}.${k}`, "unknown key");
+          if (provider === "command") {
+            if (file || Object.keys(guards).length) bad(p, "file/guards only apply to the nix-optional-attrs provider");
+            f.classify = { provider, command, types, key };
+          } else if (provider === "nix-optional-attrs") {
+            if (command.length) bad(p, "command only applies to the command provider");
+            if (file) f.classify = { provider, file, guards, types, key };
+            else bad(`${p}.file`, "required");
+          } else bad(`${p}.provider`, "required");
+        };
+        field(s, path, "classify", (v, p) => parseClassify(v, p, null));
+        field(s, path, "nixPackages", (v, p) => {
+          if (f.classify) return bad(p, "cannot specify both classify and nix-packages");
+          parseClassify(v, p, "nix-optional-attrs");
         });
         for (const k of Object.keys(s)) bad(`${path}.${k}`, "unknown key");
         return f;
@@ -284,23 +345,26 @@ export function normalizeVizConfig(raw: unknown, opts?: { strict?: boolean; warn
           if (!known.has(v)) errors.push(`${path}.types."${t}": "${v}" is not in ${path}.values`);
         for (const [id, v] of Object.entries(f.ids))
           if (!known.has(v)) errors.push(`${path}.ids."${id}": "${v}" is not in ${path}.values`);
-        if (f.nixPackages)
-          for (const [g, v] of Object.entries(f.nixPackages.guards))
-            if (!known.has(v)) errors.push(`${path}.nix-packages.guards.${g}: "${v}" is not in ${path}.values`);
+        if (f.classify?.provider === "nix-optional-attrs")
+          for (const [g, v] of Object.entries(f.classify.guards))
+            if (!known.has(v)) errors.push(`${path}.classify.guards.${g}: "${v}" is not in ${path}.values`);
       }
-      if (f.nixPackages) {
-        if (!Object.keys(f.nixPackages.guards).length) errors.push(`${path}.nix-packages.guards: required`);
-        if (!f.nixPackages.types.length) errors.push(`${path}.nix-packages.types: required`);
+      if (f.classify) {
+        if (!f.classify.types.length) errors.push(`${path}.classify.types: required`);
+        if (f.classify.provider === "nix-optional-attrs" && !Object.keys(f.classify.guards).length)
+          errors.push(`${path}.classify.guards: required`);
+        if (f.classify.provider === "command" && !f.classify.command.length)
+          errors.push(`${path}.classify.command: required`);
       }
-      if (vals.length && !Object.keys(f.types).length && !Object.keys(f.ids).length && !f.nixPackages && !f.frontmatter)
-        warn(`${path}: has values but no resolution rule (types/ids/nix-packages/frontmatter) — every concept unresolved, filter is a no-op`);
+      if (vals.length && !Object.keys(f.types).length && !Object.keys(f.ids).length && !f.classify && !f.frontmatter)
+        warn(`${path}: has values but no resolution rule (types/ids/classify/frontmatter) — every concept unresolved, filter is a no-op`);
     }
     const pathFields: [string, string][] = [
       [cfg.bundle.dir, "bundle.dir"],
       [cfg.bundle.out, "bundle.out"],
-      ...cfg.facets
-        .filter((f) => f.nixPackages)
-        .map((f): [string, string] => [f.nixPackages!.file, `facet.${f.name}.nix-packages.file`]),
+      ...cfg.facets.flatMap((f): [string, string][] =>
+        f.classify?.provider === "nix-optional-attrs" ? [[f.classify.file, `facet.${f.name}.classify.file`]] : [],
+      ),
     ];
     for (const [p, why] of pathFields) {
       if (!p) errors.push(`${why}: must not be empty`);
@@ -314,9 +378,11 @@ export function normalizeVizConfig(raw: unknown, opts?: { strict?: boolean; warn
     for (const [d, g] of Object.entries(cfg.taxonomy.dirGroups))
       if (!cfg.taxonomy.groupOrder.includes(g))
         errors.push(`taxonomy.dir-groups."${d}": "${g}" is not in taxonomy.group-order`);
+    if (!cfg.vcs.commitUrlTemplate.includes("{hash}"))
+      errors.push('vcs.commit-url-template: must contain "{hash}"');
     if (cfg.taxonomy.types.length > 12)
       warn(`taxonomy.types: ${cfg.taxonomy.types.length} entries but only 12 palette slots — overflow types get generated colors`);
-    if (errors.length) throw new VizConfigError("invalid okf-viz.toml:\n  " + errors.join("\n  "));
+    if (errors.length) throw new VizConfigError("invalid okf.toml:\n  " + errors.join("\n  "));
   }
 
   return cfg;
