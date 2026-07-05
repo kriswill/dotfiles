@@ -2,6 +2,14 @@
 
 ## 2026-07-04
 
+- **Update** — [okf-vcs-provider](decisions/okf-vcs-provider.md): okf now
+  runs **without version control**: `[vcs] provider = "auto"|"git"|"none"`
+  (auto = git only at a git toplevel), the `none` provider walks the
+  filesystem (junk names + `[vcs] ignore` globs skipped, mtime timestamps,
+  no commit links), and the workspace root is discovered config-first —
+  nearest `okf.toml` at or above cwd, else the git toplevel. Verified with
+  git removed from PATH.
+
 - **Decision** — [okf-vcs-provider](decisions/okf-vcs-provider.md): all
   version-control access now sits behind a `VcsProvider` interface
   (`flakes/okf/vcs/`); git is the first provider (batched implementations

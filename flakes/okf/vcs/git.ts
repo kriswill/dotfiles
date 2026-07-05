@@ -5,10 +5,11 @@
 import { spawnSync } from "node:child_process";
 import type { VcsProvider } from "./types";
 
-/** Toplevel of the git repository containing cwd, or null (not a repo / no
- *  git binary). Never exits — discovery (vcs/index.ts) owns the messaging. */
-export function gitRoot(): string | null {
-  const r = spawnSync("git", ["rev-parse", "--show-toplevel"], { encoding: "utf8" });
+/** Toplevel of the git repository containing `cwd` (default: process cwd),
+ *  or null (not a repo / no git binary). Never exits — discovery owns the
+ *  messaging. */
+export function gitRoot(cwd?: string): string | null {
+  const r = spawnSync("git", ["rev-parse", "--show-toplevel"], { encoding: "utf8", cwd });
   if (r.error || r.status !== 0) return null;
   const root = (r.stdout ?? "").trim();
   return root || null;

@@ -1,8 +1,33 @@
-// VCS provider unit tests. Today: the pure remote-URL normalization; the
-// "none" provider's tempdir fixtures join when it lands.
+// VCS provider unit tests: pure remote-URL normalization, the filesystem
+// ("none") provider against tempdir fixtures, and provider auto-selection.
+// Git-dependent cases skip when no git binary is available (the nix check
+// sandbox has bun only).
 
 import { describe, expect, test } from "bun:test";
+import { spawnSync } from "node:child_process";
+import { mkdirSync, mkdtempSync, utimesSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { normalizeRemoteUrl } from "../vcs/git";
+import { createProvider } from "../vcs";
+import { noneProvider } from "../vcs/none";
+
+const hasGit = spawnSync("git", ["--version"], { encoding: "utf8" }).status === 0;
+
+/** Tempdir with: a.md, sub/b.txt, plus junk that must be invisible. */
+function fixture(): string {
+  const root = mkdtempSync(join(tmpdir(), "okf-vcs-"));
+  writeFileSync(join(root, "a.md"), "# a\n");
+  mkdirSync(join(root, "sub"));
+  writeFileSync(join(root, "sub", "b.txt"), "b\n");
+  mkdirSync(join(root, "node_modules"));
+  writeFileSync(join(root, "node_modules", "x.js"), "x\n");
+  mkdirSync(join(root, ".git"));
+  writeFileSync(join(root, ".git", "config"), "\n");
+  mkdirSync(join(root, "dist"));
+  writeFileSync(join(root, "dist", "out.js"), "o\n");
+  return root;
+}
 
 describe("normalizeRemoteUrl", () => {
   test("https passes through, .git and trailing slash stripped", () => {
@@ -25,5 +50,62 @@ describe("normalizeRemoteUrl", () => {
   test("unrecognized shapes yield null", () => {
     expect(normalizeRemoteUrl("file:///srv/git/repo.git")).toBeNull();
     expect(normalizeRemoteUrl("/srv/git/repo")).toBeNull();
+  });
+});
+
+describe("noneProvider", () => {
+  test("trackedFiles: fs walk, junk names skipped at any depth, ignore globs applied, sorted", () => {
+    const p = noneProvider(fixture(), ["dist/**"]);
+    expect(p.trackedFiles()).toEqual(["a.md", "sub/b.txt"]);
+  });
+
+  test("no ignore globs: dist is content", () => {
+    const p = noneProvider(fixture());
+    expect(p.trackedFiles()).toEqual(["a.md", "dist/out.js", "sub/b.txt"]);
+  });
+
+  test("lastModified: file mtime as ISO; dir = newest tracked file under prefix; missing = null", () => {
+    const root = fixture();
+    const p = noneProvider(root, ["dist/**"]);
+    const t = new Date("2026-01-02T03:04:05Z");
+    utimesSync(join(root, "sub", "b.txt"), t, t);
+    expect(p.lastModified("sub/b.txt")).toBe("2026-01-02T03:04:05+00:00");
+    expect(p.lastModified("sub")).toBe(p.lastModified("sub/b.txt"));
+    expect(p.lastModified("sub/")).toBe(p.lastModified("sub/b.txt"));
+    expect(p.lastModified("nope.md")).toBeNull();
+    expect(Date.parse(p.lastModified("a.md")!)).toBeGreaterThan(0);
+  });
+
+  test("no citations, no revisions, no remote", () => {
+    const p = noneProvider(fixture());
+    expect(p.name).toBe("none");
+    expect(p.revisionPattern).toBeNull();
+    expect(p.resolveRevisions(["abc1234"])).toEqual({});
+    expect(p.remoteUrl()).toBeNull();
+  });
+});
+
+describe("createProvider", () => {
+  test('"none" is always the filesystem provider', () => {
+    expect(createProvider("none", fixture(), []).name).toBe("none");
+  });
+
+  test('"auto" falls back to the filesystem provider outside git', () => {
+    expect(createProvider("auto", fixture(), []).name).toBe("none");
+  });
+
+  test('explicit "git" outside a git repo throws instead of degrading', () => {
+    // fixture() has a bare .git DIR (not a valid repo) — rev-parse fails.
+    expect(() => createProvider("git", mkdtempSync(join(tmpdir(), "okf-nogit-")), [])).toThrow(/not inside a git repository/);
+  });
+
+  test.skipIf(!hasGit)('"auto" picks git at a git toplevel (this repo must never silently mtime-date)', () => {
+    const root = mkdtempSync(join(tmpdir(), "okf-git-"));
+    expect(spawnSync("git", ["init", "-q"], { cwd: root }).status).toBe(0);
+    expect(createProvider("auto", root, []).name).toBe("git");
+    // …and a nested dir is NOT a toplevel: auto degrades to none, explicit git throws.
+    mkdirSync(join(root, "nested"));
+    expect(createProvider("auto", join(root, "nested"), []).name).toBe("none");
+    expect(() => createProvider("git", join(root, "nested"), [])).toThrow(/not the git toplevel/);
   });
 });

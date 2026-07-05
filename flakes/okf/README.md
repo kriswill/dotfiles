@@ -7,15 +7,22 @@ spec/profile conformance and links, and `viz` renders the bundle as a
 self-contained interactive 3D graph (single offline HTML file — Svelte 5 viewer
 around Three.js glow spheres, bundled at generation time by `Bun.build`).
 
-okf operates on the git repository containing the **current working directory**
-(`git rev-parse --show-toplevel`). All commands read one optional config file,
-`<repo>/okf.toml` (strict-validated; malformed config fails the command):
-`[bundle] dir` sets the bundle root (default `knowledge/`), `[profile]` tunes
-validation policy (`required-fields`, `recommended-fields`, `reserved-files`,
-`rooted-links = "error"|"allow"`, `repo-links = "check"|"ignore"|"forbid"` —
-defaults reproduce the stock OKF-plus-reference-tooling behavior), and the
-remaining sections drive the viz viewer. It is a bun/TypeScript project run
-from source — no compile step.
+okf operates on a **workspace**: the nearest directory at or above cwd holding
+an `okf.toml`, else the git toplevel (zero-config mode). **Git is optional** —
+`[vcs] provider = "auto"|"git"|"none"` selects the version-control adapter
+(auto = git when the root is a git toplevel); the `none` provider walks the
+filesystem (minus `[vcs] ignore` globs), stamps mtime dates, and skips commit
+links, so any directory tree — no VCS at all — can host a bundle.
+
+All commands read that one optional config file (strict-validated; malformed
+config fails the command): `[bundle] dir` sets the bundle root (default
+`knowledge/`), `[profile]` tunes validation policy (`required-fields`,
+`recommended-fields`, `reserved-files`, `rooted-links = "error"|"allow"`,
+`repo-links = "check"|"ignore"|"forbid"` — defaults reproduce the stock
+OKF-plus-reference-tooling behavior), `[vcs]` adds `url` and
+`commit-url-template = "{url}/commit/{hash}"` for forge-agnostic revision
+links, and the remaining sections drive the viz viewer. It is a bun/TypeScript
+project run from source — no compile step.
 
 ## Outputs
 
