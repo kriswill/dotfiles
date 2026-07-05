@@ -103,9 +103,11 @@ bun flakes/okf/okf.ts <cmd>   # equivalent, no dev shell needed
 (`cd flakes/okf && bun test`). Repo-specific strings and settings (header,
 facet filters (0..n `[facet.<name>]` lenses), type taxonomy, legend groups,
 embed cap, bundle dir) come from the optional repo-root
-[`okf-viz.toml`](../okf-viz.toml) — strict-validated at build time; without
-it the viewer builds with generic fallbacks (see the
-[viz-config-toml](decisions/viz-config-toml.md) decision). The graph is
+[`okf.toml`](../okf.toml) — one config file read by **all** okf commands
+(loaded by `flakes/okf/config-cli.ts`, strict-validated; a malformed file
+fails every command); without it okf works with generic fallbacks (see the
+[viz-config-toml](decisions/viz-config-toml.md) and
+[okf-toml-unified-config](decisions/okf-toml-unified-config.md) decisions). The graph is
 published as public documentation at <https://kris.net/dotfiles/> — rebuilt
 and deployed by GitHub Pages CI (`.github/workflows/pages.yml`) on every
 push.

@@ -2,6 +2,15 @@
 
 ## 2026-07-04
 
+- **Decision** —
+  [okf-toml-unified-config](decisions/okf-toml-unified-config.md):
+  `okf-viz.toml` renamed to **`okf.toml`** — no longer viz settings but the
+  okf workspace config, read by every command (legacy name still loads with
+  a deprecation warning; pages CI trigger updated in the same commit).
+  First step of the okf generalization arc: upcoming sections `[profile]`,
+  `[vcs]`, `[scaffold]`, `[index]` and facet `classify` providers will all
+  live here.
+
 - **Update** — [okf](packages/okf.md): all four commands now read their
   config through one shared strict loader (`flakes/okf/config-cli.ts`);
   `bundle.dir` is honored everywhere (previously `validate`/`index`/

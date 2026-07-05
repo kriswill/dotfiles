@@ -6,7 +6,7 @@
 // simulates or jiggles at runtime. The viewer app (viz-app/) is bundled by
 // Bun.build with three + postprocessing and inlined, so the output is still
 // one offline file:// page. Repo-specific strings/settings come from an
-// optional ./okf-viz.toml at the repo root (viz-app/config.ts); absent -> generic.
+// optional ./okf.toml at the repo root (config-cli.ts); absent -> generic.
 
 import { existsSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { extname, join } from "node:path";
