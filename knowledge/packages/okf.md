@@ -10,11 +10,11 @@ okf — CLI for maintaining OKF knowledge bundles (scaffold/index/validate/viz).
 
 Lives in its own **private** repository,
 [kriswill/okflight](https://github.com/kriswill/okflight), consumed as the
-`okf` flake input and re-exported as `packages.<system>.okf`
+`okf` flake input (`git+ssh://` — the fetch authenticates through the SSH
+agent, here 1Password with per-use enclave gating; no token at rest) and
+re-exported as `packages.<system>.okf`
 ([packages](../modules/packages.md)); advance the pin with
-`nix flake update okf`. Every nix consumer needs a GitHub token
-(`access-tokens = github.com=<token>` in `nix.conf`) while the repo is
-private. History: `scripts/okf/` → `flakes/okf/`
+`nix flake update okf`. History: `scripts/okf/` → `flakes/okf/`
 ([okf-subflake](../decisions/okf-subflake.md), 2026-07-04) → okflight via
 `git subtree split`, all 18 okf commits preserved
 ([okflight-extraction](../decisions/okflight-extraction.md), 2026-07-05).

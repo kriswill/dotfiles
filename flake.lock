@@ -1004,15 +1004,15 @@
       "locked": {
         "lastModified": 1783284665,
         "narHash": "sha256-SwL2bVby+JCOJmjL/IHpfcWKswhzoOl5izUlfAwVWvE=",
-        "owner": "kriswill",
-        "repo": "okflight",
+        "ref": "refs/heads/main",
         "rev": "7dbd00951b3d214f2832624396600491f0465f94",
-        "type": "github"
+        "revCount": 19,
+        "type": "git",
+        "url": "ssh://git@github.com/kriswill/okflight.git"
       },
       "original": {
-        "owner": "kriswill",
-        "repo": "okflight",
-        "type": "github"
+        "type": "git",
+        "url": "ssh://git@github.com/kriswill/okflight.git"
       }
     },
     "pre-commit-hooks": {

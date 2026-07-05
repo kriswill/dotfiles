@@ -43,10 +43,11 @@
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.flake-parts.follows = "flake-parts";
     };
-    # okf lives in its own (private, for now) repo — nix consumers need a
-    # GitHub token (`access-tokens = github.com=<token>` in nix.conf).
+    # okf lives in its own (private, for now) repo, fetched over git+ssh so
+    # auth rides the SSH agent (here: 1Password, enclave-gated per use — no
+    # token at rest). Evaluation must run as the key-holding user (nh does).
     okf = {
-      url = "github:kriswill/okflight";
+      url = "git+ssh://git@github.com/kriswill/okflight.git";
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.flake-parts.follows = "flake-parts";
     };
