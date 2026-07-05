@@ -10,9 +10,10 @@
 
 import { existsSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { extname, join } from "node:path";
-import { extractLinks, gitISO, gitTrackedFiles, githubRemoteUrl, isExternal, parseDoc, repoRoot, resolveCommits, resolveLink, walkMd, RESERVED } from "./lib";
+import { loadContext } from "./config-cli";
+import { extractLinks, gitISO, gitTrackedFiles, githubRemoteUrl, isExternal, parseDoc, resolveCommits, resolveLink, walkMd, RESERVED } from "./lib";
 import { layout3d } from "./layout3d";
-import { displayName, normalizeVizConfig, VizConfigError, type VizConfig } from "./viz-app/config";
+import { displayName } from "./viz-app/config";
 import { parsePackagePlatforms, repoNameFromUrl } from "./viz-app/data";
 import { esc } from "./viz-app/markdown";
 import { THEMES } from "./viz-app/themes";
@@ -37,33 +38,12 @@ const lap = (name: string) => {
   phaseT0 = performance.now();
 };
 
-const repo = repoRoot();
-
-// Optional repo-root okf-viz.toml, normalized strictly: a malformed or misspelled
-// config fails the build rather than silently rendering wrong. Absent file ->
-// generic defaults (no facet filters, alphabetical types, flat legend).
-const cfgPath = join(repo, "okf-viz.toml");
-let cfgRaw: unknown = {};
-if (existsSync(cfgPath)) {
-  try {
-    cfgRaw = Bun.TOML.parse(readFileSync(cfgPath, "utf8"));
-  } catch (e) {
-    console.error(`viz: cannot parse okf-viz.toml — ${e instanceof Error ? e.message : e}`);
-    process.exit(1);
-  }
-}
-let cfg: VizConfig;
-try {
-  cfg = normalizeVizConfig(cfgRaw, { strict: true, warn: (m) => console.warn(`viz: warning: ${m}`) });
-} catch (e) {
-  if (e instanceof VizConfigError) {
-    console.error(`viz: ${e.message}`);
-    process.exit(1);
-  }
-  throw e;
-}
-
-const bundle = join(repo, cfg.bundle.dir);
+// Config comes from the shared loader (config-cli.ts): optional repo-root
+// TOML, normalized strictly — a malformed or misspelled config fails the
+// build rather than silently rendering wrong. Absent file -> generic
+// defaults (no facet filters, alphabetical types, flat legend).
+const { root: repo, bundle, cfg: okfCfg } = loadContext();
+const cfg = okfCfg.viz;
 
 interface Node {
   id: string; type: string; title: string; desc: string;

@@ -2,6 +2,14 @@
 
 ## 2026-07-04
 
+- **Update** — [okf](packages/okf.md): all four commands now read their
+  config through one shared strict loader (`flakes/okf/config-cli.ts`);
+  `bundle.dir` is honored everywhere (previously `validate`/`index`/
+  `scaffold` hardcoded `knowledge/` while only `viz` respected the config).
+  Behavior change: a malformed config file now fails every command loudly
+  instead of being ignored by the non-viz commands. First step of the okf
+  generalization arc (decision record lands with the `okf.toml` rename).
+
 - **Update** — [okf](packages/okf.md): `okf viz` detail-panel dates are now
   human-friendly, driven by a new `display.date-format` in `okf-viz.toml`
   (`"iso"` default = as written, `"us"` "Jul 3, 2026", `"international"`

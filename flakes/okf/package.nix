@@ -20,6 +20,7 @@ let
     fileset = lib.fileset.unions [
       ./okf.ts
       ./lib.ts
+      ./config-cli.ts
       ./scaffold.ts
       ./index-gen.ts
       ./validate.ts

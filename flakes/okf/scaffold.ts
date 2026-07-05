@@ -7,11 +7,11 @@
 
 import { readdirSync, readFileSync, writeFileSync, mkdirSync, existsSync, statSync } from "node:fs";
 import { join } from "node:path";
-import { bundleRoot, fmToYaml, gitISO, repoRoot, titleFromSlug, type FM } from "./lib";
+import { loadContext } from "./config-cli";
+import { fmToYaml, gitISO, titleFromSlug, type FM } from "./lib";
 
 const FORCE = process.argv.includes("--force");
-const repo = repoRoot();
-const bundle = bundleRoot();
+const { root: repo, bundle } = loadContext();
 let written = 0, skipped = 0;
 
 function emit(rel: string, fm: FM, body: string) {
