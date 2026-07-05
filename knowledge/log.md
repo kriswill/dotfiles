@@ -2,6 +2,19 @@
 
 ## 2026-07-04
 
+- **Update** — [okf](packages/okf.md): post-review fixes on the
+  generalization PR. Three bugs: collect-tier `output` templates now
+  reject `{repo}`/`{description}`/`{description-sentence}` at config load
+  (they were expanded before those values existed, silently emitting
+  filenames like `widget-{description}.md`); `validate` now flags an empty
+  array as an empty required field (arrays are truthy, so the falsy check
+  passed `tags: []`); `repoNameFromUrl` drops explicit ports (a manual
+  `[vcs] url` with `:8080` corrupted the header name). Plus: git-missing
+  vs not-a-repo error messages distinguished again, `[vcs]` non-table
+  self-validated, `isObj`/`fieldIn` and the placeholder regex now shared
+  single copies, none-provider directory dates memoized, dead exports
+  trimmed. Three new regression tests (289 total).
+
 - **Update** — [okf-vcs-provider](decisions/okf-vcs-provider.md): the git
   provider's batched date pass adds `--diff-merges=c` — files introduced
   during merge conflict resolution (11 in this repo, e.g. `pkgs/cbissue.nix`

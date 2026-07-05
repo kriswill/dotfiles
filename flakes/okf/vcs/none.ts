@@ -17,6 +17,10 @@ export function noneProvider(root: string, ignore: string[] = []): VcsProvider {
   const ignored = (rel: string) => globs.some((g) => g.match(rel));
 
   let cache: string[] | null = null;
+  // Per-directory result memo — lastModified(dir) otherwise re-scans the full
+  // tracked list and re-stats every matching file on each call (viz's addDir
+  // asks once per embedded directory node).
+  const dirDates = new Map<string, string | null>();
   const walk = (): string[] => {
     const out: string[] = [];
     const rec = (dirAbs: string, rel: string) => {
@@ -46,15 +50,19 @@ export function noneProvider(root: string, ignore: string[] = []): VcsProvider {
       if (st?.isFile()) return iso(st.mtimeMs);
       if (st?.isDirectory()) {
         // Newest tracked file under the prefix, mirroring the git provider's
-        // directory semantics.
+        // directory semantics; memoized per directory.
         const prefix = path.endsWith("/") ? path : path + "/";
+        const hit = dirDates.get(prefix);
+        if (hit !== undefined) return hit;
         let max = -1;
         for (const f of cache ?? (cache = walk())) {
           if (!f.startsWith(prefix)) continue;
           const s = statSync(join(root, f), { throwIfNoEntry: false });
           if (s && s.mtimeMs > max) max = s.mtimeMs;
         }
-        return max >= 0 ? iso(max) : null;
+        const result = max >= 0 ? iso(max) : null;
+        dirDates.set(prefix, result);
+        return result;
       }
       return null;
     },

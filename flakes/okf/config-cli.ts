@@ -11,7 +11,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { createProvider, gitRoot, type VcsProvider } from "./vcs";
-import { normalizeVizConfig, VizConfigError, type VizConfig } from "./viz-app/config";
+import { fieldIn, isObj, normalizeVizConfig, VizConfigError, type VizConfig } from "./viz-app/config";
 
 export const CONFIG_FILE = "okf.toml";
 
@@ -88,6 +88,17 @@ export const COLLECT_PLACEHOLDERS = new Set([
   "description-sentence", // full description as a markdown-safe sentence
 ]);
 
+/** The subset legal in `output` templates. `repo` is derived FROM the output
+ *  path (circular), and the description pair is only computed after the
+ *  output path exists — allowing them would silently emit broken filenames. */
+export const OUTPUT_PLACEHOLDERS = new Set(["path", "name", "Title", "dir", "timestamp"]);
+
+/** The one token grammar shared by validation here and expansion in
+ *  scaffold-api.ts's expandTemplate — a divergence would let configs pass
+ *  validation yet expand wrong (safe to share: matchAll clones, and
+ *  String.replace with a global regex resets lastIndex). */
+export const PLACEHOLDER_RE = /\{([A-Za-z][A-Za-z-]*)\}/g;
+
 export interface OkfScaffold {
   /** Workspace-relative TS/JS module dynamically imported; its default
    *  export receives the ScaffoldContext. */
@@ -106,8 +117,6 @@ export interface OkfConfig {
   vcs: OkfCliVcs;
   scaffold: OkfScaffold;
 }
-
-const isObj = (v: unknown): v is Record<string, unknown> => typeof v === "object" && v !== null && !Array.isArray(v);
 
 /**
  * Consume + normalize the CLI-only sections/keys out of the raw parsed TOML,
@@ -134,17 +143,6 @@ export function splitCliSections(raw: unknown): {
   const top = { ...raw };
   const errors: string[] = [];
 
-  const fieldIn =
-    (s: Record<string, unknown>, sectionName: string) =>
-    (camel: string, set: (v: unknown, path: string) => void) => {
-      const kebab = camel.replace(/[A-Z]/g, (c) => "-" + c.toLowerCase());
-      for (const key of camel === kebab ? [camel] : [camel, kebab]) {
-        if (key in s) {
-          if (s[key] !== null) set(s[key], `${sectionName}.${key}`);
-          delete s[key];
-        }
-      }
-    };
   const asStrArr = (assign: (a: string[]) => void) => (v: unknown, path: string) => {
     if (Array.isArray(v) && v.every((x) => typeof x === "string" && x !== "")) assign(v as string[]);
     else errors.push(`${path}: expected an array of non-empty strings`);
@@ -181,6 +179,11 @@ export function splitCliSections(raw: unknown): {
     // No unknown-key sweep here: the leftover viewer keys (url,
     // commit-url-template) are the viz normalizer's to validate.
     top["vcs"] = s;
+  } else if (vt !== undefined && vt !== null) {
+    // Self-validate like [profile]/[scaffold] — the downstream viz normalizer
+    // would also catch this, but only incidentally; this function's own
+    // contract shouldn't depend on being followed by that pass.
+    errors.push("vcs: expected a table");
   }
 
   const relPath = (path: string) => (v: string, p: string) => {
@@ -193,10 +196,14 @@ export function splitCliSections(raw: unknown): {
     if (typeof v === "string") assign(v);
     else errors.push(`${path}: expected a string`);
   };
-  const checkPlaceholders = (tpl: string, p: string) => {
-    for (const m of tpl.matchAll(/\{([A-Za-z][A-Za-z-]*)\}/g))
-      if (!COLLECT_PLACEHOLDERS.has(m[1]!))
-        errors.push(`${p}: unknown placeholder {${m[1]}} — known: ${[...COLLECT_PLACEHOLDERS].join(", ")}`);
+  const checkPlaceholders = (tpl: string, p: string, allowed: Set<string> = COLLECT_PLACEHOLDERS) => {
+    for (const m of tpl.matchAll(PLACEHOLDER_RE))
+      if (!allowed.has(m[1]!))
+        errors.push(
+          COLLECT_PLACEHOLDERS.has(m[1]!)
+            ? `${p}: {${m[1]}} is not available in output templates (allowed: ${[...allowed].join(", ")})`
+            : `${p}: unknown placeholder {${m[1]}} — known: ${[...COLLECT_PLACEHOLDERS].join(", ")}`,
+        );
   };
   const sc = top["scaffold"];
   delete top["scaffold"];
@@ -254,8 +261,8 @@ export function splitCliSections(raw: unknown): {
             if (!e.glob) errors.push(`${p}.glob: required`);
             if (!e.type) errors.push(`${p}.type: required`);
             if (!e.output) errors.push(`${p}.output: required`);
+            if (e.output) checkPlaceholders(e.output, `${p}.output`, OUTPUT_PLACEHOLDERS);
             for (const [tpl, tp] of [
-              [e.output, `${p}.output`],
               [e.description, `${p}.description`],
               [e.title, `${p}.title`],
               [e.body, `${p}.body`],
@@ -276,15 +283,12 @@ export function splitCliSections(raw: unknown): {
   return { profile, vcs, scaffold, rest: top };
 }
 
-/** Walk up from `start` to the fs root looking for a config file; returns
- *  its directory + name, or null. Exported for tests. */
-export function findConfigUp(
-  start: string,
-  names: string[] = [CONFIG_FILE],
-): { dir: string; file: string } | null {
+/** Walk up from `start` to the fs root looking for okf.toml; returns its
+ *  directory + name, or null. */
+function findConfigUp(start: string): { dir: string; file: string } | null {
   let dir = resolve(start);
   for (;;) {
-    for (const n of names) if (existsSync(join(dir, n))) return { dir, file: n };
+    if (existsSync(join(dir, CONFIG_FILE))) return { dir, file: CONFIG_FILE };
     const parent = dirname(dir);
     if (parent === dir) return null;
     dir = parent;
@@ -322,6 +326,11 @@ export interface OkfContext {
   vcs: VcsProvider;
 }
 
+// Safe as a module-level singleton ONLY because okf.ts dispatches exactly one
+// command module per process — a second loadContext() call with a different
+// cwd would silently return this first workspace's context. Any future
+// in-process multi-workspace flow (or a test importing this module against
+// two fixture roots) must add an explicit reset instead of relying on it.
 let ctxCache: OkfContext | null = null;
 
 /** Load (once per process) the workspace context: root, config, bundle path,
@@ -337,9 +346,13 @@ export function loadContext(): OkfContext {
   const found = findConfigUp(process.cwd());
   const root = found?.dir ?? gitRoot();
   if (!root) {
-    console.error(
-      `okf: no ${CONFIG_FILE} found in or above the current directory, and not inside a git repository — cd into your project, or create an ${CONFIG_FILE} at its root`,
-    );
+    // Distinguish "git isn't installed" from "not in a repo" — gitRoot()
+    // returns null for both, and "cd into your project" is the wrong advice
+    // for a machine with no git binary.
+    const gitHint = Bun.which("git")
+      ? "not inside a git repository — cd into your project, or"
+      : "git is not installed (or not on PATH), so the git-toplevel fallback is unavailable — install git, or";
+    console.error(`okf: no ${CONFIG_FILE} found in or above the current directory, and ${gitHint} create an ${CONFIG_FILE} at your project's root`);
     process.exit(1);
   }
   let raw: unknown = {};
