@@ -24,7 +24,15 @@ OKF-plus-reference-tooling behavior), `[vcs]` adds `url` and
 links, and the remaining sections drive the viz viewer. Facet filter lenses
 can classify concepts via `[facet.<name>.classify]` — the built-in
 `nix-optional-attrs` parser or `provider = "command"` running any repo
-script that prints a JSON name→value map. It is a bun/TypeScript
+script that prints a JSON name→value map.
+
+`okf scaffold` runs the workspace's own metadata pass: `[scaffold] script`
+(a TS/JS module dynamically imported; its default export receives the
+injected `ScaffoldContext` API from `scaffold-api.ts` — emit with
+idempotence/`--force`, VCS timestamps, comment extraction, text helpers) or
+`command` (any argv, `OKF_*` env), plus declarative `[[scaffold.collect]]`
+entries (glob + templates with `{name}`/`{Title}`/`{path}`/… placeholders,
+validated at load) for repos with simple needs. It is a bun/TypeScript
 project run from source — no compile step.
 
 ## Outputs

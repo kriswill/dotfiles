@@ -19,9 +19,16 @@ Consumed by the root flake as a relative-path input — see the
   `viz --check`/`--perf` only work here.
 - **`packages.<system>.okf`** runs from the store: sources + vendored
   `node_modules` (fixed-output `bun install` keyed on `bun.lock` — refresh
-  procedure in the README) + a `bun run --no-install` wrapper. The repo it
-  operates on is resolved from the caller's cwd (`git rev-parse
-  --show-toplevel`), so the same binary serves any consuming repo.
+  procedure in the README) + a `bun run --no-install` wrapper. The workspace
+  it operates on is discovered from the caller's cwd (nearest `okf.toml`,
+  else the git toplevel), so the same binary serves any consuming repo.
+
+okf is generic (the [okf-toml-unified-config](../decisions/okf-toml-unified-config.md)
+arc); this repo's scaffolding logic lives outside the flake in
+[`scripts/okf-scaffold.ts`](../../scripts/okf-scaffold.ts), dynamically
+imported by `okf scaffold` per `okf.toml [scaffold] script` and driven
+through the injected `ScaffoldContext` API
+([okf-scaffold-hook](../decisions/okf-scaffold-hook.md)).
 
 No `bun build --compile`: `okf viz` bundles the
 [Svelte](../svelte-language.md) viewer with `Bun.build`
