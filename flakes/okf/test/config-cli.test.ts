@@ -87,3 +87,31 @@ describe("splitCliSections: [profile]", () => {
     }
   });
 });
+
+describe("splitCliSections: [vcs] (mixed section)", () => {
+  test("defaults: provider auto, no ignore globs", () => {
+    const { vcs } = splitCliSections({});
+    expect(vcs).toEqual({ provider: "auto", ignore: [] });
+  });
+
+  test("provider/ignore consumed; viewer keys stay in rest for the viz normalizer", () => {
+    const { vcs, rest } = splitCliSections({
+      vcs: {
+        provider: "none",
+        ignore: ["dist/**", "*.log"],
+        url: "https://codeberg.org/o/r",
+        "commit-url-template": "{url}/commit/{hash}",
+      },
+    });
+    expect(vcs.provider).toBe("none");
+    expect(vcs.ignore).toEqual(["dist/**", "*.log"]);
+    expect(rest).toEqual({
+      vcs: { url: "https://codeberg.org/o/r", "commit-url-template": "{url}/commit/{hash}" },
+    });
+  });
+
+  test("bad provider / bad ignore fail with paths", () => {
+    expect(() => splitCliSections({ vcs: { provider: "p4" } })).toThrow(/vcs\.provider: expected one of: auto, git, none/);
+    expect(() => splitCliSections({ vcs: { ignore: "dist" } })).toThrow(/vcs\.ignore/);
+  });
+});

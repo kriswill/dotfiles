@@ -41,9 +41,24 @@ no version control at all, and link to any forge.
   the template with `{url}` pre-substituted; the viewer only fills `{hash}`
   (markdown.ts no longer knows what GitHub is). `repoNameFromUrl` derives
   the header name from any forge, keeping GitLab subgroup chains whole.
-- Future providers (Perforce, and the "none" filesystem provider that makes
-  okf work without version control) implement the same surface; provider
-  selection via `[vcs] provider` arrives with the second provider.
+- **The "none" filesystem provider**
+  ([../../flakes/okf/vcs/none.ts](../../flakes/okf/vcs/none.ts)) makes okf
+  work with no version control at all: tracked files = fs walk minus junk
+  names (`.git`, `node_modules`, …) and `[vcs] ignore` globs (+ the
+  generated viz output), timestamps = mtime with the same
+  newest-under-prefix directory semantics as git, no citations, no remote.
+  Selection via `[vcs] provider = "auto" | "git" | "none"`; **auto picks git
+  only when the workspace root is a git toplevel** (the git provider's
+  batched paths are toplevel-relative — a nested root would mis-key every
+  lookup), and an explicit `"git"` on a non-toplevel root fails loudly
+  instead of silently degrading to mtime dates (which a later
+  `scaffold --force` would bake into every doc). Future providers
+  (Perforce, …) implement the same surface.
+- **Root discovery is config-first:** the nearest `okf.toml` at or above
+  cwd defines the workspace root (resolving the config↔root circularity,
+  and enabling monorepo sub-bundles); without one, the git toplevel with
+  full defaults — the original zero-config behavior. Neither -> exit 1
+  with guidance.
 
 ## Consequences
 
@@ -57,3 +72,8 @@ no version control at all, and link to any forge.
   links.
 - `gitISO`'s current-time fallback moved to call sites (`lastModified` may
   be null) — scaffold and viz behavior unchanged.
+- Verified without git: a plain directory holding only `okf.toml` +
+  `knowledge/` passes validate and builds viz (0 commit links) even with
+  git removed from PATH; unit fixtures cover the walk/ignore/mtime
+  semantics and auto-selection (git-dependent cases skip in the git-less
+  nix check sandbox, which stays green).

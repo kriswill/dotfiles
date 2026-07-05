@@ -1,19 +1,35 @@
-// Workspace discovery + provider factory. Today git-only: the root is the
-// git toplevel of the caller's cwd (matching okf's original behavior); the
-// okf.toml walk-up and the "none" provider land with `[vcs] provider`.
+// Provider factory + git-root probe. Workspace-root discovery itself lives
+// in config-cli.ts (nearest okf.toml up from cwd wins, else the git
+// toplevel) because the config file names are its domain; this module turns
+// a chosen root into a provider.
 
+import { realpathSync } from "node:fs";
 import { gitProvider, gitRoot } from "./git";
+import { noneProvider } from "./none";
 import type { VcsProvider } from "./types";
 
+export { gitRoot };
 export type { VcsProvider };
 
-/** Discover the workspace root and construct its provider; exits 1 with
- *  guidance when no workspace is found. */
-export function discoverVcs(): VcsProvider {
-  const root = gitRoot();
-  if (!root) {
-    console.error("okf: not inside a git repository — run from the repo the bundle lives in");
-    process.exit(1);
-  }
-  return gitProvider(root);
+/**
+ * Construct the provider for a workspace root. "auto" picks git when the
+ * root IS a git toplevel (the git provider's batched `git log`/`ls-files`
+ * paths are toplevel-relative, so a nested root would silently mis-key
+ * every lookup), and falls back to the filesystem provider otherwise.
+ * Explicit "git" on a non-toplevel root throws instead of degrading —
+ * silent mtime timestamps would rewrite scaffolded dates on the next
+ * --force run.
+ */
+export function createProvider(kind: "auto" | "git" | "none", root: string, ignore: string[]): VcsProvider {
+  if (kind === "none") return noneProvider(root, ignore);
+  const top = gitRoot(root);
+  const same = top !== null && realpathSync(top) === realpathSync(root);
+  if (same) return gitProvider(root);
+  if (kind === "git")
+    throw new Error(
+      top
+        ? `[vcs] provider = "git" but the workspace root (${root}) is not the git toplevel (${top})`
+        : `[vcs] provider = "git" but ${root} is not inside a git repository`,
+    );
+  return noneProvider(root, ignore);
 }
