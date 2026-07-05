@@ -20,6 +20,6 @@ flake consumes via relative-path inputs.
 * [Noctalia Config](noctalia-config.md) - Custom Nix package 'noctalia-config'.
 * [okf](okf.md) - okf — CLI for maintaining OKF knowledge bundles (scaffold/index/validate/viz).
 * [Pass Xdg](pass-xdg.md) - pass-xdg — a drop-in `pass` (standard unix password manager) that defaults its store to an XDG-compliant location instead of the upstream default `~/.password-store`.
-* [Podman](podman.md) - Official prebuilt podman remote client for macOS.
+* [Podman](podman.md) - Podman — the daemonless, Docker-compatible container engine; on macOS packaged from the official prebuilt darwin_arm64 remote client (nixpkgs' podman refuses to evaluate on darwin) with vfkit + gvproxy bundled in, primarily serving minikube's podman driver for work Kubernetes.
 * [Tomato](tomato.md) - CLI to get/set TOML values preserving comments and formatting.
 * [Wowup](wowup.md) - WowUp-CF (the CurseForge fork of WowUp), packaged from the upstream AppImage (github.com/WowUp/WowUp.CF releases).
