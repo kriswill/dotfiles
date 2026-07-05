@@ -2,11 +2,11 @@
 // packages.ts, nvim.ts): repo file access rooted at ctx.root, plus the
 // darwin/nixos class constants the module and host passes both speak.
 // Everything else each pass needs comes from the injected ScaffoldContext
-// (flakes/okf/scaffold-api.ts).
+// (okf-scaffold-api.d.ts, vendored from okflight).
 
 import { readdirSync, readFileSync, statSync, type Stats } from "node:fs";
 import { join } from "node:path";
-import type { ScaffoldContext } from "../../flakes/okf/scaffold-api";
+import type { ScaffoldContext } from "./okf-scaffold-api";
 
 export const CLASSES = ["darwin", "nixos"] as const;
 export type ClassName = (typeof CLASSES)[number];

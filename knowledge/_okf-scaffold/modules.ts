@@ -4,7 +4,7 @@
 // implementations. Returns the full module-name set — the hosts pass filters
 // enable flags against it and host-qualifies doc slugs that would collide.
 
-import type { ScaffoldContext } from "../../flakes/okf/scaffold-api";
+import type { ScaffoldContext } from "./okf-scaffold-api";
 import {
   CLASS_LABEL,
   CLASSES,

@@ -11,10 +11,10 @@ graph. It exists so rationale survives outside commit bodies and chat
 history — **keep it current as part of any change, not as an afterthought.**
 All conventions live in `knowledge/okf-profile.md`; read it before authoring.
 
-## Commands (zero-dep bun, in flakes/okf/)
+## Commands (okf — nix-built from github:kriswill/okflight)
 
 In the dev shell (`nix develop` / direnv) these are on `PATH` as `okf <cmd>`;
-outside it, run `bun flakes/okf/okf.ts <cmd>`:
+outside it, run `nix run .#okf -- <cmd>`:
 
 ```sh
 okf scaffold   # stub catalog docs for new modules/packages/hosts/nvim-plugins (never overwrites)
@@ -28,9 +28,11 @@ classes, twins, gating, hosts, nvim plugins) lives in
 `knowledge/_okf-scaffold/` — a `main.ts` entry plus one pass file per
 scaffolded type (`modules.ts`, `hosts.ts`, `packages.ts`, `nvim.ts`) over a
 shared `lib.ts` — wired via `okf.toml [scaffold] script` and run through
-the injected `ScaffoldContext` API (`flakes/okf/scaffold-api.ts`).
+the injected `ScaffoldContext` API (vendored type surface:
+`knowledge/_okf-scaffold/okf-scaffold-api.d.ts`; the runtime is injected by
+`okf scaffold`, so no okf checkout is needed).
 Component-scan changes (new source dirs, new doc types, cross-link targets)
-are edits to the matching pass file, not to flakes/okf/. The `_` prefix
+are edits to the matching pass file, not to okf itself. The `_` prefix
 keeps the directory out of okf's bundle walk.
 
 ## When to update what

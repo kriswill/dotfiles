@@ -12,8 +12,8 @@ tooling disagree, we pick one and record it here.
 
 ## Profile rules
 
-These rules are enforced from `okf.toml`'s `[profile]` section (defaults in
-`flakes/okf/config-cli.ts` reproduce exactly the rules below — this repo's
+These rules are enforced from `okf.toml`'s `[profile]` section (okf's
+built-in defaults reproduce exactly the rules below — this repo's
 `okf.toml` therefore sets nothing; another bundle can tune
 `required-fields`/`recommended-fields`/`reserved-files`/`rooted-links`/
 `repo-links` without touching okf).
@@ -44,7 +44,7 @@ These rules are enforced from `okf.toml`'s `[profile]` section (defaults in
   title (markdownlint MD025). Generated `index.md` files carry an H1 title.
 - **Citations** are a `## Citations` section with a bullet list of markdown
   links (commit hashes cited as `` `abc1234` `` inline).
-- **`index.md` files are generated** by `bun flakes/okf/okf.ts index`. The
+- **`index.md` files are generated** by `okf index`. The
   prose blurb above the first heading is hand-maintained and preserved on
   regeneration (a directory's parent uses its blurb's first sentence as the
   description); the listing sections are overwritten — don't hand-edit them.
@@ -89,40 +89,52 @@ Module`, `Host`, `Nix Package`, `Overlay`, `Sub-flake`, `Neovim Plugin`,
 
 ## Tooling
 
-All bun/TypeScript in [`flakes/okf/`](../flakes/okf/) — the CLI itself is
-dependency-free; the viz viewer is a Svelte 5 app bundling three +
-postprocessing (deps in `flakes/okf/package.json`, `bun install`ed on
-demand). This repo's scaffold passes live bundle-adjacent in
+okf is bun/TypeScript living in its own repository —
+[kriswill/okflight](https://github.com/kriswill/okflight), private for now
+(nix consumers need a GitHub token in `access-tokens`) — consumed here as
+the `okf` flake input, re-exported as `packages.<system>.okf`, and advanced
+with `nix flake update okf`
+([okflight-extraction](decisions/okflight-extraction.md)). This repo's
+scaffold passes live bundle-adjacent in
 [`knowledge/_okf-scaffold/`](_okf-scaffold/main.ts) — the `_` prefix hides
 them from okf's walkers, so the bundle itself stays pure markdown
-([okf-scaffold-split](decisions/okf-scaffold-split.md)). In
-the dev shell (`nix develop` / direnv) it's on `PATH` as **`okf`** via the
-[dev](modules/dev.md) module; outside it, invoke with bun directly:
+([okf-scaffold-split](decisions/okf-scaffold-split.md)); their type-only
+`ScaffoldContext` import is satisfied by the vendored
+[`okf-scaffold-api.d.ts`](_okf-scaffold/okf-scaffold-api.d.ts) (the runtime
+API is injected by `okf scaffold`, so no okf checkout is needed). In the dev
+shell (`nix develop` / direnv) the nix-built CLI is on `PATH` as **`okf`**
+via the [dev](modules/dev.md) module:
 
 ```sh
 okf scaffold [--force]   # run this repo's scaffolder (knowledge/_okf-scaffold/main.ts via okf.toml [scaffold]; idempotent; --force overwrites)
 okf index               # regenerate index.md listings
 okf validate [--strict]  # spec + profile conformance; --strict fails on warnings too
-okf viz [--check|--perf] # render knowledge/viz.html (Svelte 5 viewer); --check runs svelte-check, --perf measures startup in headless Chrome
+okf viz                 # render knowledge/viz.html (Svelte 5 viewer)
 okf help [command]      # full usage, per-command flags, docs pointers
 
-bun flakes/okf/okf.ts <cmd>   # equivalent, no dev shell needed
+nix run .#okf -- <cmd>           # equivalent, no dev shell needed
+bun ~/src/okflight/okf.ts <cmd>  # a live checkout — for hacking on okf itself
 ```
+
+`viz --check` (svelte-check) and `viz --perf` (headless-Chrome startup
+timing) need a **live checkout**, not the store build — they write into
+okf's `node_modules`, which is a read-only store path in the packaged CLI.
 
 `viz.html` is generated output and gitignored — regenerate at will. Every
 `okf viz` run prints build-phase timings; the page records startup marks on
-`window.__okf.perf`. The viewer app (`flakes/okf/viz-app/`) has bun tests
-(`cd flakes/okf && bun test`). Repo-specific strings and settings (header,
+`window.__okf.perf`. The viewer app has bun tests (`bun test` in an
+okflight checkout). Repo-specific strings and settings (header,
 facet filters (0..n `[facet.<name>]` lenses), type taxonomy, legend groups,
 embed cap, bundle dir) come from the optional repo-root
 [`okf.toml`](../okf.toml) — one config file read by **all** okf commands
-(loaded by `flakes/okf/config-cli.ts`, strict-validated; a malformed file
+(loaded by okf's `config-cli.ts`, strict-validated; a malformed file
 fails every command); without it okf works with generic fallbacks (see the
 [viz-config-toml](decisions/viz-config-toml.md) and
 [okf-toml-unified-config](decisions/okf-toml-unified-config.md) decisions). The graph is
 published as public documentation at <https://kris.net/dotfiles/> — rebuilt
 and deployed by GitHub Pages CI (`.github/workflows/pages.yml`) on every
-push.
+push; the workflow checks out okflight at the flake.lock-pinned rev via a
+read-only deploy key, so CI always builds with the same okf this repo pins.
 
 ## Citations
 

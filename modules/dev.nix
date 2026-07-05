@@ -1,25 +1,7 @@
 # Development shell and formatter.
 {
   perSystem =
-    { pkgs, ... }:
-    let
-      # `okf` on the dev-shell PATH (scaffold|index|validate|viz), wrapping the
-      # working-tree copy in flakes/okf so edits are live without a rebuild.
-      # The nix-built package (inputs.okf, re-exported in modules/packages.nix)
-      # is for external consumption; here fast iteration wins.
-      okf = pkgs.writeShellApplication {
-        name = "okf";
-        runtimeInputs = builtins.attrValues { inherit (pkgs) bun git; };
-        text = ''
-          root="$(git rev-parse --show-toplevel)"
-          if [[ ! -f "$root/flakes/okf/okf.ts" ]]; then
-            echo "okf: $root has no flakes/okf/okf.ts — run inside the dotfiles repo" >&2
-            exit 1
-          fi
-          OKF_PROG=okf exec bun "$root/flakes/okf/okf.ts" "$@"
-        '';
-      };
-    in
+    { pkgs, inputs', ... }:
     {
       formatter = pkgs.nixfmt-tree;
       devShells.default = pkgs.mkShell {
@@ -40,7 +22,12 @@
             # Dotfiles management
             stow
             ;
-          inherit okf;
+          # `okf` on the dev-shell PATH (scaffold|index|validate|viz) — the
+          # nix-built CLI from the okflight input (github:kriswill/okflight).
+          # For live okf hacking, run a checkout directly
+          # (`bun ~/src/okflight/okf.ts <cmd>`) or rebuild this shell with
+          # `--override-input okf path:$HOME/src/okflight`.
+          okf = inputs'.okf.packages.okf;
         };
         shellHook = ''
           # plain export: works under both direnv (use flake) and nix develop

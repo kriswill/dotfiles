@@ -7,10 +7,10 @@ timestamp: '2026-07-04T00:00:00-07:00'
 ---
 
 **Status:** active. **Where:** schema in
-[../../flakes/okf/viz-app/config.ts](../../flakes/okf/viz-app/config.ts)
+[`viz-app/config.ts`](https://github.com/kriswill/okflight/blob/main/viz-app/config.ts)
 (`FacetClassify`), build execution in
-[../../flakes/okf/viz.ts](../../flakes/okf/viz.ts), resolution in
-[../../flakes/okf/viz-app/data.ts](../../flakes/okf/viz-app/data.ts). Part of
+[`viz.ts`](https://github.com/kriswill/okflight/blob/main/viz.ts), resolution in
+[`viz-app/data.ts`](https://github.com/kriswill/okflight/blob/main/viz-app/data.ts). Part of
 the okf generalization arc
 ([okf-toml-unified-config](okf-toml-unified-config.md)).
 

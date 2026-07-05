@@ -1,15 +1,15 @@
 ---
 type: Decision
 title: okf VCS Provider Adapters and Forge-Agnostic Revision Links
-description: Put all version-control access behind a VcsProvider interface (flakes/okf/vcs/) — git is the first provider, a no-VCS filesystem provider follows — and build outbound revision links from a configurable commit-url-template instead of a hardcoded GitHub URL shape.
+description: Put all version-control access behind a VcsProvider interface (okflight's vcs/) — git is the first provider, a no-VCS filesystem provider follows — and build outbound revision links from a configurable commit-url-template instead of a hardcoded GitHub URL shape.
 tags: [tooling, okf-generalization, vcs]
 timestamp: '2026-07-04T00:00:00-07:00'
 ---
 
 **Status:** active. **Where:**
-[../../flakes/okf/vcs/types.ts](../../flakes/okf/vcs/types.ts) (interface),
-[../../flakes/okf/vcs/git.ts](../../flakes/okf/vcs/git.ts) (git provider),
-[../../flakes/okf/vcs/index.ts](../../flakes/okf/vcs/index.ts)
+[`vcs/types.ts`](https://github.com/kriswill/okflight/blob/main/vcs/types.ts) (interface),
+[`vcs/git.ts`](https://github.com/kriswill/okflight/blob/main/vcs/git.ts) (git provider),
+[`vcs/index.ts`](https://github.com/kriswill/okflight/blob/main/vcs/index.ts)
 (discovery/factory). Part of the okf generalization arc
 ([okf-toml-unified-config](okf-toml-unified-config.md)).
 
@@ -42,7 +42,7 @@ no version control at all, and link to any forge.
   (markdown.ts no longer knows what GitHub is). `repoNameFromUrl` derives
   the header name from any forge, keeping GitLab subgroup chains whole.
 - **The "none" filesystem provider**
-  ([../../flakes/okf/vcs/none.ts](../../flakes/okf/vcs/none.ts)) makes okf
+  ([`vcs/none.ts`](https://github.com/kriswill/okflight/blob/main/vcs/none.ts)) makes okf
   work with no version control at all: tracked files = fs walk minus junk
   names (`.git`, `node_modules`, …) and `[vcs] ignore` globs (+ the
   generated viz output), timestamps = mtime with the same

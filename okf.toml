@@ -1,5 +1,5 @@
 # okf.toml — repo-specific settings for the okf CLI (all commands; loaded by
-# flakes/okf/config-cli.ts, viewer schema in flakes/okf/viz-app/config.ts).
+# okf's config-cli.ts, viewer schema in viz-app/config.ts — github:kriswill/okflight).
 # Without this file okf still works with generic fallbacks: knowledge/ bundle
 # dir, no facet filters, alphabetical types with generated colors, flat
 # legend, generic header/about text.

@@ -7,13 +7,13 @@
 //   nvim.ts      — Neovim plugin specs
 // Shared repo access + class vocabulary live in lib.ts.
 // Idempotence, --force, and the written/skipped summary are owned by the
-// injected ctx.emit (flakes/okf/scaffold-api.ts); these passes use only the
+// injected ctx.emit (okflight's scaffold-api.ts); these passes use only the
 // injected API plus node builtins — no runtime import from the okf checkout.
 // Lives in knowledge/_okf-scaffold/ (bundle-adjacent tooling): the `_` prefix
 // keeps the directory invisible to okf's walkMd/index-gen, so the bundle
 // itself stays pure markdown and OKF-conformant.
 
-import type { ScaffoldContext } from "../../flakes/okf/scaffold-api";
+import type { ScaffoldContext } from "./okf-scaffold-api";
 import { scaffoldHosts } from "./hosts";
 import { repoOf } from "./lib";
 import { scaffoldModules } from "./modules";

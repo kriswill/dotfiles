@@ -2,6 +2,19 @@
 
 ## 2026-07-05
 
+- **Decision** — [okflight-extraction](decisions/okflight-extraction.md):
+  okf promoted out of `flakes/okf/` into its own private repository,
+  [kriswill/okflight](https://github.com/kriswill/okflight), via
+  `git subtree split` (18 commits preserved); the `okf` input URL swapped to
+  `github:kriswill/okflight` with `follows` and all consumers untouched —
+  the [sub-flake extraction pattern](patterns/subflake-extraction.md)'s
+  promised one-liner, done for real. Dev-shell `okf` is now the nix-built
+  package (live hacking moved to a checkout); pages CI checks out okflight
+  at the flake.lock-pinned rev via a read-only deploy key; the
+  `_okf-scaffold` passes' type-only import is satisfied by a vendored
+  `okf-scaffold-api.d.ts`. Private-repo tax: nix consumers need a GitHub
+  token in `access-tokens` (nebula: pending).
+
 - **Decision** — [okf-scaffold-split](decisions/okf-scaffold-split.md): the
   repo scaffolder left `scripts/` for bundle-adjacent
   `knowledge/_okf-scaffold/`, split from one 520-line monolith into a

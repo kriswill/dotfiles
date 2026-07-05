@@ -24,8 +24,8 @@ makes sure less-common files resolve to a real filetype.
 A pattern rule maps a script's shebang interpreter to a filetype — e.g.
 `#!/usr/bin/env bun` (also deno/tsx/ts-node) → typescript, node →
 javascript — handling `env -S` flags and absolute interpreter paths. That
-gives repo tools like `flakes/okf/okf.ts` companions full LSP + treesitter
-without an extension. Two subtleties, straight from the source comments:
+gives extensionless bun/TS repo scripts full LSP + treesitter. Two
+subtleties, straight from the source comments:
 
 - The rule is guarded to extensionless paths and registered at
   `priority = -10` so any explicit rule wins.
