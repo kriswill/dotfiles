@@ -1,5 +1,5 @@
 // Human-friendly rendering of ISO dates in the detail panel, controlled by
-// okf-viz.toml's display.date-format. Browser-safe and framework-free.
+// okf.toml's display.date-format. Browser-safe and framework-free.
 
 export const DATE_FORMATS = ["iso", "us", "international"] as const;
 export type DateFormat = (typeof DATE_FORMATS)[number];

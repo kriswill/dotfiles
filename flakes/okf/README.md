@@ -8,9 +8,11 @@ self-contained interactive 3D graph (single offline HTML file — Svelte 5 viewe
 around Three.js glow spheres, bundled at generation time by `Bun.build`).
 
 okf operates on the git repository containing the **current working directory**
-(`git rev-parse --show-toplevel`), reading the bundle from `<repo>/knowledge/`
-and optional viz settings from `<repo>/okf-viz.toml`. It is a bun/TypeScript
-project run from source — no compile step.
+(`git rev-parse --show-toplevel`). All commands read one optional config file,
+`<repo>/okf.toml` (strict-validated; malformed config fails the command):
+`[bundle] dir` sets the bundle root (default `knowledge/`), the remaining
+sections drive the viz viewer. It is a bun/TypeScript project run from
+source — no compile step.
 
 ## Outputs
 
