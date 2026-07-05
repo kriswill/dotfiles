@@ -7,9 +7,11 @@ tags: [flake-parts]
 timestamp: '2026-07-02T00:00:00-07:00'
 ---
 
-Development shell and formatter. Besides the lint/format tools (deadnix,
-statix, nixfmt-tree, just), the shell puts **`okf`** on `PATH` — a
-`writeShellApplication` wrapper over the knowledge-bundle tooling
+Development shell and formatter. Besides the
+[Nix-language](../nix-language.md) lint/format tools (deadnix, statix,
+nixfmt-tree) and just, the shell puts **`okf`** on `PATH` — a
+`writeShellApplication` wrapper (carrying its own [bun](../bun-runtime.md))
+over the knowledge-bundle tooling
 (`okf scaffold|index|validate|viz`, see the
 [OKF Profile](../okf-profile.md)). The wrapper resolves the checkout at call
 time via `git rev-parse --show-toplevel` and runs the **working tree** copy of

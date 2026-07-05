@@ -2,6 +2,37 @@
 
 ## 2026-07-04
 
+- **Creation** — [bun-runtime](bun-runtime.md): root-level Reference
+  concept for Bun — the repo's default script runtime (house rule: bun + TS
+  over bash/python for tooling), per-OS provisioning
+  ([user-packages](modules/user-packages.md) on darwin,
+  [node-runtime](modules/node-runtime.md) on NixOS), and the three
+  consumption modes: run-from-source ([okf](packages/okf.md)),
+  compile-to-binary ([ccglass](packages/ccglass.md)), and outside-nix
+  ([qmd-sqlite](modules/qmd-sqlite.md)'s qmd). Backlinked from all six of
+  those plus [dev](modules/dev.md); [user-packages](modules/user-packages.md)
+  upgraded from scaffold stub in passing (boy-scout rule), and
+  [ccglass](packages/ccglass.md) gained its bun-compile provenance and a
+  [bump-ccglass](playbooks/bump-ccglass.md) link.
+
+- **Creation** — [nix-language](nix-language.md): root-level Reference
+  concept for the Nix language itself — evaluator choice (Determinate Nix,
+  for ≥ 2.26 path-input locking), laziness as the mechanism behind the
+  shared-overlay rule, dendritic idioms, and the deadnix/statix/nixfmt +
+  nil_ls toolchain. First concept authored against the new quality bar;
+  backlinked from [dev](modules/dev.md).
+
+- **Update** — [okf-profile](okf-profile.md): added a **Quality bar**
+  section codifying what a finished concept doc looks like — two-half
+  descriptions (what it is + how this repo uses it), bodies that say what
+  the source can't, verified citations to upstream docs / option
+  references / in-repo manuals, and cross-linking expectations (≥2
+  doc-specific edges, backlinks for load-bearing relationships). The
+  `knowledge-bundle` skill gained the matching pre-commit checklist and
+  now treats scaffolded stubs as placeholders to upgrade on touch.
+  Exemplars: [dnsmasq](modules/dnsmasq.md),
+  [gitsigns.nvim](nvim/plugins/gitsigns.md).
+
 - **Update** — [dnsmasq](modules/dnsmasq.md): filled in the previously
   stub description with what dnsmasq actually is (lightweight DNS
   forwarder/cache + DHCP/router-advertisement/network-boot infra) and how

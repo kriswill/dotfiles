@@ -15,8 +15,10 @@ derived `.codebase-memory/` code graph.
 
 ## Concepts
 
+* [Bun Runtime](bun-runtime.md) - Bun — the single-binary, JavaScriptCore-based JS/TypeScript runtime, bundler, test runner, and package manager; this repo's default script runtime, provisioned per-OS and consumed in three distinct modes by okf, ccglass, and qmd.
 * [Task Manuals (docs/)](manuals.md) - Entry point to the docs/ manuals layer — task-focused, machine-verified operational references with dated learnings, complementing knowledge/'s durable rationale and catalog.
-* [OKF Profile](okf-profile.md) - This bundle's conventions on top of OKF v0.1 — required fields, link style, resource semantics, type registry, and tooling.
+* [Nix Language](nix-language.md) - The lazy, pure, functional DSL every .nix file here is written in — evaluated by Determinate Nix, authored in dendritic idioms, kept clean by deadnix/statix/nixfmt and nil_ls.
+* [OKF Profile](okf-profile.md) - This bundle's conventions on top of OKF v0.1 — required fields, link style, resource semantics, entry quality bar, type registry, and tooling.
 
 ## Subdirectories
 

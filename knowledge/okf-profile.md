@@ -1,9 +1,9 @@
 ---
 type: Reference
 title: OKF Profile
-description: This bundle's conventions on top of OKF v0.1 — required fields, link style, resource semantics, type registry, and tooling.
+description: This bundle's conventions on top of OKF v0.1 — required fields, link style, resource semantics, entry quality bar, type registry, and tooling.
 tags: [okf, meta]
-timestamp: '2026-07-02T00:00:00-07:00'
+timestamp: '2026-07-04T00:00:00-07:00'
 ---
 
 This bundle follows [OKF v0.1](https://github.com/GoogleCloudPlatform/knowledge-catalog/blob/main/okf/SPEC.md)
@@ -41,6 +41,34 @@ tooling disagree, we pick one and record it here.
   description); the listing sections are overwritten — don't hand-edit them.
 - **`log.md`** is hand-maintained, newest-first, `## YYYY-MM-DD` headings,
   entries lead with `**Creation**` / `**Update**` / `**Deprecation**`.
+
+## Quality bar
+
+A concept doc earns its place by saying what the source can't. Scaffolded
+stubs are placeholders, not entries — bring any stub you touch up to this
+bar in the same change. Reference shapes: [dnsmasq](modules/dnsmasq.md)
+(module), [gitsigns.nvim](nvim/plugins/gitsigns.md) (plugin).
+
+- **Description** — one sentence with two halves: what the thing *is*
+  (upstream-accurate) and how *this repo* uses it. "dnsmasq local DNS
+  service" fails; "dnsmasq — lightweight DNS forwarder/cache, configured
+  here as a loopback-bound local resolver for custom hostnames" passes.
+- **Body** — concise and specific: a sentence or two on what the component
+  is, then the non-obvious part — how the repo wires it, deliberate
+  deviations from defaults, constraints and gotchas. Cut anything that
+  restates the description or the source code; a body that only repeats the
+  description isn't done.
+- **Citations** — link where authority actually lives: upstream project
+  docs / man page; the option reference for darwin/nixos modules
+  (nix-darwin manual, search.nixos.org, MyNixOS); the in-repo `docs/`
+  manual when one exists; commit hashes for decisions. Verify every URL
+  resolves before citing — never guess a link.
+- **Cross-links (network binding)** — link every concept the body names:
+  the host that enables it, the overlay/package that provides it, the twin
+  module, the decisions that shaped it. Add the backlink from the target
+  when the relationship is load-bearing. The scaffolded pattern links alone
+  don't bind a doc into the graph — a well-bound doc carries at least two
+  edges specific to it.
 
 ## Type registry
 
