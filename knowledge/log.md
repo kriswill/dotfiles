@@ -1,5 +1,18 @@
 # Log
 
+## 2026-07-05
+
+- **Update** — [okf](packages/okf.md): the nix package no longer ships the
+  test suite (`test/` and `viz-app/*.test.ts` excluded from the runtime
+  fileset; a separate full-tree fileset feeds `checks.test`) — bun's test
+  scanner follows the `result` symlink `nix build` leaves in the flake
+  root, so `bun test` ran a stale store copy of the whole suite alongside
+  the local one (24 files instead of 12, doubled counts). The check
+  sandbox also gains git, matching the runtime wrapper's PATH: the
+  gitProvider tests (evil-merge dating, auto-selection) now run there
+  instead of skipIf-skipping, and the one unguarded git-dependent test
+  (explicit-git error message) no longer fails git-less.
+
 ## 2026-07-04
 
 - **Update** — [okf](packages/okf.md): `okf viz` now bakes a build-time

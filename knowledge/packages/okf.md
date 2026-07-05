@@ -4,7 +4,7 @@ title: okf
 description: okf — CLI for maintaining OKF knowledge bundles (scaffold/index/validate/viz).
 resource: flakes/okf/
 tags: [sub-flake, package]
-timestamp: '2026-07-04T23:17:27+00:00'
+timestamp: '2026-07-05T06:34:41+00:00'
 ---
 
 okf — CLI for maintaining OKF knowledge bundles (scaffold/index/validate/viz).
@@ -22,6 +22,14 @@ Consumed by the root flake as a relative-path input — see the
   procedure in the README) + a `bun run --no-install` wrapper. The workspace
   it operates on is discovered from the caller's cwd (nearest `okf.toml`,
   else the git toplevel), so the same binary serves any consuming repo.
+
+The store output deliberately excludes the test suite (`test/`,
+`viz-app/*.test.ts`): bun's test scanner follows the `result` symlink that
+`nix build` leaves in the flake root, so a shipped suite would run as a
+stale second copy alongside the working tree's (`bun test` reported 24
+files instead of 12). `checks.<system>.test` builds from a separate
+full-tree fileset with git in the sandbox, so the gitProvider tests
+(evil-merge dating, auto-selection) run there instead of skipIf-skipping.
 
 okf is generic (the [okf-toml-unified-config](../decisions/okf-toml-unified-config.md)
 arc); this repo's scaffolding logic lives outside the flake in
