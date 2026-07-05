@@ -47,8 +47,8 @@ export interface RawData {
   commitUrl?: string | null;
   /** Verified revision citations: literal as written -> full canonical id. */
   commits?: Record<string, string>;
-  /** Facet name -> (package basename -> value), for facets with a
-   *  nix-packages source (parsed from that facet's configured file). */
+  /** Facet name -> (name -> value), for facets with a classify source
+   *  (built by that facet's classifier at generation time). */
   facetMaps?: Record<string, Record<string, string>>;
   /** Normalized VizConfig embedded by the build (absent: generic viewer). */
   cfg?: unknown;
@@ -151,18 +151,18 @@ export function parsePackagePlatforms(nixSource: string, guards: Record<string, 
 
 /**
  * Resolve one concept's value for one facet — first hit wins:
- * `ids[full-id]` -> the facet's nix-packages map (only when the concept's
- * type is in `nixPackages.types`, keyed by basename; a miss falls through,
+ * `ids[full-id]` -> the facet's classify map (only when the concept's type
+ * is in `classify.types`, keyed per `classify.key`; a miss falls through,
  * it does not resolve to unresolved) -> a string frontmatter value (an
  * explicit `values` list makes an out-of-range value unresolved, no further
  * fall-through — the author explicitly tagged it) -> `types[type]` ->
  * undefined ("unresolved" — always visible for this facet).
  */
-export function facetValueOf(node: ConceptNode, facet: FacetConfig, nixMap: Record<string, string>): string | undefined {
+export function facetValueOf(node: ConceptNode, facet: FacetConfig, classifyMap: Record<string, string>): string | undefined {
   const id = facet.ids[node.id];
   if (id !== undefined) return id;
-  if (facet.nixPackages && facet.nixPackages.types.includes(node.type)) {
-    const v = nixMap[basename(node.id)];
+  if (facet.classify && facet.classify.types.includes(node.type)) {
+    const v = classifyMap[facet.classify.key === "id" ? node.id : basename(node.id)];
     if (v !== undefined) return v;
   }
   if (facet.frontmatter) {
@@ -242,10 +242,10 @@ export function buildModel(raw: RawData): VizModel {
   const facets: { name: string; values: string[] }[] = [];
   const facetById: Record<string, Record<string, string>> = {};
   for (const f of cfg.facets) {
-    const nixMap = f.nixPackages ? (facetMaps[f.name] ?? {}) : {};
+    const classifyMap = f.classify ? (facetMaps[f.name] ?? {}) : {};
     const resolved: Record<string, string> = {};
     for (const n of nodes) {
-      const v = facetValueOf(n, f, nixMap);
+      const v = facetValueOf(n, f, classifyMap);
       if (v !== undefined) resolved[n.id] = v;
     }
     const values = f.values.length ? f.values : [...new Set(Object.values(resolved))].sort();

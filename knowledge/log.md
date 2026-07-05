@@ -2,6 +2,14 @@
 
 ## 2026-07-04
 
+- **Decision** — [okf-facet-classify](decisions/okf-facet-classify.md):
+  the facet build-side source generalizes from `nix-packages` to
+  `[facet.<n>.classify]` with `provider = "nix-optional-attrs"` (existing
+  parser, still built-in) or `provider = "command"` (any argv printing a
+  JSON name→value map — non-Nix repos can classify by anything). Legacy
+  spelling still accepted; plus `key = "basename"|"id"`. Platform map
+  verified byte-identical to baseline (5 entries).
+
 - **Update** — [okf-vcs-provider](decisions/okf-vcs-provider.md): okf now
   runs **without version control**: `[vcs] provider = "auto"|"git"|"none"`
   (auto = git only at a git toplevel), the `none` provider walks the

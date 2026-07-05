@@ -3,7 +3,10 @@ import { displayName, normalizeVizConfig, VizConfigError } from "./config";
 
 /** A dotfiles-shaped raw config in TOML (kebab-case) spelling, with two
  *  facets exercising every FacetConfig field (incl. nested nulls both ways:
- *  platform has nix-packages but no frontmatter, status the reverse). */
+ *  platform has a classifier but no frontmatter, status the reverse).
+ *  Deliberately uses the LEGACY `nix-packages` spelling — normalizing it
+ *  must yield the classify union (provider tag + default key), and the
+ *  idempotence test then round-trips the canonical `classify` output. */
 const rawCfg = () => ({
   bundle: { dir: "knowledge", out: "viz.html" },
   display: {
@@ -68,7 +71,13 @@ describe("normalizeVizConfig", () => {
       types: { "Darwin Module": "macos", "NixOS Module": "linux", Host: "macos" },
       ids: { "hosts/nebula": "linux" },
       frontmatter: null,
-      nixPackages: { file: "modules/packages.nix", guards: { darwin: "macos", linux: "linux" }, types: ["Nix Package"] },
+      classify: {
+        provider: "nix-optional-attrs",
+        file: "modules/packages.nix",
+        guards: { darwin: "macos", linux: "linux" },
+        types: ["Nix Package"],
+        key: "basename",
+      },
     });
     expect(c.facets[1]).toEqual({
       name: "status",
@@ -76,7 +85,7 @@ describe("normalizeVizConfig", () => {
       types: {},
       ids: {},
       frontmatter: "status",
-      nixPackages: null,
+      classify: null,
     });
   });
 
@@ -165,7 +174,7 @@ describe("normalizeVizConfig", () => {
     ).toThrow(/cannot specify both/);
   });
 
-  test("strict: dangling facet.types / ids / nix-packages.guards refs rejected", () => {
+  test("strict: dangling facet.types / ids / classify.guards refs rejected", () => {
     const base = () => ({
       facet: {
         platform: {
@@ -184,28 +193,28 @@ describe("normalizeVizConfig", () => {
     expect(() => normalizeVizConfig(b2, { strict: true })).toThrow(/facet\.platform\.ids\."hosts\/bsd"/);
     const b3 = base();
     b3.facet.platform["nix-packages"].guards["win"] = "windows";
-    expect(() => normalizeVizConfig(b3, { strict: true })).toThrow(/facet\.platform\.nix-packages\.guards\.win/);
+    expect(() => normalizeVizConfig(b3, { strict: true })).toThrow(/facet\.platform\.classify\.guards\.win/);
   });
 
-  test("strict: nix-packages requires file/guards/types", () => {
+  test("strict: nix-optional-attrs classifier requires file/guards/types (either spelling)", () => {
     expect(() =>
       normalizeVizConfig({ facet: { platform: { values: ["macos"], "nix-packages": {} } } }, { strict: true }),
     ).toThrow(/nix-packages\.file: required/);
     expect(() =>
       normalizeVizConfig(
-        { facet: { platform: { values: ["macos"], "nix-packages": { file: "x.nix" } } } },
+        { facet: { platform: { values: ["macos"], classify: { provider: "nix-optional-attrs", file: "x.nix" } } } },
         { strict: true },
       ),
-    ).toThrow(/nix-packages\.guards: required/);
+    ).toThrow(/classify\.guards: required/);
     expect(() =>
       normalizeVizConfig(
         { facet: { platform: { values: ["macos"], "nix-packages": { file: "x.nix", guards: { a: "macos" } } } } },
         { strict: true },
       ),
-    ).toThrow(/nix-packages\.types: required/);
+    ).toThrow(/classify\.types: required/);
   });
 
-  test("strict: nix-packages.file path escape rejected", () => {
+  test("strict: classify.file path escape rejected", () => {
     expect(() =>
       normalizeVizConfig(
         {
@@ -218,7 +227,62 @@ describe("normalizeVizConfig", () => {
         },
         { strict: true },
       ),
-    ).toThrow(/nix-packages\.file: must be a relative path/);
+    ).toThrow(/classify\.file: must be a relative path/);
+  });
+
+  test("classify command provider: argv required, keys can't mix, key enum checked", () => {
+    const c = normalizeVizConfig(
+      {
+        facet: {
+          platform: {
+            values: ["macos"],
+            classify: { provider: "command", command: ["bun", "x.ts"], types: ["T"], key: "id" },
+          },
+        },
+      },
+      { strict: true },
+    );
+    expect(c.facets[0]!.classify).toEqual({ provider: "command", command: ["bun", "x.ts"], types: ["T"], key: "id" });
+    expect(() =>
+      normalizeVizConfig(
+        { facet: { p: { classify: { provider: "command", types: ["T"] } } } },
+        { strict: true },
+      ),
+    ).toThrow(/classify\.command: required/);
+    expect(() =>
+      normalizeVizConfig(
+        { facet: { p: { classify: { provider: "command", command: ["x"], file: "y.nix", types: ["T"] } } } },
+        { strict: true },
+      ),
+    ).toThrow(/file\/guards only apply/);
+    expect(() =>
+      normalizeVizConfig(
+        { facet: { p: { classify: { provider: "wasm", types: ["T"] } } } },
+        { strict: true },
+      ),
+    ).toThrow(/expected "nix-optional-attrs" or "command"/);
+    expect(() =>
+      normalizeVizConfig(
+        { facet: { p: { classify: { provider: "command", command: ["x"], types: ["T"], key: "path" } } } },
+        { strict: true },
+      ),
+    ).toThrow(/expected "basename" or "id"/);
+  });
+
+  test("strict: classify and nix-packages together rejected", () => {
+    expect(() =>
+      normalizeVizConfig(
+        {
+          facet: {
+            p: {
+              classify: { provider: "command", command: ["x"], types: ["T"] },
+              "nix-packages": { file: "x.nix", guards: { a: "v" }, types: ["T"] },
+            },
+          },
+        },
+        { strict: true },
+      ),
+    ).toThrow(/cannot specify both classify and nix-packages/);
   });
 
   test("strict: a rule-less facet with values warns (no-op lens)", () => {
@@ -262,7 +326,8 @@ describe("normalizeVizConfig", () => {
     expect(c.bundle.dir).toBe("kb");
     expect(c.display.name).toBeNull();
     expect(c.vcs.url).toBeNull();
-    expect(c.facets[0]!.nixPackages!.file).toBe("pkgs.nix");
+    const cl = c.facets[0]!.classify;
+    expect(cl?.provider === "nix-optional-attrs" ? cl.file : null).toBe("pkgs.nix");
   });
 
   test("strict: >12 taxonomy types warns but does not throw", () => {

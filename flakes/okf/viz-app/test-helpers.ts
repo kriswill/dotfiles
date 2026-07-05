@@ -57,7 +57,8 @@ export const cfg = (over: Record<string, unknown> = {}) => ({
         Host: "macos", // replaces host-default
       },
       ids: { "hosts/nebula": "linux" },
-      "nix-packages": {
+      classify: {
+        provider: "nix-optional-attrs",
         file: "modules/packages.nix",
         guards: { darwin: "macos", linux: "linux" },
         types: ["Nix Package", "Sub-flake", "Overlay"],

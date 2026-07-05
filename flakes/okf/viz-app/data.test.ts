@@ -381,25 +381,41 @@ describe("facetValueOf", () => {
     types: { "Darwin Module": "macos", "NixOS Module": "linux" },
     ids: { "hosts/nebula": "linux" },
     frontmatter: "os",
-    nixPackages: { file: "modules/packages.nix", guards: { darwin: "macos", linux: "linux" }, types: ["Nix Package"] },
+    classify: {
+      provider: "nix-optional-attrs",
+      file: "modules/packages.nix",
+      guards: { darwin: "macos", linux: "linux" },
+      types: ["Nix Package"],
+      key: "basename",
+    },
   };
   const nix = { kitten: "macos", "flatpak-user": "linux" };
 
-  test("ids wins over nix-packages, frontmatter, and types", () => {
+  test("ids wins over classify, frontmatter, and types", () => {
     const n = node("hosts/nebula", "Darwin Module", "Nebula", { fm: { os: "macos" } });
     expect(facetValueOf(n, facet, nix)).toBe("linux");
   });
 
-  test("nix-packages wins over frontmatter and types when the type is listed", () => {
+  test("classify wins over frontmatter and types when the type is listed", () => {
     const n = node("packages/kitten", "Nix Package", "kitten", { fm: { os: "linux" } });
     expect(facetValueOf(n, facet, nix)).toBe("macos");
   });
 
-  test("a nix-packages miss falls through to frontmatter, then types — it does not resolve to unresolved", () => {
+  test("a classify miss falls through to frontmatter, then types — it does not resolve to unresolved", () => {
     const withFm = node("packages/iv", "Nix Package", "iv", { fm: { os: "linux" } });
     expect(facetValueOf(withFm, facet, nix)).toBe("linux");
     const bare = node("packages/iv", "Nix Package", "iv", {});
-    expect(facetValueOf(bare, facet, nix)).toBeUndefined(); // nix miss, no fm, "Nix Package" unlisted in types
+    expect(facetValueOf(bare, facet, nix)).toBeUndefined(); // classify miss, no fm, "Nix Package" unlisted in types
+  });
+
+  test('classify key = "id" looks up by full concept id instead of basename', () => {
+    const byId: FacetConfig = {
+      ...facet,
+      classify: { provider: "command", command: ["x"], types: ["Nix Package"], key: "id" },
+    };
+    const n = node("packages/kitten", "Nix Package", "kitten", {});
+    expect(facetValueOf(n, byId, { "packages/kitten": "linux" })).toBe("linux");
+    expect(facetValueOf(n, byId, { kitten: "linux" })).toBeUndefined();
   });
 
   test("frontmatter wins over types when present", () => {
@@ -434,7 +450,7 @@ describe("facetValueOf", () => {
       types: {},
       ids: {},
       frontmatter: "status",
-      nixPackages: null,
+      classify: null,
     };
     const n = node("x", "Decision", "X", { fm: { status: "draft" } });
     expect(facetValueOf(n, inferFacet, {})).toBe("draft");
@@ -470,7 +486,7 @@ describe("buildModel facets", () => {
       expect(m.facetById["platform"]![dropped]).toBeUndefined();
   });
 
-  test("missing facetMaps: nix-packages concepts fall through (unresolved here, no fm/types entry)", () => {
+  test("missing facetMaps: classify concepts fall through (unresolved here, no fm/types entry)", () => {
     const m = buildModel({ nodes: [node("packages/kitten", "Nix Package", "kitten")], edges: [], cfg: cfg() });
     expect(m.facetById["platform"]!["packages/kitten"]).toBeUndefined();
   });

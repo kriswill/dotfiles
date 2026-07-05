@@ -8,7 +8,10 @@ timestamp: '2026-07-04T00:00:00-07:00'
 
 **Status:** active, extended by
 [okf-toml-unified-config](okf-toml-unified-config.md) — the file is now
-**`okf.toml`**, read by every okf command through a shared loader.
+**`okf.toml`**, read by every okf command through a shared loader — and by
+[okf-facet-classify](okf-facet-classify.md) — the `nix-packages` facet
+source described below is now the `classify` union (legacy spelling still
+accepted).
 **Where:** [../../okf.toml](../../okf.toml), viewer schema in
 [../../flakes/okf/viz-app/config.ts](../../flakes/okf/viz-app/config.ts),
 loaded by [../../flakes/okf/config-cli.ts](../../flakes/okf/config-cli.ts).
