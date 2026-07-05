@@ -11,6 +11,7 @@ const rawCfg = () => ({
     badge: "OKF viz",
     "fallback-name": "knowledge/",
     "about-html": "<b>about</b>",
+    "date-format": "us",
   },
   embed: { "max-bytes": 100 },
   taxonomy: {
@@ -44,6 +45,7 @@ describe("normalizeVizConfig", () => {
       expect(c.display.fallbackName).toBe("OKF bundle");
       expect(c.display.name).toBeNull();
       expect(c.display.aboutHtml).toContain("Open Knowledge Format");
+      expect(c.display.dateFormat).toBe("iso");
       expect(c.embed.maxBytes).toBe(200_000);
       expect(c.taxonomy).toEqual({ types: [], dirGroups: {}, groupOrder: [], other: "Other" });
       expect(c.facets).toEqual([]);
@@ -55,6 +57,7 @@ describe("normalizeVizConfig", () => {
     const c = normalizeVizConfig(rawCfg(), { strict: true });
     expect(c.display.fallbackName).toBe("knowledge/");
     expect(c.display.aboutHtml).toBe("<b>about</b>");
+    expect(c.display.dateFormat).toBe("us");
     expect(c.embed.maxBytes).toBe(100);
     expect(c.taxonomy.groupOrder).toEqual(["Knowledge", "System"]);
     expect(c.taxonomy.dirGroups).toEqual({ decisions: "Knowledge", modules: "System" });
@@ -101,6 +104,15 @@ describe("normalizeVizConfig", () => {
   test("strict: type mismatches error; lenient keeps defaults", () => {
     expect(() => normalizeVizConfig({ embed: { "max-bytes": "big" } }, { strict: true })).toThrow(VizConfigError);
     expect(normalizeVizConfig({ embed: { "max-bytes": "big" } }).embed.maxBytes).toBe(200_000);
+  });
+
+  test("display.date-format: both spellings accepted, unknown value errs strict / defaults lenient", () => {
+    expect(normalizeVizConfig({ display: { "date-format": "us" } }, { strict: true }).display.dateFormat).toBe("us");
+    expect(normalizeVizConfig({ display: { dateFormat: "international" } }).display.dateFormat).toBe("international");
+    expect(() => normalizeVizConfig({ display: { "date-format": "eu" } }, { strict: true })).toThrow(
+      /display\.date-format: expected one of: iso, us, international/,
+    );
+    expect(normalizeVizConfig({ display: { "date-format": "eu" } }).display.dateFormat).toBe("iso");
   });
 
   test('"both" is now a legal ordinary facet value — no reserved rule sentinels', () => {

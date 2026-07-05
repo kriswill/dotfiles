@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { formatDate } from "./dates";
   import { encodeHash } from "./hash";
   import { createMd, esc } from "./markdown";
   import type { VizState } from "./state.svelte";
@@ -26,7 +27,11 @@
   const dir = $derived(viz.sel.kind === "dir" ? viz.model.dirs[viz.sel.path] : null);
   const dirPath = $derived(viz.sel.kind === "dir" ? viz.sel.path : "");
 
+  const fmtDate = (v: unknown) => formatDate(v, viz.model.cfg.display.dateFormat);
+
   const fmCell = (k: string, v: unknown): string => {
+    const date = fmtDate(v);
+    if (date) return esc(date);
     const val = esc(Array.isArray(v) ? v.join(", ") : v);
     if (k === "resource") {
       const p = String(v).replace(/\/$/, "");
@@ -161,7 +166,7 @@
             <tr><td>language</td><td>{file.lang}</td></tr>
             <tr><td>lines</td><td>{file.lines}</td></tr>
             <tr><td>size</td><td>{(file.size / 1024).toFixed(1)} KB</td></tr>
-            <tr><td>last commit</td><td>{file.date}</td></tr>
+            <tr><td>last commit</td><td>{fmtDate(file.date) ?? file.date}</td></tr>
           </tbody>
         </table>
         <div class="backlinks flat"><h4>Referenced by</h4>{@html refList(file.refs)}</div>
@@ -174,7 +179,7 @@
         <tbody>
           <tr><td>path</td><td>{dirPath}/</td></tr>
           <tr><td>entries</td><td>{dir.dirs.length + dir.files.length}</td></tr>
-          <tr><td>last commit</td><td>{dir.date}</td></tr>
+          <tr><td>last commit</td><td>{fmtDate(dir.date) ?? dir.date}</td></tr>
         </tbody>
       </table>
       <div class="backlinks flat"><h4>Referenced by</h4>{@html refList(dir.refs)}</div>

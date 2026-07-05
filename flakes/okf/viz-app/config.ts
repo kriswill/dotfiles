@@ -7,6 +7,8 @@
 // generic viewer. Normalization accepts both kebab-case (TOML) and camelCase
 // (re-normalizing its own output) spellings, so it is idempotent.
 
+import { DATE_FORMATS, type DateFormat } from "./dates";
+
 export interface VizConfig {
   bundle: {
     /** OKF bundle root, repo-relative. */
@@ -25,6 +27,9 @@ export interface VizConfig {
     name: string | null;
     /** Help-bubble body — trusted repo-owner HTML, rendered via {@html}. */
     aboutHtml: string;
+    /** Detail-panel date rendering: "iso" (as written), "us" ("Jul 3, 2026"),
+     *  or "international" ("3 Jul 2026"). */
+    dateFormat: DateFormat;
   };
   embed: {
     /** Per-file embed cap in bytes. */
@@ -105,6 +110,7 @@ const defaults = (): VizConfig => ({
     fallbackName: "OKF bundle",
     name: null,
     aboutHtml: GENERIC_ABOUT,
+    dateFormat: "iso",
   },
   embed: { maxBytes: 200_000 },
   taxonomy: { types: [], dirGroups: {}, groupOrder: [], other: "Other" },
@@ -188,6 +194,11 @@ export function normalizeVizConfig(raw: unknown, opts?: { strict?: boolean; warn
         field(s, "display", "fallbackName", asStr((v) => (cfg.display.fallbackName = v)));
         field(s, "display", "name", asStr((v) => (cfg.display.name = v || null)));
         field(s, "display", "aboutHtml", asStr((v) => (cfg.display.aboutHtml = v)));
+        field(s, "display", "dateFormat", (v, path) =>
+          typeof v === "string" && (DATE_FORMATS as readonly string[]).includes(v)
+            ? (cfg.display.dateFormat = v as DateFormat)
+            : bad(path, `expected one of: ${DATE_FORMATS.join(", ")}`),
+        );
       });
       section("embed", (s) => {
         field(s, "embed", "maxBytes", asNum((v) => (cfg.embed.maxBytes = v)));
