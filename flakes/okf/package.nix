@@ -19,6 +19,7 @@ let
     root = ./.;
     fileset = lib.fileset.unions [
       ./okf.ts
+      ./init.ts
       ./lib.ts
       ./config-cli.ts
       ./vcs

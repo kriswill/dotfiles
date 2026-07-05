@@ -294,6 +294,26 @@ export function findConfigUp(
   }
 }
 
+/** Best-effort bundle info for help text: never exits, never warns —
+ *  discovery/parse/normalization failures all fall back to the generic
+ *  defaults (a broken config must never break `okf help`). */
+export function quietBundleInfo(): { dir: string; out: string; profileDoc: string | null } {
+  const fallback = { dir: "knowledge", out: "viz.html", profileDoc: null };
+  try {
+    const found = findConfigUp(process.cwd());
+    const root = found?.dir ?? gitRoot();
+    if (!root) return fallback;
+    const raw: unknown = found ? Bun.TOML.parse(readFileSync(join(found.dir, found.file), "utf8")) : {};
+    const viz = normalizeVizConfig(splitCliSections(raw).rest); // lenient: never throws
+    const profileDoc = existsSync(join(root, viz.bundle.dir, "okf-profile.md"))
+      ? `${viz.bundle.dir}/okf-profile.md`
+      : null;
+    return { dir: viz.bundle.dir, out: viz.bundle.out, profileDoc };
+  } catch {
+    return fallback;
+  }
+}
+
 export interface OkfContext {
   /** Absolute workspace root (the repo okf operates on). */
   root: string;

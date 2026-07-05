@@ -2,6 +2,14 @@
 
 ## 2026-07-04
 
+- **Update** — [okf](packages/okf.md): new `okf init [--dir=<d>]`
+  bootstraps a fresh workspace (commented starter okf.toml + bundle
+  skeleton; never overwrites, no-op when initialized), and `okf help` is
+  now config-aware — the bundle dir, viz output path, and the profile-doc
+  pointer derive from the workspace's okf.toml via a quiet loader (a
+  broken config can never break help). The repo-specific skill pointer
+  left the footer.
+
 - **Decision** — [okf-scaffold-hook](decisions/okf-scaffold-hook.md):
   `okf scaffold` is now a generic driver; the dotfiles metadata pass moved
   out of the flake to `scripts/okf-scaffold.ts` (mechanical port,

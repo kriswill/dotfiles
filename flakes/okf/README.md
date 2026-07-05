@@ -8,7 +8,9 @@ self-contained interactive 3D graph (single offline HTML file — Svelte 5 viewe
 around Three.js glow spheres, bundled at generation time by `Bun.build`).
 
 okf operates on a **workspace**: the nearest directory at or above cwd holding
-an `okf.toml`, else the git toplevel (zero-config mode). **Git is optional** —
+an `okf.toml`, else the git toplevel (zero-config mode). `okf init [--dir=<d>]`
+bootstraps a fresh workspace — a commented starter `okf.toml` plus the bundle
+skeleton (`<d>/index.md`, `<d>/log.md`); it never overwrites. **Git is optional** —
 `[vcs] provider = "auto"|"git"|"none"` selects the version-control adapter
 (auto = git when the root is a git toplevel); the `none` provider walks the
 filesystem (minus `[vcs] ignore` globs), stamps mtime dates, and skips commit
