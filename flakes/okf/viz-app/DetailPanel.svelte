@@ -17,7 +17,7 @@
     files: viz.model.files,
     byId: viz.model.byId,
     dirs: viz.model.dirs,
-    repoUrl: viz.model.repoUrl,
+    commitUrl: viz.model.commitUrl,
     commits: viz.model.commits,
     bundleDir: viz.model.cfg.bundle.dir,
   });

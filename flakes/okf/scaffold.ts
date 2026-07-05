@@ -8,10 +8,11 @@
 import { readdirSync, readFileSync, writeFileSync, mkdirSync, existsSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { loadContext } from "./config-cli";
-import { fmToYaml, gitISO, titleFromSlug, type FM } from "./lib";
+import { fmToYaml, nowISO, titleFromSlug, type FM } from "./lib";
 
 const FORCE = process.argv.includes("--force");
-const { root: repo, bundle } = loadContext();
+const { root: repo, bundle, vcs } = loadContext();
+const gitISO = (p: string) => vcs.lastModified(p) ?? nowISO();
 let written = 0, skipped = 0;
 
 function emit(rel: string, fm: FM, body: string) {

@@ -40,9 +40,12 @@ export interface RawData {
   edges: { s: string; t: string }[];
   files?: Record<string, EmbeddedFile>;
   dirs?: Record<string, EmbeddedDir>;
-  /** https://github.com/owner/repo, for outbound commit links (null: no GitHub origin). */
+  /** https web URL of the repo, for the header name (null: no remote). */
   repoUrl?: string | null;
-  /** Verified commit-hash citations: literal as written -> full oid. */
+  /** Revision-link template with {url} pre-substituted — only {hash} remains
+   *  (null: no repo URL, citations stay plain code). */
+  commitUrl?: string | null;
+  /** Verified revision citations: literal as written -> full canonical id. */
   commits?: Record<string, string>;
   /** Facet name -> (package basename -> value), for facets with a
    *  nix-packages source (parsed from that facet's configured file). */
@@ -56,7 +59,9 @@ export interface VizModel {
   files: Record<string, EmbeddedFile>;
   dirs: Record<string, EmbeddedDir>;
   repoUrl: string | null;
-  /** "owner/repo" display name from repoUrl (null: no GitHub origin). */
+  /** Revision-link template ({hash} placeholder), see RawData.commitUrl. */
+  commitUrl: string | null;
+  /** "owner/repo"-style display name from repoUrl (null: none derivable). */
   repoName: string | null;
   /** Normalized viz configuration (generic defaults when unconfigured). */
   cfg: VizConfig;
@@ -167,12 +172,13 @@ export function facetValueOf(node: ConceptNode, facet: FacetConfig, nixMap: Reco
   return facet.types[node.type];
 }
 
-/** "owner/repo" display name from a GitHub URL — https or ssh form, with or
- *  without ".git" (same shapes lib.ts's githubRemoteUrl accepts, so a manual
- *  repo.url override behaves like the auto-detected origin). Non-GitHub URLs
- *  yield null; set display.name for those. */
+/** "owner/repo"-style display name from any forge URL — the full repo path
+ *  (so GitLab subgroups keep their group chain), https or ssh form, with or
+ *  without ".git" (same shapes vcs/git.ts's normalizeRemoteUrl emits, so a
+ *  manual vcs.url override behaves like an auto-detected origin). Underivable
+ *  shapes yield null; set display.name for those. */
 export function repoNameFromUrl(url: string | null): string | null {
-  return url?.match(/^(?:https:\/\/|git@)github\.com[/:]([^/]+\/[^/]+?)(?:\.git)?\/?$/)?.[1] ?? null;
+  return url?.match(/^(?:https?:\/\/|ssh:\/\/(?:[^@/]+@)?|[^@/:]+@)([^/:]+)[/:](.+?)(?:\.git)?\/?$/)?.[2] ?? null;
 }
 
 export function buildModel(raw: RawData): VizModel {
@@ -181,6 +187,7 @@ export function buildModel(raw: RawData): VizModel {
   const files = raw.files || {};
   const dirs = raw.dirs || {};
   const repoUrl = raw.repoUrl || null;
+  const commitUrl = raw.commitUrl || null;
   const repoName = repoNameFromUrl(repoUrl);
   const commits = raw.commits || {};
   const byId: Record<string, ConceptNode> = Object.fromEntries(nodes.map((n) => [n.id, n]));
@@ -254,6 +261,7 @@ export function buildModel(raw: RawData): VizModel {
     files,
     dirs,
     repoUrl,
+    commitUrl,
     repoName,
     cfg,
     displayName: displayName(cfg, repoName),

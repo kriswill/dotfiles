@@ -8,7 +8,7 @@
 
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { repoRoot } from "./lib";
+import { discoverVcs, type VcsProvider } from "./vcs";
 import { normalizeVizConfig, VizConfigError, type VizConfig } from "./viz-app/config";
 
 export const CONFIG_FILE = "okf.toml";
@@ -110,6 +110,9 @@ export interface OkfContext {
   /** Absolute bundle root: <root>/<viz.bundle.dir>. */
   bundle: string;
   cfg: OkfConfig;
+  /** Version-control provider for this workspace (tracked files, dates,
+   *  revision citations, remote URL). */
+  vcs: VcsProvider;
 }
 
 let ctxCache: OkfContext | null = null;
@@ -119,7 +122,8 @@ let ctxCache: OkfContext | null = null;
  *  can't trust. Absent config file -> generic defaults. */
 export function loadContext(): OkfContext {
   if (ctxCache) return ctxCache;
-  const root = repoRoot();
+  const vcs = discoverVcs();
+  const root = vcs.root;
   let cfgFile = CONFIG_FILE;
   if (!existsSync(join(root, cfgFile)) && existsSync(join(root, LEGACY_CONFIG_FILE))) {
     console.warn(`okf: warning: ${LEGACY_CONFIG_FILE} is deprecated — rename it to ${CONFIG_FILE}`);
@@ -148,6 +152,6 @@ export function loadContext(): OkfContext {
     }
     throw e;
   }
-  ctxCache = { root, bundle: join(root, viz.bundle.dir), cfg: { viz, profile } };
+  ctxCache = { root, bundle: join(root, viz.bundle.dir), cfg: { viz, profile }, vcs };
   return ctxCache;
 }

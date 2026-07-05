@@ -2,6 +2,16 @@
 
 ## 2026-07-04
 
+- **Decision** — [okf-vcs-provider](decisions/okf-vcs-provider.md): all
+  version-control access now sits behind a `VcsProvider` interface
+  (`flakes/okf/vcs/`); git is the first provider (batched implementations
+  moved verbatim from lib.ts, which is now pure text helpers). Outbound
+  revision links are forge-agnostic: `[vcs] commit-url-template`
+  (`"{url}/commit/{hash}"` default, GitLab `"{url}/-/commit/{hash}"`),
+  remote detection accepts any https/scp/ssh origin, and the viewer fills
+  `{hash}` without knowing what GitHub is. `[repo]` remains as a
+  deprecated alias of `[vcs]`.
+
 - **Update** — [okf](packages/okf.md) +
   [okf-profile](okf-profile.md): validation policy moved from
   code into `okf.toml [profile]` (`required-fields` — `type` always

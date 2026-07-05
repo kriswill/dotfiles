@@ -55,32 +55,44 @@ describe("buildModel", () => {
     expect(m.indexOf.get("c")).toBe(2);
   });
 
-  test("missing files/dirs/repoUrl/commits keys default to empty", () => {
+  test("missing files/dirs/repoUrl/commitUrl/commits keys default to empty", () => {
     const empty = buildModel({ nodes: raw.nodes, edges: [] });
     expect(empty.files).toEqual({});
     expect(empty.dirs).toEqual({});
     expect(empty.repoUrl).toBeNull();
+    expect(empty.commitUrl).toBeNull();
     expect(empty.repoName).toBeNull();
     expect(empty.commits).toEqual({});
   });
 
-  test("repoName derives owner/repo from repoUrl", () => {
-    const named = buildModel({ ...raw, repoUrl: "https://github.com/kriswill/dotfiles" });
+  test("repoName derives owner/repo from repoUrl; commitUrl passes through", () => {
+    const named = buildModel({
+      ...raw,
+      repoUrl: "https://github.com/kriswill/dotfiles",
+      commitUrl: "https://github.com/kriswill/dotfiles/commit/{hash}",
+    });
     expect(named.repoName).toBe("kriswill/dotfiles");
+    expect(named.commitUrl).toBe("https://github.com/kriswill/dotfiles/commit/{hash}");
   });
 });
 
 describe("repoNameFromUrl", () => {
-  test("accepts the same shapes as githubRemoteUrl: https/ssh, with or without .git", () => {
+  test("https/ssh shapes, with or without .git", () => {
     expect(repoNameFromUrl("https://github.com/o/r")).toBe("o/r");
     expect(repoNameFromUrl("https://github.com/o/r.git")).toBe("o/r");
     expect(repoNameFromUrl("git@github.com:o/r.git")).toBe("o/r");
     expect(repoNameFromUrl("git@github.com:o/r")).toBe("o/r");
   });
 
-  test("null and non-GitHub URLs yield null (display.name covers those)", () => {
+  test("forge-agnostic: any host works, subgroup paths kept whole", () => {
+    expect(repoNameFromUrl("https://codeberg.org/earthgman/snowglobe-lib")).toBe("earthgman/snowglobe-lib");
+    expect(repoNameFromUrl("https://gitlab.com/group/sub/repo.git")).toBe("group/sub/repo");
+    expect(repoNameFromUrl("ssh://git@sr.ht/~o/r")).toBe("~o/r");
+  });
+
+  test("null and underivable shapes yield null (display.name covers those)", () => {
     expect(repoNameFromUrl(null)).toBeNull();
-    expect(repoNameFromUrl("https://gitlab.com/o/r")).toBeNull();
+    expect(repoNameFromUrl("not a url")).toBeNull();
   });
 });
 
