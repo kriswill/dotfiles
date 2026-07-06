@@ -2,7 +2,7 @@
 type: Host
 title: nebula
 description: nebula — AMD CPU, NVIDIA GPU, UEFI desktop.
-resource: modules/hosts/nebula.nix
+resource: modules/hosts/nebula/default.nix
 tags: [host]
 timestamp: '2026-07-03T22:30:00-07:00'
 ---
@@ -70,4 +70,4 @@ Non-declarative BIOS facts, invisible to the flake:
 
 ## Source
 
-- Host module: [`modules/hosts/nebula.nix`](../../modules/hosts/nebula.nix)
+- Host module: [`modules/hosts/nebula/default.nix`](../../modules/hosts/nebula/default.nix)
