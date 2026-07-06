@@ -1,0 +1,24 @@
+[Desktop Entry]
+# Override of the packaged org.gajim.Gajim.desktop: launch through
+# gajim-op-launch, which waits for the 1Password CLI integration before
+# starting Gajim so its one-shot keyring fetch doesn't race op at startup.
+# See ~/.local/bin/gajim-op-launch and knowledge/decisions/python-keyring-op-backend.md.
+Type=Application
+Name=Gajim
+GenericName=XMPP Chat Client
+Comment=A fully-featured XMPP chat client
+Exec=/home/k/.local/bin/gajim-op-launch %u
+Icon=org.gajim.Gajim
+Terminal=false
+Categories=Network;InstantMessaging;GTK;Chat;
+Keywords=chat;messaging;im;xmpp;voip;
+StartupNotify=false
+SingleMainWindow=true
+X-GNOME-UsesNotifications=true
+MimeType=x-scheme-handler/xmpp;
+Actions=StartChat;
+
+[Desktop Action StartChat]
+Exec=/home/k/.local/bin/gajim-op-launch --start-chat
+Name=Start a new chat
+Icon=org.gajim.Gajim

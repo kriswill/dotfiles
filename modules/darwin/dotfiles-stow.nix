@@ -28,6 +28,7 @@
           "fuzzel" # Wayland launcher
           "gtk" # GTK settings
           "hyprland" # Wayland compositor config
+          "local-bin" # ~/.local/bin helpers (gajim-op-launch: op-integration wait, Linux desktop)
           "mimeapps" # freedesktop default-apps registry
           "pupgui" # ProtonUp-Qt (gaming, Linux)
           "python-keyring" # op-backed keyring backend (op path + prompt flow are NixOS-specific; macOS has Keychain)

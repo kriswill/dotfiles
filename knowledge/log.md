@@ -2,6 +2,26 @@
 
 ## 2026-07-05
 
+- **Update** — [python-keyring-op-backend](decisions/python-keyring-op-backend.md):
+  root-caused the recurring "keystore not working" to a **stale/missing `op` CLI
+  session**. Without a cached session each `op item get` does a fresh handshake
+  to the 1Password app over `/run/user/1000/1Password-BrowserSupport.sock`, which
+  intermittently `connection reset`s; Gajim fetches once per connect with no
+  retry, so one failure → offline + password dialog. The user's tell: `op
+  signin` by hand fixes it — it caches a session in `~/.config/op/config` that
+  separate processes reuse. Fix: `~/.local/bin/gajim-op-launch` (new Linux-only
+  stow pkg `home/local-bin`) runs `op signin` to prime, then `exec gajim`; a
+  `home/desktop-entries/org.gajim.Gajim.desktop` override calls it. Two launcher
+  gotchas: the `Exec` needs the **absolute path** (systemd-`--user`/Noctalia
+  PATH lacks `~/.local/bin` → bare name silently no-ops), and Noctalia caches
+  desktop entries and won't re-read a changed stow *symlink* (recreate it / it
+  rescans; fuzzel rescans every open). Backend also flock-serializes `op`.
+  Verified working from both fuzzel and Noctalia. Wrong turns, all corrected:
+  (1) lock-state framing (failures happen unlocked); (2) blocking retry in
+  `get_password` froze Gajim into "not responding" (GLib main loop); (3)
+  `op whoami`/`op account get`/launch-race framings — the real fix is priming a
+  reusable session, and my own diagnostic `op` loops caused much of the thrash.
+
 - **Update** — [codebase-memory-mcp](modules/codebase-memory-mcp.md) is now a
   Dual Module: the fork (`1d99463`) gained
   `nixosModules.codebase-memory-mcp` — a systemd user service twin of the
@@ -19,7 +39,7 @@
   backend shelling out to `op` (items titled
   `python-keyring/<service>/<username>`), selected via `keyringrc.cfg`'s
   `default-keyring`/`keyring-path` — no gnome-keyring, no new nix package,
-  secrets stay behind 1Password's authorization prompt. Verified end-to-end
+  secrets stay behind 1Password's lock state. Verified end-to-end
   (CLI round-trip + Gajim saving its XMPP password).
 
 - **Decision** — [gtk-theme-env-var-removal](decisions/gtk-theme-env-var-removal.md):
