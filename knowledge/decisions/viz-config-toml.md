@@ -12,7 +12,7 @@ timestamp: '2026-07-04T00:00:00-07:00'
 [okf-facet-classify](okf-facet-classify.md) — the `nix-packages` facet
 source described below is now the `classify` union (legacy spelling still
 accepted).
-**Where:** [../../okf.toml](../../okf.toml), viewer schema in
+**Where:** [../../okflight.toml](../../okflight.toml), viewer schema in
 [`viz-app/config.ts`](https://github.com/kriswill/okflight/blob/main/viz-app/config.ts),
 loaded by [`config-cli.ts`](https://github.com/kriswill/okflight/blob/main/config-cli.ts).
 `okf-viz.toml` below is the file's original name (historical prose).

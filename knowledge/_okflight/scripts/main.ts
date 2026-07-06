@@ -1,5 +1,5 @@
 // This repo's okf scaffolder — the dotfiles-specific metadata pass, invoked
-// by `okf scaffold` via okf.toml `[scaffold] script`. One pass per scaffolded
+// by `okf scaffold` via okflight.toml `[scaffold] script`. One pass per scaffolded
 // type, each in its own file beside this entry:
 //   modules.ts   — feature modules (darwin/nixos twins) + flake-parts plumbing
 //   hosts.ts     — host registrations + host-specific files
@@ -9,11 +9,11 @@
 // Idempotence, --force, and the written/skipped summary are owned by the
 // injected ctx.emit (okflight's scaffold-api.ts); these passes use only the
 // injected API plus node builtins — no runtime import from the okf checkout.
-// Lives in knowledge/_okf-scaffold/ (bundle-adjacent tooling): the `_` prefix
+// Lives in knowledge/_okflight/scripts/ (bundle-adjacent tooling): the `_` prefix
 // keeps the directory invisible to okf's walkMd/index-gen, so the bundle
 // itself stays pure markdown and OKF-conformant.
 
-import type { ScaffoldContext } from "./okf-scaffold-api";
+import type { ScaffoldContext } from "./scaffold-api";
 import { scaffoldHosts } from "./hosts";
 import { repoOf } from "./lib";
 import { scaffoldModules } from "./modules";
