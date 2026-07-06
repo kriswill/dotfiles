@@ -136,11 +136,11 @@ every `.nix` file under `modules/` is auto-discovered as a flake-parts module.
 ├── config/              # NON-symlinkable app-owned configs (Helium, Noctalia, gh) — snapshot
 │                        #   sync via helium-config/noctalia-config/gh-config CLIs; see config/README.md
 ├── pkgs/                # Custom package definitions (*.nix files or subdirectories)
-├── flakes/              # Self-contained sub-flakes consumed via relative-path inputs (e.g. flakes/ccglass)
+├── flakes/              # Self-contained sub-flakes consumed via relative-path inputs (ccglass, apple-container)
 ├── overlays/            # Nixpkgs overlays (makes custom packages available)
 ├── lib/                 # Pure lib helpers (kanagawa, direnv-nom-wrapper) — outside modules/ so import-tree skips them
 ├── docs/                # Task-focused manuals (hyprland, noctalia, helium, tmux, fastfetch, …)
-└── scripts/             # Helper scripts for package updates + the okf knowledge CLI
+└── scripts/             # Helper scripts for package updates
 ```
 
 ## Custom Library Functions
@@ -256,4 +256,4 @@ rather than appending contradictions.
 
 `knowledge/` is the repo's authored knowledge layer — an [OKF v0.1](https://github.com/GoogleCloudPlatform/knowledge-catalog/blob/main/okf/SPEC.md) bundle of architecture patterns, decision records, playbooks, and a scaffolded catalog of every module/package/host/nvim-plugin, cross-linked into a graph. Conventions: `knowledge/okf-profile.md`. Start reading at `knowledge/index.md` (each directory's `index.md` discloses one level at a time).
 
-**Keep it current as part of any change** (the `knowledge-bundle` skill has the full procedure): after adding a module/package/host/nvim-plugin run `okf scaffold` + `okf index`; record non-obvious decisions in `knowledge/decisions/`; append `knowledge/log.md`; `okf validate` must exit 0 before committing. `okf viz` renders an interactive graph at `knowledge/viz.html` (gitignored). The `okf` command is on the dev-shell PATH (`modules/dev.nix`); outside the dev shell use `bun scripts/okf/okf.ts <cmd>`.
+**Keep it current as part of any change** (the `knowledge-bundle` skill has the full procedure): after adding a module/package/host/nvim-plugin run `okf scaffold` + `okf index`; record non-obvious decisions in `knowledge/decisions/`; append `knowledge/log.md`; `okf validate` must exit 0 before committing. `okf viz` renders an interactive graph at `knowledge/viz.html` (gitignored). The `okf` command is on the dev-shell PATH (`modules/dev.nix`), nix-built from okf's own repo (`kriswill/okflight`, private — fetched over git+ssh, so evaluation needs a GitHub-authorized SSH key on the agent; here that's the 1Password agent); outside the dev shell use `nix run .#okf -- <cmd>`.

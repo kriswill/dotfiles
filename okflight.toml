@@ -1,0 +1,85 @@
+# okflight.toml — repo-specific settings for the okf CLI (all commands; loaded by
+# okf's config-cli.ts, viewer schema in viz-app/config.ts — github:kriswill/okflight).
+# Without this file okf still works with generic fallbacks: knowledge/ bundle
+# dir, no facet filters, alphabetical types with generated colors, flat
+# legend, generic header/about text.
+
+[bundle]
+dir = "knowledge" # OKF bundle root, repo-relative
+out = "viz.html"  # output file, relative to the bundle dir
+
+[scaffold]
+script = "knowledge/_okflight/scripts/main.ts" # repo-owned metadata pass, run by `okf scaffold`; `_` keeps it out of the bundle walk
+# command = ["python3", "tools/scaffold.py"]  # non-JS alternative (OKF_* env); exclusive with script
+# [[scaffold.collect]]                        # declarative tier for simple cases (glob + templates)
+# glob = "src/services/*.py"
+# type = "Service"
+# output = "services/{name}.md"
+# comment = "#"
+
+[display]
+title = "OKF knowledge graph" # <title> = "<name> — <title>"
+# badge = "OKFlight"          # brand label (stage About button + modal title) — default suffices
+fallback-name = "knowledge/"  # header name when no GitHub origin
+date-format = "us"            # panel dates: "iso" (as written) | "us" (Jul 3, 2026) | "international" (3 Jul 2026)
+# name = "..."                # optional hard override of the git-derived owner/repo
+about-html = """A navigable map of this repository's <b>knowledge/</b> bundle — architecture patterns, \
+decision records, playbooks, and a catalog of every module, package, and host, authored in the \
+<a href="https://github.com/GoogleCloudPlatform/knowledge-catalog/blob/main/okf/SPEC.md" \
+target="_blank" rel="noopener">Open Knowledge Format</a> and cross-linked into a graph. \
+Click a node to read its document."""
+
+[embed]
+max-bytes = 200000 # per-file source-embed cap
+
+[taxonomy]
+# Palette slot order: entry N -> CSS var --sN (12 theme slots; overflow types
+# get stable generated colors). Append-only — existing types keep their colors.
+types = [
+  "Darwin Module",
+  "Nix Package",
+  "Playbook",
+  "Pattern",
+  "Decision",
+  "Host",
+  "Sub-flake",
+  "Flake-parts Module",
+  "Neovim Config",
+  "Neovim Plugin",
+  "Overlay",
+  "Reference",
+]
+group-order = ["Knowledge", "System", "Packages", "Neovim"]
+# other = "Other"             # label for concepts in unmapped directories
+
+[taxonomy.dir-groups] # top-level bundle dir -> legend cluster ("." = root docs)
+decisions = "Knowledge"
+patterns = "Knowledge"
+playbooks = "Knowledge"
+"." = "Knowledge"
+modules = "System"
+hosts = "System"
+packages = "Packages"
+nvim = "Neovim"
+
+[facet.platform] # 0..n [facet.<name>] filter lenses; file order = sidebar control order
+values = ["macos", "linux"] # segments after "all"; section absent -> no lens at all
+
+[facet.platform.types] # concept type -> value; unlisted types are unaffected (always visible)
+"Darwin Module" = "macos"
+"NixOS Module" = "linux"
+"Host" = "macos" # default for Host concepts not overridden below
+
+[facet.platform.ids] # per-concept overrides (full concept id) — highest precedence
+"hosts/nebula" = "linux"
+
+[facet.platform.classify] # opt-in build-side classifier: name -> value map for the listed types
+provider = "nix-optional-attrs" # optionalAttrs guard parse ("command" = argv printing a JSON map instead)
+file = "modules/packages.nix" # Nix file whose optionalAttrs OS guards classify packages
+guards = { darwin = "macos", linux = "linux" } # optionalAttrs predicate substring -> value
+types = ["Nix Package", "Sub-flake", "Overlay"] # types that consult the map; a miss falls through unresolved
+# key = "basename"            # map key per concept: "basename" (default) | "id"
+
+# [vcs]
+# url = "https://github.com/kriswill/dotfiles"   # optional override of the remote detection (any forge)
+# commit-url-template = "{url}/commit/{hash}"    # outbound revision links; GitLab: "{url}/-/commit/{hash}"

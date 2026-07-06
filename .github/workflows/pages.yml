@@ -11,7 +11,8 @@ on:
       - main
     paths:
       - "knowledge/**"
-      - "scripts/okf/**"
+      - "flake.lock" # okf bumps arrive as lock updates (github:kriswill/okflight)
+      - "okflight.toml"
       - ".github/workflows/pages.yml"
   workflow_dispatch:
 
@@ -32,14 +33,27 @@ jobs:
         with:
           fetch-depth: 0 # gitISO stamps each embedded file with its last-commit date
 
+      # okf lives in the private kriswill/okflight repo; check it out at the
+      # exact rev the flake.lock pins (read-only deploy key: OKFLIGHT_DEPLOY_KEY).
+      - name: Read pinned okf rev
+        id: okf
+        run: echo "rev=$(jq -r '.nodes.okf.locked.rev' flake.lock)" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/checkout@v7
+        with:
+          repository: kriswill/okflight
+          ref: ${{ steps.okf.outputs.rev }}
+          ssh-key: ${{ secrets.OKFLIGHT_DEPLOY_KEY }}
+          path: okflight
+
       - uses: oven-sh/setup-bun@v2
 
       - name: Install viewer dependencies
-        working-directory: scripts/okf
+        working-directory: okflight
         run: bun install --frozen-lockfile
 
       - name: Build viz.html
-        run: bun scripts/okf/okf.ts viz
+        run: bun okflight/okf.ts viz
 
       - name: Stage Pages artifact
         run: |
