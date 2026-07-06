@@ -19,7 +19,7 @@ script = "knowledge/_okflight/scripts/main.ts" # repo-owned metadata pass, run b
 
 [display]
 title = "OKF knowledge graph" # <title> = "<name> — <title>"
-badge = "OKF viz"             # sidebar h1 suffix label
+# badge = "OKFlight"          # brand label (stage About button + modal title) — default suffices
 fallback-name = "knowledge/"  # header name when no GitHub origin
 date-format = "us"            # panel dates: "iso" (as written) | "us" (Jul 3, 2026) | "international" (3 Jul 2026)
 # name = "..."                # optional hard override of the git-derived owner/repo
