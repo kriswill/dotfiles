@@ -3,7 +3,7 @@
 ## 2026-07-05
 
 - **Update** — [codebase-memory-mcp](modules/codebase-memory-mcp.md) is now a
-  Dual Module: the fork (`801f909`) gained
+  Dual Module: the fork (`7ae95d7`) gained
   `nixosModules.codebase-memory-mcp` — a systemd user service twin of the
   launchd agent, same `cbm-daemon` FIFO wrapper — and cross-platform
   `cbm-tools` (cbm-ctl grew a compile-time `systemctl --user`/`journalctl`
