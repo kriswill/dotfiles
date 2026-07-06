@@ -23,7 +23,7 @@ rendered light.
 ### Root cause
 - LibreOffice uses the **gtk3** VCL plugin (`vclplug_gtk3lo.so`), which delegates
   dark-mode detection to GTK.
-- niri is a standalone Wayland compositor with **no settings daemon and no running
+- niri (the compositor at the time) had **no settings daemon and no running
   `xdg-desktop-portal`** to broadcast a `color-scheme = prefer-dark` preference,
   and no GTK theme was configured. So GTK reported "light" and the gtk3 plugin
   overrode LibreOffice's own Dark theme back to light.
@@ -31,26 +31,31 @@ rendered light.
   enough** on NixOS — there is no separate `Adwaita-dark` theme directory for that
   hint to resolve to.
 
-### Fix
-Select Adwaita's dark variant explicitly — it is compiled into GTK itself, so it
-always works — via a session variable:
+### Fix (current, Hyprland era — 2026-07)
+On Hyprland, `xdg-desktop-portal-gtk` runs and broadcasts the appearance
+settings (`color-scheme = prefer-dark`, `gtk-theme = adw-gtk3-dark`), so
+`gtk-dark.nix` now just installs the theme that name resolves to:
 
 ```nix
 # modules/nixos/gtk-dark.nix
-{ environment.sessionVariables.GTK_THEME = "Adwaita:dark"; }
+{ environment.systemPackages = [ pkgs.adw-gtk3 ]; }
 ```
 
-`home/gtk/.config/gtk-3.0/settings.ini` and `gtk-4.0/settings.ini` also set
-`gtk-application-prefer-dark-theme = true` as a supplementary hint (stow-managed,
+`home/gtk/.config/gtk-3.0/settings.ini` and `gtk-4.0/settings.ini` also name
+`adw-gtk3-dark` and set `gtk-application-prefer-dark-theme = true` (stow-managed,
 auto-deployed by `dotfiles-stow.nix`).
 
-> **Takes effect after a re-login** — session variables are read when the
-> graphical session starts.
-
-### How it was found
-A throwaway LibreOffice instance launched with `GTK_THEME=Adwaita:dark` came up
-dark, while the `settings.ini` hint alone did not — pinpointing the env var as
-the reliable lever.
+### Learned behaviours & workarounds
+- **2026-07-05 — do not use `GTK_THEME=Adwaita:dark`.** The original fix set it
+  as a session variable. That works for GTK3 apps, but libadwaita (GTK4) apps
+  respond to `GTK_THEME` by discarding their own stylesheet — padding, boxed
+  lists and margins vanish (observed as a cramped Gajim preferences window).
+  It was only needed under niri, where no portal ran; with the portal
+  broadcasting `prefer-dark` it is both redundant and harmful. Removing it
+  requires a **re-login** (session variables are read at session start).
+- The env-var lever was originally found by launching a throwaway LibreOffice
+  with `GTK_THEME=Adwaita:dark`, which came up dark while the `settings.ini`
+  hint alone did not.
 
 ---
 
