@@ -21,7 +21,9 @@ was blind to this repo's primary language.
   symbol extraction and flake-topology passes (submitted upstream as PR #19);
   rebase the fork onto upstream when bumping.
 - The fork's darwin module exposes `services.codebase-memory-mcp.{enable,package}`
-  (renamed from `kriswill.codebase-memory.*`; tracked in `b64c2ca`).
+  (renamed from `kriswill.codebase-memory.*`; tracked in `b64c2ca`); fork
+  commit `801f909` added the NixOS twin (`nixosModules.codebase-memory-mcp`,
+  systemd user service) and made `cbm-tools` cross-platform.
 - The index is persisted in-repo at `.codebase-memory/graph.db.zst`
   (bootstrap: delete project + reindex with `persistence: true`; refresh via
   the watcher) but the path is **gitignored for now** (`2f22430`) while the
