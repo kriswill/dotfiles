@@ -2,6 +2,23 @@
 
 ## 2026-07-05
 
+- **Decision** — [python-keyring-op-backend](decisions/python-keyring-op-backend.md):
+  Gajim's password store is 1Password, not a keyring daemon. New Linux-only
+  stow package `home/python-keyring/` vendors a ~60-line python-keyring
+  backend shelling out to `op` (items titled
+  `python-keyring/<service>/<username>`), selected via `keyringrc.cfg`'s
+  `default-keyring`/`keyring-path` — no gnome-keyring, no new nix package,
+  secrets stay behind 1Password's authorization prompt. Verified end-to-end
+  (CLI round-trip + Gajim saving its XMPP password).
+
+- **Decision** — [gtk-theme-env-var-removal](decisions/gtk-theme-env-var-removal.md):
+  `gtk-dark.nix` no longer forces `GTK_THEME=Adwaita:dark` — the env var made
+  libadwaita apps (Gajim) discard their own stylesheet, collapsing padding.
+  The Hyprland portal already broadcasts `prefer-dark` +
+  `gtk-theme=adw-gtk3-dark`; the module now just installs `adw-gtk3` so that
+  name resolves for GTK3 apps (LibreOffice stays dark).
+  [gtk-dark](modules/gtk-dark.md) and `docs/libreoffice.md` updated.
+
 - **Update** — okflight's rebrand adopted repo-side: `okf.toml` renamed to
   `okflight.toml` (upstream okf discovers both; new name wins) and the
   scaffold passes moved `knowledge/_okf-scaffold/` →

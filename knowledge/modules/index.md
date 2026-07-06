@@ -30,7 +30,7 @@ interesting ones by hand — scaffolding never overwrites an existing doc.
 * [Ghostty](ghostty.md) - Ghostty terminal — each OS installs it its own way and generates its half of the split config (`config-file = ?os.conf`); the shared config is stowed.
 * [Git](git.md) - Installs the binaries the stow-managed git config invokes by bare name (git, gh, gh-config, git-lfs, difftastic, …); the config itself — including 1Password SSH signing — is stow, not nix.
 * [Gpg](gpg.md) - gpg-agent on both OSes with enableSSHSupport deliberately false — 1Password owns SSH_AUTH_SOCK; gpg only backs `pass` and ad-hoc gpg use.
-* [Gtk Dark](gtk-dark.md) - Forces GTK apps to Adwaita's dark variant via one session variable (GTK_THEME=Adwaita:dark) — a bare Hyprland session has no settings daemon to broadcast prefer-dark.
+* [Gtk Dark](gtk-dark.md) - Installs the adw-gtk3 theme so the portal-broadcast gtk-theme=adw-gtk3-dark resolves — dark GTK3 apps without the GTK_THEME env var that breaks libadwaita styling.
 * [Hardware Configuration](hardware-configuration.md) - nixos-generate-config output in the two-line dendritic wrapper: initrd kernel modules, kvm-amd, x86_64-linux hostPlatform, and AMD microcode updates.
 * [Helium](helium.md) - Helium browser — enables the upstream programs.helium module and declares a root-owned Chromium managed policy in /etc (privacy baseline, DuckDuckGo, force-installed extensions).
 * [Homebrew](homebrew.md) - Kris' Homebrew stuff.
