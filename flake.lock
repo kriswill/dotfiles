@@ -78,11 +78,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1783312884,
-        "narHash": "sha256-YqbMW9Zdwxx4fLvCPIU/JBIcdwQbsBl6QLntLNSVFiQ=",
+        "lastModified": 1783313481,
+        "narHash": "sha256-JQPuAW7THM6c/yO3KllyHo/KXFGhBf90wJobDkIATFQ=",
         "owner": "kriswill",
         "repo": "codebase-memory-mcp",
-        "rev": "3289a42e484919a45097588e63d8e9fb6f54a21b",
+        "rev": "cc86ea2d17da5478af41bd9ddafb95fa84e90f7b",
         "type": "github"
       },
       "original": {
