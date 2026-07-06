@@ -21,7 +21,7 @@ Mechanics:
   darwin registry carries just `module`; the nixos one adds snowglobe-lib's
   hardware metadata (`cpu-vendor`, `gpu-vendors`, `firmware`, `isVM`,
   `stateVersion`), so hardware wiring lives in the registry entry
-  ([`modules/hosts/nebula.nix`](../../modules/hosts/nebula.nix)), not in
+  ([`modules/hosts/nebula/default.nix`](../../modules/hosts/nebula/default.nix)), not in
   feature modules.
 - **`module` is a `lib.types.deferredModule`** — the load-bearing detail.
   Because deferred modules merge, each of nebula's side files
@@ -58,5 +58,5 @@ desktop machinery come for free, the extended-lib asymmetry is the price.
 
 ## Citations
 
-- [`modules/darwin.nix`](../../modules/darwin.nix), [`modules/nixos.nix`](../../modules/nixos.nix), [`modules/hosts/nebula.nix`](../../modules/hosts/nebula.nix)
+- [`modules/darwin.nix`](../../modules/darwin.nix), [`modules/nixos.nix`](../../modules/nixos.nix), [`modules/hosts/nebula/default.nix`](../../modules/hosts/nebula/default.nix)
 - Realisers kept separate at the dual-OS merge `76a05ff` (PR #22, `0b8a629`); darwin realiser adapted from the mightyiam/dendritic example
