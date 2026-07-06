@@ -30,6 +30,7 @@
           "hyprland" # Wayland compositor config
           "mimeapps" # freedesktop default-apps registry
           "pupgui" # ProtonUp-Qt (gaming, Linux)
+          "python-keyring" # op-backed keyring backend (op path + prompt flow are NixOS-specific; macOS has Keychain)
         ];
         skipReason = "linux-only";
         runAsUser = "/usr/bin/sudo -u ${user} --set-home";
