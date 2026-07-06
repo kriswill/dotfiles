@@ -26,6 +26,5 @@ home/nvim/.config/nvim/spell/*.spl
 .td-root
 /.codebase-memory
 
-# Generated OKF bundle graph (bun scripts/okf/okf.ts viz)
+# Generated OKF bundle graph (okf viz — okf lives in github:kriswill/okflight)
 knowledge/viz.html
-scripts/okf/node_modules/

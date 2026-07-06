@@ -2,7 +2,7 @@
 
 Catalog of darwin and NixOS feature modules, flake-parts plumbing modules,
 and nebula's host-specific files. Stubs
-are scaffolded from source by `bun scripts/okf/okf.ts scaffold`; enrich the
+are scaffolded from source by `okf scaffold`; enrich the
 interesting ones by hand — scaffolding never overwrites an existing doc.
 
 ## Concepts
@@ -22,7 +22,7 @@ interesting ones by hand — scaffolding never overwrites an existing doc.
 * [Direnv Nom](direnv-nom.md) - Wraps nix-direnv's _nix() to pipe `use flake` build logs through nix-output-monitor, with an nvd closure diff after successful builds; wrapper text shared via lib/direnv-nom-wrapper.nix.
 * [Direnv](direnv.md) - direnv + nix-direnv on both OSes; links nix-direnv's stdlib into ~/.config/direnv/lib so `use flake` works, with a filename that deliberately sorts before direnv-nom's wrapper.
 * [Disko](disko.md) - Declarative disko layout for the NixOS NVMe — GPT with a 1M bios-boot partition, a 512M vfat ESP at /boot, and an unencrypted ext4 root filling the rest.
-* [Dnsmasq](dnsmasq.md) - dnsmasq local DNS service.
+* [Dnsmasq](dnsmasq.md) - dnsmasq — lightweight DNS forwarder/cache, configured here as a loopback-bound local resolver for custom hostnames like `p4c`.
 * [Dotfiles Stow](dotfiles-stow.md) - Restows every home/ package into $HOME on each rebuild via the shared lib/stow-restow-script.nix builder — live-repo symlinks, self-healing, per-OS skip lists.
 * [Fastfetch](fastfetch.md) - Kris' fastfetch.
 * [Flake Parts](flake-parts.md) - Top-level flake-parts wiring for the Dendritic pattern.
@@ -49,12 +49,12 @@ interesting ones by hand — scaffolding never overwrites an existing doc.
 * [Overlays](overlays.md) - Nixpkgs overlays, exposed as flake outputs and consumed by the host modules via `nixpkgs.overlays = builtins.attrValues config.flake.overlays`.
 * [Packages](packages.md) - Custom package outputs (also surfaced into nix-darwin via ./overlays.nix).
 * [Pass](pass.md) - Installs pass-xdg — a wrapper itself named `pass` that defaults PASSWORD_STORE_DIR to $XDG_DATA_HOME/password-store; never also install pkgs.pass or the two binaries collide.
-* [Podman Desktop](podman-desktop.md) - Podman Desktop.
+* [Podman Desktop](podman-desktop.md) - Podman Desktop — the GUI for podman containers and machines; a deliberately thin module (enable toggle + /libexec pathsToLink) with all real config stow-managed, including a git filter that scrubs the GUI's volatile settings.json rewrites.
 * [Qmd Sqlite](qmd-sqlite.md) - Custom sqlite with loadable-extension support, for sqlite-vec and qmd (system-level port of the sqliteWithExtensions package + linkSqliteForQmd activation that used to live in home-manager/core.nix).
 * [Sops](sops.md) - sops-nix on macOS — universal machinery, inert until a host defines secrets.
 * [Sudo 1password](sudo-1password.md) - sudo authentication via the 1Password SSH agent — pam_ssh_agent_auth installed as auth-sufficient on the sudo stack only, with the trusted key materialized via tmpfiles to pass StrictModes and gcr-ssh-agent disabled so the 1Password socket wins.
 * [Tmux](tmux.md) - Installs tmux and generates plugins.conf — the one tmux file that must embed a /nix/store path (tmux-which-key's rtp); tmux.conf and which-key's config.yaml are stowed.
-* [User Packages](user-packages.md) - Darwin feature module 'user-packages'.
+* [User Packages](user-packages.md) - The primary user's per-user CLI toolbox on darwin (users.users.k.packages) — everyday tools from bat/fzf/ripgrep to lazygit and uv, and the darwin provisioner of the Bun and Node runtimes.
 * [Users K Helium](users-k-helium.md) - Installs pkgs.helium-config for user k — the snapshot/restore CLI that syncs Helium's user settings into config/helium/ without symlinking the live Chromium profile.
 * [Users K Noctalia](users-k-noctalia.md) - Installs the Noctalia v5 desktop shell (native C++ Wayland binary) for user k plus its support tooling — ddcutil + i2c for DDC/CI monitor brightness, tomato, noctalia-config snapshots — and the upower/power-profiles-daemon/bluetooth services its widgets read.
 * [Users K](users-k.md) - Defines user k — sops-managed password (neededForUsers), authorized SSH key from snowglobe's keyring, wheel/networkmanager/libvirtd groups, and pkgs.flatpak-user shadowing the system flatpak via PATH.

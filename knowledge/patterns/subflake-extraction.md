@@ -22,7 +22,10 @@ standalone-buildable, or headed for its own repo — lives under
    [overlays](../modules/overlays.md) bridges it.
 
 Extraction to a separate repo later is just swapping the input URL
-`"./flakes/<name>"` → `"github:owner/<name>"` — nothing else moves.
+`"./flakes/<name>"` → `"github:owner/<name>"` — nothing else moves. Done
+for real with [okf](../packages/okf.md) → `github:kriswill/okflight`
+([okflight-extraction](../decisions/okflight-extraction.md), 2026-07-05):
+the input name, `follows`, and every consumer stayed untouched.
 
 Relative-path inputs need Nix ≥2.26 to lock stably (a relative `path` node
 with a `parent` field); under Lix they re-locked to machine-local store paths

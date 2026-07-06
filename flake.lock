@@ -141,7 +141,7 @@
         "rev": "fdef7e382e042b1fe418f65770c3acda5933b155",
         "revCount": 422,
         "type": "tarball",
-        "url": "https://api.flakehub.com/f/pinned/DeterminateSystems/determinate/3.21.2/019edc7b-7758-7223-a52e-d8a340361a73/source.tar.gz?rev=fdef7e382e042b1fe418f65770c3acda5933b155&revCount=422"
+        "url": "https://api.flakehub.com/f/pinned/DeterminateSystems/determinate/3.21.2/019edc7b-7758-7223-a52e-d8a340361a73/source.tar.gz"
       },
       "original": {
         "type": "tarball",
@@ -992,6 +992,29 @@
         "type": "github"
       }
     },
+    "okf": {
+      "inputs": {
+        "flake-parts": [
+          "flake-parts"
+        ],
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1783296211,
+        "narHash": "sha256-/wMDd8apCYg4txBcN9PLGNCZ0yLOPgo2Phv3Zuvgj0g=",
+        "ref": "refs/heads/main",
+        "rev": "f318be0ba0e8345536907941938b8bca04fbdd0b",
+        "revCount": 38,
+        "type": "git",
+        "url": "ssh://git@github.com/kriswill/okflight.git"
+      },
+      "original": {
+        "type": "git",
+        "url": "ssh://git@github.com/kriswill/okflight.git"
+      }
+    },
     "pre-commit-hooks": {
       "inputs": {
         "flake-compat": "flake-compat_2",
@@ -1028,6 +1051,7 @@
         "import-tree": "import-tree",
         "nixpkgs": "nixpkgs_3",
         "noctalia": "noctalia",
+        "okf": "okf",
         "snowglobe-lib": "snowglobe-lib",
         "sops-nix": "sops-nix",
         "tomato": "tomato",
