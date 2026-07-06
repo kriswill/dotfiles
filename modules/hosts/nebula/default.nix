@@ -31,7 +31,7 @@
 
       # mkNixosHost only sets `sops.defaultSopsFile` when given a `configDir`,
       # which we don't pass — so point it at the host secrets explicitly.
-      sops.defaultSopsFile = ./nebula/secrets.yaml;
+      sops.defaultSopsFile = ./secrets.yaml;
     };
   };
 }
