@@ -2,6 +2,17 @@
 
 ## 2026-07-05
 
+- **Update** — [codebase-memory-mcp](modules/codebase-memory-mcp.md) is now a
+  Dual Module: the fork (`801f909`) gained
+  `nixosModules.codebase-memory-mcp` — a systemd user service twin of the
+  launchd agent, same `cbm-daemon` FIFO wrapper — and cross-platform
+  `cbm-tools` (cbm-ctl grew a compile-time `systemctl --user`/`journalctl`
+  backend; the server build needed `patchShebangs` because the Linux sandbox
+  lacks `/usr/bin/env`). Re-exported by `modules/nixos/codebase-memory-mcp.nix`
+  and enabled on [nebula](hosts/nebula.md) via
+  [nebula-codebase-memory-mcp](modules/nebula-codebase-memory-mcp.md);
+  verified live (unit active, UI on :9749, cbm-ctl status/restart).
+
 - **Decision** — [python-keyring-op-backend](decisions/python-keyring-op-backend.md):
   Gajim's password store is 1Password, not a keyring daemon. New Linux-only
   stow package `home/python-keyring/` vendors a ~60-line python-keyring
