@@ -2,6 +2,18 @@
 
 ## 2026-07-05
 
+- **Update** — okflight's rebrand adopted repo-side: `okf.toml` renamed to
+  `okflight.toml` (upstream okf discovers both; new name wins) and the
+  scaffold passes moved `knowledge/_okf-scaffold/` →
+  `knowledge/_okflight/scripts/`, matching the layout `okf setup` now
+  scaffolds everywhere. The vendored type surface refreshed from okflight's
+  published template as `scaffold-api.d.ts` (types `ctx.vcs` as a minimal
+  `ScaffoldVcs` instead of `unknown`). Current-state docs updated
+  ([okf-profile](okf-profile.md), [okf](packages/okf.md), the
+  knowledge-bundle skill); decision records keep their historical prose,
+  with Where-links repointed at the new paths. The `okf` input advanced
+  past the rename (okflight now also on npm as `@kriswill/okflight`).
+
 - **Decision** — [okflight-extraction](decisions/okflight-extraction.md):
   okf promoted out of `flakes/okf/` into its own private repository,
   [kriswill/okflight](https://github.com/kriswill/okflight), via

@@ -1002,11 +1002,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1783284665,
-        "narHash": "sha256-SwL2bVby+JCOJmjL/IHpfcWKswhzoOl5izUlfAwVWvE=",
+        "lastModified": 1783296211,
+        "narHash": "sha256-/wMDd8apCYg4txBcN9PLGNCZ0yLOPgo2Phv3Zuvgj0g=",
         "ref": "refs/heads/main",
-        "rev": "7dbd00951b3d214f2832624396600491f0465f94",
-        "revCount": 19,
+        "rev": "f318be0ba0e8345536907941938b8bca04fbdd0b",
+        "revCount": 38,
         "type": "git",
         "url": "ssh://git@github.com/kriswill/okflight.git"
       },

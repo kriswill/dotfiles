@@ -1,26 +1,35 @@
 // Vendored type surface of okf's ScaffoldContext (scaffold-api.ts in
 // github:kriswill/okflight). The real implementation is INJECTED at runtime —
 // `okf scaffold` dynamically imports main.ts and calls its default export
-// with a live context, so these passes need no runtime import from the okf
-// checkout; this file exists purely for editor/type support (bun erases
-// type-only imports). Refresh it against okflight's scaffold-api.ts when
-// okf's API changes; members the passes don't use are typed loosely on
+// with a live context, so scaffold passes need no runtime import from an
+// okflight checkout; this file exists purely for editor/type support (bun
+// erases type-only imports). Refresh it against okflight's scaffold-api.ts
+// when okf's API changes; members passes rarely need are typed loosely on
 // purpose — widen them here if a pass starts needing one.
 
 /** Frontmatter map handed to emit()/fmToYaml(). */
 export type FM = Record<string, unknown>;
+
+/** The VCS surface scaffold passes typically need — okf's full VcsProvider
+ *  (vcs/types.ts) is what's actually injected. */
+export interface ScaffoldVcs {
+  /** All tracked file paths, root-relative, sorted. */
+  trackedFiles(): string[];
+  /** ISO-8601 last-modified of a root-relative path, or null (prefer
+   *  ctx.timestamp, which adds the now-fallback). */
+  lastModified(path: string): string | null;
+}
 
 export interface ScaffoldContext {
   /** Absolute workspace root. */
   root: string;
   /** Absolute bundle root. */
   bundle: string;
-  /** Workspace-relative bundle dir (cfg.viz.bundle.dir). */
+  /** Workspace-relative bundle dir. */
   bundleDir: string;
-  /** Full okf.toml config — opaque here; see okflight's config-cli.ts. */
+  /** Full okflight.toml config — opaque here; see okflight's config-cli.ts. */
   config: unknown;
-  /** VCS adapter — opaque here; see okflight's vcs/. */
-  vcs: unknown;
+  vcs: ScaffoldVcs;
   /** --force was passed: existing docs are overwritten. */
   force: boolean;
 
@@ -49,7 +58,11 @@ export interface ScaffoldContext {
   mdSafe(s: string): string;
   titleFromSlug(slug: string): string;
   fmToYaml(fm: FM): string;
-  parseFrontmatter(raw: string): unknown;
+  parseFrontmatter(raw: string): {
+    fm: Record<string, string | string[]> | null;
+    fmError: string | null;
+    body: string;
+  };
   nowISO(): string;
   log(msg: string): void;
 
