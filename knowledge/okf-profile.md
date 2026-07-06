@@ -12,9 +12,9 @@ tooling disagree, we pick one and record it here.
 
 ## Profile rules
 
-These rules are enforced from `okf.toml`'s `[profile]` section (okf's
+These rules are enforced from `okflight.toml`'s `[profile]` section (okf's
 built-in defaults reproduce exactly the rules below — this repo's
-`okf.toml` therefore sets nothing; another bundle can tune
+`okflight.toml` therefore sets nothing; another bundle can tune
 `required-fields`/`recommended-fields`/`reserved-files`/`rooted-links`/
 `repo-links` without touching okf).
 
@@ -96,17 +96,17 @@ the `okf` flake input, re-exported as `packages.<system>.okf`, and advanced
 with `nix flake update okf`
 ([okflight-extraction](decisions/okflight-extraction.md)). This repo's
 scaffold passes live bundle-adjacent in
-[`knowledge/_okf-scaffold/`](_okf-scaffold/main.ts) — the `_` prefix hides
+[`knowledge/_okflight/scripts/`](_okflight/scripts/main.ts) — the `_` prefix hides
 them from okf's walkers, so the bundle itself stays pure markdown
 ([okf-scaffold-split](decisions/okf-scaffold-split.md)); their type-only
 `ScaffoldContext` import is satisfied by the vendored
-[`okf-scaffold-api.d.ts`](_okf-scaffold/okf-scaffold-api.d.ts) (the runtime
+[`scaffold-api.d.ts`](_okflight/scripts/scaffold-api.d.ts) (the runtime
 API is injected by `okf scaffold`, so no okf checkout is needed). In the dev
 shell (`nix develop` / direnv) the nix-built CLI is on `PATH` as **`okf`**
 via the [dev](modules/dev.md) module:
 
 ```sh
-okf scaffold [--force]   # run this repo's scaffolder (knowledge/_okf-scaffold/main.ts via okf.toml [scaffold]; idempotent; --force overwrites)
+okf scaffold [--force]   # run this repo's scaffolder (knowledge/_okflight/scripts/main.ts via okflight.toml [scaffold]; idempotent; --force overwrites)
 okf index               # regenerate index.md listings
 okf validate [--strict]  # spec + profile conformance; --strict fails on warnings too
 okf viz                 # render knowledge/viz.html (Svelte 5 viewer)
@@ -126,7 +126,7 @@ okf's `node_modules`, which is a read-only store path in the packaged CLI.
 okflight checkout). Repo-specific strings and settings (header,
 facet filters (0..n `[facet.<name>]` lenses), type taxonomy, legend groups,
 embed cap, bundle dir) come from the optional repo-root
-[`okf.toml`](../okf.toml) — one config file read by **all** okf commands
+[`okflight.toml`](../okflight.toml) — one config file read by **all** okf commands
 (loaded by okf's `config-cli.ts`, strict-validated; a malformed file
 fails every command); without it okf works with generic fallbacks (see the
 [viz-config-toml](decisions/viz-config-toml.md) and
