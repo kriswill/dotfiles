@@ -114,6 +114,8 @@
         enable = true;
         # package = pkgs.discord;
       };
+
+      programs.gajim.enable = true;
       # vesktop (snowglobe's discord client) builds with pnpm, which nixpkgs
       # b5aa0fb marks insecure (CVE-2026-48995 + 6 more — pnpm CLI issues,
       # build-time-only exposure here). Remove once vesktop migrates off the
