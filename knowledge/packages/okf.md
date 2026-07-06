@@ -30,7 +30,7 @@ Consumption after the extraction:
   `node_modules` (fixed-output `bun install` keyed on `bun.lock` — refresh
   procedure in okflight's README) + a `bun run --no-install` wrapper. The
   workspace it operates on is discovered from the caller's cwd (nearest
-  `okf.toml`, else the git toplevel), so the same binary serves any
+  `okflight.toml`, else the git toplevel), so the same binary serves any
   consuming repo.
 - **GitHub Pages CI** (`.github/workflows/pages.yml`) builds `viz.html`
   bun-natively — no nix on CI — checking out okflight at the
@@ -47,15 +47,15 @@ dating, auto-selection) run there instead of skipIf-skipping.
 
 okf is generic (the [okf-toml-unified-config](../decisions/okf-toml-unified-config.md)
 arc); this repo's scaffolding logic lives in
-[`knowledge/_okf-scaffold/`](../_okf-scaffold/main.ts) — one pass file per
+[`knowledge/_okflight/scripts/`](../_okflight/scripts/main.ts) — one pass file per
 scaffolded type (`modules.ts`, `hosts.ts`, `packages.ts`, `nvim.ts`) behind
 a `main.ts` entry — dynamically imported by `okf scaffold` per
-`okf.toml [scaffold] script` and driven through the injected
+`okflight.toml [scaffold] script` and driven through the injected
 `ScaffoldContext` API
 ([okf-scaffold-hook](../decisions/okf-scaffold-hook.md),
 [okf-scaffold-split](../decisions/okf-scaffold-split.md)). The passes'
 type-only import is satisfied by the vendored
-[`okf-scaffold-api.d.ts`](../_okf-scaffold/okf-scaffold-api.d.ts).
+[`scaffold-api.d.ts`](../_okflight/scripts/scaffold-api.d.ts).
 
 No `bun build --compile`: `okf viz` bundles the
 [Svelte](../svelte-language.md) viewer with `Bun.build`

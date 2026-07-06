@@ -8,7 +8,7 @@ timestamp: '2026-07-04T00:00:00-07:00'
 
 **Status:** active. **Where:**
 [`config-cli.ts`](https://github.com/kriswill/okflight/blob/main/config-cli.ts) (loader),
-[../../okf.toml](../../okf.toml) (this repo's config). Extends
+[../../okflight.toml](../../okflight.toml) (this repo's config). Extends
 [viz-config-toml](viz-config-toml.md).
 
 ## Context

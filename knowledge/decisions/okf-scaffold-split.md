@@ -7,8 +7,8 @@ timestamp: '2026-07-05T00:00:00-07:00'
 ---
 
 **Status:** active. **Where:**
-[../_okf-scaffold/main.ts](../_okf-scaffold/main.ts) (entry),
-[../_okf-scaffold/lib.ts](../_okf-scaffold/lib.ts) (shared repo access +
+[../_okflight/scripts/main.ts](../_okflight/scripts/main.ts) (entry),
+[../_okflight/scripts/lib.ts](../_okflight/scripts/lib.ts) (shared repo access +
 class vocabulary). Follows on from
 [okf-scaffold-hook](okf-scaffold-hook.md), which moved the pass out of the
 okf flake in the first place.

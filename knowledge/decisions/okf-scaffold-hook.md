@@ -9,7 +9,7 @@ timestamp: '2026-07-04T00:00:00-07:00'
 **Status:** active. **Where:**
 [`scaffold-api.ts`](https://github.com/kriswill/okflight/blob/main/scaffold-api.ts)
 (injected API), [`scaffold.ts`](https://github.com/kriswill/okflight/blob/main/scaffold.ts)
-(generic driver), [../_okf-scaffold/main.ts](../_okf-scaffold/main.ts)
+(generic driver), [../_okflight/scripts/main.ts](../_okflight/scripts/main.ts)
 (this repo's pass — since split per type and moved bundle-adjacent, see
 [okf-scaffold-split](okf-scaffold-split.md)). Part of the okf generalization
 arc ([okf-toml-unified-config](okf-toml-unified-config.md)).

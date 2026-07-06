@@ -12,7 +12,7 @@ on:
     paths:
       - "knowledge/**"
       - "flake.lock" # okf bumps arrive as lock updates (github:kriswill/okflight)
-      - "okf.toml"
+      - "okflight.toml"
       - ".github/workflows/pages.yml"
   workflow_dispatch:
 

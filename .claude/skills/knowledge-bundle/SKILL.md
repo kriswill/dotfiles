@@ -25,11 +25,11 @@ okf viz      # regenerate knowledge/viz.html interactive graph (gitignored; Svel
 
 The okf CLI itself is generic; THIS repo's scaffolding logic (module
 classes, twins, gating, hosts, nvim plugins) lives in
-`knowledge/_okf-scaffold/` — a `main.ts` entry plus one pass file per
+`knowledge/_okflight/scripts/` — a `main.ts` entry plus one pass file per
 scaffolded type (`modules.ts`, `hosts.ts`, `packages.ts`, `nvim.ts`) over a
-shared `lib.ts` — wired via `okf.toml [scaffold] script` and run through
+shared `lib.ts` — wired via `okflight.toml [scaffold] script` and run through
 the injected `ScaffoldContext` API (vendored type surface:
-`knowledge/_okf-scaffold/okf-scaffold-api.d.ts`; the runtime is injected by
+`knowledge/_okflight/scripts/scaffold-api.d.ts`; the runtime is injected by
 `okf scaffold`, so no okf checkout is needed).
 Component-scan changes (new source dirs, new doc types, cross-link targets)
 are edits to the matching pass file, not to okf itself. The `_` prefix
