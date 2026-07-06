@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+# Prime a 1Password CLI session before starting Gajim.
+#
+# Gajim reads its XMPP password via `op item get` (the python-keyring op backend)
+# exactly once per connect, with no retry. A bare `op` call otherwise does a
+# fresh desktop-app integration handshake, which intermittently fails with
+# "connecting to desktop app: connection reset"; Gajim's lone fetch then comes
+# back empty and it drops to a manual "Password Required" dialog.
+#
+# `op signin` forces the handshake HERE (before Gajim exists, so no UI-thread
+# block) and caches the session in ~/.config/op/config, which Gajim's own `op`
+# then reuses instead of re-handshaking — the fix found by hand (`op signin`,
+# then Gajim connects). Non-interactive when the 1Password app is unlocked; pops
+# the mini-login when locked, which is the intended gate. The timeout keeps a
+# wedged/absent op from hanging the launcher; launch Gajim regardless so a
+# signin failure still leaves you Gajim + the manual prompt.
+#
+# NB: the launcher desktop entry must call this by ABSOLUTE path — the systemd
+# --user / Noctalia launcher PATH does not include ~/.local/bin, so a bare name
+# silently fails to launch.
+timeout 30 op signin >/dev/null 2>&1 || true
+exec gajim "$@"
