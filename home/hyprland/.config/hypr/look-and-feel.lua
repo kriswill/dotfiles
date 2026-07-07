@@ -92,3 +92,17 @@ hl.config({
     vrr = 2,
   },
 })
+
+-- Software cursor only WHILE screen sharing: hardware cursors live on their own
+-- display plane, which screencopy never captures — viewers on a Vesktop/portal
+-- screenshare saw no mouse. Forcing software cursors permanently would cost
+-- cursor latency in games, so toggle on the screenshare.state event instead.
+-- Refcounted because single-frame captures (grim screenshots) fire this event
+-- too — an unpaired flip back on their instant false would restore the hardware
+-- cursor mid-share. 1 = software, 2 = auto (the default; hw on this NVIDIA).
+-- ponytail: a config reload mid-share resets the count — restart the share.
+local shares = 0
+hl.on("screenshare.state", function(active, _owner, _output)
+  shares = math.max(0, shares + (active and 1 or -1))
+  hl.config({ cursor = { no_hardware_cursors = shares > 0 and 1 or 2 } })
+end)
