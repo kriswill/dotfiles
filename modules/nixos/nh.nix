@@ -20,7 +20,7 @@
       mkNhHelper =
         name: subcommand:
         pkgs.writeShellScriptBin name ''
-          flake="$(${pkgs.coreutils}/bin/readlink -f "$HOME/src/dotfiles")"
+          flake="$(readlink -f "$HOME/src/dotfiles")"
           exec env NH_NO_CHECKS=1 ${nh} os ${subcommand} "$flake" "$@"
         '';
     in
