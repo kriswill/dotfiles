@@ -435,7 +435,15 @@ Notes:
 - `NIXOS_OZONE_WL=1` (already set) makes Electron/Chromium run native Wayland —
   the standard fix for Electron flicker; don't also set `ELECTRON_OZONE_PLATFORM_HINT`.
 - `cursor:no_hardware_cursors` is **no longer** the documented NVIDIA flicker
-  fix in current Hyprland — set it only if you actually observe cursor flicker.
+  fix in current Hyprland. nebula toggles it dynamically (look-and-feel.lua):
+  hardware cursors sit on their own display plane, so screencopy/portal
+  screenshares (Vesktop) didn't show the mouse to viewers. An
+  `hl.on("screenshare.state", …)` hook (event payload: `active:bool,
+  owner:number, output:string`; fires for grim single-frame captures too, hence
+  the refcount) sets 1 (software) while any share is live and 2 (auto) after —
+  verified 2026-07-07 on Hyprland 0.55 / RTX 5080 (auto had resolved to hw
+  cursors). Note `hl.on` supports many more events than the autostart hook —
+  eval an unknown event name and the error message lists them all.
 - XWayland-game flicker is solved by explicit sync (driver ≥ 555, which the 5080
   requires anyway).
 
