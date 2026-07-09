@@ -43,7 +43,20 @@ enabled on [k](../hosts/k.md), deliberately not on mini or SOC-Kris-Williams
 (personal NAS, personal machine); auto-discovered via the
 [Dendritic module layout](../patterns/dendritic-modules.md).
 
+**Login Items still shows "unidentified developer"** — deliberately. Signing
+would need either the login keychain's private key (unreachable from a
+root-run activation script, even via `launchctl asuser`) or committing that
+key via sops for automated signing (rejected — permanent exposure of a real
+Apple Developer ID for a cosmetic label). See
+[nas-mount-codesigning](../decisions/nas-mount-codesigning.md) for the full
+tradeoff and the manual, transient, never-committed signing procedure
+actually used (in `docs/unifi-dream-machine.md`). `postActivation` copies the
+built script to a stable external path (`~/.local/state/nas-mount/nas-mount`,
+needed regardless since the store is read-only) guarded by `cmp -s`, so an
+existing manual signature survives routine `nrs` runs.
+
 ## Source
 
 - Module: [`modules/darwin/nas-mount.nix`](../../modules/darwin/nas-mount.nix)
 - Options under: `services.nas-mount`
+- Decision: [nas-mount-codesigning](../decisions/nas-mount-codesigning.md)
