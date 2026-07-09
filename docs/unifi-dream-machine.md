@@ -49,31 +49,37 @@ Apple-verified signing identity for a purely cosmetic label. Neither is worth
 it, so this stays something the machine owner runs deliberately, by hand.
 
 **Run this yourself, never delegate it to an agent/automated session** — the
-export passphrase must never appear in a transcript, and (separately)
-`codesign`'s Keychain path only works from a genuine interactive session
-anyway, which is exactly what this sidesteps by not using `codesign`/Keychain
-at all:
+passphrase must never appear in a transcript, and (separately) `codesign`'s
+Keychain path only works from a genuine interactive session anyway, which is
+exactly what this sidesteps by not using `codesign`/Keychain at all.
+
+**Export the identity via Keychain Access.app first — not `security export
+-t identities`.** That command sweeps up *every* identity in the keychain
+indiscriminately, no matter which type flag you pass; there is no
+`security export` flag that filters to one specific item (confirmed
+2026-07-09 — it bundled an unrelated "Apple Development" cert from Xcode
+alongside "Developer ID Application", and `rcodesign` silently signed with
+the *wrong one* instead of erroring on the ambiguity). In Keychain Access:
+select the login keychain, find **only** "Developer ID Application: Kris
+Williams (Y6VCVC728W)" in the list, right-click → **Export Items…** → save
+as a `.p12` (you set the export passphrase in that same dialog).
 
 ```sh
 TARGET="/Users/k/.local/state/nas-mount/nas-mount"
+P12="/path/to/your/exported.p12"   # from Keychain Access, above
+
 TMPDIR_SIGN=$(mktemp -d)
 trap 'rm -rf "$TMPDIR_SIGN"' EXIT
 
-# Exports the identity to a temp .p12. macOS pops a *secure GUI dialog* to
-# set the export passphrase here — it never touches this terminal/history.
-security export -k ~/Library/Keychains/login.keychain-db \
-  -t identities -f pkcs12 \
-  -o "$TMPDIR_SIGN/id.p12"
-
-# Enter that same passphrase — read silently, never echoed or saved.
-echo -n "p12 export passphrase: "
+# Enter the p12's passphrase — read silently, never echoed or saved.
+echo -n "p12 passphrase: "
 read -rs P12PASS
 echo
 
 # rcodesign signs directly from the .p12 — no Keychain/session ACL involved,
 # so this works regardless of who/what invokes it (unlike plain codesign).
 nix run nixpkgs#rcodesign -- sign \
-  --p12-file "$TMPDIR_SIGN/id.p12" \
+  --p12-file "$P12" \
   --p12-password-file <(printf '%s' "$P12PASS") \
   "$TARGET"
 
@@ -81,11 +87,12 @@ unset P12PASS
 codesign -dv --verbose=4 "$TARGET"   # confirm: Authority=Developer ID Application: ...
 ```
 
-`$TMPDIR_SIGN` (and the `.p12` inside it) is deleted automatically on exit via
-the `trap`. Re-run this whenever `nas-mount.nix`'s mount logic actually
-changes — the module's `cmp -s` guard means a routine `nrs` that doesn't
-touch that logic leaves an existing signature alone, so this isn't needed
-after every rebuild.
+`$TMPDIR_SIGN` is deleted automatically on exit via the `trap` (nothing
+sensitive lives there now besides the passphrase's process substitution —
+the `.p12` itself is wherever you saved it via Keychain Access, and is yours
+to delete once you're done with it). Re-run whenever `nas-mount.nix`'s mount
+logic actually changes — the module's `cmp -s` guard means a routine `nrs`
+that doesn't touch that logic leaves an existing signature alone.
 
 ### Generalized version: `scripts/sign-launchd-agents.ts`
 
@@ -103,14 +110,17 @@ executable, and shows an fzf picker with current signature status per row —
 (e.g. Go/Rust binaries the linker auto-signs), ❌ unsigned, ❓ unresolved —
 plus the signing Authority and `Signed Time`, with a live `codesign -dv`
 preview pane. Multi-select (tab/shift-tab) whichever you want signed, hit
-enter, and it exports the identity **once** for the whole batch (same secure
-GUI passphrase dialog + one passphrase re-entry as above) rather than making
-you repeat the export per target. Anything whose executable lives under
-`/nix/store/` (read-only) is flagged and skipped with a note to add a
-stable-path module first (`nas-mount.nix` is the template). Same security
-posture as the one-off script: the `.p12` only ever exists in a `mktemp -d`
-directory for the duration of the run, never written anywhere permanent.
-Run it yourself, interactively — same reasoning as above.
+enter, and it asks **once** for the path to a `.p12` you've already exported
+via Keychain Access (see above — same one-identity-only export, same reason:
+it does *not* call `security export -t identities` itself, to avoid the
+same multi-identity ambiguity) plus that file's passphrase, then signs the
+whole selected batch with it rather than making you repeat anything per
+target. Anything whose executable lives under `/nix/store/` (read-only) is
+flagged and skipped with a note to add a stable-path module first
+(`nas-mount.nix` is the template). Same security posture as the manual
+procedure: only the passphrase ever touches a temp file (`mktemp -d`,
+deleted on exit); the `.p12` itself is wherever you saved it and yours to
+delete afterward. Run it yourself, interactively — same reasoning as above.
 
 ## Scan toolkit (macOS)
 

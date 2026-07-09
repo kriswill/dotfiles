@@ -4,7 +4,7 @@
 // Lists every user LaunchAgent with its current signature status
 // (unsigned / ad-hoc / Apple-signed-no-team / Developer ID), identity, and
 // signed time; lets you multi-select which to (re-)sign; signs the whole
-// batch with one passphrase entry via rcodesign + a transient .p12 export
+// batch with one passphrase entry via rcodesign against a .p12 you supply
 // (never touches macOS codesign/Keychain ACLs directly — see
 // docs/unifi-dream-machine.md and knowledge/decisions/nas-mount-codesigning.md
 // for why: root-run activation scripts can't reach the login keychain's
@@ -17,11 +17,20 @@
 // Mach-O/bundle/DMG/pkg though, not plain scripts — see
 // pkgs/nas-mount/package.nix for why nas-mount is a compiled binary now.
 //
+// You export the .p12 yourself, via Keychain Access.app, selecting only the
+// ONE identity you want (right-click > Export Items...) — NOT via `security
+// export -t identities`, which sweeps up every identity in the keychain
+// indiscriminately (confirmed 2026-07-09: it bundled an unrelated "Apple
+// Development" cert from Xcode alongside "Developer ID Application", and
+// rcodesign silently signed with the wrong one instead of erroring — no
+// `security export` flag filters by specific item, this is a documented
+// CLI limitation, not something scriptable around).
+//
 // Run this yourself, interactively — never through an automated session.
-// The export passphrase never leaves this process (temp files only, mode
-// 0700 dir, deleted on exit).
+// The passphrase never leaves this process (temp file only, mode 0700 dir,
+// deleted on exit); the .p12 itself is yours to manage/delete afterward.
 
-import { accessSync, constants as fsConstants, mkdtempSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import { accessSync, constants as fsConstants, existsSync, mkdtempSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -136,6 +145,16 @@ function readSecret(prompt: string): string {
   return new TextDecoder().decode(proc.stdout ?? new Uint8Array());
 }
 
+function readLine(prompt: string): string {
+  const proc = Bun.spawnSync({
+    cmd: ["/bin/sh", "-c", 'read -r -p "$1" REPLY >&2; printf %s "$REPLY"', "--", prompt],
+    stdin: "inherit",
+    stdout: "pipe",
+    stderr: "inherit",
+  });
+  return new TextDecoder().decode(proc.stdout ?? new Uint8Array()).trim();
+}
+
 function main() {
   const agents = discoverAgents();
   if (agents.length === 0) {
@@ -173,9 +192,13 @@ function main() {
     return;
   }
 
-  const idResult = run(["security", "find-identity", "-v", "-p", "codesigning"]);
-  if (!/1\)/.test(idResult.stdout)) {
-    console.error("No codesigning identity found in the keychain. Aborting.");
+  console.log(`Signing ${signable.length} agent(s): ${signable.map((a) => a.label).join(", ")}`);
+  console.log("Export the ONE identity you want (e.g. \"Developer ID Application: ...\") from Keychain Access.app first:");
+  console.log("  right-click it in the login keychain > Export Items... > save as a .p12");
+  console.log("(security export -t identities would bundle every identity in the keychain — not what you want here.)");
+  const p12 = readLine("Path to that .p12 file: ");
+  if (!existsSync(p12)) {
+    console.error(`No file at ${p12}. Aborting.`);
     process.exitCode = 1;
     return;
   }
@@ -189,17 +212,7 @@ function main() {
   });
 
   try {
-    console.log(`Signing ${signable.length} agent(s): ${signable.map((a) => a.label).join(", ")}`);
-    console.log("A secure macOS dialog will ask you to set an export passphrase now...");
-    const p12 = join(tmp, "id.p12");
-    const exportResult = run(["security", "export", "-k", join(HOME, "Library/Keychains/login.keychain-db"), "-t", "identities", "-f", "pkcs12", "-o", p12]);
-    if (exportResult.exitCode !== 0) {
-      console.error("Export failed or was cancelled:", exportResult.stderr.trim());
-      process.exitCode = 1;
-      return;
-    }
-
-    const password = readSecret("Re-enter that same p12 export passphrase: ");
+    const password = readSecret("p12 passphrase: ");
     const passFile = join(tmp, "pass");
     writeFileSync(passFile, password, { mode: 0o600 });
 
@@ -215,6 +228,7 @@ function main() {
   } finally {
     cleanup();
   }
+  console.log(`Done. That .p12 (${p12}) is yours to delete now if you don't need it anymore.`);
 }
 
 main();
