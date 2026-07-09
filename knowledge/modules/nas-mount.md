@@ -66,7 +66,7 @@ path; the module header documents the bootout + rm + wait + restore +
 bootstrap refresh dance. Full history (keychain ACL boundary, sops
 rejection, wrong-identity export, bundle requirement):
 [nas-mount-codesigning](../decisions/nas-mount-codesigning.md) and
-`docs/unifi-dream-machine.md`.
+`docs/darwin-codesigning.md`.
 
 ## Source
 
