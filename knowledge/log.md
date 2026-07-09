@@ -18,6 +18,15 @@
   `set-env.sh` quoting and surfaces as a 403 on `/api/auth/login`,
   indistinguishable at first glance from a bad-account-type or 2FA-blocked
   login.
+- **Update** — [unifi-dream-machine](../docs/unifi-dream-machine.md): documented
+  that UNAS Pro 4 / UniFi Drive has its own separate local API on the NAS
+  host, unpublished by Ubiquiti and unsupported by sirkirby/unifi-mcp
+  (confirmed via the plugin repo's actual file tree — no drive/UNAS package).
+  Pulled real endpoint paths and the auth model (session-cookie + CSRF, or
+  `X-API-Key`) directly from the reverse-engineered
+  [memphi2/ha-unifi-drive](https://github.com/memphi2/ha-unifi-drive) source,
+  then confirmed them live against `192.168.0.82`. Noted `GET /api/system` on
+  the NAS is unauthenticated and leaks minor device-identity metadata.
 - **Update** — [unifi-dream-machine](../docs/unifi-dream-machine.md): added a
   static `nas.home.lan → 192.168.0.82` name via the client's "Local DNS
   Record" field (`unifi_set_client_ip_settings`) after a direct static A
