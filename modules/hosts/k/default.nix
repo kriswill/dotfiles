@@ -33,6 +33,7 @@
     # ship disabled; enabling here is what mounts them into k.
     services.apple-container.enable = true;
     services.codebase-memory-mcp.enable = true;
+    services.nas-mount.enable = true;
     programs.podman-desktop.enable = true;
 
     programs.claude-account-selector = {

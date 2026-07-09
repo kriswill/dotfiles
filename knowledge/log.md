@@ -2,6 +2,15 @@
 
 ## 2026-07-09
 
+- **Creation** — [nas-mount](modules/nas-mount.md)
+  (`modules/darwin/nas-mount.nix`): new darwin host-selective module, a
+  `launchd.user.agents` job that mounts the UNAS Pro 4's Personal-Drive SMB
+  share at `~/nas` via `nas.home.lan` at login (`-N` keychain-only auth,
+  `StartInterval` retry, idempotent mount-if-not-mounted guard). Enabled on
+  host `k`; built, activated via `nrs`, and confirmed live
+  (`launchctl list`, `mount`). Discovered while testing that mounting via
+  `nas.home.lan` conflicts with the pre-existing Bonjour-based mount — see
+  [unifi-dream-machine](../docs/unifi-dream-machine.md) for the root cause.
 - **Creation** — New manual `docs/unifi-dream-machine.md`: verified LAN DNS
   architecture (UDM dnsmasq `home.lan` vs the NAS's own mDNS/Bonjour identity
   — macOS SMB mounts ride Bonjour, not DNS), the three headless control paths
