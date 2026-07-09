@@ -65,6 +65,43 @@ curl -sk -H "X-API-KEY: $KEY" https://192.168.0.1/proxy/network/integration/v1/s
 
 - **Preferred:** UDM's built-in WireGuard VPN server, then hit the local API as if at home — full surface, no exposed ports. - Cloud [Site Manager API](https://help.ui.com/hc/en-us/articles/30076656117655-Getting-Started-with-the-Official-UniFi-API) (`api.ui.com`, account-level API key): good for fleet/health auditing, thinner on config control.
 
+## UNAS Pro 4 — a separate local API (UniFi Drive)
+
+**This is a different API surface from everything above** — it runs on the NAS itself (`192.168.0.82`), not proxied through the UDM, and belongs to the "UniFi Drive" application (the NAS-hosting counterpart to Network/Protect/Access), not the Network API. Confirmed live 2026-07-09 by probing the NAS directly:
+
+```
+/api/auth/login                          → 401 (exists, needs POST)
+/api/system                              → 200  ← unauthenticated!
+/proxy/drive/api/v2/storage               → 401 (exists)
+/proxy/drive/api/v2/systems/network-io    → 401 (exists)
+/proxy/drive/api/v2/systems/fan-control   → 401 (exists)
+```
+
+`GET /api/system` returns **200 with no auth** and leaks minor device-identity metadata (MAC, model, `direct-connect` domain, cloud/SSO status). Not a real vulnerability — standard UniFi OS console-discovery behavior for onboarding — but worth knowing it's there unauthenticated:
+
+```sh
+curl -sk https://192.168.0.82/api/system   # {"hardware":{"shortname":"UNASPRO4"},"mac":"A89C6C04DA4B", ...}
+```
+
+**No official developer documentation exists** for this API (unlike Network's `developer.ui.com/network`) — Ubiquiti has not published a UniFi Drive API reference. **No MCP support exists either**: confirmed by reading `sirkirby/unifi-mcp`'s actual repo tree (`plugins/` contains only `unifi-network`, `unifi-access`, `unifi-protect` — no drive/UNAS package). In the Network MCP the NAS only ever shows up as a generic network *client* (hostname/IP/MAC) — no storage, snapshot, or fan tools.
+
+The best available documentation is a well-built, actively maintained, MIT-licensed **reverse-engineered** client: **[memphi2/ha-unifi-drive](https://github.com/memphi2/ha-unifi-drive)** (Home Assistant integration). Endpoint paths below were pulled directly from its source (`custom_components/unifi_unas/const.py` + `snapshot_paths.py`), not the README:
+
+| Purpose | Method + Path |
+|---|---|
+| Login | `POST /api/auth/login` → sets `TOKEN` cookie |
+| System identity/status | `GET /api/system` |
+| Storage/pool/drive health | `GET /proxy/drive/api/v2/storage` |
+| Network throughput | `GET /proxy/drive/api/v2/systems/network-io` |
+| Fan control (read/write) | `GET /proxy/drive/api/v2/systems/fan-control` |
+| Backup tasks | `GET /proxy/drive/api/v2/remote-backup/tasks`, `POST .../run-task/{task_id}` |
+| Snapshot settings | `GET/POST /proxy/drive/api/v1/systems/snapshot`, `/proxy/drive/api/v1/snapshot-settings/{personal,shared}/{target_id}` |
+| Snapshot listings | `GET /proxy/drive/api/v1/snapshots/{personal,shared}/{target_id or shared_drive_name}` |
+| Firmware/app update | `POST /api/firmware/update`, `POST /api/applications/drive/update` |
+| Power control | `POST /api/system/poweroff`, `POST /api/system/reboot` |
+
+Auth model (from `api_auth.py`/`api_transport.py`): **session-cookie login** (`POST /api/auth/login` with username/password → `TOKEN` cookie, refreshed via `X-CSRF-Token` echoed from the `x-csrf-token`/`x-updated-csrf-token` response headers on each request) **or an API key** via an `X-API-Key` header — API-key mode is only used when no username/password is configured; if both are present, session-cookie auth wins. Tested by the integration author against UNAS2 (UniFi OS 5.1.8–5.1.19) and **UNAS4 (5.1.16)** — the latter is this exact NAS's reported firmware.
+
 ## OSS ecosystem (surveyed 2026-07-09)
 
 - [sirkirby/unifi-mcp](https://github.com/sirkirby/unifi-mcp) — MCP servers for Network (181 tools, stable) / Protect / Access; MIT, Python; Claude Code plugin (`/plugin marketplace add sirkirby/unifi-mcp`, then per-server `/reload-plugins`). All mutations are preview-then-confirm — the right safety model for autonomous agents. **Auth caveat:** primary auth is local admin **username+password** (`UNIFI_NETWORK_HOST/USERNAME/PASSWORD` env vars, set via `/unifi-network:unifi-network-setup`) — its API-key mode is explicitly experimental, read-only, and covers only a tool subset, so it does not fully substitute for the official `X-API-KEY` path above. Mutations are further permission-gated per category (`UNIFI_POLICY_NETWORK_<CATEGORY>_<ACTION>=true`); devices/clients/networks/WLANs/VPN servers/routes default off, deletes always default off.
@@ -81,6 +118,7 @@ curl -sk -H "X-API-KEY: $KEY" https://192.168.0.1/proxy/network/integration/v1/s
   ([ubiquiti-community's](https://registry.terraform.io/providers/ubiquiti-community/unifi/latest)
   is the conservative drop-in fork). `terraform plan` = audit primitive; its `go-unifi` client is the best Go building block.
 - Python: `aiounifi` (what Home Assistant uses), `pyunifi`.
+- [memphi2/ha-unifi-drive](https://github.com/memphi2/ha-unifi-drive) — the only real client for the UNAS/UniFi Drive local API (see above); Home Assistant custom component, MIT, Python. Not a general-purpose CLI/MCP, but its source is the closest thing to a spec this API has.
 
 **Plan of record for audit + autonomous control:** DNS records under DNSControl (git-tracked zone, `dnscontrol preview` as drift audit — fits this repo); sirkirby/unifi-mcp as the agent layer for everything else. If rolling our own instead: the official API is just HTTPS + `X-API-KEY` + JSON, so a thin bun/TypeScript CLI + MCP wrapper over `/integration/v1` (legacy `v2/static-dns` fallback) is a small, durable project.
 
@@ -95,9 +133,12 @@ curl -sk -H "X-API-KEY: $KEY" https://192.168.0.1/proxy/network/integration/v1/s
 - **(2026-07-09) A UniFi local-admin password with shell-special characters breaks naive shell quoting in setup one-liners, producing a 403 on `/api/auth/login`** that looks identical to a bad-account-type or 2FA-blocked login. Rule out quoting before treating it as a credentials/account-type problem.
 - **(2026-07-09) A "reported failure" mutation can still write.** `unifi_create_dns_record` returned `success: false` for a conflicting A record, yet had already changed the conflicting client's `local_dns_record` field server-side. Don't treat a non-`success` mutation response as guaranteed no-op — re-check live state.
 - **(2026-07-09) A client can carry two independent `home.lan` names simultaneously**: one auto-derived from its raw reported `hostname`, one from the optional per-client "Local DNS Record" field. Setting the latter does not replace or remove the former.
+- **(2026-07-09) The NAS's local API is a distinct surface from the Network API — don't assume UDM API coverage extends to it.** UniFi Drive/UNAS has its own unpublished local API on the NAS host itself; neither the official Network `integration/v1` API nor sirkirby/unifi-mcp reach it. Verified by reading the plugin repo's actual file tree, not its docs.
+- **(2026-07-09) `GET /api/system` on the NAS is unauthenticated** and returns MAC/model/direct-connect-domain/SSO-status. Minor recon-only leak, standard UniFi OS onboarding-discovery behavior — not something we changed or need to fix.
 
 ## Sources
 
 - Live scan of this LAN 2026-07-09: `scutil --dns`, `ipconfig getsummary`, `dig @192.168.0.1`, `dscacheutil`, `smbutil statshares -a`, `dns-sd`, endpoint probes with `curl -sk`, `nc -z 192.168.0.1 22`.
 - [Official UniFi API getting started](https://help.ui.com/hc/en-us/articles/30076656117655-Getting-Started-with-the-Official-UniFi-API), [UniFi Network API reference](https://developer.ui.com/network/v10.1.84/gettingstarted), [UniFi DNS records & local hostnames](https://help.ui.com/hc/en-us/articles/15179064940439-UniFi-DNS-Records-and-Local-Hostnames)
 - [DNSControl UniFi provider docs](https://docs.dnscontrol.org/provider/unifi) (API auto-detection, record types, flat-zone limitation).
+- UNAS Pro 4 API endpoints: read directly from [memphi2/ha-unifi-drive](https://github.com/memphi2/ha-unifi-drive) source (`const.py`, `api_auth.py`, `api_transport.py`, `snapshot_paths.py`) 2026-07-09, then confirmed live against `192.168.0.82` with `curl -sk`. `sirkirby/unifi-mcp` repo tree checked via `gh api repos/sirkirby/unifi-mcp/contents/plugins` to confirm no drive/UNAS plugin exists.
