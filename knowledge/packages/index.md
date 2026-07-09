@@ -17,6 +17,7 @@ flake consumes via relative-path inputs.
 * [Helium Config](helium-config.md) - Custom Nix package 'helium-config'.
 * [Iv](iv.md) - A command-line image viewer using terminal graphics.
 * [Kitten](kitten.md) - Kitten - A collection of small, useful programs for the kitty terminal.
+* [Nas Mount](nas-mount.md) - Mounts the UNAS Pro 4 Personal-Drive SMB share if not already mounted — a compiled Mach-O binary (pure-std Rust, no crates, bare rustc build) so rcodesign can sign it. Consumed by modules/darwin/nas-mount.nix.
 * [Noctalia Config](noctalia-config.md) - Custom Nix package 'noctalia-config'.
 * [okf](okf.md) - okf — CLI for maintaining OKF knowledge bundles (scaffold/index/validate/viz), consumed from its own repo, github:kriswill/okflight.
 * [Pass Xdg](pass-xdg.md) - pass-xdg — a drop-in `pass` (standard unix password manager) that defaults its store to an XDG-compliant location instead of the upstream default `~/.password-store`.

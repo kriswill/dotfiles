@@ -23,14 +23,22 @@ confirmed the same entry serves both the Bonjour and DNS hostnames. The mount
 script is idempotent (`mount | grep` guard) so `RunAtLoad` firing against an
 already-mounted share is a harmless no-op.
 
-**`writeShellScriptBin`, not `writeShellScript`**: the latter outputs a bare
-file at the store path's top level (`/nix/store/<hash>-nas-mount`), so the
-hash leaks into the executable's own filename — macOS's Login Items pane
-(System Settings > General) shows exactly that basename, hash and all.
-`writeShellScriptBin` nests it under `$out/bin/nas-mount`, so only the
-*directory* carries the hash and the display name is clean. This is also why
-`cbm-daemon`, `gh-config`, etc. show up clean in that same pane — they're all
-`bin/`-wrapped — while nix-darwin/sops-nix's own system daemons
+**A compiled binary (`pkgs/nas-mount/`), not a shell script.** Originally
+`pkgs.writeShellScriptBin`; rewritten (2026-07-09) to a genuine Mach-O binary
+— `main.rs` (pure `std`, no crates, built via a bare `rustc -O` rather than
+`rustPlatform.buildRustPackage`) — because `rcodesign` (the codesigning tool
+this module's ecosystem uses; see below) only recognizes Mach-O/bundle/DMG/pkg
+and errors `specified path is not of a recognized type` on a plain script.
+`mountPoint`/`share` are passed as CLI args via launchd's `ProgramArguments`
+rather than baked into the binary. Bonus: rustc/the linker auto-ad-hoc-signs
+the output at build time (`flags=0x20002(adhoc,linker-signed)`) — Login Items
+shows 🔏 ad-hoc rather than ❌ unsigned even before any manual signing.
+
+Either form (script or binary) already avoided the hash-prefixed-name
+problem the same way: the store path's *directory* carries the content hash,
+but `$out/bin/nas-mount` (what launchd actually execs) doesn't, so Login
+Items shows a clean `nas-mount`. `cbm-daemon`, `gh-config`, etc. show up
+clean the same way — while nix-darwin/sops-nix's own system daemons
 (`activate-system`, `sops-install-secrets`) show as generic `sh`: nix-darwin
 wraps *system* LaunchDaemons in a `/bin/sh -c "wait4path /nix/store && exec
 ..."` trampoline upstream (guards against the store not being mounted yet at
@@ -58,5 +66,6 @@ existing manual signature survives routine `nrs` runs.
 ## Source
 
 - Module: [`modules/darwin/nas-mount.nix`](../../modules/darwin/nas-mount.nix)
+- Package: [`pkgs/nas-mount/`](../../pkgs/nas-mount/) (`main.rs`, `package.nix`)
 - Options under: `services.nas-mount`
 - Decision: [nas-mount-codesigning](../decisions/nas-mount-codesigning.md)

@@ -10,6 +10,12 @@
 // for why: root-run activation scripts can't reach the login keychain's
 // private key, and committing the key via sops would permanently widen
 // exposure of a real Apple Developer ID for a cosmetic Login Items label).
+// rcodesign is deliberate, not incidental: unlike plain `codesign`, it never
+// touches the Keychain/session ACL at all, which is exactly what will let
+// this same approach run non-interactively in CI later (certs stored
+// there securely) — plain `codesign` could never do that. It only signs
+// Mach-O/bundle/DMG/pkg though, not plain scripts — see
+// pkgs/nas-mount/package.nix for why nas-mount is a compiled binary now.
 //
 // Run this yourself, interactively — never through an automated session.
 // The export passphrase never leaves this process (temp files only, mode
@@ -149,7 +155,7 @@ function main() {
   }
 
   const chosen = selected.map((line) => {
-    const [icon, label, , , execPath] = line.split("\t");
+    const [, label, , , execPath] = line.split("\t");
     return agents.find((a) => a.label === label && a.execPath === execPath)!;
   });
 

@@ -20,25 +20,27 @@
 # survives every `nrs` that doesn't touch the mount logic itself.
 {
   flake.modules.darwin.nas-mount =
-    { lib, config, pkgs, ... }:
+    {
+      lib,
+      config,
+      pkgs,
+      ...
+    }:
     let
       cfg = config.services.nas-mount;
       home = "/Users/k";
       mountPoint = "${home}/nas";
       share = "//k@nas.home.lan/Personal-Drive";
       signedBin = "${home}/.local/state/nas-mount/nas-mount";
-      # writeShellScriptBin (not writeShellScript): puts the script at
+      # pkgs.nas-mount (pkgs/nas-mount/) — a compiled Mach-O binary, not a
+      # shell script: rcodesign (scripts/sign-launchd-agents.ts) only
+      # recognizes Mach-O/bundle/DMG/pkg, not plain scripts (confirmed
+      # 2026-07-09 — it errors "specified path is not of a recognized type"
+      # on a shell script). Its own build already puts the binary at
       # $out/bin/nas-mount, so only the store path's *directory* carries the
-      # hash — the file launchd actually execs is plain "nas-mount", which is
-      # what shows up in System Settings > Login Items instead of a
-      # hash-prefixed name.
-      mountScript = pkgs.writeShellScriptBin "nas-mount" ''
-        set -euo pipefail
-        mkdir -p "${mountPoint}"
-        if ! /sbin/mount | grep -qF " on ${mountPoint} "; then
-          /sbin/mount_smbfs -N "${share}" "${mountPoint}"
-        fi
-      '';
+      # hash — what launchd execs is plain "nas-mount", which is what shows
+      # up in System Settings > Login Items instead of a hash-prefixed name.
+      mountBin = pkgs.nas-mount;
     in
     {
       options.services.nas-mount.enable = lib.mkEnableOption "auto-mount the UNAS Pro 4 Personal-Drive SMB share at login";
@@ -49,8 +51,8 @@
           /usr/bin/sudo -u k --set-home /bin/sh -c '
             set -e
             mkdir -p "$(dirname "${signedBin}")"
-            if ! cmp -s "${mountScript}/bin/nas-mount" "${signedBin}" 2>/dev/null; then
-              cp -f "${mountScript}/bin/nas-mount" "${signedBin}"
+            if ! cmp -s "${mountBin}/bin/nas-mount" "${signedBin}" 2>/dev/null; then
+              cp -f "${mountBin}/bin/nas-mount" "${signedBin}"
             fi
             # Unconditional, even when cmp -s skipped the copy: cp preserves
             # the nix store source'"'"'s read-only mode (no write bit for
@@ -64,7 +66,11 @@
         '';
         launchd.user.agents.nas-mount = {
           serviceConfig = {
-            ProgramArguments = [ signedBin ];
+            ProgramArguments = [
+              signedBin
+              mountPoint
+              share
+            ];
             RunAtLoad = true;
             StartInterval = 300; # retry if the NAS/network wasn't ready at login
             StandardOutPath = "${home}/Library/Logs/nas-mount.log";
