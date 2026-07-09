@@ -14,7 +14,12 @@
       home = "/Users/k";
       mountPoint = "${home}/nas";
       share = "//k@nas.home.lan/Personal-Drive";
-      mountScript = pkgs.writeShellScript "nas-mount" ''
+      # writeShellScriptBin (not writeShellScript): puts the script at
+      # $out/bin/nas-mount, so only the store path's *directory* carries the
+      # hash — the file launchd actually execs is plain "nas-mount", which is
+      # what shows up in System Settings > Login Items instead of a
+      # hash-prefixed name.
+      mountScript = pkgs.writeShellScriptBin "nas-mount" ''
         set -euo pipefail
         mkdir -p "${mountPoint}"
         if ! /sbin/mount | grep -qF " on ${mountPoint} "; then
@@ -27,7 +32,7 @@
       config = lib.mkIf cfg.enable {
         launchd.user.agents.nas-mount = {
           serviceConfig = {
-            ProgramArguments = [ "${mountScript}" ];
+            ProgramArguments = [ (lib.getExe mountScript) ];
             RunAtLoad = true;
             StartInterval = 300; # retry if the NAS/network wasn't ready at login
             StandardOutPath = "${home}/Library/Logs/nas-mount.log";

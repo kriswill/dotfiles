@@ -23,6 +23,19 @@ confirmed the same entry serves both the Bonjour and DNS hostnames. The mount
 script is idempotent (`mount | grep` guard) so `RunAtLoad` firing against an
 already-mounted share is a harmless no-op.
 
+**`writeShellScriptBin`, not `writeShellScript`**: the latter outputs a bare
+file at the store path's top level (`/nix/store/<hash>-nas-mount`), so the
+hash leaks into the executable's own filename — macOS's Login Items pane
+(System Settings > General) shows exactly that basename, hash and all.
+`writeShellScriptBin` nests it under `$out/bin/nas-mount`, so only the
+*directory* carries the hash and the display name is clean. This is also why
+`cbm-daemon`, `gh-config`, etc. show up clean in that same pane — they're all
+`bin/`-wrapped — while nix-darwin/sops-nix's own system daemons
+(`activate-system`, `sops-install-secrets`) show as generic `sh`: nix-darwin
+wraps *system* LaunchDaemons in a `/bin/sh -c "wait4path /nix/store && exec
+..."` trampoline upstream (guards against the store not being mounted yet at
+boot), which is out of any individual module's control.
+
 Imported on every darwin host but disabled by default — hosts opt in with
 `services.nas-mount.enable = true;`
 (see the [host-mounted modules pattern](../patterns/host-mounted-modules.md)):

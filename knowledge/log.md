@@ -2,6 +2,17 @@
 
 ## 2026-07-09
 
+- **Update** — [nas-mount](modules/nas-mount.md): fixed Login Items display —
+  switched `pkgs.writeShellScript` to `pkgs.writeShellScriptBin` so the
+  executable macOS shows in System Settings > Login Items is a clean
+  `nas-mount` rather than the hash-prefixed store-path basename
+  (`writeShellScript` outputs a bare file at the store path's top level;
+  `writeShellScriptBin` nests it under `$out/bin/`, so only the parent
+  directory carries the hash). While investigating, confirmed the unrelated
+  generic `sh` Login Items are nix-darwin/sops-nix's own `wait4path`-wrapped
+  system daemons (`activate-system`, `sops-install-secrets`) plus two
+  third-party agents (1Password's SSH_AUTH_SOCK helper, the Determinate Nix
+  installer's repair hook) — all expected, none of them ours to fix.
 - **Creation** — [nas-mount](modules/nas-mount.md)
   (`modules/darwin/nas-mount.nix`): new darwin host-selective module, a
   `launchd.user.agents` job that mounts the UNAS Pro 4's Personal-Drive SMB
