@@ -2,6 +2,22 @@
 
 ## 2026-07-09
 
+- **Creation** — [nas-mount-codesigning](decisions/nas-mount-codesigning.md):
+  investigated clearing "unidentified developer" for `nas-mount` in Login
+  Items. Confirmed via `sfltool dumpbtm` the label tracks the executable's
+  own Developer ID Team Identifier, not plist installation method. Enrolled
+  in the Apple Developer Program, obtained a Developer ID Application
+  certificate, installed the missing "Developer ID - G1" intermediate
+  (matched via Authority/Subject Key Identifier). Proved codesigning from
+  `system.activationScripts` is structurally impossible — root (even via
+  `launchctl asuser`) cannot reach the login keychain's private key, a real
+  macOS security boundary. Rejected the alternative (sops-committing the
+  exported key for automated signing) as disproportionate permanent exposure
+  of a real signing identity for a cosmetic label. Landed on a manual,
+  transient `rcodesign` + `.p12`-export procedure the machine owner runs
+  himself, documented in `docs/unifi-dream-machine.md`; `nas-mount.nix`
+  simplified to just a `cmp -s`-guarded stable-path copy so a manual
+  signature survives routine `nrs` runs.
 - **Update** — [nas-mount](modules/nas-mount.md): fixed Login Items display —
   switched `pkgs.writeShellScript` to `pkgs.writeShellScriptBin` so the
   executable macOS shows in System Settings > Login Items is a clean

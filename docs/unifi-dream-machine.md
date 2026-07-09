@@ -31,6 +31,62 @@ Practical upshot: **you can have `nas.home.lan` *or* the Bonjour name mounted, n
 
 **Persistent auto-mount:** `modules/darwin/nas-mount.nix` (`flake.modules.darwin.nas-mount`, gated behind `services.nas-mount.enable`, flipped on for host `k`) — a `launchd.user.agents.nas-mount` job, `RunAtLoad` + `StartInterval = 300` (retries every 5 min in case the NAS/network wasn't up yet at login), running an idempotent `mkdir -p ~/nas && mount_smbfs -N ... ~/nas` guarded by a `mount | grep` check so re-runs are harmless.
 
+## Manually codesigning nas-mount (optional, cosmetic)
+
+Without this, `nas-mount` (and every other nix-built launchd item on this Mac)
+shows "Item from unidentified developer" in System Settings > Login Items —
+confirmed via `sfltool dumpbtm` that this is driven by whether the executable
+itself carries a real Apple Developer ID Team Identifier, not by anything
+about how the launchd plist was installed. Full reasoning — why this is a
+manual, transient, **never-automated** step rather than something wired into
+`nrs` — is in
+[nas-mount-codesigning](../knowledge/decisions/nas-mount-codesigning.md): the
+short version is that root-run activation scripts cannot reach the login
+keychain's private key (a real macOS security boundary, not a bug), and the
+alternative — committing the exported key via sops so it could sign
+automatically — would mean permanently expanding the exposure of a real,
+Apple-verified signing identity for a purely cosmetic label. Neither is worth
+it, so this stays something the machine owner runs deliberately, by hand.
+
+**Run this yourself, never delegate it to an agent/automated session** — the
+export passphrase must never appear in a transcript, and (separately)
+`codesign`'s Keychain path only works from a genuine interactive session
+anyway, which is exactly what this sidesteps by not using `codesign`/Keychain
+at all:
+
+```sh
+TARGET="/Users/k/.local/state/nas-mount/nas-mount"
+TMPDIR_SIGN=$(mktemp -d)
+trap 'rm -rf "$TMPDIR_SIGN"' EXIT
+
+# Exports the identity to a temp .p12. macOS pops a *secure GUI dialog* to
+# set the export passphrase here — it never touches this terminal/history.
+security export -k ~/Library/Keychains/login.keychain-db \
+  -t identities -f pkcs12 \
+  -o "$TMPDIR_SIGN/id.p12"
+
+# Enter that same passphrase — read silently, never echoed or saved.
+echo -n "p12 export passphrase: "
+read -rs P12PASS
+echo
+
+# rcodesign signs directly from the .p12 — no Keychain/session ACL involved,
+# so this works regardless of who/what invokes it (unlike plain codesign).
+nix run nixpkgs#rcodesign -- sign \
+  --p12-file "$TMPDIR_SIGN/id.p12" \
+  --p12-password-file <(printf '%s' "$P12PASS") \
+  "$TARGET"
+
+unset P12PASS
+codesign -dv --verbose=4 "$TARGET"   # confirm: Authority=Developer ID Application: ...
+```
+
+`$TMPDIR_SIGN` (and the `.p12` inside it) is deleted automatically on exit via
+the `trap`. Re-run this whenever `nas-mount.nix`'s mount logic actually
+changes — the module's `cmp -s` guard means a routine `nrs` that doesn't
+touch that logic leaves an existing signature alone, so this isn't needed
+after every rebuild.
+
 ## Scan toolkit (macOS)
 
 ```sh
