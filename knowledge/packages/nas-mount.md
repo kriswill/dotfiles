@@ -17,6 +17,16 @@ built via a bare `rustc -O` inside a plain `stdenv.mkDerivation` rather than
 vendor. Takes `<mount-point> <smb-share>` as CLI args (passed via launchd's
 `ProgramArguments` in the consuming module) rather than baking them in.
 
+Ships two outputs: `bin/nas-mount` (the CLI) and
+`Applications/NasMount.app` — a minimal bundle (`net.kris.nas-mount`,
+`LSUIElement`, icns rendered from an SF Symbol by the checked-in
+`make-icon.swift`) that exists so Login Items can attribute the launchd
+agent (`AssociatedBundleIdentifiers`) and show a custom icon. The bundle is
+ad-hoc signed at build time (`rcodesign sign` in postFixup — keyless, pure
+Rust, sandbox-safe; an unsigned bundle is an invalid code object launchd
+`EX_CONFIG`s, and postInstall signing would be invalidated by fixupPhase's
+strip). `bundleId` is an overridable argument.
+
 darwin-only (`meta.platforms`); registered in `modules/packages.nix` under
 the `aarch64-darwin` guard alongside `kitten`/`podman`.
 

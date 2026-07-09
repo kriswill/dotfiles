@@ -69,6 +69,15 @@ function isWritable(path: string): boolean {
   }
 }
 
+// When a plist's executable lives inside a .app, sign (and inspect) the whole
+// bundle rather than the bare inner Mach-O: the bundle is what Login Items
+// attributes via AssociatedBundleIdentifiers, and codesign seals Info.plist +
+// Resources only at the bundle level. /a/b/Foo.app/Contents/MacOS/foo → /a/b/Foo.app
+function signTarget(execPath: string): string {
+  const i = execPath.indexOf(".app/");
+  return i === -1 ? execPath : execPath.slice(0, i + ".app".length);
+}
+
 function inspectSignature(execPath: string): Pick<AgentInfo, "status" | "authority" | "teamId" | "signedTime"> {
   const { stdout, stderr } = run(["codesign", "-dv", "--verbose=4", execPath]);
   const text = stdout + stderr;
@@ -106,7 +115,8 @@ function discoverAgents(): AgentInfo[] {
       agents.push({ label, plistPath, execPath: null, writable: false, status: "unresolved", authority: null, teamId: null, signedTime: null });
       continue;
     }
-    agents.push({ label, plistPath, execPath, writable: isWritable(execPath), ...inspectSignature(execPath) });
+    const target = signTarget(execPath);
+    agents.push({ label, plistPath, execPath: target, writable: isWritable(target), ...inspectSignature(target) });
   }
   return agents.sort((a, b) => a.label.localeCompare(b.label));
 }

@@ -2,6 +2,21 @@
 
 ## 2026-07-09
 
+- **Update** — [nas-mount](modules/nas-mount.md) /
+  [nas-mount-codesigning](decisions/nas-mount-codesigning.md): finished the
+  Login Items arc — a correct Developer ID signature on the bare binary
+  changed nothing; attribution needs an associated .app bundle
+  (`AssociatedBundleIdentifiers`, per Apple DTS). `pkgs/nas-mount` now also
+  builds an ad-hoc-signed `NasMount.app` (rcodesign in postFixup — an
+  unsigned bundle is an invalid code object launchd `EX_CONFIG`s), the
+  module deploys it to `~/Applications` (stamp-guarded copy + `lsregister
+  -f`, since cp-installed apps are invisible to LaunchServices) and writes
+  the plist via `environment.userLaunchAgents` (the `launchd.user.agents`
+  submodule is closed and lacks the key). BTM caches by plist path — bust
+  via bootout + rm-plist + ~75s wait + restore + bootstrap. Verified live:
+  Login Items shows **NasMount**, custom icon, `Developer Name: Kris
+  Williams`. Notarization not required.
+
 - **Update** — `scripts/sign-launchd-agents.ts`, `docs/unifi-dream-machine.md`:
   fixed a wrong-identity bug. `security export -t identities` exports every
   identity in the keychain with no per-item filter (confirmed a documented

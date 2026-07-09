@@ -165,3 +165,42 @@ that `.p12` file's path plus its passphrase. Considered instead temporarily
 removing the "Apple Development" identity from the keychain before
 export — rejected as needlessly invasive to an unrelated Xcode-managed item
 for a session-scoped ambiguity that a one-time GUI export solves cleanly.
+
+**Final act (2026-07-09): the correct signature changed nothing — the label
+needs an app bundle, not a signature.** With the right Developer ID
+signature finally on the binary, BTM still recorded
+`Developer Name: (null)`. Apple's design (DTS,
+developer.apple.com/forums/thread/721918): Login Items attributes launchd
+items through an *associated app bundle* via the plist's
+`AssociatedBundleIdentifiers`, never through a bare executable's signature.
+Implemented: `pkgs/nas-mount` now also builds
+`$out/Applications/NasMount.app` (Info.plist, `net.kris.nas-mount`,
+`LSUIElement`, icns rendered from an SF Symbol by the checked-in
+`make-icon.swift`) — which conveniently also delivers the custom icon
+originally wished for. Four more load-bearing discoveries:
+
+1. **An unsigned bundle wrapping a linker-signed binary is an invalid code
+   object** — launchd refuses to spawn it (`EX_CONFIG`, empty job log,
+   `codesign -v`: "code has no resources but signature indicates they must
+   be present"). Fixed by `rcodesign sign` (keyless = ad-hoc) in
+   `postFixup` — pure Rust, sandbox-safe; postFixup because fixupPhase's
+   `strip` would invalidate an install-time signature.
+2. **nix-darwin's `launchd.user.agents` cannot express
+   `AssociatedBundleIdentifiers`** — its serviceConfig submodule is closed.
+   The module writes the plist itself into `environment.userLaunchAgents`
+   (which is all `launchd.user.agents` funnels into anyway).
+3. **A `cp`-installed app is invisible to LaunchServices**, and Login Items
+   resolves the association through LS — `lsregister -f` after the copy
+   (now in the module's postActivation) or the group shows a blank icon and
+   the bare developer name.
+4. **BTM caches by plist path and never re-reads on content change** — the
+   refresh is `launchctl bootout` + `rm` the plist, wait ~60–75s for btmd to
+   drop the record, restore, `bootstrap`, reopen System Settings. Also:
+   `sfltool dumpbtm` fires an admin auth prompt per invocation — don't poll
+   it; the Settings pane is the readout.
+
+End state verified live: Login Items shows **NasMount** with the custom
+icon; BTM: `Name: NasMount`, `Developer Name: Kris Williams`,
+`Team Identifier: Y6VCVC728W`. Notarization was **not** required
+(`spctl -a` still says "Unnotarized Developer ID" — irrelevant without a
+quarantine bit).
