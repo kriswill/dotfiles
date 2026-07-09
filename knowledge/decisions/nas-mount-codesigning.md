@@ -7,7 +7,7 @@ timestamp: '2026-07-09T19:35:00Z'
 ---
 
 **Status:** active. **Where:** [nas-mount](../modules/nas-mount.md)
-(`modules/darwin/nas-mount.nix`), `docs/unifi-dream-machine.md` ("Manually
+(`modules/darwin/nas-mount.nix`), `docs/darwin-codesigning.md` ("Manually
 codesigning nas-mount").
 
 ## Context
@@ -70,7 +70,7 @@ store is read-only and its build sandbox has no keychain access either) —
 guarded by `cmp -s` so an existing manual signature survives any `nrs` that
 doesn't actually change the mount logic. Signing that stable path is a
 separate, manual, undocumented-in-nix procedure the machine owner runs
-himself in his own terminal — see `docs/unifi-dream-machine.md` for the exact
+himself in his own terminal — see `docs/darwin-codesigning.md` for the exact
 script. This is deliberately **not** wired into the flake at all: the whole
 point is that it must stay something a human chooses to do, not something
 that runs unattended.
@@ -158,7 +158,7 @@ a genuinely real signature.
 
 **Fix:** stopped calling `security export` programmatically at all. Both
 `sign-launchd-agents.ts` and the manual procedure in
-`docs/unifi-dream-machine.md` now require exporting the *one* wanted
+`docs/darwin-codesigning.md` now require exporting the *one* wanted
 identity yourself via Keychain Access.app's GUI (which does support
 selecting a single item — right-click → Export Items…) and just prompt for
 that `.p12` file's path plus its passphrase. Considered instead temporarily

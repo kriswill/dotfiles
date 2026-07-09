@@ -2,6 +2,17 @@
 
 ## 2026-07-09
 
+- **Creation** — New manual `docs/darwin-codesigning.md`: extracted every
+  codesigning learning from the nas-mount arc out of the UDM manual into a
+  general-purpose reference — identity/cert-type pitfalls (Apple Development
+  vs Developer ID, missing G1 intermediate), codesign-vs-rcodesign trust
+  paths, the hard boundaries (root cannot reach login-keychain keys;
+  `security export` cannot filter to one identity), the
+  `sign-launchd-agents` tool, and the full Login Items attribution recipe
+  (.app bundle + AssociatedBundleIdentifiers + lsregister + BTM cache-bust;
+  notarization not required). `docs/unifi-dream-machine.md` slimmed to a
+  pointer; knowledge-bundle references repointed.
+
 - **Update** — [nas-mount](modules/nas-mount.md) /
   [nas-mount-codesigning](decisions/nas-mount-codesigning.md): finished the
   Login Items arc — a correct Developer ID signature on the bare binary

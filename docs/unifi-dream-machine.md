@@ -31,149 +31,14 @@ Practical upshot: **you can have `nas.home.lan` *or* the Bonjour name mounted, n
 
 **Persistent auto-mount:** `modules/darwin/nas-mount.nix` (`flake.modules.darwin.nas-mount`, gated behind `services.nas-mount.enable`, flipped on for host `k`) — a `launchd.user.agents.nas-mount` job, `RunAtLoad` + `StartInterval = 300` (retries every 5 min in case the NAS/network wasn't up yet at login), running an idempotent `mkdir -p ~/nas && mount_smbfs -N ... ~/nas` guarded by a `mount | grep` check so re-runs are harmless.
 
-## Manually codesigning nas-mount (optional, cosmetic)
+## Codesigning the agent (moved)
 
-Without this, `nas-mount` (and every other nix-built launchd item on this Mac)
-shows "Item from unidentified developer" in System Settings > Login Items —
-confirmed via `sfltool dumpbtm` that this is driven by whether the executable
-itself carries a real Apple Developer ID Team Identifier, not by anything
-about how the launchd plist was installed. Full reasoning — why this is a
-manual, transient, **never-automated** step rather than something wired into
-`nrs` — is in
-[nas-mount-codesigning](../knowledge/decisions/nas-mount-codesigning.md): the
-short version is that root-run activation scripts cannot reach the login
-keychain's private key (a real macOS security boundary, not a bug), and the
-alternative — committing the exported key via sops so it could sign
-automatically — would mean permanently expanding the exposure of a real,
-Apple-verified signing identity for a purely cosmetic label. Neither is worth
-it, so this stays something the machine owner runs deliberately, by hand.
-
-**Run this yourself, never delegate it to an agent/automated session** — the
-passphrase must never appear in a transcript, and (separately) `codesign`'s
-Keychain path only works from a genuine interactive session anyway, which is
-exactly what this sidesteps by not using `codesign`/Keychain at all.
-
-**Export the identity via Keychain Access.app first — not `security export
--t identities`.** That command sweeps up *every* identity in the keychain
-indiscriminately, no matter which type flag you pass; there is no
-`security export` flag that filters to one specific item (confirmed
-2026-07-09 — it bundled an unrelated "Apple Development" cert from Xcode
-alongside "Developer ID Application", and `rcodesign` silently signed with
-the *wrong one* instead of erroring on the ambiguity). In Keychain Access:
-select the login keychain, find **only** "Developer ID Application: Kris
-Williams (Y6VCVC728W)" in the list, right-click → **Export Items…** → save
-as a `.p12` (you set the export passphrase in that same dialog).
-
-```sh
-TARGET="/Users/k/.local/state/nas-mount/nas-mount"
-P12="/path/to/your/exported.p12"   # from Keychain Access, above
-
-TMPDIR_SIGN=$(mktemp -d)
-trap 'rm -rf "$TMPDIR_SIGN"' EXIT
-
-# Enter the p12's passphrase — read silently, never echoed or saved.
-echo -n "p12 passphrase: "
-read -rs P12PASS
-echo
-
-# rcodesign signs directly from the .p12 — no Keychain/session ACL involved,
-# so this works regardless of who/what invokes it (unlike plain codesign).
-nix run nixpkgs#rcodesign -- sign \
-  --p12-file "$P12" \
-  --p12-password-file <(printf '%s' "$P12PASS") \
-  "$TARGET"
-
-unset P12PASS
-codesign -dv --verbose=4 "$TARGET"   # confirm: Authority=Developer ID Application: ...
-```
-
-`$TMPDIR_SIGN` is deleted automatically on exit via the `trap` (nothing
-sensitive lives there now besides the passphrase's process substitution —
-the `.p12` itself is wherever you saved it via Keychain Access, and is yours
-to delete once you're done with it). Re-run whenever `nas-mount.nix`'s mount
-logic actually changes — the module's `cmp -s` guard means a routine `nrs`
-that doesn't touch that logic leaves an existing signature alone.
-
-### Generalized version: `scripts/sign-launchd-agents.ts`
-
-For signing more than one LaunchAgent in a batch, `scripts/sign-launchd-agents.ts`
-(bun, run from the dev shell — `rcodesign` is on the dev-shell `PATH` via
-`modules/dev.nix`) generalizes the procedure above:
-
-```sh
-bun scripts/sign-launchd-agents.ts
-```
-
-It scans every plist in `~/Library/LaunchAgents`, resolves each one's target
-executable, and shows an fzf picker with current signature status per row —
-✅ Developer ID, 🍎 Apple-signed with no team (e.g. `/bin/sh`), 🔏 ad-hoc
-(e.g. Go/Rust binaries the linker auto-signs), ❌ unsigned, ❓ unresolved —
-plus the signing Authority and `Signed Time`, with a live `codesign -dv`
-preview pane. Multi-select (tab/shift-tab) whichever you want signed, hit
-enter, and it asks **once** for the path to a `.p12` you've already exported
-via Keychain Access (see above — same one-identity-only export, same reason:
-it does *not* call `security export -t identities` itself, to avoid the
-same multi-identity ambiguity) plus that file's passphrase, then signs the
-whole selected batch with it rather than making you repeat anything per
-target. When a plist's executable lives inside a `.app`, the tool signs (and
-inspects) the **bundle**, not the bare inner Mach-O — the bundle is the code
-object Login Items attributes, and signing only the binary leaves the
-bundle's `Info.plist`/`Resources` unsealed. Anything whose executable lives
-under `/nix/store/` (read-only) is flagged and skipped with a note to add a
-stable-path module first (`nas-mount.nix` is the template). Same security
-posture as the manual procedure: only the passphrase ever touches a temp
-file (`mktemp -d`, deleted on exit); the `.p12` itself is wherever you saved
-it and yours to delete afterward. Run it yourself, interactively — same
-reasoning as above.
-
-### Fixing "Item from unidentified developer" for real: the .app bundle
-
-A correct Developer ID signature on a bare launchd executable changes
-**nothing** in System Settings > Login Items — verified 2026-07-09: BTM
-recorded `Developer Name: (null)` even with a valid, timestamped, correctly
-chained signature. Apple's design (per DTS,
-[developer.apple.com/forums/thread/721918](https://developer.apple.com/forums/thread/721918))
-attributes launchd items through an **associated app bundle**, wired by the
-plist's `AssociatedBundleIdentifiers` key. The full working recipe, as
-deployed for `nas-mount`:
-
-1. **Ship a real `.app`** — `pkgs/nas-mount` builds
-   `$out/Applications/NasMount.app` (Info.plist with
-   `CFBundleIdentifier = net.kris.nas-mount`, `LSUIElement = true`, the icns
-   rendered by `make-icon.swift`) alongside the plain `bin/nas-mount`.
-2. **Ad-hoc sign the bundle at build time** (`rcodesign sign` in `postFixup`
-   — pure Rust, works in the nix sandbox). Not optional: rustc's
-   linker-signed inner binary doesn't seal `Info.plist`, so the unsigned
-   bundle is an *invalid code object* and launchd refuses to spawn it —
-   `last exit code = 78: EX_CONFIG` with an empty job log. postFixup, not
-   postInstall: fixupPhase's `strip` would invalidate an earlier signature.
-3. **Plist**: `ProgramArguments[0]` points into
-   `~/Applications/NasMount.app/Contents/MacOS/nas-mount`, plus
-   `AssociatedBundleIdentifiers = [ net.kris.nas-mount ]`. nix-darwin's
-   `launchd.user.agents` serviceConfig is a **closed submodule with no such
-   key** — write the plist yourself into `environment.userLaunchAgents`
-   (which is all `launchd.user.agents` does under the hood anyway).
-4. **`lsregister -f` the copied app** (in the module's postActivation): a
-   `cp`-installed bundle is invisible to LaunchServices, and Login Items
-   resolves the association through LS — without it the group shows a blank
-   icon and the bare developer name.
-5. **Bust the BTM cache**: BTM keys its record on the plist *path* and never
-   re-reads on content change — `launchctl bootout` + `rm <plist>`, wait
-   ~60–75s for btmd to drop the record, restore the plist,
-   `launchctl bootstrap`, then ⌘Q and reopen System Settings. (Avoid
-   `sfltool dumpbtm` for checking — every invocation throws an admin auth
-   prompt; the Settings pane itself is the readout. `sfltool resetbtm`
-   also works but nukes every login item on the machine.)
-6. Sign the deployed bundle with the real Developer ID via
-   `sign-launchd-agents` whenever it's re-copied (the module's stamp-file
-   guard means only when the app actually changed).
-
-End state, verified live: Login Items shows **NasMount** with the custom
-drive icon; BTM records `Name: NasMount`, `Developer Name: Kris Williams`,
-`Team Identifier: Y6VCVC728W`. Gatekeeper's `spctl -a` still says
-"Unnotarized Developer ID" — irrelevant for a locally-installed launchd
-agent (no quarantine bit), and notarization was *not* needed for the
-attribution.
+Everything about signing `nas-mount` — the Developer ID identity setup, the
+`sign-launchd-agents` batch tool, and the full "Item from unidentified
+developer" fix (the `.app` bundle + `AssociatedBundleIdentifiers` +
+LaunchServices + BTM-cache recipe) — lives in its own manual now:
+**[docs/darwin-codesigning.md](darwin-codesigning.md)**. It applies to any
+darwin launchd agent, not just this one; `nas-mount` is the worked example.
 
 ## Scan toolkit (macOS)
 
@@ -276,8 +141,7 @@ Auth model (from `api_auth.py`/`api_transport.py`): **session-cookie login** (`P
 
 ## Learned behaviours & workarounds
 
-- **(2026-07-09) Developer ID signing a bare launchd executable does NOT fix "unidentified developer" — only an associated .app bundle does.** See "Fixing 'Item from unidentified developer' for real" above for the full 6-step recipe (bundle + build-time ad-hoc sign + AssociatedBundleIdentifiers + lsregister + BTM cache-bust + Developer ID sign). Three sub-gotchas discovered en route: an *unsigned bundle* wrapping a linker-signed binary is an invalid code object launchd refuses with `EX_CONFIG` and an empty job log; nix-darwin's `launchd.user.agents` cannot express `AssociatedBundleIdentifiers` (closed submodule — write `environment.userLaunchAgents` directly); and BTM caches by plist path, refreshing only on file removal + re-add, never on content change.
-- **(2026-07-09) `sfltool dumpbtm` throws an admin auth prompt on every invocation** — fine once for diagnosis, hostile in any loop or repeated check. The System Settings pane (⌘Q + reopen to bust its own cache) is the better readout.
+- Codesigning/Login-Items gotchas moved to [darwin-codesigning.md](darwin-codesigning.md)'s own learned-behaviours section.
 - **(2026-07-09) `lsof +D` on an SMB mount hangs and itself pins the mount busy.** Debugging a "resource busy" unmount by running `lsof +D /Users/k/nas` makes it worse: lsof walks the whole network tree, never returns, and its own open references then keep the mount busy — a self-inflicted deadlock that survives until the lsof processes are killed (`pkill -f 'lsof.*nas'`, then `diskutil unmount` succeeds). Check `ps ax | grep lsof` for stuck walkers before believing "something else" holds an SMB mount.
 - **(2026-07-09) "SMB uses a different DNS" was Bonjour, not DNS.** Finder mounts via mDNS service discovery (`UNAS-Pro._smb._tcp.local`); the `home.lan` name never enters the SMB path. Check `mount | grep smb` before chasing DNS records.
 - **(2026-07-09) UDM reverse PTR returns `…id.ui.direct`, not `home.lan`.** UniFi's internal device identity — expected, not a misconfiguration.
