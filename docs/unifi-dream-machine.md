@@ -87,6 +87,31 @@ changes — the module's `cmp -s` guard means a routine `nrs` that doesn't
 touch that logic leaves an existing signature alone, so this isn't needed
 after every rebuild.
 
+### Generalized version: `scripts/sign-launchd-agents.ts`
+
+For signing more than one LaunchAgent in a batch, `scripts/sign-launchd-agents.ts`
+(bun, run from the dev shell — `rcodesign` is on the dev-shell `PATH` via
+`modules/dev.nix`) generalizes the procedure above:
+
+```sh
+bun scripts/sign-launchd-agents.ts
+```
+
+It scans every plist in `~/Library/LaunchAgents`, resolves each one's target
+executable, and shows an fzf picker with current signature status per row —
+✅ Developer ID, 🍎 Apple-signed with no team (e.g. `/bin/sh`), 🔏 ad-hoc
+(e.g. Go/Rust binaries the linker auto-signs), ❌ unsigned, ❓ unresolved —
+plus the signing Authority and `Signed Time`, with a live `codesign -dv`
+preview pane. Multi-select (tab/shift-tab) whichever you want signed, hit
+enter, and it exports the identity **once** for the whole batch (same secure
+GUI passphrase dialog + one passphrase re-entry as above) rather than making
+you repeat the export per target. Anything whose executable lives under
+`/nix/store/` (read-only) is flagged and skipped with a note to add a
+stable-path module first (`nas-mount.nix` is the template). Same security
+posture as the one-off script: the `.p12` only ever exists in a `mktemp -d`
+directory for the duration of the run, never written anywhere permanent.
+Run it yourself, interactively — same reasoning as above.
+
 ## Scan toolkit (macOS)
 
 ```sh

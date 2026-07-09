@@ -85,3 +85,17 @@ that runs unattended.
 - If the identified-developer label is ever wanted for another custom
   launchd module, this same manual procedure generalizes directly — no new
   design needed, just point `rcodesign` at the new stable path.
+
+**Update (2026-07-09):** generalized into
+`scripts/sign-launchd-agents.ts` (bun, `rcodesign` added to the dev shell in
+`modules/dev.nix`) — an fzf picker over every plist in
+`~/Library/LaunchAgents`, showing each one's current signature status
+(Developer ID / Apple-signed-no-team / ad-hoc / unsigned / unresolved),
+Authority, and `Signed Time`, with multi-select so a whole batch signs off
+one passphrase entry instead of repeating the export per agent. Same
+transient-`.p12`-only posture; anything under `/nix/store/` is flagged and
+skipped (needs a stable-path module like `nas-mount.nix` first). Confirmed
+its signature-status parsing against live data on this machine — correctly
+distinguished `nas-mount` (unsigned), `/bin/launchctl` (Apple-signed, no
+team), and `cbm-daemon`/`gpg-connect-agent` (ad-hoc, `flags=0x20002(adhoc,
+linker-signed)` — Go/Rust linker auto-signing).
