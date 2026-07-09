@@ -2,6 +2,16 @@
 
 ## 2026-07-09
 
+- **Update** — [nas-mount](modules/nas-mount.md): fixed a real bug the new
+  `sign-launchd-agents` tool surfaced — the stable-path copy at
+  `~/.local/state/nas-mount/nas-mount` was `r-xr-xr-x` (no write bit)
+  because `cp` copies the nix store source's read-only mode and `chmod +x`
+  never grants write. Changed to `chmod u+w,+x` and moved it outside the
+  `cmp -s` content-diff guard (permission bits don't affect a code
+  signature, so it's safe — and now self-healing — to re-assert every
+  activation). See
+  [nas-mount-codesigning](decisions/nas-mount-codesigning.md) for the
+  write-up.
 - **Creation** — `scripts/sign-launchd-agents.ts`: generalized the manual
   nas-mount codesigning procedure into an fzf-based batch tool over every
   `~/Library/LaunchAgents` plist — shows signature status (Developer ID /
