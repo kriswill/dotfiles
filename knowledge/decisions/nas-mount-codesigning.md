@@ -1,7 +1,7 @@
 ---
 type: Decision
 title: nas-mount Codesigning — Manual, Transient, Never Committed
-description: 'Login Items shows "Unidentified Developer" for every nix-built launchd agent. Rejected both doing OS codesigning inside nix-darwin activation (fails — root cannot reach the login keychain''s private-key ACL) and committing the exported private key via sops (real, permanent exposure of an Apple Developer ID for a cosmetic label). Landed on rcodesign + a transient, never-persisted .p12 export the machine owner runs by hand.'
+description: 'Login Items shows "Unidentified Developer" for every nix-built launchd agent. Rejected both doing OS codesigning inside nix-darwin activation (fails — root cannot reach the login keychain''s private-key ACL) and committing the exported private key via sops (real, permanent exposure of an Apple Developer ID for a cosmetic label). Landed on rcodesign + a transient, never-persisted .p12 export the machine owner runs by hand — kept over plain codesign specifically so the same approach can later run non-interactively in CI. rcodesign only signs Mach-O/bundle/DMG/pkg, so nas-mount became a compiled Rust binary (pkgs/nas-mount/) instead of a shell script.'
 tags: [darwin-module, codesigning, security, nas-mount]
 timestamp: '2026-07-09T19:35:00Z'
 ---
@@ -110,3 +110,29 @@ permission bits don't affect a code signature — moved it **outside** the
 `cmp -s` content-diff guard so it re-asserts on every activation regardless
 of whether the mount logic changed, making it self-healing rather than a
 one-time fix.
+
+**Second bug found and fixed (2026-07-09):** signing then failed differently
+— `rcodesign` errored `specified path is not of a recognized type`.
+`rcodesign sign` only handles Mach-O binaries, bundles, DMGs, or `.pkg`
+installers — not a plain shell script, which `nas-mount` was (via
+`pkgs.writeShellScriptBin`). Considered switching the signer to plain OS
+`codesign` instead (which signs any file via its "signed generic" mode, and
+would work fine since this tool is always run in Kris's own interactive
+session) — **rejected**: the whole reason `rcodesign` was chosen over
+`codesign` in the first place is that it never touches the Keychain/session
+ACL at all, which is what will let this same signing approach eventually run
+non-interactively in GitHub CI (certs stored there securely — not
+implemented yet, noted for later). Plain `codesign` could never do that.
+Fixed the actual mismatch instead: rewrote `nas-mount` as a genuinely
+compiled Mach-O binary — `pkgs/nas-mount/` (`main.rs`, pure `std`, no
+external crates, built via a bare `rustc -O` in a plain `stdenv.mkDerivation`
+rather than `rustPlatform.buildRustPackage`'s Cargo.lock machinery),
+registered as a proper package (`modules/packages.nix`,
+`overlays/nas-mount.nix`) and referenced from `nas-mount.nix` as
+`pkgs.nas-mount` instead of `writeShellScriptBin`. `mountPoint`/`share` are
+now passed as CLI arguments (via launchd's `ProgramArguments`) rather than
+baked into the script text, so the binary itself stays generic. Bonus:
+rustc/the linker auto-ad-hoc-signs the output at build time
+(`flags=0x20002(adhoc,linker-signed)`, same as the Go-built `cbm-daemon`) —
+Login Items shows 🔏 ad-hoc instead of ❌ unsigned even before any manual
+`rcodesign` run.

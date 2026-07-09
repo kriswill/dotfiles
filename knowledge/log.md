@@ -2,6 +2,23 @@
 
 ## 2026-07-09
 
+- **Update** — [nas-mount](modules/nas-mount.md) /
+  [nas-mount package](packages/nas-mount.md): `rcodesign` errored `specified
+  path is not of a recognized type` signing the shell-script version — it
+  only handles Mach-O/bundle/DMG/pkg. Considered switching the signer to
+  plain OS `codesign` (works on any file, and would succeed here since the
+  tool always runs in Kris's own session) but rejected: `rcodesign` was
+  chosen specifically because it never touches Keychain/session ACLs, which
+  is what will let this same signing approach run in GitHub CI later (certs
+  stored there securely — not implemented yet). Rewrote `nas-mount` as a
+  genuinely compiled Mach-O binary instead — `pkgs/nas-mount/` (`main.rs`,
+  pure `std`, bare `rustc -O`, no Cargo), registered via
+  `modules/packages.nix` + `overlays/nas-mount.nix`, consumed as
+  `pkgs.nas-mount` in place of `writeShellScriptBin`; `mountPoint`/`share`
+  now passed as CLI args via launchd's `ProgramArguments`. Bonus: rustc
+  auto-ad-hoc-signs the binary at build time, upgrading Login Items from ❌
+  unsigned to 🔏 ad-hoc before any manual signing. Full write-up in
+  [nas-mount-codesigning](decisions/nas-mount-codesigning.md).
 - **Update** — [nas-mount](modules/nas-mount.md): fixed a real bug the new
   `sign-launchd-agents` tool surfaced — the stable-path copy at
   `~/.local/state/nas-mount/nas-mount` was `r-xr-xr-x` (no write bit)

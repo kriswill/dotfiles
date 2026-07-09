@@ -47,6 +47,8 @@
         podman = pkgs.callPackage ../pkgs/podman.nix { };
         # kitten ships as a prebuilt darwin-arm64 binary.
         kitten = pkgs.callPackage ../pkgs/kitten.nix { };
+        # nas-mount — compiled Mach-O mount helper (modules/darwin/nas-mount.nix).
+        nas-mount = pkgs.callPackage ../pkgs/nas-mount/package.nix { };
       }
       # Linux-only: wowup wraps an AppImage (needs the appimage runtime);
       # flatpak-user shims a Linux-only package manager.

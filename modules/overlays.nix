@@ -9,6 +9,7 @@
 {
   flake.overlays = {
     kitten = import ../overlays/kitten.nix;
+    nas-mount = import ../overlays/nas-mount.nix;
     direnv = import ../overlays/direnv.nix;
     dots-adopt = import ../overlays/dots-adopt.nix;
     podman = import ../overlays/podman.nix;
