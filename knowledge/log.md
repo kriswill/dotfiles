@@ -1,5 +1,35 @@
 # Log
 
+## 2026-07-09
+
+- **Creation** — New manual `docs/unifi-dream-machine.md`: verified LAN DNS
+  architecture (UDM dnsmasq `home.lan` vs the NAS's own mDNS/Bonjour identity
+  — macOS SMB mounts ride Bonjour, not DNS), the three headless control paths
+  into the UDM (official `integration/v1` API with `X-API-KEY`, legacy
+  controller API, SSH read-only), and the OSS ecosystem survey (unifi-mcp,
+  DNSControl UniFi provider, terraform forks) with a plan of record for
+  agent-driven audit/control.
+- **Update** — [unifi-dream-machine](../docs/unifi-dream-machine.md): installed
+  and verified sirkirby/unifi-mcp end-to-end against the real UDM (Pro Max,
+  Network 10.4.57). Found the NAS's original `home.lan` name is derived from
+  the client's raw reported hostname, not a static DNS record —
+  `unifi_list_dns_records` returned zero entries. Recorded a gotcha: a
+  local-admin password with shell-special characters breaks naive
+  `set-env.sh` quoting and surfaces as a 403 on `/api/auth/login`,
+  indistinguishable at first glance from a bad-account-type or 2FA-blocked
+  login.
+- **Update** — [unifi-dream-machine](../docs/unifi-dream-machine.md): added a
+  static `nas.home.lan → 192.168.0.82` name via the client's "Local DNS
+  Record" field (`unifi_set_client_ip_settings`) after a direct static A
+  record was rejected (`StaticDnsOverlapsWithDeviceLocalDns`). Surfaced a
+  safety-contract bug in sirkirby/unifi-mcp: `unifi_create_dns_record`
+  reported `success: false` on that conflict but had already mutated the
+  client's `local_dns_record` field server-side before rejecting — a "failed"
+  mutation was not actually a no-op. Documented that a client can carry two
+  independent `home.lan` names at once (hostname-derived + Local DNS Record),
+  and resolved it by re-running the correct tool explicitly with
+  `confirm=true` for a clean record of intent.
+
 ## 2026-07-05
 
 - **Update** — [python-keyring-op-backend](decisions/python-keyring-op-backend.md):
