@@ -51,17 +51,22 @@ enabled on [k](../hosts/k.md), deliberately not on mini or SOC-Kris-Williams
 (personal NAS, personal machine); auto-discovered via the
 [Dendritic module layout](../patterns/dendritic-modules.md).
 
-**Login Items still shows "unidentified developer"** — deliberately. Signing
-would need either the login keychain's private key (unreachable from a
-root-run activation script, even via `launchctl asuser`) or committing that
-key via sops for automated signing (rejected — permanent exposure of a real
-Apple Developer ID for a cosmetic label). See
-[nas-mount-codesigning](../decisions/nas-mount-codesigning.md) for the full
-tradeoff and the manual, transient, never-committed signing procedure
-actually used (in `docs/unifi-dream-machine.md`). `postActivation` copies the
-built script to a stable external path (`~/.local/state/nas-mount/nas-mount`,
-needed regardless since the store is read-only) guarded by `cmp -s`, so an
-existing manual signature survives routine `nrs` runs.
+**Login Items shows "NasMount" + custom icon + Kris's developer identity**
+(resolved 2026-07-09, after a long arc). Attribution needs an *associated
+app bundle*, not a signed executable — so `pkgs/nas-mount` also builds
+`NasMount.app` (ad-hoc signed at build time via rcodesign in postFixup; an
+unsigned bundle is an invalid code object launchd rejects with `EX_CONFIG`),
+the module deploys it to `~/Applications` with a stamp-guarded copy (so a
+manual Developer ID signature survives routine `nrs` runs) plus
+`lsregister -f` (cp-installed apps are invisible to LaunchServices), and the
+launchd plist — written via `environment.userLaunchAgents` because the
+`launchd.user.agents` submodule is closed and lacks the key — carries
+`AssociatedBundleIdentifiers = [ net.kris.nas-mount ]`. BTM caches by plist
+path; the module header documents the bootout + rm + wait + restore +
+bootstrap refresh dance. Full history (keychain ACL boundary, sops
+rejection, wrong-identity export, bundle requirement):
+[nas-mount-codesigning](../decisions/nas-mount-codesigning.md) and
+`docs/unifi-dream-machine.md`.
 
 ## Source
 
