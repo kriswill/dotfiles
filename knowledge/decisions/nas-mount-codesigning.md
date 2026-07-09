@@ -136,3 +136,32 @@ rustc/the linker auto-ad-hoc-signs the output at build time
 (`flags=0x20002(adhoc,linker-signed)`, same as the Go-built `cbm-daemon`) —
 Login Items shows 🔏 ad-hoc instead of ❌ unsigned even before any manual
 `rcodesign` run.
+
+**Third bug found and fixed (2026-07-09):** signing succeeded (real,
+non-ad-hoc signature, `flags=0x0(none)`) but Login Items *still* showed
+"unidentified developer." `codesign -dv` on the result showed
+`Authority=Apple Development: Kris Williams (X8B24Z8GP2)` — a different cert
+than the "Developer ID Application: Kris Williams (Y6VCVC728W)" one set up
+for this — even though `TeamIdentifier=Y6VCVC728W` (same team) matched.
+Root cause: `security export -k ... -t identities -f pkcs12` exports **every
+identity in the keychain**, no exceptions — there is no `security export`
+flag that filters to one specific item (confirmed via web search: this is a
+documented, known limitation, not something scriptable around). Kris's
+keychain also holds an "Apple Development" cert (Xcode's local-testing
+identity, a different purpose/chain than distribution-grade "Developer ID
+Application"), and `rcodesign` — despite its own docs saying it errors when
+more than one signing key is present in a `.p12` — silently picked that one
+instead. "Apple Development" certs chain through Apple Worldwide Developer
+Relations, not the Developer ID Certification Authority chain Gatekeeper/BTM
+check for identified-developer attribution, so the label persisted despite
+a genuinely real signature.
+
+**Fix:** stopped calling `security export` programmatically at all. Both
+`sign-launchd-agents.ts` and the manual procedure in
+`docs/unifi-dream-machine.md` now require exporting the *one* wanted
+identity yourself via Keychain Access.app's GUI (which does support
+selecting a single item — right-click → Export Items…) and just prompt for
+that `.p12` file's path plus its passphrase. Considered instead temporarily
+removing the "Apple Development" identity from the keychain before
+export — rejected as needlessly invasive to an unrelated Xcode-managed item
+for a session-scoped ambiguity that a one-time GUI export solves cleanly.

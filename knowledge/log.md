@@ -2,6 +2,20 @@
 
 ## 2026-07-09
 
+- **Update** — `scripts/sign-launchd-agents.ts`, `docs/unifi-dream-machine.md`:
+  fixed a wrong-identity bug. `security export -t identities` exports every
+  identity in the keychain with no per-item filter (confirmed a documented
+  CLI limitation, not something scriptable around); Kris's keychain also has
+  an "Apple Development" cert from Xcode, and `rcodesign` silently signed
+  `nas-mount` with that one instead of "Developer ID Application" —
+  producing a real (non-ad-hoc) signature that still left Login Items
+  showing "unidentified developer," since Apple Development certs don't
+  chain through the Developer ID authority BTM checks for. Fixed by
+  dropping the programmatic `security export` call entirely — both the
+  script and the manual doc procedure now prompt for a `.p12` path you
+  export yourself via Keychain Access.app (which supports selecting exactly
+  one identity). Write-up in
+  [nas-mount-codesigning](decisions/nas-mount-codesigning.md).
 - **Update** — [nas-mount](modules/nas-mount.md) /
   [nas-mount package](packages/nas-mount.md): `rcodesign` errored `specified
   path is not of a recognized type` signing the shell-script version — it
