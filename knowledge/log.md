@@ -2,7 +2,19 @@
 
 ## 2026-07-09
 
-- **Creation** — [nas-mount-codesigning](decisions/nas-mount-codesigning.md):
+- **Creation** — `scripts/sign-launchd-agents.ts`: generalized the manual
+  nas-mount codesigning procedure into an fzf-based batch tool over every
+  `~/Library/LaunchAgents` plist — shows signature status (Developer ID /
+  Apple-signed-no-team / ad-hoc / unsigned / unresolved), Authority, and
+  Signed Time per agent, with a live `codesign -dv` preview; multi-select
+  signs a whole batch off one passphrase export instead of one-at-a-time.
+  Added `rcodesign` to the dev shell (`modules/dev.nix`) so it's on PATH.
+  Verified the discovery/parsing logic against live data (correctly
+  classified `nas-mount` unsigned, `/bin/launchctl` Apple-signed-no-team,
+  `cbm-daemon`/`gpg-connect-agent` ad-hoc-linker-signed). Same
+  transient/never-committed `.p12` posture as the one-off script it
+  replaces for the multi-agent case — see
+  [nas-mount-codesigning](decisions/nas-mount-codesigning.md).
   investigated clearing "unidentified developer" for `nas-mount` in Login
   Items. Confirmed via `sfltool dumpbtm` the label tracks the executable's
   own Developer ID Team Identifier, not plist installation method. Enrolled

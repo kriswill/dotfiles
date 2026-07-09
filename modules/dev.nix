@@ -21,6 +21,10 @@
             ssh-to-age
             # Dotfiles management
             stow
+            # macOS codesigning without touching Keychain/ACLs — see
+            # scripts/sign-launchd-agents.ts and
+            # knowledge/decisions/nas-mount-codesigning.md
+            rcodesign
             ;
           # `okf` on the dev-shell PATH (scaffold|index|validate|viz) — the
           # nix-built CLI from the okflight input (github:kriswill/okflight).
