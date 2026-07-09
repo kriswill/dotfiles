@@ -51,8 +51,15 @@
             mkdir -p "$(dirname "${signedBin}")"
             if ! cmp -s "${mountScript}/bin/nas-mount" "${signedBin}" 2>/dev/null; then
               cp -f "${mountScript}/bin/nas-mount" "${signedBin}"
-              chmod +x "${signedBin}"
             fi
+            # Unconditional, even when cmp -s skipped the copy: cp preserves
+            # the nix store source'"'"'s read-only mode (no write bit for
+            # anyone), and permission bits do not affect a code signature, so
+            # this is safe to re-assert every activation regardless of the
+            # content-diff guard above — otherwise a missing write bit can
+            # get baked in forever (confirmed 2026-07-09: rcodesign/codesign
+            # need to write here, and `chmod +x` alone never grants it).
+            chmod u+w,+x "${signedBin}"
           '
         '';
         launchd.user.agents.nas-mount = {

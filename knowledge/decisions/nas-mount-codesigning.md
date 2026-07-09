@@ -99,3 +99,14 @@ its signature-status parsing against live data on this machine — correctly
 distinguished `nas-mount` (unsigned), `/bin/launchctl` (Apple-signed, no
 team), and `cbm-daemon`/`gpg-connect-agent` (ad-hoc, `flags=0x20002(adhoc,
 linker-signed)` — Go/Rust linker auto-signing).
+
+**Bug found and fixed (2026-07-09):** the stable-path file ended up
+`r-xr-xr-x` (no write bit) — `cp` copies the nix store source's read-only
+mode, and `chmod +x` only ever adds execute bits, never touches read/write,
+so the missing write bit was permanent from the very first activation.
+`rcodesign sign-launchd-agents` correctly reported it as read-only and
+skipped it. Fixed by changing `chmod +x` to `chmod u+w,+x`, and — since
+permission bits don't affect a code signature — moved it **outside** the
+`cmp -s` content-diff guard so it re-asserts on every activation regardless
+of whether the mount logic changed, making it self-healing rather than a
+one-time fix.
