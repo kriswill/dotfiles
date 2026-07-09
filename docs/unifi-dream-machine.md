@@ -223,6 +223,7 @@ Auth model (from `api_auth.py`/`api_transport.py`): **session-cookie login** (`P
 
 ## Learned behaviours & workarounds
 
+- **(2026-07-09) `lsof +D` on an SMB mount hangs and itself pins the mount busy.** Debugging a "resource busy" unmount by running `lsof +D /Users/k/nas` makes it worse: lsof walks the whole network tree, never returns, and its own open references then keep the mount busy — a self-inflicted deadlock that survives until the lsof processes are killed (`pkill -f 'lsof.*nas'`, then `diskutil unmount` succeeds). Check `ps ax | grep lsof` for stuck walkers before believing "something else" holds an SMB mount.
 - **(2026-07-09) "SMB uses a different DNS" was Bonjour, not DNS.** Finder mounts via mDNS service discovery (`UNAS-Pro._smb._tcp.local`); the `home.lan` name never enters the SMB path. Check `mount | grep smb` before chasing DNS records.
 - **(2026-07-09) UDM reverse PTR returns `…id.ui.direct`, not `home.lan`.** UniFi's internal device identity — expected, not a misconfiguration.
 - **(2026-07-09) Can't fingerprint the Network version unauthenticated.** `/proxy/network/status` (which used to leak the version) now returns 401 on this firmware. Confirmed instead via an authenticated MCP call: **10.4.57**.
