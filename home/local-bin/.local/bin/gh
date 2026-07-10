@@ -1,0 +1,51 @@
+#!/usr/bin/env bash
+# PATH shim for gh (stowed to ~/.local/bin, which precedes the system gh on
+# PATH): passes every command through except `gh auth setup-git`.
+#
+# git's github.com credentials are configured declaratively in this repo —
+# home/git/.config/git/config sets `helper = !gh auth git-credential` for
+# github.com and gist.github.com, and gh itself sources GH_TOKEN from
+# 1Password (overlays/gh-op.nix in the nix config, on Linux). `gh auth
+# setup-git` rewrites the live — i.e. symlinked-into-this-repo — git config in
+# place, replacing those sections with an absolute path to its own binary; on
+# NixOS that resolves through the gh-op wrapper to a
+# /nix/store/...gh.../bin/.gh-wrapped path that does not exist, silently
+# breaking every github.com push with "could not read Username" and dirtying
+# the dotfiles checkout besides (2026-07-10: happened exactly this way).
+
+if [[ "$1" == "auth" && "$2" == "setup-git" ]]; then
+  cat >&2 <<'EOF'
+gh auth setup-git is blocked here (~/.local/bin/gh shim from dotfiles).
+
+git is already wired to gh declaratively: home/git/.config/git/config in the
+dotfiles repo (stowed to ~/.config/git/config) sets
+
+    [credential "https://github.com"]
+    helper =
+    helper = !gh auth git-credential
+
+(and the same for gist.github.com), with gh sourcing GH_TOKEN from 1Password
+via the gh-op.nix wrapper. setup-git would rewrite that symlinked config with
+an absolute /nix/store/....gh-wrapped path that doesn't exist, breaking
+github.com pushes with "could not read Username".
+
+If the credential helper ever looks wrong, restore the committed config:
+
+    git -C ~/src/github/kriswill/dotfiles checkout -- home/git/.config/git/config
+EOF
+  exit 1
+fi
+
+# Hand off to the next gh on PATH, skipping this shim — compare by canonical
+# path since the shim can appear more than once (~/.local/bin is duplicated in
+# PATH) and is reached through a stow symlink. mapfile, not a stdin-redirected
+# while-read loop: the exec'd gh must inherit the CALLER's stdin — git pipes
+# the credential request through here for `gh auth git-credential get`.
+self=$(realpath "$0")
+mapfile -t candidates < <(type -aP gh)
+for cand in "${candidates[@]}"; do
+  [[ "$(realpath "$cand")" == "$self" ]] && continue
+  exec "$cand" "$@"
+done
+echo "gh shim: no real gh found on PATH" >&2
+exit 127
