@@ -108,6 +108,30 @@
             `null` (default) leaves the desktop app on the unsegregated `~/.claude`.
           '';
         };
+
+        fallbackProfile = lib.mkOption {
+          type = lib.types.nullOr lib.types.str;
+          default = null;
+          example = "me";
+          description = ''
+            Replace the unsegregated fallback dir `~/.claude` with a symlink to
+            `~/.claude-<fallbackProfile>`.
+
+            Anything that launches without `CLAUDE_CONFIG_DIR` reads `~/.claude` and
+            silently grows a parallel config tree there. The `desktopProfile` LaunchAgent
+            covers the normal GUI case, but its env can be lost (login race, or a
+            relaunch chain from a var-less instance — seen 2026-06-28 and 2026-07-10);
+            the symlink is the backstop that catches whatever misses the env.
+
+            Activation only creates or re-points the symlink. A real `~/.claude`
+            directory is never deleted — activation warns and leaves it; migrate its
+            contents into the profile dir and remove it, then re-activate.
+
+            Trade-off: env-loss becomes silent — e.g. a *work* session that misses the
+            env var lands in this (typically personal) profile instead of a visibly
+            stray `~/.claude`. `null` (default) manages no symlink.
+          '';
+        };
       };
 
       config = lib.mkIf cfg.enable (
@@ -126,6 +150,27 @@
                 'mkdir -p ${home}/.config/zsh && ln -sfn ${snippet} ${home}/.config/zsh/claude-account-selector.zsh'
             '';
           }
+
+          # Point the unsegregated fallback dir at a real profile: ~/.claude →
+          # ~/.claude-<fallbackProfile>. Order 1601: right after the zsh snippet
+          # link (1600). Never deletes a real ~/.claude directory — a stray tree
+          # holds session data and must be migrated by hand first.
+          (lib.mkIf (cfg.fallbackProfile != null) {
+            system.activationScripts.postActivation.text = lib.mkOrder 1601 ''
+              /usr/bin/sudo -u k --set-home /bin/sh -c '
+                link=${home}/.claude target=${home}/.claude-${cfg.fallbackProfile}
+                if [ -L "$link" ]; then
+                  [ "$(readlink "$link")" = "$target" ] || ln -sfn "$target" "$link"
+                elif [ -e "$link" ]; then
+                  echo "claude-account-selector: $link exists and is not a symlink;" \
+                    "refusing to replace it — migrate its contents into $target," \
+                    "remove it, then re-activate" >&2
+                else
+                  ln -s "$target" "$link"
+                fi
+              '
+            '';
+          })
 
           # Pin the GUI desktop app to ~/.claude-<desktopProfile> by injecting
           # CLAUDE_CONFIG_DIR into the macOS login (Aqua) session at login.
