@@ -58,6 +58,17 @@
 
 ## 2026-07-10
 
+- **Creation** — [ci-github-actions](decisions/ci-github-actions.md) +
+  `.github/workflows/{ci,update-flake-lock}.yml`: GitHub Actions now builds
+  both deployed closures on every PR — `darwinConfigurations.k.system` on
+  the free arm64 macOS runner, nebula's toplevel on ubuntu behind a
+  disk-reclaim step — plus a weekly `update-flake-lock@v28` bump PR opened
+  with a fine-grained PAT (GITHUB_TOKEN-created events never trigger
+  workflows). Load-bearing property: builds never decrypt sops secrets, so
+  CI's only credential is the read-only okflight deploy key — no signing
+  key, no age key, ever. Chosen over Dependabot's native nix support
+  (April 2026) because Dependabot can't bump the private git+ssh okf input.
+
 - **Update** — [claude-account-selector](modules/claude-account-selector.md) /
   [claude-profile-isolation](decisions/claude-profile-isolation.md): new
   `fallbackProfile` option symlinks `~/.claude` → `~/.claude-<profile>` at
