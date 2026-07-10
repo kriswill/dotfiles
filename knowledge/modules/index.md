@@ -32,8 +32,9 @@ interesting ones by hand — scaffolding never overwrites an existing doc.
 * [Gpg](gpg.md) - gpg-agent on both OSes with enableSSHSupport deliberately false — 1Password owns SSH_AUTH_SOCK; gpg only backs `pass` and ad-hoc gpg use.
 * [Gtk Dark](gtk-dark.md) - Installs the adw-gtk3 theme so the portal-broadcast gtk-theme=adw-gtk3-dark resolves — dark GTK3 apps without the GTK_THEME env var that breaks libadwaita styling.
 * [Hardware Configuration](hardware-configuration.md) - nixos-generate-config output in the two-line dendritic wrapper: initrd kernel modules, kvm-amd, x86_64-linux hostPlatform, and AMD microcode updates.
+* [Helium Chrome Shim](helium-chrome-shim.md) - Plants an exec-wrapper at the canonical Google Chrome.app binary path on every rebuild, so Chrome-only tooling (chrome-devtools-mcp / Puppeteer channel 'stable') launches Helium — no per-tool --executablePath wiring.
 * [Helium](helium.md) - Helium browser — enables the upstream programs.helium module and declares a root-owned Chromium managed policy in /etc (privacy baseline, DuckDuckGo, force-installed extensions).
-* [Homebrew](homebrew.md) - Kris' Homebrew stuff.
+* [Homebrew](homebrew.md) - nix-darwin's homebrew module — declares the casks/brews/taps that must come from Homebrew rather than nixpkgs, with zap cleanup so anything not listed is uninstalled on rebuild.
 * [Htop](htop.md) - Kris' htop (system-level port of the old home-manager programs.htop).
 * [Hyprland](hyprland.md) - Enables Hyprland directly (programs.hyprland + withUWSM) instead of snowglobe-lib.desktop.hyprland — dodging its force-enabled hyprlock/kitty/dolphin — and asserts the shared snowglobe desktop layer plus fuzzel formerly implied by niri.
 * [Keyring](keyring.md) - snowglobe-lib installer key metadata (NOT GNOME Keyring) — user k's ssh-ed25519 public key and nebula's age recipient; do not remove.

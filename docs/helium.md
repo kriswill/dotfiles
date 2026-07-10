@@ -531,6 +531,23 @@ installed binary body matches the committed `helium-config.sh` (verified 2026-06
 
 ## Learned behaviours & workarounds
 
+- **macOS: Helium stands in for Chrome via a shim .app (2026-07-10).** After
+  dropping the Chromium cask, chrome-devtools-mcp (Puppeteer) broke on the
+  Macs: it hard-probes `/Applications/Google Chrome.app/Contents/MacOS/Google
+  Chrome` for channel `stable` (existence-only `accessSync` — no identity or
+  version check) and has **no env-var override**; without `--executablePath`
+  it never finds Helium. Fix: `modules/darwin/helium-chrome-shim.nix` plants a
+  2-line `exec`-wrapper at that exact path on every rebuild. `exec` keeps the
+  PID, so puppeteer's launch/close semantics are unchanged — verified headful
+  + headless + isolated + persistent-profile, SIGTERM/stdin-EOF close (no
+  orphans), and `--browserUrl` attach (server stop disconnects, browser
+  survives). Guards: no-op/self-clean when Helium.app is absent; refuses to
+  touch a real Chrome (Mach-O, not a `#!` script). Bonus: Playwright's
+  `channel: "chrome"` also lands on Helium. MCP-launched sessions use their
+  own profile (`~/.cache/chrome-devtools-mcp/`), never the real one. Note:
+  chrome-devtools-mcp 1.5.0 has no close-browser *tool* (`close_page` refuses
+  the last page) — launched browsers close when the MCP server stops (session
+  end, `/mcp` reconnect).
 - **Helium reads `/etc/chromium`, not `/etc/helium` (2026-06-20).** Unbranded
   Chromium fork; the policy path is stock. `/etc/helium` / `/etc/opt/helium`
   don't exist (proven from binary strings). Don't waste time looking for a
