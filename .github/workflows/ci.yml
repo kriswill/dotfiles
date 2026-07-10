@@ -1,0 +1,100 @@
+# Build gate: the two host closures this repo actually deploys — k
+# (aarch64-darwin, on the arm64 macOS runner; free on public repos) and
+# nebula's NixOS toplevel (x86_64-linux). Deliberately NOT `nix flake check`:
+# the darwin checks would build all three darwin hosts; the gate is k only.
+#
+# Both jobs run ssh-agent because the flake has a private git+ssh input
+# (okf → kriswill/okflight; read-only deploy key, the same OKFLIGHT_DEPLOY_KEY
+# secret pages.yml uses). Fork PRs get no secrets, so the okf fetch — and the
+# job — fails there; acceptable for a personal repo.
+#
+# NO signing key and NO age key in CI, ever: builds never decrypt sops
+# secrets (decryption happens at activation on the host), so the only
+# credential here is the read-only okflight deploy key. See
+# knowledge/decisions/ci-github-actions.md.
+#
+# No hyprland.cachix.org substituter: hyprland/noctalia follow this flake's
+# nixpkgs, so their upstream caches can never hit — nebula rebuilds them from
+# source on bumps by design (the cost of the `follows` decision).
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  darwin-k:
+    runs-on: macos-latest # arm64 == aarch64-darwin, matches host k
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: DeterminateSystems/determinate-nix-action@v3
+
+      # GHA-cache-backed store cache (~10 GiB/repo) — mainly helps the
+      # custom packages (ccglass, okf, tomato, nas-mount, …).
+      - uses: DeterminateSystems/magic-nix-cache-action@v14
+
+      - uses: webfactory/ssh-agent@v0.10.0
+        with:
+          ssh-private-key: ${{ secrets.OKFLIGHT_DEPLOY_KEY }}
+
+      - name: Ensure github.com in known_hosts
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan github.com >> ~/.ssh/known_hosts
+
+      - name: Build darwin system closure (k)
+        run: nix build .#darwinConfigurations.k.system -L
+
+  nixos-nebula:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      # nebula's closure (gaming profile, nvidia, source-built hyprland) can
+      # exceed the stock runner's free disk — reclaim preinstalled bloat
+      # first. Tune or drop once the first runs report disk high-water.
+      - uses: jlumbroso/free-disk-space@v1.3.1
+        with:
+          tool-cache: true
+
+      - uses: actions/checkout@v7
+
+      - uses: DeterminateSystems/determinate-nix-action@v3
+
+      - uses: webfactory/ssh-agent@v0.10.0
+        with:
+          ssh-private-key: ${{ secrets.OKFLIGHT_DEPLOY_KEY }}
+
+      - name: Ensure github.com in known_hosts
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan github.com >> ~/.ssh/known_hosts
+
+      # snowglobe-lib lives on codeberg.org, which intermittently serves
+      # 503/504 (observed 2026-07-10, from residential IPs too — not just
+      # datacenter blocking). Fetch all inputs with backoff (~10 min grace)
+      # so the build step never dies on a fetch blip. If Codeberg flakiness
+      # becomes chronic, the escalation is mirroring snowglobe-lib to GitHub
+      # and swapping the input URL.
+      - name: Fetch flake inputs (retried)
+        run: |
+          for i in 1 2 3 4 5; do
+            nix flake archive && exit 0
+            echo "input fetch attempt $i failed (Codeberg down?); retrying in $((i * 60))s" >&2
+            sleep $((i * 60))
+          done
+          exit 1
+
+      - name: Build NixOS toplevel (nebula)
+        run: nix build .#nixosConfigurations.nebula.config.system.build.toplevel -L

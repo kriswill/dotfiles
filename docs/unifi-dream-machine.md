@@ -23,6 +23,23 @@ Two independent naming systems run in parallel; they are **not** in conflict:
   - **The static-DNS record set is separate again** — confirmed empty via `unifi_list_dns_records` before we touched anything. It manages a third, independent list (the DNS API / DNSControl / this MCP server's `create/update/delete_dns_record`) that doesn't see or shadow either of the above. Creating a static A record for an IP that already has a Local DNS Record (mechanism 2) enabled is rejected outright: `api.err.StaticDnsOverlapsWithDeviceLocalDns`.
   - To fully replace `home-unas-pro-4.home.lan` you'd have to change the client's raw `hostname`, a different and untested action — not something we've done.
 
+## Mounting via `nas.home.lan` (SMB) — tested 2026-07-09
+
+`mount_smbfs -N //k@nas.home.lan/Personal-Drive <mountpoint>` (the `-N` flag uses keychain-only auth, no interactive prompt — required for anything non-interactive, including a launchd agent) failed with **`File exists`** while the existing Bonjour-based mount (`//k@UNAS-Pro._smb._tcp.local/Personal-Drive`) was still active — **not a DNS or auth problem**. macOS's SMB client recognizes both hostnames as the *same negotiated server identity* (they resolve to the same box) and refuses a second concurrent mount of the same share. Confirmed the mechanism by unmounting the Bonjour-based mount first (`diskutil unmount /Volumes/Personal-Drive`) and retrying: `nas.home.lan` mounted cleanly, browsed correctly, and reported real capacity (3.7T / 155G used). The `-N` keychain lookup also succeeded with no prior credential entry made under that literal hostname — another sign macOS keys the keychain match off the server's canonical identity, not the connect string.
+
+Practical upshot: **you can have `nas.home.lan` *or* the Bonjour name mounted, never both at once.** Kris now mounts permanently at `~/nas` via `nas.home.lan` (module below); Time Machine stays on the Bonjour destination as before (unaffected — separate share, separate mount).
+
+**Persistent auto-mount:** `modules/darwin/nas-mount.nix` (`flake.modules.darwin.nas-mount`, gated behind `services.nas-mount.enable`, flipped on for host `k`) — a `launchd.user.agents.nas-mount` job, `RunAtLoad` + `StartInterval = 300` (retries every 5 min in case the NAS/network wasn't up yet at login), running an idempotent `mkdir -p ~/nas && mount_smbfs -N ... ~/nas` guarded by a `mount | grep` check so re-runs are harmless.
+
+## Codesigning the agent (moved)
+
+Everything about signing `nas-mount` — the Developer ID identity setup, the
+`sign-launchd-agents` batch tool, and the full "Item from unidentified
+developer" fix (the `.app` bundle + `AssociatedBundleIdentifiers` +
+LaunchServices + BTM-cache recipe) — lives in its own manual now:
+**[docs/darwin-codesigning.md](darwin-codesigning.md)**. It applies to any
+darwin launchd agent, not just this one; `nas-mount` is the worked example.
+
 ## Scan toolkit (macOS)
 
 ```sh
@@ -124,6 +141,8 @@ Auth model (from `api_auth.py`/`api_transport.py`): **session-cookie login** (`P
 
 ## Learned behaviours & workarounds
 
+- Codesigning/Login-Items gotchas moved to [darwin-codesigning.md](darwin-codesigning.md)'s own learned-behaviours section.
+- **(2026-07-09) `lsof +D` on an SMB mount hangs and itself pins the mount busy.** Debugging a "resource busy" unmount by running `lsof +D /Users/k/nas` makes it worse: lsof walks the whole network tree, never returns, and its own open references then keep the mount busy — a self-inflicted deadlock that survives until the lsof processes are killed (`pkill -f 'lsof.*nas'`, then `diskutil unmount` succeeds). Check `ps ax | grep lsof` for stuck walkers before believing "something else" holds an SMB mount.
 - **(2026-07-09) "SMB uses a different DNS" was Bonjour, not DNS.** Finder mounts via mDNS service discovery (`UNAS-Pro._smb._tcp.local`); the `home.lan` name never enters the SMB path. Check `mount | grep smb` before chasing DNS records.
 - **(2026-07-09) UDM reverse PTR returns `…id.ui.direct`, not `home.lan`.** UniFi's internal device identity — expected, not a misconfiguration.
 - **(2026-07-09) Can't fingerprint the Network version unauthenticated.** `/proxy/network/status` (which used to leak the version) now returns 401 on this firmware. Confirmed instead via an authenticated MCP call: **10.4.57**.

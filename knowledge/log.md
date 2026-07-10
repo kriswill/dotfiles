@@ -2,6 +2,37 @@
 
 ## 2026-07-10
 
+- **Creation** — [ci-github-actions](decisions/ci-github-actions.md) +
+  `.github/workflows/{ci,update-flake-lock}.yml`: GitHub Actions now builds
+  both deployed closures on every PR — `darwinConfigurations.k.system` on
+  the free arm64 macOS runner, nebula's toplevel on ubuntu behind a
+  disk-reclaim step — plus a weekly `update-flake-lock@v28` bump PR opened
+  with a fine-grained PAT (GITHUB_TOKEN-created events never trigger
+  workflows). Load-bearing property: builds never decrypt sops secrets, so
+  CI's only credential is the read-only okflight deploy key — no signing
+  key, no age key, ever. Chosen over Dependabot's native nix support
+  (April 2026) because Dependabot can't bump the private git+ssh okf input.
+
+- **Update** — [nas-mount](modules/nas-mount.md) /
+  [nas-mount-codesigning](decisions/nas-mount-codesigning.md) /
+  `docs/darwin-codesigning.md`: automated the Developer ID re-sign chore.
+  First verified Determinate Nix offers nothing here (its "signing" = its
+  own notarized installer, Keychain TLS certs, NAR cache signatures — no
+  Mach-O signing of user builds; their own BTM answer is a signed binary
+  *outside* the store, same pattern as ours). The module now signs the
+  deployed bundle at activation via rcodesign + a **dedicated, purpose-
+  minted** Developer ID cert (openssl PKCS#8 key → CSR → portal; personal
+  Keychain identity never exported), PEM sops-encrypted as
+  `nas-signing-pem` (owner k; sops-nix installs at order 1500, module
+  signs at 1600 in the same switch; trigger = fresh copy or missing
+  `Authority=Developer ID Application`). Accepted, recorded risk: public
+  repo, blob permanent in history, single ssh-host-key-derived recipient —
+  rotation (new mint + sops replace) is the recovery story. Gotchas
+  learned: sops-nix fails the *build* when a declared secret is missing
+  from the sops file (declaration ships commented until the key exists);
+  rcodesign `--pem-file` demands PKCS#8 framing and pairs the FIRST
+  certificate with the key.
+
 - **Creation** — [helium-chrome-shim](modules/helium-chrome-shim.md) /
   [decision](decisions/helium-chrome-shim.md): dropped the chromium cask from
   [homebrew](modules/homebrew.md) (Helium is the browser now), which broke
@@ -20,6 +51,121 @@
 
 ## 2026-07-09
 
+- **Creation** — New manual `docs/darwin-codesigning.md`: extracted every
+  codesigning learning from the nas-mount arc out of the UDM manual into a
+  general-purpose reference — identity/cert-type pitfalls (Apple Development
+  vs Developer ID, missing G1 intermediate), codesign-vs-rcodesign trust
+  paths, the hard boundaries (root cannot reach login-keychain keys;
+  `security export` cannot filter to one identity), the
+  `sign-launchd-agents` tool, and the full Login Items attribution recipe
+  (.app bundle + AssociatedBundleIdentifiers + lsregister + BTM cache-bust;
+  notarization not required). `docs/unifi-dream-machine.md` slimmed to a
+  pointer; knowledge-bundle references repointed.
+
+- **Update** — [nas-mount](modules/nas-mount.md) /
+  [nas-mount-codesigning](decisions/nas-mount-codesigning.md): finished the
+  Login Items arc — a correct Developer ID signature on the bare binary
+  changed nothing; attribution needs an associated .app bundle
+  (`AssociatedBundleIdentifiers`, per Apple DTS). `pkgs/nas-mount` now also
+  builds an ad-hoc-signed `NasMount.app` (rcodesign in postFixup — an
+  unsigned bundle is an invalid code object launchd `EX_CONFIG`s), the
+  module deploys it to `~/Applications` (stamp-guarded copy + `lsregister
+  -f`, since cp-installed apps are invisible to LaunchServices) and writes
+  the plist via `environment.userLaunchAgents` (the `launchd.user.agents`
+  submodule is closed and lacks the key). BTM caches by plist path — bust
+  via bootout + rm-plist + ~75s wait + restore + bootstrap. Verified live:
+  Login Items shows **NasMount**, custom icon, `Developer Name: Kris
+  Williams`. Notarization not required.
+
+- **Update** — `scripts/sign-launchd-agents.ts`, `docs/unifi-dream-machine.md`:
+  fixed a wrong-identity bug. `security export -t identities` exports every
+  identity in the keychain with no per-item filter (confirmed a documented
+  CLI limitation, not something scriptable around); Kris's keychain also has
+  an "Apple Development" cert from Xcode, and `rcodesign` silently signed
+  `nas-mount` with that one instead of "Developer ID Application" —
+  producing a real (non-ad-hoc) signature that still left Login Items
+  showing "unidentified developer," since Apple Development certs don't
+  chain through the Developer ID authority BTM checks for. Fixed by
+  dropping the programmatic `security export` call entirely — both the
+  script and the manual doc procedure now prompt for a `.p12` path you
+  export yourself via Keychain Access.app (which supports selecting exactly
+  one identity). Write-up in
+  [nas-mount-codesigning](decisions/nas-mount-codesigning.md).
+- **Update** — [nas-mount](modules/nas-mount.md) /
+  [nas-mount package](packages/nas-mount.md): `rcodesign` errored `specified
+  path is not of a recognized type` signing the shell-script version — it
+  only handles Mach-O/bundle/DMG/pkg. Considered switching the signer to
+  plain OS `codesign` (works on any file, and would succeed here since the
+  tool always runs in Kris's own session) but rejected: `rcodesign` was
+  chosen specifically because it never touches Keychain/session ACLs, which
+  is what will let this same signing approach run in GitHub CI later (certs
+  stored there securely — not implemented yet). Rewrote `nas-mount` as a
+  genuinely compiled Mach-O binary instead — `pkgs/nas-mount/` (`main.rs`,
+  pure `std`, bare `rustc -O`, no Cargo), registered via
+  `modules/packages.nix` + `overlays/nas-mount.nix`, consumed as
+  `pkgs.nas-mount` in place of `writeShellScriptBin`; `mountPoint`/`share`
+  now passed as CLI args via launchd's `ProgramArguments`. Bonus: rustc
+  auto-ad-hoc-signs the binary at build time, upgrading Login Items from ❌
+  unsigned to 🔏 ad-hoc before any manual signing. Full write-up in
+  [nas-mount-codesigning](decisions/nas-mount-codesigning.md).
+- **Update** — [nas-mount](modules/nas-mount.md): fixed a real bug the new
+  `sign-launchd-agents` tool surfaced — the stable-path copy at
+  `~/.local/state/nas-mount/nas-mount` was `r-xr-xr-x` (no write bit)
+  because `cp` copies the nix store source's read-only mode and `chmod +x`
+  never grants write. Changed to `chmod u+w,+x` and moved it outside the
+  `cmp -s` content-diff guard (permission bits don't affect a code
+  signature, so it's safe — and now self-healing — to re-assert every
+  activation). See
+  [nas-mount-codesigning](decisions/nas-mount-codesigning.md) for the
+  write-up.
+- **Creation** — `scripts/sign-launchd-agents.ts`: generalized the manual
+  nas-mount codesigning procedure into an fzf-based batch tool over every
+  `~/Library/LaunchAgents` plist — shows signature status (Developer ID /
+  Apple-signed-no-team / ad-hoc / unsigned / unresolved), Authority, and
+  Signed Time per agent, with a live `codesign -dv` preview; multi-select
+  signs a whole batch off one passphrase export instead of one-at-a-time.
+  Added `rcodesign` to the dev shell (`modules/dev.nix`) so it's on PATH.
+  Verified the discovery/parsing logic against live data (correctly
+  classified `nas-mount` unsigned, `/bin/launchctl` Apple-signed-no-team,
+  `cbm-daemon`/`gpg-connect-agent` ad-hoc-linker-signed). Same
+  transient/never-committed `.p12` posture as the one-off script it
+  replaces for the multi-agent case — see
+  [nas-mount-codesigning](decisions/nas-mount-codesigning.md).
+  investigated clearing "unidentified developer" for `nas-mount` in Login
+  Items. Confirmed via `sfltool dumpbtm` the label tracks the executable's
+  own Developer ID Team Identifier, not plist installation method. Enrolled
+  in the Apple Developer Program, obtained a Developer ID Application
+  certificate, installed the missing "Developer ID - G1" intermediate
+  (matched via Authority/Subject Key Identifier). Proved codesigning from
+  `system.activationScripts` is structurally impossible — root (even via
+  `launchctl asuser`) cannot reach the login keychain's private key, a real
+  macOS security boundary. Rejected the alternative (sops-committing the
+  exported key for automated signing) as disproportionate permanent exposure
+  of a real signing identity for a cosmetic label. Landed on a manual,
+  transient `rcodesign` + `.p12`-export procedure the machine owner runs
+  himself, documented in `docs/unifi-dream-machine.md`; `nas-mount.nix`
+  simplified to just a `cmp -s`-guarded stable-path copy so a manual
+  signature survives routine `nrs` runs.
+- **Update** — [nas-mount](modules/nas-mount.md): fixed Login Items display —
+  switched `pkgs.writeShellScript` to `pkgs.writeShellScriptBin` so the
+  executable macOS shows in System Settings > Login Items is a clean
+  `nas-mount` rather than the hash-prefixed store-path basename
+  (`writeShellScript` outputs a bare file at the store path's top level;
+  `writeShellScriptBin` nests it under `$out/bin/`, so only the parent
+  directory carries the hash). While investigating, confirmed the unrelated
+  generic `sh` Login Items are nix-darwin/sops-nix's own `wait4path`-wrapped
+  system daemons (`activate-system`, `sops-install-secrets`) plus two
+  third-party agents (1Password's SSH_AUTH_SOCK helper, the Determinate Nix
+  installer's repair hook) — all expected, none of them ours to fix.
+- **Creation** — [nas-mount](modules/nas-mount.md)
+  (`modules/darwin/nas-mount.nix`): new darwin host-selective module, a
+  `launchd.user.agents` job that mounts the UNAS Pro 4's Personal-Drive SMB
+  share at `~/nas` via `nas.home.lan` at login (`-N` keychain-only auth,
+  `StartInterval` retry, idempotent mount-if-not-mounted guard). Enabled on
+  host `k`; built, activated via `nrs`, and confirmed live
+  (`launchctl list`, `mount`). Discovered while testing that mounting via
+  `nas.home.lan` conflicts with the pre-existing Bonjour-based mount — see
+  [unifi-dream-machine](../docs/unifi-dream-machine.md) for the root cause.
 - **Creation** — New manual `docs/unifi-dream-machine.md`: verified LAN DNS
   architecture (UDM dnsmasq `home.lan` vs the NAS's own mDNS/Bonjour identity
   — macOS SMB mounts ride Bonjour, not DNS), the three headless control paths
