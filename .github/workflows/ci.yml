@@ -81,5 +81,20 @@ jobs:
           mkdir -p ~/.ssh
           ssh-keyscan github.com >> ~/.ssh/known_hosts
 
+      # snowglobe-lib lives on codeberg.org, which intermittently serves
+      # 503/504 (observed 2026-07-10, from residential IPs too — not just
+      # datacenter blocking). Fetch all inputs with backoff (~10 min grace)
+      # so the build step never dies on a fetch blip. If Codeberg flakiness
+      # becomes chronic, the escalation is mirroring snowglobe-lib to GitHub
+      # and swapping the input URL.
+      - name: Fetch flake inputs (retried)
+        run: |
+          for i in 1 2 3 4 5; do
+            nix flake archive && exit 0
+            echo "input fetch attempt $i failed (Codeberg down?); retrying in $((i * 60))s" >&2
+            sleep $((i * 60))
+          done
+          exit 1
+
       - name: Build NixOS toplevel (nebula)
         run: nix build .#nixosConfigurations.nebula.config.system.build.toplevel -L
