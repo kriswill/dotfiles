@@ -66,7 +66,8 @@ run against the **resolved profile's** config dir, so their effect is cwd-depend
 `claude mcp add` under `~/src/perforce/...` edits `~/.claude-work`; the same command elsewhere
 edits `~/.claude-me`. This is intentional (profiles are isolated), but it means servers/config
 in your original `~/.claude` aren't visible under a profile unless you seeded that profile
-from it (see setup). Use `command claude …` to operate on the original `~/.claude`.
+from it (see setup). Use `command claude …` to operate on the original `~/.claude` — though
+with `fallbackProfile` set, `~/.claude` is itself a symlink to that profile's dir.
 
 ## Desktop app (GUI)
 
@@ -86,6 +87,7 @@ programs.claude-account-selector = {
   defaultProfile = "me";
   profiles = [ "me" "work" ];
   desktopProfile = "me";   # GUI desktop app → ~/.claude-me
+  fallbackProfile = "me";  # ~/.claude → ~/.claude-me (env-loss backstop)
 };
 ```
 
@@ -101,12 +103,34 @@ init: an interactive shell that merely **inherited** this exact value drops it, 
 resolves by `$PWD` as usual. An explicit `CLAUDE_CONFIG_DIR=… claude` (set *after* init, per
 command) is unaffected and still wins.
 
+### The env-loss backstop (`fallbackProfile`)
+
+The LaunchAgent's `launchctl setenv` can be **lost**: a login race (agent runs after the
+desktop app launched), or a relaunch chain started from a var-less instance (both seen, on
+2026-06-28 and 2026-07-10). A launch that misses `CLAUDE_CONFIG_DIR` falls back to the
+unsegregated `~/.claude` and silently grows a parallel config tree there — stray sessions,
+memories, and settings that the real profile never sees.
+
+Set `fallbackProfile` to close that hole: activation replaces `~/.claude` with a symlink to
+`~/.claude-<fallbackProfile>`, so env-less launches land in a real profile. Safety rules:
+
+- Activation only **creates or re-points a symlink**. A real `~/.claude` directory is never
+  deleted — activation warns and leaves it. Migrate its contents into the profile dir
+  (sessions/`projects/`, `plans/`, `tasks/`, memories; check for collisions), remove the
+  emptied dir, and re-activate.
+- Trade-off: env-loss becomes **silent** — a *work* session that misses the env var lands in
+  this (typically personal) profile instead of a visibly stray `~/.claude`. The symlink is a
+  default, not per-directory routing.
+- `command claude` (wrapper bypass) and anything else reading `~/.claude` now also resolve to
+  the fallback profile — the "unsegregated scope" effectively ceases to exist.
+
 ### Activation & verification
 
 ```sh
 nrs                                                  # nh darwin switch ~/src/dotfiles
 launchctl setenv CLAUDE_CONFIG_DIR ~/.claude-me      # apply now (or just log out/in)
 launchctl getenv  CLAUDE_CONFIG_DIR                  # → /Users/<you>/.claude-me
+readlink ~/.claude                                   # → /Users/<you>/.claude-me (fallbackProfile set)
 # Cmd-Q and relaunch the Claude desktop app so its next session inherits the env.
 # In a fresh Ghostty window, `echo $CLAUDE_CONFIG_DIR` should be EMPTY (scrub working).
 ```
@@ -186,6 +210,7 @@ zsh file with built-in fallbacks, so it also runs standalone (e.g. under test).
 | `profiles` | list of str | `[ "me" "work" ]` | Accepted profile names → `~/.claude-<name>` and keychain `claude-token-<name>`. |
 | `rules` | attrs (path → profile) | `{ "<home>/src/work" = "work"; }` | Built-in path-prefix rules; longest match wins. `{ }` for none. |
 | `desktopProfile` | str or null | `null` | Pin the GUI Claude **desktop app** to `~/.claude-<name>` via a login LaunchAgent. See [Desktop app (GUI)](#desktop-app-gui). |
+| `fallbackProfile` | str or null | `null` | Symlink `~/.claude` → `~/.claude-<name>` so launches that miss `CLAUDE_CONFIG_DIR` land in a real profile. See [The env-loss backstop](#the-env-loss-backstop-fallbackprofile). |
 
 ```nix
 # In a host module (modules/hosts/<hostname>/default.nix):

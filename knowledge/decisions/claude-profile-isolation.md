@@ -36,6 +36,12 @@ login per `CLAUDE_CONFIG_DIR`.
 - A matching `ccglass` function applies the same resolution for the traffic
   inspector, which spawns the real `claude` binary directly and would
   otherwise bypass the wrapper.
+- The LaunchAgent's env can be lost (login race, or a relaunch chain from a
+  var-less instance — seen 2026-06-28 and 2026-07-10, the latter growing a
+  stray parallel config tree in `~/.claude`), so `fallbackProfile` symlinks
+  `~/.claude` → `~/.claude-<profile>` at activation as the backstop.
+  Activation never deletes a real `~/.claude` directory (stray trees hold
+  session data); it warns and waits for a hand migration.
 
 ## Consequences
 
@@ -43,6 +49,9 @@ login per `CLAUDE_CONFIG_DIR`.
 - Stateful subcommands (`claude mcp add`, …) are cwd-scoped to the resolved
   profile — intentional, occasionally surprising.
 - The desktop app gets one fixed profile; ~0.2 s auth probe per launch.
+- With the fallback symlink, env-loss is silent (a work session that misses
+  the env var lands in the personal profile) and the unsegregated `~/.claude`
+  scope effectively ceases to exist.
 
 ## Citations
 

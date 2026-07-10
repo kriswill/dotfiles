@@ -48,6 +48,9 @@
       # Pin the GUI Claude desktop app to ~/.claude-me (GUI apps can't do the
       # per-$PWD switching the shell wrapper does). See the module README.
       desktopProfile = "me";
+      # Backstop for launches that miss CLAUDE_CONFIG_DIR entirely (launchd env
+      # lost to a login race / var-less relaunch): ~/.claude → ~/.claude-me.
+      fallbackProfile = "me";
     };
 
     nixpkgs.hostPlatform = "aarch64-darwin";

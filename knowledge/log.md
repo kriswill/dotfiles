@@ -2,6 +2,17 @@
 
 ## 2026-07-10
 
+- **Update** — [claude-account-selector](modules/claude-account-selector.md) /
+  [claude-profile-isolation](decisions/claude-profile-isolation.md): new
+  `fallbackProfile` option symlinks `~/.claude` → `~/.claude-<profile>` at
+  activation (order 1601), closing the env-loss hole where a desktop launch
+  that misses the LaunchAgent's `CLAUDE_CONFIG_DIR` (login race / var-less
+  relaunch chain, seen 2026-06-28 and 2026-07-10) silently grows a stray
+  config tree in `~/.claude`. Activation never deletes a real `~/.claude`
+  directory — it warns and waits for a hand migration. Host `k` sets
+  `fallbackProfile = "me"`. Trade-off recorded: env-loss is now silent, and
+  a work session that misses the env var lands in the personal profile.
+
 - **Creation** — [helium-chrome-shim](modules/helium-chrome-shim.md) /
   [decision](decisions/helium-chrome-shim.md): dropped the chromium cask from
   [homebrew](modules/homebrew.md) (Helium is the browser now), which broke
