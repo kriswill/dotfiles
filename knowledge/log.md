@@ -1,5 +1,23 @@
 # Log
 
+## 2026-07-10
+
+- **Creation** — [helium-chrome-shim](modules/helium-chrome-shim.md) /
+  [decision](decisions/helium-chrome-shim.md): dropped the chromium cask from
+  [homebrew](modules/homebrew.md) (Helium is the browser now), which broke
+  chrome-devtools-mcp on the Macs — Puppeteer probes the literal
+  `/Applications/Google Chrome.app/…` path for channel `stable`
+  (existence-only, no env override) and the Claude Code plugin passes no
+  browser flag (plugin MCP args aren't user-overridable). Fix (Kris' idea): a
+  nix-darwin activation script plants a 2-line `exec` wrapper at that exact
+  path → Helium; `exec` keeps the PID so launch/close semantics are
+  unchanged. Verified the full matrix (headful/headless × isolated/persistent
+  × SIGTERM/stdin-EOF close × `--browserUrl` attach) — all pass, no orphaned
+  processes; live plugin tools drove Helium without a session restart.
+  Guarded: no-op/self-clean without Helium.app, never touches a real Chrome
+  (Mach-O vs `#!`). Also documented in `docs/helium.md`; homebrew.md stub
+  upgraded (zap-cleanup gotcha).
+
 ## 2026-07-09
 
 - **Creation** — New manual `docs/unifi-dream-machine.md`: verified LAN DNS
