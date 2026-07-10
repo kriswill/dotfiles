@@ -63,6 +63,14 @@ observation removed the entire hard part.
   or drop the disk-reclaim step); the PAT's expiry (~1 year) needs a
   calendar note; `timeout-minutes` may need raising on uncached
   hyprland-bump PRs.
+- First-run data (2026-07-10): `darwin-k` green in 41m8s fully uncached,
+  and it DID fetch the private okf input (ssh-agent is required, not
+  precautionary). `nixos-nebula` failed twice on **Codeberg 503/504
+  fetching snowglobe-lib** — reproduced from a residential IP, i.e. a real
+  Codeberg outage, and only the nebula eval forces that input (darwin
+  never touches Codeberg). Mitigation: a retried `nix flake archive` step
+  (~10 min backoff) before the build; escalation if chronic: mirror
+  snowglobe-lib to GitHub and swap the input URL.
 
 ## Citations
 
