@@ -26,16 +26,19 @@
 # reopen System Settings. (`sfltool resetbtm` also works but nukes and
 # re-prompts EVERY login item on the machine.)
 #
-# Stable external path: nix-darwin's own root-run activation context cannot
-# codesign this (confirmed 2026-07-09 — modern macOS walls the login
+# Stable external path: the nix store is read-only, so the app is copied to
+# ~/Applications and the Developer ID signature goes on that copy. Signing is
+# automated in the activation block below via rcodesign + a dedicated
+# sops-held PEM identity (key + cert chain minted specifically for this —
+# NOT the personal Keychain identity, which stays non-exportable; see
+# knowledge/decisions/nas-mount-codesigning.md, 2026-07-10 update). rcodesign
+# signs from a key *file*, which sidesteps the login-keychain boundary that
+# rules out OS `codesign` here (confirmed 2026-07-09: macOS walls the login
 # keychain's private-key material off from root entirely, even via
-# `launchctl asuser`; only a process genuinely running as the user in their
-# real session can use it), and the nix store is read-only regardless. So the
-# app is copied to ~/Applications and signing is a deliberate manual step the
-# machine's owner runs (`sign-launchd-agents`, or see docs/unifi-dream-machine.md)
-# against that copy. The copy is guarded by a stamp file holding the source
-# store path, so an existing manual signature survives every `nrs` that
-# doesn't actually rebuild the app.
+# `launchctl asuser`). The copy is guarded by a stamp file holding the source
+# store path, so the signature survives every `nrs` that doesn't actually
+# rebuild the app. `sign-launchd-agents` remains the manual tool for OTHER
+# launchd agents (see docs/darwin-codesigning.md).
 {
   flake.modules.darwin.nas-mount =
     {
@@ -56,6 +59,16 @@
       appDst = "${home}/Applications/NasMount.app";
       execPath = "${appDst}/Contents/MacOS/nas-mount";
       stamp = "${home}/.local/state/nas-mount/source-store-path";
+
+      # Developer ID signing of the deployed copy, run as user k during
+      # postActivation. sops-nix installs /run/secrets/* earlier in this SAME
+      # postActivation run (its installScript is lib.mkAfter = order 1500, we
+      # run at 1600), so the PEM is already present when the block executes.
+      # The `or` fallback keeps eval working on a host that enables nas-mount
+      # without declaring the secret — the runtime -r check warns and skips.
+      pemSecret = config.sops.secrets.nas-signing-pem.path or "/run/secrets/nas-signing-pem";
+      # Keep in sync with TIMESTAMP_URL in scripts/sign-launchd-agents.ts.
+      timestampUrl = "http://timestamp.apple.com/ts01";
 
       # Written directly rather than via `launchd.user.agents`: that option's
       # serviceConfig is a *closed* submodule (nix-darwin's modules/launchd/
@@ -104,10 +117,11 @@
           /usr/bin/sudo -u k --set-home /bin/sh -c '
             set -e
             mkdir -p "${home}/Applications" "$(dirname "${stamp}")"
-            # Re-copy only when the built app actually changed, so a manual
+            # Re-copy only when the built app actually changed, so the
             # signature on the copy survives unrelated `nrs` runs. The stamp
             # holds the source store path (content-addressed, so a changed
             # app == a changed path).
+            fresh=0
             if [ "$(cat "${stamp}" 2>/dev/null)" != "${appSrc}" ]; then
               rm -rf "${appDst}"
               cp -R "${appSrc}" "${appDst}"
@@ -120,9 +134,29 @@
               # association through LS — without this the group shows a
               # blank icon and the raw developer name only.
               /System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister -f "${appDst}"
+              fresh=1
             fi
             # Superseded by the .app bundle (was the pre-bundle exec target).
             rm -f "${home}/.local/state/nas-mount/nas-mount"
+            # Developer ID signing with the dedicated sops-held identity.
+            # Trigger on a fresh copy (only ad-hoc-signed from the store) or
+            # a deployed bundle without a Developer ID signature (first
+            # rollout, an earlier failed sign, tampering). Gate on Authority=,
+            # NOT TeamIdentifier= — an Apple Development cert shows the same
+            # team through the wrong chain (see the decision record). A
+            # failure warns instead of failing activation; the Authority
+            # check re-arms the sign attempt on the next activation.
+            if [ "$fresh" = 1 ] || ! /usr/bin/codesign -dvv "${appDst}" 2>&1 | grep -q "Authority=Developer ID Application"; then
+              if [ -r "${pemSecret}" ]; then
+                if ${pkgs.rcodesign}/bin/rcodesign sign --pem-file "${pemSecret}" --timestamp-url "${timestampUrl}" "${appDst}"; then
+                  echo "nas-mount: signed ${appDst} with Developer ID" >&2
+                else
+                  echo "nas-mount: WARNING: Developer ID signing failed; bundle keeps its current signature" >&2
+                fi
+              else
+                echo "nas-mount: WARNING: signing PEM ${pemSecret} missing or unreadable; skipping Developer ID signing" >&2
+              fi
+            fi
           '
         '';
       };

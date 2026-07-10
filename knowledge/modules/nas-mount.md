@@ -56,8 +56,8 @@ enabled on [k](../hosts/k.md), deliberately not on mini or SOC-Kris-Williams
 app bundle*, not a signed executable — so `pkgs/nas-mount` also builds
 `NasMount.app` (ad-hoc signed at build time via rcodesign in postFixup; an
 unsigned bundle is an invalid code object launchd rejects with `EX_CONFIG`),
-the module deploys it to `~/Applications` with a stamp-guarded copy (so a
-manual Developer ID signature survives routine `nrs` runs) plus
+the module deploys it to `~/Applications` with a stamp-guarded copy (so the
+Developer ID signature survives routine `nrs` runs) plus
 `lsregister -f` (cp-installed apps are invisible to LaunchServices), and the
 launchd plist — written via `environment.userLaunchAgents` because the
 `launchd.user.agents` submodule is closed and lacks the key — carries
@@ -67,6 +67,20 @@ bootstrap refresh dance. Full history (keychain ACL boundary, sops
 rejection, wrong-identity export, bundle requirement):
 [nas-mount-codesigning](../decisions/nas-mount-codesigning.md) and
 `docs/darwin-codesigning.md`.
+
+**Developer ID signing is automated at activation** (2026-07-10): the
+module runs `rcodesign sign --pem-file /run/secrets/nas-signing-pem` on the
+deployed bundle whenever the copy is fresh or `codesign -dvv` lacks
+`Authority=Developer ID Application` (Authority, never TeamIdentifier — a
+wrong-type cert matches the team). The PEM is a dedicated, purpose-minted
+identity (openssl CSR → Apple portal; the personal Keychain identity is
+never exported), sops-encrypted in `modules/hosts/k/secrets.yaml` with
+`owner = "k"`; sops-nix installs it at postActivation order 1500, the
+module signs at 1600 in the same switch. Failures warn without failing
+activation; a missing secret skips with a warning (and its declaration
+stays commented in the host file until the key exists — sops-nix fails the
+build otherwise). CI never holds the key
+([ci-github-actions](../decisions/ci-github-actions.md)).
 
 ## Source
 
