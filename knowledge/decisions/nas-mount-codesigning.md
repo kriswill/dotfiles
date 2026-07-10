@@ -1,7 +1,7 @@
 ---
 type: Decision
 title: nas-mount Codesigning — Manual, Transient, Never Committed
-description: 'Login Items shows "Unidentified Developer" for every nix-built launchd agent. Rejected both doing OS codesigning inside nix-darwin activation (fails — root cannot reach the login keychain''s private-key ACL) and committing the exported private key via sops (real, permanent exposure of an Apple Developer ID for a cosmetic label). Landed on rcodesign + a transient, never-persisted .p12 export the machine owner runs by hand — kept over plain codesign specifically so the same approach can later run non-interactively in CI. rcodesign only signs Mach-O/bundle/DMG/pkg, so nas-mount became a compiled Rust binary (pkgs/nas-mount/) instead of a shell script.'
+description: 'Login Items shows "Unidentified Developer" for every nix-built launchd agent. OS codesigning inside nix-darwin activation is impossible (root cannot reach the login keychain''s private-key ACL), and exporting/committing the personal Keychain identity stays forbidden. First landed on rcodesign + a transient, owner-run .p12 export; superseded 2026-07-10 by automated activation-time signing with a dedicated, purpose-minted Developer ID cert whose PEM (key born outside Keychain via openssl CSR) is sops-encrypted in git — rotation-first posture, CI never holds any key. rcodesign only signs Mach-O/bundle/DMG/pkg, so nas-mount became a compiled Rust binary (pkgs/nas-mount/) instead of a shell script.'
 tags: [darwin-module, codesigning, security, nas-mount]
 timestamp: '2026-07-09T19:35:00Z'
 ---
@@ -204,3 +204,46 @@ icon; BTM: `Name: NasMount`, `Developer Name: Kris Williams`,
 `Team Identifier: Y6VCVC728W`. Notarization was **not** required
 (`spctl -a` still says "Unnotarized Developer ID" — irrelevant without a
 quarantine bit).
+
+**Update (2026-07-10): option 3 revived — with a dedicated identity, not
+the personal one.** Kris chose to automate the manual re-sign chore.
+Determinate Nix was investigated first and offers nothing here (its
+"signing" claims are its own notarized installer, Keychain TLS certs, and
+NAR cache signatures — zero Mach-O signing of user builds). The original
+option-3 rejection was re-read carefully: what made it unacceptable was
+exporting the *Keychain-held personal identity* into git history. The
+adopted variant changes exactly that term:
+
+- **A dedicated "Developer ID Application" cert is minted for this**
+  (openssl-generated PKCS#8 key → CSR → Apple portal; same team
+  Y6VCVC728W). The key is born outside Keychain and the personal identity
+  is never exported. Rotation = mint a new key/cert, replace the sops
+  value, `nrs`; leak response = revoke just this cert with Apple.
+- **The PEM (key + leaf + Developer ID G2 intermediate — leaf FIRST after
+  the key: rcodesign pairs the first certificate with the signing key and
+  treats the rest as the CA chain) is sops-encrypted** as
+  `nas-signing-pem` in `modules/hosts/k/secrets.yaml`, `owner = "k"`
+  (default `root:staff 0400` is unreadable by the `sudo -u k` activation
+  block). Accepted residual risk, eyes open: the repo is PUBLIC, the
+  encrypted blob is permanent in git history, and its only recipient is
+  host k's ssh-host-key-derived age key (no second recipient — a rebuilt
+  Mac cannot decrypt old ciphertext; rotation IS the recovery story).
+- **The module signs at activation**: sops-nix installs secrets at
+  postActivation order 1500 (`mkAfter`), the nas-mount block at 1600 runs
+  `rcodesign sign --pem-file /run/secrets/nas-signing-pem` on the deployed
+  bundle in the same `darwin-rebuild switch` — triggered by a fresh
+  stamp-guarded copy or a bundle whose `codesign -dvv` lacks
+  `Authority=Developer ID Application` (Authority, never TeamIdentifier —
+  see the Third bug above). Failures warn without failing activation.
+- **Signing inside the derivation was rejected outright** (the build
+  sandbox cannot see `/run/secrets`; any key routed into a build lands in
+  the world-readable store), and **CI never holds the signing key or any
+  age key** — builds do not decrypt sops secrets (see
+  [ci-github-actions](ci-github-actions.md)).
+- **Build-time gotcha:** sops-nix validates at build time that every
+  declared secret exists in the sops file — the `sops.secrets.nas-signing-pem`
+  declaration ships commented-out in `modules/hosts/k/default.nix` until
+  the minting procedure puts the key into secrets.yaml.
+
+`sign-launchd-agents` remains the manual tool for every *other* launchd
+agent; its transient-.p12 posture is unchanged.

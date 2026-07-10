@@ -6,7 +6,8 @@ Program individual membership with **Developer ID Application: Kris Williams
 (Y6VCVC728W)** in the login keychain. Worked example throughout: `nas-mount`
 (`modules/darwin/nas-mount.nix` + `pkgs/nas-mount/`), whose Login Items entry
 went from "nas-mount — Item from unidentified developer" to "NasMount" with a
-custom icon and real developer attribution. Checked 2026-07-09.
+custom icon and real developer attribution. Checked 2026-07-09; automated
+activation-time signing added 2026-07-10 (see that section below).
 
 ## The signing identity
 
@@ -43,7 +44,7 @@ custom icon and real developer attribution. Checked 2026-07-09.
 | Key source | Keychain (session ACL) | `.p12`/PEM file you supply |
 | Works from root/activation scripts | ❌ (see boundaries) | ✅ (no Keychain at all) |
 | Works in the nix build sandbox | ❌ | ✅ (keyless ad-hoc, or with key material) |
-| CI-viable | ❌ | ✅ (certs in CI secrets — planned, not implemented) |
+| CI-viable | ❌ | ✅ technically — but by decision CI holds **no** signing key (see `knowledge/decisions/ci-github-actions.md`); the automated path runs at *activation* on the host instead |
 | Signs | anything ("signed generic" for non-code) | **Mach-O / bundle / DMG / pkg only** — errors `specified path is not of a recognized type` on scripts |
 
 This repo standardizes on **rcodesign** (decision:
@@ -57,8 +58,10 @@ is why `pkgs/nas-mount` is a compiled Rust binary, not a shell script.
   `system.activationScripts` via `sudo -u k`, not via `launchctl asuser <uid>`
   to reattach the GUI session — the key material is walled off from root
   even inside the right session. Only a process genuinely running as the
-  user in their real login session can use it. This is why signing is never
-  wired into `nrs`.
+  user in their real login session can use it. This is why OS `codesign`
+  can never be wired into `nrs` — the automated activation path (below)
+  works only because rcodesign signs from a key *file*, no keychain
+  involved.
 - **The nix build sandbox has no keychain either** — but keyless
   `rcodesign sign` (ad-hoc) works fine there, which is load-bearing (below).
 - **`security export` cannot export a single identity** — `-t identities`
@@ -70,9 +73,13 @@ is why `pkgs/nas-mount` is a compiled Rust binary, not a shell script.
   Export Items… → `.p12`; the `.p12` option is greyed out unless the item
   includes its private key — use the My Certificates category, not
   Certificates).
-- **Committing the signing key (e.g. sops) was rejected**: permanent
-  git-history exposure of a real Apple-verified identity for a cosmetic
-  label. Key material only ever exists transiently, supplied by the human.
+- **The personal Keychain identity is never exported or committed.** The
+  original blanket "no key in sops" rejection was narrowed 2026-07-10: what
+  stays forbidden is exporting the Keychain-held Developer ID identity; a
+  **dedicated, purpose-minted cert whose key was born outside Keychain**
+  (openssl CSR → portal) IS sops-committed for the automated path below —
+  accepted-risk trade recorded in
+  `knowledge/decisions/nas-mount-codesigning.md` (2026-07-10 update).
 
 ## Signing launchd agents: `sign-launchd-agents`
 
@@ -136,9 +143,10 @@ the plist's `AssociatedBundleIdentifiers`. The full working recipe:
    `launchctl bootstrap gui/$UID <plist>`, then **⌘Q and reopen System
    Settings** (the pane caches too). `sfltool resetbtm` also works but
    nukes/re-prompts every login item on the machine.
-6. **Sign the deployed bundle** with `sign-launchd-agents` (Developer ID,
-   on top of the build-time ad-hoc signature) whenever the app was
-   re-copied.
+6. **Sign the deployed bundle** (Developer ID, on top of the build-time
+   ad-hoc signature) whenever the app was re-copied. For nas-mount this is
+   automated at activation (next section); for other agents it's the manual
+   `sign-launchd-agents` run.
 
 End state, verified live: Login Items shows **NasMount**, custom icon,
 `Developer Name: Kris Williams`, `Team Identifier: Y6VCVC728W`.
@@ -146,8 +154,69 @@ End state, verified live: Login Items shows **NasMount**, custom icon,
 Developer ID", which is irrelevant for locally-installed agents (no
 quarantine bit).
 
+## Automated activation-time signing (nas-mount)
+
+Since 2026-07-10 `modules/darwin/nas-mount.nix` signs the deployed bundle
+itself during `postActivation`, replacing the manual `sign-launchd-agents`
+chore *for this one agent*. The pieces:
+
+- **A dedicated identity, minted outside Keychain.** The key is generated
+  with openssl and never enters Keychain; the personal Keychain identity is
+  never exported. Minting:
+
+  ```sh
+  cd "$(mktemp -d)"
+  # PKCS#8 framing ("BEGIN PRIVATE KEY") is REQUIRED — rcodesign's
+  # --pem-file parser ignores legacy PKCS#1 "BEGIN RSA PRIVATE KEY".
+  openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:2048 -out nas-signing.key
+  openssl req -new -key nas-signing.key -out nas-signing.certSigningRequest \
+    -subj "/emailAddress=kris@kris.net/CN=Kris Williams/C=US"
+  # developer.apple.com → Certificates → "+" → Developer ID Application
+  # (NOT Apple Development/Distribution) → upload CSR → download .cer.
+  openssl x509 -inform DER -in developerID_application.cer -out leaf.pem
+  curl -sO https://www.apple.com/certificateauthority/DeveloperIDG2CA.cer
+  openssl x509 -inform DER -in DeveloperIDG2CA.cer -out devid-ca.pem
+  openssl verify -partial_chain -CAfile devid-ca.pem leaf.pem   # sanity
+  cat nas-signing.key leaf.pem devid-ca.pem > nas-signing.pem
+  ```
+
+- **PEM ordering is load-bearing.** rcodesign's `--pem-file` help: there
+  must be 0 or 1 signing keys present, and *the first encountered
+  certificate is paired with the key* — all remaining certs become the
+  embedded CA chain. So: key, then leaf, then intermediate. (rcodesign
+  auto-registers Apple's chain for Apple-issued certs, but embedding the
+  G2 intermediate keeps the signature self-contained.)
+- **Storage: sops.** The PEM lives as `nas-signing-pem` in
+  `modules/hosts/k/secrets.yaml`
+  (`sops set modules/hosts/k/secrets.yaml '["nas-signing-pem"]' "$(jq -Rs . nas-signing.pem)"`),
+  declared with `owner = "k"` in `modules/hosts/k/default.nix` — the
+  signing step runs `sudo -u k` and the default `root:staff 0400` is
+  unreadable there. sops-nix installs `/run/secrets/*` at postActivation
+  order 1500 (`mkAfter`); the nas-mount block runs at 1600 in the *same*
+  `darwin-rebuild switch`. **sops-nix validates at build time that every
+  declared secret exists in the sops file** — declare the secret only
+  after the key is in secrets.yaml or the build fails.
+- **The trigger** is a fresh stamp-guarded copy OR `codesign -dvv` lacking
+  `Authority=Developer ID Application` (never gate on `TeamIdentifier=` —
+  a wrong-type cert matches it). Failures warn without failing activation
+  and re-arm the next run.
+- **Rotation** = mint a new key/CSR/cert (steps above), replace the sops
+  value, `nrs`. **Revocation** (leak response, not routine) = revoke just
+  the dedicated cert with Apple — the Keychain identity is untouched.
+  Public-repo caveat: the encrypted blob is permanent in git history and
+  encrypted only to host k's ssh-host-key-derived age key; rotation IS the
+  recovery story.
+
 ## Learned behaviours & workarounds
 
+- **(2026-07-10) sops-nix fails the whole system build when a declared
+  secret's key is missing from the sops file** — `sops-install-secrets:
+  manifest is not valid: … the key 'x' cannot be found` from the
+  `manifest.json` derivation. Add the key to secrets.yaml *before*
+  declaring `sops.secrets.x`.
+- **(2026-07-10) rcodesign `--pem-file` pairs the FIRST certificate with
+  the signing key** and requires PKCS#8 (`BEGIN PRIVATE KEY`) framing;
+  leaf-before-intermediate ordering in a concatenated PEM is mandatory.
 - **(2026-07-09) Developer ID signing a bare launchd executable does not
   fix "unidentified developer"** — only an associated .app bundle does (see
   recipe above). Don't spend time on notarization for this either; it was
