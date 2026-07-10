@@ -2,6 +2,37 @@
 
 ## 2026-07-10
 
+- **Creation** — [ci-github-actions](decisions/ci-github-actions.md) +
+  `.github/workflows/{ci,update-flake-lock}.yml`: GitHub Actions now builds
+  both deployed closures on every PR — `darwinConfigurations.k.system` on
+  the free arm64 macOS runner, nebula's toplevel on ubuntu behind a
+  disk-reclaim step — plus a weekly `update-flake-lock@v28` bump PR opened
+  with a fine-grained PAT (GITHUB_TOKEN-created events never trigger
+  workflows). Load-bearing property: builds never decrypt sops secrets, so
+  CI's only credential is the read-only okflight deploy key — no signing
+  key, no age key, ever. Chosen over Dependabot's native nix support
+  (April 2026) because Dependabot can't bump the private git+ssh okf input.
+
+- **Update** — [nas-mount](modules/nas-mount.md) /
+  [nas-mount-codesigning](decisions/nas-mount-codesigning.md) /
+  `docs/darwin-codesigning.md`: automated the Developer ID re-sign chore.
+  First verified Determinate Nix offers nothing here (its "signing" = its
+  own notarized installer, Keychain TLS certs, NAR cache signatures — no
+  Mach-O signing of user builds; their own BTM answer is a signed binary
+  *outside* the store, same pattern as ours). The module now signs the
+  deployed bundle at activation via rcodesign + a **dedicated, purpose-
+  minted** Developer ID cert (openssl PKCS#8 key → CSR → portal; personal
+  Keychain identity never exported), PEM sops-encrypted as
+  `nas-signing-pem` (owner k; sops-nix installs at order 1500, module
+  signs at 1600 in the same switch; trigger = fresh copy or missing
+  `Authority=Developer ID Application`). Accepted, recorded risk: public
+  repo, blob permanent in history, single ssh-host-key-derived recipient —
+  rotation (new mint + sops replace) is the recovery story. Gotchas
+  learned: sops-nix fails the *build* when a declared secret is missing
+  from the sops file (declaration ships commented until the key exists);
+  rcodesign `--pem-file` demands PKCS#8 framing and pairs the FIRST
+  certificate with the key.
+
 - **Creation** — [helium-chrome-shim](modules/helium-chrome-shim.md) /
   [decision](decisions/helium-chrome-shim.md): dropped the chromium cask from
   [homebrew](modules/homebrew.md) (Helium is the browser now), which broke
