@@ -18,6 +18,14 @@ gh is **cross-platform**: the CLI ships via the [git](../modules/git.md)
 module twins on both OSes, and a fresh machine runs `gh-config restore` once
 to materialize the live file. Design: `config/README.md`.
 
+`capture` and `diff` normalize the YAML through yq-go (2-space indent,
+comments and quoting preserved) instead of copying/comparing verbatim: gh
+versions disagree on mapping indent when they rewrite the live file, so
+verbatim snapshots flip-flopped 2sp↔4sp across machines (commits `db80257`
+then `9873982` accepted opposite rewrites; fixed 2026-07-11). The snapshot is
+canonical-format; `restore` still copies it verbatim and lets gh re-style the
+live file however it likes.
+
 Added per the [add-package playbook](../playbooks/add-package.md).
 
 ## Source
