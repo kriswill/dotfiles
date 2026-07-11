@@ -2,6 +2,16 @@
 
 ## 2026-07-11
 
+- **Update** — [gh-config](packages/gh-config.md): `capture`/`diff` now
+  normalize the YAML through yq-go (2-space indent, comments/quoting kept)
+  instead of copying/comparing verbatim. gh versions disagree on mapping
+  indent when rewriting the live file, so verbatim snapshots flip-flopped
+  2sp↔4sp across machines (`db80257` and `9873982` accepted opposite
+  rewrites). Snapshot is now canonical-format and byte-stable across
+  repeated captures; `restore` unchanged. Same day, the zsh `y` yazi
+  wrapper (`727b0fb`) learned to recover real dirs from virtual
+  `search://<keyword>//<dir>` cwd URLs and to never cd to a non-directory.
+
 - **Creation** — [ssh-private-hosts dual module](modules/ssh-private-hosts.md):
   the k-only sops ssh hosts setup generalised across machines. The sops file
   moved `modules/hosts/k/ssh-hosts.yaml` → shared

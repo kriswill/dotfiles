@@ -2,6 +2,7 @@
   writeShellApplication,
   coreutils,
   diffutils,
+  yq-go,
 }:
 # Snapshot/restore gh's config.yml between the live file (~/.config/gh,
 # app-owned) and the dotfiles repo, WITHOUT symlinking the live file.
@@ -18,6 +19,10 @@
 #   gh-config restore   # snapshot -> live (atomic, 0600; e.g. a fresh machine)
 #   gh-config diff      # show snapshot vs live
 #
+# capture/diff normalize through yq (2-space indent, comments/quoting kept):
+# gh versions disagree on YAML indent when they rewrite the live file, which
+# made verbatim snapshots flip 2sp<->4sp across machines (bitten 2026-07-11).
+#
 # No is-it-running guard: gh is a one-shot CLI, not a daemon — the only race
 # is running `gh config set` concurrently with restore, which last-writer-wins.
 writeShellApplication {
@@ -25,6 +30,7 @@ writeShellApplication {
   runtimeInputs = [
     coreutils
     diffutils
+    yq-go
   ];
   text = ''
     set -euo pipefail
@@ -38,7 +44,8 @@ writeShellApplication {
       capture)
         [ -f "$live" ] || { echo "no live config.yml at $live" >&2; exit 1; }
         mkdir -p "$(dirname "$snap")"
-        cp -f "$live" "$snap"
+        normalized="$(yq --indent 2 '.' "$live")"   # canonical style; fail before touching snap
+        printf '%s\n' "$normalized" > "$snap"
         chmod 644 "$snap"                 # repo copy; 0600 is restored on restore
         echo "captured: $live -> $snap"
         echo "review:   git -C $repo diff -- config/gh/config.yml"
@@ -56,7 +63,10 @@ writeShellApplication {
       diff)
         [ -f "$snap" ] || { echo "no snapshot at $snap" >&2; exit 1; }
         [ -f "$live" ] || { echo "no live file at $live" >&2; exit 1; }
-        if diff -u "$snap" "$live"; then echo "(in sync)"; fi
+        if diff -u --label "$snap" --label "$live" \
+            <(yq --indent 2 '.' "$snap") <(yq --indent 2 '.' "$live"); then
+          echo "(in sync)"
+        fi
         ;;
       *)
         echo "usage: gh-config {capture|restore|diff}" >&2
