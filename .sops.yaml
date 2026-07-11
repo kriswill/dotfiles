@@ -16,3 +16,9 @@ creation_rules:
     key_groups:
       - age:
           - *k
+  # Private ssh Host entries (~/.ssh/config.d) — separate file so more Macs
+  # can be added as recipients later without touching k's own secrets.
+  - path_regex: modules/hosts/k/ssh-hosts.yaml
+    key_groups:
+      - age:
+          - *k

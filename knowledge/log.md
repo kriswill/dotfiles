@@ -1,5 +1,23 @@
 # Log
 
+## 2026-07-11
+
+- **Creation** — [ssh-private-hosts decision](decisions/ssh-private-hosts.md):
+  private ssh `Host` entries (nephew's homelab `earthlab`, `k-mini`) moved
+  out of the public stow config into a dedicated sops file
+  (`modules/hosts/k/ssh-hosts.yaml`, key `ssh-private-hosts`) deployed to
+  `~/.ssh/config.d/private-hosts` (owner `k`), which the stow config's
+  existing `Include ~/.ssh/config.d/*` glob picks up. Dedicated file rather
+  than `secrets.yaml`: creating a *new* sops file needs only the public
+  recipients (no sudo for the host key), and it can gain `mini`/`SOC`
+  recipients later independently of `k`'s own secrets.
+  [sops](modules/sops.md) stub upgraded in the same change (launchd install
+  daemon, per-secret `path`, build-time validation gotcha; removed the wrong
+  "enable option" scaffold boilerplate);
+  [stow-tree](patterns/stow-tree.md) now lists secret material as the third
+  kind of file the tree can't hold; [host k](hosts/k.md) gained a Secrets
+  section.
+
 ## 2026-07-10
 
 - **Update** — [claude-account-selector](modules/claude-account-selector.md) /

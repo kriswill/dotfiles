@@ -26,8 +26,21 @@
     # sops-nix (machinery: modules/darwin/sops.nix; recipients: .sops.yaml).
     # smoke-test secret proves decryption end-to-end on this host — replace
     # with real secrets as they arrive; edit with `sops modules/hosts/k/secrets.yaml`.
-    sops.defaultSopsFile = ./secrets.yaml;
-    sops.secrets.sops-smoke-test = { };
+    sops = {
+      defaultSopsFile = ./secrets.yaml;
+      secrets.sops-smoke-test = { };
+      # Private ssh Host entries, kept out of the public repo. Lands as a
+      # symlink in ~/.ssh/config.d/, which home/ssh's config Include-globs.
+      # owner k: ssh runs as the user and the default root:staff 0400 is
+      # unreadable there. Edit with:
+      #   SOPS_AGE_KEY=$(sudo ssh-to-age -private-key -i /etc/ssh/ssh_host_ed25519_key) \
+      #     sops modules/hosts/k/ssh-hosts.yaml
+      secrets.ssh-private-hosts = {
+        sopsFile = ./ssh-hosts.yaml;
+        owner = "k";
+        path = "/Users/k/.ssh/config.d/private-hosts";
+      };
+    };
 
     # Host-selective features: their modules are imported on every host but
     # ship disabled; enabling here is what mounts them into k.

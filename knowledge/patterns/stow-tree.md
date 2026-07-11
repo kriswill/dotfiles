@@ -4,7 +4,7 @@ title: Stow Tree
 description: Plain config files live in home/ as GNU Stow packages symlinked into $HOME — one tree shared by macOS and NixOS, pointing at the live repo so edits apply without a rebuild.
 resource: modules/darwin/dotfiles-stow.nix
 tags: [stow, dotfiles, symlinks]
-timestamp: '2026-07-03T12:00:00-07:00'
+timestamp: '2026-07-11T12:40:00-07:00'
 ---
 
 Config files that don't need Nix evaluation live under `home/` as one GNU Stow
@@ -36,8 +36,11 @@ Why it's shaped this way:
 
 Capture and round-trip workflows are in the
 [adopt-dotfile playbook](../playbooks/adopt-dotfile.md), using
-[dots-adopt](../packages/dots-adopt.md). Two kinds of file can't live here:
+[dots-adopt](../packages/dots-adopt.md). Three kinds of file can't live here:
 files that must embed `/nix/store` paths
-([store-path-embedding configs](store-path-configs.md)), and files their app
+([store-path-embedding configs](store-path-configs.md)); files their app
 rewrites via atomic rename, which destroys the symlink on the first save
-([snapshot-synced configs](snapshot-synced-configs.md)).
+([snapshot-synced configs](snapshot-synced-configs.md)); and secret material —
+the tree is published, so e.g. private ssh `Host` entries live in a sops file
+deployed alongside the public config instead
+([ssh-private-hosts decision](../decisions/ssh-private-hosts.md)).

@@ -53,7 +53,7 @@ interesting ones by hand — scaffolding never overwrites an existing doc.
 * [Pass](pass.md) - Installs pass-xdg — a wrapper itself named `pass` that defaults PASSWORD_STORE_DIR to $XDG_DATA_HOME/password-store; never also install pkgs.pass or the two binaries collide.
 * [Podman Desktop](podman-desktop.md) - Podman Desktop — the GUI for podman containers and machines; a deliberately thin module (enable toggle + /libexec pathsToLink) with all real config stow-managed, including a git filter that scrubs the GUI's volatile settings.json rewrites.
 * [Qmd Sqlite](qmd-sqlite.md) - Custom sqlite with loadable-extension support, for sqlite-vec and qmd (system-level port of the sqliteWithExtensions package + linkSqliteForQmd activation that used to live in home-manager/core.nix).
-* [Sops](sops.md) - sops-nix on macOS — universal machinery, inert until a host defines secrets.
+* [Sops](sops.md) - sops-nix on macOS — universal secrets machinery whose age identity derives from the host SSH key; inert until a host declares secrets.
 * [Sudo 1password](sudo-1password.md) - sudo authentication via the 1Password SSH agent — pam_ssh_agent_auth installed as auth-sufficient on the sudo stack only, with the trusted key materialized via tmpfiles to pass StrictModes and gcr-ssh-agent disabled so the 1Password socket wins.
 * [Tmux](tmux.md) - Installs tmux and generates plugins.conf — the one tmux file that must embed a /nix/store path (tmux-which-key's rtp); tmux.conf and which-key's config.yaml are stowed.
 * [User Packages](user-packages.md) - The primary user's per-user CLI toolbox on darwin (users.users.k.packages) — everyday tools from bat/fzf/ripgrep to lazygit and uv, and the darwin provisioner of the Bun and Node runtimes.
