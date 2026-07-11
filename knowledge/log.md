@@ -2,6 +2,20 @@
 
 ## 2026-07-11
 
+- **Creation** — `overlays/ld64-lld.nix` (TEMPORARY): the pinned nixpkgs'
+  cctools ld64 1010.6 SIGTRAPs ("Trace/BPT trap: 5") while linking kitty
+  0.47.4, vfkit 0.6.3, and starship 1.26.0 on aarch64-darwin — hydra has no
+  cache entries for them, so every darwin rebuild fails. The root fix sits
+  on staging (NixOS/nixpkgs#536365); master carries per-package
+  `-fuse-ld=lld` workarounds (kitty `83cc719d53`, vfkit `559ebc0633`,
+  starship `883e799eb2`) that have not reached nixos-unstable (HEAD
+  `0bb7ec5`, 2026-07-08). The overlay replicates each workaround
+  byte-identically, so kitty and vfkit hash-match hydra's builds and are
+  fetched from cache instead of compiled. Inert on Linux
+  (`lib.optionalAttrs isDarwin` → empty set; nebula cross-eval verified).
+  DELETE the overlay and its `modules/overlays.nix` line at the first
+  flake.lock bump that builds all three without it.
+
 - **Creation** — [ssh-private-hosts decision](decisions/ssh-private-hosts.md):
   private ssh `Host` entries (nephew's homelab `earthlab`, `k-mini`) moved
   out of the public stow config into a dedicated sops file
