@@ -16,9 +16,10 @@ creation_rules:
     key_groups:
       - age:
           - *k
-  # Private ssh Host entries (~/.ssh/config.d) — separate file so more Macs
-  # can be added as recipients later without touching k's own secrets.
-  - path_regex: modules/hosts/k/ssh-hosts.yaml
+  # Private ssh Host entries (~/.ssh/config.d) — one shared file, every host
+  # that deploys them is a recipient (add mini/SOC here + `sops updatekeys`).
+  - path_regex: modules/hosts/ssh-hosts.yaml
     key_groups:
       - age:
           - *k
+          - *nebula

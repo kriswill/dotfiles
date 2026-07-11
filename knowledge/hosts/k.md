@@ -23,9 +23,8 @@ are opted into below per the
 ## Secrets
 
 Consumes [sops](../modules/sops.md) secrets: `sops-smoke-test` (end-to-end
-decryption proof) and `ssh-private-hosts` — a dedicated sops file
-(`ssh-hosts.yaml`) deployed to `~/.ssh/config.d/private-hosts` so private
-`Host` entries stay out of the public repo
+decryption proof), plus the shared private ssh hosts file via the gated
+[ssh-private-hosts module](../modules/ssh-private-hosts.md)
 ([decision](../decisions/ssh-private-hosts.md)).
 
 ## Source

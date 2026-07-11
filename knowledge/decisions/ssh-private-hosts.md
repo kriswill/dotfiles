@@ -6,7 +6,15 @@ tags: [ssh, sops, secrets, privacy]
 timestamp: '2026-07-11T12:40:00-07:00'
 ---
 
-**Status:** active. **Where:** [sops](../modules/sops.md),
+**Status:** active — generalised 2026-07-11 into the
+[ssh-private-hosts dual module](../modules/ssh-private-hosts.md): the sops
+file moved to the shared `modules/hosts/ssh-hosts.yaml` with
+[nebula](../hosts/nebula.md) added as a recipient (re-encrypted fresh from
+k's deployed plaintext — public keys only, no host-key decryption needed),
+and `home/ssh` left the nixos skip list (per-OS 1Password `IdentityAgent`
+via `Match exec uname`). Details below describe the original k-only shape;
+mechanics unchanged otherwise. **Where:** [sops](../modules/sops.md),
+[ssh-private-hosts module](../modules/ssh-private-hosts.md),
 [host k](../hosts/k.md), [stow tree](../patterns/stow-tree.md).
 
 ## Context
@@ -67,6 +75,6 @@ loose, untracked `~/.ssh/config.d/k-mini` entry was folded into the secret.
 - [sops-nix](https://github.com/Mic92/sops-nix) — per-secret `owner`/`path`/
   `sopsFile` options ("Set secret permission/owner", "Emit plain file to
   another location" sections)
-- Source: [`modules/hosts/k/ssh-hosts.yaml`](../../modules/hosts/k/ssh-hosts.yaml),
+- Source: [`modules/hosts/ssh-hosts.yaml`](../../modules/hosts/ssh-hosts.yaml),
   [`modules/hosts/k/default.nix`](../../modules/hosts/k/default.nix),
   [`home/ssh/.ssh/config`](../../home/ssh/.ssh/config)

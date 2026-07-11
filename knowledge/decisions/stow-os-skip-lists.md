@@ -45,5 +45,7 @@ loads last, `?` tolerates absence), git signing branches via
 
 Moving a package between scopes is a one-line edit + rebuild (stow heals the
 links). The lists are the single place to consult for "why isn't X deployed
-here". `ssh` stays macOS-only until its 1Password `IdentityAgent` path gets an
-OS-conditional split (candidate: ssh `Match`/`Include`).
+here". `ssh` was macOS-only until 2026-07-11, when its 1Password
+`IdentityAgent` path got exactly the predicted OS-conditional split
+(`Match exec uname`, relative `Include`) and left the nixos skip list
+([ssh-private-hosts module](../modules/ssh-private-hosts.md)).

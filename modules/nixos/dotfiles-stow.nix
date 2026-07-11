@@ -28,7 +28,6 @@
           "kitty" # not installed on nebula (ghostty is the terminal)
           "oksh" # not installed on nebula
           "podman-desktop" # darwin podman stack only
-          "ssh" # IdentityAgent points at the macOS 1Password socket
           "yazi" # yazi module (plugins/flavor links) not ported to nixos yet
         ];
         skipReason = "darwin-only";
