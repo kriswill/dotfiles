@@ -55,13 +55,16 @@ alias lg='lazygit'
 compdef batman=man
 
 ## yazi — `y` wraps yazi so quitting (q) cd's the shell into yazi's last
-## directory; quit with Q to skip the cd.
+## directory; quit with Q to skip the cd. Quitting from search results yields
+## a virtual `search://<keyword>//<dir>` URL instead of a path — recover the
+## real dir, and never cd to anything that isn't one.
 function y() {
   local tmp cwd
   tmp="$(mktemp -t yazi-cwd.XXXXXX)"
   yazi "$@" --cwd-file="$tmp"
   IFS='' read -r -d '' cwd < "$tmp"
-  [ -n "$cwd" ] && [ "$cwd" != "$PWD" ] && builtin cd -- "$cwd"
+  [[ "$cwd" == search://* ]] && cwd="/${cwd#search://*//}"
+  [ -n "$cwd" ] && [ "$cwd" != "$PWD" ] && [ -d "$cwd" ] && builtin cd -- "$cwd"
   rm -f -- "$tmp"
 }
 
