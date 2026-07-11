@@ -4,7 +4,7 @@ title: k
 description: k - my personal macbook pro M1 max, 64GB RAM.
 resource: modules/hosts/k/default.nix
 tags: [host]
-timestamp: '2026-07-03T17:53:43+00:00'
+timestamp: '2026-07-11T12:40:00-07:00'
 ---
 
 k - my personal macbook pro M1 max, 64GB RAM.
@@ -19,6 +19,14 @@ are opted into below per the
 - [claude-account-selector](../modules/claude-account-selector.md)
 - [codebase-memory-mcp](../modules/codebase-memory-mcp.md)
 - [podman-desktop](../modules/podman-desktop.md)
+
+## Secrets
+
+Consumes [sops](../modules/sops.md) secrets: `sops-smoke-test` (end-to-end
+decryption proof) and `ssh-private-hosts` — a dedicated sops file
+(`ssh-hosts.yaml`) deployed to `~/.ssh/config.d/private-hosts` so private
+`Host` entries stay out of the public repo
+([decision](../decisions/ssh-private-hosts.md)).
 
 ## Source
 
