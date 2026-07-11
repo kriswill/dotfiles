@@ -2,6 +2,20 @@
 
 ## 2026-07-11
 
+- **Creation** — [ssh-private-hosts dual module](modules/ssh-private-hosts.md):
+  the k-only sops ssh hosts setup generalised across machines. The sops file
+  moved `modules/hosts/k/ssh-hosts.yaml` → shared
+  `modules/hosts/ssh-hosts.yaml`, re-encrypted with nebula as a second
+  recipient (fresh encryption from k's deployed `/run/secrets` plaintext read
+  over ssh — public recipients only, no host-key decryption); twin modules
+  deploy it to `~/.ssh/config.d/private-hosts` per OS (darwin gated
+  `programs.ssh-private-hosts.enable`, on for k; nixos universal + tmpfiles
+  for the k-owned `~/.ssh/config.d`). `home/ssh` is now cross-platform
+  (relative `Include config.d/*`, per-OS 1Password `IdentityAgent` via
+  `Match exec uname`) and left the nixos stow skip list. Verified: nebula
+  age key (1Password) decrypts to byte-identical content; nebula toplevel
+  builds; darwin k/mini cross-eval with the gate true/false.
+
 - **Creation** — `overlays/ld64-lld.nix` (TEMPORARY): the pinned nixpkgs'
   cctools ld64 1010.6 SIGTRAPs ("Trace/BPT trap: 5") while linking kitty
   0.47.4, vfkit 0.6.3, and starship 1.26.0 on aarch64-darwin — hydra has no

@@ -24,8 +24,9 @@ in `$HOME`, see the
 secrets are validated at build time against their sops file, so declaring a
 key before it exists in the file breaks the build (verified 2026-07-10).
 
-Consumer today: [host k](../hosts/k.md) (smoke-test secret + the private ssh
-hosts file). Auto-discovered via the
+Consumers today: [host k](../hosts/k.md) (smoke-test secret) and the
+[ssh-private-hosts twins](ssh-private-hosts.md) (shared
+`modules/hosts/ssh-hosts.yaml`, k + nebula recipients). Auto-discovered via the
 [Dendritic module layout](../patterns/dendritic-modules.md).
 
 ## Citations

@@ -29,22 +29,12 @@
     sops = {
       defaultSopsFile = ./secrets.yaml;
       secrets.sops-smoke-test = { };
-      # Private ssh Host entries, kept out of the public repo. Lands as a
-      # symlink in ~/.ssh/config.d/, which home/ssh's config Include-globs.
-      # owner k: ssh runs as the user and the default root:staff 0400 is
-      # unreadable there. Edit with:
-      #   SOPS_AGE_KEY=$(sudo ssh-to-age -private-key -i /etc/ssh/ssh_host_ed25519_key) \
-      #     sops modules/hosts/k/ssh-hosts.yaml
-      secrets.ssh-private-hosts = {
-        sopsFile = ./ssh-hosts.yaml;
-        owner = "k";
-        path = "/Users/k/.ssh/config.d/private-hosts";
-      };
     };
 
     # Host-selective features: their modules are imported on every host but
     # ship disabled; enabling here is what mounts them into k.
     services.apple-container.enable = true;
+    programs.ssh-private-hosts.enable = true;
     services.codebase-memory-mcp.enable = true;
     programs.podman-desktop.enable = true;
 
