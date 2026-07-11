@@ -58,14 +58,20 @@ compdef batman=man
 ## directory; quit with Q to skip the cd. Quitting from search results yields
 ## a virtual `search://<keyword>//<dir>` URL instead of a path — recover the
 ## real dir, and never cd to anything that isn't one.
-function y() {
-  local tmp cwd
-  tmp="$(mktemp -t yazi-cwd.XXXXXX)"
-  yazi "$@" --cwd-file="$tmp"
-  IFS='' read -r -d '' cwd < "$tmp"
-  [[ "$cwd" == search://* ]] && cwd="/${cwd#search://*//}"
-  [ -n "$cwd" ] && [ "$cwd" != "$PWD" ] && [ -d "$cwd" ] && builtin cd -- "$cwd"
-  rm -f -- "$tmp"
+## POSIX-compatible: no local/[[ ]]/read -d, must run in the current shell
+## (it cd's), so scope variables by prefix and unset them on the way out.
+y() {
+  y_tmp=$(mktemp "${TMPDIR:-/tmp}/yazi-cwd.XXXXXX") || return 1
+  yazi "$@" --cwd-file="$y_tmp"
+  IFS= read -r y_cwd < "$y_tmp" || :
+  rm -f -- "$y_tmp"
+  case $y_cwd in
+    search://*) y_cwd="/${y_cwd#search://*//}" ;;
+  esac
+  if [ -n "$y_cwd" ] && [ "$y_cwd" != "$PWD" ] && [ -d "$y_cwd" ]; then
+    cd -- "$y_cwd"
+  fi
+  unset y_tmp y_cwd
 }
 
 ## Red background on stderr. Defined but not enabled by default — run `stderred`
