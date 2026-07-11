@@ -4,7 +4,7 @@
 # (hosts.yml) is gh-owned per machine and never tracked. Note gh drops these
 # comments the first time it rewrites the live file.
 aliases:
-    co: pr checkout
+  co: pr checkout
 editor: ''
 git_protocol: https
 version: '1'
