@@ -63,7 +63,7 @@
     determinate.url = "https://flakehub.com/f/DeterminateSystems/determinate/3";
     snowglobe-lib = {
       # Host builder (mkNixosHost), snowglobe-lib.profiles/desktop options.
-      url = "git+https://codeberg.org/earthgman/snowglobe-lib?ref=unstable";
+      url = "github:kriswill/snowglobe-lib/unstable";
       # We own nixpkgs (above); make snowglobe follow it so there's a single
       # nixpkgs in the store and we control the rev (e.g. to pull kernel 7.1).
       inputs = {
