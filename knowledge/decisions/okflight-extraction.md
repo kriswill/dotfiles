@@ -6,7 +6,10 @@ tags: [okf, sub-flake, extraction, okflight]
 timestamp: '2026-07-05T00:00:00-07:00'
 ---
 
-**Status:** active. **Where:** [okf](../packages/okf.md),
+**Status:** active; **2026-07-11 update:** okflight went public — the input
+is now plain `github:kriswill/okflight` and the git+ssh/1Password auth
+mechanics below are historical ([ci-github-actions](ci-github-actions.md)
+records the deploy-key retirement). **Where:** [okf](../packages/okf.md),
 [dev](../modules/dev.md), `flake.nix` (`okf` input),
 `.github/workflows/pages.yml`.
 

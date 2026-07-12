@@ -93,9 +93,11 @@ observation removed the entire hard part.
   precautionary). `nixos-nebula` failed twice on **Codeberg 503/504
   fetching snowglobe-lib** — reproduced from a residential IP, i.e. a real
   Codeberg outage, and only the nebula eval forces that input (darwin
-  never touches Codeberg). Mitigation: a retried `nix flake archive` step
-  (~10 min backoff) before the build; escalation if chronic: mirror
-  snowglobe-lib to GitHub and swap the input URL.
+  never touches Codeberg). Mitigation was a retried `nix flake archive`
+  step (~10 min backoff). **Resolved 2026-07-11:** the escalation happened
+  — snowglobe-lib moved to the `github:kriswill/snowglobe-lib` fork
+  (`16207cf`), every input is now GitHub or FlakeHub, and the retry step
+  was removed.
 
 ## Citations
 

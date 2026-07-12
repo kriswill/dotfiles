@@ -6,7 +6,8 @@ Nix-based dotfiles for **macOS (nix-darwin)** and **NixOS** in one flake — no
 home-manager anywhere; every config is a per-class system module + the shared
 GNU Stow tree under `home/`. Hosts: `k`, `mini`, `SOC-Kris-Williams`
 (aarch64-darwin) and `nebula` (x86_64-linux desktop: Hyprland/Noctalia on
-[snowglobe-lib](https://codeberg.org/earthgman/snowglobe-lib)). Primary
+[snowglobe-lib](https://github.com/kriswill/snowglobe-lib) (GitHub fork
+of the Codeberg upstream)). Primary
 configs: Neovim (Lua), Tmux, Zsh, CLI tools; nebula adds the Wayland desktop
 stack. Flake-based, using flake-parts + `import-tree` (the Dendritic pattern):
 every `.nix` file under `modules/` is auto-discovered as a flake-parts module.
