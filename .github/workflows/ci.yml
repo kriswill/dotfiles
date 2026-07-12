@@ -19,13 +19,44 @@
 # No hyprland.cachix.org substituter: hyprland/noctalia follow this flake's
 # nixpkgs, so their upstream caches can never hit — nebula rebuilds them from
 # source on bumps by design (the cost of the `follows` decision).
+#
+# Two layers of gating keep the (long) builds from running needlessly:
+#  * `paths:` filters both triggers to the files that can actually change the
+#    closures. Everything else — docs/, knowledge/, home/, config/, scripts/,
+#    README — is invisible to the build: home/ is stowed from the live
+#    checkout at activation, config/ snapshots are restored at runtime by the
+#    *-config CLIs, and nothing embeds those trees at eval time. A NEW
+#    build-relevant top-level dir must be added to BOTH lists.
+#  * The `gate` job skips the main-push builds when they'd be pure reruns:
+#    drv hashes depend only on tree contents, so a merge commit whose tree
+#    equals the merged PR head's tree (main didn't move since branch-off) was
+#    already built AND pushed to the cache by that PR's CI. Direct pushes,
+#    divergent merges, and squashes (no second parent to compare) still build.
 name: ci
 
 on:
   pull_request:
+    paths:
+      - flake.nix
+      - flake.lock
+      - "modules/**"
+      - "pkgs/**"
+      - "overlays/**"
+      - "lib/**"
+      - "flakes/**"
+      - ".github/workflows/ci.yml"
   push:
     branches:
       - main
+    paths:
+      - flake.nix
+      - flake.lock
+      - "modules/**"
+      - "pkgs/**"
+      - "overlays/**"
+      - "lib/**"
+      - "flakes/**"
+      - ".github/workflows/ci.yml"
   workflow_dispatch:
 
 permissions:
@@ -37,7 +68,32 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # Decides whether the builds run (see the gating comment up top). Runs on
+  # every trigger; only a main-push merge commit with an unchanged tree says no.
+  gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      build: ${{ steps.decide.outputs.build }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 2 # depth 2 reaches both parents of a merge commit
+
+      - id: decide
+        run: |
+          if [ "${{ github.event_name }}" = "push" ] &&
+             git rev-parse -q --verify 'HEAD^2' >/dev/null &&
+             [ "$(git rev-parse 'HEAD^{tree}')" = "$(git rev-parse 'HEAD^2^{tree}')" ]; then
+            echo "tree identical to the merged PR head — its CI run already built and cached these closures"
+            echo "build=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "build=true" >> "$GITHUB_OUTPUT"
+          fi
+
   darwin-k:
+    needs: gate
+    if: needs.gate.outputs.build == 'true'
     runs-on: macos-latest # arm64 == aarch64-darwin, matches host k
     timeout-minutes: 120
     steps:
@@ -53,6 +109,8 @@ jobs:
         run: nix build .#darwinConfigurations.k.system -L
 
   nixos-nebula:
+    needs: gate
+    if: needs.gate.outputs.build == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 180
     steps:

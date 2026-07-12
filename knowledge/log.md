@@ -3,6 +3,17 @@
 ## 2026-07-11
 
 - **Update** — [ci-github-actions](decisions/ci-github-actions.md) /
+  `.github/workflows/ci.yml`: gated the long host-closure builds twice
+  over. Both triggers now carry a `paths:` allow-list (flake.nix,
+  flake.lock, modules/, pkgs/, overlays/, lib/, flakes/, ci.yml itself) —
+  docs/knowledge/home/config/scripts changes never alter the closures, so
+  they no longer spin runners. And a new `gate` job skips the main-push
+  builds when `HEAD^{tree}` equals `HEAD^2^{tree}`: a merge whose tree the
+  PR head already carried was built and cache-pushed by that PR's CI run,
+  so rebuilding on main is pure rerun. Direct pushes, divergent merges,
+  squashes, and `workflow_dispatch` still build.
+
+- **Update** — [ci-github-actions](decisions/ci-github-actions.md) /
   [okflight-extraction](decisions/okflight-extraction.md) / `.github/workflows/ci.yml`
   / AGENTS.md / README.md / [okf](packages/okf.md) / okf-profile: stale-claim
   sweep after two input moves. snowglobe-lib now comes from the
