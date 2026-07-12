@@ -1,3 +1,5 @@
+config_version = 1
+
 [bar]
 order = [ "bar" ]
 
