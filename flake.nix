@@ -43,11 +43,11 @@
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.flake-parts.follows = "flake-parts";
     };
-    # okf lives in its own (private, for now) repo, fetched over git+ssh so
-    # auth rides the SSH agent (here: 1Password, enclave-gated per use — no
-    # token at rest). Evaluation must run as the key-holding user (nh does).
+    # okf lives in its own (public since 2026-07) repo; plain github: fetch —
+    # no SSH agent or deploy key needed anywhere (machines or CI). If it ever
+    # goes private again: git+ssh + deploy key, or a private FlakeHub flake.
     okf = {
-      url = "git+ssh://git@github.com/kriswill/okflight.git";
+      url = "github:kriswill/okflight";
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.flake-parts.follows = "flake-parts";
     };

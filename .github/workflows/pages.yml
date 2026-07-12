@@ -33,8 +33,8 @@ jobs:
         with:
           fetch-depth: 0 # gitISO stamps each embedded file with its last-commit date
 
-      # okf lives in the private kriswill/okflight repo; check it out at the
-      # exact rev the flake.lock pins (read-only deploy key: OKFLIGHT_DEPLOY_KEY).
+      # okf lives in the (public) kriswill/okflight repo; check it out at the
+      # exact rev the flake.lock pins.
       - name: Read pinned okf rev
         id: okf
         run: echo "rev=$(jq -r '.nodes.okf.locked.rev' flake.lock)" >> "$GITHUB_OUTPUT"
@@ -43,7 +43,6 @@ jobs:
         with:
           repository: kriswill/okflight
           ref: ${{ steps.okf.outputs.rev }}
-          ssh-key: ${{ secrets.OKFLIGHT_DEPLOY_KEY }}
           path: okflight
 
       - uses: oven-sh/setup-bun@v2

@@ -2,6 +2,29 @@
 
 ## 2026-07-11
 
+- **Update** — [ci-github-actions](decisions/ci-github-actions.md) /
+  `flake.nix` / all three workflows: okf turned out to be PUBLIC (flipped
+  with the okflight rebrand), so its input became `github:kriswill/okflight`
+  and the deploy-key machinery (`OKFLIGHT_DEPLOY_KEY`, ssh-agent,
+  known_hosts) left ci.yml, update-flake-lock.yml, and pages.yml — CI now
+  holds zero build credentials (FLAKE_UPDATE_PAT for bump PRs is the sole
+  secret; retire the deploy key + secret after merge). Added the reusable
+  `nix-build-cache.yml` (`workflow_call`): one-job callers give any
+  kriswill/* repo Determinate Nix + FlakeHub-cached CI (account-scoped
+  OIDC, no per-repo setup); flake-explorer and okflight wired the same day.
+
+- **Update** — [ci-github-actions](decisions/ci-github-actions.md) /
+  `.github/workflows/ci.yml`: both CI jobs now push the closures they build
+  to the private FlakeHub Cache via
+  `DeterminateSystems/flakehub-cache-action` (replaces the darwin job's
+  `magic-nix-cache-action` GHA backend). Auth is the workflow's OIDC JWT
+  (`id-token: write`) — FlakeHub forbids ad-hoc push, so CI is the cache's
+  only writer and no cache credential exists; `OKFLIGHT_DEPLOY_KEY` remains
+  CI's sole secret. Hosts pull with a one-time `determinate-nixd login`
+  (already done + verified on `k`; pending on `mini`, `SOC-Kris-Williams`,
+  `nebula` — Determinate Nix writes substituter/netrc/keys itself, zero nix
+  config changes).
+
 - **Update** — [gh-config](packages/gh-config.md): `capture`/`diff` now
   normalize the YAML through yq-go (2-space indent, comments/quoting kept)
   instead of copying/comparing verbatim. gh versions disagree on mapping
@@ -57,6 +80,17 @@
   section.
 
 ## 2026-07-10
+
+- **Creation** — [ci-github-actions](decisions/ci-github-actions.md) +
+  `.github/workflows/{ci,update-flake-lock}.yml`: GitHub Actions now builds
+  both deployed closures on every PR — `darwinConfigurations.k.system` on
+  the free arm64 macOS runner, nebula's toplevel on ubuntu behind a
+  disk-reclaim step — plus a weekly `update-flake-lock@v28` bump PR opened
+  with a fine-grained PAT (GITHUB_TOKEN-created events never trigger
+  workflows). Load-bearing property: builds never decrypt sops secrets, so
+  CI's only credential is the read-only okflight deploy key — no signing
+  key, no age key, ever. Chosen over Dependabot's native nix support
+  (April 2026) because Dependabot can't bump the private git+ssh okf input.
 
 - **Update** — [claude-account-selector](modules/claude-account-selector.md) /
   [claude-profile-isolation](decisions/claude-profile-isolation.md): new

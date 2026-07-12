@@ -1,0 +1,31 @@
+# Weekly flake.lock bump PR. Uses a fine-grained PAT (FLAKE_UPDATE_PAT — NOT
+# the default GITHUB_TOKEN) so the resulting PR triggers ci.yml: GitHub never
+# runs workflows on events created with GITHUB_TOKEN. PAT scope: this repo
+# only, Contents R/W + Pull requests R/W.
+#
+# `nix flake update` re-fetches every input; all of them are public fetches
+# (okf went public 2026-07), so no ssh key or other credential is needed.
+name: update-flake-lock
+
+on:
+  schedule:
+    - cron: "0 10 * * 1" # Mondays 10:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read # the PAT, not this token, does the writing
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: DeterminateSystems/determinate-nix-action@v3
+
+      - uses: DeterminateSystems/update-flake-lock@v28
+        with:
+          token: ${{ secrets.FLAKE_UPDATE_PAT }}
+          pr-title: "flake.lock: weekly update"
+          pr-labels: dependencies

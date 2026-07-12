@@ -1,0 +1,88 @@
+# Build gate: the two host closures this repo actually deploys — k
+# (aarch64-darwin, on the arm64 macOS runner; free on public repos) and
+# nebula's NixOS toplevel (x86_64-linux). Deliberately NOT `nix flake check`:
+# the darwin checks would build all three darwin hosts; the gate is k only.
+#
+# Both jobs push what they build to FlakeHub Cache (private; paid
+# Determinate account) via flakehub-cache-action — FlakeHub forbids ad-hoc
+# push, CI OIDC is the only way in, so this workflow is what populates the
+# cache the hosts pull from (`determinate-nixd login` per machine). Auth is
+# the job's OIDC JWT (`id-token: write`) — no FlakeHub secret exists. Fork
+# PRs get no id-token, so they build without cache push (warns, still green).
+#
+# CI holds ZERO build credentials: every flake input is a public fetch (okf
+# went public 2026-07, dropping the old git+ssh deploy key), and builds
+# never decrypt sops secrets (decryption happens at activation on the
+# host). NO signing key and NO age key in CI, ever. See
+# knowledge/decisions/ci-github-actions.md.
+#
+# No hyprland.cachix.org substituter: hyprland/noctalia follow this flake's
+# nixpkgs, so their upstream caches can never hit — nebula rebuilds them from
+# source on bumps by design (the cost of the `follows` decision).
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write # OIDC JWT = the FlakeHub Cache credential (absent on fork PRs)
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  darwin-k:
+    runs-on: macos-latest # arm64 == aarch64-darwin, matches host k
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: DeterminateSystems/determinate-nix-action@v3
+
+      # Pushes builds to (and pulls prior builds from) the private FlakeHub
+      # cache — replaces magic-nix-cache's ~10 GiB GHA-cache backend.
+      - uses: DeterminateSystems/flakehub-cache-action@main
+
+      - name: Build darwin system closure (k)
+        run: nix build .#darwinConfigurations.k.system -L
+
+  nixos-nebula:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      # nebula's closure (gaming profile, nvidia, source-built hyprland) can
+      # exceed the stock runner's free disk — reclaim preinstalled bloat
+      # first. Tune or drop once the first runs report disk high-water.
+      - uses: jlumbroso/free-disk-space@v1.3.1
+        with:
+          tool-cache: true
+
+      - uses: actions/checkout@v7
+
+      - uses: DeterminateSystems/determinate-nix-action@v3
+
+      - uses: DeterminateSystems/flakehub-cache-action@main
+
+      # snowglobe-lib lives on codeberg.org, which intermittently serves
+      # 503/504 (observed 2026-07-10, from residential IPs too — not just
+      # datacenter blocking). Fetch all inputs with backoff (~10 min grace)
+      # so the build step never dies on a fetch blip. If Codeberg flakiness
+      # becomes chronic, the escalation is mirroring snowglobe-lib to GitHub
+      # and swapping the input URL.
+      - name: Fetch flake inputs (retried)
+        run: |
+          for i in 1 2 3 4 5; do
+            nix flake archive && exit 0
+            echo "input fetch attempt $i failed (Codeberg down?); retrying in $((i * 60))s" >&2
+            sleep $((i * 60))
+          done
+          exit 1
+
+      - name: Build NixOS toplevel (nebula)
+        run: nix build .#nixosConfigurations.nebula.config.system.build.toplevel -L
