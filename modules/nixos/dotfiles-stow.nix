@@ -10,7 +10,7 @@
     #
     # The script body (canonicalization, self-heal, conflict-tolerant restow) is
     # shared with the darwin twin via lib/stow-restow-script.nix.
-    { pkgs, ... }:
+    { pkgs, config, ... }:
     let
       user = "k";
       home = "/home/k";
@@ -43,7 +43,7 @@
           rundir="''${sock%/hypr/*}"
           sig="''${sock%/.socket.sock}"; sig="''${sig##*/}"
           if XDG_RUNTIME_DIR="$rundir" HYPRLAND_INSTANCE_SIGNATURE="$sig" \
-               ${pkgs.hyprland}/bin/hyprctl reload >/dev/null 2>&1; then
+               ${config.programs.hyprland.package}/bin/hyprctl reload >/dev/null 2>&1; then
             echo "stow: reloaded hyprland ($sig)" >&2
           fi
         done

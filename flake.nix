@@ -1,6 +1,18 @@
 {
   description = "Kris' Nix configurations — macOS (nix-darwin) + NixOS";
 
+  # Hyprland's binary cache. Only useful because the hyprland input does NOT
+  # follow our nixpkgs (see the input below): the drvs we evaluate are exactly
+  # the ones upstream CI built and pushed. Flake-level nixConfig needs
+  # accept-flake-config (CI) or trusted-user; nebula's daemon gets the same
+  # pair declaratively via nix.settings in modules/hosts/nebula/hyprland.nix.
+  nixConfig = {
+    extra-substituters = [ "https://hyprland.cachix.org" ];
+    extra-trusted-public-keys = [
+      "hyprland.cachix.org-1:a7pgxzMz7+chwVL3/pzj6jIBMioiJM7ypFP8PwtkuGc="
+    ];
+  };
+
   # Dendritic layout: flake-parts wraps `import-tree ./modules`, so every `.nix`
   # file under `modules/` is a flake-parts module (auto-discovered). Host config
   # lives as first-class files under `modules/hosts/` merging into
@@ -78,10 +90,15 @@
       url = "github:Mic92/sops-nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    hyprland = {
-      url = "github:hyprwm/Hyprland";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
+    # Deliberately NO nixpkgs follows (unlike everything else here): following
+    # rebuilds the whole hypr* stack against our nixpkgs, which only matches
+    # hyprland.cachix.org (nixConfig above) when our rev happens to be
+    # drv-equivalent to their lock's. Un-followed, the drvs are byte-identical
+    # to upstream CI's — guaranteed cache hits. Costs a second nixpkgs eval.
+    # Consumed via inputs.hyprland.packages (modules/hosts/nebula/hyprland.nix),
+    # NOT the overlays — overlay builds would rebuild against our nixpkgs and
+    # defeat the cache anyway.
+    hyprland.url = "github:hyprwm/Hyprland";
     noctalia = {
       url = "github:noctalia-dev/noctalia-shell";
       inputs.nixpkgs.follows = "nixpkgs";
