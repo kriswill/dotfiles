@@ -8,6 +8,12 @@
 # secret pages.yml uses). Fork PRs get no secrets, so the okf fetch — and the
 # job — fails there; acceptable for a personal repo.
 #
+# Both jobs push what they build to FlakeHub Cache (private; paid
+# Determinate account) via flakehub-cache-action — FlakeHub forbids ad-hoc
+# push, CI OIDC is the only way in, so this workflow is what populates the
+# cache the hosts pull from (`determinate-nixd login` per machine). Auth is
+# the job's OIDC JWT (`id-token: write`) — no FlakeHub secret exists.
+#
 # NO signing key and NO age key in CI, ever: builds never decrypt sops
 # secrets (decryption happens at activation on the host), so the only
 # credential here is the read-only okflight deploy key. See
@@ -27,6 +33,7 @@ on:
 
 permissions:
   contents: read
+  id-token: write # OIDC JWT = the FlakeHub Cache credential (absent on fork PRs)
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -41,9 +48,9 @@ jobs:
 
       - uses: DeterminateSystems/determinate-nix-action@v3
 
-      # GHA-cache-backed store cache (~10 GiB/repo) — mainly helps the
-      # custom packages (ccglass, okf, tomato, nas-mount, …).
-      - uses: DeterminateSystems/magic-nix-cache-action@v14
+      # Pushes builds to (and pulls prior builds from) the private FlakeHub
+      # cache — replaces magic-nix-cache's ~10 GiB GHA-cache backend.
+      - uses: DeterminateSystems/flakehub-cache-action@main
 
       - uses: webfactory/ssh-agent@v0.10.0
         with:
@@ -71,6 +78,8 @@ jobs:
       - uses: actions/checkout@v7
 
       - uses: DeterminateSystems/determinate-nix-action@v3
+
+      - uses: DeterminateSystems/flakehub-cache-action@main
 
       - uses: webfactory/ssh-agent@v0.10.0
         with:

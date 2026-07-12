@@ -1,8 +1,8 @@
 ---
 type: Decision
 title: CI Builds Both Host Closures — No Signing Key, No Age Key, Ever
-description: 'GitHub Actions builds darwinConfigurations.k.system (free arm64 macOS runner, public repo) and nebula''s NixOS toplevel on every PR, plus a weekly update-flake-lock PR via a fine-grained PAT. The load-bearing security property: builds never decrypt sops secrets, so CI''s only credential is the read-only okflight deploy key — the Developer ID signing key never touches GitHub.'
-tags: [ci, security, codesigning]
+description: 'GitHub Actions builds darwinConfigurations.k.system (free arm64 macOS runner, public repo) and nebula''s NixOS toplevel on every PR, pushing both closures to the private FlakeHub Cache via OIDC, plus a weekly update-flake-lock PR via a fine-grained PAT. The load-bearing security property: builds never decrypt sops secrets, so CI''s only credential is the read-only okflight deploy key — the Developer ID signing key never touches GitHub, and the cache needs no key at all.'
+tags: [ci, security, codesigning, cache]
 timestamp: '2026-07-10T21:30:00Z'
 ---
 
@@ -47,10 +47,21 @@ observation removed the entire hard part.
   bump PR. Chosen over Dependabot's native nix support (April 2026)
   because Dependabot cannot bump the private git+ssh okf input or the
   FlakeHub `determinate` input.
+- **FlakeHub Cache push (2026-07-11):** both jobs run
+  `DeterminateSystems/flakehub-cache-action`, pushing every closure they
+  build to the private FlakeHub cache (paid Determinate account) and
+  pulling prior CI builds back. It replaced the darwin job's
+  `magic-nix-cache-action` (~10 GiB GHA-cache backend). Auth is the job's
+  OIDC JWT (`permissions: id-token: write`) — FlakeHub forbids ad-hoc push
+  by design, so this workflow is the cache's only writer and there is no
+  cache secret to leak; the no-new-credentials property above holds. Hosts
+  consume with a one-time `determinate-nixd login` per machine (Determinate
+  Nix auto-configures substituter, netrc, and trusted keys; pull verified
+  on `k` 2026-07-11 via `nix store info --store https://cache.flakehub.com`).
 - **Accepted cost:** hyprland/noctalia `follows` this flake's nixpkgs, so
   their upstream caches can never hit — every bump PR rebuilds them from
-  source on the nebula job. `magic-nix-cache-action` (GHA cache, ~10 GiB)
-  is included on the darwin job for the custom packages.
+  source on the nebula job, once; the FlakeHub cache then serves that build
+  to re-runs and to nebula itself.
 
 ## Consequences
 
@@ -63,6 +74,11 @@ observation removed the entire hard part.
   or drop the disk-reclaim step); the PAT's expiry (~1 year) needs a
   calendar note; `timeout-minutes` may need raising on uncached
   hyprland-bump PRs.
+- The `follows` rebuild cost moves off the machines: after a merged bump
+  PR, nebula's `nrs` pulls source-built Hyprland/noctalia prebuilt from
+  the FlakeHub cache instead of compiling locally; same for the custom
+  packages on the darwin hosts (`k` — and `mini`/`SOC-Kris-Williams` for
+  the store paths their closures share with `k`'s).
 - First-run data (2026-07-10): `darwin-k` green in 41m8s fully uncached,
   and it DID fetch the private okf input (ssh-agent is required, not
   precautionary). `nixos-nebula` failed twice on **Codeberg 503/504
@@ -74,6 +90,8 @@ observation removed the entire hard part.
 
 ## Citations
 
+- [FlakeHub Cache: CI-only push, JWT auth, `determinate-nixd login` to pull](https://docs.determinate.systems/flakehub/cache/)
+- [DeterminateSystems/flakehub-cache-action](https://github.com/DeterminateSystems/flakehub-cache-action)
 - [GitHub: workflows are not triggered by GITHUB_TOKEN events](https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/trigger-a-workflow#triggering-a-workflow-from-a-workflow)
 - [DeterminateSystems/update-flake-lock](https://github.com/DeterminateSystems/update-flake-lock)
 - [webfactory/ssh-agent](https://github.com/webfactory/ssh-agent)

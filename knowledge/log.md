@@ -2,6 +2,18 @@
 
 ## 2026-07-11
 
+- **Update** — [ci-github-actions](decisions/ci-github-actions.md) /
+  `.github/workflows/ci.yml`: both CI jobs now push the closures they build
+  to the private FlakeHub Cache via
+  `DeterminateSystems/flakehub-cache-action` (replaces the darwin job's
+  `magic-nix-cache-action` GHA backend). Auth is the workflow's OIDC JWT
+  (`id-token: write`) — FlakeHub forbids ad-hoc push, so CI is the cache's
+  only writer and no cache credential exists; `OKFLIGHT_DEPLOY_KEY` remains
+  CI's sole secret. Hosts pull with a one-time `determinate-nixd login`
+  (already done + verified on `k`; pending on `mini`, `SOC-Kris-Williams`,
+  `nebula` — Determinate Nix writes substituter/netrc/keys itself, zero nix
+  config changes).
+
 - **Update** — [gh-config](packages/gh-config.md): `capture`/`diff` now
   normalize the YAML through yq-go (2-space indent, comments/quoting kept)
   instead of copying/comparing verbatim. gh versions disagree on mapping
