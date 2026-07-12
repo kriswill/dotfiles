@@ -3,6 +3,18 @@
 ## 2026-07-11
 
 - **Update** — [ci-github-actions](decisions/ci-github-actions.md) /
+  [okflight-extraction](decisions/okflight-extraction.md) / `.github/workflows/ci.yml`
+  / AGENTS.md / README.md / [okf](packages/okf.md) / okf-profile: stale-claim
+  sweep after two input moves. snowglobe-lib now comes from the
+  `github:kriswill/snowglobe-lib` fork (`16207cf`) — the Codeberg-5xx retry
+  step left ci.yml (its reason to exist is gone; every input is GitHub or
+  FlakeHub) and the snowglobe links point at the fork. okflight's
+  public-since-2026-07 status corrected everywhere that still described the
+  private git+ssh/1Password fetch as current (append-only log entries and
+  the extraction record's Decision body stay as history; the record got a
+  dated status note instead).
+
+- **Update** — [ci-github-actions](decisions/ci-github-actions.md) /
   `flake.nix` / all three workflows: okf turned out to be PUBLIC (flipped
   with the okflight rebrand), so its input became `github:kriswill/okflight`
   and the deploy-key machinery (`OKFLIGHT_DEPLOY_KEY`, ssh-agent,
