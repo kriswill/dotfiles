@@ -5,7 +5,7 @@
       # The flake's own packages, built against ITS locked nixpkgs — exactly the
       # drvs upstream CI pushes to hyprland.cachix.org (input deliberately does
       # not follow our nixpkgs; overlay-built packages could never hit the
-      # cache). See the hyprland input + nixConfig in flake.nix.
+      # cache). See the hyprland input in flake.nix.
       hyprPkgs = inputs.hyprland.packages.${pkgs.stdenv.hostPlatform.system};
     in
     {
@@ -38,8 +38,8 @@
       };
 
       # Substitute the hypr* stack from upstream's cache instead of building it.
-      # Daemon-level twin of the flake's nixConfig (which non-trusted callers
-      # ignore); both lists merge with the defaults.
+      # CI gets the same pair via extra-nix-config in ci.yml; both lists merge
+      # with the defaults.
       nix.settings = {
         substituters = [ "https://hyprland.cachix.org" ];
         trusted-public-keys = [ "hyprland.cachix.org-1:a7pgxzMz7+chwVL3/pzj6jIBMioiJM7ypFP8PwtkuGc=" ];
