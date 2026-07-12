@@ -40,16 +40,13 @@
       tomato = prev.callPackage ../pkgs/tomato.nix { tomato-src = inputs.tomato; };
     };
 
-    # Hyprland's `default` overlay (hyprland + hyprland-extras) assumes the
-    # hypr* build deps (hyprland-guiutils, aquamarine, hyprcursor, hyprgraphics,
-    # hyprlang, hyprutils, hyprwire, …) already exist in nixpkgs. They don't in
-    # the pinned nixpkgs, so `callPackage ./default.nix` fails with a missing
-    # `hyprland-guiutils` argument. `hyprland-packages` is the same hyprland
-    # build but with all those dependency overlays applied; pair it with
-    # `hyprland-extras` to also get the xdg-desktop-portal-hyprland (xdph) that
-    # `default` would have provided.
-    hyprland-packages = inputs.hyprland.overlays.hyprland-packages;
-    hyprland-extras = inputs.hyprland.overlays.hyprland-extras;
+    # NO hyprland overlays (dropped with the hyprland nixpkgs un-follow): the
+    # overlays rebuilt hyprland + the whole hypr* dep stack against OUR
+    # nixpkgs — never matching hyprland.cachix.org — and their bumped hyprutils
+    # bled into unrelated nixpkgs packages (hyprpolkitagent), forcing source
+    # rebuilds of those too. Hyprland now comes straight from
+    # inputs.hyprland.packages in modules/hosts/nebula/hyprland.nix; everything
+    # else hypr-adjacent stays pure nixpkgs (Hydra-cached).
 
     # snowglobe-lib hardcodes `alacritty.terminfo` into environment.systemPackages
     # (for ssh terminfo). Alacritty is otherwise removed on this system, so
