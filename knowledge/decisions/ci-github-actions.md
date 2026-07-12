@@ -1,7 +1,7 @@
 ---
 type: Decision
 title: CI Builds Both Host Closures — No Signing Key, No Age Key, Ever
-description: 'GitHub Actions builds darwinConfigurations.k.system (free arm64 macOS runner, public repo) and nebula''s NixOS toplevel on every PR, pushing both closures to the private FlakeHub Cache via OIDC, plus a weekly update-flake-lock PR via a fine-grained PAT. The load-bearing security property: builds never decrypt sops secrets, so CI''s only credential is the read-only okflight deploy key — the Developer ID signing key never touches GitHub, and the cache needs no key at all.'
+description: 'GitHub Actions builds darwinConfigurations.k.system (free arm64 macOS runner, public repo) and nebula''s NixOS toplevel on every PR, pushing both closures to the private FlakeHub Cache via OIDC, plus a weekly update-flake-lock PR via a fine-grained PAT. The load-bearing security property: builds never decrypt sops secrets and every flake input is a public fetch (okf went public 2026-07), so CI holds zero build credentials — the Developer ID signing key never touches GitHub, and the cache needs no key at all.'
 tags: [ci, security, codesigning, cache]
 timestamp: '2026-07-10T21:30:00Z'
 ---
@@ -32,13 +32,22 @@ observation removed the entire hard part.
   (nebula's closure: gaming profile, nvidia, source-built Hyprland).
   Deliberately not `nix flake check` — that would build all three darwin
   hosts; the gate is the two machines actually deployed.
-- **CI's only credential is `OKFLIGHT_DEPLOY_KEY`** (pre-existing read-only
-  deploy key for the private `git+ssh` okf input, loaded via
-  `webfactory/ssh-agent`; same secret pages.yml uses). **No signing key and
-  no age key in CI ever**: a compromised workflow, malicious PR, or
-  exfiltrated secret store cannot leak what was never there. Fork PRs get
-  no secrets and simply fail on the okf fetch — acceptable for a personal
-  repo.
+- **CI holds zero build credentials (since 2026-07-11):** okf went public,
+  so its input became `github:kriswill/okflight` and the read-only deploy
+  key (`OKFLIGHT_DEPLOY_KEY` + `webfactory/ssh-agent` + known_hosts steps)
+  was dropped from all three workflows (ci, update-flake-lock, pages —
+  retire the secret and the okflight deploy key once this merges). **No
+  signing key and no age key in CI ever**: a compromised workflow,
+  malicious PR, or exfiltrated secret store cannot leak what was never
+  there. Fork PRs now build fine; lacking `id-token`, they only lose the
+  cache push. `FLAKE_UPDATE_PAT` (bump PRs) is the sole remaining secret.
+- **Account-wide caching via a reusable workflow**
+  (`.github/workflows/nix-build-cache.yml`, `workflow_call`): any
+  kriswill/* repo gets Determinate Nix + FlakeHub cache CI with a one-job
+  caller granting `id-token: write` — the cache is account-scoped, so no
+  per-repo registration or secret exists. flake-explorer and okflight
+  wired 2026-07-11 (okflight builds on both ubuntu and arm64 macOS because
+  this flake consumes okf on x86_64-linux and aarch64-darwin).
 - **`update-flake-lock.yml`** (weekly cron + dispatch):
   `DeterminateSystems/update-flake-lock@v28` opens the bump PR with a
   fine-grained PAT (`FLAKE_UPDATE_PAT`, this repo only, Contents R/W +

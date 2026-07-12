@@ -3,6 +3,17 @@
 ## 2026-07-11
 
 - **Update** — [ci-github-actions](decisions/ci-github-actions.md) /
+  `flake.nix` / all three workflows: okf turned out to be PUBLIC (flipped
+  with the okflight rebrand), so its input became `github:kriswill/okflight`
+  and the deploy-key machinery (`OKFLIGHT_DEPLOY_KEY`, ssh-agent,
+  known_hosts) left ci.yml, update-flake-lock.yml, and pages.yml — CI now
+  holds zero build credentials (FLAKE_UPDATE_PAT for bump PRs is the sole
+  secret; retire the deploy key + secret after merge). Added the reusable
+  `nix-build-cache.yml` (`workflow_call`): one-job callers give any
+  kriswill/* repo Determinate Nix + FlakeHub-cached CI (account-scoped
+  OIDC, no per-repo setup); flake-explorer and okflight wired the same day.
+
+- **Update** — [ci-github-actions](decisions/ci-github-actions.md) /
   `.github/workflows/ci.yml`: both CI jobs now push the closures they build
   to the private FlakeHub Cache via
   `DeterminateSystems/flakehub-cache-action` (replaces the darwin job's
