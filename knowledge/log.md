@@ -1,5 +1,22 @@
 # Log
 
+## 2026-07-12
+
+- **Creation** — [hyprland-unfollow-cachix](decisions/hyprland-unfollow-cachix.md)
+  / `flake.nix` / [hyprland](modules/hyprland.md) / `modules/overlays.nix` /
+  [dotfiles-stow](modules/dotfiles-stow.md) / ci.yml: the hyprland input
+  stopped following our nixpkgs; nebula consumes `inputs.hyprland.packages`
+  directly (overlays dropped) and hyprland.cachix.org is wired as a
+  substituter on nebula's daemon, the CI nebula job (`extra-conf`), and the
+  flake's nixConfig. Hits are drv-equivalence with upstream's lock (verified
+  across a 1,570-commit nixpkgs gap), not a guarantee — `nix flake lock`
+  resolves the un-followed dep fresh from unstable HEAD, not upstream's lock.
+  hyprpolkitagent de-taints to Hydra-cached nixpkgs drvs, and the
+  hyprutils-outpaces-nixpkgs breakage class documented in docs/hyprland.md is
+  closed. Stale overlay claims corrected in docs/hyprland.md,
+  [cross-os-module-twins](patterns/cross-os-module-twins.md),
+  [nebula](hosts/nebula.md), and the ci-github-actions accepted-cost bullet.
+
 ## 2026-07-11
 
 - **Update** — [ci-github-actions](decisions/ci-github-actions.md) /

@@ -61,7 +61,10 @@ the whole `flake.overlays` set, so an overlay that only makes sense on one OS
 must be internally platform-guarded
 ([`overlays/podman.nix`](../../overlays/podman.nix): darwin gets the prebuilt
 remote client, Linux passes nixpkgs' podman through) or only add lazy attrs
-the other OS never evaluates (the hyprland overlays).
+the other OS never evaluates (`flatpak-user`, `wowup` — Linux-only packages
+darwin never references; the hyprland overlays were the canonical example
+until the [hyprland unfollow decision](../decisions/hyprland-unfollow-cachix.md)
+replaced them with direct flake packages).
 
 Tradeoffs: two files per feature and manual package-list sync (drift risk)
 buy zero conditionals in module bodies and independent evolution of each
