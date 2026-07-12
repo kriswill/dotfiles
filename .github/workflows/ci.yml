@@ -21,9 +21,10 @@
 # nixpkgs and is consumed as inputs.hyprland.packages, so our drvs match what
 # upstream CI pushed whenever our nixpkgs is drv-equivalent to their lock's
 # (most weeks; a staging mass-rebuild in the gap means one source build,
-# which FlakeHub then serves). Wired via extra-conf — the runner ignores the
-# flake's nixConfig as untrusted. Noctalia still follows our nixpkgs: it has
-# no upstream cache at all, so following keeps its deps on cache.nixos.org.
+# which FlakeHub then serves). Wired via extra-conf; the flake carries no
+# nixConfig (untrusted clients would only warn about it). Noctalia still
+# follows our nixpkgs: it has no upstream cache at all, so following keeps
+# its deps on cache.nixos.org.
 #
 # Two layers of gating keep the (long) builds from running needlessly:
 #  * `paths:` filters both triggers to the files that can actually change the
@@ -130,8 +131,8 @@ jobs:
 
       - uses: DeterminateSystems/determinate-nix-action@v3
         with:
-          # Upstream cache for the hypr* stack (see header). extra-conf lands in
-          # the daemon's nix.conf; the flake's nixConfig can't (untrusted).
+          # Upstream cache for the hypr* stack (see header). extra-conf lands
+          # in the daemon's nix.conf.
           extra-conf: |
             extra-substituters = https://hyprland.cachix.org
             extra-trusted-public-keys = hyprland.cachix.org-1:a7pgxzMz7+chwVL3/pzj6jIBMioiJM7ypFP8PwtkuGc=
