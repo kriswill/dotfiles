@@ -8,10 +8,10 @@ timestamp: '2026-07-05T00:00:00-07:00'
 
 okf — CLI for maintaining OKF knowledge bundles (scaffold/index/validate/viz).
 
-Lives in its own **private** repository,
+Lives in its own **public** repository,
 [kriswill/okflight](https://github.com/kriswill/okflight), consumed as the
-`okf` flake input (`git+ssh://` — the fetch authenticates through the SSH
-agent, here 1Password with per-use enclave gating; no token at rest) and
+`okf` flake input (a plain `github:` fetch — public since 2026-07; the old
+git+ssh/1Password auth story is historical) and
 re-exported as `packages.<system>.okf`
 ([packages](../modules/packages.md)); advance the pin with
 `nix flake update okf`. History: `scripts/okf/` → `flakes/okf/`
