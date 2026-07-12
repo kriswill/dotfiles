@@ -3,20 +3,17 @@
 # nebula's NixOS toplevel (x86_64-linux). Deliberately NOT `nix flake check`:
 # the darwin checks would build all three darwin hosts; the gate is k only.
 #
-# Both jobs run ssh-agent because the flake has a private git+ssh input
-# (okf → kriswill/okflight; read-only deploy key, the same OKFLIGHT_DEPLOY_KEY
-# secret pages.yml uses). Fork PRs get no secrets, so the okf fetch — and the
-# job — fails there; acceptable for a personal repo.
-#
 # Both jobs push what they build to FlakeHub Cache (private; paid
 # Determinate account) via flakehub-cache-action — FlakeHub forbids ad-hoc
 # push, CI OIDC is the only way in, so this workflow is what populates the
 # cache the hosts pull from (`determinate-nixd login` per machine). Auth is
-# the job's OIDC JWT (`id-token: write`) — no FlakeHub secret exists.
+# the job's OIDC JWT (`id-token: write`) — no FlakeHub secret exists. Fork
+# PRs get no id-token, so they build without cache push (warns, still green).
 #
-# NO signing key and NO age key in CI, ever: builds never decrypt sops
-# secrets (decryption happens at activation on the host), so the only
-# credential here is the read-only okflight deploy key. See
+# CI holds ZERO build credentials: every flake input is a public fetch (okf
+# went public 2026-07, dropping the old git+ssh deploy key), and builds
+# never decrypt sops secrets (decryption happens at activation on the
+# host). NO signing key and NO age key in CI, ever. See
 # knowledge/decisions/ci-github-actions.md.
 #
 # No hyprland.cachix.org substituter: hyprland/noctalia follow this flake's
@@ -52,15 +49,6 @@ jobs:
       # cache — replaces magic-nix-cache's ~10 GiB GHA-cache backend.
       - uses: DeterminateSystems/flakehub-cache-action@main
 
-      - uses: webfactory/ssh-agent@v0.10.0
-        with:
-          ssh-private-key: ${{ secrets.OKFLIGHT_DEPLOY_KEY }}
-
-      - name: Ensure github.com in known_hosts
-        run: |
-          mkdir -p ~/.ssh
-          ssh-keyscan github.com >> ~/.ssh/known_hosts
-
       - name: Build darwin system closure (k)
         run: nix build .#darwinConfigurations.k.system -L
 
@@ -80,15 +68,6 @@ jobs:
       - uses: DeterminateSystems/determinate-nix-action@v3
 
       - uses: DeterminateSystems/flakehub-cache-action@main
-
-      - uses: webfactory/ssh-agent@v0.10.0
-        with:
-          ssh-private-key: ${{ secrets.OKFLIGHT_DEPLOY_KEY }}
-
-      - name: Ensure github.com in known_hosts
-        run: |
-          mkdir -p ~/.ssh
-          ssh-keyscan github.com >> ~/.ssh/known_hosts
 
       # snowglobe-lib lives on codeberg.org, which intermittently serves
       # 503/504 (observed 2026-07-10, from residential IPs too — not just

@@ -1,0 +1,41 @@
+# Reusable account-wide Nix CI: build with Determinate Nix, push everything
+# built to the private FlakeHub cache. Any kriswill/* repo gets cached Nix CI
+# with a single job:
+#
+#   jobs:
+#     nix:
+#       uses: kriswill/dotfiles/.github/workflows/nix-build-cache.yml@main
+#       permissions: { id-token: write, contents: read }
+#       # optionally:
+#       # with: { command: "nix build .#foo -L", runner: macos-latest }
+#
+# The caller MUST grant `id-token: write` — that OIDC JWT is the FlakeHub
+# credential (account-scoped cache; no secrets exist). Fork PRs get no
+# id-token and build without cache push. dotfiles' own ci.yml does not use
+# this (its jobs carry host-specific extras); it exists for the other repos.
+name: nix-build-cache
+
+on:
+  workflow_call:
+    inputs:
+      command:
+        description: Nix command(s) to run
+        type: string
+        default: nix flake check -L
+      runner:
+        description: Runner image (ubuntu-latest, macos-latest, ...)
+        type: string
+        default: ubuntu-latest
+
+jobs:
+  build:
+    runs-on: ${{ inputs.runner }}
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: DeterminateSystems/determinate-nix-action@v3
+
+      - uses: DeterminateSystems/flakehub-cache-action@main
+
+      - run: ${{ inputs.command }}

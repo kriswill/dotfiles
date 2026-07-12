@@ -3,8 +3,8 @@
 # runs workflows on events created with GITHUB_TOKEN. PAT scope: this repo
 # only, Contents R/W + Pull requests R/W.
 #
-# ssh-agent is REQUIRED here: `nix flake update` re-fetches every input,
-# including the private git+ssh okf (kriswill/okflight, read-only deploy key).
+# `nix flake update` re-fetches every input; all of them are public fetches
+# (okf went public 2026-07), so no ssh key or other credential is needed.
 name: update-flake-lock
 
 on:
@@ -23,15 +23,6 @@ jobs:
       - uses: actions/checkout@v7
 
       - uses: DeterminateSystems/determinate-nix-action@v3
-
-      - uses: webfactory/ssh-agent@v0.10.0
-        with:
-          ssh-private-key: ${{ secrets.OKFLIGHT_DEPLOY_KEY }}
-
-      - name: Ensure github.com in known_hosts
-        run: |
-          mkdir -p ~/.ssh
-          ssh-keyscan github.com >> ~/.ssh/known_hosts
 
       - uses: DeterminateSystems/update-flake-lock@v28
         with:
