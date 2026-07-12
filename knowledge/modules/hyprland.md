@@ -1,7 +1,7 @@
 ---
 type: NixOS Module
 title: Hyprland
-description: Enables Hyprland directly (programs.hyprland + withUWSM) instead of snowglobe-lib.desktop.hyprland — dodging its force-enabled hyprlock/kitty/dolphin — and asserts the shared snowglobe desktop layer plus fuzzel formerly implied by niri.
+description: Enables Hyprland directly (programs.hyprland + withUWSM, package/portalPackage pinned to inputs.hyprland.packages with the hyprland.cachix.org substituter) instead of snowglobe-lib.desktop.hyprland — dodging its force-enabled hyprlock/kitty/dolphin — and asserts the shared snowglobe desktop layer plus fuzzel formerly implied by niri.
 resource: modules/hosts/nebula/hyprland.nix
 tags: [nixos-module, host-specific]
 timestamp: '2026-07-03T12:00:00-07:00'
@@ -16,6 +16,15 @@ contribution is `programs.hyprland` + uwsm; it also force-enables hyprlock
 here (ghostty terminal, fuzzel/Noctalia launcher, Noctalia lock), and
 hyprlock repeatedly broke the build whenever the hyprland flake's hyprutils
 overlay outpaced nixpkgs. See the manual.
+
+Since 2026-07-12 the compositor itself comes straight from the flake:
+`programs.hyprland.{package,portalPackage}` are set to
+`inputs.hyprland.packages.*` (hyprland + xdg-desktop-portal-hyprland), and the
+file adds `nix.settings.{substituters,trusted-public-keys}` for
+hyprland.cachix.org so nebula's daemon downloads those exact drvs instead of
+building them. This replaced the `hyprland-packages`/`hyprland-extras`
+overlays — full rationale in the
+[hyprland unfollow decision](../decisions/hyprland-unfollow-cachix.md).
 
 Since niri was removed, nebula has no other desktop, so this file also
 asserts the shared snowglobe desktop layer that niri used to pull in:

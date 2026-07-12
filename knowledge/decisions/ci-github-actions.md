@@ -87,10 +87,17 @@ observation removed the entire hard part.
   consume with a one-time `determinate-nixd login` per machine (Determinate
   Nix auto-configures substituter, netrc, and trusted keys; pull verified
   on `k` 2026-07-11 via `nix store info --store https://cache.flakehub.com`).
-- **Accepted cost:** hyprland/noctalia `follows` this flake's nixpkgs, so
-  their upstream caches can never hit — every bump PR rebuilds them from
-  source on the nebula job, once; the FlakeHub cache then serves that build
-  to re-runs and to nebula itself.
+- **Accepted cost (revised 2026-07-12):** originally hyprland AND noctalia
+  followed this flake's nixpkgs, so their upstream caches could never hit and
+  every bump PR rebuilt them from source on the nebula job. The hyprland half
+  was reversed by the [hyprland unfollow decision](hyprland-unfollow-cachix.md):
+  the input un-followed, packages consumed from `inputs.hyprland.packages`,
+  and hyprland.cachix.org wired into the nebula job via
+  `determinate-nix-action`'s `extra-conf` (runners ignore flake nixConfig as
+  untrusted) — the stack now substitutes whenever our nixpkgs is
+  drv-equivalent to upstream's lock, with a once-per-miss source build served
+  onward by FlakeHub. Noctalia still follows: it has no upstream cache, and
+  following keeps its deps on cache.nixos.org.
 
 ## Consequences
 

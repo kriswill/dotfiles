@@ -19,7 +19,9 @@ other entries below are host-specific *files* merged in per the
 [host-mounted modules pattern](../patterns/host-mounted-modules.md), not
 opt-in feature flags). Beyond the imports, the registry entry does two
 non-obvious things: it re-applies the full `flake.overlays` set
-(`nixpkgs.overlays`, so wowup/hyprland resolve through our overlays) and
+(`nixpkgs.overlays`, so e.g. wowup resolves through our overlays; hyprland no
+longer does — it comes straight from `inputs.hyprland.packages`, see the
+[hyprland unfollow decision](../decisions/hyprland-unfollow-cachix.md)) and
 explicitly points `sops.defaultSopsFile` at `./nebula/secrets.yaml`, because
 `mkNixosHost` only sets it when given a `configDir` we don't pass. Three
 further host files under `nebula/users/k/` configure the user:
