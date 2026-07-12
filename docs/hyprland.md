@@ -19,8 +19,14 @@ don't read the version string as "older than 0.55.2"; it's whatever the pinned
 `nix flake update`.)
 
 Installed via the official flake (`inputs.hyprland = github:hyprwm/Hyprland`,
-see `flake.nix`), with the `hyprland-packages` / `hyprland-extras` overlays in
-`modules/overlays.nix`.
+see `flake.nix`), consumed directly as `inputs.hyprland.packages.*` in
+`modules/hosts/nebula/hyprland.nix` (`programs.hyprland.{package,portalPackage}`).
+Since 2026-07-12 the input does NOT follow our nixpkgs and the old
+`hyprland-packages` / `hyprland-extras` overlays are gone: the direct packages
+match what upstream CI pushes to hyprland.cachix.org (substituter wired on
+nebula's daemon, on the CI nebula job, and in the flake's nixConfig), so the
+hypr* stack is downloaded rather than source-built whenever our nixpkgs is
+drv-equivalent to upstream's lock (most weeks).
 
 **0.55 is the cutover release.** As of 0.55 the configuration language is
 **Lua** (`~/.config/hypr/hyprland.lua`, using an `hl.*` API). The old
@@ -535,7 +541,8 @@ value differs from your file and shows `set: false`, your file isn't being read.
   hyprpaper (package + `hyprpaper.conf` + the `hyprland.start` launch) was
   dropped. niri still paints its own wallpaper via swaybg, independently.
 - **xdg-desktop-portal-hyprland (xdph)** — screenshare + global shortcuts
-  portal (the `hyprland-extras` overlay here provides it). Has **no file
+  portal (`inputs.hyprland.packages.*.xdg-desktop-portal-hyprland`, wired as
+  `programs.hyprland.portalPackage`). Has **no file
   picker** — pair with `xdg-desktop-portal-gtk`.
 - **hyprpm** — official plugin manager. **Unsupported on Nix.** Use the Hyprland
   Nix plugin mechanism instead (<https://wiki.hypr.land/Nix/Plugins/>).
@@ -827,9 +834,12 @@ Real findings on nebula — append as you discover more; correct/remove stale on
   and `hyprlauncher` — none used here (ghostty terminal, fuzzel/Noctalia
   launcher, **Noctalia lock**). The trigger to rip it out: hyprlock comes from
   **nixpkgs**, but the `hyprland-packages` overlay (`modules/overlays.nix`)
-  replaces `hyprutils` globally with the hyprland flake's newer one — so every
+  replaced `hyprutils` globally with the hyprland flake's newer one — so every
   `nix flake update` that bumped the flake ahead of nixpkgs' hyprlock broke the
   build with `Seat.cpp: cannot convert CSharedPointer<CCWlSeat> to bool`.
+  *(2026-07-12: that overlay is gone — see the next entry — which closes this
+  whole breakage class: nixpkgs' hypr-dependent packages now build against
+  nixpkgs' own hypr libs.)*
   `hyprland.nix` therefore also asserts the **shared snowglobe desktop layer**
   (`snowglobe-lib.system.hasDesktop` + `snowglobe-lib.desktop.{enable,
   installWaylandDeps}`) that the niri module used to provide — that's what gates
@@ -838,7 +848,25 @@ Real findings on nebula — append as you discover more; correct/remove stale on
   plus `programs.fuzzel.enable` (the launcher, formerly a niri-module default).
   The session is `hyprland-uwsm` (`displayManager.defaultSession`); Hyprland runs
   under **uwsm**.
-- **kanshi was removed with niri (2026-06-27); Hyprland owns monitors via
+- **Hyprland stopped following our nixpkgs and dropped the overlays
+  (2026-07-12); the stack now substitutes from hyprland.cachix.org.**
+  `programs.hyprland.{package,portalPackage}` come straight from
+  `inputs.hyprland.packages.*` — the exact drvs upstream CI pushes to its
+  cachix — instead of the `hyprland-packages`/`hyprland-extras` overlays,
+  which rebuilt everything against our nixpkgs and could never hit any cache
+  (the weekly bump cost CI a 1-2 h source build). Substituter + key are wired
+  three ways: nebula's daemon (`nix.settings`, modules/hosts/nebula/hyprland.nix),
+  the CI nebula job (`determinate-nix-action` `extra-conf` — runners ignore
+  flake nixConfig as untrusted), and the flake's `nixConfig` (for trusted
+  interactive use). Two gotchas learned doing it: (a) `nix flake lock` resolves
+  the un-followed nixpkgs **fresh from nixos-unstable HEAD**, NOT from
+  hyprland's own lock — so cache hits rely on drv-equivalence between nearby
+  unstable revs (verified across a 1,570-commit gap; breaks the week a staging
+  mass-rebuild lands, costing one FlakeHub-cached source build); (b) the
+  `hyprctl` embedded in the stow activation script must reference
+  `config.programs.hyprland.package`, not `pkgs.hyprland`, or the closure
+  gains a second, mismatched hyprland from nixpkgs. Full rationale:
+  knowledge/decisions/hyprland-unfollow-cachix.md.
   `hl.monitor`.** *Historical gotcha, kept because it cost real time:* kanshi was
   a systemd user service that drove displays under niri, and because it started
   on the shared graphical-session it **also ran under Hyprland** and reapplied

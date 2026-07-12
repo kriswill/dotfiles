@@ -16,9 +16,14 @@
 # host). NO signing key and NO age key in CI, ever. See
 # knowledge/decisions/ci-github-actions.md.
 #
-# No hyprland.cachix.org substituter: hyprland/noctalia follow this flake's
-# nixpkgs, so their upstream caches can never hit — nebula rebuilds them from
-# source on bumps by design (the cost of the `follows` decision).
+# hyprland.cachix.org substitutes the hypr* stack on the nebula job (the
+# darwin closures never contain it): the hyprland input does NOT follow our
+# nixpkgs and is consumed as inputs.hyprland.packages, so our drvs match what
+# upstream CI pushed whenever our nixpkgs is drv-equivalent to their lock's
+# (most weeks; a staging mass-rebuild in the gap means one source build,
+# which FlakeHub then serves). Wired via extra-conf — the runner ignores the
+# flake's nixConfig as untrusted. Noctalia still follows our nixpkgs: it has
+# no upstream cache at all, so following keeps its deps on cache.nixos.org.
 #
 # Two layers of gating keep the (long) builds from running needlessly:
 #  * `paths:` filters both triggers to the files that can actually change the
@@ -124,6 +129,12 @@ jobs:
       - uses: actions/checkout@v7
 
       - uses: DeterminateSystems/determinate-nix-action@v3
+        with:
+          # Upstream cache for the hypr* stack (see header). extra-conf lands in
+          # the daemon's nix.conf; the flake's nixConfig can't (untrusted).
+          extra-conf: |
+            extra-substituters = https://hyprland.cachix.org
+            extra-trusted-public-keys = hyprland.cachix.org-1:a7pgxzMz7+chwVL3/pzj6jIBMioiJM7ypFP8PwtkuGc=
 
       - uses: DeterminateSystems/flakehub-cache-action@main
 
