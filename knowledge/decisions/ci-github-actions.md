@@ -1,7 +1,7 @@
 ---
 type: Decision
 title: CI Builds Both Host Closures — No Signing Key, No Age Key, Ever
-description: 'GitHub Actions builds darwinConfigurations.k.system (free arm64 macOS runner, public repo) and nebula''s NixOS toplevel on every PR, pushing both closures to the private FlakeHub Cache via OIDC, plus a weekly update-flake-lock PR via a fine-grained PAT. The load-bearing security property: builds never decrypt sops secrets and every flake input is a public fetch (okf went public 2026-07), so CI holds zero build credentials — the Developer ID signing key never touches GitHub, and the cache needs no key at all.'
+description: 'GitHub Actions builds darwinConfigurations.k.system (free arm64 macOS runner, public repo) and nebula''s NixOS toplevel on build-relevant PRs, pushing both closures to the private FlakeHub Cache via OIDC, plus a weekly update-flake-lock PR via a fine-grained PAT. Doubly gated since 2026-07-11: a paths filter skips changes that cannot alter the closures, and a tree-equality gate skips main-push builds whose tree the merged PR already built and cached. The load-bearing security property: builds never decrypt sops secrets and every flake input is a public fetch (okf went public 2026-07), so CI holds zero build credentials — the Developer ID signing key never touches GitHub, and the cache needs no key at all.'
 tags: [ci, security, codesigning, cache]
 timestamp: '2026-07-10T21:30:00Z'
 ---
@@ -23,7 +23,8 @@ observation removed the entire hard part.
 
 ## Decision
 
-- **`ci.yml`** (pull_request + push to main): `darwin-k` builds
+- **`ci.yml`** (pull_request + push to main, both gated — see the double
+  gating bullet): `darwin-k` builds
   `.#darwinConfigurations.k.system` on `macos-latest` (arm64 — free and
   unlimited on public repos; the ~10× private-repo minute multiplier does
   not apply); `nixos-nebula` builds
@@ -41,6 +42,25 @@ observation removed the entire hard part.
   malicious PR, or exfiltrated secret store cannot leak what was never
   there. Fork PRs now build fine; lacking `id-token`, they only lose the
   cache push. `FLAKE_UPDATE_PAT` (bump PRs) is the sole remaining secret.
+- **Double gating (2026-07-11)** — the builds are long (darwin ~40 min
+  uncached; nebula longer), so ci.yml only runs them when they can matter:
+  - *Paths filter* on both triggers: `flake.nix`, `flake.lock`,
+    `modules/**`, `pkgs/**`, `overlays/**`, `lib/**`, `flakes/**`, and
+    ci.yml itself. Everything else (docs/, knowledge/, home/, config/,
+    scripts/, README) is invisible to the build — verified: home/ is stowed
+    from the live checkout at activation, config/ snapshots are restored at
+    runtime by the `*-config` CLIs, and no nix code embeds those trees at
+    eval time. A new build-relevant top-level dir must be added to BOTH
+    trigger lists.
+  - *Tree-equality gate* on main pushes: a cheap `gate` job (both build
+    jobs `needs` it) compares `HEAD^{tree}` to `HEAD^2^{tree}`. Drv hashes
+    depend only on tree contents, so a merge commit whose tree equals the
+    merged PR head's tree (main didn't move since branch-off — the normal
+    case, including the weekly bump PRs) was already built and pushed to
+    the cache by that PR's run; the gate skips the builds. Direct pushes,
+    divergent merges, and squashes (no `HEAD^2`) still build, and
+    `workflow_dispatch` always builds. Verified against history: merges
+    `bec82eb`/`3411cbf` would skip, plain commits build.
 - **Account-wide caching via a reusable workflow**
   (`.github/workflows/nix-build-cache.yml`, `workflow_call`): any
   kriswill/* repo gets Determinate Nix + FlakeHub cache CI with a one-job
@@ -83,6 +103,13 @@ observation removed the entire hard part.
   or drop the disk-reclaim step); the PAT's expiry (~1 year) needs a
   calendar note; `timeout-minutes` may need raising on uncached
   hyprland-bump PRs.
+- Watch (gating): the paths filter is an allow-list — a change that routes
+  new repo paths into the build (a module reading `../../config/...`, a
+  package embedding `scripts/...`) silently escapes CI until the dir is
+  added to both trigger lists. The gate assumes merge commits; switching
+  the repo to squash-merging would make every main push rebuild (correct,
+  just redundant — the squash tree equals the PR head tree but leaves no
+  `HEAD^2` to prove it).
 - The `follows` rebuild cost moves off the machines: after a merged bump
   PR, nebula's `nrs` pulls source-built Hyprland/noctalia prebuilt from
   the FlakeHub cache instead of compiling locally; same for the custom
