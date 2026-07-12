@@ -4,7 +4,8 @@ One flake for all my machines: three Macs (`k`, `mini`, `SOC-Kris-Williams` —
 [nix-darwin](https://github.com/lnl7/nix-darwin), Apple Silicon) and the
 `nebula` NixOS desktop (AMD/NVIDIA, Wayland: [Hyprland](https://hyprland.org) +
 [Noctalia](https://github.com/noctalia-dev/noctalia-shell), built on
-[snowglobe-lib](https://codeberg.org/earthgman/snowglobe-lib)). Everything is
+[snowglobe-lib](https://github.com/kriswill/snowglobe-lib) (GitHub fork
+of the Codeberg upstream)). Everything is
 organised with the dendritic pattern ([flake-parts](https://flake.parts) +
 [import-tree](https://github.com/vic/import-tree)): per-OS module classes
 (`modules/darwin/`, `modules/nixos/`), a shared GNU Stow tree (`home/`) for the
