@@ -1036,15 +1036,14 @@
       "locked": {
         "lastModified": 1783915894,
         "narHash": "sha256-JkD3S7lpOCt3S4x5g3hKKwDnAiIg5WtEC2ZGaoDmj7s=",
-        "owner": "kriswill",
-        "repo": "okflight",
         "rev": "2ee7fdaadd6adf81e6f11438978c7eaa3c901cf9",
-        "type": "github"
+        "revCount": 98,
+        "type": "tarball",
+        "url": "https://api.flakehub.com/f/pinned/kriswill/okflight/0.2.0/019f59ad-8ee3-72e2-9575-a5578fcdcae2/source.tar.gz"
       },
       "original": {
-        "owner": "kriswill",
-        "repo": "okflight",
-        "type": "github"
+        "type": "tarball",
+        "url": "https://flakehub.com/f/kriswill/okflight/0"
       }
     },
     "pre-commit-hooks": {
