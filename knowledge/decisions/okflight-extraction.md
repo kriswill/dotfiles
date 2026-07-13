@@ -7,9 +7,12 @@ timestamp: '2026-07-05T00:00:00-07:00'
 ---
 
 **Status:** active; **2026-07-11 update:** okflight went public — the input
-is now plain `github:kriswill/okflight` and the git+ssh/1Password auth
+became plain `github:kriswill/okflight` and the git+ssh/1Password auth
 mechanics below are historical ([ci-github-actions](ci-github-actions.md)
-records the deploy-key retirement). **Where:** [okf](../packages/okf.md),
+records the deploy-key retirement). **2026-07-13 update:** the input moved
+to okflight's FlakeHub releases (`https://flakehub.com/f/kriswill/okflight/0`,
+tracking 0.x) — the pin now advances on published releases rather than
+every `main` commit. **Where:** [okf](../packages/okf.md),
 [dev](../modules/dev.md), `flake.nix` (`okf` input),
 `.github/workflows/pages.yml`.
 

@@ -25,7 +25,10 @@ Extraction to a separate repo later is just swapping the input URL
 `"./flakes/<name>"` → `"github:owner/<name>"` — nothing else moves. Done
 for real with [okf](../packages/okf.md) → `github:kriswill/okflight`
 ([okflight-extraction](../decisions/okflight-extraction.md), 2026-07-05):
-the input name, `follows`, and every consumer stayed untouched.
+the input name, `follows`, and every consumer stayed untouched. (The okf
+input has since moved again, `github:` → FlakeHub release URL
+`https://flakehub.com/f/kriswill/okflight/0`, 2026-07-13 — the same
+one-line-swap property held.)
 
 Relative-path inputs need Nix ≥2.26 to lock stably (a relative `path` node
 with a `parent` field); under Lix they re-locked to machine-local store paths
