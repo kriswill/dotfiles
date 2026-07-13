@@ -19,7 +19,7 @@ flake consumes via relative-path inputs.
 * [Kitten](kitten.md) - Kitten - A collection of small, useful programs for the kitty terminal.
 * [Ld64 Lld](ld64-lld.md) - TEMPORARY overlay linking kitty/vfkit/starship with LLVM lld on darwin — works around the pinned nixpkgs' cctools ld64 1010.6 SIGTRAP until the staging fix reaches nixos-unstable.
 * [Noctalia Config](noctalia-config.md) - Custom Nix package 'noctalia-config'.
-* [okf](okf.md) - okf — CLI for maintaining OKF knowledge bundles (scaffold/index/validate/viz), consumed from its own repo, github:kriswill/okflight.
+* [okf](okf.md) - okf — CLI for maintaining OKF knowledge bundles (scaffold/index/validate/viz), consumed from its own repo via FlakeHub (kriswill/okflight).
 * [Pass Xdg](pass-xdg.md) - pass-xdg — a drop-in `pass` (standard unix password manager) that defaults its store to an XDG-compliant location instead of the upstream default `~/.password-store`.
 * [Podman](podman.md) - Podman — the daemonless, Docker-compatible container engine; on macOS packaged from the official prebuilt darwin_arm64 remote client (nixpkgs' podman refuses to evaluate on darwin) with vfkit + gvproxy bundled in, primarily serving minikube's podman driver for work Kubernetes.
 * [Tomato](tomato.md) - CLI to get/set TOML values preserving comments and formatting.

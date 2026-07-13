@@ -1,5 +1,17 @@
 # Log
 
+## 2026-07-13
+
+- **Update** — [okflight-extraction](decisions/okflight-extraction.md) /
+  `flake.nix` / [okf](packages/okf.md) / okf-profile / AGENTS.md /
+  [subflake-extraction](patterns/subflake-extraction.md): the okf input
+  moved from `github:kriswill/okflight` (main HEAD) to okflight's FlakeHub
+  releases — `https://flakehub.com/f/kriswill/okflight/0`, a semver
+  constraint tracking the 0.x series (same style as the `determinate`
+  input). Same source revision at swap time (0.2.0 = `2ee7fda`), so no
+  closure change; the pin now only advances on published releases via
+  `nix flake update okf`.
+
 ## 2026-07-12
 
 - **Creation** — [hyprland-unfollow-cachix](decisions/hyprland-unfollow-cachix.md)

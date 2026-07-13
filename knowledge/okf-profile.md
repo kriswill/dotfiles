@@ -91,8 +91,9 @@ Module`, `Host`, `Nix Package`, `Overlay`, `Sub-flake`, `Neovim Plugin`,
 
 okf is bun/TypeScript living in its own repository —
 [kriswill/okflight](https://github.com/kriswill/okflight), public since
-2026-07 (plain `github:` input, no SSH auth) — consumed here as
-the `okf` flake input, re-exported as `packages.<system>.okf`, and advanced
+2026-07 — consumed here as the `okf` flake input from FlakeHub
+(`https://flakehub.com/f/kriswill/okflight/0`, tracking 0.x releases),
+re-exported as `packages.<system>.okf`, and advanced
 with `nix flake update okf`
 ([okflight-extraction](decisions/okflight-extraction.md)). This repo's
 scaffold passes live bundle-adjacent in
