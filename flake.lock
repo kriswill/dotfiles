@@ -1034,11 +1034,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1783835137,
-        "narHash": "sha256-EZd7PdK09kwgCvfRKdhOtJJyORaWmW7sFSwudW4wUmA=",
+        "lastModified": 1783915894,
+        "narHash": "sha256-JkD3S7lpOCt3S4x5g3hKKwDnAiIg5WtEC2ZGaoDmj7s=",
         "owner": "kriswill",
         "repo": "okflight",
-        "rev": "02a600f2a5a85ee596bf46bc58eb8302b4a800c7",
+        "rev": "2ee7fdaadd6adf81e6f11438978c7eaa3c901cf9",
         "type": "github"
       },
       "original": {
