@@ -15,6 +15,18 @@
   recomputing git status (~130-150ms) — was left alone as a UX tradeoff, not
   a bug; full breakdown in the manual.
 
+- **Creation** — [gui-path](modules/gui-path.md): GUI apps get the nix PATH.
+  Two-pronged: `launchd.user.envVariables.PATH` (user-domain `launchctl
+  setenv` at activation — Dock/Finder-launched apps otherwise inherit the
+  bare `/usr/bin:/bin:/usr/sbin:/sbin`) plus a `home/zsh/.zshrc` shim for
+  apps that parse `~/.zshrc` to recover PATH instead of trusting their
+  environment (Claude Code desktop's documented probe). The shim is inert
+  for real shells: [zsh](modules/zsh.md)'s ZDOTDIR points zsh at
+  `~/.config/zsh/.zshrc` on both OSes, which is precisely why the probe
+  found nothing before. Trigger: Claude Code desktop's CI monitoring
+  reporting "gh not installed" while gh (nix profile only) worked in every
+  terminal.
+
 ## 2026-07-13
 
 - **Update** — [okflight-extraction](decisions/okflight-extraction.md) /
