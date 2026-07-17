@@ -1,5 +1,20 @@
 # Log
 
+## 2026-07-16
+
+- **Creation** — [cache-brew-shellenv](decisions/cache-brew-shellenv.md) /
+  [zsh](modules/zsh.md) / `home/zsh/.config/zsh/darwin.zsh` / `.gitignore` /
+  `docs/shell-startup-performance.md`: profiled why a new tmux pane felt slow
+  (timestamped `zsh -x` traces, per-subprocess timing, `STARSHIP_LOG=trace`).
+  Cached `brew shellenv`'s output the same way `determinate-nixd`'s
+  completion script already was (~30ms/shell saved, warm `zsh -i -c exit`
+  ~150-190ms → ~120ms). Removed a stray root-owned `.cache/` in the repo
+  root that was making every `git status` here print a permission-denied
+  warning, and gitignored `/.cache` against a recurrence. The dominant
+  per-pane cost — starship rendering the prompt twice per line, each
+  recomputing git status (~130-150ms) — was left alone as a UX tradeoff, not
+  a bug; full breakdown in the manual.
+
 ## 2026-07-13
 
 - **Update** — [okflight-extraction](decisions/okflight-extraction.md) /
