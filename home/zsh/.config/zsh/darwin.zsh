@@ -13,4 +13,15 @@ if command -v determinate-nixd > /dev/null; then
   source "$_dnd_cache"
   unset _dnd_bin _dnd_cache
 fi
-[ -x /opt/homebrew/bin/brew ] && eval "$(/opt/homebrew/bin/brew shellenv)"
+## `brew shellenv` takes ~30ms per shell to emit the same static exports, so
+## cache it and refresh only when the brew binary changes (same pattern as
+## determinate-nixd's completion script above).
+if [ -x /opt/homebrew/bin/brew ]; then
+  _brew_bin=/opt/homebrew/bin/brew
+  _brew_cache="$ZDOTDIR/.brew-shellenv.zsh"
+  if [[ ! -f $_brew_cache || $_brew_bin -nt $_brew_cache ]]; then
+    "$_brew_bin" shellenv > "$_brew_cache"
+  fi
+  source "$_brew_cache"
+  unset _brew_bin _brew_cache
+fi
