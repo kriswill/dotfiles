@@ -1,0 +1,46 @@
+{
+    "buckets": [
+        {
+            "Name": "main",
+            "Source": "https://github.com/ScoopInstaller/Main.git",
+            "Updated": "2026-04-12T13:31:36-07:00",
+            "Manifests": 1493
+        },
+        {
+            "Name": "extras",
+            "Source": "https://github.com/ScoopInstaller/Extras",
+            "Updated": "2026-04-12T14:46:08-07:00",
+            "Manifests": 2291
+        }
+    ],
+    "apps": [
+        {
+            "Version": "2.89.0",
+            "Info": "",
+            "Source": "main",
+            "Name": "gh",
+            "Updated": "2026-04-12T17:44:01.8307756-07:00"
+        },
+        {
+            "Version": "0.56.0",
+            "Info": "",
+            "Source": "extras",
+            "Name": "lazygit",
+            "Updated": "2025-11-24T23:00:04.2500043-08:00"
+        },
+        {
+            "Version": "0.12.1",
+            "Info": "",
+            "Source": "main",
+            "Name": "neovim",
+            "Updated": "2026-04-12T17:44:01.8307756-07:00"
+        },
+        {
+            "Version": "7.6.0",
+            "Info": "",
+            "Source": "main",
+            "Name": "pwsh",
+            "Updated": "2026-04-12T16:49:15.0726375-07:00"
+        }
+    ]
+}
