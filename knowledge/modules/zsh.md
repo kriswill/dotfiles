@@ -27,6 +27,10 @@ newer than the cache. See
 [shell-startup-performance manual](../../docs/shell-startup-performance.md)
 for the profiling that motivated it.
 
+Side effect of ZDOTDIR worth knowing: `~/.zshrc` is never read by zsh, so
+the stow tree ships one anyway as a PATH shim for GUI apps that parse it —
+see [GUI Path](gui-path.md).
+
 ## Twin differences
 
 Darwin additionally sets `enableAutosuggestions`/`enableSyntaxHighlighting`

@@ -31,6 +31,7 @@ interesting ones by hand — scaffolding never overwrites an existing doc.
 * [Git](git.md) - Installs the binaries the stow-managed git config invokes by bare name (git, gh, gh-config, git-lfs, difftastic, …); the config itself — including 1Password SSH signing — is stow, not nix.
 * [Gpg](gpg.md) - gpg-agent on both OSes with enableSSHSupport deliberately false — 1Password owns SSH_AUTH_SOCK; gpg only backs `pass` and ad-hoc gpg use.
 * [Gtk Dark](gtk-dark.md) - Installs the adw-gtk3 theme so the portal-broadcast gtk-theme=adw-gtk3-dark resolves — dark GTK3 apps without the GTK_THEME env var that breaks libadwaita styling.
+* [GUI Path](gui-path.md) - launchd user-domain PATH injection — macOS gives Dock/Finder-launched apps a bare PATH, so this module publishes the nix profile bins to every GUI app at activation (making gh visible to Claude Code desktop's CI monitoring, git to editors).
 * [Hardware Configuration](hardware-configuration.md) - nixos-generate-config output in the two-line dendritic wrapper: initrd kernel modules, kvm-amd, x86_64-linux hostPlatform, and AMD microcode updates.
 * [Helium Chrome Shim](helium-chrome-shim.md) - Plants an exec-wrapper at the canonical Google Chrome.app binary path on every rebuild, so Chrome-only tooling (chrome-devtools-mcp / Puppeteer channel 'stable') launches Helium — no per-tool --executablePath wiring.
 * [Helium](helium.md) - Helium browser — enables the upstream programs.helium module and declares a root-owned Chromium managed policy in /etc (privacy baseline, DuckDuckGo, force-installed extensions).
