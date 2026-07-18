@@ -1,5 +1,14 @@
 # Log
 
+## 2026-07-18
+
+- **Update** — [gh-op](gh-op.md) /
+  [op-service-account-token](../decisions/op-service-account-token.md): the
+  wrapper's token read moved `op://Private/…` → `op://Automation/…` and now
+  prefers `OP_SERVICE_ACCOUNT_TOKEN` from `/run/secrets/op-sa-token` (scoped
+  per-read, not exported to gh), falling back to interactive desktop-app
+  auth, then hosts.yml. Rotation procedure (90d) documented in the doc.
+
 ## 2026-07-11
 
 - **Update** — [gh-config](gh-config.md): `capture`/`diff` now

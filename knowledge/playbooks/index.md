@@ -11,3 +11,4 @@ adding modules and packages, and keeping tooling up to date.
 * [Bump ccglass](bump-ccglass.md) - Update the ccglass sub-flake for a new upstream release via the patch-ccglass skill.
 * [Rebuild and Rollback](rebuild-and-rollback.md) - Apply, test-build, inspect, and roll back system generations on both OSes.
 * [Refresh the Codebase-memory Index](refresh-codebase-memory.md) - Bootstrap or refresh the code-graph index the codebase-memory MCP server keeps for this repo.
+* [Rotate the nebula-gh Service-Account Token](rotate-op-sa-token.md) - ~90-day rotation of the 1Password service-account token behind the gh wrapper's prompt-free op read — web-UI rotate, re-bank, sops re-set, rebuild, verify.

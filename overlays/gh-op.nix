@@ -6,6 +6,12 @@
 # NixOS it must resolve to the setgid security wrapper (/run/wrappers/bin/op,
 # group onepassword-cli) or desktop-app integration breaks.
 #
+# The read prefers a 1Password service-account token (sops secret →
+# /run/secrets/op-sa-token; SA is read-only on the Automation vault, which
+# holds only the gh token): no desktop-app authorization prompt, works with
+# the app locked. Falls back to interactive desktop-app auth when the secret
+# is absent, then to hosts.yml behaviour.
+#
 # On darwin, pass gh through untouched (FileVault disks; hosts.yml is fine).
 _final: prev: {
   gh =
@@ -24,10 +30,16 @@ _final: prev: {
             "auth login" | "auth logout" | "auth refresh") ;;
             *)
               if [ -z "''${GH_TOKEN-}" ]; then
-                # ponytail: one op read per gh call (~0.5s, needs the 1Password
-                # app unlocked); on failure fall through to hosts.yml behaviour
-                GH_TOKEN=$(op read "op://Private/GitHub gh CLI token/credential" 2>/dev/null) \
-                  && export GH_TOKEN
+                # ponytail: one op read per gh call (~0.5s); on failure fall
+                # through to hosts.yml behaviour. SA token is scoped per-read,
+                # not exported into gh's environment.
+                if [ -z "''${OP_SERVICE_ACCOUNT_TOKEN-}" ] && [ -r /run/secrets/op-sa-token ]; then
+                  GH_TOKEN=$(OP_SERVICE_ACCOUNT_TOKEN=$(cat /run/secrets/op-sa-token) \
+                    op read "op://Automation/GitHub gh CLI token/credential" 2>/dev/null)
+                else
+                  GH_TOKEN=$(op read "op://Automation/GitHub gh CLI token/credential" 2>/dev/null)
+                fi
+                [ -n "$GH_TOKEN" ] && export GH_TOKEN
               fi
               ;;
           esac
