@@ -17,16 +17,16 @@
 # Re-check the patch on every version bump (see Risks in the plan).
 buildNpmPackage (finalAttrs: {
   pname = "ccglass";
-  version = "1.0.0";
+  version = "1.1.2";
 
   src = fetchFromGitHub {
     owner = "jianshuo";
     repo = "ccglass";
     tag = "v${finalAttrs.version}";
-    hash = "sha256-Os7fQh4Egi5WcMXZ7MhIQVNjLI2iRPhbktPqWiq9sTI=";
+    hash = "sha256-SC2MnBKoT0wcjzB3IEs5ZvUZ5um6QKY8ZSb6xBQ8nTY=";
   };
 
-  npmDepsHash = "sha256-VcPa9YsGS+sUcsGHucPceknhR6J5qoeA4C018qX/dRE=";
+  npmDepsHash = "sha256-wAs46NnewSWJn40WdXuNOd3xeEs96oPF1S325qhPwxQ=";
 
   patches = [ ./fork.patch ];
 

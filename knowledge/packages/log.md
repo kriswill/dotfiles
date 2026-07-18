@@ -2,6 +2,14 @@
 
 ## 2026-07-18
 
+- **Update** — [ccglass](ccglass.md): bumped 1.0.0 → 1.1.2 (`fork.patch`
+  still applies cleanly; hardcoded `VERSION` literal and both hashes
+  updated). Gotcha reconfirmed: bumping the tag without touching `src.hash`
+  "succeeds" by silently reusing the cached old source (fixed-output
+  derivation) — the first green verify was v1.0.0 code labeled 1.1.2; forcing
+  `lib.fakeHash` surfaced the real hashes. All driver checks pass on true
+  1.1.2 (version, MCP tools, embedded dashboard assets).
+
 - **Update** — [gh-op](gh-op.md) /
   [op-service-account-token](../decisions/op-service-account-token.md): the
   wrapper's token read moved `op://Private/…` → `op://Automation/…` and now
