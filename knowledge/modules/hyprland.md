@@ -38,7 +38,9 @@ Note this file sets **no** NVIDIA-specific env vars — driver selection lives
 in [configuration](configuration.md) (`hardware.nvidia.package = production`)
 and the GPU metadata in the [nebula](../hosts/nebula.md) registry entry
 (`gpu-vendors = ["nvidia"]`). The user-side Hyprland config is the
-stow-tracked Lua tree under `home/hyprland/`.
+stow-tracked Lua tree under `home/hyprland/`. A sibling host file,
+[oled-resume-bump](oled-resume-bump.md), DPMS-bounces the DP-3 OLED after
+every resume because the panel sometimes doesn't wake on its own.
 
 Host-specific file for [nebula](../hosts/nebula.md) — merged straight into
 that host's configuration per the

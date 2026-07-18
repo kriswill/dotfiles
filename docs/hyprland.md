@@ -652,6 +652,22 @@ Real findings on nebula — append as you discover more; correct/remove stale on
   string, prefer a leveled bracket. (Also: `hyprctl binds` prints the key
   capitalised — `key: G`, not `g` — so grep case-insensitively.)
 
+- **DP-3 (OLED) not waking → a plain DPMS bounce on that output is the first
+  thing to try; it's also automated on resume (2026-07-15).** The panel stayed
+  black while Hyprland reported it fully live (`disabled:false, dpmsStatus:1`,
+  correct mode). Fix was just:
+  ```sh
+  hyprctl dispatch 'hl.dsp.dpms("off", "DP-3")'
+  hyprctl dispatch 'hl.dsp.dpms("on", "DP-3")'
+  ```
+  — milder than the two-step *mode* bounce below (which remains the escalation
+  when DPMS cycling isn't enough, i.e. a true link-training failure). Note the
+  `hyprctl dispatch '<lua expr>'` shorthand works and is simpler than
+  `hyprctl eval 'hl.dispatch(...)'`. Since sleep/wake is the usual trigger,
+  `modules/hosts/nebula/oled-resume-bump.nix` now runs this bounce on every
+  resume via `powerManagement.resumeCommands` (as root → `runuser -u k` with
+  `XDG_RUNTIME_DIR` + `HYPRLAND_INSTANCE_SIGNATURE` exported, hyprctl taken
+  from `config.programs.hyprland.package`).
 - **OLED (DP-3, PG34WCDM) blanks at login at 240Hz — DSC won't negotiate; capped
   to 143.97Hz (2026-06-16).** Symptom: on Hyprland login the OLED showed nothing;
   its own OSD read **"no DisplayPort signal"** while `hyprctl monitors` still
