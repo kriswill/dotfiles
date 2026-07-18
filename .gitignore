@@ -1,5 +1,9 @@
 .direnv
 pkgs/result
+# Stray root-owned dir some sudo'd tool dropped in the repo root (2026-07-15) —
+# unreadable to the user, so git status/starship's git_status silently ate the
+# permission-denied cost on every prompt render. Ignored in case it recurs.
+/.cache
 # nebula's hand-appended rebuild log (untracked since the dual-OS merge review)
 updates.log
 **/.DS_Store

@@ -45,7 +45,7 @@ keeps the directory out of okf's bundle walk.
 | Made a non-obvious decision (anything that would deserve a long commit body) | Add `knowledge/decisions/<slug>.md` (template below); cite commit hashes; link affected concepts both ways |
 | Changed how a core mechanism works (stow, module discovery, sub-flakes, …) | Update the matching `knowledge/patterns/*.md` |
 | New recurring procedure | Add `knowledge/playbooks/<slug>.md` |
-| Any of the above | Append a `log.md` entry under today's `## YYYY-MM-DD` (newest first, `**Update**`/`**Creation**`/`**Deprecation**` lead), then run `index` + `validate` |
+| Any of the above | Append a log entry to the **owning bundle's** `log.md` — `knowledge/modules/log.md`, `decisions/log.md`, `packages/log.md`, `hosts/log.md`, `nvim/log.md`, `patterns/log.md`, `playbooks/log.md` (create on first entry) — under today's `## YYYY-MM-DD` (newest first, `**Update**`/`**Creation**`/`**Deprecation**` lead), links relative to that file; then run `index` + `validate` |
 
 ## Entry quality checklist
 
@@ -109,3 +109,9 @@ timestamp: '<ISO-8601 now>'
   concept bodies (frontmatter `title` is the H1).
 - Never hand-edit generated `index.md` listing sections — only the blurb
   above the first heading; `viz.html` is generated and gitignored.
+- ⚠️ **The root `knowledge/log.md` is NOT the default log.** It records
+  bundle-level events only: new bundle types/directories, root-level concept
+  docs, `docs/` manuals, bundle-wide sweeps, workspace tooling conventions.
+  Everything else logs in its bundle's own `log.md`. Before appending to the
+  root log, justify why no single bundle owns the change — if one does, the
+  entry belongs there.
