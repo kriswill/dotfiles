@@ -149,10 +149,10 @@ ui_scale = 1.4000000134110451
 
 [theme]
 builtin = "Rosé Pine"
-community_palette = "Murata"
+community_palette = "Kanagawa Kasumi"
 mode = "dark"
 source = "wallpaper"
-wallpaper_scheme = "m3-rainbow"
+wallpaper_scheme = "muted"
 
     [theme.templates]
     builtin_ids = [ "hyprland" ]

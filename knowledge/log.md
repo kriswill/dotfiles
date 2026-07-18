@@ -1,5 +1,20 @@
 # Log
 
+## 2026-07-15
+
+- **Creation** — [oled-resume-bump](modules/oled-resume-bump.md) /
+  `modules/hosts/nebula/oled-resume-bump.nix` / docs/hyprland.md: the DP-3
+  OLED (PG34WCDM) sometimes stays black after resume while Hyprland reports
+  the output live; a per-output DPMS bounce wakes it, so
+  `powerManagement.resumeCommands` now runs one on every resume
+  (root → `runuser -u k`, hyprctl from `config.programs.hyprland.package`).
+  Same day, live recovery of both panels used the escalation path: the
+  two-step *mode* bounce (docs/hyprland.md Learned behaviours), which forces a
+  real DP link retrain when DPMS cycling isn't enough. Also recorded in
+  docs/hyprland.md: `hyprctl dispatch '<lua expr>'` shorthand works
+  (`hl.dsp.dpms("off", "DP-3")`) and is simpler than
+  `hyprctl eval 'hl.dispatch(...)'`.
+
 ## 2026-07-12
 
 - **Creation** — [hyprland-unfollow-cachix](decisions/hyprland-unfollow-cachix.md)
