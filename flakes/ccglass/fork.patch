@@ -7,7 +7,7 @@ index e899e21..c707442 100644
 
  const __dirname = path.dirname(fileURLToPath(import.meta.url));
 -const VERSION = JSON.parse(fs.readFileSync(path.join(__dirname, "..", "package.json"), "utf8")).version;
-+const VERSION = "1.0.0";
++const VERSION = "1.1.2";
 
  const HELP = `ccglass v${VERSION} — see what your coding agent sends to the model
 
