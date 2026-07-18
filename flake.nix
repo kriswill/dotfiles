@@ -47,11 +47,11 @@
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.flake-parts.follows = "flake-parts";
     };
-    # okf lives in its own (public since 2026-07) repo; plain github: fetch —
-    # no SSH agent or deploy key needed anywhere (machines or CI). If it ever
-    # goes private again: git+ssh + deploy key, or a private FlakeHub flake.
+    # okf ships from FlakeHub (kriswill/okflight, public); "0" tracks the 0.x
+    # release series — `nix flake update okf` moves to the newest release.
+    # If it ever goes private: FlakeHub supports private flakes (netrc auth).
     okf = {
-      url = "github:kriswill/okflight";
+      url = "https://flakehub.com/f/kriswill/okflight/0";
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.flake-parts.follows = "flake-parts";
     };

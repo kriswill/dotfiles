@@ -17,6 +17,20 @@ installs the tools the stowed `.zshrc` (`home/zsh/`) invokes by bare name
 XDG state, and pre-creates `~/.config/zsh`, `~/.local/state/zsh`, and
 `~/.local/state/less`.
 
+`darwin.zsh` (part of the stowed `home/zsh/` package, so darwin-only at
+runtime despite living in the shared tree) caches two `eval "$(cmd)"`-style
+shell integrations whose output is deterministic and expensive to
+regenerate — `determinate-nixd completion zsh` and `brew shellenv` — to
+files in `$ZDOTDIR`, refreshed only when the underlying binary's mtime is
+newer than the cache. See
+[cache-brew-shellenv](../decisions/cache-brew-shellenv.md) and the
+[shell-startup-performance manual](../../docs/shell-startup-performance.md)
+for the profiling that motivated it.
+
+Side effect of ZDOTDIR worth knowing: `~/.zshrc` is never read by zsh, so
+the stow tree ships one anyway as a PATH shim for GUI apps that parse it —
+see [GUI Path](gui-path.md).
+
 ## Twin differences
 
 Darwin additionally sets `enableAutosuggestions`/`enableSyntaxHighlighting`

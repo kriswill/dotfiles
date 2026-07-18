@@ -29,6 +29,8 @@ pkgs.writeText "zz-nom-wrapper.sh" ''
     eval "$(declare -f _nix | sed '1s/_nix/_nix_direnv_original/')"
 
     _nix() {
+      # Silence Determinate Nix's Sentry/Crashpad crash reporter.
+      local -x NIX_SENTRY_ENDPOINT=""
       case "''${1:-}" in
         print-dev-env)
           ${lib.optionalString (diffCmd != null) ''

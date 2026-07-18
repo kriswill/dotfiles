@@ -1,7 +1,7 @@
 ---
 type: Nix Package
 title: okf
-description: okf — CLI for maintaining OKF knowledge bundles (scaffold/index/validate/viz), consumed from its own repo, github:kriswill/okflight.
+description: okf — CLI for maintaining OKF knowledge bundles (scaffold/index/validate/viz), consumed from its own repo via FlakeHub (kriswill/okflight).
 tags: [package, flake-input, okf]
 timestamp: '2026-07-05T00:00:00-07:00'
 ---
@@ -10,9 +10,11 @@ okf — CLI for maintaining OKF knowledge bundles (scaffold/index/validate/viz).
 
 Lives in its own **public** repository,
 [kriswill/okflight](https://github.com/kriswill/okflight), consumed as the
-`okf` flake input (a plain `github:` fetch — public since 2026-07; the old
-git+ssh/1Password auth story is historical) and
-re-exported as `packages.<system>.okf`
+`okf` flake input from [FlakeHub](https://flakehub.com/flake/kriswill/okflight)
+(`https://flakehub.com/f/kriswill/okflight/0` — tracks the 0.x release
+series, so the pin only moves on published releases; the earlier plain
+`github:` fetch and the pre-public git+ssh/1Password auth story are
+historical) and re-exported as `packages.<system>.okf`
 ([packages](../modules/packages.md)); advance the pin with
 `nix flake update okf`. History: `scripts/okf/` → `flakes/okf/`
 ([okf-subflake](../decisions/okf-subflake.md), 2026-07-04) → okflight via
@@ -64,6 +66,6 @@ be present.
 
 ## Source
 
-- Repository: [kriswill/okflight](https://github.com/kriswill/okflight) (private)
+- Repository: [kriswill/okflight](https://github.com/kriswill/okflight) (public; released on [FlakeHub](https://flakehub.com/flake/kriswill/okflight))
 - README: [okflight README](https://github.com/kriswill/okflight/blob/main/README.md)
 - Re-export: [`modules/packages.nix`](../../modules/packages.nix)

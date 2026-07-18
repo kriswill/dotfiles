@@ -50,6 +50,16 @@ built-in defaults reproduce exactly the rules below — this repo's
   description); the listing sections are overwritten — don't hand-edit them.
 - **`log.md`** is hand-maintained, newest-first, `## YYYY-MM-DD` headings,
   entries lead with `**Creation**` / `**Update**` / `**Deprecation**`.
+  **Logs are bundle-scoped** — per SPEC §7, a `log.md` "MAY appear at any
+  level of the hierarchy to record the history of changes to that scope":
+  an entry lives in the `log.md` of the bundle directory owning its primary
+  subject (`modules/log.md`, `decisions/log.md`, `packages/log.md`, …;
+  created on first entry), with links relative to that file. The root
+  `log.md` is reserved for bundle-level events ONLY — new bundle types or
+  directories, root-level concept docs, `docs/` manuals, bundle-wide
+  sweeps, workspace tooling conventions. Treat a root-log entry as a
+  deliberate exception: before writing one, check that no single bundle
+  owns the change.
 
 ## Quality bar
 
@@ -91,8 +101,9 @@ Module`, `Host`, `Nix Package`, `Overlay`, `Sub-flake`, `Neovim Plugin`,
 
 okf is bun/TypeScript living in its own repository —
 [kriswill/okflight](https://github.com/kriswill/okflight), public since
-2026-07 (plain `github:` input, no SSH auth) — consumed here as
-the `okf` flake input, re-exported as `packages.<system>.okf`, and advanced
+2026-07 — consumed here as the `okf` flake input from FlakeHub
+(`https://flakehub.com/f/kriswill/okflight/0`, tracking 0.x releases),
+re-exported as `packages.<system>.okf`, and advanced
 with `nix flake update okf`
 ([okflight-extraction](decisions/okflight-extraction.md)). This repo's
 scaffold passes live bundle-adjacent in
