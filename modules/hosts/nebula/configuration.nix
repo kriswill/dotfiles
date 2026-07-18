@@ -73,6 +73,14 @@
       sops.secrets = {
         ssh_host_ed25519_key.path = "/etc/ssh/ssh_host_ed25519_key";
         ssh_host_rsa_key.path = "/etc/ssh/ssh_host_rsa_key";
+        # 1Password service-account token, read-only on the Automation vault
+        # (holds only the gh CLI token). Consumed by the gh wrapper
+        # (overlays/gh-op.nix) for prompt-free `op read`. Rotate ~every 90d:
+        # 1password.com → Developer → Service Accounts → nebula-gh.
+        op-sa-token = {
+          owner = "k";
+          mode = "0400";
+        };
       };
 
       environment.systemPackages = [

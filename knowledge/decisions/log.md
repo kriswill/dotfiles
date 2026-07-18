@@ -1,5 +1,18 @@
 # Log
 
+## 2026-07-18
+
+- **Creation** — [op-service-account-token](op-service-account-token.md) /
+  [gh-op](../packages/gh-op.md) / `modules/hosts/nebula/configuration.nix` /
+  `modules/hosts/nebula/secrets.yaml`: the gh wrapper's `op read` now prefers
+  a 1Password service-account token (`nebula-gh`, read-only on a new
+  Automation vault holding only the gh token, 90-day expiry) delivered via
+  sops to `/run/secrets/op-sa-token` — ending the per-tty desktop-app
+  authorization prompts (10-min idle / 12-h caps, non-configurable). At rest
+  it's equivalent to the pre-wrapper plaintext hosts.yml (unencrypted disk),
+  but adds audit, one-click revocation, central rotation, and expiry; the
+  Private vault and sudo/SSH signing stay biometric-gated.
+
 ## 2026-07-16
 
 - **Creation** — [cache-brew-shellenv](cache-brew-shellenv.md) /
