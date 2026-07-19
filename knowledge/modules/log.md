@@ -11,6 +11,25 @@
   module twins were added (see the [add-package playbook](../playbooks/add-package.md)
   step 3, easy to skip for a package that also happens to build standalone).
 
+## 2026-07-18
+
+- **Update** — [gtk-dark](gtk-dark.md) now declares
+  `programs.dconf.profiles.user.databases` with
+  `org/gnome/desktop/interface.color-scheme = "prefer-dark"`, instead of
+  relying on whatever value happened to already be sitting in nebula's live
+  dconf database. Trigger: Nautilus warned
+  `gtk-application-prefer-dark-theme … is unsupported` — that legacy key
+  (removed from `home/gtk`'s `gtk-4.0/settings.ini`, kept in `gtk-3.0`) was
+  the only thing actually giving libadwaita apps a dark theme, since the
+  portal had no declared `color-scheme` to broadcast.
+- **Creation** — [localsearch](localsearch.md): enables
+  `services.gnome.localsearch` (nixpkgs's rename of `tracker-miners`) so
+  `org.freedesktop.Tracker3.Miner.Files` is D-Bus-activatable — Nautilus
+  was warning "the name is not activatable" for it. Both fixes and the
+  still-unfixable third Nautilus warning (Mutter `ServiceChannel`, GNOME
+  Shell-only) are covered in the
+  [decision record](../decisions/nautilus-dbus-warnings.md).
+
 ## 2026-07-16
 
 - **Creation** — [gui-path](gui-path.md): GUI apps get the nix PATH.

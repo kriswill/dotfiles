@@ -44,6 +44,10 @@ now-installed theme.
 - If nebula ever moves to a compositor session without a settings portal,
   dark mode silently reverts to light — the fix then is a portal/settings
   daemon, not the `GTK_THEME` hammer.
+- The `busctl`-verified `prefer-dark` broadcast turned out to be reading an
+  undeclared, incidental dconf value rather than anything this repo set —
+  see the follow-up [decision](nautilus-dbus-warnings.md) that made it
+  reproducible.
 
 ## Citations
 
