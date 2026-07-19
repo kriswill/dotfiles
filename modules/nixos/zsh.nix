@@ -32,7 +32,7 @@
           eza # ls replacement (alias chain)
           starship # prompt
           zoxide # `j` smart-cd
-          hstr # Ctrl-R history picker
+          atuin # Ctrl-R history search (fuzzy, syncless)
           ;
         inherit (pkgs.bat-extras) batman; # man-page colorizer (compdef batman=man)
       };

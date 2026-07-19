@@ -2,6 +2,60 @@
 
 ## 2026-07-19
 
+- **Creation** — [gnome-keyring](gnome-keyring.md): `services.gnome.gnome-keyring.enable
+  = true;`, added because atuin-desktop's Hub-connect "Accept" button was
+  permanently stuck — its `confirm()` handler has no try/catch around the
+  keyring-save Tauri call, so with no Secret Service running it fails and
+  the dialog can never dismiss (root-caused by reading `DesktopConnect.tsx`
+  and `auth.ts` upstream). Traced with `busctl --user status
+  org.freedesktop.secrets` → no owner, no gnome-keyring/kwallet process.
+  First attempt at this module had **zero effect**: `mkForce false` was
+  already set in [sudo-1password.nix](../hosts/nebula.md) from the earlier
+  1Password sudo-ssh-agent work, which always wins over a plain `= true`.
+  That force went further than its own comment's stated intent
+  ("keyring secrets/pkcs11 stay enabled") — the actual SSH_AUTH_SOCK
+  conflict is fully isolated one line above by
+  `services.gnome.gcr-ssh-agent.enable = false;` alone — so the `mkForce`
+  was removed rather than fought with a second `mkForce`. Verified both
+  ways post-fix: `gnome-keyring.enable` → `true`, `gcr-ssh-agent.enable`
+  stays `false`, full nebula closure builds.
+- **Update** — [zsh](zsh.md): atuin CLI sync enabled and verified working
+  (`auto_sync = true`, `docs/atuin.md` Sync section). Two findings worth
+  keeping straight: (1) atuin 18.x defaults to Hub-native sync — `atuin
+  login -u <user>` saves a `hub_session` row in `meta.db`, never a
+  `~/.local/share/atuin/session` file (that's a legacy-login-only artifact,
+  doesn't exist here) — so `atuin account link` correctly errors "No CLI
+  session found" on this account type, it's not applicable, not broken; (2)
+  `atuin login`'s password/key prompts open `/dev/tty` directly and panic
+  (ENXIO) when run through Claude Code's `!` relay — needs a real terminal.
+  Confirmed sync works by running `atuin sync` directly (uploaded records,
+  "Sync complete!"), not by trusting `atuin status`'s `Last sync` field,
+  which didn't visibly update in testing.
+- **Creation** — [atuin-desktop](atuin-desktop.md): `pkgs.atuin-desktop` (Tauri
+  GUI runbook editor, same upstream project as the [atuin](zsh.md) CLI)
+  installed nebula-only. Single-file module — the derivation ships its own
+  `.desktop` entry/icons, so `environment.systemPackages` is the whole thing,
+  no `desktop-entries` stow work needed. Universal within the nixos class
+  (single host today); retrofit a `programs.atuin-desktop.enable` gate if a
+  second, non-desktop NixOS host appears. Playbook: `docs/atuin.md`. First
+  real-machine launch hit "Failed to create welcome workspace — Permission
+  denied (os error 13)"; traced to upstream source (`workspaces.rs`,
+  `copy_welcome_workspace`) — it copies its bundled example workspace out of
+  the Nix store with `fs::copy` (preserves the store's `444` perms) then
+  immediately rewrites the copy, EACCES every time on any Nix install.
+  Verified live: the copied `atuin.toml` really is `444`. No nix-side fix
+  possible; documented as a known upstream bug with a workaround ("Create
+  new workspace" instead of the auto-offered one).
+- **Update** — [zsh](zsh.md): the CLI's stow-managed `home/atuin/.config/atuin/config.toml`
+  never actually got symlinked on nebula's first `nrs` after this module
+  landed — something (most likely atuin-desktop's own "is the CLI
+  installed?" first-run check) ran the `atuin` binary and auto-wrote a full
+  default config to that path *before* the rebuild's stow activation ran,
+  so stow found a real file already there and silently skipped the whole
+  package. `history_filter`/`auto_sync`/`update_check` were dead the whole
+  time. Fixed by hand (`rm` the stray file, `stow --restow atuin`);
+  full gotcha in `docs/atuin.md` Learned behaviours.
+
 - **Creation** — [rtk](rtk.md): cross-OS twin (`modules/darwin/rtk.nix` /
   `modules/nixos/rtk.nix`) mounting the [rtk package](../packages/rtk.md) onto
   `environment.systemPackages`. Registering `pkgs.rtk` under
@@ -16,6 +70,15 @@
 
 ## 2026-07-18
 
+- **Update** — [zsh](zsh.md): swapped `hstr` for `atuin` as the Ctrl-R
+  history picker (both class twins' package lists, `home/zsh/`'s
+  `integrations.zsh`/`.zshrc` comments). `atuin init zsh` also claims
+  Up-arrow, unlike hstr. New stow package `home/atuin/.config/atuin/config.toml`
+  (mirrors [starship](../modules/zsh.md)'s pattern — a plain config file, no
+  nix module needed since it embeds no store paths) sets `auto_sync = false`
+  / `update_check = false`: no sync account is configured on any host, so
+  both would otherwise be dead network calls on every shell start. Playbook:
+  `docs/atuin.md`.
 - **Update** — [gtk-dark](gtk-dark.md) now declares
   `programs.dconf.profiles.user.databases` with
   `org/gnome/desktop/interface.color-scheme = "prefer-dark"`, instead of

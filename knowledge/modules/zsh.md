@@ -13,7 +13,7 @@ so it takes effect before `.zshrc` lookup and `.zcompdump` placement;
 `histSize = 100000` with the history file under `~/.local/state/zsh`; and
 `promptInit = lib.mkForce ""` because starship owns the prompt. It also
 installs the tools the stowed `.zshrc` (`home/zsh/`) invokes by bare name
-(eza, starship, zoxide, hstr, bat-extras.batman), sets `LESSHISTFILE` under
+(eza, starship, zoxide, atuin, bat-extras.batman), sets `LESSHISTFILE` under
 XDG state, and pre-creates `~/.config/zsh`, `~/.local/state/zsh`, and
 `~/.local/state/less`.
 

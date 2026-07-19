@@ -19,6 +19,7 @@ SAVEHIST=10000000
 ## Options
 setopt interactivecomments # allow comments on the command line
 setopt AUTO_CD             # bare `dir/` cd's into it
+setopt histignorespace     # space-prefixed commands are excluded from history
 
 ## Editor — used by edit-command-line below (EDITOR/MANPAGER are set
 ## system-wide by each OS's neovim module).
@@ -55,7 +56,7 @@ source "$ZDOTDIR/darwin.zsh"
 ## (Harmless on NixOS, where /run/current-system is reliable.)
 export PATH="$HOME/.bun/bin:$HOME/.local/bin:$PATH:/nix/var/nix/profiles/system/sw/bin"
 
-## Third-party tool hooks: starship prompt, zoxide, direnv, fzf, hstr. Must
+## Third-party tool hooks: starship prompt, zoxide, direnv, fzf, atuin. Must
 ## follow the PATH export above so the tools are findable.
 source "$ZDOTDIR/integrations.zsh"
 
