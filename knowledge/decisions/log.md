@@ -13,6 +13,18 @@
   but adds audit, one-click revocation, central rotation, and expiry; the
   Private vault and sudo/SSH signing stay biometric-gated.
 
+- **Creation** — [nautilus-dbus-warnings](nautilus-dbus-warnings.md) /
+  [gtk-dark](../modules/gtk-dark.md) / [localsearch](../modules/localsearch.md):
+  root-caused two of Nautilus's three Hyprland startup warnings. The
+  `gtk-application-prefer-dark-theme` deprecation warning traced back to the
+  [prior GTK_THEME decision](gtk-theme-env-var-removal.md)'s `busctl`-verified
+  portal broadcast actually reading an undeclared, incidental dconf value —
+  now declared via `programs.dconf.profiles`. The Tracker
+  "name is not activatable" warning was `localsearch` (nixpkgs's rename of
+  `tracker-miners`) never being installed/registered. The third warning
+  (Mutter `ServiceChannel`) is GNOME Shell-only and has no NixOS-side fix.
+  Verified live: `nrs` rebuild + `nautilus .` re-run, warnings 1 and 2 gone.
+
 ## 2026-07-16
 
 - **Creation** — [cache-brew-shellenv](cache-brew-shellenv.md) /
