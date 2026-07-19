@@ -10,6 +10,9 @@
   `doCheck = false`: its integration tests shell out to git/docker/aws/etc.
   and expect a live tool-populated environment.
 
+- **Update** — [rtk](rtk.md): cross-linked the
+  [nix/direnv custom filters decision](../decisions/rtk-nix-direnv-filters.md).
+
 ## 2026-07-18
 
 - **Update** — [ccglass](ccglass.md): bumped 1.0.0 → 1.1.2 (`fork.patch`

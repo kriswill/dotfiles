@@ -29,6 +29,12 @@ that's a one-time per-user `rtk init -g`, which patches
 (`rtk gain`, `rtk discover`, `rtk proxy <cmd>`). None of that hook wiring is
 Nix-managed — it lives in the user's `~/.claude/` config, outside this repo.
 
+rtk's own config (`~/.config/rtk/config.toml`, `filters.toml`) is a separate
+[stow package](../patterns/stow-tree.md), `home/rtk/`, unrelated to this
+module's `environment.systemPackages` install. Custom filter config extends
+coverage to `nix`/`direnv` wrappers — see the
+[rtk nix/direnv filters decision](../decisions/rtk-nix-direnv-filters.md).
+
 ## Source
 
 - darwin module: [`modules/darwin/rtk.nix`](../../modules/darwin/rtk.nix)

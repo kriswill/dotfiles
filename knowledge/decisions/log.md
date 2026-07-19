@@ -1,5 +1,26 @@
 # Log
 
+## 2026-07-19
+
+- **Creation** — [rtk-nix-direnv-filters](rtk-nix-direnv-filters.md) /
+  [rtk](../packages/rtk.md) / [rtk module](../modules/rtk.md) / `AGENTS.md`:
+  added user-global rtk TOML filters stripping `nix run/shell/develop/build/
+  flake check` store-fetch noise and `direnv exec` loading noise, sourced
+  from real usage data (`rtk discover -a -s 90`). `filter_stderr = true` is
+  required for both — nix's fetch/copy lines and direnv's loading/using
+  lines are stderr, and a filter can match without it firing, silently.
+  Confirmed empirically (`RTK_TOML_DEBUG=1`, real uncached-package runs)
+  that custom filters are never consulted by rtk's Claude Code auto-rewrite
+  hook, so `AGENTS.md` now documents the six `rtk <cmd>` forms to type by
+  hand. `nix eval` (the largest single miss in the scan) was left
+  unfiltered — TOML filters strip noise lines, they don't reformat JSON.
+
+- **Update** — [rtk-nix-direnv-filters](rtk-nix-direnv-filters.md):
+  `dots-adopt rtk .config/rtk/{config,filters}.toml` captured rtk's config
+  into a new `home/rtk` [stow package](../patterns/stow-tree.md), correcting
+  the record's earlier "not git-tracked, re-apply per host" claim — the
+  filters now propagate via the normal stow restow like any other dotfile.
+
 ## 2026-07-18
 
 - **Creation** — [op-service-account-token](op-service-account-token.md) /
