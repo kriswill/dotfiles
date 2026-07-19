@@ -25,19 +25,27 @@ the bottom.
 ```toml
 auto_sync = true
 update_check = false
-history_filter = ["^\\s"]
+history_filter = ["^\\s", "^cd\\b", "^j\\b"]
 ```
 
 - `auto_sync = true` — sync history through the linked Atuin Hub account
   (see Sync below).
 - `update_check = false` — package updates come from the flake, not a
   self-updater, so the daily version-check network call is dead weight.
-- `history_filter = ["^\\s"]` — atuin hooks zsh's `preexec` directly and does
-  **not** honor `setopt histignorespace` (the .zshrc option that makes zsh's
-  own history drop space-prefixed commands). This regex replicates that
-  behavior for atuin's own db — without it, a command you meant to keep out
-  of history (e.g. one with a bare secret typed inline) would still land in
-  atuin even though zsh's `$HISTFILE` skipped it.
+- `history_filter = ["^\\s", "^cd\\b", "^j\\b"]` — atuin hooks zsh's
+  `preexec` directly and does **not** honor `setopt histignorespace` (the
+  .zshrc option that makes zsh's own history drop space-prefixed commands).
+  The `^\\s` regex replicates that behavior for atuin's own db — without it,
+  a command you meant to keep out of history (e.g. one with a bare secret
+  typed inline) would still land in atuin even though zsh's `$HISTFILE`
+  skipped it. `^cd\\b` / `^j\\b` (added 2026-07-18) drop bare `cd` and the
+  `j` auto-jump command (zoxide-style directory jumper) — pure navigation
+  noise, never worth re-running from history. The `\b` word boundary keeps
+  these from matching lookalikes (`cdw`, `jq`, `journalctl`, …). New matches
+  aren't retroactive — after adding a pattern, run `atuin history prune
+  --dry-run` to preview and `atuin history prune` to delete already-recorded
+  entries that now match (used once already: 63 `cd` + 5 `j dot` entries
+  pruned on first setup).
 - Everything else is atuin's default: `search_mode = "fuzzy"`,
   `secrets_filter = true` (redacts AWS keys / GitHub PATs / etc. from
   recorded commands), `keymap_mode = "emacs"`, `style = "compact"`. Full key
@@ -157,6 +165,44 @@ The frontend bug (missing try/catch, no user-visible error) is still worth
 reporting upstream regardless of the environment fix — on any install
 without a Secret Service (this one, minimal Wayland compositors generally,
 some containers), the dialog would hang identically with zero feedback.
+
+## Atuin AI & Claude Code integration (set up 2026-07-18)
+
+Three independent features, all under `atuin ai`/`atuin mcp`/`atuin hook` (see
+`atuin --help`):
+
+1. **Atuin AI itself** — `?` on an empty zsh/bash/fish prompt opens an inline
+   natural-language command assistant (generate a command, ask "why did that
+   fail" using last-command context, follow up conversationally). Backed by
+   an Atuin Hub account (free during testing) unless self-hosted. Config:
+   `[ai]` section in `home/atuin/.config/atuin/config.toml`, currently just
+   `enabled = true` (defaults to `false`). Other keys (`model`, `endpoint`,
+   `api_token`, `[ai.capabilities]`, `[ai.opening]`) documented inline —
+   don't set `yolo = true`, it bypasses all permission checks. **First
+   interactive use needs a real terminal**: it triggers a browser-based Hub
+   login, same `!`-relay ENXIO panic as `atuin login` (see Learned
+   behaviours below) — do the first `?` invocation from a real terminal
+   window, not through Claude Code.
+2. **MCP server, Claude Code → atuin history (read-only)**: registered at
+   user scope (`claude mcp add atuin -s user -- atuin mcp`, so it's live in
+   every project, not just this repo) via `~/.claude.json`. Exposes
+   `atuin_history` (fuzzy search, filter by directory/session/failed/author)
+   and `atuin_output` (fetch captured output of a past command — needs the
+   daemon + pty-proxy running, otherwise errors cleanly). Verify:
+   `claude mcp list` → `atuin: atuin mcp - ✔ Connected`.
+3. **Agent hook, Claude Code → atuin history (the reverse direction)**:
+   `atuin hook install claude-code` wrote `PreToolUse`/`PostToolUse`/
+   `PostToolUseFailure` entries into `~/.claude/settings.json` (`atuin hook
+   claude-code` command). Every Bash command Claude Code runs now lands in
+   atuin history tagged `author: claude-code` — filter with `atuin search
+   --author claude-code -- ''` (or `--author '$all-agent'` for any agent,
+   `--author '$all-user'` to exclude all agents — this is the interactive
+   search TUI's default). Takes effect for new Claude Code sessions, not
+   retroactively for one already running. Idempotent to re-run.
+   `~/.claude/settings.json` isn't part of the dotfiles stow tree (it's a
+   Claude Code–owned file, not this repo's), so this hook install doesn't
+   survive a fresh-machine setup automatically — rerun `atuin hook install
+   claude-code` on `k`/`mini` too.
 
 ## Sync (enabled and working, verified 2026-07-18)
 
