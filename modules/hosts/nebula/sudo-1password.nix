@@ -1,6 +1,5 @@
 {
   configurations.nixos.nebula.module =
-    { lib, ... }:
     let
       # Public half of the ed25519 key stored in 1Password — the same key that signs
       # commits (see home/git/.config/git/config / allowed_signers).
@@ -43,8 +42,6 @@
       # Disable just its ssh-agent so the 1Password socket above wins; keyring secrets/
       # pkcs11 stay enabled.
       services.gnome.gcr-ssh-agent.enable = false;
-      # Keep the gnome-keyring NixOS module off no matter what a desktop profile pulls in.
-      services.gnome.gnome-keyring.enable = lib.mkForce false;
     }
 
   ;

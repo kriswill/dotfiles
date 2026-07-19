@@ -9,6 +9,7 @@ interesting ones by hand — scaffolding never overwrites an existing doc.
 
 * [Alias En0](alias-en0.md) - Alias a local dev IP onto en0 (work host only).
 * [Apple Container](apple-container.md) - apple-container ships its nix-darwin module with its sub-flake (./flakes/apple-container/darwin-module.nix); re-export it into the Dendritic module set so hosts pick it up like any in-tree modules/darwin/* module.
+* [Atuin Desktop](atuin-desktop.md) - Installs pkgs.atuin-desktop, the Tauri GUI runbook editor companion to the atuin CLI (see zsh.md).
 * [Cbissue](cbissue.md) - Codeberg (Forgejo) issue CLIs — cbissue opens issues, cbissues browses them; the API token is fetched at call time via 1Password `op read`, nothing secret is stored.
 * [Claude Account Selector](claude-account-selector.md) - zsh wrapper that auto-selects a Claude Code account/profile by launch directory, with per-profile config-dir isolation.
 * [Codebase Memory Mcp](codebase-memory-mcp.md) - Supervised codebase-memory-mcp MCP daemon (semantic code graph + HTTP UI on :9749) from the kriswill fork, whose flake ships both OS modules — a launchd user agent on darwin, a systemd user service on NixOS — plus the cbm-ctl control CLI.
@@ -29,6 +30,7 @@ interesting ones by hand — scaffolding never overwrites an existing doc.
 * [Flatpak Repo User](flatpak-repo-user.md) - Masks snowglobe's system flatpak-repo service and replaces it with a per-user oneshot that registers Flathub in ~/.local/share/flatpak at login, gated on a DNS ExecCondition so offline logins skip cleanly.
 * [Ghostty](ghostty.md) - Ghostty terminal — each OS installs it its own way and generates its half of the split config (`config-file = ?os.conf`); the shared config is stowed.
 * [Git](git.md) - Installs the binaries the stow-managed git config invokes by bare name (git, gh, gh-config, git-lfs, difftastic, …); the config itself — including 1Password SSH signing — is stow, not nix.
+* [Gnome Keyring](gnome-keyring.md) - Enables services.gnome.gnome-keyring — the Secret Service (org.freedesktop.secrets) provider atuin-desktop needs to save its Hub token.
 * [Gpg](gpg.md) - gpg-agent on both OSes with enableSSHSupport deliberately false — 1Password owns SSH_AUTH_SOCK; gpg only backs `pass` and ad-hoc gpg use.
 * [Gtk Dark](gtk-dark.md) - Installs the adw-gtk3 theme so the portal-broadcast gtk-theme=adw-gtk3-dark resolves, and declares the dconf color-scheme=prefer-dark key the portal reads for GTK4/libadwaita apps — dark theming without the GTK_THEME env var that breaks libadwaita styling.
 * [GUI Path](gui-path.md) - launchd user-domain PATH injection — macOS gives Dock/Finder-launched apps a bare PATH, so this module publishes the nix profile bins to every GUI app at activation (making gh visible to Claude Code desktop's CI monitoring, git to editors).

@@ -1,0 +1,14 @@
+# Kris' atuin config. Read from ~/.config/atuin/config.toml by default.
+# Synced via an Atuin Hub account (linked 2026-07-18) — history follows
+# across k/mini/nebula.
+auto_sync = true
+
+# Skip the daily version-check network call; package updates come from the
+# flake, not a self-updater.
+update_check = false
+
+# atuin hooks zsh's preexec directly and does NOT honor `setopt
+# histignorespace` (.zshrc) — without this it would record space-prefixed
+# commands zsh itself is told to drop. Replicates that behavior for atuin's
+# own db.
+history_filter = ["^\\s"]
