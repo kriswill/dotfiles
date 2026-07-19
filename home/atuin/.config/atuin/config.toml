@@ -11,4 +11,10 @@ update_check = false
 # histignorespace` (.zshrc) — without this it would record space-prefixed
 # commands zsh itself is told to drop. Replicates that behavior for atuin's
 # own db.
-history_filter = ["^\\s"]
+history_filter = ["^\\s", "^cd\\b", "^j\\b"]
+
+# Atuin AI: `?` on an empty prompt opens the natural-language command
+# assistant, backed by Atuin Hub (free during testing). Requires a one-time
+# browser login on first interactive use — see docs/atuin.md.
+[ai]
+enabled = true
