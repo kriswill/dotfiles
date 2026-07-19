@@ -22,6 +22,7 @@
     helium-config = import ../overlays/helium-config.nix;
     noctalia-config = import ../overlays/noctalia-config.nix;
     pass-xdg = import ../overlays/pass-xdg.nix;
+    rtk = import ../overlays/rtk.nix;
     wowup = import ../overlays/wowup.nix;
     # ccglass comes from its own flake (./flakes/ccglass), not an in-tree package.
     # Overlays are pure final/prev functions, so we close over `inputs` here rather
