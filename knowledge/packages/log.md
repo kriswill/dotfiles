@@ -1,5 +1,15 @@
 # Log
 
+## 2026-07-19
+
+- **Creation** — [rtk](rtk.md): `rustPlatform.buildRustPackage` for
+  [rtk-ai/rtk](https://github.com/rtk-ai/rtk) v0.43.0, a CLI proxy that
+  filters dev command output to cut LLM token usage. Pinned via
+  `fetchFromGitHub` (not a flake input — no fork, all deps from crates.io) with
+  `cargoLock.lockFile` reading the crate's own `Cargo.lock` directly.
+  `doCheck = false`: its integration tests shell out to git/docker/aws/etc.
+  and expect a live tool-populated environment.
+
 ## 2026-07-18
 
 - **Update** — [ccglass](ccglass.md): bumped 1.0.0 → 1.1.2 (`fork.patch`

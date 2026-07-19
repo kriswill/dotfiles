@@ -1,5 +1,16 @@
 # Log
 
+## 2026-07-19
+
+- **Creation** — [rtk](rtk.md): cross-OS twin (`modules/darwin/rtk.nix` /
+  `modules/nixos/rtk.nix`) mounting the [rtk package](../packages/rtk.md) onto
+  `environment.systemPackages`. Registering `pkgs.rtk` under
+  `perSystem.packages` alone (as first done) only creates a flake output
+  (`nix build .#rtk`) — it never reaches a host's own `pkgs`, so `nrs`/nixos-
+  rebuild installed nothing until the [overlay](overlays.md) plus these
+  module twins were added (see the [add-package playbook](../playbooks/add-package.md)
+  step 3, easy to skip for a package that also happens to build standalone).
+
 ## 2026-07-16
 
 - **Creation** — [gui-path](gui-path.md): GUI apps get the nix PATH.
