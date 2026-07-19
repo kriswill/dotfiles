@@ -11,6 +11,9 @@
   module twins were added (see the [add-package playbook](../playbooks/add-package.md)
   step 3, easy to skip for a package that also happens to build standalone).
 
+- **Update** — [rtk](rtk.md): cross-linked the
+  [nix/direnv custom filters decision](../decisions/rtk-nix-direnv-filters.md).
+
 ## 2026-07-18
 
 - **Update** — [gtk-dark](gtk-dark.md) now declares

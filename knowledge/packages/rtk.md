@@ -21,6 +21,10 @@ Consumed by the [rtk module twins](../modules/rtk.md), which install it onto
 
 Added per the [add-package playbook](../playbooks/add-package.md).
 
+Custom user-global filter config extends coverage to `nix`/`direnv` wrapper
+commands rtk has no built-in filter for — see the
+[rtk nix/direnv filters decision](../decisions/rtk-nix-direnv-filters.md).
+
 ## Source
 
 - Package: [`pkgs/rtk.nix`](../../pkgs/rtk.nix)

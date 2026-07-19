@@ -1,0 +1,37 @@
+# User-global RTK filters — apply to all your projects.
+# Project-local .rtk/filters.toml takes precedence over these.
+# Docs: https://github.com/rtk-ai/rtk#custom-filters
+schema_version = 1
+
+# Example: suppress noise from a tool you use everywhere
+# [filters.my-global-tool]
+# description = "Compact my-global-tool output"
+# match_command = "^my-global-tool\\b"
+# strip_ansi = true
+# strip_lines_matching = ["^\\s*$"]
+# max_lines = 40
+
+[filters.nix]
+description = "Strip nix run/shell/develop/build/flake-check store-fetch boilerplate"
+match_command = "^nix\\s+(run|shell|develop|build|flake\\s+check)\\b"
+filter_stderr = true
+strip_ansi = true
+strip_lines_matching = [
+  "^\\s*$",
+  "^this path will be fetched",
+  "^these \\d+ paths will be fetched",
+  "^\\s+/nix/store/",
+  "^copying path '.*' from '.*'\\.\\.\\.",
+  "^warning: Git tree '.*' is dirty",
+]
+
+[filters.direnv]
+description = "Strip direnv exec loading/using noise"
+match_command = "^direnv\\s+exec\\b"
+filter_stderr = true
+strip_ansi = true
+strip_lines_matching = [
+  "^direnv: loading ",
+  "^direnv: using ",
+  "^direnv: nix-direnv: ",
+]
