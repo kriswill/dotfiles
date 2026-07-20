@@ -1,5 +1,21 @@
 # Log
 
+## 2026-07-20
+
+- **Update** — [rtk](rtk.md) /
+  [claude-account-selector](claude-account-selector.md): the darwin rtk twin
+  now bridges rtk's macOS config path — rtk reads user-global
+  config/filters from `dirs::config_dir()` = `~/Library/Application
+  Support/rtk` (XDG ignored on macOS), so the stowed `~/.config/rtk/`
+  files were silently unread on darwin; a `postActivation` script (order
+  1600) symlinks `{config,filters}.toml` across, per-file because rtk
+  keeps mutable state (`history.db`) in the same dir. Also registered
+  rtk's Claude Code hook on `k` — `rtk init -g --auto-patch` once per
+  claude-account-selector profile (`CLAUDE_CONFIG_DIR=~/.claude-me` and
+  `~/.claude-work`), patching each profile's `settings.json` with the
+  `PreToolUse`/`Bash` → `rtk hook claude` rewrite hook and dropping
+  `RTK.md` + the `@RTK.md` CLAUDE.md reference.
+
 ## 2026-07-19
 
 - **Creation** — [gnome-keyring](gnome-keyring.md): `services.gnome.gnome-keyring.enable
