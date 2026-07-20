@@ -1,5 +1,16 @@
 # Log
 
+## 2026-07-20
+
+- **Update** — [rtk-nix-direnv-filters](rtk-nix-direnv-filters.md): dated
+  correction to the "deploys to every host" claim — rtk never read
+  `~/.config/rtk/` on macOS (`dirs::config_dir()` returns
+  `~/Library/Application Support`, XDG ignored), so the custom nix/direnv
+  filters only ever fired on Linux. Now bridged by per-file symlinks in the
+  [rtk darwin module](../modules/rtk.md); `rtk config` printing
+  "(default config, file not created)" is the diagnostic tell for a broken
+  bridge.
+
 ## 2026-07-19
 
 - **Creation** — [rtk-nix-direnv-filters](rtk-nix-direnv-filters.md) /

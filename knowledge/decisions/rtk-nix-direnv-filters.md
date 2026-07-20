@@ -67,6 +67,18 @@ not-yet-cached-package runs):
   typed by hand, which is why `AGENTS.md` spells out the six forms instead
   of relying on the hook.
 
+- **(2026-07-20 correction) `~/.config/rtk/` is only read on Linux.** rtk
+  resolves its user-global config/filters via Rust's `dirs::config_dir()`,
+  which ignores XDG on macOS and returns `~/Library/Application Support` —
+  so on darwin hosts the stowed files were silently invisible (rtk fell back
+  to builtin filters and default config; `rtk config` reporting
+  "(default config, file not created)" is the tell). Bridged in the
+  [rtk darwin module](../modules/rtk.md): a `postActivation` script (order
+  1600, after dotfiles-stow) symlinks
+  `~/Library/Application Support/rtk/{config,filters}.toml` →
+  `~/.config/rtk/*`. Per-file, not whole-dir — rtk also writes mutable data
+  (`history.db`, tee output) into that directory.
+
 Also confirmed, not used here: a custom TOML filter can never override a
 command name rtk already implements natively in Rust (e.g. `wc`) —
 `RTK_TOML_DEBUG=1` reports a shadow warning and the Rust module always wins.
@@ -79,8 +91,10 @@ Irrelevant for `nix`/`direnv` since neither is a native rtk subcommand.
   strip store-fetch and direnv-loading boilerplate while leaving the wrapped
   tool's real output untouched.
 - Being in the `home/rtk` stow package, the filters (and `config.toml`)
-  propagate to every host on the next `dotfiles-stow` restow — no per-host
-  re-application needed.
+  propagate to every host on the next `dotfiles-stow` restow — on Linux
+  directly, on darwin through the Application Support symlink bridge in the
+  [rtk darwin module](../modules/rtk.md) (see the 2026-07-20 correction
+  above).
 - `nix eval` remains unfiltered; revisit only if a stdin-capable compaction
   path appears (e.g. a future `rtk json -` or a `truncate_lines_at`-based
   filter proves acceptable for JSON).
