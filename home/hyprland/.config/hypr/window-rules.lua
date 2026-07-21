@@ -91,6 +91,21 @@ hl.workspace_rule({
   monitor = "desc:ASUSTek COMPUTER INC PG34WCDM RCLMRS022510",
 })
 
+-- Reserve workspace 9 for WoW alone. Anything that OPENS on ws9 is bounced to
+-- ws8; the wow-fullscreen rule below re-lands WoW on 9. Rules are last-match-
+-- wins on the workspace prop (wiki: "the last match takes precedence"), so WoW
+-- matches both this and its own rule and its own rule (declared after) wins,
+-- while every other window matches only this one and gets parked on ws8.
+-- ponytail: catches auto-opens only; a deliberate `movetoworkspace 9` still
+-- works (workspace assignment is a static, open-time effect). Change "8 silent"
+-- to another workspace if you'd rather park strays elsewhere.
+hl.window_rule({
+  name = "workspace-9-wow-only",
+  match = { workspace = "9" },
+
+  workspace = "8 silent",
+})
+
 hl.window_rule({
   name = "wow-fullscreen",
   match = { title = "World of Warcraft" },
