@@ -38,20 +38,23 @@ hl.monitor({
 -- ceilings: ~180Hz @ 8-bit, ~143Hz @ 10-bit, 120Hz comfortably @ 10-bit. True
 -- 240Hz is only possible if DSC starts working.) Verified live 2026-06-16.
 --
--- HDR: bitdepth 10 + cm "auto" (verified 2026-06-13, Hyprland 0.55). "auto" keeps
--- the SDR desktop in proper SDR (preset reports "wide" — 10-bit wide-gamut SDR) and
--- only flips the output to the full HDR/PQ pipeline (preset "hdr") when a client
--- presents HDR content. cm "hdr" (force whole desktop HDR) looked washed out for
--- everyday SDR content even with sdrbrightness/sdrsaturation tuning, so "auto" is
--- the right default for a mixed desktop+gaming OLED. NOTE: a client must speak the
--- wp_color_management_v1 protocol to trigger HDR — plain XWayland (how the WoW rule
--- below runs today) does NOT, so HDR games need PROTON_ENABLE_WAYLAND=1 DXVK_HDR=1
--- (native Wayland) or gamescope --hdr-enabled. See docs/hdr-hyprland-june-2026.md.
+-- CM: "srgb", NOT "auto" (changed 2026-07-21). cm "auto" turned the OLED OFF
+-- whenever a fullscreen video played in Helium: Chromium's
+-- wp_color_management_v1 usage made "auto" attempt the PQ/HDR mode flip, and the
+-- resulting modeset dropped the DP link (same Blackwell atomic-test failure class
+-- as the 240Hz blank above). Even plain SDR bt709 video triggered it, and
+-- Helium's force-color-profile=srgb flag did NOT prevent it — the protocol-level
+-- poke happens regardless. "srgb" keeps the 10-bit wide-SDR desktop and can never
+-- mode-switch. Cost: no HDR pipeline on this output — acceptable since nothing
+-- uses HDR today (WoW launches SDR; see docs/hdr-hyprland-june-2026.md). If HDR
+-- gaming ever lands, re-test cm "auto" on a newer driver, knowing fullscreen
+-- browser video is the repro. cm "hdr" (whole desktop HDR) was already ruled out
+-- as washed-out for SDR content.
 hl.monitor({
   output = "desc:ASUSTek COMPUTER INC PG34WCDM RCLMRS022510",
   mode = "3440x1440@143.97",
   scale = 1,
   position = "1440x1000",
   bitdepth = 10,
-  cm = "auto",
+  cm = "srgb",
 })
