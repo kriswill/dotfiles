@@ -56,10 +56,13 @@ hl.monitor({
 })
 ```
 
-- **`cm = "auto"` is the chosen default.** It keeps the SDR desktop in proper
-  SDR (preset reports `wide`) and only flips the *whole output* to the HDR/PQ
-  curve (preset `hdr`) when a client presents HDR content. For a mixed
-  desktop+gaming OLED this is the right mode.
+- **`cm = "srgb"` is the current default (changed 2026-07-21; was `"auto"`).**
+  `"auto"` keeps the SDR desktop in proper SDR (preset reports `wide`) and only
+  flips the *whole output* to the HDR/PQ curve (preset `hdr`) when a client
+  presents HDR content — but that flip **drops the OLED's DP link** (monitor
+  turns off) when triggered by fullscreen video in Helium. See "Learned
+  behaviours" below. `"srgb"` with `bitdepth = 10` keeps the 10-bit desktop and
+  can never mode-switch; re-test `"auto"` on a newer driver if HDR gaming lands.
 - **`cm = "hdr"` (force whole desktop into HDR) looked washed out** for everyday
   SDR content — milky blacks, pale colors — even after tuning `sdrbrightness`
   (tried 1.2) and `sdrsaturation`. Forcing desktop HDR is not recommended here.
@@ -237,6 +240,15 @@ also works via `mpv --target-colorspace-hint=yes`.
 
 ## Learned behaviours & workarounds
 
+- **`cm = "auto"` + fullscreen Helium video turns the OLED off** (2026-07-21,
+  driver 595.80). Fullscreening any YouTube video — even plain SDR bt709 —
+  makes Chromium's `wp_color_management_v1` usage trigger `auto`'s PQ mode
+  flip, and the modeset drops the DP link (same class as the 240Hz blank in
+  `hyprland.md`; output reports enabled+dpms-on while the panel shows no
+  signal). Ruled out: `misc.vrr` (blanked with vrr=0) and Helium's
+  `force-color-profile=srgb` flag (blanked anyway — the flag doesn't stop the
+  protocol-level poke). Fix: `cm = "srgb"` (10-bit kept); recover a blanked
+  output live with the `hl.monitor{}` eval below.
 - **`hyprctl keyword monitor` fails under the Lua parser** — use
   `hyprctl eval 'hl.monitor{...}'` for live monitor changes (2026-06-13).
 - **`HYPRLAND_INSTANCE_SIGNATURE` goes stale across restarts** — multiple
