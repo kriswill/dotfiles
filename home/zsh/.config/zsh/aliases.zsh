@@ -24,5 +24,10 @@ alias gco='g checkout'
 alias gba='g branch -a'
 alias lg='lazygit'
 
+## rtk against the work-account stats DB (pairs with RTK_DB_PATH in
+## ~/.claude-work/settings.json; plain `rtk` stays on the default/me DB).
+alias rtk-work='RTK_DB_PATH=$HOME/.local/share/rtk/history-work.db rtk'
+alias rtkw='rtk-work'
+
 ## man-page completion for bat-extras' `batman` (compinit ran in /etc/zshrc).
 compdef batman=man
