@@ -3,14 +3,16 @@
 # nix-darwin has no `programs.yazi`, so this module installs the binary and
 # wires the config the way the rest of the repo does:
 #
-#  * Static config — yazi.toml, theme.toml, init.lua and the user's own
-#    `font-dark` previewer plugin — lives in the stow tree
-#    (home/yazi/.config/yazi/…) and is symlinked into ~ by dotfiles-stow.nix
-#    (the live, editable repo copy rather than a /nix/store snapshot).
-#  * The third-party plugins (git, faster-piper, and the types.yazi LuaCATS
-#    stubs) and the generated kanagawa-dragon flavor all resolve to /nix/store
-#    paths only Nix knows — so, exactly like tmux's plugins.conf, they can't be
-#    static stow symlinks. We link them under ~/.config/yazi/{plugins,flavors}
+#  * Static config — yazi.toml, theme.toml, init.lua and the user-owned
+#    plugins (`font-dark`, plus the vendored `faster-piper` fork — patched
+#    for interruption-safe cache generation, provenance in its main.lua) —
+#    lives in the stow tree (home/yazi/.config/yazi/…) and is symlinked into
+#    ~ by dotfiles-stow.nix (the live, editable repo copy rather than a
+#    /nix/store snapshot).
+#  * The third-party plugins (git, and the types.yazi LuaCATS stubs) and the
+#    generated kanagawa-dragon flavor all resolve to /nix/store paths only
+#    Nix knows — so, exactly like tmux's plugins.conf, they can't be static
+#    stow symlinks. We link them under ~/.config/yazi/{plugins,flavors}
 #    during activation instead. Plugin dirs follow yazi's `<name>.yazi`
 #    naming; yazi.toml refers to them without the suffix (`git`, `faster-piper`,
 #    `font-dark`).
@@ -47,7 +49,6 @@
         /usr/bin/sudo -u k --set-home /bin/sh -c '
           mkdir -p /Users/k/.config/yazi/plugins /Users/k/.config/yazi/flavors
           ln -sfn ${pkgs.yaziPlugins.git} /Users/k/.config/yazi/plugins/git.yazi
-          ln -sfn ${inputs.faster-piper-yazi} /Users/k/.config/yazi/plugins/faster-piper.yazi
           ln -sfn ${inputs.yazi-plugins}/types.yazi /Users/k/.config/yazi/plugins/types.yazi
           ln -sfn ${flavor} /Users/k/.config/yazi/flavors/kanagawa-dragon.yazi
         '

@@ -1,5 +1,13 @@
 # Log
 
+## 2026-07-22
+
+- **Update** — [yazi](yazi.md): stub upgraded; the markdown-preview plugin
+  `faster-piper` moved from a flake-input store symlink to a vendored fork
+  in the stow tree with interruption-safe, atomic cache generation (see
+  [vendor-faster-piper-fork](../decisions/vendor-faster-piper-fork.md));
+  the activation script now links only `git` + `types.yazi` + the flavor.
+
 ## 2026-07-20
 
 - **Update** — [rtk](rtk.md) /
