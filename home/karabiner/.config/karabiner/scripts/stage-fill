@@ -1,0 +1,65 @@
+#!/usr/bin/osascript -l JavaScript
+// Stage Manager-aware Fill, bound to fn+ctrl+f in karabiner.json.
+//
+// Fills the frontmost window to its screen's visible frame (same result as
+// the system Fill shortcut this rule replaces). When Stage Manager is
+// enabled, the left STAGE_INSET px are left free so the recent-apps strip
+// stays visible instead of auto-hiding under the window.
+
+ObjC.import('AppKit')
+
+const STAGE_INSET = 190 // px reserved for the Stage Manager strip
+
+function run() {
+  const app = Application.currentApplication()
+  app.includeStandardAdditions = true
+
+  let stageOn = false
+  try {
+    stageOn =
+      app.doShellScript(
+        '/usr/bin/defaults read com.apple.WindowManager GloballyEnabled'
+      ) === '1'
+  } catch (e) {} // key absent = Stage Manager never enabled
+
+  const se = Application('System Events')
+  const proc = se.applicationProcesses.whose({ frontmost: true })[0]
+  const wins = proc.windows()
+  if (wins.length === 0) return
+  const win = wins[0]
+
+  // Find the screen holding the window's centre. System Events coordinates
+  // are top-left-origin; AppKit's are bottom-left — convert through the
+  // primary screen's height.
+  const pos = win.position()
+  const size = win.size()
+  const screens = $.NSScreen.screens
+  const primaryH = screens.objectAtIndex(0).frame.size.height
+  const cx = pos[0] + size[0] / 2
+  const cy = primaryH - (pos[1] + size[1] / 2)
+
+  let screen = screens.objectAtIndex(0)
+  for (let i = 0; i < screens.count; i++) {
+    const f = screens.objectAtIndex(i).frame
+    if (
+      cx >= f.origin.x && cx < f.origin.x + f.size.width &&
+      cy >= f.origin.y && cy < f.origin.y + f.size.height
+    ) {
+      screen = screens.objectAtIndex(i)
+      break
+    }
+  }
+
+  const vf = screen.visibleFrame
+  let x = vf.origin.x
+  let w = vf.size.width
+  const yTop = primaryH - (vf.origin.y + vf.size.height)
+  const h = vf.size.height
+  if (stageOn) {
+    x += STAGE_INSET
+    w -= STAGE_INSET
+  }
+
+  win.position = [x, yTop]
+  win.size = [w, h]
+}
