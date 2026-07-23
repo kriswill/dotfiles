@@ -4,6 +4,19 @@
             "complex_modifications": {
                 "rules": [
                     {
+                        "description": "fn+ctrl+f: Stage Manager-aware Fill",
+                        "manipulators": [
+                            {
+                                "from": {
+                                    "key_code": "f",
+                                    "modifiers": { "mandatory": ["fn", "control"] }
+                                },
+                                "to": [{ "shell_command": "~/.config/karabiner/scripts/stage-fill" }],
+                                "type": "basic"
+                            }
+                        ]
+                    },
+                    {
                         "description": "Left Control and Escape",
                         "manipulators": [
                             {
