@@ -68,6 +68,6 @@ interesting ones by hand — scaffolding never overwrites an existing doc.
 * [Users K Noctalia](users-k-noctalia.md) - Installs the Noctalia v5 desktop shell (native C++ Wayland binary) for user k plus its support tooling — ddcutil + i2c for DDC/CI monitor brightness, tomato, noctalia-config snapshots — and the upower/power-profiles-daemon/bluetooth services its widgets read.
 * [Users K](users-k.md) - Defines user k — sops-managed password (neededForUsers), authorized SSH key from snowglobe's keyring, wheel/networkmanager/libvirtd groups, and pkgs.flatpak-user shadowing the system flatpak via PATH.
 * [Windows Mount](windows-mount.md) - Permanent read-only ntfs-3g mount of the Windows NTFS partition (the other NVMe) at /mnt/windows — lazy systemd automount with nofail; read-only tolerates Fast-Startup-"dirty" volumes.
-* [Yazi](yazi.md) - Kris' yazi.
+* [Yazi](yazi.md) - yazi — the Rust terminal file manager; here installed system-wide with stow-managed config, a generated kanagawa-dragon flavor, and a mix of store-linked and vendored preview plugins.
 * [Zk](zk.md) - Kris' zk.
 * [Zsh](zsh.md) - Zsh with ZDOTDIR moved to ~/.config/zsh (exported from shellInit so it precedes .zshrc lookup), XDG history placement, starship-owned prompt, and the tools the stowed .zshrc calls by bare name.

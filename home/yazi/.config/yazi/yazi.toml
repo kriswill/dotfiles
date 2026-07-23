@@ -3,10 +3,10 @@
 #
 # Plugins are referenced here by bare name (e.g. `git`, `font-dark`,
 # `faster-piper`); yazi resolves each to plugins/<name>.yazi. The third-party
-# plugins (git, faster-piper) and the flavor are linked into
-# ~/.config/yazi/{plugins,flavors} from the /nix/store by
-# modules/darwin/yazi/default.nix during activation; `font-dark` lives in this
-# stow tree under plugins/font-dark.yazi/.
+# `git` plugin and the flavor are linked into ~/.config/yazi/{plugins,flavors}
+# from the /nix/store by modules/darwin/yazi/default.nix during activation;
+# `font-dark` and the vendored `faster-piper` fork (patched so interrupted
+# renders can't cache blank previews) live in this stow tree under plugins/.
 
 [mgr]
 ratio = [1, 2, 3]

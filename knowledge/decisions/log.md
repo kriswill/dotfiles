@@ -1,5 +1,16 @@
 # Log
 
+## 2026-07-22
+
+- **Creation** — [vendor-faster-piper-fork](vendor-faster-piper-fork.md):
+  faster-piper.yazi is now a vendored fork in the stow tree — upstream wrote
+  glow output in place at the final cache path and held the lock from Lua,
+  so rapid-scroll interruptions cached blank/corrupt markdown previews and
+  leaked the lock for 60s; the fork renders in a detached daemon (survives
+  peek cancellation) with atomic mv install, shell-owned lock + EXIT-trap
+  release, and a `.failed` stderr marker. The `faster-piper-yazi` flake
+  input is gone.
+
 ## 2026-07-20
 
 - **Update** — [rtk-nix-direnv-filters](rtk-nix-direnv-filters.md): dated

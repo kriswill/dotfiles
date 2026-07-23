@@ -227,22 +227,6 @@
         "type": "github"
       }
     },
-    "faster-piper-yazi": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1770057785,
-        "narHash": "sha256-m6ZiwA36lcdZORK3KIz4Xq3bs7mmtC6j62B/+BuDGAQ=",
-        "owner": "alberti42",
-        "repo": "faster-piper.yazi",
-        "rev": "8b794bfa3bc9c780e3f03b6f5a0ccde7744e54bb",
-        "type": "github"
-      },
-      "original": {
-        "owner": "alberti42",
-        "repo": "faster-piper.yazi",
-        "type": "github"
-      }
-    },
     "flake-compat": {
       "flake": false,
       "locked": {
@@ -1075,7 +1059,6 @@
         "codebase-memory-mcp": "codebase-memory-mcp",
         "darwin": "darwin",
         "determinate": "determinate",
-        "faster-piper-yazi": "faster-piper-yazi",
         "flake-parts": "flake-parts_2",
         "hyprland": "hyprland",
         "import-tree": "import-tree",
