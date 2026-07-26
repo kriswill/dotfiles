@@ -23,6 +23,7 @@
         # the right default for cross-platform CLI configs. Mirror list:
         # modules/darwin/dotfiles-stow.nix.
         skip = [
+          "claude-me" # the ~/.claude-me profile split only exists on the macs (claude-account-selector); nebula uses plain ~/.claude via the claude package
           "glow" # macOS Library/Preferences path
           "karabiner" # macOS-only hardware remapper
           "kitty" # not installed on nebula (ghostty is the terminal)

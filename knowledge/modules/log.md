@@ -1,5 +1,11 @@
 # Log
 
+## 2026-07-25
+
+- **Update** — [claude-account-selector](claude-account-selector.md): note
+  that profile isolation also shapes user-level skill deployment, linking the
+  new [split stow packages decision](../decisions/claude-skills-split-stow-packages.md).
+
 ## 2026-07-22
 
 - **Update** — [yazi](yazi.md): stub upgraded; the markdown-preview plugin

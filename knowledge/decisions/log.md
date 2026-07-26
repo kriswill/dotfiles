@@ -1,5 +1,17 @@
 # Log
 
+## 2026-07-25
+
+- **Creation** — [claude-skills-split-stow-packages](claude-skills-split-stow-packages.md):
+  user-level Claude skills (first: `tmux-session-coordinator`) ship as two
+  mirrored stow packages — `home/claude/` (nixos, plain `~/.claude`) and
+  `home/claude-me/` (macs, real profile dir) sharing one copy via a
+  repo-internal symlink — because stow refuses to traverse the account
+  selector's unowned `~/.claude -> ~/.claude-me` fallback symlink. Work
+  profile deliberately unwired. Skill retrospectives append to its
+  `LESSONS.md` *inside the repo*, so skill evolution is ordinary git history.
+  Backlink added to [claude-account-selector](../modules/claude-account-selector.md).
+
 ## 2026-07-22
 
 - **Creation** — [vendor-faster-piper-fork](vendor-faster-piper-fork.md):
