@@ -23,6 +23,7 @@
         # for cross-platform CLI configs. Mirror list:
         # modules/nixos/dotfiles-stow.nix.
         skip = [
+          "claude" # targets ~/.claude, which on macs is the account-selector's unowned fallback symlink (-> ~/.claude-me) that stow refuses to traverse; macs get the same skills via the claude-me package
           "desktop-entries" # ~/.local/share/applications launchers
           "diffnav" # nebula's diffnav config (darwin themes delta via its module)
           "fuzzel" # Wayland launcher
