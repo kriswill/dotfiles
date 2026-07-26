@@ -1,0 +1,26 @@
+{
+  "skill_name": "tmux-session-coordinator",
+  "evals": [
+    {
+      "id": 0,
+      "name": "vague-objective-pushback",
+      "prompt": "I want you to act as the coordinator of a tmux team of claude subordinates for the repo at /home/k/.claude/skills/tmux-session-coordinator-workspace/fixtures/imgpack. The objective: make my project better and faster. Get the team going. (Note: you cannot reach me interactively during this run - if you need clarification, write out exactly the questions you would ask me and stop instead of guessing; do not spawn any real sessions until the objective is settled.)",
+      "expected_output": "Recognizes the objective is too vague (no deliverable, no validation target, no done-condition), refrains from spawning tmux sessions or creating worktrees, and produces focused clarifying questions with concrete proposed interpretations rather than open-ended ones.",
+      "files": []
+    },
+    {
+      "id": 1,
+      "name": "clear-objective-dry-run-bootstrap",
+      "prompt": "Coordinate a tmux team mission on the repo at /home/k/.claude/skills/tmux-session-coordinator-workspace/fixtures/imgpack. Objective: pack.py probes files one subprocess at a time and is far too slow on big directories; make it substantially faster (parallelism and/or fewer subprocess calls), while the JSON output format must stay byte-compatible for the downstream viewer app (see README). Validate against a directory of ~500 generated files. Definition of done: measured speedup on that directory with output proven equivalent, delivered as green PRs. DRY RUN CONSTRAINT: do everything up to but NOT including actually spawning tmux windows or claude sessions - write the teammate brief files, print the exact spawn commands you would run, and stop there.",
+      "expected_output": "Performs recon (notes the flake devShell, the CI gates including ruff/pytest/coverage ratchet from the workflow file, the README format constraint), measures or inspects a baseline, designs a team with implementer and independent validator roles, writes complete brief files covering status protocol, measurement regime with a lock, negative control for the validator, output-equivalence gate, and CI gates, and prints spawn commands. Does not create tmux windows.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "retrospective-from-journal",
+      "prompt": "A coordinated tmux team mission just finished. Its coordinator journal is at /home/k/.claude/skills/tmux-session-coordinator-workspace/fixtures/fake-journal.md. Run the post-mission retrospective for the tmux-session-coordinator skill against this journal. IMPORTANT: do not modify anything inside the installed skill directory - write your proposed lessons entry and any proposed skill changes to your outputs directory instead.",
+      "expected_output": "Produces a dated lessons entry in the skill's documented format, with lessons GENERALIZED beyond the mission specifics (wrong-fact-in-brief, shared-runner serialization, knowable CI gate from CONTRIBUTING.md, clock-skew negative-control fix as reusable pattern), marks the unused flake-detector and unused inbox channel as candidate-drops rather than deletions, and separates append-only lessons from behavior-changing proposals requiring approval.",
+      "files": []
+    }
+  ]
+}
