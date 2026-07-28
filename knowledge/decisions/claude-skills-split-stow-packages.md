@@ -13,7 +13,7 @@ timestamp: '2026-07-25T23:35:00-07:00'
 
 ## Context
 
-The `tmux-session-coordinator` skill (a global Claude Code skill for running
+The `session-coordinator` skill (a global Claude Code skill for running
 coordinated multi-agent missions in tmux, distilled from the 2026-07-25
 flake-explorer extractor session) needed to reach every machine's *user-level*
 Claude config — not the repo-scoped `.claude/skills/` project skills. The
@@ -31,9 +31,9 @@ that package would conflict-skip forever and never deploy.
 
 Two thin stow packages share one copy of the skill:
 
-- `home/claude/.claude/skills/tmux-session-coordinator/` — the canonical
+- `home/claude/.claude/skills/session-coordinator/` — the canonical
   files; deploys on nebula, skip-listed on darwin.
-- `home/claude-me/.claude-me/skills/tmux-session-coordinator` — a
+- `home/claude-me/.claude-me/skills/session-coordinator` — a
   repo-internal relative symlink into the `claude` package; deploys on the
   macs (targeting the real profile dir, bypassing the unowned symlink),
   skip-listed on nixos.
@@ -49,7 +49,7 @@ A property worth knowing: the skill maintains a `LESSONS.md` that its own
 post-mission retrospective appends to. Because deployment is stow links into
 the live repo, those retrospectives write *into this repository* — skill
 evolution shows up as ordinary `git diff`/history under
-`home/claude/.claude/skills/tmux-session-coordinator/`, and syncs to the other
+`home/claude/.claude/skills/session-coordinator/`, and syncs to the other
 machines on pull like any dotfile.
 
 ## Consequences

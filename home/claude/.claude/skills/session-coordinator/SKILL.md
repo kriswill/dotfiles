@@ -1,11 +1,11 @@
 ---
-name: tmux-session-coordinator
-description: Run a multi-agent engineering mission as the COORDINATOR of subordinate claude sessions in tmux windows. Use this whenever the user wants to lead a team, spawn teammates/subordinates/workers in tmux, coordinate parallel claude sessions on a large objective, run a "mission" with implementer/validator roles, or asks for a coordinated optimize-migrate-audit-build effort that is too big for one session. Trigger even if the user just describes a big objective plus words like "team", "coordinator", "tmux workers", "spawn agents in tmux", or "run this like last time's coordinated session". The argument is the mission objective; the skill molds it, pushes back if it is vague, then runs the full spawn -> execute -> validate -> report -> retrospective lifecycle.
+name: session-coordinator
+description: Run a multi-agent engineering mission as the COORDINATOR of subordinate claude sessions in tmux windows or herdr tabs (auto-detected from the multiplexer this session runs inside). Use this whenever the user wants to lead a team, spawn teammates/subordinates/workers in tmux or herdr, coordinate parallel claude sessions on a large objective, run a "mission" with implementer/validator roles, or asks for a coordinated optimize-migrate-audit-build effort that is too big for one session. Trigger even if the user just describes a big objective plus words like "team", "coordinator", "tmux workers", "herdr workers", "spawn agents in tmux", or "run this like last time's coordinated session". The argument is the mission objective; the skill molds it, pushes back if it is vague, then runs the full spawn -> execute -> validate -> report -> retrospective lifecycle.
 ---
 
-# tmux-session-coordinator
+# session-coordinator
 
-Lead a small team of subordinate `claude` sessions — each in its own tmux window and git worktree — through a substantial engineering mission: baseline, implement, independently validate, merge green PRs, produce a session report, then run a retrospective that improves this skill itself.
+Lead a small team of subordinate `claude` sessions — each in its own multiplexer window (tmux window or herdr tab; the scripts detect which multiplexer this session is inside via `HERDR_PANE_ID`/`TMUX`) and git worktree — through a substantial engineering mission: baseline, implement, independently validate, merge green PRs, produce a session report, then run a retrospective that improves this skill itself.
 
 This skill was distilled from a real coordinated session (6 PRs, 1.7-3.1x measured speedups, three self-caught bad claims). Its core belief: **every number and claim that ships must survive something built to kill it** — a control, a lock, a byte-diff, a skeptical teammate. Build that apparatus first and the mission mostly steers itself.
 
@@ -42,14 +42,14 @@ Size the team to the mission — one teammate for a focused task, several for a 
 - **Implementer(s)** — build the thing, red->green TDD, one commit per step.
 - **Independent validator** — owns fixtures, measurement, equivalence checking, and A/B verdicts. The implementer never grades their own work. The validator builds its kit (fixtures, censuses, diff tooling, a rehearsed **negative control** — same binary/input on both arms must FAIL the improvement check) *while* the implementer designs, so validation never blocks on tooling.
 
-Each teammate gets its own git worktree (`git worktree add ../wt/<name> -b <branch>`) and tmux window. Verify every factual claim in a brief against the code before sending — a wrong "the crate is sync" costs a teammate its first half hour. Read `references/mission-prompt.md` and instantiate it per teammate; read `references/protocols.md` for the spawn command, communication protocol, and measurement regime that go into every brief.
+Each teammate gets its own git worktree (`git worktree add ../wt/<name> -b <branch>`) and multiplexer window (tmux window / herdr tab). Verify every factual claim in a brief against the code before sending — a wrong "the crate is sync" costs a teammate its first half hour. Read `references/mission-prompt.md` and instantiate it per teammate; read `references/protocols.md` for the spawn command, communication protocol, and measurement regime that go into every brief.
 
 ## Step 4 — Spawn and wire up monitoring
 
 Spawn with `scripts/spawn-teammate.sh`; send all later messages with `scripts/msg-teammate.sh` (it handles the paste/Enter delivery failure that plagued the original session and verifies a turn actually started — never raw `send-keys` for anything that matters). Then arm:
 
 1. **Status stream**: teammates append one-line updates to `status-<name>.md` after every step; you monitor with a persistent `tail -F` Monitor.
-2. **Heartbeat**: a periodic Monitor that reads each pane's *spinner line* (never the input-box line) and reports working vs idle. An idle session with text in its input box needs that text submitted — check panes on every suspicious idle.
+2. **Heartbeat**: a periodic Monitor reporting working vs idle per teammate. In herdr, `herdr agent list` reports each agent's status (`working`/`idle`) natively — use that. In tmux, read each pane's *spinner line* (never the input-box line). An idle session with text in its input box needs that text submitted — check panes on every suspicious idle.
 3. **CI watchers**: per-PR check streams (poll `gh pr checks`, emit each settled check once, end when all settle). Watch CI as events, not by polling in your main loop.
 
 Status updates to the user at every milestone and for anything taking longer than ~5 minutes. Lead with what happened, not what you're about to do.
