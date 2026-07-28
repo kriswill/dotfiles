@@ -2,6 +2,13 @@
 
 ## 2026-07-28
 
+- **Update** — [multiplexer navigation](multiplexer.md): recorded that
+  `<C-Space>` is unreachable under tmux for the same reason as under herdr —
+  `set -g prefix C-space` claims the chord before any root-table binding is
+  consulted, so tmux's own `bind-key -n 'C-Space' … send-keys C-Space`
+  forwarding half never runs either. The `n` motion stays correct for a bare
+  terminal or a rebound prefix.
+
 - **Update** — [multiplexer navigation](multiplexer.md) corrected against the
   code after a review of the landing commit. The doc had claimed a zoomed pane
   is never left by any of the six motions; `disable_when_zoomed` gates the four
