@@ -12,6 +12,6 @@ focus_pane_down = "ctrl+j"
 focus_pane_up = "ctrl+k"
 focus_pane_right = "ctrl+l"
 # tmux muscle memory: % splits side-by-side, " splits stacked
-split_vertical = "prefix+percent"
-split_horizontal = "prefix+double_quote"
+split_vertical = ["prefix+percent", "prefix+v"]
+split_horizontal = ["prefix+double_quote", "prefix+minus"]
 toggle_sidebar = "prefix+space"
