@@ -17,6 +17,7 @@ efm-langserver (see [LSP](lsp.md)).
 * [Filetype Detection & ftplugins](filetypes.md) - Custom filetype registrations plus shebang-based detection for extensionless scripts; per-filetype tweaks under ftplugin/.
 * [Keymap Topology](keymaps.md) - Space-leader keymap layout — which namespace lives where, core non-leader maps, and which plugin owns each group.
 * [LSP & Formatting](lsp.md) - Native vim.lsp.config/enable with one file per server, efm-langserver as the single formatting/linting authority, format-on-save filtered to efm.
+* [Multiplexer Navigation](multiplexer.md) - One set of keys (<C-h/j/k/l>) walking nvim splits and then the surrounding terminal multiplexer's panes — a local module with tmux and herdr backends, chosen from the environment at startup.
 * [Editor Options](options.md) - Core vim.opt settings — 2-space indent defaults, treesitter folds, hidden cmdline, system clipboard, transparency-friendly UI.
 
 ## Subdirectories

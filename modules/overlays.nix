@@ -19,6 +19,7 @@
     flatpak-user = import ../overlays/flatpak-user.nix;
     gh-config = import ../overlays/gh-config.nix;
     gh-op = import ../overlays/gh-op.nix;
+    herdr-nav = import ../overlays/herdr-nav.nix;
     helium-config = import ../overlays/helium-config.nix;
     noctalia-config = import ../overlays/noctalia-config.nix;
     pass-xdg = import ../overlays/pass-xdg.nix;

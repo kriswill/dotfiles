@@ -62,6 +62,13 @@ paths → edit `modules/nixos/tmux.nix` + rebuild.**
 active pane runs vim/nvim/view/fzf (the `is_vim` `ps`-based check at the top of
 the config). `C-\` = last pane, `C-Space` = cycle.
 
+The nvim half is `home/nvim/.config/nvim/lua/config/multiplexer.lua` (local
+module, no plugin): it walks nvim's own windows and only calls `tmux
+select-pane` once the motion runs off the edge. The same module drives the
+identical keys under **herdr**, whose config.toml binds `ctrl+h/j/k/l` to
+`herdr-nav` — the herdr equivalent of `is_vim` + `if-shell`, since herdr has no
+conditional bindings of its own. See `pkgs/herdr-nav.sh`.
+
 **Plugin:** tmux-which-key (XDG-enabled) — discoverable keybind menu, loaded via
 the Nix-generated `plugins.conf`.
 

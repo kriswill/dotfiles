@@ -7,11 +7,34 @@ previous_tab = "shift+left"
 next_tab = "shift+right"
 previous_workspace = "shift+up"
 next_workspace = "shift+down"
-focus_pane_left = "ctrl+h"
-focus_pane_down = "ctrl+j"
-focus_pane_up = "ctrl+k"
-focus_pane_right = "ctrl+l"
 # tmux muscle memory: % splits side-by-side, " splits stacked
 split_vertical = ["prefix+percent", "prefix+v"]
 split_horizontal = ["prefix+double_quote", "prefix+minus"]
 toggle_sidebar = "prefix+space"
+
+# ctrl+h/j/k/l pane focus, but vim-aware: herdr-nav checks whether the focused
+# pane is running vim/nvim and, if so, forwards the chord to it instead of
+# moving pane focus — nvim walks its own splits and calls `herdr pane focus`
+# once it's against the edge (home/nvim/.config/nvim/lua/config/multiplexer.lua).
+# This is the herdr equivalent of tmux.conf's is_vim + if-shell binds.
+# focus_pane_* stays on its prefix+h/j/k/l default as a direct fallback.
+
+[[keys.command]]
+key = "ctrl+h"
+type = "shell"
+command = "herdr-nav left"
+
+[[keys.command]]
+key = "ctrl+j"
+type = "shell"
+command = "herdr-nav down"
+
+[[keys.command]]
+key = "ctrl+k"
+type = "shell"
+command = "herdr-nav up"
+
+[[keys.command]]
+key = "ctrl+l"
+type = "shell"
+command = "herdr-nav right"

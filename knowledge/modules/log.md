@@ -1,5 +1,14 @@
 # Log
 
+## 2026-07-28
+
+- **Update** — [herdr](herdr.md): ships
+  [herdr-nav](../packages/herdr-nav.md) alongside herdr on both OSes, and its
+  `config.toml` now routes `ctrl+h/j/k/l` through it instead of binding
+  `focus_pane_*` directly, so nvim keeps those keys inside its own splits.
+  [tmux](tmux.md) gained a backlink to the shared nvim side. See the
+  [decision record](../decisions/vim-aware-pane-navigation.md).
+
 ## 2026-07-27
 
 - **Creation** — [herdr](herdr.md): terminal agent multiplexer from nixpkgs,

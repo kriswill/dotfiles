@@ -1,5 +1,13 @@
 # Log
 
+## 2026-07-28
+
+- **Creation** — [vim-aware-pane-navigation](vim-aware-pane-navigation.md):
+  keep one set of `<C-h/j/k/l>` keys across tmux and herdr. nvim's side became
+  a local backend-table module; herdr, which has no conditional bindings, got
+  the `is_vim` escape hatch rebuilt out of its own CLI
+  ([herdr-nav](../packages/herdr-nav.md)) rather than conceding the keys.
+
 ## 2026-07-27
 
 - **Update** — [claude-skills-split-stow-packages](claude-skills-split-stow-packages.md):

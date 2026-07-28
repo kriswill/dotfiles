@@ -15,6 +15,7 @@ flake consumes via relative-path inputs.
 * [Gh Config](gh-config.md) - Snapshot/restore gh's config.yml between ~/.config/gh (app-owned) and config/gh/ — gh's atomic-rename saves break stow symlinks, so it left the stow tree for the snapshot pattern.
 * [gh-op](gh-op.md) - Linux-only gh wrapper sourcing GH_TOKEN from 1Password at runtime — via a vault-scoped service-account token when deployed, desktop-app auth otherwise — so ~/.config/gh/hosts.yml holds no plain-text token on nebula's unencrypted disk.
 * [Helium Config](helium-config.md) - Custom Nix package 'helium-config'.
+* [Herdr Nav](herdr-nav.md) - herdr-nav — a keybinding shim that gives herdr the vim-aware pane switching tmux gets from is_vim + if-shell — forwarding ctrl+h/j/k/l to a pane running vim instead of moving pane focus.
 * [Iv](iv.md) - A command-line image viewer using terminal graphics.
 * [Kitten](kitten.md) - Kitten - A collection of small, useful programs for the kitty terminal.
 * [Ld64 Lld](ld64-lld.md) - TEMPORARY overlay linking kitty/vfkit/starship with LLVM lld on darwin — works around the pinned nixpkgs' cctools ld64 1010.6 SIGTRAP until the staging fix reaches nixos-unstable.

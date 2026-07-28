@@ -1,5 +1,14 @@
 # Log
 
+## 2026-07-28
+
+- **Creation** — [herdr-nav](herdr-nav.md): `writeShellApplication` shim bound
+  to `ctrl+h/j/k/l` in herdr's `config.toml`, giving herdr the vim-aware pane
+  switching tmux gets from `is_vim` + `if-shell`. Inspects `herdr pane
+  process-info --current` and either `send-keys` the chord to a vim-running
+  pane or moves pane focus. Installed alongside herdr on both OSes; see the
+  [decision record](../decisions/vim-aware-pane-navigation.md).
+
 ## 2026-07-19
 
 - **Creation** — [rtk](rtk.md): `rustPlatform.buildRustPackage` for
