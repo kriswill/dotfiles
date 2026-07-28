@@ -73,9 +73,13 @@ pane=$(printf '%s' "$info" | jq -r '.result.process_info.pane_id // empty') || e
 # argv0 and argv[0]'s basename — `name` is the kernel's comm, truncated to 15
 # characters, so it is a last resort for entries that carry no argv.
 #
-# `--headless`/`--embed` processes are excluded: those are LSP/formatter hosts
-# and GUI clients, not something the user is looking at, and forwarding the
-# chord to one types a stray backspace into whatever IS in the pane.
+# Daemon invocations of those same programs are excluded, per program, because
+# the flag that means "not a UI" differs: `--headless`/`--embed` for vim (LSP
+# and formatter hosts, GUI clients) and `--listen` for fzf (driven as a server
+# by another tool). Forwarding the chord to one types a stray backspace into
+# whatever IS in the pane. The exclusions are deliberately NOT pooled: `nvim
+# --listen /tmp/sock` is an ordinary interactive editor, and a blanket
+# `--listen` test would stop forwarding to it.
 #
 # Residual gap, documented rather than papered over: herdr's payload carries no
 # parent pid, so the process tree cannot be rebuilt, and an interactive vim
@@ -84,11 +88,16 @@ pane=$(printf '%s' "$info" | jq -r '.result.process_info.pane_id // empty') || e
 # state, `^[^TXZ ]+`, which herdr does not expose).
 is_vim=$(printf '%s' "$info" | jq -r '
   def base: sub(".*/"; "");
+  def names: [((.argv[0]? // "") | base), ((.argv0 // "") | base), (.name // "")];
+  def flags: [.argv[]?];
   [ .result.process_info.foreground_processes[]?
-    | select([.argv[]?] | any(. == "--headless" or . == "--embed") | not)
-    | ((.argv[0]? // "") | base), ((.argv0 // "") | base), (.name // "")
+    | ((names | any(test("^g?(view|n?vim?x?)(diff)?$")))
+       and (flags | any(. == "--headless" or . == "--embed") | not))
+      or
+      ((names | any(test("^fzf$")))
+       and (flags | any(. == "--listen") | not))
   ]
-  | any(test("^(g?(view|n?vim?x?)(diff)?|fzf)$"))
+  | any
 ') || exit 0
 
 if [ "$is_vim" = "true" ]; then
