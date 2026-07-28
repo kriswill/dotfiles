@@ -2,6 +2,17 @@
 
 ## 2026-07-28
 
+- **Update** — [herdr-nav](herdr-nav.md): JSON is parsed with `jq` instead of a
+  greedy `sed` regex, keypresses are serialised behind an `mkdir` lock, and the
+  vim test excludes `--headless`/`--embed` processes and matches on
+  `argv0`/`argv[0]` basenames rather than the 15-character-truncated `name`.
+  `foreground_processes` is the whole process group, so daemon children of the
+  foreground job (LSP hosts, MCP servers) previously matched like an editor.
+  Documents the residual gap honestly — herdr exposes no ppid — and the
+  exit-status contract that lets `config.toml` chain a
+  `|| … pane focus --current` fallback for the window where the stow-deployed
+  binding is live but the binary has not been rebuilt yet.
+
 - **Creation** — [herdr-nav](herdr-nav.md): `writeShellApplication` shim bound
   to `ctrl+h/j/k/l` in herdr's `config.toml`, giving herdr the vim-aware pane
   switching tmux gets from `is_vim` + `if-shell`. Inspects `herdr pane
