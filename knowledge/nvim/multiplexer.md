@@ -36,8 +36,12 @@ Backends differ in reach: tmux gets `select-pane -L/-D/-U/-R/-l/-t:.+`, so all
 six motions cross panes. herdr's CLI only does directional focus (0.7.4), so
 under herdr `<C-\>` and `<C-Space>` stay inside nvim. **`<C-Space>` in practice
 only reaches nvim in a bare terminal**: both multiplexers are configured with
-`ctrl+space` as their prefix (`tmux.conf`, herdr's `config.toml`). The `n` motion
-is kept correct anyway, for a bare terminal or a rebound prefix.
+`ctrl+space` as their prefix (`tmux.conf`, herdr's `config.toml`). Under tmux
+that shadowing also makes tmux's own `bind-key -n 'C-Space' … send-keys
+C-Space` unreachable — `set -g prefix C-space` claims the chord as the prefix
+before any root-table binding is consulted, so the forwarding half never runs
+either. The `n` motion is kept correct anyway, for a bare terminal or a rebound
+prefix.
 
 Hand-offs are synchronous and their exit status is believed — "did the
 multiplexer actually move?" is the only input to the last-active bookkeeping,
