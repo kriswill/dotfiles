@@ -1,5 +1,11 @@
 # Log
 
+## 2026-07-27
+
+- **Creation** — [herdr](herdr.md): terminal agent multiplexer from nixpkgs,
+  installed everywhere — a NixOS module plus a darwin
+  [user-packages](user-packages.md) entry (deliberately not a twin pair).
+
 ## 2026-07-25
 
 - **Update** — [claude-account-selector](claude-account-selector.md): note
