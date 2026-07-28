@@ -5,19 +5,19 @@
 #
 # herdr is pinned rather than taken from PATH because this runs as a
 # [[keys.command]] spawned by the herdr server, whose PATH we don't control.
+# jq parses the pane payload; coreutils supplies the id/mkdir/rmdir/sleep the
+# keypress lock is built from.
 {
   writeShellApplication,
   herdr,
-  gnugrep,
-  gnused,
+  jq,
   coreutils,
 }:
 writeShellApplication {
   name = "herdr-nav";
   runtimeInputs = [
     herdr
-    gnugrep
-    gnused
+    jq
     coreutils
   ];
   text = builtins.readFile ./herdr-nav.sh;
