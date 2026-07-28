@@ -27,11 +27,15 @@ see `<C-h>`. herdr-nav is bound to `ctrl+h/j/k/l` instead, as a
 
 The vim test matches `argv0` and `argv[0]`'s basename — `name` is the kernel's
 comm, truncated to 15 characters, and is only a last resort for entries carrying
-no `argv`. Processes with `--headless` or `--embed` in their argv are excluded:
-`foreground_processes` is the whole process *group*, so a pane running an agent
-or a dev script returns its LSP/formatter hosts and MCP servers alongside the
-command the user is looking at, and forwarding the chord to one of those types a
-stray backspace into the pane instead of switching it. **Residual gap, stated
+no `argv`. Daemon invocations are excluded **per program**, because the flag
+meaning "not a UI" differs: `--headless`/`--embed` for vim, `--listen` for fzf.
+They are deliberately not pooled — `nvim --listen /tmp/sock` is an ordinary
+interactive editor, and a blanket `--listen` test would stop forwarding to it.
+This matters because `foreground_processes` is the whole process *group*, so a
+pane running an agent or a dev script returns its LSP/formatter hosts and MCP
+servers alongside the command the user is looking at, and forwarding the chord
+to one of those types a stray backspace into the pane instead of switching it.
+**Residual gap, stated
 plainly:** herdr exposes no parent pid, so the tree can't be rebuilt and an
 interactive vim running as a *background* child of the foreground job still
 matches. tmux's `ps`-based `is_vim` has the same shape of gap — it additionally
