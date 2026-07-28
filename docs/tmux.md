@@ -21,8 +21,12 @@ tmux-256color                          # NOT "screen" — load-bearing, see belo
 ```
 
 - **Prefix is `C-Space`** (not `C-b`). `prefix + C-Space` = last-window.
-- tmux is **3.6a**, so all the `tmux_version < 3.0` legacy branches in the config
-  are dead weight carried over from the cross-host config — harmless.
+- tmux is **3.7b**. The `tmux_version < 3.0` legacy branches that used to guard
+  the `C-\` re-bind have been removed: measured on 3.7b with throwaway servers,
+  the version pair produced *no* `C-\` binding at all on its own (the nested
+  quoting never yields a usable `bind-key`), so the plain
+  `bind-key -n C-'\' if-shell "$is_vim" …` line above it was always the one
+  doing the work. Bindings are byte-identical with and without the pair.
 
 ## How the config is managed (two pieces, two mechanisms)
 
