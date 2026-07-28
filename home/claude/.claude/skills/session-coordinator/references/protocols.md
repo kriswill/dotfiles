@@ -10,20 +10,20 @@ Model/effort default: the strongest available model at high effort (`--model cla
 scripts/spawn-teammate.sh <name> <worktree-dir> <brief-file>
 ```
 
-which creates the tmux window, launches claude with the brief as the initial prompt, and verifies the session started processing. One teammate per window; window name = teammate name.
+which creates the teammate's multiplexer window — a tmux window or a herdr tab, auto-detected from `HERDR_PANE_ID`/`TMUX` — launches claude with the brief as the initial prompt, and verifies the session started processing (in herdr via `herdr agent wait --status working`, falling back to visible claude chrome for turns that finish before the poll). One teammate per window/tab; window/agent name = teammate name.
 
 ## Messaging teammates (the delivery problem)
 
 tmux `send-keys "<long text>" Enter` frequently leaves the text as an unsubmitted paste — paste rendering swallows the trailing Enter. In the original mission ~a third of messages needed manual rescue, and two merge-gating directives silently never started a turn. Therefore:
 
-- **Every** coordinator->teammate message goes through `scripts/msg-teammate.sh <name> "<message>"`, which sends the text, sends Enter as a separate delayed keystroke, then verifies via capture-pane that a turn actually started (spinner visible or message rendered in transcript), retrying Enter if not. It exits nonzero if delivery cannot be confirmed — treat that as undelivered.
+- **Every** coordinator->teammate message goes through `scripts/msg-teammate.sh <name> "<message>"`, which sends the text, sends Enter as a separate delayed keystroke, then verifies that a turn actually started, retrying Enter if not. It exits nonzero if delivery cannot be confirmed — treat that as undelivered. In herdr it uses `herdr agent send` + `herdr pane send-keys <id> enter` and verifies with `herdr agent wait --status working`; in tmux it verifies via capture-pane (spinner visible or message rendered in transcript). Same interface either way.
 - Long content (briefs, designs, data) goes in files; the message just points at the file.
 - Additionally, each teammate polls `inbox-<name>.md` between steps (this is in the brief template). For anything mission-critical, write it to the inbox file *and* send the tmux message — the inbox survives delivery failures.
 
 ## Monitoring
 
 - **Status stream** (persistent Monitor): `tail -F -n 0 <scratch>/status-*.md`, filtered of noise lines. This is your primary signal.
-- **Heartbeat** (persistent Monitor, ~5 min period): for each window, capture the pane and classify by the *spinner line* — a line matching an elapsed-time pattern like `([0-9]+m? ?[0-9]*s ·` means working; no spinner means the turn ended. Never classify by the last line (it's the input box — always looks idle).
+- **Heartbeat** (persistent Monitor, ~5 min period): in herdr, `herdr agent list` reports each agent's `agent_status` (`working`/`idle`) directly — no pane scraping; `herdr agent read <name> --source visible` replaces capture-pane for triage. In tmux, capture each pane and classify by the *spinner line* — a line matching an elapsed-time pattern like `([0-9]+m? ?[0-9]*s ·` means working; no spinner means the turn ended. Never classify by the last line (it's the input box — always looks idle).
 - **Idle triage**: an idle session is one of (a) legitimately waiting on its own background shells — check for "N shells" in the pane footer and the lock owner file; (b) stalled with a queued self-prompt in its input box — submit it (msg-teammate.sh with an empty message does a verified Enter); (c) genuinely stalled — send a status-check directive. A teammate that went idle right after receiving an assignment is case (c) until proven otherwise; the original mission caught a real stall exactly this way.
 - **CI watchers** (one Monitor per open PR): poll `gh pr checks <n> --json name,bucket` every 30s, emit each check's result once as it settles, exit when all settle. On failure, pull the specific job log (`gh api .../jobs/<id>/logs`) and grep for `##[error]` — the real error is usually at the end, and naive greps match test names containing "fail".
 

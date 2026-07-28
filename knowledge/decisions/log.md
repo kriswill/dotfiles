@@ -1,5 +1,12 @@
 # Log
 
+## 2026-07-27
+
+- **Update** — [claude-skills-split-stow-packages](claude-skills-split-stow-packages.md):
+  the skill was renamed `tmux-session-coordinator` → `session-coordinator`
+  after gaining multiplexer auto-detection (spawns/messages teammates via the
+  herdr CLI when inside herdr, tmux otherwise); record's paths updated.
+
 ## 2026-07-25
 
 - **Creation** — [claude-skills-split-stow-packages](claude-skills-split-stow-packages.md):
