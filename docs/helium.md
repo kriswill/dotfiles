@@ -531,6 +531,21 @@ installed binary body matches the committed `helium-config.sh` (verified 2026-06
 
 ## Learned behaviours & workarounds
 
+- **Bare `bunx playwright` does NOT reach Helium — pass `--channel chrome`
+  (2026-07-28).** The Chrome shim (entry below) only catches launches that ask
+  for the `chrome` channel. Playwright's default is its OWN bundled
+  chromium/headless-shell, version-pinned per release: `bunx playwright`
+  resolves the *latest* CLI (1.62.0 → `chromium_headless_shell-1234`) while
+  `~/Library/Caches/ms-playwright` only holds revisions installed by real
+  projects (1208 ← playwright 1.58.0 via a python venv, 1228 ← 1.61.1 via a
+  node repo), so it dies with "Executable doesn't exist … run playwright
+  install". Not a browser-integration conflict — chrome-devtools-mcp /
+  claude-in-chrome are separate processes and irrelevant. Fixes, verified on
+  Helium 150.0.7871.114: `bunx playwright screenshot --channel chrome …`
+  (goes through the shim, zero downloads) or, in scripts,
+  `chromium.launch({ channel: "chrome" })` /
+  `{ executablePath: "/Applications/Helium.app/Contents/MacOS/Helium" }` —
+  both render headless correctly.
 - **macOS: Helium stands in for Chrome via a shim .app (2026-07-10).** After
   dropping the Chromium cask, chrome-devtools-mcp (Puppeteer) broke on the
   Macs: it hard-probes `/Applications/Google Chrome.app/Contents/MacOS/Google
