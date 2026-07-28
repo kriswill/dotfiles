@@ -20,6 +20,7 @@
           gnupg # signature verifier
           go # an awesome language
           grc # generic text colorizer
+          herdr # agent multiplexer that lives in your terminal
           jq # command-line JSON processor
           just # better make
           keycastr # keystroke visualizer

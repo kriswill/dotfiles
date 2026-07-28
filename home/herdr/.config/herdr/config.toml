@@ -1,0 +1,7 @@
+[ui]
+agent_panel_sort = "priority"
+
+[keys]
+prefix = "ctrl+space"
+previous_tab = "shift+left"
+next_tab = "shift+right"
