@@ -26,7 +26,6 @@ hand, and when a plugin is removed delete its doc here too.
 * [oil.nvim](oil-nvim.md) - Directories as editable buffers, opened floating with `-`; hidden files shown, icons via mini.icons.
 * [schemastore.nvim](schemastore.md) - JSON/YAML schema catalog consumed by the yaml language server (no setup — a pure data library).
 * [snacks.nvim](snacks.md) - The utility platform — picker, explorer, dashboard, terminal, zen, notifier — owning most of the leader keymap surface, plus a custom vim.pack plugin-inventory picker.
-* [nvim-tmux-navigation](tmux.md) - One set of keys (<C-h/j/k/l>) to move across nvim splits and tmux panes, including from terminal mode; disabled when a pane is zoomed.
 * [nvim-treesitter-context](treesitter-context.md) - Sticky scope header (up to 3 lines, cursor mode) pinned to the top of the window; toggled with <leader>ut.
 * [nvim-treesitter-textobjects](treesitter-textobjects.md) - Treesitter text objects (af/if, ac/ic, ao, as) and parameter swapping, main branch, keymaps set explicitly.
 * [nvim-treesitter](treesitter.md) - Treesitter parsers on the main branch (0.12+ API) — async install, highlight+indent per filetype, TSUpdate wired to PackChanged.

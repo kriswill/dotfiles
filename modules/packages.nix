@@ -29,6 +29,9 @@
         noctalia-config = pkgs.callPackage ../pkgs/noctalia-config.nix { };
         helium-config = pkgs.callPackage ../pkgs/helium-config.nix { };
         gh-config = pkgs.callPackage ../pkgs/gh-config.nix { };
+        # herdr-nav — vim-aware ctrl+h/j/k/l pane navigation for herdr; the
+        # herdr-side half of nvim's config/multiplexer.lua integration.
+        herdr-nav = pkgs.callPackage ../pkgs/herdr-nav.nix { };
         # rtk — CLI proxy that filters dev command output to cut LLM token usage.
         rtk = pkgs.callPackage ../pkgs/rtk.nix { };
         # ccglass is built by its own flake (./flakes/ccglass); re-export it here.

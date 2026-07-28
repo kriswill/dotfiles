@@ -1,5 +1,14 @@
 # Log
 
+## 2026-07-28
+
+- **Creation** — [multiplexer navigation](multiplexer.md): `<C-h/j/k/l>` split
+  ↔ pane navigation moved from the `nvim-tmux-navigation` plugin into
+  `lua/config/multiplexer.lua`, a local module with tmux and herdr backends
+  detected from `$TMUX` / `$HERDR_PANE_ID`. Same edge-detection behaviour, one
+  fewer plugin. `knowledge/nvim/plugins/tmux.md` deleted with it; see the
+  [decision record](../decisions/vim-aware-pane-navigation.md).
+
 ## 2026-07-02
 
 - **Update** — Svelte LSP wired into Neovim: `lsp/svelte.lua`

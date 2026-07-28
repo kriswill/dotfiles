@@ -21,6 +21,7 @@
           go # an awesome language
           grc # generic text colorizer
           herdr # agent multiplexer that lives in your terminal
+          herdr-nav # vim-aware ctrl+hjkl pane navigation for herdr (see its config.toml)
           jq # command-line JSON processor
           just # better make
           keycastr # keystroke visualizer

@@ -16,6 +16,10 @@ worked example of the
 AGENTS.md itself cites. `tmux.conf` and which-key's `config.yaml` are
 stow-managed in `home/tmux/`.
 
+`tmux.conf`'s `is_vim` + `if-shell` binds are one half of nvim's
+[multiplexer navigation](../nvim/multiplexer.md); [herdr](herdr.md) gets the
+same behaviour through [herdr-nav](../packages/herdr-nav.md).
+
 ## Twin differences
 
 The generated `plugins.conf` is identical; only how each class links it into

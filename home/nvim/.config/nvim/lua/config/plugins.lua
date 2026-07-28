@@ -21,7 +21,6 @@ local order = {
   "vim-sleuth",
   "baleia",
   "direnv",
-  "tmux",
   "advanced-new-file",
   "colorful-winsep",
   "mini-splitjoin",

@@ -14,7 +14,11 @@ from nixpkgs.
 
 Its `config.toml` is the `home/herdr/` [stow package](../patterns/stow-tree.md)
 — adopted per-file because herdr keeps mutable runtime data (logs, sockets,
-`session.json`) in the same `~/.config/herdr/` directory.
+`session.json`) in the same `~/.config/herdr/` directory. The keybindings there
+lean tmux-ward (`ctrl+space` prefix, `%`/`"` splits); `ctrl+h/j/k/l` pane focus
+goes through [herdr-nav](../packages/herdr-nav.md), installed alongside herdr on
+both OSes, so nvim keeps those keys inside its own splits — see the [vim-aware
+pane navigation decision](../decisions/vim-aware-pane-navigation.md).
 
 Deliberately **not** a cross-OS twin pair: the NixOS module puts it on
 `environment.systemPackages`, while on darwin it is one entry in the

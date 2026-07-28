@@ -44,9 +44,9 @@ preset, 300 ms delay) names the groups and pops up the reference; press
   `ao`, `as` — treesitter text objects; `sj`/`sk` — split/join args
   ([mini-splitjoin](plugins/mini-splitjoin.md)); `-` — parent dir as buffer
   ([oil](plugins/oil-nvim.md)).
-- `<C-h/j/k/l>` — seamless nvim-split ↔ tmux-pane navigation, also mapped in
-  terminal mode ([tmux](plugins/tmux.md)); `<C-/>` — snacks terminal;
-  `]]`/`[[` — jump word references.
+- `<C-h/j/k/l>` — seamless nvim-split ↔ multiplexer-pane navigation under tmux
+  or herdr, also mapped in terminal mode ([multiplexer](multiplexer.md));
+  `<C-/>` — snacks terminal; `]]`/`[[` — jump word references.
 
 ## Known quirks
 
