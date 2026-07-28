@@ -48,7 +48,13 @@ if [ "$mux" = herdr ]; then
   tab_id="$(herdr tab create --label "$name" --cwd "$workdir" --no-focus \
     | grep -o '"tab_id":"[^"]*"' | head -1 | cut -d'"' -f4)"
   [ -n "$tab_id" ] || { echo "herdr tab create failed"; exit 2; }
-  herdr agent start "$name" --tab "$tab_id" --cwd "$workdir" --no-focus -- \
+  # herdr agent start spawns from the SERVER's env, not the caller's: a
+  # coordinator running with a custom CLAUDE_CONFIG_DIR must forward it or the
+  # teammate lands in an unauthenticated default config (OAuth login screen).
+  env_args=()
+  [ -n "${CLAUDE_CONFIG_DIR:-}" ] && env_args=(--env "CLAUDE_CONFIG_DIR=$CLAUDE_CONFIG_DIR")
+  herdr agent start "$name" --tab "$tab_id" --cwd "$workdir" --no-focus \
+    ${env_args[@]:+"${env_args[@]}"} -- \
     claude --dangerously-skip-permissions ${model_args[@]:+"${model_args[@]}"} \
     ${extra_args[@]:+"${extra_args[@]}"} "$(cat "$brief")" >/dev/null || exit 2
   # working = processing the brief; a very short first turn can finish before
