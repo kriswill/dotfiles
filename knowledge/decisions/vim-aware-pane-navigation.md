@@ -55,10 +55,24 @@ skips it.
   cost.
 - herdr's CLI has no last/next-pane command, so `<C-\>` and `<C-Space>` stay
   inside nvim there while they cross panes under tmux. Revisit if herdr adds
-  them.
+  them. `<C-Space>` is moot in practice either way: both multiplexers bind
+  `ctrl+space` as their prefix, so it only reaches nvim in a bare terminal.
+- Forwarding the chord into nvim means nvim now owns it in **every** mode, not
+  just normal mode. Insert-mode `<C-h>/<C-j>/<C-k>` therefore stop meaning
+  backspace / line-break / digraph whenever a multiplexer is present — a
+  deliberate trade, because the alternative is a key that moves pane focus in
+  one mode and edits text in another. The maps are installed only when a backend
+  is detected, so bare nvim keeps vim's defaults. Terminal mode likewise routes
+  through the same logic instead of a static `<C-\><C-n><C-w>h`, and a hand-off
+  at the edge does not drop the user out of terminal mode.
 - `herdr-nav` must be on the herdr **server's** PATH; it ships with herdr on
-  both OSes, but a config reload before a system rebuild leaves the keys
-  no-ops.
+  both OSes. Because `config.toml` deploys by stow (live on the next herdr
+  restart) while the binary needs a system rebuild, each bind chains
+  `herdr-nav <dir> || … pane focus --direction <dir> --current` so the keys
+  degrade to plain directional focus instead of going dead in that window. This
+  works because herdr evaluates `[[keys.command]]` strings with `/bin/sh -lc`
+  and exports `HERDR_BIN_PATH`, and because herdr-nav's only non-zero exit is a
+  usage error.
 - If herdr ever grows native vim-awareness, the shim collapses back into four
   `focus_pane_*` lines.
 

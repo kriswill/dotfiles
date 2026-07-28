@@ -2,6 +2,14 @@
 
 ## 2026-07-28
 
+- **Update** — [vim-aware-pane-navigation](vim-aware-pane-navigation.md):
+  consequences corrected after review. "A config reload before a system rebuild
+  leaves the keys no-ops" is no longer true — each bind chains to plain
+  directional focus. Records the deliberate mode trade the design implies:
+  forwarding the chord into nvim means nvim owns `<C-h/j/k/l>` in insert and
+  terminal mode too, so insert-mode backspace/line-break/digraph give way to
+  pane navigation whenever a multiplexer is present.
+
 - **Creation** — [vim-aware-pane-navigation](vim-aware-pane-navigation.md):
   keep one set of `<C-h/j/k/l>` keys across tmux and herdr. nvim's side became
   a local backend-table module; herdr, which has no conditional bindings, got

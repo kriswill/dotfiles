@@ -2,6 +2,19 @@
 
 ## 2026-07-28
 
+- **Update** — [multiplexer navigation](multiplexer.md) corrected against the
+  code after a review of the landing commit. The doc had claimed a zoomed pane
+  is never left by any of the six motions; `disable_when_zoomed` gates the four
+  directional keys only, and `<C-\>` / `<C-Space>` deliberately do escape a
+  zoom (they are explicit "go elsewhere" commands — gating them makes both dead
+  keys in a zoomed single-window nvim). Also documents what the fixes changed:
+  synchronous hand-offs whose exit status is believed, `FocusGained` refreshing
+  the last-active flag, the float-proof `winnr(dir)` edge test and cmdwin guard,
+  server-resolved `--current` on the herdr backend, validated
+  `vim.g.multiplexer`, the new insert- and terminal-mode semantics, and the fact
+  that `<C-Space>` only reaches nvim in a bare terminal because both
+  multiplexers bind `ctrl+space` as their prefix.
+
 - **Creation** — [multiplexer navigation](multiplexer.md): `<C-h/j/k/l>` split
   ↔ pane navigation moved from the `nvim-tmux-navigation` plugin into
   `lua/config/multiplexer.lua`, a local module with tmux and herdr backends
