@@ -18,23 +18,31 @@ toggle_sidebar = "prefix+space"
 # once it's against the edge (home/nvim/.config/nvim/lua/config/multiplexer.lua).
 # This is the herdr equivalent of tmux.conf's is_vim + if-shell binds.
 # focus_pane_* stays on its prefix+h/j/k/l default as a direct fallback.
+#
+# Each command falls back to plain directional focus if herdr-nav is not on the
+# PATH — this file is a stow symlink into the repo, so it takes effect the
+# moment herdr restarts, while herdr-nav only lands after a system rebuild.
+# Without the fallback that window leaves all four keys dead. The chain is safe
+# because herdr-nav exits 0 on every path except a usage error, so `||` fires
+# only for command-not-found (see pkgs/herdr-nav.sh). herdr runs these through
+# `/bin/sh -lc`, and exports HERDR_BIN_PATH pointing at its own binary.
 
 [[keys.command]]
 key = "ctrl+h"
 type = "shell"
-command = "herdr-nav left"
+command = "herdr-nav left || ${HERDR_BIN_PATH:-herdr} pane focus --direction left --current"
 
 [[keys.command]]
 key = "ctrl+j"
 type = "shell"
-command = "herdr-nav down"
+command = "herdr-nav down || ${HERDR_BIN_PATH:-herdr} pane focus --direction down --current"
 
 [[keys.command]]
 key = "ctrl+k"
 type = "shell"
-command = "herdr-nav up"
+command = "herdr-nav up || ${HERDR_BIN_PATH:-herdr} pane focus --direction up --current"
 
 [[keys.command]]
 key = "ctrl+l"
 type = "shell"
-command = "herdr-nav right"
+command = "herdr-nav right || ${HERDR_BIN_PATH:-herdr} pane focus --direction right --current"
