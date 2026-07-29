@@ -14,10 +14,12 @@ Work autonomously; do not ask the coordinator questions unless truly blocked.
 <one-paragraph charter from Step 1: deliverable, target, constraints, done-condition>
 
 ## Integration policy (binding)
-Integration policy: <no-github|push-only|prs-user-merge|prs-auto-merge>
+Integration policy: <no-github|local-merge|push-only|prs-user-merge|prs-auto-merge>
 What the levels mean:
 - no-github: do NOT push, open PRs, or touch GitHub in any way. Commit locally on
   your branch and report readiness in your status file.
+- local-merge: no GitHub (no pushes, no PRs); the COORDINATOR merges branches into
+  the mission mainline locally. You never merge; report readiness in your status file.
 - push-only: push your branch; do NOT open PRs. Review and merging belong to the user.
 - prs-user-merge: open PRs, but NOBODY merges — not you, not the coordinator — until
   the user explicitly approves that PR (adversarial review may happen first in a

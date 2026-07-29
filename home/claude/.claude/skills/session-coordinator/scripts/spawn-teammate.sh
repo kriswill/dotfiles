@@ -15,7 +15,7 @@
 # args): a brief still containing unexpanded template placeholders (<name>,
 # <scratch>, <skill-dir>, ... — a guaranteed-wrong brief fact costs the
 # teammate its first work block); a brief that does not declare the mission
-# INTEGRATION POLICY ("Integration policy: <no-github|push-only|
+# INTEGRATION POLICY ("Integration policy: <no-github|local-merge|push-only|
 # prs-user-merge|prs-auto-merge>", decided with the user at Step 1 — a live
 # mission opened PRs and merged despite a user instruction not to, so no
 # teammate spawns without knowing the rule); or a workdir that is a PRIMARY
@@ -78,9 +78,9 @@ if [ -n "$placeholders" ] && [ "$force" = 0 ]; then
   echo "fix the brief, or pass --force to spawn anyway" >&2
   exit 2
 fi
-if ! grep -qE '^Integration policy: (no-github|push-only|prs-user-merge|prs-auto-merge)[[:space:]]*$' "$brief" \
+if ! grep -qE '^Integration policy: (no-github|local-merge|push-only|prs-user-merge|prs-auto-merge)[[:space:]]*$' "$brief" \
    && [ "$force" = 0 ]; then
-  echo "brief declares no integration policy - add 'Integration policy: <no-github|push-only|prs-user-merge|prs-auto-merge>' (decided with the user at Step 1; a mission once opened PRs and merged against a user instruction); pass --force to spawn anyway" >&2
+  echo "brief declares no integration policy - add 'Integration policy: <no-github|local-merge|push-only|prs-user-merge|prs-auto-merge>' (decided with the user at Step 1; a mission once opened PRs and merged against a user instruction); pass --force to spawn anyway" >&2
   exit 2
 fi
 if git -C "$workdir" rev-parse --git-dir >/dev/null 2>&1; then
