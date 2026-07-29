@@ -10,7 +10,7 @@ Model/effort default: the strongest available model at high effort (`--model cla
 scripts/spawn-teammate.sh <name> <worktree-dir> <brief-file>
 ```
 
-which creates the teammate's multiplexer window — a tmux window or a herdr tab, auto-detected from `HERDR_PANE_ID`/`TMUX` — launches claude with the brief as the initial prompt, and verifies the session started processing (in herdr via `herdr agent wait --status working`, falling back to visible claude chrome for turns that finish before the poll). One teammate per window/tab; window/agent name = teammate name. Placement is pinned to the coordinator's own tmux session / herdr workspace (derived from `TMUX_PANE` / `HERDR_PANE_ID`), never the currently-active one — herdr tabs cannot be moved between workspaces after the fact.
+which creates the teammate's multiplexer window — a tmux window or a herdr tab, auto-detected from `HERDR_PANE_ID`/`TMUX` — launches claude with the brief as the initial prompt, and verifies the session started processing (in herdr via `herdr agent wait --status working`, falling back to visible claude chrome for turns that finish before the poll). One teammate per window/tab; window/agent name = teammate name. Placement is pinned to the coordinator's own tmux session / herdr workspace (derived from `TMUX_PANE` / `HERDR_PANE_ID`), never the currently-active one — herdr tabs cannot be moved between workspaces after the fact. The script also preflights before spawning: it refuses a brief still containing unexpanded template placeholders and a workdir that is a primary git checkout rather than a linked worktree (`--force` overrides both).
 
 ## Messaging teammates (the delivery problem)
 
@@ -18,7 +18,7 @@ tmux `send-keys "<long text>" Enter` frequently leaves the text as an unsubmitte
 
 - **Every** coordinator->teammate message goes through `scripts/msg-teammate.sh <name> "<message>"`, which sends the text, sends Enter as a separate delayed keystroke, then verifies that a turn actually started, retrying Enter if not. It exits nonzero if delivery cannot be confirmed — treat that as undelivered. In herdr it uses `herdr agent send` + `herdr pane send-keys <id> enter` and verifies with `herdr agent wait --status working`; in tmux it verifies via capture-pane (spinner visible or message rendered in transcript). Same interface either way.
 - Long content (briefs, designs, data) goes in files; the message just points at the file.
-- Additionally, each teammate polls `inbox-<name>.md` between steps (this is in the brief template). For anything mission-critical, write it to the inbox file *and* send the tmux message — the inbox survives delivery failures.
+- Additionally, each teammate polls `inbox-<name>.md` between steps (this is in the brief template). For anything mission-critical, pass `--inbox <scratch>` to msg-teammate.sh — it appends the message to the teammate's inbox file *before* attempting delivery, so the directive survives even an unconfirmed send.
 
 ## Monitoring
 
@@ -31,7 +31,7 @@ tmux `send-keys "<long text>" Enter` frequently leaves the text as an unsubmitte
 
 Two teammates benchmarking one machine invalidated each other's numbers twice before the lock existed. The regime (also in every brief):
 
-- `heavy.lock` mkdir-mutex with owner file and trap-release; all heavy runs take it.
+- All heavy runs go through `scripts/with-heavy-lock.sh <scratch> "<who>: <purpose>" -- <cmd...>` — the `heavy.lock` mkdir-mutex with owner file, trap-release, and stale-holder stealing (a dead holder's lock is reclaimed via atomic rename instead of stalling the mission). The wrapped command's exit code and stdout pass through.
 - Process-tree-scoped samplers with per-sample contamination flags — belt and braces: the lock prevents contamination, the flag detects what the lock missed.
 - Interleaved A/B arms inside one lock hold; counts distinguished from timings (counts survive contention, timings don't).
 - The tell that attribution is broken: a measurement that violates a structural bound (e.g. more concurrent processes than a semaphore allows). Trust structural bounds over samplers.
