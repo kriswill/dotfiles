@@ -63,10 +63,11 @@ new entries and acknowledge them in your status file.
   say so immediately and loudly — self-correction is rewarded, not punished.
 
 ## Measurement regime (non-negotiable, from minute one)
-- Heavy runs (long benchmarks, big builds, memory measurement) take the exclusive lock:
-    until mkdir <scratch>/heavy.lock 2>/dev/null; do sleep 10; done
-    echo "<name>: <purpose> (pid $$)" > <scratch>/heavy.lock/owner
-    trap 'rm -rf <scratch>/heavy.lock' EXIT
+- Heavy runs (long benchmarks, big builds, memory measurement) run under the exclusive
+  lock, ALWAYS through the wrapper — never hand-roll the mkdir recipe:
+    <skill-dir>/scripts/with-heavy-lock.sh <scratch> "<name>: <purpose>" -- <cmd...>
+  (owner file, trap-release, stale-holder stealing; your command's exit code and
+  stdout pass through untouched, lock chatter goes to stderr.)
 - Samplers must be process-tree-scoped (attribute to YOUR process tree, never
   machine-wide) and record a per-sample contamination flag (was a foreign run alive).
 - Name metrics precisely; never compare across methodologies (peak summed tree RSS and

@@ -67,7 +67,7 @@ You coordinate; teammates implement. Your jobs during execution:
 
 ## Step 6 — Final validation and report
 
-When the work is merged, the validator runs the mission's closing measurement **on shipped main** against the real target from the charter — not on the branches. Then stand the team down (confirm: locks free, nothing unpushed, worktrees clean; collect each teammate's short retro — what they'd do differently). Generate the session report from the journal (if a `session-report` skill is available, use it; otherwise write an honest HTML/MD summary to the user's Documents), including false starts and corrections — the record's value is its honesty.
+When the work is merged, the validator runs the mission's closing measurement **on shipped main** against the real target from the charter — not on the branches. Then stand the team down: `scripts/stand-down.sh <scratch> <worktree>...` verifies locks free, worktrees clean, nothing unpushed (exit 0 = all clear); collect each teammate's short retro — what they'd do differently. Generate the session report from the journal (if a `session-report` skill is available, use it; otherwise write an honest HTML/MD summary to the user's Documents), including false starts and corrections — the record's value is its honesty.
 
 ## Step 7 — Retrospective: improve this skill
 
@@ -91,3 +91,5 @@ This is part of the mission, not optional polish. After the report:
 | `scripts/ci-watch.sh` | Steps 4-5, one per open PR |
 | `scripts/merge-pr.sh` | Step 5, every merge — never raw `gh pr merge` |
 | `scripts/log-status.sh` | Referenced in every brief; teammates call it for each status line |
+| `scripts/with-heavy-lock.sh` | Referenced in every brief; wraps every heavy run |
+| `scripts/stand-down.sh` | Step 6, before dismissing the team |
