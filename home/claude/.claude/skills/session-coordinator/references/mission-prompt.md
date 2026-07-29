@@ -1,6 +1,6 @@
 # Teammate brief template
 
-Instantiate this per teammate. Replace `<...>` placeholders; delete sections that don't apply to the role. The brief is a *contract*: everything the teammate needs to work autonomously for hours, and nothing you haven't verified. Facts you only believe (didn't check against the code) must be labeled as beliefs.
+Instantiate this per teammate. Replace `<...>` placeholders; delete sections that don't apply to the role. The brief is a *contract*: everything the teammate needs to work autonomously for hours, and nothing you haven't verified. Facts you only believe (didn't check against the code) must be labeled as beliefs, and unverified technical claims or recipes as "HYPOTHESIS — verify before building on it", never as directives — the word invites compliance over verification, and a wrong "directive" costs a teammate its first work block. State questions and required investigations, never expected conclusions: a brief that names the expected answer invites the cheap path, and a failing test may BE the finding. Every factual claim about code names the branch it is true of, and so must every later coordinator directive (a gate merged into a feature branch is not on main).
 
 Write the brief to a file (e.g. `$SCRATCH/brief-<name>.md`) and pass it via the spawn script — never paste long briefs through send-keys. Replace `<skill-dir>` with this skill's absolute directory so teammates can call its scripts.
 
@@ -12,6 +12,9 @@ Work autonomously; do not ask the coordinator questions unless truly blocked.
 
 ## Mission charter
 <one-paragraph charter from Step 1: deliverable, target, constraints, done-condition>
+Shared dependencies: <the assumptions/interfaces this stream shares with sibling
+teammates — treat a cross-stream contradiction as a first-class finding to raise
+loudly, never to smooth over>
 
 ## Integration policy (binding)
 Integration policy: <no-github|local-merge|push-only|prs-user-merge|prs-auto-merge>
@@ -36,7 +39,14 @@ your kit FIRST, while the implementer designs: fixtures (including a mutated pai
 cache/replay feature — one that gains an element after state is recorded), an operation
 census (count the expensive operations, not just time them), output-diff tooling, and a
 rehearsed NEGATIVE CONTROL: the same binary/input on both arms must FAIL your improvement
-check. A validation suite that cannot fail proves nothing.>
+check. A validation suite that cannot fail proves nothing. Every rig also ships a
+rehearsed POSITIVE control — a rig that cannot pass proves nothing either, and a broken
+rig reports ERROR, never FAIL. Preflight-ASSERT the environment invariants your specs
+assume (service config, claim mappers, seeded state), each with a named remedy —
+hand-applied config drift masquerades as deep test failures two layers away.>
+<DATA-FORMAT MISSIONS: have two teammates derive the load-bearing format/field table
+independently before implementation — their agreement is what makes "the reference is
+wrong" trustworthy.>
 
 ## Your working directory
 <worktree path> — a git worktree on branch <branch>. Never touch the main checkout or
@@ -59,11 +69,15 @@ new entries and acknowledge them in your status file.
 
 ## Engineering discipline
 - Investigation before design; post a written design + hazard list to your status file
-  and wait for coordinator sign-off before writing feature code.
+  and wait for coordinator sign-off before writing feature code. The design post ECHOES
+  the full interface surface you depend on from peers and the coordinator (keymaps,
+  public functions, derives) — echoes catch contract bugs before any code exists.
 - Performance designs must state projected savings AFTER dividing by pool width and
   measured efficiency — designs without this arithmetic will be sent back.
 - Red->green TDD: failing test first, one commit per coherent step, imperative messages
   matching the repo's git log style.
+- A guard test merges only with a demonstrated red run under the EXACT mutation it
+  guards — a guard that has never failed guards nothing.
 - Prefer hermetic shims and structural test hooks (counters, epoch/generation tags)
   over timing-margin tests — timing tests lie on loaded machines.
 - Any change to output-producing code is gated on OUTPUT EQUIVALENCE with the old code
@@ -71,8 +85,17 @@ new entries and acknowledge them in your status file.
   analog), verified on the real target, not just fixtures.
 - Fixture shapes must be derived from the artifact grammar: ask "which legal shape does
   my fixture NOT contain?" — that shape is where your bug is hiding.
+- Anything that tails/streams/aggregates gets a synthetic large-input smoke (fixture xN)
+  at milestone 1, with producer/consumer hazards checked on BOTH sides; stubs standing
+  in for a peer's module mimic the real construction contract (start EMPTY, never
+  pre-seeded with demo data).
 - Root-cause claims must cite the artifact they're derived from. If someone diagnoses
   your code, you get right of reply — check the artifact before accepting the theory.
+- Claims of the form ALL/ONLY/LAST ("all call sites", "the only writer", completeness
+  audits) publish only with the enumeration command and its pasted output.
+- State what your probe changes about the system it measures, and prove the
+  artifact-under-test actually loaded/ran (assert its path/pid inside the probe) —
+  a probe must survive, and must not replace, what it observes.
 - Keep condemned designs as separate commits under their fix; post corrections on merged
   PRs rather than editing history. If you discover one of your published claims is wrong,
   say so immediately and loudly — self-correction is rewarded, not punished.
