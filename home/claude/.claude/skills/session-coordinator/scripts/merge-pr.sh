@@ -8,6 +8,8 @@
 #
 #   (no --policy)    REFUSE - no policy declared, no merge, ever
 #   no-github        REFUSE - the charter forbids touching GitHub at all
+#   local-merge      REFUSE - integration is local git merges by the
+#                    coordinator; GitHub PRs/merges are out of scope
 #   push-only        REFUSE - branches may be pushed, but PRs and merges are
 #                    the user's, not the mission's
 #   prs-user-merge   REFUSE unless --user-approved, which asserts the user
@@ -47,12 +49,15 @@ MOCK
   echo "prs-auto-merge"  > "$tmp/pol-auto"
   echo "prs-user-merge"  > "$tmp/pol-user"
   echo "push-only"       > "$tmp/pol-push"
+  echo "local-merge"     > "$tmp/pol-local"
 
   # policy gate: forbidden by default, and at every level below auto-merge
   PATH="$tmp:$PATH" "$self" 7 abc123d >/dev/null 2>&1; rc=$?
   [ "$rc" = 4 ] || { echo "self-test: FAIL no-policy rc=$rc (want 4: refuse)"; fail=1; }
   PATH="$tmp:$PATH" "$self" 7 abc123d --policy "$tmp/pol-push" >/dev/null 2>&1; rc=$?
   [ "$rc" = 4 ] || { echo "self-test: FAIL push-only rc=$rc (want 4: refuse)"; fail=1; }
+  PATH="$tmp:$PATH" "$self" 7 abc123d --policy "$tmp/pol-local" >/dev/null 2>&1; rc=$?
+  [ "$rc" = 4 ] || { echo "self-test: FAIL local-merge rc=$rc (want 4: refuse)"; fail=1; }
   PATH="$tmp:$PATH" "$self" 7 abc123d --policy "$tmp/pol-user" >/dev/null 2>&1; rc=$?
   [ "$rc" = 4 ] || { echo "self-test: FAIL user-merge-unapproved rc=$rc (want 4: refuse)"; fail=1; }
   PATH="$tmp:$PATH" "$self" 7 abc123d --policy "$tmp/pol-user" --user-approved >/dev/null 2>&1; rc=$?
@@ -99,11 +104,11 @@ case "$policy" in
       echo "*** REFUSED *** policy prs-user-merge: each merge needs the user's explicit per-PR approval (their adversarial review may still be pending) - ask the user, then re-run with --user-approved" >&2
       exit 4
     fi ;;
-  no-github|push-only)
-    echo "*** REFUSED *** policy '$policy' forbids PRs/merges - if a PR exists it already violates the charter; escalate to the user, do not merge" >&2
+  no-github|local-merge|push-only)
+    echo "*** REFUSED *** policy '$policy' forbids GitHub PRs/merges - if a PR exists it already violates the charter; escalate to the user, do not merge" >&2
     exit 4 ;;
   *)
-    echo "*** REFUSED *** missing or invalid policy in $policy_file ('${policy:-empty}') - expected no-github|push-only|prs-user-merge|prs-auto-merge" >&2
+    echo "*** REFUSED *** missing or invalid policy in $policy_file ('${policy:-empty}') - expected no-github|local-merge|push-only|prs-user-merge|prs-auto-merge" >&2
     exit 4 ;;
 esac
 
