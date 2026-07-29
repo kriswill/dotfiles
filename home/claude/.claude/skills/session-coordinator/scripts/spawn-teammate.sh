@@ -45,7 +45,12 @@ for a in "${extra_args[@]:-}"; do [ "$a" = "--model" ] && model_args=(); done
 
 if [ "$mux" = herdr ]; then
   command -v herdr >/dev/null || { echo "inside herdr but herdr CLI not on PATH"; exit 2; }
-  tab_id="$(herdr tab create --label "$name" --cwd "$workdir" --no-focus \
+  # Pin the tab to the COORDINATOR's workspace (HERDR_PANE_ID = "<ws>:p<n>").
+  # Without --workspace, tab create lands in the currently-FOCUSED workspace —
+  # which may be a different one — and herdr has no tab-move to recover
+  # (2026-07-28 mission: two teammates stranded in a sibling workspace).
+  ws="${HERDR_PANE_ID%%:*}"
+  tab_id="$(herdr tab create --workspace "$ws" --label "$name" --cwd "$workdir" --no-focus \
     | grep -o '"tab_id":"[^"]*"' | head -1 | cut -d'"' -f4)"
   [ -n "$tab_id" ] || { echo "herdr tab create failed"; exit 2; }
   # herdr agent start spawns from the SERVER's env, not the caller's: a
@@ -69,13 +74,17 @@ if [ "$mux" = herdr ]; then
   exit 1
 fi
 
-tmux new-window -d -n "$name" -c "$workdir" || exit 2
-tmux send-keys -t "$name" "claude --dangerously-skip-permissions ${model_args[*]} ${extra_args[*]:-} \"\$(cat $(printf '%q' "$brief"))\"" Enter
+# Pin the window to the COORDINATOR's session (resolved from this pane), never
+# whatever session happens to be active in another attached client. Address the
+# window by id afterwards so a same-name window elsewhere can't be hit.
+sess="$(tmux display-message -p ${TMUX_PANE:+-t "$TMUX_PANE"} '#{session_id}')"
+win_id="$(tmux new-window -dP -F '#{window_id}' -t "${sess}:" -n "$name" -c "$workdir")" || exit 2
+tmux send-keys -t "$win_id" "claude --dangerously-skip-permissions ${model_args[*]} ${extra_args[*]:-} \"\$(cat $(printf '%q' "$brief"))\"" Enter
 
 # Verify the session came up and began processing the brief.
 for i in $(seq 1 12); do
   sleep 5
-  p="$(tmux capture-pane -t "$name" -p 2>/dev/null)"
+  p="$(tmux capture-pane -t "$win_id" -p 2>/dev/null)"
   if printf '%s' "$p" | grep -qE '\([0-9]+m? ?[0-9]*s? ?·|bypass permissions'; then
     echo "spawned $name (window '$name', cwd $workdir)"
     exit 0

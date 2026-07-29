@@ -48,9 +48,9 @@ Each teammate gets its own git worktree (`git worktree add ../wt/<name> -b <bran
 
 Spawn with `scripts/spawn-teammate.sh`; send all later messages with `scripts/msg-teammate.sh` (it handles the paste/Enter delivery failure that plagued the original session and verifies a turn actually started — never raw `send-keys` for anything that matters). Then arm:
 
-1. **Status stream**: teammates append one-line updates to `status-<name>.md` after every step; you monitor with a persistent `tail -F` Monitor.
-2. **Heartbeat**: a periodic Monitor reporting working vs idle per teammate. In herdr, `herdr agent list` reports each agent's status (`working`/`idle`) natively — use that. In tmux, read each pane's *spinner line* (never the input-box line). An idle session with text in its input box needs that text submitted — check panes on every suspicious idle.
-3. **CI watchers**: per-PR check streams (poll `gh pr checks`, emit each settled check once, end when all settle). Watch CI as events, not by polling in your main loop.
+1. **Status stream**: teammates append one-line updates to `status-<name>.md` after every step via `scripts/log-status.sh` (stamps time + HEAD SHA deterministically — the brief template mandates it); you monitor with a persistent `tail -F` Monitor.
+2. **Heartbeat**: `scripts/heartbeat.sh <names...>` as a persistent Monitor — debounced per-teammate state changes (herdr agent status / tmux spinner line) with auto-submit of stranded input-box prompts. Trust its debounce; investigate any idle that survives it.
+3. **CI watchers**: `scripts/ci-watch.sh <pr>` per open PR — emits each settled check once, voids the verdict and re-arms if the head SHA moves, exits when all settle. Watch CI as events, not by polling in your main loop.
 
 Status updates to the user at every milestone and for anything taking longer than ~5 minutes. Lead with what happened, not what you're about to do.
 
@@ -62,7 +62,7 @@ You coordinate; teammates implement. Your jobs during execution:
 - **Adjudicate with artifacts.** When teammates disagree on a root cause, the claim that cites the artifact wins; the author of the code gets right of reply before anyone acts on a diagnosis of it. Be willing to withdraw your own directives — the coordinator being wrong quickly is far cheaper than being wrong stubbornly.
 - **Hold the equivalence gate.** Any change to output-producing code merges only with proof the output is equivalent (byte-identical modulo listed volatile fields, or the project's nearest analog), verified by the validator on the real target.
 - **Enforce measurement hygiene** (details in `references/protocols.md`): exclusive lock for heavy runs, tree-scoped attribution, named metrics, interleaved arms, counts vs timings distinguished. Every published number states its methodology.
-- **Merge discipline**: teammates open PRs with honest trade-off tables (every context measured — wins AND costs — in the first paragraph); only you merge; verify head SHA then `gh pr merge --auto --merge` so a racing push can't slip through; branch protection is the backstop, not the plan.
+- **Merge discipline**: teammates open PRs with honest trade-off tables (every context measured — wins AND costs — in the first paragraph); only you merge, via `scripts/merge-pr.sh <n> <watched-sha>` — it refuses when the head has moved past the checks you watched, then arms auto-merge so a racing push can't slip through; branch protection is the backstop, not the plan.
 - **Preserve history**: condemned designs stay as separate commits under their fix; corrections are posted on merged PRs, not edited away.
 
 ## Step 6 — Final validation and report
@@ -87,3 +87,7 @@ This is part of the mission, not optional polish. After the report:
 | `references/retrospective.md` | Step 7 |
 | `scripts/spawn-teammate.sh` | Step 4 |
 | `scripts/msg-teammate.sh` | Every message to a teammate, always |
+| `scripts/heartbeat.sh` | Step 4, armed once as the heartbeat Monitor |
+| `scripts/ci-watch.sh` | Steps 4-5, one per open PR |
+| `scripts/merge-pr.sh` | Step 5, every merge — never raw `gh pr merge` |
+| `scripts/log-status.sh` | Referenced in every brief; teammates call it for each status line |

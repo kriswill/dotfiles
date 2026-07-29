@@ -2,7 +2,7 @@
 
 Instantiate this per teammate. Replace `<...>` placeholders; delete sections that don't apply to the role. The brief is a *contract*: everything the teammate needs to work autonomously for hours, and nothing you haven't verified. Facts you only believe (didn't check against the code) must be labeled as beliefs.
 
-Write the brief to a file (e.g. `$SCRATCH/brief-<name>.md`) and pass it via the spawn script — never paste long briefs through send-keys.
+Write the brief to a file (e.g. `$SCRATCH/brief-<name>.md`) and pass it via the spawn script — never paste long briefs through send-keys. Replace `<skill-dir>` with this skill's absolute directory so teammates can call its scripts.
 
 ---
 
@@ -30,9 +30,15 @@ sibling worktrees. All build/test/lint commands run through the project's dev sh
 
 ## Status protocol (mandatory)
 After every meaningful step (test written, commit, measurement, PR opened, blocked),
-append ONE line to <scratch>/status-<name>.md:
-  [HH:MM] <name>: <what happened / what's next>
-If blocked, say BLOCKED and why. The coordinator monitors this file continuously.
+append ONE line to <scratch>/status-<name>.md by running (from your worktree):
+  <skill-dir>/scripts/log-status.sh <scratch>/status-<name>.md "<what happened / what's next>"
+It stamps wall-clock time and your HEAD SHA itself. Never hand-write timestamps or
+identifiers (SHAs, IDs) anywhere — status lines, PR bodies — recalled ones drift and
+cite objects that don't exist; paste them from command output.
+If blocked, log BLOCKED and why. If you discover a published claim of yours is wrong,
+retract it AS LOUDLY as you claimed it:
+  <skill-dir>/scripts/log-status.sh --retract <scratch>/status-<name>.md "<what is unsound + what survives>"
+The coordinator monitors this file continuously.
 Also poll <scratch>/inbox-<name>.md between steps for coordinator directives; act on
 new entries and acknowledge them in your status file.
 

@@ -10,7 +10,7 @@ Model/effort default: the strongest available model at high effort (`--model cla
 scripts/spawn-teammate.sh <name> <worktree-dir> <brief-file>
 ```
 
-which creates the teammate's multiplexer window — a tmux window or a herdr tab, auto-detected from `HERDR_PANE_ID`/`TMUX` — launches claude with the brief as the initial prompt, and verifies the session started processing (in herdr via `herdr agent wait --status working`, falling back to visible claude chrome for turns that finish before the poll). One teammate per window/tab; window/agent name = teammate name.
+which creates the teammate's multiplexer window — a tmux window or a herdr tab, auto-detected from `HERDR_PANE_ID`/`TMUX` — launches claude with the brief as the initial prompt, and verifies the session started processing (in herdr via `herdr agent wait --status working`, falling back to visible claude chrome for turns that finish before the poll). One teammate per window/tab; window/agent name = teammate name. Placement is pinned to the coordinator's own tmux session / herdr workspace (derived from `TMUX_PANE` / `HERDR_PANE_ID`), never the currently-active one — herdr tabs cannot be moved between workspaces after the fact.
 
 ## Messaging teammates (the delivery problem)
 
@@ -23,9 +23,9 @@ tmux `send-keys "<long text>" Enter` frequently leaves the text as an unsubmitte
 ## Monitoring
 
 - **Status stream** (persistent Monitor): `tail -F -n 0 <scratch>/status-*.md`, filtered of noise lines. This is your primary signal.
-- **Heartbeat** (persistent Monitor, ~5 min period): in herdr, `herdr agent list` reports each agent's `agent_status` (`working`/`idle`) directly — no pane scraping; `herdr agent read <name> --source visible` replaces capture-pane for triage. In tmux, capture each pane and classify by the *spinner line* — a line matching an elapsed-time pattern like `([0-9]+m? ?[0-9]*s ·` means working; no spinner means the turn ended. Never classify by the last line (it's the input box — always looks idle).
-- **Idle triage**: an idle session is one of (a) legitimately waiting on its own background shells — check for "N shells" in the pane footer and the lock owner file; (b) stalled with a queued self-prompt in its input box — submit it (msg-teammate.sh with an empty message does a verified Enter); (c) genuinely stalled — send a status-check directive. A teammate that went idle right after receiving an assignment is case (c) until proven otherwise; the original mission caught a real stall exactly this way.
-- **CI watchers** (one Monitor per open PR): poll `gh pr checks <n> --json name,bucket` every 30s, emit each check's result once as it settles, exit when all settle. On failure, pull the specific job log (`gh api .../jobs/<id>/logs`) and grep for `##[error]` — the real error is usually at the end, and naive greps match test names containing "fail".
+- **Heartbeat** (persistent Monitor): `scripts/heartbeat.sh <name>...` — polls every 2 min and emits one line per confirmed state change. It encodes the hard-won rules so you don't re-derive them: every non-working state needs 2+ consecutive reads before alerting (single-read idle/done alerts were turn-boundary races, every time); herdr status comes from `herdr agent get <name>` (`agent_status`, any non-working value reported verbatim — expect `done` besides `idle`); tmux panes classify by the *spinner line*, never the last line (that's the input box — always looks idle); a confirmed-idle pane with text in its input box (a stranded self-prompt) is auto-submitted via msg-teammate.sh's verified bare-Enter. `--no-submit` to observe only; `--once` for an undebounced triage read.
+- **Idle triage**: an idle session is one of (a) legitimately waiting on its own background shells — check for "N shells" in the pane footer and the lock owner file; (b) stalled with a queued self-prompt in its input box — heartbeat.sh detects and auto-submits this; the manual tool is msg-teammate.sh with an empty message; (c) genuinely stalled — send a status-check directive. A teammate that went idle right after receiving an assignment is case (c) until proven otherwise; the original mission caught a real stall exactly this way.
+- **CI watchers** (one per open PR): `scripts/ci-watch.sh <pr>` — records the armed head SHA, polls `gh pr checks --json name,bucket` every 30s, emits each check once as it settles, declares all settled verdicts VOID and re-arms if the head SHA changes mid-watch, and exits 0 all-green / 1 otherwise, printing the exact `merge-pr.sh` invocation on green. On failure, pull the specific job log (`gh api .../jobs/<id>/logs`) and grep for `##[error]` — the real error is usually at the end, and naive greps match test names containing "fail".
 
 ## Shared-machine measurement (the contamination problem)
 
@@ -38,8 +38,8 @@ Two teammates benchmarking one machine invalidated each other's numbers twice be
 
 ## PR / merge pipeline
 
-- Teammates open PRs; only the coordinator merges. Before merging: verify the head SHA is the one whose checks you watched (`gh pr view --json headRefOid,mergeStateStatus`), then `gh pr merge --merge --auto` — auto-merge closes the race where a teammate pushes between your check and your merge (this race happened; branch protection caught it).
-- A fresh push resets checks: re-arm the CI watcher, don't reuse a settled verdict from a superseded SHA.
+- Teammates open PRs; only the coordinator merges, and only through `scripts/merge-pr.sh <n> <watched-sha>` — it refuses (exit 3) if the PR head no longer matches the SHA whose checks you watched, then arms `gh pr merge --merge --auto`. Auto-merge closes the race where a teammate pushes between your check and your merge (this race happened; branch protection caught it, but the backstop is not the plan).
+- A fresh push resets checks: ci-watch.sh voids its verdicts and re-arms itself on a SHA change, but a verdict carried away from a stopped watcher never transfers to a new SHA.
 - Merge order when branches overlap: additive/instrumentation PRs first; the restructuring PR rebases on top. Have the rebasing teammate verify the rebase changed no measured code (`git diff <old> <new> -- src/ ...` empty) so measurements carry over without re-runs.
 - Regressions do not merge, however much design work they carry. Parity doesn't either, if it adds complexity — the burden is on the change to beat the status quo on the path that matters, stated honestly (a change can lose on one path and win on the one users actually feel; the PR table must show both).
 
