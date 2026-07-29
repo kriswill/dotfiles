@@ -36,7 +36,8 @@ Spend 10-15 minutes solo before designing the team:
 2. **CI gates**: read the workflow files now. Coverage bars, ratchets, formatters, linters, required checks — write them into every brief so first CI runs pass. Predictable CI failures are pure waste.
 3. **Invariants**: find the tests/properties that protect what must not change (determinism suites, golden files, schema tests). If the mission touches data-producing code and no output-equivalence check exists, creating one becomes an early work item — it is what makes aggressive change safe.
 4. **Baseline**: measure the current state yourself (one timing run, one build, whatever fits). You cannot direct priorities without a number, and `time` + a CPU% is often enough to set the whole agenda.
-5. **Journal**: create `JOURNAL.md` in your scratchpad now. Append at every event worth remembering: baselines, assignments, commits, CI verdicts, corrections, rulings, blockers, merges. It becomes the session report and feeds the retrospective — nothing gets retconned, corrections are appended not edited.
+5. **Real input**: ask "can the real artifact/input exist NOW?" — if the mission consumes real data, make enabling it the first user request of the mission, before implementers design from documentation. Ground truth has refuted a canonical-looking reference, corrected a spec, and fixed fixtures within minutes of existing.
+6. **Journal**: create `JOURNAL.md` in your scratchpad now. Append at every event worth remembering: baselines, assignments, commits, CI verdicts, corrections, rulings, blockers, merges. It becomes the session report and feeds the retrospective — nothing gets retconned, corrections are appended not edited.
 
 ## Step 3 — Design the team
 
@@ -44,6 +45,10 @@ Size the team to the mission — one teammate for a focused task, several for a 
 
 - **Implementer(s)** — build the thing, red->green TDD, one commit per step.
 - **Independent validator** — owns fixtures, measurement, equivalence checking, and A/B verdicts. The implementer never grades their own work. The validator builds its kit (fixtures, censuses, diff tooling, a rehearsed **negative control** — same binary/input on both arms must FAIL the improvement check) *while* the implementer designs, so validation never blocks on tooling.
+
+A third role earns its cost on security-adjacent or high-stakes missions:
+
+- **Adversarial reviewer** (optional) — review-only, no git-write authority; every verdict mutation-backed; holds a MERGE-OK gate per PR and right-of-refutation on the final report. In its first outing every vacuous guard fell to this role — none to CI or the code's authors.
 
 Each teammate gets its own git worktree (`git worktree add ../wt/<name> -b <branch>`) and multiplexer window (tmux window / herdr tab). Verify every factual claim in a brief against the code before sending — a wrong "the crate is sync" costs a teammate its first half hour. Read `references/mission-prompt.md` and instantiate it per teammate; read `references/protocols.md` for the spawn command, communication protocol, and measurement regime that go into every brief.
 
@@ -70,7 +75,7 @@ You coordinate; teammates implement. Your jobs during execution:
 
 ## Step 6 — Final validation and report
 
-When the work is merged, the validator runs the mission's closing measurement **on shipped main** against the real target from the charter — not on the branches. Then stand the team down: `scripts/stand-down.sh <scratch> <worktree>...` verifies locks free, worktrees clean, nothing unpushed (exit 0 = all clear); collect each teammate's short retro — what they'd do differently. Generate the session report from the journal (if a `session-report` skill is available, use it; otherwise write an honest HTML/MD summary to the user's Documents), including false starts and corrections — the record's value is its honesty.
+When the work is merged, the validator runs the mission's closing measurement **on shipped main** against the real target from the charter — not on the branches. Then stand the team down: `scripts/stand-down.sh <scratch> <worktree>...` verifies locks free, worktrees clean, nothing unpushed (exit 0 = all clear); collect each teammate's short retro — what they'd do differently. Generate the session report from the journal (if a `session-report` skill is available, use it; otherwise write an honest HTML/MD summary to the user's Documents), including false starts and corrections — the record's value is its honesty. The report states its verified-vs-synthetic split (which behaviors real data exercised, which only fixtures did), and a reviewer — the adversarial reviewer if one exists, else the validator — gets right-of-refutation on the report itself before it ships: the coordinator is not exempt from overclaiming.
 
 ## Step 7 — Retrospective: improve this skill
 
