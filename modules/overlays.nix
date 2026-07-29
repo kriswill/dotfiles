@@ -10,6 +10,7 @@
   flake.overlays = {
     kitten = import ../overlays/kitten.nix;
     ld64-lld = import ../overlays/ld64-lld.nix; # TEMPORARY, see file header
+    lact-libdisplay-info = import ../overlays/lact-libdisplay-info.nix; # TEMPORARY, see file header
 
     direnv = import ../overlays/direnv.nix;
     dots-adopt = import ../overlays/dots-adopt.nix;

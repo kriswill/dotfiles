@@ -396,3 +396,11 @@
   wrapper in `modules/dev.nix` that resolves the live checkout via git);
   [dev](../modules/dev.md) and the [OKF Profile](../okf-profile.md) tooling section
   updated to match.
+
+- **Creation** — `overlays/lact-libdisplay-info.nix` (TEMPORARY): nixpkgs'
+  libdisplay-info 0.4.0 bump (`3927e90c`) breaks lact 0.9.1, whose vendored
+  `libdisplay-info-sys` demands `< 0.4.0`; upstream's `libdisplay-info_0_3`
+  pin (`3ee083c2`) has not reached nixos-unstable and neither has the attr it
+  needs, so the overlay rebuilds that 0.3.0 locally (version + hash lifted
+  from upstream's `0.3.nix`) and feeds it to lact via `override`. See
+  [Lact Libdisplay Info](lact-libdisplay-info.md).
