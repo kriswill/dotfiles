@@ -50,7 +50,9 @@ post-mission retrospective appends to. Because deployment is stow links into
 the live repo, those retrospectives write *into this repository* — skill
 evolution shows up as ordinary `git diff`/history under
 `home/claude/.claude/skills/session-coordinator/`, and syncs to the other
-machines on pull like any dotfile.
+machines on pull like any dotfile. Mechanical lessons graduate from that
+file into self-tested scripts — see
+[lessons-to-scripts](claude-skill-lessons-to-scripts.md).
 
 ## Consequences
 
