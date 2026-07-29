@@ -19,6 +19,31 @@ The mission this skill was distilled from; most of its lessons ARE the skill (br
 - LESSON: Fresh flakes' nix eval caches confound first-ever timings by ~5x; "cold" must be defined (cold data dir vs cold machine) beside every number.
   Action: encoded in brief measurement regime.
 
+## 2026-07-27 — wowdps-team-build (kriswill/wowdps, 3 teammates, shipped TUI meter; 238 tests; 0 unparsed across 493k real lines; 3 self-caught wrong claims)
+
+New-project greenfield mission (no CI, local merges only, no PRs) with a live external data source (the user's active WoW raid) as the real target. Herdr multiplexer path exercised end-to-end for the first time: spawn/msg/agent-list all worked, zero delivery failures, zero queued-prompt rescues.
+
+- LESSON: Get the real artifact flowing on day zero, before implementers design from documentation. Ground truth refuted the canonical-looking wiki (would have shifted every value 2 columns), corrected the better spec once, and corrected the validator's own fixture 4 times; six binding parser corrections came from real lines that no doc mentioned.
+  Evidence: journal 21:38–23:10 — every offset dispute settled by the live log within minutes of it existing. Action: recorded; recon step should ask "can the real input exist NOW?" and make enabling it the first user request of the mission.
+- LESSON: Label unverified technical claims in briefs as "hypothesis — verify before building", never "directive". The coordinator's parse-from-end strategy was wrong; the word "directive" invites compliance over verification, and only the mandatory design-review step made the refutation free.
+  Evidence: core's retro #3; design post 20:50 refuted the directive with spec evidence before any code. Action: fold into mission-prompt.md preamble wording on next edit.
+- LESSON: Commission duplicate derivation deliberately when a data format/protocol is load-bearing: two teammates independently deriving the same field table (and agreeing) is what made "the reference is wrong" trustworthy. It happened by accident this mission.
+  Evidence: core and validator independently found spec.json and the 19-field block within the same hour. Action: recorded; consider a brief line for data-format missions.
+- LESSON: Require implementers to echo back the full interface surface they depend on (keymap, public fns, derives) in their design post. The echo caught a coordinator contract bug (one key bound twice) before code existed, and tui's derive-requirements note pre-solved integration.
+  Evidence: tui design 13:05; tui retro #4. Action: fold into mission-prompt.md design-post requirements.
+- LESSON: Stubs standing in for a peer's module must mimic the real construction contract (start EMPTY, not pre-seeded with demo data); and any producer/consumer hazard needs its check on BOTH sides — mitigating chunked reads producer-side did not stop an unbounded consumer drain from freezing the UI for 10s on a 154MB input.
+  Evidence: 19 predicted test failures at swap, all from stub pre-seeding; drain-starvation bug found only by the live-log run. Action: recorded; add "synthetic large-input smoke (fixture xN) at milestone 1" as a standing gate for anything that tails/streams.
+- LESSON: Pre-measure cross-teammate integrations on the owning branch before handing them over: core compiled tui's swap on its own branch and reported "0 compile errors, 19 test failures, root cause X", turning integration into one mechanical round.
+  Evidence: core status 21:17; tui completed the swap + adaptations in a single milestone. Action: recorded; generalize as "the teammate whose module arrives second pre-measures the join".
+- LESSON: Golden files are only trustworthy if regeneration is gated on a diff against the committed copy — the validator's checker silently lost ALL pet attribution (uninitialised awk var) and the only thing that caught it was diff-before-regenerate. Corollary: design expected values around the RULE (contract), not around what currently passes; the R7 gating flip then costs zero recomputation.
+  Evidence: validator retro #4 and #5. Action: recorded.
+- LESSON: In event-stream aggregation domains, hunt duplicate-event families FIRST (the same fact reported twice under different names): SWING_DAMAGE_LANDED and *_SUPPORT would each have silently inflated every number, and no test catches a double-count you don't know exists. Empirical dedup proof = summed totals per source identical across the twin streams.
+  Evidence: rulings R1/R3; validator's per-source equality check 21:38. Action: recorded.
+- LESSON: TUI smoke-testing needs a real terminal emulator: script(1) cannot host crossterm apps (no answer to the cursor-position query). A detached `tmux -L <sock>` server inside the agent's own pane + capture-pane assertions works headless, opens no window, and can assert exact rendered numbers.
+  Evidence: tui's discovery at milestone 1; validator's screen-level verification of hand-computed values. Action: recorded for any TUI mission.
+- LESSON: A "verified vs synthetic-only" scoreboard in the final verdict (which behaviors real data exercised, which only fixtures did) keeps a green suite honest — this mission ships with three shapes gated only synthetically (dispels, _SUPPORT, off-hand swing) and says so.
+  Evidence: validator stand-down 23:42. Action: recorded; final-report template should include the split.
+
 ## 2026-07-28 — multiplexer-findings-fix (kriswill/dotfiles, 2 teammates, 15/15 findings fixed, 17/17 e2e controls, GREEN merge)
 
 - LESSON: `herdr agent start` spawns from the SERVER's env, not the caller's — a coordinator with a custom CLAUDE_CONFIG_DIR strands teammates on an OAuth login screen.
