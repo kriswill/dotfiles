@@ -14,8 +14,13 @@
 # Preflight (refuses before spawning; override with --force among the extra
 # args): a brief still containing unexpanded template placeholders (<name>,
 # <scratch>, <skill-dir>, ... — a guaranteed-wrong brief fact costs the
-# teammate its first work block), or a workdir that is a PRIMARY git checkout
-# rather than a linked worktree (teammates never touch the main checkout).
+# teammate its first work block); a brief that does not declare the mission
+# INTEGRATION POLICY ("Integration policy: <no-github|push-only|
+# prs-user-merge|prs-auto-merge>", decided with the user at Step 1 — a live
+# mission opened PRs and merged despite a user instruction not to, so no
+# teammate spawns without knowing the rule); or a workdir that is a PRIMARY
+# git checkout rather than a linked worktree (teammates never touch the main
+# checkout).
 set -u
 
 detect_mux() {
@@ -36,9 +41,12 @@ if [ "${1:-}" = "--self-test" ]; then
   tmp="$(mktemp -d)"; trap 'rm -rf "$tmp"' EXIT
   mkdir "$tmp/wt" "$tmp/main-co"
   printf 'Deliver X. Status file: <scratch>/status-impl.md\n' > "$tmp/brief-bad.md"
-  printf 'Deliver X. All placeholders expanded.\n' > "$tmp/brief-ok.md"
+  printf 'Deliver X. No policy declared here.\n' > "$tmp/brief-nopol.md"
+  printf 'Deliver X. All placeholders expanded.\nIntegration policy: push-only\n' > "$tmp/brief-ok.md"
   "$0" t "$tmp/wt" "$tmp/brief-bad.md" >/dev/null 2>&1; rc=$?
   [ "$rc" = 2 ] || { echo "self-test: FAIL placeholder lint did not refuse (rc=$rc)"; exit 1; }
+  "$0" t "$tmp/wt" "$tmp/brief-nopol.md" >/dev/null 2>&1; rc=$?
+  [ "$rc" = 2 ] || { echo "self-test: FAIL integration-policy gate did not refuse (rc=$rc)"; exit 1; }
   git -C "$tmp/main-co" init -q
   "$0" t "$tmp/main-co" "$tmp/brief-ok.md" >/dev/null 2>&1; rc=$?
   [ "$rc" = 2 ] || { echo "self-test: FAIL primary-checkout guard did not refuse (rc=$rc)"; exit 1; }
@@ -68,6 +76,11 @@ if [ -n "$placeholders" ] && [ "$force" = 0 ]; then
   echo "brief contains unexpanded template placeholders - a guaranteed-wrong brief fact costs the teammate its first work block:" >&2
   printf '%s\n' "$placeholders" >&2
   echo "fix the brief, or pass --force to spawn anyway" >&2
+  exit 2
+fi
+if ! grep -qE '^Integration policy: (no-github|push-only|prs-user-merge|prs-auto-merge)[[:space:]]*$' "$brief" \
+   && [ "$force" = 0 ]; then
+  echo "brief declares no integration policy - add 'Integration policy: <no-github|push-only|prs-user-merge|prs-auto-merge>' (decided with the user at Step 1; a mission once opened PRs and merged against a user instruction); pass --force to spawn anyway" >&2
   exit 2
 fi
 if git -C "$workdir" rev-parse --git-dir >/dev/null 2>&1; then

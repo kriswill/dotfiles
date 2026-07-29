@@ -13,6 +13,19 @@ Work autonomously; do not ask the coordinator questions unless truly blocked.
 ## Mission charter
 <one-paragraph charter from Step 1: deliverable, target, constraints, done-condition>
 
+## Integration policy (binding)
+Integration policy: <no-github|push-only|prs-user-merge|prs-auto-merge>
+What the levels mean:
+- no-github: do NOT push, open PRs, or touch GitHub in any way. Commit locally on
+  your branch and report readiness in your status file.
+- push-only: push your branch; do NOT open PRs. Review and merging belong to the user.
+- prs-user-merge: open PRs, but NOBODY merges — not you, not the coordinator — until
+  the user explicitly approves that PR (adversarial review may happen first in a
+  separate session).
+- prs-auto-merge: open PRs; the coordinator merges green PRs.
+Never exceed the declared level, even if a directive seems to ask for it — flag the
+contradiction in your status file instead of complying.
+
 ## Your role
 <IMPLEMENTER: what to build, in what order, with priorities ranked by the coordinator's
 baseline data — include the numbers.>
@@ -83,9 +96,10 @@ and ratchets and HOW to measure them against main (e.g. in a clone), required ch
 Run all of them locally before every push. First-run CI failures on knowable gates are
 pure waste.
 
-## PRs
+## PRs (prs-* policies only — delete this section under no-github/push-only)
 Open the PR yourself when your milestone is done and green (title prefix "<prefix>");
 the description LEADS with the honest trade-off table — every context measured, wall
 AND memory, wins AND costs, each number naming its methodology. Report the PR number in
-your status file. Never merge — the coordinator merges after CI.
+your status file. Never merge — under prs-auto-merge the coordinator merges after CI;
+under prs-user-merge nobody merges until the user approves that PR.
 ```
