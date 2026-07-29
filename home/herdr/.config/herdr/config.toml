@@ -1,6 +1,7 @@
 [ui]
 agent_panel_sort = "priority"
 
+show_agent_labels_on_pane_borders = true
 [keys]
 prefix = "ctrl+space"
 previous_tab = "shift+left"
@@ -46,3 +47,15 @@ command = "herdr-nav up || ${HERDR_BIN_PATH:-herdr} pane focus --direction up --
 key = "ctrl+l"
 type = "shell"
 command = "herdr-nav right || ${HERDR_BIN_PATH:-herdr} pane focus --direction right --current"
+
+[[keys.command]]
+key = "prefix+r"
+type = "shell"
+command = "bun /Users/k/.config/herdr/scripts/pane-rotate.ts"
+
+[ui.toast]
+delivery = "system"
+
+[theme]
+name = "kanagawa"
+auto_switch = false
