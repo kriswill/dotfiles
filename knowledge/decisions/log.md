@@ -2,6 +2,19 @@
 
 ## 2026-07-28
 
+- **Creation** — [claude-skill-lessons-to-scripts](claude-skill-lessons-to-scripts.md):
+  the session-coordinator skill's mechanical mission lessons (debounced
+  monitoring, self-stamped time/SHA status lines, SHA-armed CI watching and
+  merge refusal, canonical heavy.lock, spawn preflight, inbox mirroring,
+  stand-down gate) are now enforced by six new + two upgraded self-tested
+  scripts instead of prose; judgment-call lessons deliberately remain prose.
+  Extended same-day with a user-feedback-driven integration-policy gate
+  (mission-policy file + spawn/merge refusals) after a mission opened PRs
+  and merged to main against an explicit "no PRs".
+  Backlinked from
+  [claude-skills-split-stow-packages](claude-skills-split-stow-packages.md)'s
+  LESSONS.md paragraph. Commits `5e6871f`, `024351a`.
+
 - **Update** — [vim-aware-pane-navigation](vim-aware-pane-navigation.md):
   consequences corrected after review. "A config reload before a system rebuild
   leaves the keys no-ops" is no longer true — each bind chains to plain
