@@ -21,7 +21,10 @@ The invocation argument is the mission objective. Before spawning anything, test
 - **Target**: which repo/system, and what is the *substantial real thing* final validation runs against (not just fixtures)?
 - **Constraints**: what must not change (data formats, public APIs, user-visible behavior, compatibility)?
 - **Done-condition**: how do we know it worked — a measurement, a passing suite, a shipped artifact?
+- **Integration policy**: may the team touch GitHub at all? push branches? open PRs? who merges — you automatically, or nobody until the user approves each PR (their adversarial review may run in a separate session)? Record the answer in `$SCRATCH/mission-policy` as one of `no-github` / `push-only` / `prs-user-merge` / `prs-auto-merge`; spawn-teammate.sh refuses briefs that don't declare it, merge-pr.sh enforces it.
 - **Budget/scale hints**: PR granularity, how autonomous, anything explicitly out of scope?
+
+The integration policy is exempt from the two-question threshold below: if the objective doesn't state it, **ask** — never assume PRs are welcome (a mission once opened PRs and merged to main against an explicit "no PRs"; the user's constraint outranks every pipeline convenience). If the user genuinely cannot be asked, assume `push-only`.
 
 If two or more of these are unanswerable from the objective plus quick repo inspection, **push back before spawning**: tell the user what's ambiguous, propose your best-guess interpretation, and ask focused questions (AskUserQuestion works well — offer concrete options, not open-ended "what do you want?"). A vague objective multiplied across several autonomous teammates becomes expensive drift; five minutes of molding is the cheapest optimization of the whole mission. When the objective is clear, restate it in one paragraph as the mission charter and proceed — don't interrogate a user who was already precise.
 
@@ -62,7 +65,7 @@ You coordinate; teammates implement. Your jobs during execution:
 - **Adjudicate with artifacts.** When teammates disagree on a root cause, the claim that cites the artifact wins; the author of the code gets right of reply before anyone acts on a diagnosis of it. Be willing to withdraw your own directives — the coordinator being wrong quickly is far cheaper than being wrong stubbornly.
 - **Hold the equivalence gate.** Any change to output-producing code merges only with proof the output is equivalent (byte-identical modulo listed volatile fields, or the project's nearest analog), verified by the validator on the real target.
 - **Enforce measurement hygiene** (details in `references/protocols.md`): exclusive lock for heavy runs, tree-scoped attribution, named metrics, interleaved arms, counts vs timings distinguished. Every published number states its methodology.
-- **Merge discipline**: teammates open PRs with honest trade-off tables (every context measured — wins AND costs — in the first paragraph); only you merge, via `scripts/merge-pr.sh <n> <watched-sha>` — it refuses when the head has moved past the checks you watched, then arms auto-merge so a racing push can't slip through; branch protection is the backstop, not the plan.
+- **Merge discipline**: teammates open PRs with honest trade-off tables (every context measured — wins AND costs — in the first paragraph); only you merge, and only what the integration policy allows: `scripts/merge-pr.sh <n> <watched-sha> --policy $SCRATCH/mission-policy` refuses without a declared policy, refuses under `no-github`/`push-only`, requires the user's per-PR approval under `prs-user-merge`, and refuses when the head has moved past the checks you watched before arming auto-merge; branch protection is the backstop, not the plan.
 - **Preserve history**: condemned designs stay as separate commits under their fix; corrections are posted on merged PRs, not edited away.
 
 ## Step 6 — Final validation and report

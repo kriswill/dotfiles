@@ -105,7 +105,7 @@ while :; do
     done <<<"$checks"
     if [ "$pending" -eq 0 ]; then
       if [ "$failed" -eq 0 ]; then
-        echo "[$(now)] ci-watch PR#$pr: ALL SETTLED on ${armed:0:9} - $passed pass, $skipped skipped. next: merge-pr.sh $pr $armed"
+        echo "[$(now)] ci-watch PR#$pr: ALL SETTLED on ${armed:0:9} - $passed pass, $skipped skipped. merge path (policy-gated): merge-pr.sh $pr $armed --policy \$SCRATCH/mission-policy"
         exit 0
       fi
       echo "[$(now)] ci-watch PR#$pr: ALL SETTLED on ${armed:0:9} - $failed FAILED, $passed pass. Job log: gh api .../jobs/<id>/logs, grep '##\[error\]' (the real error is near the end; naive greps match test names containing 'fail')"
