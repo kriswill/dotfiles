@@ -91,14 +91,15 @@ if [ "$mux" = herdr ]; then
   pane_id="$(herdr agent get "$win" 2>/dev/null | grep -o '"pane_id":"[^"]*"' | head -1 | cut -d'"' -f4)"
   [ -n "$pane_id" ] || { echo "no such teammate: $win"; exit 2; }
   if [ -n "$msg" ]; then
-    herdr agent send "$win" "$msg" >/dev/null || exit 2
+    # herdr >=proto17 renamed `agent send` to `agent prompt` (submission included).
+    herdr agent prompt "$win" "$msg" >/dev/null || exit 2
     sleep 1
   fi
   for attempt in 1 2 3 4; do
     herdr pane send-keys "$pane_id" enter >/dev/null
     [ -z "$msg" ] && exit 0   # bare-Enter: nothing stranded is success
     # Delivered if a turn started or the text rendered into the transcript.
-    if herdr agent wait "$win" --status working --timeout 5000 >/dev/null 2>&1; then
+    if herdr agent wait "$win" --until working --timeout 5000 >/dev/null 2>&1; then
       exit 0
     fi
     frag="$(printf '%s' "$msg" | head -c 40)"
