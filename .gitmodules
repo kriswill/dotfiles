@@ -1,0 +1,3 @@
+[submodule "home/claude/.claude/skills/session-report"]
+	path = home/claude/.claude/skills/session-report
+	url = https://gist.github.com/c5274f3817c345f6d8e9f9366fa8e23a.git
