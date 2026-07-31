@@ -109,21 +109,35 @@ if [ "$mux" = herdr ]; then
   # which may be a different one — and herdr has no tab-move to recover
   # (2026-07-28 mission: two teammates stranded in a sibling workspace).
   ws="${HERDR_PANE_ID%%:*}"
-  tab_id="$(herdr tab create --workspace "$ws" --label "$name" --cwd "$workdir" --no-focus \
-    | grep -o '"tab_id":"[^"]*"' | head -1 | cut -d'"' -f4)"
-  [ -n "$tab_id" ] || { echo "herdr tab create failed"; exit 2; }
   # herdr agent start spawns from the SERVER's env, not the caller's: a
   # coordinator running with a custom CLAUDE_CONFIG_DIR must forward it or the
   # teammate lands in an unauthenticated default config (OAuth login screen).
+  # herdr >=proto17: env forwarding moved to `tab create --env`; `agent start`
+  # attaches to the tab's existing pane via --kind/--pane (pane must be at an
+  # interactive shell prompt — freshly created tabs are).
   env_args=()
   [ -n "${CLAUDE_CONFIG_DIR:-}" ] && env_args=(--env "CLAUDE_CONFIG_DIR=$CLAUDE_CONFIG_DIR")
-  herdr agent start "$name" --tab "$tab_id" --cwd "$workdir" --no-focus \
-    ${env_args[@]:+"${env_args[@]}"} -- \
-    claude --dangerously-skip-permissions ${model_args[@]:+"${model_args[@]}"} \
-    ${extra_args[@]:+"${extra_args[@]}"} "$(cat "$brief")" >/dev/null || exit 2
+  tab_id="$(herdr tab create --workspace "$ws" --label "$name" --cwd "$workdir" --no-focus \
+    ${env_args[@]:+"${env_args[@]}"} \
+    | grep -o '"tab_id":"[^"]*"' | head -1 | cut -d'"' -f4)"
+  [ -n "$tab_id" ] || { echo "herdr tab create failed"; exit 2; }
+  # tab get doesn't list panes; pane list carries the tab_id mapping. jq, not
+  # grep: the nested scroll object separates pane_id from tab_id in the text.
+  command -v jq >/dev/null || { echo "herdr spawn path needs jq on PATH"; exit 2; }
+  pane_id="$(herdr pane list --workspace "$ws" \
+    | jq -r --arg t "$tab_id" '.result.panes[] | select(.tab_id==$t) | .pane_id' | head -1)"
+  [ -n "$pane_id" ] || { echo "no pane found in tab $tab_id"; exit 2; }
+  # herdr >=proto17 shell-encodes agent args into the pane and REFUSES
+  # multi-line text ("cannot be encoded safely"), so the brief can no longer
+  # travel as an argv element — pass a one-line bootstrap pointing at the file.
+  herdr agent start "$name" --kind claude --pane "$pane_id" -- \
+    --dangerously-skip-permissions ${model_args[@]:+"${model_args[@]}"} \
+    ${extra_args[@]:+"${extra_args[@]}"} \
+    "Read the file $brief and follow it: it is your complete mission brief and operating instructions. Start now." \
+    >/dev/null || exit 2
   # working = processing the brief; a very short first turn can finish before
   # the wait polls, so also accept visible claude chrome (as the tmux path does).
-  if herdr agent wait "$name" --status working --timeout 60000 >/dev/null 2>&1 \
+  if herdr agent wait "$name" --until working --timeout 60000 >/dev/null 2>&1 \
      || herdr agent read "$name" --source visible --lines 50 2>/dev/null \
         | grep -qE '\([0-9]+m? ?[0-9]*s? ?·|bypass permissions'; then
     echo "spawned $name (herdr tab $tab_id, cwd $workdir)"
