@@ -43,7 +43,22 @@ check. A validation suite that cannot fail proves nothing. Every rig also ships 
 rehearsed POSITIVE control — a rig that cannot pass proves nothing either, and a broken
 rig reports ERROR, never FAIL. Preflight-ASSERT the environment invariants your specs
 assume (service config, claim mappers, seeded state), each with a named remedy —
-hand-applied config drift masquerades as deep test failures two layers away.>
+hand-applied config drift masquerades as deep test failures two layers away.
+PHASED MISSIONS — acceptance-criteria cadence and hygiene:
+- Pre-publish objective acceptance criteria (EXPECTATIONS-P<n>.md) per phase BEFORE seeing the
+  implementation; publish phase n+1's file AT phase n's verdict, not later — the implementer's
+  next design starts the moment the verdict lands, and a criteria gap there stalls the pipeline.
+- MEASURE THE DATA SURFACE FIRST, then write criteria: independence is from the implementation,
+  never from the data. Criteria written against an assumed surface are the ones that get retracted.
+- Criteria are instruments and inherit every instrument rule: a criterion that cannot fail proves
+  nothing (F1 binds your criteria as hard as your rigs); any criterion that turns on a field's
+  optionality/type re-reads the declaration in the same sitting; counts you publish are pasted
+  from enumeration output, never recalled. When a published criterion turns out wrong: retract
+  the premise LOUDLY before grading, then grade N/A with the precondition stated — never grade
+  against a premise you know is false, and never quietly rewrite published criteria.
+- Fixtures need a REACHABILITY check, not just schema validity: can the hazard actually appear
+  on screen / on the exercised path? A valid fixture whose hazard sits where the system never
+  looks tests nothing while looking like coverage.>
 <DATA-FORMAT MISSIONS: have two teammates derive the load-bearing format/field table
 independently before implementation — their agreement is what makes "the reference is
 wrong" trustworthy.>
@@ -60,6 +75,10 @@ append ONE line to <scratch>/status-<name>.md by running (from your worktree):
 It stamps wall-clock time and your HEAD SHA itself. Never hand-write timestamps or
 identifiers (SHAs, IDs) anywhere — status lines, PR bodies — recalled ones drift and
 cite objects that don't exist; paste them from command output.
+Milestone declarations and verdicts get their OWN line with the declaration as the
+HEADLINE (the line's first words) — a milestone buried mid-line under a different
+headline reads as absence to a line-scanning coordinator and triggers false stall
+interventions.
 If blocked, log BLOCKED and why. If you discover a published claim of yours is wrong,
 retract it AS LOUDLY as you claimed it:
   <skill-dir>/scripts/log-status.sh --retract <scratch>/status-<name>.md "<what is unsound + what survives>"
@@ -76,6 +95,12 @@ new entries and acknowledge them in your status file.
   measured efficiency — designs without this arithmetic will be sent back.
 - Red->green TDD: failing test first, one commit per coherent step, imperative messages
   matching the repo's git log style.
+- Phased/stacked work: creating the phase's branch (git switch -c <phase-branch>) is the
+  FIRST action of every phase — before the first test file exists, never a cleanup after
+  commits land. Committing a phase onto the previous phase's branch puts commits on an
+  OPEN PR's head; if that branch is already pushed, one push mutates a PR mid-review.
+  "Repaired the layout afterward" is not a fix; the same slip recurs until
+  branch-creation-first is the habit.
 - A guard test merges only with a demonstrated red run under the EXACT mutation it
   guards — a guard that has never failed guards nothing.
 - Prefer hermetic shims and structural test hooks (counters, epoch/generation tags)
@@ -122,6 +147,11 @@ Run all of them locally before every push. First-run CI failures on knowable gat
 pure waste.
 
 ## PRs (prs-* policies only — delete this section under no-github/push-only)
+Stacking convention for phased work (state it ONCE; a brief that says both "every PR
+bases X" and "stack on the previous phase" contradicts itself): the first PR bases the
+mission mainline; each later PR bases its predecessor's branch so it shows only its own
+diff; PRs retarget to the mainline as predecessors merge. After every push, verify the
+upstream PRs were not disturbed (head SHAs unchanged).
 Open the PR yourself when your milestone is done and green (title prefix "<prefix>");
 the description LEADS with the honest trade-off table — every context measured, wall
 AND memory, wins AND costs, each number naming its methodology. Report the PR number in

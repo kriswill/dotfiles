@@ -19,6 +19,8 @@ tmux `send-keys "<long text>" Enter` frequently leaves the text as an unsubmitte
 - **Every** coordinator->teammate message goes through `scripts/msg-teammate.sh <name> "<message>"`, which sends the text, sends Enter as a separate delayed keystroke, then verifies that a turn actually started, retrying Enter if not. It exits nonzero if delivery cannot be confirmed — treat that as undelivered. In herdr it uses `herdr agent send` + `herdr pane send-keys <id> enter` and verifies with `herdr agent wait --status working`; in tmux it verifies via capture-pane (spinner visible or message rendered in transcript). Same interface either way.
 - Long content (briefs, designs, data) goes in files; the message just points at the file.
 - Additionally, each teammate polls `inbox-<name>.md` between steps (this is in the brief template). For anything mission-critical, pass `--inbox <scratch>` to msg-teammate.sh — it appends the message to the teammate's inbox file *before* attempting delivery, so the directive survives even an unconfirmed send.
+- **Phase-criteria handoffs are work-starting.** In phased missions the implementer's turn predictably ends within the same minute the validator publishes the next phase's criteria, and an idle agent never reads its inbox — so the coordinator relays every criteria publication (and every verdict/clearance) via msg-teammate.sh, never inbox-only. One mission hit this seam three times; the inbox pointer did not prevent the third stall.
+- **Phase-clearance directives name the expected new branch explicitly** (e.g. "first action: `git switch -c graph/ui-p4` off graph/ui-p3") — it costs one clause and pairs with the brief's branch-creation-first rule to prevent phase commits landing on an open PR's head branch.
 
 ## Monitoring
 
@@ -43,6 +45,16 @@ Two teammates benchmarking one machine invalidated each other's numbers twice be
 - A fresh push resets checks: ci-watch.sh voids its verdicts and re-arms itself on a SHA change, but a verdict carried away from a stopped watcher never transfers to a new SHA.
 - Merge order when branches overlap: additive/instrumentation PRs first; the restructuring PR rebases on top. Have the rebasing teammate verify the rebase changed no measured code (`git diff <old> <new> -- src/ ...` empty) so measurements carry over without re-runs.
 - Regressions do not merge, however much design work they carry. Parity doesn't either, if it adds complexity — the burden is on the change to beat the status quo on the path that matters, stated honestly (a change can lose on one path and win on the one users actually feel; the PR table must show both).
+
+## Pause / resume (user pause, machine reboot)
+
+Exercised end-to-end through a real mid-phase reboot with zero work loss; the sequence matters:
+
+1. **Pause directives go via verified delivery** (msg-teammate.sh) with explicit checkpoint instructions: commit in-flight work locally, append a final status line stating exactly where you stopped and what is next, then STOP — no new work, nothing pushed.
+2. **Back up the scratchpad to real disk after the checkpoint lines land** (e.g. `cp -r <scratch> ~/src/wt/<mission>-scratchpad-backup`) — `/tmp` scratchpads do NOT survive a reboot, and the scratchpad may hold irreplaceable ground-truth data. Re-sync the backup after the final checkpoint, not just once.
+3. **Write a resume memory** recording per-worktree branch/SHA state, what remains, and where the backup lives — the post-reboot session has no context.
+4. **On resume:** restore the backup into the new session's scratchpad (fix any absolute paths inside briefs), close stale multiplexer tabs (sessions die with the reboot even when tabs persist), and respawn with a resume brief that (a) declares the integration policy on its own bare line (the spawn preflight requires it), (b) points the teammate at its ORIGINAL brief and its OWN status-file checkpoint lines ("trust it over memory; you have none"), and (c) instructs re-verifying — not inheriting — all state (gates, baselines, rig controls, tool hypotheses confirmed only in the dead session).
+5. Teammates re-verify at their checkpoint SHA before new work; expect byte-identical re-measurements, and treat any drift as a finding.
 
 ## Nix / toolchain
 
