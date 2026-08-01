@@ -11,6 +11,52 @@
 [mgr]
 ratio = [1, 2, 3]
 
+# The preset ships "Show EXIF" as a second *variant* of the `reveal` opener,
+# and every preset rule includes `reveal` — so exiftool is offered on every
+# file, including html/text where it reports nothing useful. Redefine `reveal`
+# without that variant (a user `[opener]` key replaces the preset's entry of
+# the same name wholesale; other preset openers are untouched) and hoist the
+# exiftool call into its own `exif` opener, handed out per-rule below.
+[opener]
+reveal = [
+  { run = "xdg-open %d1",         desc = "Reveal", for = "linux" },
+  { run = "open -R %s1",          desc = "Reveal", for = "macos" },
+  { run = "explorer /select,%s1", desc = "Reveal", for = "windows", orphan = true },
+  { run = "termux-open %d1",      desc = "Reveal", for = "android" },
+]
+exif = [
+  { run = "clear; exiftool %s1; echo 'Press enter to exit'; read _", desc = "Show EXIF", for = "unix", block = true },
+  { run = "exiftool %s1 & pause", desc = "Show EXIF", for = "windows", block = true },
+]
+
+# Open .html in the default browser. The preset `open` opener is already
+# platform-dispatched (`open` on macOS, `xdg-open` on Linux, `start` on
+# Windows), so reusing it keeps this portable. Without this rule html falls
+# under the preset's `text/*` rule and defaults to $EDITOR.
+[[open.prepend_rules]]
+url = "*.html"
+use = ["open", "edit", "reveal"]
+
+# Re-grant EXIF only where metadata exists. These mirror the preset's image /
+# media rules (first match wins, so prepending shadows them) plus the two font
+# mimes the font previewer above already special-cases. First entry in `use` is
+# what plain Enter fires; `exif` sits last, reachable from the `O` menu.
+[[open.prepend_rules]]
+mime = "image/*"
+use = ["open", "reveal", "exif"]
+
+[[open.prepend_rules]]
+mime = "{audio,video}/*"
+use = ["play", "reveal", "exif"]
+
+[[open.prepend_rules]]
+mime = "font/*"
+use = ["open", "reveal", "exif"]
+
+[[open.prepend_rules]]
+mime = "application/ms-opentype"
+use = ["open", "reveal", "exif"]
+
 # Show git status in the file list, via the `git` plugin's fetcher.
 [[plugin.prepend_fetchers]]
 group = "git"
