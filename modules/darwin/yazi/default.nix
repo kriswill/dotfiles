@@ -35,10 +35,12 @@
     in
     {
       # yazi itself, plus `magick` (ImageMagick 7) required by the font
-      # previewer. glow (md previews, from core.nix) and bat (code previews)
-      # are already on PATH; the previewer invokes them by bare name.
+      # previewer and `exiftool` for the preset "Show EXIF" opener (both are
+      # invoked by bare name and silently no-op otherwise). glow (md previews,
+      # from core.nix) and bat (code previews) are already on PATH; the
+      # previewer invokes them by bare name too.
       environment.systemPackages = builtins.attrValues {
-        inherit (pkgs) yazi imagemagick;
+        inherit (pkgs) yazi imagemagick exiftool;
       };
 
       # Order 1600: after dotfiles-stow (1500) has populated ~/.config/yazi
