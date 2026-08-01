@@ -71,6 +71,18 @@ if [ "${1:-}" = "--inbox" ]; then inbox_dir="${2:?--inbox needs the scratch dir}
 win="${1:?usage: msg-teammate.sh [--inbox <scratch-dir>] <teammate> \"<message>\" }"
 msg="${2:-}"
 
+# A message that looks like a flag is almost always a misplaced option. Calling
+# this as `msg-teammate.sh <name> --inbox <dir> "<text>"` binds msg to the
+# literal string "--inbox", discards the real text as surplus argv, and then
+# DELIVERS THE FLAG and exits 0 - which silently corrupted four consecutive
+# coordinator directives in a live mission. Refuse rather than deliver garbage.
+case "$msg" in
+  --*)
+    echo "refusing to send a message beginning with '--' (got: $msg)" >&2
+    echo "  --inbox <scratch-dir> must come FIRST, before the teammate name" >&2
+    exit 2 ;;
+esac
+
 if [ -n "$inbox_dir" ] && [ -n "$msg" ]; then
   [ -d "$inbox_dir" ] || { echo "inbox dir does not exist: $inbox_dir" >&2; exit 2; }
   printf '[%s] coordinator: %s\n' "$(date +%H:%M)" "$msg" >> "$inbox_dir/inbox-$win.md" \
@@ -90,16 +102,30 @@ if [ "$mux" = herdr ]; then
   command -v herdr >/dev/null || { echo "inside herdr but herdr CLI not on PATH"; exit 2; }
   pane_id="$(herdr agent get "$win" 2>/dev/null | grep -o '"pane_id":"[^"]*"' | head -1 | cut -d'"' -f4)"
   [ -n "$pane_id" ] || { echo "no such teammate: $win"; exit 2; }
+  # herdr renamed `agent send` -> `agent prompt` around proto17 and this has
+  # CHANGED BACK on at least one build; a CLI that drifts under a running
+  # mission silently broke four consecutive directives (each printing herdr's
+  # help and exiting 2). Probe both spellings rather than assuming either.
+  herdr_send() {
+    herdr agent prompt "$1" "$2" >/dev/null 2>&1 && return 0
+    herdr agent send "$1" "$2" >/dev/null 2>&1 && return 0
+    return 1
+  }
+  # Same drift on the wait flag: `--until <state>` vs `--status <state>`.
+  herdr_wait_working() {
+    herdr agent wait "$1" --until working --timeout 5000 >/dev/null 2>&1 && return 0
+    herdr agent wait "$1" --status working --timeout 5000 >/dev/null 2>&1 && return 0
+    return 1
+  }
   if [ -n "$msg" ]; then
-    # herdr >=proto17 renamed `agent send` to `agent prompt` (submission included).
-    herdr agent prompt "$win" "$msg" >/dev/null || exit 2
+    herdr_send "$win" "$msg" || exit 2
     sleep 1
   fi
   for attempt in 1 2 3 4; do
     herdr pane send-keys "$pane_id" enter >/dev/null
     [ -z "$msg" ] && exit 0   # bare-Enter: nothing stranded is success
     # Delivered if a turn started or the text rendered into the transcript.
-    if herdr agent wait "$win" --until working --timeout 5000 >/dev/null 2>&1; then
+    if herdr_wait_working "$win"; then
       exit 0
     fi
     frag="$(printf '%s' "$msg" | head -c 40)"

@@ -56,6 +56,21 @@ fi
 name="${1:?usage: spawn-teammate.sh <name> <workdir> <brief-file> [claude args...]}"
 workdir="${2:?missing workdir}"
 brief="${3:?missing brief file}"
+
+# Every brief tells the teammate to poll inbox-<name>.md "between steps", but
+# that file does not exist until the coordinator's first --inbox message - so a
+# standing instruction points at nothing until then (an entire mission, once).
+# Create it at spawn, deriving the scratch dir from the status-file path the
+# brief already mandates.
+seed_inbox() {
+  [ -f "$brief" ] || return 0
+  sp="$(grep -o "/[^ '\"]*status-${name}.md" "$brief" 2>/dev/null | head -1)"
+  [ -n "$sp" ] || return 0
+  d="$(dirname "$sp")"
+  [ -d "$d" ] || return 0
+  : >> "$d/inbox-${name}.md" 2>/dev/null || true
+}
+seed_inbox
 shift 3
 extra_args=("$@")
 
@@ -137,7 +152,8 @@ if [ "$mux" = herdr ]; then
     >/dev/null || exit 2
   # working = processing the brief; a very short first turn can finish before
   # the wait polls, so also accept visible claude chrome (as the tmux path does).
-  if herdr agent wait "$name" --until working --timeout 60000 >/dev/null 2>&1 \
+  if { herdr agent wait "$name" --until working --timeout 60000 >/dev/null 2>&1 \
+       || herdr agent wait "$name" --status working --timeout 60000 >/dev/null 2>&1; } \
      || herdr agent read "$name" --source visible --lines 50 2>/dev/null \
         | grep -qE '\([0-9]+m? ?[0-9]*s? ?·|bypass permissions'; then
     echo "spawned $name (herdr tab $tab_id, cwd $workdir)"

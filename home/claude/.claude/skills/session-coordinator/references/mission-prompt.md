@@ -118,9 +118,63 @@ new entries and acknowledge them in your status file.
   your code, you get right of reply — check the artifact before accepting the theory.
 - Claims of the form ALL/ONLY/LAST ("all call sites", "the only writer", completeness
   audits) publish only with the enumeration command and its pasted output.
+- **STATE THE DOMAIN BEFORE YOU RUN THE COMMAND, then show the command's scope EQUALS
+  it.** Name the quantifier ("all X") and name what X ranges over — files? file *types*?
+  commits? *a commit range*? principals? principal *classes*? set members? cases? — and
+  paste a POSITIVE CONTROL proving the command can find a known member. If the scope is
+  narrower than the domain, narrow the claim to match IN THE SAME SENTENCE, not a
+  footnote. This is the single most common error class across missions: it has appeared
+  as a truncating timeout, an undisclosed extension filter, a single-commit diff against
+  a multi-commit move, a users-only enumeration published as "all principals", and a
+  coordinator's own "every path is synthetic". It applies to PLAN and BRIEF authoring too,
+  not just verification — two instances propagated plan -> brief -> published PR body.
+- **Disambiguate the SHARED NOUN.** Before publishing, write out as TWO SEPARATE STRINGS
+  what the load-bearing noun refers to in your EVIDENCE and in your CLAIM. If they
+  differ, the finding is wrong or must be narrowed to the evidence string. The same word
+  naming both is what makes a scope gap invisible — "realm" (local vs dev), a role name
+  defined identically in two systems, "references", "the guard" (function body vs deployed
+  behaviour), "the body" (a PR description vs a staged file). In every recorded case the
+  data was already on screen; the failure was never writing the two strings side by side.
+- **Label every finding at publication: (a) CONFIRMED or PLAUSIBLE, (b) its scope string,
+  (c) the decisive experiment that would settle it.** The goal is CHEAPER RETRACTION, not
+  fewer claims — publish early, before the code exists if you can. An unscoped absolute
+  costs a full retraction plus unwinding whatever it caused; the same claim labelled
+  PLAUSIBLE with its experiment named gets NARROWED instead, at almost no cost.
+- **An empty or zero result is a claim about your INSTRUMENT until a positive control
+  proves the instrument can find a known member.** Three separate teammates in one
+  mission got an empty result from a hand-built probe and rebuilt the instrument instead
+  of publishing the absence; all three would otherwise have been confident false
+  findings. Run the positive control FIRST, not after a suspicious result.
+- **Handed-down facts marked [VERIFIED] carry their VERIFICATION SCOPE, not just their
+  truth value** — and so do the ones you pass on. A true statement about one subtree
+  invites the reader to treat that subtree as the whole world.
 - State what your probe changes about the system it measures, and prove the
   artifact-under-test actually loaded/ran (assert its path/pid inside the probe) —
   a probe must survive, and must not replace, what it observes.
+- **A probe or harness must not NORMALISE its own input** — then it agrees with itself
+  rather than with the system under test, which is a false-pass generator. MEASURE what
+  your transport can actually carry, and DELETE rows it cannot express (documenting the
+  limit) rather than keeping a row that passes because the input never arrived.
+- **Every mutation asserts that its anchor actually landed.** A substitution whose
+  pattern silently fails to match leaves the code UNMUTATED and the suite reporting `ok`
+  — a false proof of exactly the thing being hunted. Prefer tools that error on a
+  non-matching anchor over ones that no-op.
+- **Read the artifact, not the exit code.** An exit status that cannot distinguish "the
+  check caught it" from "the tool crashed" is an insufficient signal, no matter how
+  correctly scoped the command was.
+- **Distinguish guards that pin INTENT from guards that pin ATTACHMENT.** A test that
+  inspects a config/options struct can be entirely correct about policy and still pass
+  when the component enforcing it is not wired in at all. Ask of every guard which of the
+  two it pins, and whether anything pins the other.
+- **A changed test COUNT is a signal to investigate, not to accept** — measure baseline
+  vs with-change (same env on both runs) and prove nothing was lost.
+- **When every finding a broken check would report is a FALSE positive, a correct fix and
+  a neutered fix are indistinguishable by output** — both report zero. Mutation is then
+  the ONLY evidence. Pre-register the specific reds, and watch two evasions by name: an
+  exclusion list used as a dumping ground, and the highest-teeth assertion DELETED rather
+  than SCOPED.
+- **"Builds but ships nothing" is worse than a build failure** — when grading a build,
+  assert the artifact's CONTENTS, not just its exit status.
 - Keep condemned designs as separate commits under their fix; post corrections on merged
   PRs rather than editing history. If you discover one of your published claims is wrong,
   say so immediately and loudly — self-correction is rewarded, not punished.
