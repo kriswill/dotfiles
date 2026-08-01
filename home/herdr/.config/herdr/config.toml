@@ -1,3 +1,4 @@
+onboarding = false
 [ui]
 agent_panel_sort = "spaces"
 
@@ -54,7 +55,7 @@ type = "shell"
 command = "bun /Users/k/.config/herdr/scripts/pane-rotate.ts"
 
 [ui.toast]
-delivery = "system"
+delivery = "herdr"
 
 [theme]
 name = "kanagawa"
