@@ -719,6 +719,15 @@ the hardware keys to drive DDC too.
   while upstream still calls v5 "alpha" with no `v5.0.0` *release* tag. The
   install is branch HEAD at a pinned commit, so re-verify everything after
   `nix flake update`.
+- **nixpkgs ships a competing `programs.noctalia` module (2026-08-02).**
+  nixos-unstable (`148bab9`) added `nixos/modules/programs/wayland/noctalia.nix`,
+  whose option declarations collide with the upstream flake module
+  snowglobe-lib imports — nebula's eval died with "`programs.noctalia.enable`
+  … already declared". Fixed with
+  `disabledModules = [ "programs/wayland/noctalia.nix" ]` in
+  `modules/hosts/nebula/users/k/noctalia.nix`; we keep the flake module
+  because it is pinned in lockstep with the installed binary (see
+  `knowledge/decisions/noctalia-flake-module-over-nixpkgs.md`).
 
 ## Sources
 

@@ -1,5 +1,14 @@
 # Log
 
+## 2026-08-02
+
+- **Creation** — [noctalia-flake-module-over-nixpkgs](noctalia-flake-module-over-nixpkgs.md):
+  nixpkgs' new `programs.noctalia` module is disabled on nebula
+  (`disabledModules`) so the upstream noctalia-shell flake module — imported
+  by snowglobe-lib's `mkNixosHost`, pinned in lockstep with the installed
+  binary — keeps sole ownership of the `programs.noctalia` namespace.
+  Linked from [modules/users-k-noctalia](../modules/users-k-noctalia.md).
+
 ## 2026-08-01
 
 - **Creation** — [devenv-native-hook-over-direnv](devenv-native-hook-over-direnv.md):

@@ -1,5 +1,14 @@
 # Log
 
+## 2026-08-02
+
+- **Deprecation** — `overlays/lact-libdisplay-info.nix`: deleted per its own
+  header's exit condition — the nixpkgs bump to `148bab9` (commit `25f9332`)
+  carries upstream's `libdisplay-info_0_3` pin (`3ee083c2`), and lact's
+  `package.nix` no longer accepts a `libdisplay-info` argument at all, so the
+  override had gone from redundant to eval-breaking on
+  [nebula](../hosts/nebula.md). Doc removed with the overlay.
+
 ## 2026-07-28
 
 - **Update** — [herdr-nav](herdr-nav.md): JSON is parsed with `jq` instead of a
@@ -402,5 +411,5 @@
   `libdisplay-info-sys` demands `< 0.4.0`; upstream's `libdisplay-info_0_3`
   pin (`3ee083c2`) has not reached nixos-unstable and neither has the attr it
   needs, so the overlay rebuilds that 0.3.0 locally (version + hash lifted
-  from upstream's `0.3.nix`) and feeds it to lact via `override`. See
-  [Lact Libdisplay Info](lact-libdisplay-info.md).
+  from upstream's `0.3.nix`) and feeds it to lact via `override`. (Doc since
+  removed with the overlay — see the 2026-08-02 deprecation above.)

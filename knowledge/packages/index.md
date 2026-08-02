@@ -18,7 +18,6 @@ flake consumes via relative-path inputs.
 * [Herdr Nav](herdr-nav.md) - herdr-nav — a keybinding shim that gives herdr the vim-aware pane switching tmux gets from is_vim + if-shell — forwarding ctrl+h/j/k/l to a pane running vim instead of moving pane focus.
 * [Iv](iv.md) - A command-line image viewer using terminal graphics.
 * [Kitten](kitten.md) - Kitten - A collection of small, useful programs for the kitty terminal.
-* [Lact Libdisplay Info](lact-libdisplay-info.md) - TEMPORARY overlay building lact against libdisplay-info 0.3.0 — works around nixpkgs' libdisplay-info 0.4.0 bump, which breaks lact 0.9.1's vendored libdisplay-info-sys pkg-config probe.
 * [Ld64 Lld](ld64-lld.md) - TEMPORARY overlay linking kitty/vfkit/starship with LLVM lld on darwin — works around the pinned nixpkgs' cctools ld64 1010.6 SIGTRAP until the staging fix reaches nixos-unstable.
 * [Noctalia Config](noctalia-config.md) - Custom Nix package 'noctalia-config'.
 * [okf](okf.md) - okf — CLI for maintaining OKF knowledge bundles (scaffold/index/validate/viz), consumed from its own repo via FlakeHub (kriswill/okflight).

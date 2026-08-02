@@ -46,6 +46,13 @@ lives in the stow-managed Lua config,
 `noctalia --daemon` on hyprland.start and driven with `noctalia msg
 <command>` from binds.
 
+Module collision (2026-08-02): nixos-unstable grew its own
+`programs.noctalia` module, colliding with the upstream noctalia-shell flake
+module snowglobe-lib's `mkNixosHost` imports into every host. This file
+carries `disabledModules = [ "programs/wayland/noctalia.nix" ]` to keep the
+flake module — see the
+[decision record](../decisions/noctalia-flake-module-over-nixpkgs.md).
+
 Host-specific file for [nebula](../hosts/nebula.md) — merged straight into
 that host's configuration per the
 [host-mounted modules pattern](../patterns/host-mounted-modules.md).

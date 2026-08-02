@@ -1,5 +1,14 @@
 # Log
 
+## 2026-08-02
+
+- **Update** — [users-k-noctalia](users-k-noctalia.md): gains
+  `disabledModules = [ "programs/wayland/noctalia.nix" ]` — nixos-unstable's
+  new `programs.noctalia` module collided with the upstream noctalia-shell
+  flake module snowglobe-lib imports, breaking nebula's eval. The flake
+  module wins; see the
+  [decision record](../decisions/noctalia-flake-module-over-nixpkgs.md).
+
 ## 2026-08-01
 
 - **Creation** — [devenv](devenv.md): new cross-OS twin modules install
