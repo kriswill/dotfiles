@@ -15,8 +15,9 @@ project trusted via `devenv allow` **spawns a nested `devenv shell`** (the
 libghostty-backed VT introduced in devenv 2.1) rather than diff-exporting env
 into the outer shell, and cd-ing outside `DEVENV_ROOT` exits that subshell,
 handing the target directory back to the parent via
-`.devenv/exit-dir`. No `.envrc` is involved (`devenv init` since 2.1 no
-longer generates one); the environment re-evaluates in the background on file
+`.devenv/exit-dir`. No `.envrc` is involved (since 2.2, `devenv init` no
+longer generates one by default — `--include-envrc` restores it; verified
+against 2.2.0); the environment re-evaluates in the background on file
 changes and applies at the next prompt.
 
 Deliberately NOT wired through direnv — see the
