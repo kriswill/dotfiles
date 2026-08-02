@@ -1,5 +1,5 @@
 ---
-type: Reference
+type: Language
 title: Nix Language
 description: 'The lazy, pure, functional DSL every .nix file here is written in — evaluated by Determinate Nix, authored in dendritic idioms, kept clean by deadnix/statix/nixfmt and nil_ls.'
 tags: [nix, language]
@@ -17,20 +17,20 @@ repository is written in it.
 - **Evaluator:** all hosts run Determinate Nix — chosen because the
   `./flakes/*` relative-path sub-flake inputs need Nix ≥ 2.26's path-input
   locking, which Lix lacked (see
-  [Replace Lix With Determinate Nix](decisions/lix-to-determinate.md)).
+  [Replace Lix With Determinate Nix](../decisions/lix-to-determinate.md)).
 - **Laziness as a feature:** the single `flake.overlays` set applies to
   both OSes because one-OS overlays either guard internally or only *add*
   attrs the other OS never evaluates — a rule that only works in a lazy
-  language ([`AGENTS.md`](../AGENTS.md), Overlays).
+  language ([`AGENTS.md`](../../AGENTS.md), Overlays).
 - **Idioms:** every file is an attrset-merging flake-parts module (the
-  [Dendritic module layout](patterns/dendritic-modules.md)); package lists
+  [Dendritic module layout](../patterns/dendritic-modules.md)); package lists
   use `builtins.attrValues { inherit (pkgs) …; }`; override-prone scalars
   in universal modules take `lib.mkDefault`. House style is codified in
-  [`AGENTS.md`](../AGENTS.md).
-- **Tooling:** the [dev](modules/dev.md) shell carries the lint/format
+  [`AGENTS.md`](../../AGENTS.md).
+- **Tooling:** the [dev](../modules/dev.md) shell carries the lint/format
   chain — deadnix (dead bindings), statix (anti-patterns), nixfmt via
   `nix fmt` (nixfmt-tree). Editing goes through nil_ls (see
-  [nvim LSP](nvim/lsp.md)), which formats with the same nixfmt and ignores
+  [nvim LSP](../nvim/lsp.md)), which formats with the same nixfmt and ignores
   `unused_binding`/`unused_with` — dendritic modules legitimately keep
   unused args.
 

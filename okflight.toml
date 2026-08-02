@@ -48,6 +48,7 @@ types = [
   "Neovim Plugin",
   "Overlay",
   "Reference",
+  "Language",
 ]
 group-order = ["Knowledge", "System", "Packages", "Neovim"]
 # other = "Other"             # label for concepts in unmapped directories
@@ -56,6 +57,7 @@ group-order = ["Knowledge", "System", "Packages", "Neovim"]
 decisions = "Knowledge"
 patterns = "Knowledge"
 playbooks = "Knowledge"
+languages = "Knowledge"
 "." = "Knowledge"
 modules = "System"
 hosts = "System"

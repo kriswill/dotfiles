@@ -26,22 +26,22 @@ nil_ls · rust_analyzer · svelte · tofu_ls · vtsls · yaml.
 but is commented out — [tofu_ls](https://github.com/opentofu/tofu-ls)
 supersedes it for the same filetypes. Notable per-server choices:
 
-- **bash** ([Bash Language](../bash-language.md)) — bashls' built-in
+- **bash** ([Bash Language](../languages/bash.md)) — bashls' built-in
   shellcheck is disabled (`shellcheckPath = ""`) so efm's shellcheck
   doesn't produce duplicate `SC####` diagnostics.
 - **json/yaml** — schemas come from [schemastore](plugins/schemastore.md)
   (`require("schemastore").yaml.schemas()`).
-- **luals** ([Lua Language](../lua-language.md)) — workspace library set to
+- **luals** ([Lua Language](../languages/lua.md)) — workspace library set to
   all runtime files; pairs with [lazydev](plugins/lazydev-nvim.md) for
   config development.
 - **nil_ls** — `autoEvalInputs = false` ("generates too many issues"),
   formats with nixfmt, ignores `unused_binding`/`unused_with` (dendritic
   modules legitimately keep unused args).
-- **svelte** ([Svelte Language](../svelte-language.md)) — `svelteserver`
+- **svelte** ([Svelte Language](../languages/svelte.md)) — `svelteserver`
   (from `svelte-language-server`) owns `.svelte` files, including their
   embedded JS/TS/CSS; vtsls stays scoped to plain js/ts filetypes so the
   two never fight over a buffer.
-- **vtsls** ([TypeScript Language](../typescript-language.md)) — workspace
+- **vtsls** ([TypeScript Language](../languages/typescript.md)) — workspace
   TypeScript SDK preferred, inlay hints on (parameter names for literals
   only), server-side fuzzy completion.
 
@@ -56,7 +56,7 @@ Tool definitions come from [efmls-configs-nvim](plugins/efmls-configs-nvim.md),
 several extended in-place (yamllint gains `lintFormats` +
 `lintIgnoreExitCode`; biome's root markers narrowed to real `biome.json`
 files; shfmt anchored on `.editorconfig`) and a few defined inline (yamlfmt,
-xmllint, rumdl lint+fmt for [markdown](../markdown-language.md)).
+xmllint, rumdl lint+fmt for [markdown](../languages/markdown.md)).
 
 Lint: shellcheck (sh/bash/zsh), hadolint (dockerfile), gitlint (gitcommit),
 yamllint, rumdl (markdown). Format: shfmt, yamlfmt, prettier_d (html), biome

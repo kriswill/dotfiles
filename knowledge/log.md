@@ -5,6 +5,18 @@ types or directories, root-level concept docs, `docs/` manuals, bundle-wide
 sweeps, and workspace tooling conventions. Changes scoped to one bundle log
 in that bundle's own `log.md` (e.g. [modules/log.md](modules/log.md)).
 
+## 2026-08-02
+
+- **Creation** — [languages/](languages/index.md): new `Language` bundle type;
+  the six root-level `*-language.md` docs moved into it as
+  [bash](languages/bash.md), [lua](languages/lua.md),
+  [markdown](languages/markdown.md), [nix](languages/nix.md),
+  [svelte](languages/svelte.md), [typescript](languages/typescript.md)
+  (`type: Reference` → `Language`; registered in the
+  [OKF Profile](okf-profile.md) type registry and `okflight.toml`'s taxonomy
+  and dir-groups). [Bun runtime](bun-runtime.md) stays at the root — it's a
+  runtime, not a language.
+
 ## 2026-08-01
 
 - **Update** — scaffold tooling: `_okflight/scripts/lib.ts`'s `exists`/`stat`
@@ -116,22 +128,22 @@ in that bundle's own `log.md` (e.g. [modules/log.md](modules/log.md)).
 
 ## 2026-07-04
 
-- **Creation** — [svelte-language](svelte-language.md),
-  [markdown-language](markdown-language.md): the last two language
+- **Creation** — [svelte-language](languages/svelte.md),
+  [markdown-language](languages/markdown.md): the last two language
   References. Svelte: the viz-app is the one Svelte codebase (Svelte 5
   runes, Bun.build-bundled, svelte-check + bun test), with the
   `docs/svelt/` manual's "always write runes, translate Svelte-4 content"
   ground rule surfaced; backlinked from [nvim LSP](nvim/lsp.md),
-  [typescript-language](typescript-language.md), [okf](packages/okf.md),
+  [typescript-language](languages/typescript.md), [okf](packages/okf.md),
   and [manuals](manuals.md). Markdown: the documentation language —
   OKF-profile dialect rules (H2 bodies, file-relative links for GitHub),
   rumdl via efm with the load-bearing MD013-disabled rationale from
   `rumdl.toml`, glow + viz-app rendering paths.
 
-- **Creation** — [typescript-language](typescript-language.md),
-  [lua-language](lua-language.md), [bash-language](bash-language.md):
+- **Creation** — [typescript-language](languages/typescript.md),
+  [lua-language](languages/lua.md), [bash-language](languages/bash.md):
   the language-Reference series continues from
-  [nix-language](nix-language.md). TypeScript: default tooling language,
+  [nix-language](languages/nix.md). TypeScript: default tooling language,
   bun-executed with no tsc step, vtsls/svelte-server file ownership split,
   biome formatting. Lua: exclusively the Neovim config (LuaJIT / 5.1
   dialect), stylua + lua-ls/lazydev. Bash: the glue layer bounded by zsh
@@ -154,7 +166,7 @@ in that bundle's own `log.md` (e.g. [modules/log.md](modules/log.md)).
   [ccglass](packages/ccglass.md) gained its bun-compile provenance and a
   [bump-ccglass](playbooks/bump-ccglass.md) link.
 
-- **Creation** — [nix-language](nix-language.md): root-level Reference
+- **Creation** — [nix-language](languages/nix.md): root-level Reference
   concept for the Nix language itself — evaluator choice (Determinate Nix,
   for ≥ 2.26 path-input locking), laziness as the mechanism behind the
   shared-overlay rule, dendritic idioms, and the deadnix/statix/nixfmt +

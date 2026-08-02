@@ -61,7 +61,7 @@ versions live in the manuals themselves, which lead with verified state.
   computer-use MCP, with an osascript/screencapture fallback (caveat: still
   describes retired home-manager machinery — needs correction).
 - [`docs/svelt/manual.md`](../docs/svelt/manual.md) —
-  [Svelte](svelte-language.md) + SvelteKit
+  [Svelte](languages/svelte.md) + SvelteKit
   hub: runes and template cheat sheets, tooling table,
   this repo's nvim Svelte wiring; topic docs
   [`runes.md`](../docs/svelt/runes.md),

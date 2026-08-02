@@ -8,7 +8,7 @@ timestamp: '2026-07-05T00:00:00-07:00'
 ---
 
 Development shell and formatter. Besides the
-[Nix-language](../nix-language.md) lint/format tools (deadnix, statix,
+[Nix-language](../languages/nix.md) lint/format tools (deadnix, statix,
 nixfmt-tree) and just, the shell puts **`okf`** on `PATH` — the nix-built
 knowledge-bundle CLI from the okflight flake input
 (`okf scaffold|index|validate|viz`, see the
