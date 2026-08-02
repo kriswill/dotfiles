@@ -32,7 +32,21 @@ export function repoOf(ctx: ScaffoldContext): Repo {
       readdirSync(abs(dir))
         .filter((f) => !f.startsWith("_") && !f.startsWith("."))
         .sort(),
-    exists: (rel) => statSync(abs(rel), { throwIfNoEntry: false }) !== undefined,
-    stat: (rel) => statSync(abs(rel), { throwIfNoEntry: false }),
+    // try/catch: throwIfNoEntry only suppresses ENOENT — a path through a
+    // FILE (e.g. flakes/AGENTS.md/flake.nix) throws ENOTDIR instead.
+    exists: (rel) => {
+      try {
+        return statSync(abs(rel), { throwIfNoEntry: false }) !== undefined;
+      } catch {
+        return false;
+      }
+    },
+    stat: (rel) => {
+      try {
+        return statSync(abs(rel), { throwIfNoEntry: false });
+      } catch {
+        return undefined;
+      }
+    },
   };
 }
