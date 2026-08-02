@@ -2,7 +2,7 @@
 
 The languages this repository is authored in — one doc per language covering
 how the repo uses it, the lint/format toolchain, and the editor wiring.
-Runtime docs ([Bun](../bun-runtime.md)) stay at the bundle root.
+Their execution layer lives in [runtimes/](../runtimes/index.md).
 
 ## Concepts
 

@@ -13,7 +13,7 @@ erased at runtime, leaving plain JavaScript.
 ## How this repo uses it
 
 **It is the default tooling language** (house rule: bun + TS over
-bash/python — see [Bun runtime](../bun-runtime.md)): the [okf](../packages/okf.md)
+bash/python — see [Bun runtime](../runtimes/bun.md)): the [okf](../packages/okf.md)
 CLI and its Svelte viz-app, the skill drivers
 (`.claude/skills/patch-ccglass/driver.ts`, `derivation-to-flake`'s
 scripts), and [ccglass](../packages/ccglass.md)'s patched upstream are all TS.

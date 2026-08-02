@@ -8,7 +8,7 @@ timestamp: '2026-07-03T12:00:00-07:00'
 ---
 
 Installs `pkgs.nodejs` (`node`/`npm`/`npx`) and
-[`pkgs.bun`](../bun-runtime.md) system-wide.
+[`pkgs.bun`](../runtimes/bun.md) system-wide.
 NixOS ships no node by default, but Claude Code's MCP servers are launched
 via `npx` (e.g. the chrome-devtools-mcp plugin), and without a runtime on
 PATH they silently fail to start. Bun doubles as the preferred fast

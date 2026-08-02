@@ -15,7 +15,6 @@ derived `.codebase-memory/` code graph.
 
 ## Concepts
 
-* [Bun Runtime](bun-runtime.md) - Bun — the single-binary, JavaScriptCore-based JS/TypeScript runtime, bundler, test runner, and package manager; this repo's default script runtime, provisioned per-OS and consumed in three distinct modes by okf, ccglass, and qmd.
 * [Task Manuals (docs/)](manuals.md) - Entry point to the docs/ manuals layer — task-focused, machine-verified operational references with dated learnings, complementing knowledge/'s durable rationale and catalog.
 * [OKF Profile](okf-profile.md) - This bundle's conventions on top of OKF v0.1 — required fields, link style, resource semantics, entry quality bar, type registry, and tooling.
 
@@ -29,3 +28,4 @@ derived `.codebase-memory/` code graph.
 * [packages](packages/index.md) - Custom packages, nixpkgs overlays, and the self-contained sub-flakes the root flake consumes via relative-path inputs.
 * [patterns](patterns/index.md) - Named architectural patterns this repository is built on.
 * [playbooks](playbooks/index.md) - Operational how-tos for recurring tasks — rebuilds, adopting dotfiles, adding modules and packages, and keeping tooling up to date.
+* [runtimes](runtimes/index.md) - The runtimes this repo provisions and leans on — one doc each covering what it is, how it's wired here, and the contracts it imposes.
