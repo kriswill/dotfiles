@@ -1,5 +1,15 @@
 # Log
 
+## 2026-08-01
+
+- **Creation** — [devenv](devenv.md): new cross-OS twin modules install
+  `pkgs.devenv` on both classes; cd auto-activation via devenv 2.1's native
+  `devenv hook zsh` in the stowed `integrations.zsh` (nested-shell
+  mechanism), deliberately not via [direnv](direnv.md)'s
+  `~/.config/direnv/lib` idiom — see the
+  [decision record](../decisions/devenv-native-hook-over-direnv.md).
+  direnv.md gained the backlink.
+
 ## 2026-07-28
 
 - **Update** — [herdr](herdr.md): ships

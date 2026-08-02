@@ -1,5 +1,15 @@
 # Log
 
+## 2026-08-01
+
+- **Creation** — [devenv-native-hook-over-direnv](devenv-native-hook-over-direnv.md):
+  devenv cd-activation uses the native 2.1 `precmd` hook instead of a
+  direnvrc in `~/.config/direnv/lib`, because devenv's direnvrc redefines
+  three nix-direnv helpers with different bodies and the lib dir's
+  sort-order sourcing would silently corrupt one side. Linked from
+  [modules/devenv](../modules/devenv.md) and
+  [modules/direnv](../modules/direnv.md).
+
 ## 2026-07-28
 
 - **Creation** — [claude-skill-lessons-to-scripts](claude-skill-lessons-to-scripts.md):

@@ -17,6 +17,11 @@ shell hook and `direnv.toml` are stow-managed (`home/zsh`, `home/direnv`), not
 part of this module — only the store-path link needs nix (see the
 [store-path configs pattern](../patterns/store-path-configs.md)).
 
+[devenv](devenv.md) deliberately does NOT plug into this lib-dir mechanism —
+its direnvrc redefines nix-direnv helpers, so it uses its own native zsh hook
+instead (see the
+[decision record](../decisions/devenv-native-hook-over-direnv.md)).
+
 ## Twin differences
 
 Only how each class creates the `~/.config/direnv/lib/nix-direnv.sh` link
