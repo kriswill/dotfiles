@@ -7,6 +7,12 @@ in that bundle's own `log.md` (e.g. [modules/log.md](modules/log.md)).
 
 ## 2026-08-01
 
+- **Update** — scaffold tooling: `_okflight/scripts/lib.ts`'s `exists`/`stat`
+  now swallow `ENOTDIR` (`statSync`'s `throwIfNoEntry` only covers `ENOENT`),
+  fixing the `okf scaffold` crash introduced when `flakes/` gained a plain
+  `AGENTS.md` file — the sub-flake pass stats `flakes/<entry>/flake.nix` for
+  every entry and hit `flakes/AGENTS.md/flake.nix`.
+
 - **Update** — `pkgs/`, `overlays/`, and `flakes/` each gained their own
   `AGENTS.md` (+ `CLAUDE.md` companion) documenting that dir's local
   conventions — pkgs: companion-`.sh` `writeShellApplication` tools, unpinned

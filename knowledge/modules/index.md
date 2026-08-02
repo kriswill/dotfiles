@@ -19,6 +19,7 @@ interesting ones by hand — scaffolding never overwrites an existing doc.
 * [Darwin](darwin.md) - Declares `configurations.darwin.<name>` and realises each into a `darwinConfigurations.<name>` flake output (plus a toplevel build check).
 * [Determinate](determinate.md) - Determinate Nix replaces snowglobe-lib's Lix default: snowglobe sets nix.package at priority 1337 (setDefault); the determinate module's plain assignment wins — no fork, no mkForce.
 * [Dev](dev.md) - Development shell (deadnix, statix, nixfmt-tree, just, okf) and formatter.
+* [Devenv](devenv.md) - devenv.sh's Nix developer-environment CLI on both OSes; cd auto-activation comes from devenv 2.1's native zsh hook in the stowed integrations.zsh, not direnv.
 * [Diffnav](diffnav.md) - diffnav git diff pager.
 * [Direnv Nom](direnv-nom.md) - Wraps nix-direnv's _nix() to pipe `use flake` build logs through nix-output-monitor, with an nvd closure diff after successful builds; wrapper text shared via lib/direnv-nom-wrapper.nix.
 * [Direnv](direnv.md) - direnv + nix-direnv on both OSes; links nix-direnv's stdlib into ~/.config/direnv/lib so `use flake` works, with a filename that deliberately sorts before direnv-nom's wrapper.

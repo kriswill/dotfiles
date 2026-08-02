@@ -12,6 +12,11 @@ eval "$(zoxide init zsh --cmd j)"
 ## direnv — per-directory envs (guarded: not provisioned on every host yet).
 command -v direnv > /dev/null && eval "$(direnv hook zsh)"
 
+## devenv — per-project Nix dev environments (devenv.sh). Native cd-activation
+## via the 2.1+ hook, no .envrc/direnv involved; trust a project once with
+## `devenv allow`, revoke with `devenv revoke`. Guarded like direnv above.
+command -v devenv > /dev/null && eval "$(devenv hook zsh)"
+
 ## fd/tree come from the user package set (each OS's user-packages module).
 export FZF_DEFAULT_COMMAND="fd --type f"
 export FZF_DEFAULT_OPTS="--height 40% --prompt ⟫"
