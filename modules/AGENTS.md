@@ -3,8 +3,10 @@
 Every `.nix` file under `modules/` is auto-discovered by `import-tree` as a
 flake-parts module — no manual imports; prefix a path component with `_` to
 exclude it (e.g. `yazi/_themes/`). **`git add` new files before `nix build`**
-— flakes only see git-tracked files. The conventions here also govern the
-sibling dirs modules/ wires up: `pkgs/`, `overlays/`, `flakes/`, `lib/`.
+— flakes only see git-tracked files. This file holds the Nix code style and
+the cross-dir wiring walkthroughs; the sibling dirs modules/ wires up carry
+their own local conventions in `pkgs/AGENTS.md`, `overlays/AGENTS.md`, and
+`flakes/AGENTS.md` (`lib/` is documented below).
 
 ## Code Style - Nix
 
