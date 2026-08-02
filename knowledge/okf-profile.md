@@ -96,8 +96,8 @@ Free-form per the spec; this bundle currently uses: `Pattern`, `Decision`,
 one doc covering the parallel darwin + nixos implementations), `Flake-parts
 Module`, `Host`, `Nix Package`, `Overlay`, `Sub-flake`, `Neovim Plugin`,
 `Neovim Config`, `Language` (the `languages/` bundle — the languages the
-repo is authored in), `Reference`. Add new types sparingly and list them
-here.
+repo is authored in), `Runtime` (the `runtimes/` bundle — their execution
+layer), `Reference`. Add new types sparingly and list them here.
 
 ## Tooling
 

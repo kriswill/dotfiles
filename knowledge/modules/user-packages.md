@@ -10,7 +10,7 @@ timestamp: '2026-07-04T00:00:00-07:00'
 The darwin per-user package list (`users.users.k.packages`): the everyday
 CLI toolbox — bat, fzf, ripgrep, lazygit, jq, just, uv, nix-tree, … —
 installed for the primary user rather than system-wide. It is also the
-darwin provisioner of the JS runtimes: [bun](../bun-runtime.md) and
+darwin provisioner of the JS runtimes: [bun](../runtimes/bun.md) and
 `nodejs_24` live here, where NixOS provides them system-wide via
 [node-runtime](node-runtime.md) instead (there is no darwin twin of that
 module); [neovim](neovim.md)'s darwin twin separately carries a plain

@@ -7,6 +7,14 @@ in that bundle's own `log.md` (e.g. [modules/log.md](modules/log.md)).
 
 ## 2026-08-02
 
+- **Creation** — [runtimes/](runtimes/index.md): new `Runtime` bundle type,
+  the execution layer under `languages/` — [bun](runtimes/bun.md) moves in
+  from the root (superseding the "stays at the root" call below), and a new
+  [nix](runtimes/nix.md) concept covers Nix's executable half (Determinate
+  evaluator/store/daemon), twinned with [Nix Language](languages/nix.md);
+  registered in the [OKF Profile](okf-profile.md) type registry and
+  `okflight.toml`'s taxonomy and dir-groups.
+
 - **Creation** — [languages/](languages/index.md): new `Language` bundle type;
   the six root-level `*-language.md` docs moved into it as
   [bash](languages/bash.md), [lua](languages/lua.md),
@@ -14,7 +22,7 @@ in that bundle's own `log.md` (e.g. [modules/log.md](modules/log.md)).
   [svelte](languages/svelte.md), [typescript](languages/typescript.md)
   (`type: Reference` → `Language`; registered in the
   [OKF Profile](okf-profile.md) type registry and `okflight.toml`'s taxonomy
-  and dir-groups). [Bun runtime](bun-runtime.md) stays at the root — it's a
+  and dir-groups). [Bun runtime](runtimes/bun.md) stays at the root — it's a
   runtime, not a language.
 
 ## 2026-08-01
@@ -151,9 +159,9 @@ in that bundle's own `log.md` (e.g. [modules/log.md](modules/log.md)).
   in-editor and at build time inside `writeShellApplication`. Backlinked
   from [nvim LSP](nvim/lsp.md) (per-server bullets),
   [nvim architecture](nvim/architecture.md), and
-  [bun-runtime](bun-runtime.md).
+  [bun-runtime](runtimes/bun.md).
 
-- **Creation** — [bun-runtime](bun-runtime.md): root-level Reference
+- **Creation** — [bun-runtime](runtimes/bun.md): root-level Reference
   concept for Bun — the repo's default script runtime (house rule: bun + TS
   over bash/python for tooling), per-OS provisioning
   ([user-packages](modules/user-packages.md) on darwin,

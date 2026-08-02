@@ -9,7 +9,7 @@ timestamp: '2026-07-04T00:00:00-07:00'
 [Bash](https://www.gnu.org/software/bash/manual/) is the GNU
 Bourne-again shell. Here it is the glue language, deliberately bounded on
 two sides: interactive shells are [zsh](../modules/zsh.md), and new tooling
-defaults to [bun + TypeScript](../bun-runtime.md) — bash remains where a shell
+defaults to [bun + TypeScript](../runtimes/bun.md) — bash remains where a shell
 is the natural fit.
 
 ## How this repo uses it

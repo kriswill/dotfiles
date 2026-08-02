@@ -10,7 +10,8 @@ The [Nix language](https://nix.dev/manual/nix/stable/language/) is a
 domain-specific, declarative, pure, lazy, dynamically typed functional
 language designed for composing derivations — precise descriptions of how
 existing files are used to derive new files. Every `.nix` file in this
-repository is written in it.
+repository is written in it. Its executable half — evaluator, store,
+daemon — is the [Nix runtime](../runtimes/nix.md).
 
 ## How this repo uses it
 
