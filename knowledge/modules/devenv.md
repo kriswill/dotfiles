@@ -30,6 +30,17 @@ directories explicitly allowed.
 Gotcha: activation is prompt-driven (precmd), so non-interactive shells never
 auto-activate — agents and scripts use `devenv shell -- <cmd>` explicitly.
 
+## Per-project use
+
+First consumer: [kriswill/flake-explorer](https://github.com/kriswill/flake-explorer)
+(its PRs #129/#131), which sets the pairing convention for projects that
+already have a flake: `devenv.nix` twins the flake's `devShells.default`,
+and `devenv.lock` is *derived* — a bun sync script pins `devenv.yaml`'s
+shared inputs to the revs `flake.lock` locks, CI gates lock parity plus a
+`devenv test` enterTest contract, and a weekly workflow bumps both locks in
+one PR opened with a repo-scoped GitHub App token. Full rationale:
+[decision record](../decisions/devenv-lock-derived-from-flake-lock.md).
+
 ## Twin differences
 
 None — both classes are the same one-line package install; see the
