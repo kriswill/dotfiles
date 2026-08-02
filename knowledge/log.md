@@ -5,6 +5,34 @@ types or directories, root-level concept docs, `docs/` manuals, bundle-wide
 sweeps, and workspace tooling conventions. Changes scoped to one bundle log
 in that bundle's own `log.md` (e.g. [modules/log.md](modules/log.md)).
 
+## 2026-08-01
+
+- **Update** — `pkgs/`, `overlays/`, and `flakes/` each gained their own
+  `AGENTS.md` (+ `CLAUDE.md` companion) documenting that dir's local
+  conventions — pkgs: companion-`.sh` `writeShellApplication` tools, unpinned
+  `op`, flake-input sources; overlays: thin re-export vs commented
+  patch/wrapper shapes, TEMPORARY flagging; flakes: per-sub-flake
+  `flake.lock` + `README.md`, inline-overlay wiring. The three cross-link
+  each other and defer wiring walkthroughs to `modules/AGENTS.md`, whose
+  intro (and the root's Nested Agent Docs section) now points at them.
+
+- **Update** — the Nix layer's guidance moved from the root `AGENTS.md` into a
+  nested `modules/AGENTS.md` (+ `CLAUDE.md` companion): Code Style - Nix, the
+  module/package/sub-flake patterns, `lib/` access, and sops secrets. The
+  nested doc also governs the sibling dirs modules/ wires up (`pkgs/`,
+  `overlays/`, `flakes/`, `lib/`), and its intro absorbs the import-tree
+  auto-discovery + git-add-before-build steps. The root keeps overview,
+  commands, shell style, naming, file organization, and the `home/`/`config/`
+  deployment patterns.
+
+- **Update** — Neovim guidance moved out of the root `AGENTS.md` into a
+  nested `home/nvim/.config/nvim/AGENTS.md` (+ `CLAUDE.md` companion),
+  correcting a stale claim en route (plugin specs feed native `vim.pack`
+  via the `lua/config/pack.lua` dispatcher, not lazy.nvim). The root file
+  gained a "Nested Agent Docs" section directing agents to the nearest
+  `AGENTS.md` above any file they touch; the nested doc points back to
+  [knowledge/nvim](nvim/index.md) and `docs/neovim-testing.md` for depth.
+
 ## 2026-07-16
 
 - **Update** — logs are now **bundle-scoped**: the root `log.md` (85 entries,
