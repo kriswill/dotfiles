@@ -2,15 +2,42 @@
 
 ## Overview
 
-Nix-based dotfiles for **macOS (nix-darwin)** and **NixOS** in one flake — no
-home-manager anywhere; every config is a per-class system module + the shared
-GNU Stow tree under `home/`. Hosts: `k`, `mini`, `SOC-Kris-Williams`
-(aarch64-darwin) and `nebula` (x86_64-linux desktop: Hyprland/Noctalia on
-[snowglobe-lib](https://github.com/kriswill/snowglobe-lib) (GitHub fork
-of the Codeberg upstream)). Primary
-configs: Neovim (Lua), Tmux, Zsh, CLI tools; nebula adds the Wayland desktop
-stack. Flake-based, using flake-parts + `import-tree` (the Dendritic pattern):
+Nix-based dotfiles for **macOS (nix-darwin)** and **NixOS** in one flake; every config
+is a per-class system module + the shared GNU Stow tree under `home/`.
+Hosts: `k`, `mini`, `SOC-Kris-Williams` (aarch64-darwin) and
+`nebula` (x86_64-linux desktop: Hyprland/Noctalia on
+[snowglobe-lib](https://github.com/kriswill/snowglobe-lib)
+(GitHub fork of the Codeberg upstream)).
+Primary configs: Neovim (Lua), Tmux, Zsh, CLI tools;
+nebula adds the Wayland desktop stack. Flake-based, using flake-parts + `import-tree` (the Dendritic pattern):
 every `.nix` file under `modules/` is auto-discovered as a flake-parts module.
+
+## Nested Agent Docs
+
+Some subtrees carry their own `AGENTS.md` (+ thin `CLAUDE.md`) **When working
+on files in a subdirectory, always look for and follow the nearest `AGENTS.md`
+up the tree from those files** — it holds the local conventions this root file
+omits. `modules/AGENTS.md` anchors the Nix layer — code style, the
+module/package/sub-flake wiring walkthroughs, `lib/`, sops secrets — and
+`pkgs/`, `overlays/`, and `flakes/` each carry their own cross-linked
+`AGENTS.md` with that dir's local conventions.
+
+## Knowledge Bundle (`knowledge/`)
+
+`knowledge/` is the repo's authored knowledge layer — an
+[OKF v0.1](https://github.com/GoogleCloudPlatform/knowledge-catalog/blob/main/okf/SPEC.md)
+bundle of architecture patterns, decision records, playbooks, and a scaffolded catalog
+of every module/package/host/nvim-plugin, cross-linked into a graph.
+Conventions: `knowledge/okf-profile.md`. Start reading at `knowledge/index.md`
+(each directory's `index.md` discloses one level at a time).
+
+**Keep it current as part of any change** (the `knowledge-bundle` skill has the full procedure):
+after adding a module/package/host/nvim-plugin run `okf scaffold` + `okf index`;
+record non-obvious decisions in `knowledge/decisions/`; append `knowledge/log.md`;
+`okf validate` must exit 0 before committing. `okf viz` renders an interactive graph at
+`knowledge/viz.html` (gitignored). The `okf` command is on the dev-shell PATH (`modules/dev.nix`),
+nix-built from okf's own repo (`kriswill/okflight`, public — consumed as a FlakeHub input,
+`https://flakehub.com/f/kriswill/okflight/0`); outside the dev shell use `nix run .#okf -- <cmd>`.
 
 ## Build & Commands
 
@@ -46,63 +73,6 @@ must be typed explicitly):
 - `rtk nix run …` / `rtk nix shell …` / `rtk nix develop -c …`
 - `rtk nix build …` / `rtk nix flake check …`
 - `rtk direnv exec . …`
-
-## Code Style - Nix
-
-- **Module pattern:** two module classes, one per OS, deliberately parallel:
-  - `flake.modules.darwin.<name>` (`modules/darwin/`) — realised by
-    `modules/darwin.nix` via `configurations.darwin.<host>`.
-  - `flake.modules.nixos.<name>` (`modules/nixos/`) — realised by
-    `modules/nixos.nix` via `configurations.nixos.<host>` through
-    snowglobe-lib's `mkNixosHost` (hardware metadata lives in the registry
-    entry, `modules/hosts/nebula.nix`).
-  Hosts blanket-import their whole class (`builtins.attrValues
-  config.flake.modules.<class>`). Universal features are ungated; darwin
-  host-selective features gate behind `programs.<name>.enable` /
-  `services.<name>.enable` flipped in `modules/hosts/<hostname>/default.nix`.
-  The nixos class is currently all-universal (single Linux host) — retrofit
-  gates when a second NixOS host appears. Truly host-specific config is a file
-  beside the host's registration (e.g. `modules/hosts/SOC-Kris-Williams/alias-en0.nix`,
-  `modules/hosts/nebula/*.nix`).
-- **Cross-platform features get twins:** a feature shared by both OSes has a
-  module in each class dir (`modules/darwin/git.nix` ↔ `modules/nixos/git.nix`);
-  shared generated-file text is extracted to `lib/` (see
-  `lib/direnv-nom-wrapper.nix`). Keep the twins' package lists in sync.
-- **Imports:** Use `inherit` for cleaner destructuring
-- **Package lists:** Use `builtins.attrValues { inherit (pkgs) ...; }` pattern
-- **Options:** darwin host-selective modules gate on `lib.mkEnableOption` under
-  `programs.<name>` / `services.<name>` (no personal namespace); universal
-  modules carry no toggles, though a behavior setting is fine
-  (`programs.direnv-nom.diff`, declared in both classes' twins). Universal
-  modules' override-prone scalars use `lib.mkDefault`; overriding anything else
-  per host needs `lib.mkForce`
-- **Symlinks:** Stow tree under `home/` for plain config files (see Symlinked
-  Configs below); files that must embed /nix/store paths are generated by the
-  feature's module — darwin: activation script (`postActivation`, order 1600),
-  nixos: `systemd.tmpfiles.rules` (`L+`) — see `modules/darwin/tmux.nix` ↔
-  `modules/nixos/tmux.nix`
-- **Overlays:** every host on both OSes applies the whole `flake.overlays` set;
-  an overlay that only makes sense on one OS must be internally
-  platform-guarded (see `overlays/podman.nix`) or only ADD lazy attrs the
-  other OS never evaluates (hyprland overlays)
-- **Unfree packages:** Repo sets `nixpkgs.config.allowUnfree = false` in
-  `modules/darwin/core.nix` (darwin); to permit a specific unfree package add a
-  `nixpkgs.config.allowUnfreePredicate` there. nebula's unfree policy comes via
-  snowglobe-lib profiles.
-
-## Code Style - Lua (Neovim)
-
-**Formatter:** stylua (configured in `home/nvim/.config/nvim/.stylua.toml`)
-
-- `indent_width = 2`
-- `collapse_simple_statement = "FunctionOnly"`
-- `sort_requires.enabled = true`
-
-**Structure:**
-
-- Entry: `init.lua` → `require("config")`
-- Core config: `lua/config/` (options, keymaps, autocmds, LSP)
-- Plugins: `lua/plugins/` (lazy.nvim plugin specs)
 
 ## Code Style - Shell Scripts
 
@@ -153,80 +123,11 @@ must be typed explicitly):
 └── scripts/             # Helper scripts for package updates
 ```
 
-## Custom Library Functions
-
-Pure helpers live in `lib/` (the `kanagawa` palette via `lib/default.nix`, plus
-standalone builder files like `lib/direnv-nom-wrapper.nix` imported by path).
-`modules/darwin.nix` extends `nixpkgs.lib` with `lib/default.nix` and hands the
-result to the darwin evaluation via specialArgs, so darwin modules reach them
-as `lib.kanagawa`. The nixos evaluation goes through snowglobe-lib's
-`mkNixosHost` and does NOT get the extended lib — nixos modules import lib
-files by path when needed.
-
-## Secrets (sops-nix)
-
-- Recipients and creation rules: `.sops.yaml`. Every host's age identity is
-  derived from its SSH host key — on a new machine run
-  `ssh-to-age < /etc/ssh/ssh_host_ed25519_key.pub` and add an anchor + rule.
-- Secrets files: `modules/hosts/<host>/secrets.yaml`, edited with
-  `sops modules/hosts/<host>/secrets.yaml` (tools in the dev shell).
-- Machinery: darwin imports `sops-nix.darwinModules.sops` via
-  `modules/darwin/sops.nix`; nebula gets the NixOS module via snowglobe-lib.
-  A host consumes secrets with `sops.defaultSopsFile` + `sops.secrets.<name>`.
-- git commit signing is NOT gpg: it's SSH-format signing through the 1Password
-  agent, OS-branched inside `home/git/.config/git/config` via
-  `includeIf gitdir:/Users/ | /home/`. gpg-agent (both OSes) only backs `pass`
-  and ad-hoc gpg; `enableSSHSupport` stays false.
-
 ## Common Patterns
 
-**Adding a New Module:**
-
-1. Create a bare `<name>.nix` in `modules/darwin/` or `modules/nixos/` defining
-   `flake.modules.<class>.<name>` (a directory only when bundling adjacent
-   config files). Universal: no options, no `lib.mkIf`. Darwin host-selective:
-   gate behind `programs.<name>.enable` / `services.<name>.enable`
-   (`lib.mkEnableOption` + `lib.mkIf`; see `modules/darwin/podman-desktop.nix`)
-   and flip it in each wanting host's `modules/hosts/<hostname>/default.nix`.
-2. Cross-platform feature? Add the twin in the other class dir; share generated
-   file text via `lib/` if non-trivial.
-3. Config that only ever applies to one machine (fixed IPs, hardware quirks)
-   skips the class dirs entirely: put it in a file beside that host's
-   registration merging into `configurations.<class>.<hostname>.module`.
-4. File is auto-discovered by `import-tree` — no manual import needed (prefix a
-   path component with `_` to exclude it, e.g. `yazi/_themes/`)
-5. **Must `git add` new files before `nix build`** — flakes only see
-   git-tracked files
-
-**Adding a Custom Package:**
-
-1. Create `pkgs/<name>.nix` (or `pkgs/<name>/package.nix`)
-2. Add `<name> = pkgs.callPackage ../pkgs/<name>.nix { };` to
-   `perSystem.packages` in `modules/packages.nix` — under the right platform
-   guard (`lib.optionalAttrs`) if it only builds on one OS
-3. To make it available to hosts, create `overlays/<name>.nix` and register it
-   in `modules/overlays.nix` (`flake.overlays.<name>`)
-4. If unfree: add a `nixpkgs.config.allowUnfreePredicate` entry in
-   `modules/darwin/core.nix`
-
-**Adding a Custom Package as a Sub-flake (extraction pattern):**
-
-For a package that warrants its own flake — forked/patched source,
-standalone-buildable, or destined to become a separate repo — put it under
-`flakes/<name>/` instead of `pkgs/`:
-
-1. Create `flakes/<name>/{flake.nix,package.nix,…}`. `flake.nix` uses
-   flake-parts and exposes `packages.<system>.<name>` (+ `default`).
-   **`git add` it** — sub-flake files must be git-tracked to be seen.
-2. Add a relative-path input in `flake.nix`: `inputs.<name>.url = "./flakes/<name>";`
-   with `inputs.<name>.inputs.{nixpkgs,flake-parts}.follows` to dedupe nixpkgs.
-3. Re-export in `modules/packages.nix`: `<name> = inputs.<name>.packages.${system}.<name>;`.
-4. If a host needs it on `pkgs`, add an **inline** overlay in
-   `modules/overlays.nix` (which receives `inputs`).
-
-Later extraction to a separate repo is just swapping the input URL
-`"./flakes/<name>"` → `"github:owner/<name>"`. See `flakes/ccglass/` for a
-worked example.
+Nix-side patterns (adding a module / package / sub-flake) live in
+`modules/AGENTS.md`. The patterns below cover config deployment (`home/`,
+`config/`).
 
 **Symlinked Configs — the stow tree (`home/`), pointing at the live repo (editable without rebuild):**
 
@@ -261,9 +162,3 @@ machine-verified, written for agent reuse. Consult the relevant manual before
 working on its topic and keep it current: lead with the verified version/state,
 keep a dated "Learned behaviours & workarounds" section, correct stale claims
 rather than appending contradictions.
-
-## Knowledge Bundle (`knowledge/`)
-
-`knowledge/` is the repo's authored knowledge layer — an [OKF v0.1](https://github.com/GoogleCloudPlatform/knowledge-catalog/blob/main/okf/SPEC.md) bundle of architecture patterns, decision records, playbooks, and a scaffolded catalog of every module/package/host/nvim-plugin, cross-linked into a graph. Conventions: `knowledge/okf-profile.md`. Start reading at `knowledge/index.md` (each directory's `index.md` discloses one level at a time).
-
-**Keep it current as part of any change** (the `knowledge-bundle` skill has the full procedure): after adding a module/package/host/nvim-plugin run `okf scaffold` + `okf index`; record non-obvious decisions in `knowledge/decisions/`; append `knowledge/log.md`; `okf validate` must exit 0 before committing. `okf viz` renders an interactive graph at `knowledge/viz.html` (gitignored). The `okf` command is on the dev-shell PATH (`modules/dev.nix`), nix-built from okf's own repo (`kriswill/okflight`, public — consumed as a FlakeHub input, `https://flakehub.com/f/kriswill/okflight/0`); outside the dev shell use `nix run .#okf -- <cmd>`.
