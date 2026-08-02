@@ -1,5 +1,5 @@
 ---
-type: Reference
+type: Language
 title: Lua Language
 description: 'Lua — the small embeddable scripting language, used here in its Lua 5.1/LuaJIT dialect exclusively as the Neovim configuration language, formatted by stylua and served by lua-ls + lazydev.'
 tags: [lua, language]
@@ -16,17 +16,17 @@ habitat: Neovim, which embeds LuaJIT, so the working dialect is Lua 5.1.
 `require("config")`, and everything under
 `home/nvim/.config/nvim/lua/{config,plugins}/` is plain Lua on nightly
 Neovim, including the hand-rolled `vim.pack` trigger dispatcher (see
-[Plugin & Startup Architecture](nvim/architecture.md)). There is no Lua
+[Plugin & Startup Architecture](../nvim/architecture.md)). There is no Lua
 outside the editor (no hammerspoon, no awesome).
 
 **Formatting** is stylua via efm, configured in the config tree's own
 `.stylua.toml`: 2-space indent, `collapse_simple_statement =
 "FunctionOnly"`, sorted requires. lua-ls itself never formats —
 format-on-save is filtered to efm as the single formatting authority
-([nvim LSP](nvim/lsp.md)).
+([nvim LSP](../nvim/lsp.md)).
 
 **Language server** is lua-ls with its workspace library set to all Neovim
-runtime files, paired with [lazydev](nvim/plugins/lazydev-nvim.md) so
+runtime files, paired with [lazydev](../nvim/plugins/lazydev-nvim.md) so
 editing the config gets plugin-and-API-aware completion.
 
 ## Citations

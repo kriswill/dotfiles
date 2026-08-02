@@ -60,7 +60,7 @@ type-only import is satisfied by the vendored
 [`scaffold-api.d.ts`](../_okflight/scripts/scaffold-api.d.ts).
 
 No `bun build --compile`: `okf viz` bundles the
-[Svelte](../svelte-language.md) viewer with `Bun.build`
+[Svelte](../languages/svelte.md) viewer with `Bun.build`
 + bun-plugin-svelte at CLI runtime, so the bun runtime and node_modules must
 be present.
 
