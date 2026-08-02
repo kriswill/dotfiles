@@ -2,6 +2,11 @@
 
 ## 2026-08-02
 
+- **Update** — [devenv](devenv.md): gains a "Per-project use" section — the
+  flake-explorer pairing convention (devenv.nix twins the flake devShell,
+  devenv.lock derived from flake.lock) linking the new
+  [devenv-lock-derived-from-flake-lock](../decisions/devenv-lock-derived-from-flake-lock.md)
+  decision.
 - **Update** — [users-k-noctalia](users-k-noctalia.md): gains
   `disabledModules = [ "programs/wayland/noctalia.nix" ]` — nixos-unstable's
   new `programs.noctalia` module collided with the upstream noctalia-shell

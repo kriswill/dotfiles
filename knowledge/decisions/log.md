@@ -2,6 +2,12 @@
 
 ## 2026-08-02
 
+- **Creation** — [devenv-lock-derived-from-flake-lock](devenv-lock-derived-from-flake-lock.md):
+  devenv-paired flake projects derive devenv.lock from flake.lock — a bun
+  sync script pins devenv.yaml's shared inputs to the locked revs, CI gates
+  parity plus an enterTest contract, and the weekly update PR is opened with
+  a repo-scoped GitHub App token (GITHUB_TOKEN PRs never trigger CI; PATs
+  expire). Reference implementation: kriswill/flake-explorer PRs #129/#131.
 - **Creation** — [noctalia-flake-module-over-nixpkgs](noctalia-flake-module-over-nixpkgs.md):
   nixpkgs' new `programs.noctalia` module is disabled on nebula
   (`disabledModules`) so the upstream noctalia-shell flake module — imported
