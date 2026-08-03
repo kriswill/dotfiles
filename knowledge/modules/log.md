@@ -1,5 +1,15 @@
 # Log
 
+## 2026-08-03
+
+- **Update** — [herdr](herdr.md): darwin joins the upstream preview-flake pin.
+  New `modules/darwin/herdr.nix` twin (installs the `herdr` input's package +
+  `herdr-nav` on `environment.systemPackages`, mirroring the NixOS module);
+  the nixpkgs-stable `herdr`/`herdr-nav` entries leave
+  [user-packages](user-packages.md). Doc promoted NixOS Module → Dual Module.
+  Dropping the pin (see [herdr-update-check](herdr-update-check.md)) now
+  reverts both OSes.
+
 ## 2026-08-02
 
 - **Creation** — [xdg-open-journal](xdg-open-journal.md): universal NixOS

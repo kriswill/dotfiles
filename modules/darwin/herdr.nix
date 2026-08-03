@@ -1,10 +1,10 @@
 { inputs, ... }:
 {
-  flake.modules.nixos.herdr =
+  flake.modules.darwin.herdr =
     # herdr — agent multiplexer that lives in your terminal. Pinned to the
     # upstream preview flake (see the herdr input in flake.nix) instead of
     # nixpkgs' stable 0.7.5, for in-pane image rendering (docs/fastfetch.md).
-    # Darwin twin: modules/darwin/herdr.nix.
+    # NixOS twin: modules/nixos/herdr.nix.
     { pkgs, ... }:
     {
       environment.systemPackages = [

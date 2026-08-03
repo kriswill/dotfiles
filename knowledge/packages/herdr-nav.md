@@ -74,7 +74,7 @@ Added per the [add-package playbook](../playbooks/add-package.md).
 - Package: [`pkgs/herdr-nav.nix`](../../pkgs/herdr-nav.nix)
 - Script: [`pkgs/herdr-nav.sh`](../../pkgs/herdr-nav.sh)
 - Overlay: [`overlays/herdr-nav.nix`](../../overlays/herdr-nav.nix) — exposes/replaces `pkgs.herdr-nav`
-- Installed alongside herdr on both OSes: [`modules/nixos/herdr.nix`](../../modules/nixos/herdr.nix), [`modules/darwin/user-packages.nix`](../../modules/darwin/user-packages.nix)
+- Installed alongside herdr on both OSes by the [herdr module twins](../modules/herdr.md): [`modules/nixos/herdr.nix`](../../modules/nixos/herdr.nix), [`modules/darwin/herdr.nix`](../../modules/darwin/herdr.nix)
 
 ## Citations
 
