@@ -366,6 +366,28 @@
         "url": "https://flakehub.com/f/cachix/git-hooks.nix/0.1.941"
       }
     },
+    "herdr": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ],
+        "rust-overlay": "rust-overlay"
+      },
+      "locked": {
+        "lastModified": 1785331463,
+        "narHash": "sha256-C9RJd+LQXFcuAzLYN/HHrA0K3C1n1TuZVMQQ2r8jTM0=",
+        "owner": "herdrdev",
+        "repo": "herdr",
+        "rev": "44b3adb125524ea9a55739eee3776f922f2115ad",
+        "type": "github"
+      },
+      "original": {
+        "owner": "herdrdev",
+        "ref": "preview-2026-07-29-44b3adb12552",
+        "repo": "herdr",
+        "type": "github"
+      }
+    },
     "hyprcursor": {
       "inputs": {
         "hyprlang": [
@@ -1066,6 +1088,7 @@
         "darwin": "darwin",
         "determinate": "determinate",
         "flake-parts": "flake-parts_2",
+        "herdr": "herdr",
         "hyprland": "hyprland",
         "import-tree": "import-tree",
         "nixos-hardware": "nixos-hardware",
@@ -1076,6 +1099,27 @@
         "sops-nix": "sops-nix",
         "tomato": "tomato",
         "yazi-plugins": "yazi-plugins"
+      }
+    },
+    "rust-overlay": {
+      "inputs": {
+        "nixpkgs": [
+          "herdr",
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1783577481,
+        "narHash": "sha256-EWMxOWrJ031f8f/lrcEmhTRs4npw1/5N3Hcjin846c8=",
+        "owner": "oxalica",
+        "repo": "rust-overlay",
+        "rev": "4cdea398dc491b082dccdce0fad1ed0b75fa3394",
+        "type": "github"
+      },
+      "original": {
+        "owner": "oxalica",
+        "repo": "rust-overlay",
+        "type": "github"
       }
     },
     "snowglobe-lib": {
