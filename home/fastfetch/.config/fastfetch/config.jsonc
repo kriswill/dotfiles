@@ -10,6 +10,8 @@
     // Image lives in the stow tree at home/fastfetch/.config/fastfetch/Nebula.png,
     // symlinked here by dotfiles-stow.nix. Swap the file to change the logo.
     // (logo.png is the macOS Apple logo — don't let a merge swap it back in.)
+    // macOS never sees this source: modules/darwin/fastfetch.nix wraps the
+    // binary with --logo pointing at the Hexley-the-platypus PNG instead.
     "source": "~/.config/fastfetch/Nebula.png",
     "width": 27,
     "height": 20

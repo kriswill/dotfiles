@@ -14,7 +14,14 @@ stable across rebuilds and the adopt workflow works (see the
 builder [`lib/stow-restow-script.nix`](../../lib/stow-restow-script.nix))
 canonicalizes the stow dir, self-heals links that reach repo files through a
 non-canonical convenience symlink, then runs `stow --no-folding --restow` per
-package with per-package conflict tolerance (log + skip, never abort). Also
+package with per-package conflict tolerance (log + skip, never abort). Stow
+runs with `--ignore='\.cache'` and `--ignore='\.DS_Store'`: sudo'd tools
+occasionally drop root-owned droppings *inside* a stow package (a root-owned
+`.cache/` in `home/fastfetch` was unreadable to the user-level stow, which
+errored and silently skipped the whole package on every restow, 2026-08-03) —
+ignore matching is by name before stow opens the dir, so such droppings can't
+take the package down. Git ignores them at any depth too (`**/.cache/` in
+`.gitignore`). Also
 installs `stow` and the `dots-adopt` capture helper. The whole thing runs in
 a subshell so a stray `exit` can't abort the rest of activation — the
 hard-won lesson from the June-06 bootloader incident (manual below).

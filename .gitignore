@@ -1,9 +1,12 @@
 .direnv
 pkgs/result
-# Stray root-owned dir some sudo'd tool dropped in the repo root (2026-07-15) —
-# unreadable to the user, so git status/starship's git_status silently ate the
-# permission-denied cost on every prompt render. Ignored in case it recurs.
-/.cache
+# Stray root-owned .cache dirs sudo'd tools drop inside the repo (repo root
+# 2026-07-15; home/fastfetch/.config/fastfetch 2026-08-03 — that one was
+# unreadable to user-level stow, which errored and skipped the whole fastfetch
+# package on every restow). Also cost git status/starship a permission-denied
+# on every prompt render. Ignored at any depth so git never descends; the
+# restow script (lib/stow-restow-script.nix) --ignores them for stow too.
+**/.cache/
 # nebula's hand-appended rebuild log (untracked since the dual-OS merge review)
 updates.log
 **/.DS_Store

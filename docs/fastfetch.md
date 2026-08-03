@@ -191,7 +191,41 @@ Hard-won gotchas from doing this (so the next session doesn't relearn them):
 
 ## Learned behaviours & workarounds
 
-- **No image logo is possible inside herdr (0.7.5)** — herdr's pty reports no
+- **macOS overrides the logo at the package layer, not in config.jsonc** —
+  `modules/darwin/fastfetch.nix` wraps the darwin binary
+  (symlinkJoin + wrapProgram, same idiom as `modules/darwin/diffnav.nix`) with
+  `--logo "$HOME/.config/fastfetch/hexley-nix.png"` (Hexley the platypus —
+  Darwin's mascot — on the Nix snowflake, 580×502; lives in the stow tree
+  beside Nebula.png, as does `dark-apple.png`, the old Apple logo renamed).
+  CLI flags beat the config's `source`, so the shared config keeps
+  `Nebula.png` for nebula — if macOS shows a platypus while this file says
+  Nebula, that's why. Logo type and the 27×20 box still come from config.jsonc;
+  `kitten icat` fits the image inside the box preserving aspect — by
+  screenshot this wide image width-fits at ~13 rows beside ~19 rows of
+  output, so the wrapper also passes `--logo-padding-top 3` to drop it toward
+  vertical center. Tune the number there, or add
+  `--logo-width`/`--logo-height` for independent sizing. (2026-08-03)
+- **A root-owned `.cache/` inside a stow package silently kills its restow** —
+  a sudo'd tool (most plausibly a root `fastfetch` run resolving the stowed
+  config to its repo realpath and dropping its cache next to it) created
+  root-owned `home/fastfetch/.config/fastfetch/.cache/`. User-level stow
+  couldn't read it → errored → activation logged only
+  `stow: WARNING conflict/error on fastfetch, skipped` → files added/renamed
+  in the package after that point never got symlinked (the wrapper's
+  `--logo` path dangled, so macOS fell back to the builtin ASCII apple; git
+  isn't involved anywhere — stow deploys the live working tree, tracked or
+  not). Same phenomenon previously hit the repo root (2026-07-15 `.gitignore`
+  entry). Fixed in `lib/stow-restow-script.nix`: stow now runs with
+  `--ignore='\.cache' --ignore='\.DS_Store'` (name-matched before opening, so
+  unreadable droppings can't fail the package), and `.gitignore` ignores
+  `**/.cache/`. Removing such a dir without sudo: you can't `mv` it to a new
+  parent (macOS needs write on the dir itself to rewrite `..`) — only
+  `sudo rm -rf` it. (2026-08-03)
+- **No image logo is possible inside herdr (0.7.5 stable)** — but with the
+  preview pin below this is FIXED on both OSes: darwin joined the pin in
+  `df2d5ae` (2026-08-01), and the kitty-icat logo verified rendering inside
+  herdr on macOS by screenshot (2026-08-03). The rest of this entry describes
+  stock 0.7.5. herdr's pty reports no
   pixel dimensions and doesn't answer the `CSI 14 t` screen-size query, so
   *every* image path dies: `kitty-icat` → ``kitten icat` returned empty
   output` (`kitten icat --detect-support` → "Terminal does not support
