@@ -7,12 +7,12 @@
     // requires tmux's TERM != "screen" (fastfetch blocks images when TERM is
     // exactly "screen") — set via `default-terminal "tmux-256color"` in tmux.conf.
     "type": "kitty-icat",
-    // Image lives in the stow tree at home/fastfetch/.config/fastfetch/logo.png,
-    // symlinked here by the dotfiles-stow module (Nebula.png also ships in the
-    // package as an alternative — swap the source to change the logo).
-    "source": "~/.config/fastfetch/logo.png"
-    //"width": 30,
-    //"height": 18
+    // Image lives in the stow tree at home/fastfetch/.config/fastfetch/Nebula.png,
+    // symlinked here by dotfiles-stow.nix. Swap the file to change the logo.
+    // (logo.png is the macOS Apple logo — don't let a merge swap it back in.)
+    "source": "~/.config/fastfetch/Nebula.png",
+    "width": 27,
+    "height": 20
   },
   "modules": [
     "title",

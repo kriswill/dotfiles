@@ -34,6 +34,9 @@
         herdr-nav = pkgs.callPackage ../pkgs/herdr-nav.nix { };
         # rtk — CLI proxy that filters dev command output to cut LLM token usage.
         rtk = pkgs.callPackage ../pkgs/rtk.nix { };
+        # kitten — prebuilt standalone binary (darwin-arm64 + linux-amd64);
+        # fastfetch's kitty-icat logo shells out to it on both OSes.
+        kitten = pkgs.callPackage ../pkgs/kitten.nix { };
         # ccglass is built by its own flake (./flakes/ccglass); re-export it here.
         ccglass = inputs.ccglass.packages.${system}.ccglass;
         # okf (the knowledge-bundle CLI) is built from its own repo
@@ -50,8 +53,6 @@
         apple-container = inputs.apple-container.packages.${system}.apple-container;
         # Official prebuilt podman macOS remote client (aarch64-darwin only).
         podman = pkgs.callPackage ../pkgs/podman.nix { };
-        # kitten ships as a prebuilt darwin-arm64 binary.
-        kitten = pkgs.callPackage ../pkgs/kitten.nix { };
       }
       # Linux-only: wowup wraps an AppImage (needs the appimage runtime);
       # flatpak-user shims a Linux-only package manager.
