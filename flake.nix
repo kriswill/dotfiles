@@ -61,6 +61,10 @@
     # are already on Determinate, installer-managed). Deliberately NO nixpkgs
     # follows: upstream recommends against it (FlakeHub cache misses).
     determinate.url = "https://flakehub.com/f/DeterminateSystems/determinate/3";
+    nixos-hardware = {
+      url = "github:NixOS/nixos-hardware";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     snowglobe-lib = {
       # Host builder (mkNixosHost), snowglobe-lib.profiles/desktop options.
       url = "github:kriswill/snowglobe-lib/unstable";
@@ -70,6 +74,7 @@
         nixpkgs.follows = "nixpkgs";
         import-tree.follows = "import-tree";
         sops-nix.follows = "sops-nix";
+        nixos-hardware.follows = "nixos-hardware";
       };
     };
     # Explicit sops-nix (snowglobe-lib follows it, above): also provides
