@@ -1,7 +1,7 @@
 ---
 type: Dual Module
 title: Herdr
-description: 'herdr — terminal agent multiplexer (run several coding agents in persistent, SSH-reachable sessions); pinned on both OSes to an upstream preview flake tag for in-pane image rendering.'
+description: 'herdr — terminal agent multiplexer (run several coding agents in persistent, SSH-reachable sessions); pinned on both OSes to the upstream flake at stable v0.8.0 for in-pane image rendering.'
 resource: modules/darwin/herdr.nix
 tags: [darwin-module, nixos-module]
 timestamp: '2026-07-28T01:39:41+00:00'
@@ -10,15 +10,18 @@ timestamp: '2026-07-28T01:39:41+00:00'
 [herdr](https://herdr.dev) is a terminal multiplexer for coding agents: it
 runs multiple agents side by side in one terminal, with persistent sessions
 that survive detach and are reachable remotely over SSH. Both OSes are
-**pinned to an upstream preview tag** via the `herdr` flake input (the repo
-ships its own flake; built from source, no binary cache) for the CSI 14t/16t
-pixel-size fix ([#835](https://github.com/herdrdev/herdr/issues/835)) that
-stable 0.7.5 lacks — paired with `experimental.kitty_graphics = true` in the
-stow `config.toml`, this enables in-pane image rendering (fastfetch/yazi; the
-full story lives in [`docs/fastfetch.md`](../../docs/fastfetch.md)). Drop the
-pin back to nixpkgs once a stable release carries the fix —
+**pinned to the upstream `v0.8.0` stable tag** via the `herdr` flake input
+(the repo ships its own flake; built from source, no binary cache) for the
+CSI 14t/16t pixel-size fix
+([#835](https://github.com/herdrdev/herdr/issues/835)) that nixpkgs' 0.7.5
+lacks — paired with `experimental.kitty_graphics = true` in the stow
+`config.toml`, this enables in-pane image rendering (fastfetch/yazi; the
+full story lives in [`docs/fastfetch.md`](../../docs/fastfetch.md)). The pin
+started at preview tag `preview-2026-07-29-44b3adb12552` and moved to stable
+`v0.8.0` the day upstream released it (2026-08-03). Drop the pin back to
+nixpkgs once nixos-unstable ships >= 0.8.0 —
 [herdr-update-check](herdr-update-check.md) is the daily reminder, and
-dropping it now reverts **both** OSes at once.
+dropping it reverts **both** OSes at once.
 
 Its `config.toml` is the `home/herdr/` [stow package](../patterns/stow-tree.md)
 — adopted per-file because herdr keeps mutable runtime data (logs, sockets,

@@ -222,8 +222,8 @@ Hard-won gotchas from doing this (so the next session doesn't relearn them):
   parent (macOS needs write on the dir itself to rewrite `..`) — only
   `sudo rm -rf` it. (2026-08-03)
 - **No image logo is possible inside herdr (0.7.5 stable)** — but with the
-  preview pin below this is FIXED on both OSes: darwin joined the pin in
-  `df2d5ae` (2026-08-01), and the kitty-icat logo verified rendering inside
+  upstream-flake pin below this is FIXED on both OSes: darwin joined the pin
+  in `df2d5ae` (2026-08-01), and the kitty-icat logo verified rendering inside
   herdr on macOS by screenshot (2026-08-03). The rest of this entry describes
   stock 0.7.5. herdr's pty reports no
   pixel dimensions and doesn't answer the `CSI 14 t` screen-size query, so
@@ -249,13 +249,15 @@ Hard-won gotchas from doing this (so the next session doesn't relearn them):
   - **Pixel-size queries** (CSI 14t/16t answered 0×0, `TIOCGWINSZ` pixel
     fields zero) were exactly
     [#835](https://github.com/herdrdev/herdr/issues/835) — fixed on master,
-    shipped in preview release
-    [`preview-2026-07-29-44b3adb12552`](https://github.com/ogulcancelik/herdr/releases/tag/preview-2026-07-29-44b3adb12552),
-    **not yet in stable 0.7.5** (what nixpkgs ships). nebula therefore pins
-    that preview tag via the `herdr` flake input (upstream ships its own
-    flake; `modules/nixos/herdr.nix` consumes it, built from source — the
-    binary still reports "0.7.5", tell it apart by store path). Drop the pin
-    when a stable release carries the fix. (2026-08-02)
+    first shipped in preview `preview-2026-07-29-44b3adb12552`, now in stable
+    [`v0.8.0`](https://github.com/herdrdev/herdr/releases/tag/v0.8.0)
+    (released 2026-08-03), **which nixpkgs does not yet carry** (still 0.7.5).
+    Both OSes therefore pin the upstream flake at the `v0.8.0` tag via the
+    `herdr` flake input (upstream ships its own flake;
+    `modules/{darwin,nixos}/herdr.nix` consume it, built from source — the
+    binary reports "0.8.0", unlike the earlier preview pin which still said
+    "0.7.5"). Drop the pin when nixos-unstable ships >= 0.8.0 — nebula's
+    `herdr-update-check` timer watches for that daily. (2026-08-03)
 
 - **ASCII instead of the PNG inside tmux = `TERM=="screen"` guard**, not a
   terminal/passthrough problem. Proof: raw `kitten icat ~/.config/fastfetch/Nebula.png`

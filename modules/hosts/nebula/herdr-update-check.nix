@@ -1,14 +1,14 @@
-# Daily reminder to drop the herdr preview-flake pin (flake.nix) once
-# nixos-unstable ships a herdr newer than the 0.7.5 the pin shadows — see
-# docs/fastfetch.md. One raw-file HTTP fetch, no nix eval. Pops a dismissable
-# critical notification; clicking the action opens the upstream releases page.
+# Daily reminder to drop the herdr upstream-flake pin (flake.nix) once
+# nixos-unstable ships a herdr >= the pinned 0.8.0 — see docs/fastfetch.md.
+# One raw-file HTTP fetch, no nix eval. Pops a dismissable critical
+# notification; clicking the action opens the upstream releases page.
 # DELETE THIS FILE together with the pin.
 {
   configurations.nixos.nebula.module =
     { pkgs, ... }:
     {
       systemd.user.services.herdr-update-check = {
-        description = "Notify when nixos-unstable carries herdr > 0.7.5 (drop the preview pin)";
+        description = "Notify when nixos-unstable carries herdr >= 0.8.0 (drop the upstream-flake pin)";
         serviceConfig = {
           Type = "oneshot";
           # notify-send -A blocks until the notification is clicked or
@@ -22,18 +22,20 @@
           pkgs.xdg-utils
         ];
         script = ''
-          pinned="0.7.5" # the stable version the preview pin shadows
+          pinned="0.8.0" # the pinned version — drop the pin when nixpkgs catches up
           v=$(curl -fsSL --max-time 30 \
             https://raw.githubusercontent.com/NixOS/nixpkgs/nixos-unstable/pkgs/by-name/he/herdr/package.nix \
             | sed -n 's/.*version = "\([0-9.]*\)".*/\1/p' | head -1) || true
           [ -n "$v" ] || exit 0 # network/path hiccup — try again tomorrow
           newest=$(printf '%s\n' "$pinned" "$v" | sort -V | tail -1)
-          if [ "$newest" != "$pinned" ]; then
+          # fire on v >= pinned (equality included — nixpkgs landing exactly
+          # the pinned version is the drop signal)
+          if [ "$newest" = "$v" ]; then
             # timeout < TimeoutStartSec so an ignored notification ends the
             # run cleanly (it re-fires next day anyway).
             action=$(timeout 12h notify-send -u critical -A open="Open herdr releases" \
               "herdr $v is in nixos-unstable" \
-              "Stable now exceeds the pinned $pinned — drop the preview pin (flake.nix, modules/nixos/herdr.nix); see docs/fastfetch.md" \
+              "nixpkgs has caught up to the pinned $pinned — drop the pin (flake.nix, modules/{darwin,nixos}/herdr.nix); see docs/fastfetch.md" \
               || true)
             if [ "$action" = "open" ]; then
               xdg-open "https://github.com/ogulcancelik/herdr/releases"
