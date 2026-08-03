@@ -1,4 +1,14 @@
 onboarding = false
+
+# kitty graphics passthrough (fastfetch/yazi image rendering in panes) — off
+# by default upstream. Only fully works on a herdr build with the CSI 14t/16t
+# pixel-size fix (herdrdev/herdr#835; preview channel / our pinned flake
+# input, not stable 0.7.5). Enabling needs a server restart + fresh pane —
+# `herdr server reload-config` claims applied but renders nothing (#1843).
+# See docs/fastfetch.md.
+[experimental]
+kitty_graphics = true
+
 [ui]
 agent_panel_sort = "spaces"
 

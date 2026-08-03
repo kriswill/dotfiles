@@ -2,6 +2,14 @@
 
 ## 2026-08-02
 
+- **Change** — [herdr](herdr.md): NixOS install now pinned to upstream preview
+  tag `preview-2026-07-29-44b3adb12552` via a new `herdr` flake input (upstream
+  ships its own flake; built from source) for the pixel-size fix
+  (herdrdev/herdr#835) stable 0.7.5 lacks; `experimental.kitty_graphics = true`
+  added to the stow `config.toml`. Together these enable in-pane image
+  rendering (fastfetch/yazi) — see `docs/fastfetch.md`. Darwin stays on
+  nixpkgs stable.
+
 - **Update** — [devenv](devenv.md): gains a "Per-project use" section — the
   flake-explorer pairing convention (devenv.nix twins the flake devShell,
   devenv.lock derived from flake.lock) linking the new

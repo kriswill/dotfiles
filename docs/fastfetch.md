@@ -13,22 +13,26 @@ at the bottom.
 $ fastfetch --version
 fastfetch 2.64.2 (x86_64)
 $ kitten --version
-kitten 0.47.4 created by Kovid Goyal
-$ command -v fastfetch kitten kitty
+kitten 0.42.2 created by Kovid Goyal    # from pkgs/kitten.nix (prebuilt static binary)
+$ command -v fastfetch kitten
 /run/current-system/sw/bin/fastfetch
 /run/current-system/sw/bin/kitten        # required by logo type "kitty-icat"
-/run/current-system/sw/bin/kitty
 ```
 
-- **Install:** comes from snowglobe-lib's package set (it's on the system
-  `PATH`, not declared in this repo). `kitten`/`kitty` are also already on
-  `PATH` here — unlike the macOS/`main` branch, which needed a custom `kitten`
-  derivation because kitty.app's `kitten` wasn't standalone.
+- **Install:** fastfetch comes from snowglobe-lib's package set (it's on the
+  system `PATH`, not declared in this repo). `kitten` comes from
+  `pkgs/kitten.nix` (prebuilt static binary, darwin-arm64 + linux-amd64),
+  added to nebula's `environment.systemPackages` in
+  `modules/hosts/nebula/configuration.nix`. It used to ride in with the full
+  `kitty` package from snowglobe's hyprland module until commit `907cf90`
+  dropped kitty — which silently broke the logo (ASCII fallback,
+  ``running `kitten icat` failed command not found``).
 - **Config:** `home/fastfetch/.config/fastfetch/config.jsonc`, a **stowed**
   dotfile (symlinked into `~/.config/fastfetch/` by `dotfiles-stow.nix`, not
   nix-managed). The logo image lives next to it as `Nebula.png` and is
   referenced by `~/.config/fastfetch/Nebula.png`. Swap the file to change the
-  logo. (`logo.png` is an older leftover.)
+  logo. (`logo.png` is the macOS Apple logo — the `76a05ff` macOS merge once
+  swapped the config's `source` to it; don't let that happen again.)
 
 ## The logo image situation on nebula (the load-bearing facts)
 
@@ -186,6 +190,38 @@ Hard-won gotchas from doing this (so the next session doesn't relearn them):
   clients -j` instead.
 
 ## Learned behaviours & workarounds
+
+- **No image logo is possible inside herdr (0.7.5)** — herdr's pty reports no
+  pixel dimensions and doesn't answer the `CSI 14 t` screen-size query, so
+  *every* image path dies: `kitty-icat` → ``kitten icat` returned empty
+  output` (`kitten icat --detect-support` → "Terminal does not support
+  reporting screen sizes in pixels"), `chafa` →
+  `getCharacterPixelDimensions() failed` even with explicit
+  `--logo-width/--logo-height`. Inside herdr fastfetch always falls back to
+  the builtin ASCII; the PNG renders only in a bare ghostty pane (or
+  ghostty+tmux — tmux passes the pixel ioctl through). Not fastfetch-specific:
+  yazi's image preview is blank under herdr for the same reason (`yazi
+  --debug`: detects Ghostty via the leaked `GHOSTTY_*` env vars and picks the
+  Kgp adapter, but `csi_16t: (0, 0)` and `Dimension.available … width: 0,
+  height: 0`). Both halves are known upstream
+  ([herdrdev/herdr](https://github.com/herdrdev/herdr)); nothing to file:
+  - **Graphics passthrough** exists behind `experimental.kitty_graphics =
+    true` in herdr's `config.toml` — off by default; our stow config
+    (`home/herdr`) now sets it. Enabling it silently requires a server
+    restart + fresh pane; `herdr server reload-config` claims "applied" but
+    renders nothing
+    ([#1843](https://github.com/herdrdev/herdr/issues/1843), feature origin
+    [#111](https://github.com/herdrdev/herdr/issues/111)).
+  - **Pixel-size queries** (CSI 14t/16t answered 0×0, `TIOCGWINSZ` pixel
+    fields zero) were exactly
+    [#835](https://github.com/herdrdev/herdr/issues/835) — fixed on master,
+    shipped in preview release
+    [`preview-2026-07-29-44b3adb12552`](https://github.com/ogulcancelik/herdr/releases/tag/preview-2026-07-29-44b3adb12552),
+    **not yet in stable 0.7.5** (what nixpkgs ships). nebula therefore pins
+    that preview tag via the `herdr` flake input (upstream ships its own
+    flake; `modules/nixos/herdr.nix` consumes it, built from source — the
+    binary still reports "0.7.5", tell it apart by store path). Drop the pin
+    when a stable release carries the fix. (2026-08-02)
 
 - **ASCII instead of the PNG inside tmux = `TERM=="screen"` guard**, not a
   terminal/passthrough problem. Proof: raw `kitten icat ~/.config/fastfetch/Nebula.png`

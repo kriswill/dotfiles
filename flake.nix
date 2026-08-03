@@ -96,6 +96,17 @@
       url = "github:noctalia-dev/noctalia-shell";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    # herdr pinned to an upstream preview tag (the repo ships its own flake;
+    # no binary cache, builds from source) for the CSI 14t/16t pixel-size fix
+    # (herdrdev/herdr#835) that stable 0.7.5 lacks — required for image
+    # rendering (fastfetch/yazi) inside herdr panes, together with
+    # `experimental.kitty_graphics = true` in the stow config.toml. See
+    # docs/fastfetch.md. Drop back to nixpkgs' herdr once a stable release
+    # carries the fix. (rust-overlay is left unfollowed — we don't carry one.)
+    herdr = {
+      url = "github:herdrdev/herdr/preview-2026-07-29-44b3adb12552";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     # tomato — Rust CLI to get/set TOML values preserving comments + formatting
     # (built on toml_edit). Not a flake; built via rustPlatform in pkgs/tomato.nix
     # and exposed as pkgs.tomato. Used by the Hyprland gaps-toggle to flip

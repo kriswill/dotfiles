@@ -1,7 +1,7 @@
 ---
 type: NixOS Module
 title: Herdr
-description: 'herdr — terminal agent multiplexer (run several coding agents in persistent, SSH-reachable sessions); installed from nixpkgs on every host of both OSes.'
+description: 'herdr — terminal agent multiplexer (run several coding agents in persistent, SSH-reachable sessions); on NixOS pinned to an upstream preview flake tag, on darwin from nixpkgs.'
 resource: modules/nixos/herdr.nix
 tags: [nixos-module]
 timestamp: '2026-07-28T01:39:41+00:00'
@@ -9,8 +9,15 @@ timestamp: '2026-07-28T01:39:41+00:00'
 
 [herdr](https://herdr.dev) is a terminal multiplexer for coding agents: it
 runs multiple agents side by side in one terminal, with persistent sessions
-that survive detach and are reachable remotely over SSH. Installed unmodified
-from nixpkgs.
+that survive detach and are reachable remotely over SSH. On NixOS it is
+**pinned to an upstream preview tag** via the `herdr` flake input (the repo
+ships its own flake; built from source, no binary cache) for the CSI 14t/16t
+pixel-size fix ([#835](https://github.com/herdrdev/herdr/issues/835)) that
+stable 0.7.5 lacks — paired with `experimental.kitty_graphics = true` in the
+stow `config.toml`, this enables in-pane image rendering (fastfetch/yazi; the
+full story lives in [`docs/fastfetch.md`](../../docs/fastfetch.md)). Drop the
+pin back to nixpkgs once a stable release carries the fix. Darwin still
+installs unmodified from nixpkgs.
 
 Its `config.toml` is the `home/herdr/` [stow package](../patterns/stow-tree.md)
 — adopted per-file because herdr keeps mutable runtime data (logs, sockets,
