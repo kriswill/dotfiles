@@ -2,6 +2,14 @@
 
 ## 2026-08-03
 
+- **Update** — [herdr](herdr.md): pin moved from preview tag
+  `preview-2026-07-29-44b3adb12552` to stable `v0.8.0`, released upstream
+  today with the #835 pixel-size fix (nixpkgs still ships 0.7.5, so the pin
+  stays). The binary now reports "0.8.0" (the preview still said "0.7.5").
+  [herdr-update-check](herdr-update-check.md) retargeted: fires when
+  nixos-unstable ships >= 0.8.0 (equality included), and its notification
+  now names both class modules.
+
 - **Update** — [fastfetch](fastfetch.md): darwin now wraps the package
   (symlinkJoin + wrapProgram) to pass `--logo` with `hexley-nix.png`
   (Hexley on the Nix snowflake, new in the stow tree; the old Apple
