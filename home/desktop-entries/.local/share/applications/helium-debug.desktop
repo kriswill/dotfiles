@@ -1,0 +1,13 @@
+[Desktop Entry]
+# Helium with the CDP endpoint open, for helium-shot --tab and other DevTools
+# tooling. Same profile as normal Helium; helium-debug-launch enforces the
+# singleton rule (refuses + notifies if a normal-mode instance is running)
+# and posts a sticky notification while debug mode is up.
+Type=Application
+Name=Helium (debug)
+Comment=Helium with remote debugging on port 9222
+Exec=/home/k/.local/bin/helium-debug-launch %U
+Icon=helium
+Terminal=false
+Categories=Network;WebBrowser;
+StartupNotify=true

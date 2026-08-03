@@ -1,4 +1,5 @@
 config_version = 12
+hooks = { logging_out = "/home/k/.local/bin/helium-quit" , rebooting = "/home/k/.local/bin/helium-quit" , shutting_down = "/home/k/.local/bin/helium-quit" }
 
 [bar]
 order = [ "bar" ]

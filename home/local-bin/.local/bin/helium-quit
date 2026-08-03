@@ -1,0 +1,14 @@
+#!/usr/bin/env bun
+// helium-quit — orderly Helium shutdown via CDP Browser.close (full clean
+// shutdown path: session saved, exit_type=Normal, no restore prompt).
+// Needs the debug port, i.e. an instance started via "Helium (debug)".
+const port = process.env.HELIUM_SHOT_PORT ?? "9222";
+const info = await fetch(`http://127.0.0.1:${port}/json/version`).then((r) => r.json()).catch(() => {
+  console.error(`no CDP endpoint on :${port} — Helium not running in debug mode; quit it from the UI instead`);
+  process.exit(1);
+});
+const ws = new WebSocket(info.webSocketDebuggerUrl);
+await new Promise((r) => (ws.onopen = r));
+ws.send(JSON.stringify({ id: 1, method: "Browser.close" }));
+await new Promise((r) => (ws.onclose = r));
+console.log("helium closed cleanly");

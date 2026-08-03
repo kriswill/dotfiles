@@ -531,6 +531,34 @@ installed binary body matches the committed `helium-config.sh` (verified 2026-06
 
 ## Learned behaviours & workarounds
 
+- **Full-page screenshots: `helium-shot` (2026-08-02).**
+  `~/.local/bin/helium-shot <url> [out.png] [width]` (bun + raw CDP, zero
+  deps, `home/local-bin/`) captures at exact `cssContentSize` via
+  `Page.captureScreenshot` + `captureBeyondViewport`; `helium-shot --tab
+  <substring>` attaches to a running instance instead (port 9222, override
+  `HELIUM_SHOT_PORT`) — start it via the "Helium (debug)" desktop entry
+  (`home/desktop-entries/` → `~/.local/bin/helium-debug-launch`, which adds
+  `--remote-debugging-port=9222`, refuses with a critical notification if a
+  normal-mode Helium is already running, posts a sticky notification while
+  debug mode is up, and forwards args if the debug instance already owns the
+  port). `helium-quit` shuts the debug instance down cleanly via CDP
+  `Browser.close` (verified: `exit_type: Normal`, no restore prompt) — the
+  restore-tabs prompt appears whenever the process dies by signal instead
+  (logout/poweroff with Helium open, `kill`; Chromium treats even SIGTERM as
+  a crash), while a graceful window close (Super+W) is clean. Wired
+  (2026-08-02): Noctalia hooks `logging_out`/`rebooting`/`shutting_down` →
+  `helium-quit` (inline `hooks = {…}` table in settings.toml, applied via
+  the same-dir-copy + `mv -f` + `config-reload` procedure from
+  docs/noctalia.md; snapshot captured). Only fires for Noctalia-initiated
+  session actions — a terminal `systemctl poweroff` bypasses it. Verified on
+  Helium 0.13.4.1 / Chromium 149: the Chromium-136 "ignore debug port on
+  default profile" restriction is NOT enforced, so the debug entry uses the
+  normal profile — but the profile singleton means the flag only takes effect
+  when no other Helium is already running. DevTools' manual "Capture full
+  size screenshot" flashes (viewport resize+repaint, harmless) and crops to
+  viewport *width* — undock DevTools or use helium-shot. Captures clamp at
+  ~16384px/dimension (GPU texture limit). Headless mode refuses multiple
+  start URLs ("Multiple targets are not supported").
 - **Bare `bunx playwright` does NOT reach Helium — pass `--channel chrome`
   (2026-07-28).** The Chrome shim (entry below) only catches launches that ask
   for the `chrome` channel. Playwright's default is its OWN bundled
