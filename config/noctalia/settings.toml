@@ -1,4 +1,4 @@
-config_version = 8
+config_version = 12
 
 [bar]
 order = [ "bar" ]
