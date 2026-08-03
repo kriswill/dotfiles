@@ -1,5 +1,15 @@
 # Log
 
+## 2026-08-02
+
+- **Addition** — [nebula](nebula.md):
+  `modules/hosts/nebula/herdr-update-check.nix`, a daily systemd user timer
+  that fetches herdr's version from nixos-unstable (one raw-GitHub fetch) and
+  pops a dismissable notification (action → upstream releases page) once it
+  exceeds the pinned 0.7.5 — the prompt to drop the herdr preview-flake pin
+  ([herdr module](../modules/herdr.md)). Deliberately temporary: the file is
+  deleted together with the pin.
+
 ## 2026-07-03
 
 - **Update** — [nebula](nebula.md) gained a "Firmware quirks" section:
