@@ -2,6 +2,20 @@
 
 ## 2026-08-03
 
+- **Update** — [fastfetch](fastfetch.md): darwin now wraps the package
+  (symlinkJoin + wrapProgram) to pass `--logo` with `hexley-nix.png`
+  (Hexley on the Nix snowflake, new in the stow tree; the old Apple
+  `logo.png` renamed to `dark-apple.png`), overriding the shared
+  config.jsonc's `Nebula.png` source on macOS only — the config stays
+  untouched per `docs/fastfetch.md`'s don't-swap-the-source warning.
+
+- **Update** — [dotfiles-stow](dotfiles-stow.md): the shared restow script
+  now passes `--ignore='\.cache' --ignore='\.DS_Store'` to stow, after a
+  root-owned `.cache/` dropped inside `home/fastfetch` made user-level stow
+  error and silently skip that package on every restow (full post-mortem in
+  `docs/fastfetch.md`). `.gitignore`'s root-only `/.cache` entry broadened
+  to `**/.cache/` for the same reason.
+
 - **Update** — [herdr](herdr.md): darwin joins the upstream preview-flake pin.
   New `modules/darwin/herdr.nix` twin (installs the `herdr` input's package +
   `herdr-nav` on `environment.systemPackages`, mirroring the NixOS module);

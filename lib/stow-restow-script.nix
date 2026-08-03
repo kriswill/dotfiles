@@ -83,9 +83,16 @@ in
     # --no-folding keeps ~/.config/<app> a real dir (only files symlinked),
     # so app-generated siblings don't leak into the repo. Tolerate per-package
     # conflicts (log + continue) so one bad package never fails the rebuild.
+    # --ignore: apps that canonicalize a stowed file's path leak droppings
+    # NEXT TO the real files anyway — a sudo'd fastfetch left a root-owned
+    # .cache/ inside home/fastfetch, unreadable to the user, so this stow
+    # invocation errored and the package was skipped on every restow. Ignore
+    # matching is by name, before stow ever opens the dir, so unreadable
+    # droppings can't take the package down. (Patterns full-match basenames.)
     if ${runAsUser} \
          ${pkgs.stow}/bin/stow \
            --dir="${stowDir}" --target="${home}" \
+           --ignore='\.cache' --ignore='\.DS_Store' \
            --no-folding --restow "$pkg"; then
       echo "stow: restowed $pkg" >&2
     else
