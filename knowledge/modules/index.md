@@ -38,7 +38,8 @@ interesting ones by hand — scaffolding never overwrites an existing doc.
 * [Hardware Configuration](hardware-configuration.md) - nixos-generate-config output in the two-line dendritic wrapper: initrd kernel modules, kvm-amd, x86_64-linux hostPlatform, and AMD microcode updates.
 * [Helium Chrome Shim](helium-chrome-shim.md) - Plants an exec-wrapper at the canonical Google Chrome.app binary path on every rebuild, so Chrome-only tooling (chrome-devtools-mcp / Puppeteer channel 'stable') launches Helium — no per-tool --executablePath wiring.
 * [Helium](helium.md) - Helium browser — enables the upstream programs.helium module and declares a root-owned Chromium managed policy in /etc (privacy baseline, DuckDuckGo, force-installed extensions).
-* [Herdr](herdr.md) - herdr — terminal agent multiplexer (run several coding agents in persistent, SSH-reachable sessions); installed from nixpkgs on every host of both OSes.
+* [Herdr Update Check](herdr-update-check.md) - Daily reminder to drop the herdr preview-flake pin (flake.nix) once nixos-unstable ships a herdr newer than the 0.7.5 the pin shadows — see docs/fastfetch.md.
+* [Herdr](herdr.md) - herdr — terminal agent multiplexer (run several coding agents in persistent, SSH-reachable sessions); on NixOS pinned to an upstream preview flake tag, on darwin from nixpkgs.
 * [Homebrew](homebrew.md) - nix-darwin's homebrew module — declares the casks/brews/taps that must come from Homebrew rather than nixpkgs, with zap cleanup so anything not listed is uninstalled on rebuild.
 * [Htop](htop.md) - Kris' htop (system-level port of the old home-manager programs.htop).
 * [Hyprland](hyprland.md) - Enables Hyprland directly (programs.hyprland + withUWSM, package/portalPackage pinned to inputs.hyprland.packages with the hyprland.cachix.org substituter) instead of snowglobe-lib.desktop.hyprland — dodging its force-enabled hyprlock/kitty/dolphin — and asserts the shared snowglobe desktop layer plus fuzzel formerly implied by niri.
@@ -70,6 +71,7 @@ interesting ones by hand — scaffolding never overwrites an existing doc.
 * [Users K Noctalia](users-k-noctalia.md) - Installs the Noctalia v5 desktop shell (native C++ Wayland binary) for user k plus its support tooling — ddcutil + i2c for DDC/CI monitor brightness, tomato, noctalia-config snapshots — and the upower/power-profiles-daemon/bluetooth services its widgets read.
 * [Users K](users-k.md) - Defines user k — sops-managed password (neededForUsers), authorized SSH key from snowglobe's keyring, wheel/networkmanager/libvirtd groups, and pkgs.flatpak-user shadowing the system flatpak via PATH.
 * [Windows Mount](windows-mount.md) - Permanent read-only ntfs-3g mount of the Windows NTFS partition (the other NVMe) at /mnt/windows — lazy systemd automount with nofail; read-only tolerates Fast-Startup-"dirty" volumes.
+* [Xdg Open Journal](xdg-open-journal.md) - PATH-shadowing xdg-open wrapper that diverts stdout to the systemd journal when running on a tty, hiding the portal reply tuple gdbus prints on every URL open while keeping it inspectable via journalctl.
 * [Yazi](yazi.md) - yazi — the Rust terminal file manager; here installed system-wide with stow-managed config, a generated kanagawa-dragon flavor, and a mix of store-linked and vendored preview plugins.
 * [Zk](zk.md) - Kris' zk.
 * [Zsh](zsh.md) - Zsh with ZDOTDIR moved to ~/.config/zsh (exported from shellInit so it precedes .zshrc lookup), XDG history placement, starship-owned prompt, and the tools the stowed .zshrc calls by bare name.

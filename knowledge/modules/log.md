@@ -2,6 +2,14 @@
 
 ## 2026-08-02
 
+- **Creation** — [xdg-open-journal](xdg-open-journal.md): universal NixOS
+  module shadowing `xdg-open` in `$PATH` (`lib.hiPrio` writeShellScriptBin);
+  on a tty it diverts stdout — the `(objectpath …)` reply tuple gdbus prints
+  because snowglobe sets `xdg.portal.xdgOpenUsePortal` — to
+  `systemd-cat -t xdg-open` along with the invocation, so
+  `journalctl -t xdg-open` shows what was opened; non-tty stdout passes
+  through. The [zsh](zsh.md) `open()` `/dev/null` redirect was dropped in the
+  same change (it would defeat the tty check).
 - **Change** — [herdr](herdr.md): NixOS install now pinned to upstream preview
   tag `preview-2026-07-29-44b3adb12552` via a new `herdr` flake input (upstream
   ships its own flake; built from source) for the pixel-size fix

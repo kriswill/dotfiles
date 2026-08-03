@@ -18,8 +18,9 @@ alias gv='NVIM_APPNAME=gman nvim'
 alias claude-yolo='claude --dangerously-skip-permissions'
 alias cyolo='claude --dangerously-skip-permissions'
 
-## `open` everywhere: macOS has it natively; Linux gets xdg-open.
-[[ $OSTYPE == linux* ]] && open() { xdg-open "$@" > /dev/null }
+## `open` everywhere: macOS has it natively; Linux gets xdg-open
+## (the xdg-open-journal wrapper diverts tty stdout to the journal).
+[[ $OSTYPE == linux* ]] && open() { xdg-open "$@" }
 
 ## Git (gco/gba chain off g the same way the ls family chains off ls).
 alias g='git'
