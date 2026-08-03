@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+# Launcher for the "Helium (debug)" desktop entry. Helium is a profile
+# singleton, so the debug flag only takes effect on a fresh start: refuse
+# (with a notification) if a normal-mode instance is already running.
+# ponytail: sticky notification as the debug indicator; a Noctalia bar
+# widget would need a Quickshell plugin (custom_button can't poll).
+set -euo pipefail
+
+PORT="${HELIUM_SHOT_PORT:-9222}"
+
+if curl -sf -m 1 "http://127.0.0.1:$PORT/json/version" >/dev/null; then
+  # already in debug mode — forward args (opens window/URL in that instance)
+  exec helium "$@"
+elif pgrep -f 'opt/helium/helium( |$)' >/dev/null; then
+  notify-send -u critical -a Helium "Helium (debug)" \
+    "Refusing to launch: Helium is already running WITHOUT the debug port. Quit it first."
+  exit 1
+else
+  notify-send -t 0 -a Helium "Helium (debug)" \
+    "Debug mode active — CDP listening on :$PORT. Dismiss to hide."
+  exec helium --remote-debugging-port="$PORT" "$@"
+fi

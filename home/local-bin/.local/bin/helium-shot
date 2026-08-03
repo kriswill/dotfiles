@@ -1,0 +1,88 @@
+#!/usr/bin/env bun
+// helium-shot <url> [out.png] [width] — full-page screenshot at exact content height,
+// via headless Helium + raw CDP (captureBeyondViewport). No deps beyond bun.
+import { spawn } from "node:child_process";
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+
+const attach = process.argv[2] === "--tab";
+const [url, out = "shot.png", width = "1280"] = process.argv.slice(attach ? 3 : 2);
+if (!url) {
+  console.error("usage: helium-shot <url> [out.png] [width]");
+  console.error("       helium-shot --tab <url-or-title-substring> [out.png]");
+  console.error("attach mode needs Helium started with --remote-debugging-port=9222");
+  process.exit(1);
+}
+
+let port = process.env.HELIUM_SHOT_PORT ?? "9222";
+if (!attach) {
+  const profile = mkdtempSync(join(tmpdir(), "helium-shot-"));
+  const helium = spawn("helium", [
+    "--headless", "--hide-scrollbars", "--remote-debugging-port=0",
+    `--user-data-dir=${profile}`, `--window-size=${width},800`, "about:blank",
+  ], { stdio: ["ignore", "ignore", "pipe"] });
+
+  const cleanup = () => { helium.kill(); rmSync(profile, { recursive: true, force: true }); };
+  process.on("exit", cleanup);
+
+  // Chromium prints the picked port on stderr: "DevTools listening on ws://127.0.0.1:PORT/..."
+  port = await new Promise((resolve, reject) => {
+    let buf = "";
+    helium.stderr.on("data", (d) => {
+      buf += d;
+      const m = buf.match(/ws:\/\/127\.0\.0\.1:(\d+)\//);
+      if (m) resolve(m[1]);
+    });
+    helium.on("exit", () => reject(new Error("helium exited before DevTools came up")));
+    setTimeout(() => reject(new Error("timed out waiting for DevTools port")), 15000);
+  });
+}
+
+const targets = await fetch(`http://127.0.0.1:${port}/json/list`).then((r) => r.json()).catch(() => {
+  console.error(`no DevTools endpoint on port ${port} — is Helium running with --remote-debugging-port=${port}?`);
+  process.exit(1);
+});
+const pages = targets.filter((t) => t.type === "page");
+const page = attach
+  ? pages.find((t) => t.url.includes(url) || t.title.includes(url))
+  : pages[0];
+if (!page) {
+  console.error(`no tab matching "${url}"; open tabs:\n` + pages.map((t) => `  ${t.title} — ${t.url}`).join("\n"));
+  process.exit(1);
+}
+const ws = new WebSocket(page.webSocketDebuggerUrl);
+await new Promise((r) => (ws.onopen = r));
+
+let id = 0;
+const pending = new Map();
+const events = new Map();
+ws.onmessage = (e) => {
+  const msg = JSON.parse(e.data);
+  if (msg.id) pending.get(msg.id)?.(msg);
+  else events.get(msg.method)?.(msg);
+};
+const cdp = (method, params = {}) =>
+  new Promise((resolve, reject) => {
+    const mid = ++id;
+    pending.set(mid, (m) => (m.error ? reject(new Error(m.error.message)) : resolve(m.result)));
+    ws.send(JSON.stringify({ id: mid, method, params }));
+  });
+
+await cdp("Page.enable");
+if (!attach) {
+  const loaded = new Promise((r) => events.set("Page.loadEventFired", r));
+  await cdp("Page.navigate", { url });
+  await loaded;
+  await Bun.sleep(500); // ponytail: fixed settle for late layout/fonts; wait for networkIdle if it bites
+}
+
+const { cssContentSize } = await cdp("Page.getLayoutMetrics");
+const { data } = await cdp("Page.captureScreenshot", {
+  format: "png",
+  captureBeyondViewport: true,
+  clip: { x: 0, y: 0, width: cssContentSize.width, height: cssContentSize.height, scale: 1 },
+});
+writeFileSync(out, Buffer.from(data, "base64"));
+console.log(`${out}: ${cssContentSize.width}x${cssContentSize.height}`);
+process.exit(0);

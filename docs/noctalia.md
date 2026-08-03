@@ -155,8 +155,13 @@ Subcommands:
 - `noctalia --daemon` starts the shell in the background (how nebula autostarts it).
 - **Single instance:** a second `noctalia` prints `error: noctalia is already
   running` and exits (exit 0). There is **no `restart` subcommand** (upstream FR
-  was closed *not planned*). **Clean restart = `pkill -x noctalia; noctalia
-  --daemon`** — that's our pattern, not a documented command.
+  was closed *not planned*). **Clean restart = `pkill -f '/bin/noctalia';
+  noctalia --daemon`** — that's our pattern, not a documented command.
+  `pkill -x noctalia` does NOT match (verified 2026-08-02): the nix wrapper's
+  process name is `.noctalia-wrapp`, and a missed pkill + the single-instance
+  guard makes the "restart" silently do nothing. Launch the daemon back inside
+  the session with `hyprctl dispatch 'hl.dsp.exec_cmd("noctalia --daemon")'`
+  when restarting from an agent/ssh shell (no session env).
 - **Reload without restart:** `noctalia msg config-reload`. Treat it as
   best-effort; **restart for structural changes** (e.g. adding a second bar).
 
