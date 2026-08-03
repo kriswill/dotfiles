@@ -2,6 +2,16 @@
 
 ## 2026-08-02
 
+- **Change** — [kitten](kitten.md): now cross-platform (adds a linux-amd64
+  prebuilt source) and installed on [nebula](../hosts/nebula.md)
+  (`environment.systemPackages`). Restores fastfetch's `kitty-icat` PNG logo,
+  broken since `907cf90` removed the full `kitty` package that had been
+  supplying `kitten`; the macOS merge `76a05ff` had also swapped the logo
+  `source` to the Apple `logo.png` — both reverted. Herdr finding recorded in
+  `docs/fastfetch.md`: no image logo can render inside herdr (no pixel-size
+  reporting). Registration moved out of the darwin-only guard in
+  `modules/packages.nix`.
+
 - **Deprecation** — `overlays/lact-libdisplay-info.nix`: deleted per its own
   header's exit condition — the nixpkgs bump to `148bab9` (commit `25f9332`)
   carries upstream's `libdisplay-info_0_3` pin (`3ee083c2`), and lact's

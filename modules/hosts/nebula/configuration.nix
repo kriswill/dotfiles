@@ -89,6 +89,7 @@
         pkgs.fd # fast file finder
         pkgs.gimp # raster image editor
         pkgs.kdePackages.breeze-icons
+        pkgs.kitten # fastfetch's kitty-icat logo renderer (standalone binary, not the kitty terminal)
         pkgs.opensnitch-ui # prompt/tray UI for the opensnitch daemon (services.opensnitch)
         pkgs.rose-pine-cursor # Xcursor twin of the hyprcursor theme, for XWayland client cursors (Steam); selected via XCURSOR_THEME in environment.lua
         pkgs.rose-pine-hyprcursor # native hyprcursor theme (BreezeX shape, Rose Pine palette); selected via HYPRCURSOR_THEME in hyprland.lua
