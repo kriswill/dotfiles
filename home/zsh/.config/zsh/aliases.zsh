@@ -19,7 +19,7 @@ alias claude-yolo='claude --dangerously-skip-permissions'
 alias cyolo='claude --dangerously-skip-permissions'
 
 ## `open` everywhere: macOS has it natively; Linux gets xdg-open.
-[[ $OSTYPE == linux* ]] && open() { xdg-open "$@" }
+[[ $OSTYPE == linux* ]] && open() { xdg-open "$@" > /dev/null }
 
 ## Git (gco/gba chain off g the same way the ls family chains off ls).
 alias g='git'
