@@ -831,17 +831,23 @@
       }
     },
     "nixos-hardware": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
       "locked": {
-        "lastModified": 1761824787,
-        "narHash": "sha256-cH0vVt83ZBafqJzwOl7IHTXo6KA1c1J+8qvMjfARMqI=",
-        "rev": "e07b1618c3009195ffbd4749e9b5618511260557",
-        "revCount": 2470,
-        "type": "tarball",
-        "url": "https://api.flakehub.com/f/pinned/NixOS/nixos-hardware/0.1.2470%2Brev-e07b1618c3009195ffbd4749e9b5618511260557/019a3500-fe98-71d0-908c-81c78f5f82cf/source.tar.gz?rev=e07b1618c3009195ffbd4749e9b5618511260557&revCount=2470"
+        "lastModified": 1785232496,
+        "narHash": "sha256-65EQYIRRpTdpH8lUiB6Mvo5uBkG60aBIzAJuALfx+O0=",
+        "owner": "NixOS",
+        "repo": "nixos-hardware",
+        "rev": "2e790b0a6be8ec2b76174ac0931b8ff11919ec98",
+        "type": "github"
       },
       "original": {
-        "type": "tarball",
-        "url": "https://flakehub.com/f/NixOS/nixos-hardware/%2A.tar.gz"
+        "owner": "NixOS",
+        "repo": "nixos-hardware",
+        "type": "github"
       }
     },
     "nixpkgs": {
@@ -1062,6 +1068,7 @@
         "flake-parts": "flake-parts_2",
         "hyprland": "hyprland",
         "import-tree": "import-tree",
+        "nixos-hardware": "nixos-hardware",
         "nixpkgs": "nixpkgs_4",
         "noctalia": "noctalia",
         "okf": "okf",
@@ -1082,7 +1089,9 @@
         "jovian-nixos": "jovian-nixos",
         "nix-index-database": "nix-index-database",
         "nix-post-build-hook-queue": "nix-post-build-hook-queue",
-        "nixos-hardware": "nixos-hardware",
+        "nixos-hardware": [
+          "nixos-hardware"
+        ],
         "nixpkgs": [
           "nixpkgs"
         ],
