@@ -32,6 +32,9 @@
       # mkNixosHost only sets `sops.defaultSopsFile` when given a `configDir`,
       # which we don't pass — so point it at the host secrets explicitly.
       sops.defaultSopsFile = ./secrets.yaml;
+
+      # The Nebula galaxy render (modules/nixos/fastfetch.nix).
+      programs.fastfetch.logo = "Nebula.png";
     };
   };
 }

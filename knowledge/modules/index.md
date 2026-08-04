@@ -26,7 +26,7 @@ interesting ones by hand — scaffolding never overwrites an existing doc.
 * [Disko](disko.md) - Declarative disko layout for the NixOS NVMe — GPT with a 1M bios-boot partition, a 512M vfat ESP at /boot, and an unencrypted ext4 root filling the rest.
 * [Dnsmasq](dnsmasq.md) - dnsmasq — lightweight DNS forwarder/cache, configured here as a loopback-bound local resolver for custom hostnames like `p4c`.
 * [Dotfiles Stow](dotfiles-stow.md) - Restows every home/ package into $HOME on each rebuild via the shared lib/stow-restow-script.nix builder — live-repo symlinks, self-healing, per-OS skip lists.
-* [Fastfetch](fastfetch.md) - Kris' fastfetch.
+* [Fastfetch](fastfetch.md) - fastfetch — fast neofetch-style system-info fetcher; both OSes wrap the binary so each host picks its logo image declaratively via programs.fastfetch.logo instead of config.jsonc.
 * [Flake Parts](flake-parts.md) - Top-level flake-parts wiring for the Dendritic pattern.
 * [Flatpak Repo User](flatpak-repo-user.md) - Masks snowglobe's system flatpak-repo service and replaces it with a per-user oneshot that registers Flathub in ~/.local/share/flatpak at login, gated on a DNS ExecCondition so offline logins skip cleanly.
 * [Ghostty](ghostty.md) - Ghostty terminal — each OS installs it its own way and generates its half of the split config (`config-file = ?os.conf`); the shared config is stowed.
