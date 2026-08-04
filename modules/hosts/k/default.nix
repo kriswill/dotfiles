@@ -38,6 +38,9 @@
     services.codebase-memory-mcp.enable = true;
     programs.podman-desktop.enable = true;
 
+    # Hexley the platypus on the Nix snowflake (modules/darwin/fastfetch.nix).
+    programs.fastfetch.logo = "hexley-nix.png";
+
     programs.claude-account-selector = {
       enable = true;
       defaultProfile = "me";

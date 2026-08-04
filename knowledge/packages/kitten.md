@@ -21,5 +21,5 @@ Added per the [add-package playbook](../playbooks/add-package.md).
 
 - Prebuilt static binary for **both** aarch64-darwin and linux-amd64 (per-platform
   `fetchurl` keyed on `stdenv.hostPlatform.system`). On nebula it exists solely so
-  fastfetch's `kitty-icat` logo can shell out to it (`docs/fastfetch.md`) — the full
+  [fastfetch](../modules/fastfetch.md)'s `kitty-icat` logo can shell out to it (`docs/fastfetch.md`) — the full
   `kitty` package was dropped from nebula in `907cf90`, which silently broke the logo.
