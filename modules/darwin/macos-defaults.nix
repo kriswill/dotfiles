@@ -9,5 +9,7 @@
         NSWindowShouldDragOnGesture = lib.mkDefault true;
       };
       system.defaults.dock.autohide = lib.mkDefault true;
+      # Tapping fn/🌐 alone does nothing (emoji picker stays on fn+e / ctrl+cmd+space)
+      system.defaults.hitoolbox.AppleFnUsageType = lib.mkDefault "Do Nothing";
     };
 }
