@@ -8,8 +8,8 @@
 }:
 
 let
-  version = "1.0.0";
-  hash = "sha256-E/RfJtqUw1Sty+/h6PdjHn8SbpPF1N1qWlOKpmtPR50=";
+  version = "1.2.0";
+  hash = "sha256-0UDUB2/wWT1rT3xYcicXsqvofXVFLP4KIDeSun9I8Hw=";
 in
 
 # Apple ships `container` as a flat, signed `.pkg`; we install the already-signed

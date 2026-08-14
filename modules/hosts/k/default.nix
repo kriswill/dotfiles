@@ -17,6 +17,7 @@
               podman-desktop # config: home/podman-desktop stow tree
               podman # bundles its vfkit + gvproxy machine helpers (pkgs/podman.nix)
               k9s # kubernetes TUI
+              socat # TCP port plumbing tool
               ;
           };
         }
