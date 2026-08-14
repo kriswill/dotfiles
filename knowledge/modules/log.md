@@ -1,5 +1,12 @@
 # Log
 
+## 2026-08-06
+
+- **Update** — [macos-defaults](macos-defaults.md): fn/🌐 key tap set to
+  "Do Nothing" (`system.defaults.hitoolbox.AppleFnUsageType`), disabling the
+  emoji-picker popup on a bare fn press; fn+e (or ctrl+cmd+space) still opens
+  it on demand.
+
 ## 2026-08-03
 
 - **Update** — [fastfetch](fastfetch.md): promoted from a darwin-only wrapper
