@@ -67,7 +67,7 @@
     };
     snowglobe-lib = {
       # Host builder (mkNixosHost), snowglobe-lib.profiles/desktop options.
-      url = "github:kriswill/snowglobe-lib/unstable";
+      url = "github:kriswill/snowglobe-factory/unstable";
       # We own nixpkgs (above); make snowglobe follow it so there's a single
       # nixpkgs in the store and we control the rev (e.g. to pull kernel 7.1).
       inputs = {

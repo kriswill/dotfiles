@@ -15,15 +15,15 @@
       # pull in.
       # (renamed from libvirtd-qemu in snowglobe-lib f0135ce; same
       # libvirtd + qemu_kvm + virt-manager payload)
-      snowglobe-lib.qemu.enable = true;
+      snowglobe-factory.qemu.enable = true;
 
       # custom profiles
-      snowglobe-lib.profiles.hardware-tools.enable = true;
-      snowglobe-lib.profiles.gaming.enable = true;
-      snowglobe-lib.profiles.office.enable = true;
-      snowglobe-lib.profiles.hacker-mode.enable = true;
-      snowglobe-lib.profiles.nix-tools.enable = true;
-      snowglobe-lib.profiles.harden.enable = true;
+      snowglobe-factory.profiles.hardware-tools.enable = true;
+      snowglobe-factory.profiles.gaming.enable = true;
+      snowglobe-factory.profiles.office.enable = true;
+      snowglobe-factory.profiles.hacker-mode.enable = true;
+      snowglobe-factory.profiles.nix-tools.enable = true;
+      snowglobe-factory.profiles.harden.enable = true;
       # corefreq's out-of-tree module doesn't build on kernel 7.1 (CPPC struct
       # field reference_perf → reference). Disable until upstream catches up.
       # ponytail: re-enable when corefreq builds against 7.1.

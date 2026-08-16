@@ -1,7 +1,7 @@
 # Declares `configurations.nixos.<name>` and realises each into a
 # `nixosConfigurations.<name>` flake output (plus a toplevel build check),
 # building through snowglobe-lib's `mkNixosHost` so all the
-# `snowglobe-lib.profiles.*` / `snowglobe-lib.desktop.*` machinery and the
+# `snowglobe-factory.profiles.*` / `snowglobe-factory.desktop.*` machinery and the
 # hardware wiring are still applied. Adapted from main's `modules/darwin.nix`.
 {
   lib,
@@ -59,6 +59,9 @@ in
         isVM
         stateVersion
         ;
+      # We run Determinate Nix (modules/nixos/determinate.nix), so opt out of
+      # mkNixosHost's lix default — "nix" means it leaves nix.package alone.
+      nixImplementation = "nix";
       # mkNixosHost does not inject these; our host modules expect `inputs`.
       specialArgs = { inherit inputs; };
       modules = [ cfg.module ];
