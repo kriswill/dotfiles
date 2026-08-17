@@ -12,7 +12,7 @@ timestamp: '2026-08-02T15:00:13-07:00'
 
 nixos-unstable grew its own `programs.noctalia` module
 (`nixos/modules/programs/wayland/noctalia.nix`), carried into flake.lock by
-the nixpkgs bump to `148bab9` in commit `25f9332`. snowglobe-lib's
+the nixpkgs bump to `148bab9` in commit `25f9332`. snowglobe-factory's
 `mkNixosHost` imports upstream noctalia-shell's `nixosModules.default` into
 every host it builds, and that module declares the same
 `programs.noctalia.enable` option — two declarations of one option is a
@@ -35,7 +35,7 @@ the channel happens to carry.
 - nebula evaluates again; the shell keeps coming solely from the pinned
   input, and module semantics track upstream instead of the channel.
 - The `disabledModules` line must survive as long as both modules declare
-  `programs.noctalia`. If snowglobe-lib ever stops importing the flake
+  `programs.noctalia`. If snowglobe-factory ever stops importing the flake
   module (or nixpkgs renames its namespace), the line — and the collision —
   go away together.
 

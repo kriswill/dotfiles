@@ -23,7 +23,7 @@
       # the niri module. `snowglobe-factory.desktop.enable` gates desktop.nix, which
       # provides xdg portals, pipewire, bluetooth, screenshot/clipboard tools
       # (grim/slurp/wl-clipboard), swaync, fonts, the ly greeter, hardware.graphics,
-      # NIXOS_OZONE_WL, etc. (see snowglobe nixosModules/snowglobe-lib/desktop.nix).
+      # NIXOS_OZONE_WL, etc. (see snowglobe nixosModules/snowglobe-factory/desktop.nix).
       snowglobe-factory.system.hasDesktop = true;
       snowglobe-factory.desktop = {
         enable = true;

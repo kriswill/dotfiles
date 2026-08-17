@@ -15,7 +15,7 @@ timestamp: '2026-07-03T12:00:00-07:00'
 3. To put it on `pkgs` for hosts: add `overlays/<name>.nix` and register it in
    [overlays](../modules/overlays.md).
 4. If unfree: add an `allowUnfreePredicate` entry in `modules/darwin/core.nix`
-   (darwin policy only — nebula's unfree policy comes via snowglobe-lib
+   (darwin policy only — nebula's unfree policy comes via snowglobe-factory
    profiles); see [unfree deny-by-default](../decisions/unfree-default-deny.md).
 5. `git add` everything, then `nix build .#packages.<system>.<name>`
    (aarch64-darwin or x86_64-linux).

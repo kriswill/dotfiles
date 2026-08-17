@@ -1,6 +1,6 @@
 # Declares `configurations.nixos.<name>` and realises each into a
 # `nixosConfigurations.<name>` flake output (plus a toplevel build check),
-# building through snowglobe-lib's `mkNixosHost` so all the
+# building through snowglobe-factory's `mkNixosHost` so all the
 # `snowglobe-factory.profiles.*` / `snowglobe-factory.desktop.*` machinery and the
 # hardware wiring are still applied. Adapted from main's `modules/darwin.nix`.
 {
@@ -10,7 +10,7 @@
   ...
 }:
 let
-  slib = inputs.snowglobe-lib.lib;
+  slib = inputs.snowglobe-factory.lib;
 in
 {
   options.configurations.nixos = lib.mkOption {

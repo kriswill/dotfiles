@@ -17,7 +17,7 @@ Findings from investigating how to get HDR working on the OLED monitor
 | Second monitor | ASUS ROG PG348Q, 3440x1440 @ 60 Hz, portrait |
 | GPU | NVIDIA GeForce RTX 5080 |
 | NVIDIA driver | 595.45.04 |
-| Compositor | niri 26.04 (nixpkgs, via snowglobe-lib `desktop.niri`) |
+| Compositor | niri 26.04 (nixpkgs, via snowglobe-factory `desktop.niri`) |
 
 The GPU and driver are fully HDR-capable. The monitor does HDR fine (verified
 on the Windows partition, which has an HDR profile plus an NVIDIA-app per-app

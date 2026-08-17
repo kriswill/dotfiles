@@ -1,7 +1,7 @@
 # nebula — AMD CPU, NVIDIA GPU, UEFI desktop.
 #
 # Registers into the `configurations.nixos` registry (realised by
-# `modules/nixos.nix` through snowglobe-lib's `mkNixosHost`). This file carries
+# `modules/nixos.nix` through snowglobe-factory's `mkNixosHost`). This file carries
 # the host metadata and the shared baseline of its `module`; the host-specific
 # pieces live as their own first-class dendritic files under `nebula/`, each a
 # flake-parts module that merges into `configurations.nixos.nebula.module` (the

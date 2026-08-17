@@ -57,7 +57,7 @@
     };
 
     ### nixos
-    # Determinate Nix on nebula (replaces snowglobe-lib's Lix default; the Macs
+    # Determinate Nix on nebula (replaces snowglobe-factory's Lix default; the Macs
     # are already on Determinate, installer-managed). Deliberately NO nixpkgs
     # follows: upstream recommends against it (FlakeHub cache misses).
     determinate.url = "https://flakehub.com/f/DeterminateSystems/determinate/3";
@@ -65,9 +65,11 @@
       url = "github:NixOS/nixos-hardware";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    snowglobe-lib = {
-      # Host builder (mkNixosHost), snowglobe-lib.profiles/desktop options.
-      url = "github:kriswill/snowglobe-factory/unstable";
+    snowglobe-factory = {
+      # Host builder (mkNixosHost), snowglobe-factory.profiles/desktop options.
+      # Local checkout for development; switch back to
+      # github:kriswill/snowglobe-factory/unstable when done iterating.
+      url = "git+file:///home/k/src/codeberg/kriswill/snowglobe-factory";
       # We own nixpkgs (above); make snowglobe follow it so there's a single
       # nixpkgs in the store and we control the rev (e.g. to pull kernel 7.1).
       inputs = {
@@ -77,7 +79,7 @@
         nixos-hardware.follows = "nixos-hardware";
       };
     };
-    # Explicit sops-nix (snowglobe-lib follows it, above): also provides
+    # Explicit sops-nix (snowglobe-factory follows it, above): also provides
     # darwinModules.sops for secrets on the macOS hosts.
     sops-nix = {
       url = "github:Mic92/sops-nix";

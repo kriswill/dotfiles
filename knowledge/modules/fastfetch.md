@@ -22,7 +22,7 @@ Full protocol/terminal story: [`docs/fastfetch.md`](../../docs/fastfetch.md).
 
 The twins deliver the wrapper differently: darwin adds it to
 `environment.systemPackages` (nix-darwin has no fastfetch module), while the
-nixos side swaps it in through snowglobe-lib's own
+nixos side swaps it in through snowglobe-factory's own
 `programs.fastfetch.package` option — snowglobe already installs fastfetch,
 so our `logo`/`logoPaddingTop` declarations merge into its option set and no
 colliding second copy ships. The `kitty-icat` logo type shells out to

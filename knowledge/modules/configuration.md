@@ -1,7 +1,7 @@
 ---
 type: NixOS Module
 title: Configuration
-description: Nebula's baseline system config — locale/timezone, snowglobe-lib profile toggles, NVIDIA production driver, GRUB dual-boot via os-prober, initrd emergency access, sops-decrypted SSH host keys, and the host's package/program selections.
+description: Nebula's baseline system config — locale/timezone, snowglobe-factory profile toggles, NVIDIA production driver, GRUB dual-boot via os-prober, initrd emergency access, sops-decrypted SSH host keys, and the host's package/program selections.
 resource: modules/hosts/nebula/configuration.nix
 tags: [nixos-module, host-specific]
 timestamp: '2026-07-03T12:00:00-07:00'
@@ -11,7 +11,7 @@ Nebula's baseline system configuration — everything host-wide that doesn't
 warrant its own file:
 
 - **Locale/keymap/timezone:** `en_US.UTF-8`, `us`, `America/Los_Angeles`.
-- **snowglobe-lib toggles:** `qemu` (libvirtd + qemu_kvm + virt-manager) plus
+- **snowglobe-factory toggles:** `qemu` (libvirtd + qemu_kvm + virt-manager) plus
   the `hardware-tools`, `gaming`, `office`, `hacker-mode`, `nix-tools`, and
   `harden` profiles. `programs.corefreq.enable = false` — the out-of-tree
   kernel module doesn't build on kernel 7.1 (CPPC struct field
