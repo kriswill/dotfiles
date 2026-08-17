@@ -1138,6 +1138,7 @@
       },
       "original": {
         "owner": "noctalia-dev",
+        "ref": "v5.0.0-beta.8",
         "repo": "noctalia-shell",
         "type": "github"
       }
