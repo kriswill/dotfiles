@@ -41,7 +41,7 @@
     {
       # nixpkgs (2026-07, nixos-unstable) grew its own programs.noctalia module
       # whose option declarations collide with the upstream noctalia-shell
-      # flake module that snowglobe-lib's mkNixosHost imports into every host.
+      # flake module that snowglobe-factory's mkNixosHost imports into every host.
       # We keep the flake module — it IS upstream noctalia, pinned by our
       # `noctalia` input — so nixpkgs' copy must leave the eval.
       disabledModules = [ "programs/wayland/noctalia.nix" ];

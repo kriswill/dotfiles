@@ -21,7 +21,7 @@ repo-wide. Permitting a specific unfree package means adding it to the
 `allowUnfreePredicate` there — a one-line, greppable, code-reviewed exception.
 
 **Amended 2026-07-03:** "repo-wide" now means darwin-class-wide — nebula's
-unfree policy comes via snowglobe-lib profiles, so the darwin predicate list
+unfree policy comes via snowglobe-factory profiles, so the darwin predicate list
 enumerates only Mac closures.
 
 ## Consequences

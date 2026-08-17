@@ -18,7 +18,7 @@ rarer fault that muddied the picture for a while.
 
 Host: `nebula` — MSI MAG X870E TOMAHAWK WIFI (AMI UEFI), AMD + NVIDIA, two NVMe
 drives (NixOS on a Samsung SSD 9100 PRO 4 TB; Windows on a separate disk),
-`nixos-rebuild-ng`, GRUB via `snowglobe-lib`, `harden` profile enabled.
+`nixos-rebuild-ng`, GRUB via `snowglobe-factory`, `harden` profile enabled.
 
 ---
 

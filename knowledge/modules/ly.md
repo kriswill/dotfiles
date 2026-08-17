@@ -8,8 +8,8 @@ timestamp: '2026-07-03T12:00:00-07:00'
 ---
 
 Tweaks the ly TUI login greeter. ly itself is enabled elsewhere — by
-snowglobe-lib's shared desktop module (`services.displayManager.ly.enable`),
-switched on via `snowglobe-lib.desktop.enable` in [hyprland](hyprland.md);
+snowglobe-factory's shared desktop module (`services.displayManager.ly.enable`),
+switched on via `snowglobe-factory.desktop.enable` in [hyprland](hyprland.md);
 its config.ini is built from `defaultConfig //
 services.displayManager.ly.settings`, so anything set here overrides ly's
 defaults.

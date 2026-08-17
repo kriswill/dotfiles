@@ -14,7 +14,7 @@ to manage. Universal but inert: nothing happens until a host declares
 `sops.defaultSopsFile` + `sops.secrets.<name>` and `.sops.yaml` gains the
 matching recipient anchor + creation rule. Mirrors
 [nebula](../hosts/nebula.md)'s setup, which gets the NixOS sops module via
-snowglobe-lib's `mkNixosHost` instead.
+snowglobe-factory's `mkNixosHost` instead.
 
 Secrets install at activation through a launchd daemon
 (`org.nixos.sops-install-secrets`) into `/run/secrets.d/`, symlinked from

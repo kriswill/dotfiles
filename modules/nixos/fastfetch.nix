@@ -23,7 +23,7 @@
         };
       };
 
-      # snowglobe-lib already installs fastfetch via its own programs.fastfetch
+      # snowglobe-factory already installs fastfetch via its own programs.fastfetch
       # options (enable/package/installGlobally) — our logo/logoPaddingTop
       # declarations merge into that set, and swapping the wrapped binary in
       # through its `package` option avoids shipping a colliding second copy.

@@ -2,7 +2,7 @@
   flake.modules.nixos.neovim =
     { pkgs, lib, ... }:
     {
-      # snowglobe-lib disables nixpkgs' programs/neovim and ships its own minimal
+      # snowglobe-factory disables nixpkgs' programs/neovim and ships its own minimal
       # module (enable / package / viAlias / vimAlias). `enable` installs pkgs.neovim
       # globally; the supporting LSP/formatter/linter/tool binaries go on PATH below.
       programs.neovim = {

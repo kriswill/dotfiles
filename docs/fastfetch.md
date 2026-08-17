@@ -19,7 +19,7 @@ $ command -v fastfetch kitten
 /run/current-system/sw/bin/kitten        # required by logo type "kitty-icat"
 ```
 
-- **Install:** fastfetch comes from snowglobe-lib's package set (it's on the
+- **Install:** fastfetch comes from snowglobe-factory's package set (it's on the
   system `PATH`, not declared in this repo). `kitten` comes from
   `pkgs/kitten.nix` (prebuilt static binary, darwin-arm64 + linux-amd64),
   added to nebula's `environment.systemPackages` in
@@ -200,7 +200,7 @@ Hard-won gotchas from doing this (so the next session doesn't relearn them):
   `lib/fastfetch-logo-wrapper.nix` (symlinkJoin + wrapProgram, same idiom as
   `modules/darwin/diffnav.nix`) with `--logo
   "$HOME/.config/fastfetch/<logo>"`; each host sets the option beside its
-  registration. On nixos the wrapped package rides in through snowglobe-lib's
+  registration. On nixos the wrapped package rides in through snowglobe-factory's
   own `programs.fastfetch.package` option (no colliding second copy); the
   darwin twin adds it to `environment.systemPackages`. Darwin hosts use
   `hexley-nix.png` (Hexley the platypus — Darwin's mascot — on the Nix

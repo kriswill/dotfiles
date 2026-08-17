@@ -416,7 +416,7 @@ hl.animation({ leaf = "workspaces",enabled = true, speed = 1.94, bezier = "almos
 
 ## Environment variables & NVIDIA (RTX 5080)
 
-**On nebula the NVIDIA plumbing is handled by snowglobe-lib**, not by hand:
+**On nebula the NVIDIA plumbing is handled by snowglobe-factory**, not by hand:
 `gpu-vendors = [ "nvidia" ]` in `modules/hosts/nebula.nix` pulls in the
 driver, KMS, and `NIXOS_OZONE_WL=1` (verified set in-session). The RTX 5080 is
 a 50-series card, so the **open kernel modules are mandatory** — snowglobe’s
@@ -843,7 +843,7 @@ Real findings on nebula — append as you discover more; correct/remove stale on
   *requires* the open modules. Don't add hand-rolled NVIDIA env/modprobe in
   Hyprland or a stray nix module — fix it in the snowglobe NVIDIA path.
 - **Hyprland is the only desktop, wired directly (NOT via
-  `snowglobe-lib.desktop.hyprland`), in `modules/hosts/nebula/hyprland.nix`
+  `snowglobe-factory.desktop.hyprland`), in `modules/hosts/nebula/hyprland.nix`
   (2026-06-27).** niri was removed the same day. That snowglobe hyprland module's
   only unique contribution we wanted is `programs.hyprland` + uwsm; it *also*
   force-enables `programs.hyprlock` (→ `services.hypridle`), `kitty`, `dolphin`,
@@ -857,7 +857,7 @@ Real findings on nebula — append as you discover more; correct/remove stale on
   whole breakage class: nixpkgs' hypr-dependent packages now build against
   nixpkgs' own hypr libs.)*
   `hyprland.nix` therefore also asserts the **shared snowglobe desktop layer**
-  (`snowglobe-lib.system.hasDesktop` + `snowglobe-lib.desktop.{enable,
+  (`snowglobe-factory.system.hasDesktop` + `snowglobe-factory.desktop.{enable,
   installWaylandDeps}`) that the niri module used to provide — that's what gates
   `desktop.nix` (xdg portals, pipewire, bluetooth, grim/slurp/wl-clipboard,
   swaync, fonts, the **ly** greeter, `hardware.graphics`, `NIXOS_OZONE_WL`, …) —

@@ -13,7 +13,7 @@
       # Hyprland (the host's only desktop) is configured in ./hyprland.nix,
       # which also asserts the shared snowglobe desktop layer that niri used to
       # pull in.
-      # (renamed from libvirtd-qemu in snowglobe-lib f0135ce; same
+      # (renamed from libvirtd-qemu in snowglobe-factory f0135ce; same
       # libvirtd + qemu_kvm + virt-manager payload)
       snowglobe-factory.qemu.enable = true;
 

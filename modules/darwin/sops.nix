@@ -9,7 +9,7 @@
 # plus a matching creation rule in .sops.yaml (edit with
 # `sops modules/hosts/<host>/secrets.yaml`; sops/age/ssh-to-age are in the dev
 # shell). Mirrors nebula's setup (modules/hosts/nebula.nix), which gets the
-# sops module via snowglobe-lib's mkNixosHost instead.
+# sops module via snowglobe-factory's mkNixosHost instead.
 {
   flake.modules.darwin.sops =
     { inputs, ... }:

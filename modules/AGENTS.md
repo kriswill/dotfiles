@@ -33,7 +33,7 @@ their own local conventions in `pkgs/AGENTS.md`, `overlays/AGENTS.md`, and
   the other OS never evaluates.
 - **Unfree** is off by default; darwin allows per-package via
   `allowUnfreePredicate` in `modules/darwin/core.nix`; nebula's policy comes
-  from snowglobe-lib profiles.
+  from snowglobe-factory profiles.
 
 ## Adding a New Module
 
@@ -88,7 +88,7 @@ standalone builder files like `lib/direnv-nom-wrapper.nix` imported by path) —
 outside `modules/` so import-tree skips them. `modules/darwin.nix` extends
 `nixpkgs.lib` with `lib/default.nix` and hands the result to the darwin
 evaluation via specialArgs, so darwin modules reach them as `lib.kanagawa`.
-The nixos evaluation goes through snowglobe-lib's `mkNixosHost` and does NOT
+The nixos evaluation goes through snowglobe-factory's `mkNixosHost` and does NOT
 get the extended lib — nixos modules import lib files by path when needed.
 
 ## Secrets (sops-nix)
@@ -99,7 +99,7 @@ get the extended lib — nixos modules import lib files by path when needed.
 - Secrets files: `modules/hosts/<host>/secrets.yaml`, edited with
   `sops modules/hosts/<host>/secrets.yaml` (tools in the dev shell).
 - Machinery: darwin imports `sops-nix.darwinModules.sops` via
-  `modules/darwin/sops.nix`; nebula gets the NixOS module via snowglobe-lib.
+  `modules/darwin/sops.nix`; nebula gets the NixOS module via snowglobe-factory.
   A host consumes secrets with `sops.defaultSopsFile` + `sops.secrets.<name>`.
 - git commit signing is NOT gpg: it's SSH-format signing through the 1Password
   agent, OS-branched inside `home/git/.config/git/config` via
