@@ -1255,11 +1255,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1786921524,
-        "narHash": "sha256-qItR1RFExF8W1fDRN2FR3X6SCfWsgnUSfKrSzeLycoQ=",
+        "lastModified": 1786951633,
+        "narHash": "sha256-6goOqMsttmwZIhpOGJYh/+6QFLtA4GV8fb5Ee1kjXAI=",
         "owner": "kriswill",
         "repo": "snowglobe-factory",
-        "rev": "1c4d7c4467df9774a0dbfb0d216d688b8ca3d9a6",
+        "rev": "cea6aa11d9a8087ef86eeb05fd35f55a08fe5cb6",
         "type": "github"
       },
       "original": {
@@ -1394,11 +1394,11 @@
     "yazi-plugins": {
       "flake": false,
       "locked": {
-        "lastModified": 1786542661,
-        "narHash": "sha256-ixdQLt8DJZRqoK4GqwaytxSrLGc+B5L+ILBs7eG6kLY=",
+        "lastModified": 1786951261,
+        "narHash": "sha256-/T4bWdpRZrYJqNeUZSlwqf5bCCJiB4Wa273iYNb8eBY=",
         "owner": "yazi-rs",
         "repo": "plugins",
-        "rev": "3f2b8822aa77f8699d70803ef1407ef7a2a77b0d",
+        "rev": "b564235ae6e98b86865d0a23b841d9ddb2edd7f1",
         "type": "github"
       },
       "original": {
