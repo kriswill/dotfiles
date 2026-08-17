@@ -66,12 +66,8 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
     snowglobe-factory = {
-      # Host builder (mkNixosHost), snowglobe-factory.profiles/desktop options.
-      # Local checkout for development; switch back to
-      # github:kriswill/snowglobe-factory/unstable when done iterating.
-      url = "git+file:///home/k/src/codeberg/kriswill/snowglobe-factory";
-      # We own nixpkgs (above); make snowglobe follow it so there's a single
-      # nixpkgs in the store and we control the rev (e.g. to pull kernel 7.1).
+      url = "github:kriswill/snowglobe-factory/unstable";
+      # url = "git+file:///home/k/src/codeberg/kriswill/snowglobe-factory";
       inputs = {
         nixpkgs.follows = "nixpkgs";
         import-tree.follows = "import-tree";

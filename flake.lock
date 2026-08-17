@@ -1255,16 +1255,18 @@
         ]
       },
       "locked": {
-        "lastModified": 1786920289,
-        "narHash": "sha256-fz9Eg+vCZyKQDQaNGIqsaQnEo2cK/h81Xo0j4A3axIk=",
-        "rev": "e72849804f86f88e6ca8f5100e8f8b023a1887f6",
-        "revCount": 1753,
-        "type": "git",
-        "url": "file:///home/k/src/codeberg/kriswill/snowglobe-factory"
+        "lastModified": 1786921524,
+        "narHash": "sha256-qItR1RFExF8W1fDRN2FR3X6SCfWsgnUSfKrSzeLycoQ=",
+        "owner": "kriswill",
+        "repo": "snowglobe-factory",
+        "rev": "1c4d7c4467df9774a0dbfb0d216d688b8ca3d9a6",
+        "type": "github"
       },
       "original": {
-        "type": "git",
-        "url": "file:///home/k/src/codeberg/kriswill/snowglobe-factory"
+        "owner": "kriswill",
+        "ref": "unstable",
+        "repo": "snowglobe-factory",
+        "type": "github"
       }
     },
     "sops-nix": {
