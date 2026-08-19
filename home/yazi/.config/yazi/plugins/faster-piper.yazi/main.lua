@@ -117,7 +117,8 @@ end
 --
 -- How:
 --   Yazi already exposes the underlying path via `url.path`, and also tells
---   us whether this Url comes from search using `url.is_search`.
+--   us whether this Url comes from search using `url.spec.is_search`
+--   (`url.is_search` was deprecated in yazi 26.8).
 --
 -- Behavior:
 --   - For search URLs: return tostring(url.path)
@@ -125,7 +126,7 @@ end
 --   - Defensive fallback: if url.path is missing/empty, fall back to tostring(url)
 ----------------------------------------------------------------------
 local function fs_path(url)
-  if url and url.is_search then
+  if url and url.spec and url.spec.is_search then
     local p = url.path
     if p then
       local s = tostring(p)
