@@ -59,6 +59,36 @@ selector — so `claude work on the bug` launches the real CLI with `on the bug`
 *work* profile, **not** the prompt `work on the bug`. To pass such text verbatim, give it as
 a flag value (`claude -p "work on the bug"`) or bypass the wrapper (`command claude …`).
 
+### Injected launch flags
+
+Every launch also gets `_CCW_LAUNCH_FLAGS` prepended — currently
+`--disallowedTools=Workflow`. The `Workflow` tool's definition costs **~7.9k tokens** of
+context on its own (measured 2026-08-17 against 2.1.234, as the marginal cost of adding it
+to an otherwise-full tool set: 26,863 → 34,763). It is by a wide margin the most expensive
+single tool, and nothing here uses multi-agent orchestration.
+
+Injection is skipped when:
+
+- the first argument is an auth verb (`auth`, `login`, `setup-token`) — these start no
+  session, and `_ccw_exec_with_profile` identifies them by inspecting `$1`, which a
+  prepended flag would displace (injecting a Keychain token into exactly the flows that
+  must not have one);
+- you pass any tool-selection flag yourself (`--tools`, `--allowedTools`,
+  `--disallowedTools`, or their `-` spellings, with `=` or a space) — your flag wins
+  outright rather than competing with the injected copy.
+
+So `claude --tools default` re-enables Workflow for one run, and `command claude …` bypasses
+the whole wrapper as always.
+
+> **The `=` is load-bearing.** `--disallowedTools` is variadic. Written as
+> `--disallowedTools Workflow` and prepended to the user's args, it swallows a following
+> positional argument — `claude "fix the build"` would parse the prompt as a second tool
+> name and launch with no prompt at all. `--disallowedTools=Workflow` takes exactly one
+> value. Verified both ways against 2.1.234.
+
+`ccglass` does **not** get these flags: it spawns the real binary itself via Node, so the
+wrapper has no argv to prepend to.
+
 ### Subcommands are profile-scoped
 
 Stateful subcommands (`claude mcp …`, `claude config …`, `claude update`, `claude doctor`, …)

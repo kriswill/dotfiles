@@ -10,6 +10,9 @@
 # Pins: $XDG_STATE_HOME/claude/profile-map.tsv (mutable, NOT nix-managed).
 # Bypass the wrapper entirely with:  command claude …
 # NOTE: never name a local `path` here — it is zsh's special $PATH array.
+# NOTE: launches also get _CCW_LAUNCH_FLAGS prepended (see below) — currently
+#       --disallowedTools=Workflow, to keep that tool's ~7.9k-token definition out
+#       of the context window. Pass your own --tools/--disallowedTools to override.
 # ---------------------------------------------------------------------------
 
 # Inputs — the nix module assigns these (as global shell variables) ahead of this
@@ -52,6 +55,40 @@ _ccw_resolve() {                       # $1 = abs path → winning profile ("" i
 }
 
 _ccw_token() { security find-generic-password -s "claude-token-$1" -a "$USER" -w 2>/dev/null; }
+
+# Flags prepended to every launch. Workflow's tool definition costs ~7.9k tokens of
+# context on its own (measured 2026-08-17 against 2.1.234, as the marginal cost of
+# adding it to an otherwise-full tool set) — the single most expensive tool by a wide
+# margin — and nothing here uses multi-agent orchestration.
+#
+# The `=` form is REQUIRED. --disallowedTools is variadic, so the space form
+# ("--disallowedTools Workflow") swallows a following positional argument: injected
+# ahead of "$@", `claude "fix the build"` would parse the prompt as a second tool name
+# and launch with no prompt at all. The `=` form takes exactly one value. Verified both
+# ways against 2.1.234 — do not "tidy" this into a space.
+typeset -ga _CCW_LAUNCH_FLAGS=(--disallowedTools=Workflow)
+
+# Populate the global array _ccw_flags with the flags to inject, given the launch args.
+# Emptied — inject nothing — in two cases:
+#   1. the caller passed a tool-selection flag of their own, so an explicit
+#      `claude --tools …` / `--disallowedTools …` wins outright instead of silently
+#      competing with the injected copy (commander would keep only one);
+#   2. an auth verb, which _ccw_exec_with_profile detects by inspecting $1 — a
+#      prepended flag would shift that verb out of $1 and defeat the check, injecting
+#      a token into the very flows that must not have one. Auth verbs start no
+#      session, so they have no context window to economize anyway.
+_ccw_launch_flags() {
+  emulate -L zsh
+  typeset -ga _ccw_flags=("${_CCW_LAUNCH_FLAGS[@]}")
+  case "$1" in setup-token|login|auth) _ccw_flags=(); return ;; esac
+  local a
+  for a in "$@"; do
+    case "${a%%=*}" in                      # ${a%%=*} folds --tools=x and --tools together
+      --tools|--allowedTools|--allowed-tools|--disallowedTools|--disallowed-tools)
+        _ccw_flags=(); return ;;
+    esac
+  done
+}
 
 # True if the profile config dir $1 already has a working interactive OAuth login
 # (`authMethod "claude.ai"`). Blanks CLAUDE_CODE_OAUTH_TOKEN for the probe (empty is
@@ -134,7 +171,8 @@ claude() {
   # An explicit CLAUDE_CONFIG_DIR from the caller wins — pass through untouched, so
   # e.g. `CLAUDE_CONFIG_DIR=~/.claude-work claude setup-token` targets that dir.
   if [[ -n "$CLAUDE_CONFIG_DIR" ]]; then
-    command claude "$@"; return
+    _ccw_launch_flags "$@"
+    command claude "${_ccw_flags[@]}" "$@"; return
   fi
   case "$verb" in
     me|work) profile="$verb"; shift ;;
@@ -142,8 +180,11 @@ claude() {
   esac
   profile="${profile:-$_CCW_DEFAULT_PROFILE}"
   # the helper sets CLAUDE_CONFIG_DIR, then prefers the profile's interactive login
-  # and falls back to the keychain token (skipping the token during auth flows)
-  _ccw_exec_with_profile claude "$profile" "$@"
+  # and falls back to the keychain token (skipping the token during auth flows).
+  # _ccw_launch_flags runs after the me/work shift, so it sees the args the CLI will,
+  # and leaves $1 alone for auth verbs so the helper's token check still fires.
+  _ccw_launch_flags "$@"
+  _ccw_exec_with_profile claude "$profile" "${_ccw_flags[@]}" "$@"
 }
 
 # ccglass — the LLM-traffic inspector (https://github.com/jianshuo/ccglass) starts
