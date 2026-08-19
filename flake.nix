@@ -57,7 +57,7 @@
     };
 
     ### nixos
-    # Determinate Nix on nebula (replaces snowglobe-lib's Lix default; the Macs
+    # Determinate Nix on nebula (replaces snowglobe-factory's Lix default; the Macs
     # are already on Determinate, installer-managed). Deliberately NO nixpkgs
     # follows: upstream recommends against it (FlakeHub cache misses).
     determinate.url = "https://flakehub.com/f/DeterminateSystems/determinate/3";
@@ -65,11 +65,9 @@
       url = "github:NixOS/nixos-hardware";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    snowglobe-lib = {
-      # Host builder (mkNixosHost), snowglobe-lib.profiles/desktop options.
-      url = "github:kriswill/snowglobe-lib/unstable";
-      # We own nixpkgs (above); make snowglobe follow it so there's a single
-      # nixpkgs in the store and we control the rev (e.g. to pull kernel 7.1).
+    snowglobe-factory = {
+      url = "github:kriswill/snowglobe-factory/unstable";
+      # url = "git+file:///home/k/src/codeberg/kriswill/snowglobe-factory";
       inputs = {
         nixpkgs.follows = "nixpkgs";
         import-tree.follows = "import-tree";
@@ -77,7 +75,7 @@
         nixos-hardware.follows = "nixos-hardware";
       };
     };
-    # Explicit sops-nix (snowglobe-lib follows it, above): also provides
+    # Explicit sops-nix (snowglobe-factory follows it, above): also provides
     # darwinModules.sops for secrets on the macOS hosts.
     sops-nix = {
       url = "github:Mic92/sops-nix";
@@ -93,7 +91,7 @@
     # defeat the cache anyway.
     hyprland.url = "github:hyprwm/Hyprland";
     noctalia = {
-      url = "github:noctalia-dev/noctalia-shell";
+      url = "github:noctalia-dev/noctalia-shell/v5.0.0-beta.8";
       inputs.nixpkgs.follows = "nixpkgs";
     };
     # herdr pinned to the upstream v0.8.0 stable tag (the repo ships its own

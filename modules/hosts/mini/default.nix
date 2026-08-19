@@ -20,6 +20,9 @@
       )
     ];
 
+    # Hexley the platypus on the Nix snowflake (modules/darwin/fastfetch.nix).
+    programs.fastfetch.logo = "hexley-nix.png";
+
     nixpkgs.hostPlatform = "aarch64-darwin";
     nixpkgs.overlays = builtins.attrValues config.flake.overlays;
   };

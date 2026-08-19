@@ -7,7 +7,7 @@ tags: [host]
 timestamp: '2026-07-03T22:30:00-07:00'
 ---
 
-nebula — AMD CPU, NVIDIA GPU, UEFI desktop. Registers into the `configurations.nixos` registry (realised by `modules/nixos.nix` through snowglobe-lib's `mkNixosHost`). This file carries the host metadata and the shared baseline of its `module`; the host-specific pieces live as their own first-class dendritic files under `nebula/`, each a flake-parts module that merges into `configurations.nixos.nebula.module` (the realizer's `deferredModule` option), so there is no import-tree exclusion and no hand-maintained imports list. Non-`.nix` files (secrets.yaml, *.pub) sit in `nebula/` too — import-tree only picks up `.nix`, so they are ignored by the scan and referenced by path.
+nebula — AMD CPU, NVIDIA GPU, UEFI desktop. Registers into the `configurations.nixos` registry (realised by `modules/nixos.nix` through snowglobe-factory's `mkNixosHost`). This file carries the host metadata and the shared baseline of its `module`; the host-specific pieces live as their own first-class dendritic files under `nebula/`, each a flake-parts module that merges into `configurations.nixos.nebula.module` (the realizer's `deferredModule` option), so there is no import-tree exclusion and no hand-maintained imports list. Non-`.nix` files (secrets.yaml, *.pub) sit in `nebula/` too — import-tree only picks up `.nix`, so they are ignored by the scan and referenced by path.
 
 Imports every [nixos module](../modules/index.md) (`builtins.attrValues
 config.flake.modules.nixos` — the nixos class is almost all-universal; the one

@@ -13,7 +13,7 @@ timestamp: '2026-07-03T14:00:00-07:00'
 ## Context
 
 `main` (nix-darwin, 3 Macs) and `nebula-snowglobe` (orphan branch, one NixOS
-desktop on snowglobe-lib) shared the dendritic skeleton by design — the
+desktop on snowglobe-factory) shared the dendritic skeleton by design — the
 [remove-option-gating](remove-option-gating.md) refactor explicitly aligned
 main's layout with nebula's so "a merge drops the trees side by side with zero
 path collisions". Time to actually merge: many CLI tools (nvim, tmux, zsh, git,
@@ -31,9 +31,9 @@ apart with every commit.
   (double lock churn, two store universes). At merge time the lock is pinned to
   nebula's prior rev (`e73de5b`) so nebula rebuilds byte-stable; darwin absorbs
   the channel switch. Bump normally afterwards.
-- **Pinned nixos-side inputs:** `snowglobe-lib`/`hyprland`/`noctalia`/`tomato`
-  locked at nebula's revs — snowglobe-lib's unstable HEAD had already renamed
-  `snowglobe-lib.libvirtd-qemu` → `snowglobe-lib.qemu`; bumping it is its own
+- **Pinned nixos-side inputs:** `snowglobe-factory`/`hyprland`/`noctalia`/`tomato`
+  locked at nebula's revs — snowglobe-factory's unstable HEAD had already renamed
+  `snowglobe-factory.libvirtd-qemu` → `snowglobe-factory.qemu`; bumping it is its own
   change, not the merge's.
 - **Custom packages:** nebula's `packages/` aggregator dissolved into `pkgs/`
   per the documented convention (one file per package + one overlay file each);
@@ -43,7 +43,7 @@ apart with every commit.
   platform-guarded (darwin gets the prebuilt remote client, Linux keeps
   nixpkgs' podman) because every host applies the whole overlay set.
 - **Realisers coexist:** `modules/darwin.nix` (darwinSystem + extendedLib) and
-  `modules/nixos.nix` (snowglobe-lib `mkNixosHost`, hardware metadata in the
+  `modules/nixos.nix` (snowglobe-factory `mkNixosHost`, hardware metadata in the
   registry) stay separate files — isomorphic shape, different builders. The
   nixos evaluation does not get the extended lib; nixos modules import `lib/`
   files by path (see `lib/direnv-nom-wrapper.nix`).

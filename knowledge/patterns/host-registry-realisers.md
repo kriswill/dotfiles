@@ -1,7 +1,7 @@
 ---
 type: Pattern
 title: Host Registry Realisers
-description: Hosts register into typed configurations.<class>.<hostname> option registries; per-class realiser modules (darwin.nix via darwinSystem, nixos.nix via snowglobe-lib's mkNixosHost) turn each entry into a flake output plus a per-host flake check.
+description: Hosts register into typed configurations.<class>.<hostname> option registries; per-class realiser modules (darwin.nix via darwinSystem, nixos.nix via snowglobe-factory's mkNixosHost) turn each entry into a flake output plus a per-host flake check.
 resource: modules/nixos.nix
 tags: [flake-parts, nix, architecture]
 timestamp: '2026-07-03T12:00:00-07:00'
@@ -18,7 +18,7 @@ different builders — a deliberate outcome of the
 Mechanics:
 
 - **Typed registries**: both are `lib.types.lazyAttrsOf` a submodule. The
-  darwin registry carries just `module`; the nixos one adds snowglobe-lib's
+  darwin registry carries just `module`; the nixos one adds snowglobe-factory's
   hardware metadata (`cpu-vendor`, `gpu-vendors`, `firmware`, `isVM`,
   `stateVersion`), so hardware wiring lives in the registry entry
   ([`modules/hosts/nebula/default.nix`](../../modules/hosts/nebula/default.nix)), not in
@@ -34,7 +34,7 @@ Mechanics:
   `inputs.darwin.lib.darwinSystem` with `nixpkgs.lib` extended by
   `lib/default.nix` (the kanagawa palette) injected as the evaluation's `lib`
   via `specialArgs`; [`modules/nixos.nix`](../../modules/nixos.nix) calls
-  snowglobe-lib's `mkNixosHost`, manually injecting
+  snowglobe-factory's `mkNixosHost`, manually injecting
   `specialArgs = { inherit inputs; }` (mkNixosHost doesn't) and **without**
   the extended lib — nixos modules import `lib/` files by path (the asymmetry
   noted in [cross-OS module twins](cross-os-module-twins.md)).
@@ -53,7 +53,7 @@ Mechanics:
 
 Tradeoffs: typed validation, uniform per-host checks, and colocated hardware
 metadata, at the cost of one level of indirection over calling the builders
-directly. The nixos side is coupled to snowglobe-lib — its profiles and
+directly. The nixos side is coupled to snowglobe-factory — its profiles and
 desktop machinery come for free, the extended-lib asymmetry is the price.
 
 ## Citations

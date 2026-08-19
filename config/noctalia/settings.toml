@@ -1,5 +1,5 @@
 config_version = 12
-hooks = { logging_out = "/home/k/.local/bin/helium-quit" , rebooting = "/home/k/.local/bin/helium-quit" , shutting_down = "/home/k/.local/bin/helium-quit" }
+hooks = { logging_out = "/home/k/.local/bin/helium-quit", rebooting = "/home/k/.local/bin/helium-quit", shutting_down = "/home/k/.local/bin/helium-quit" }
 
 [bar]
 order = [ "bar" ]
@@ -181,6 +181,12 @@ transition_on_startup = true
     path = "/home/k/Pictures/Wallpapers/vertical-wide/nebula-landscape-left.png"
 
     [wallpaper.monitors.DP-3]
+    path = "/home/k/Pictures/Wallpapers/horizontal-wide/nebula-landscape-right.png"
+
+    [wallpaper.monitors.HEADLESS-1]
+    path = "/home/k/Pictures/Wallpapers/nebula-wall-vertical.png"
+
+    [wallpaper.monitors.HEADLESS-7]
     path = "/home/k/Pictures/Wallpapers/horizontal-wide/nebula-landscape-right.png"
 
 [weather]

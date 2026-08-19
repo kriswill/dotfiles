@@ -9,6 +9,16 @@
 
 ## 2026-08-03
 
+- **Update** — [fastfetch](fastfetch.md): promoted from a darwin-only wrapper
+  to a Dual Module. Both classes now declare `programs.fastfetch.logo` +
+  `logoPaddingTop` and build the wrapped binary through the new shared
+  `lib/fastfetch-logo-wrapper.nix`; each host picks its image beside its
+  registration (`hexley-nix.png` on the Macs, `Nebula.png` on nebula). The
+  stowed config.jsonc lost its logo `source` — the option is now the single
+  place a logo is chosen. On nixos the wrapper rides in via snowglobe-factory's
+  own `programs.fastfetch.package` option instead of a colliding
+  systemPackages copy.
+
 - **Update** — [herdr](herdr.md): pin moved from preview tag
   `preview-2026-07-29-44b3adb12552` to stable `v0.8.0`, released upstream
   today with the #835 pixel-size fix (nixpkgs still ships 0.7.5, so the pin
@@ -65,7 +75,7 @@
 - **Update** — [users-k-noctalia](users-k-noctalia.md): gains
   `disabledModules = [ "programs/wayland/noctalia.nix" ]` — nixos-unstable's
   new `programs.noctalia` module collided with the upstream noctalia-shell
-  flake module snowglobe-lib imports, breaking nebula's eval. The flake
+  flake module snowglobe-factory imports, breaking nebula's eval. The flake
   module wins; see the
   [decision record](../decisions/noctalia-flake-module-over-nixpkgs.md).
 
@@ -320,7 +330,7 @@
 
 - **Creation** — nebula's Nix implementation swapped from Lix to Determinate
   Nix via the new [determinate](determinate.md) nixos-class module
-  (imports the determinate flake input's NixOS module; snowglobe-lib unforked —
+  (imports the determinate flake input's NixOS module; snowglobe-factory unforked —
   its `setDefault`/1337 `nix.package = lix` loses to the module's plain
   assignment). Motive: Lix lacks Nix ≥2.26 relative-path input locking
   (lix#641, Flakes frozen), so the `./flakes/*` sub-flake inputs re-locked to

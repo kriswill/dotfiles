@@ -21,7 +21,7 @@ daemon.
   installer-managed and nix-darwin keeps its hands off
   (`nix.enable = mkForce false` in [core](../modules/core.md)); on nebula
   the [determinate](../modules/determinate.md) module's plain `nix.package`
-  assignment outbids snowglobe-lib's Lix `setDefault`. Either way
+  assignment outbids snowglobe-factory's Lix `setDefault`. Either way
   `determinate-nixd` owns `/etc/nix/nix.conf`, including the class-generated
   settings via `nix.custom.conf`.
 - **Why this runtime:** the `./flakes/*` relative-path sub-flake inputs need

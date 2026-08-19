@@ -14,8 +14,8 @@ timestamp: '2026-07-03T15:30:00-07:00'
 
 The post-merge `nix flake update` (`5497cb0`) moved nixpkgs to `b5aa0fb`,
 which marks `pnpm-10.29.2` insecure (CVE-2026-48995 plus six more). nebula's
-Discord client is vesktop — snowglobe-lib's `programs.discord` weak-defaults
-`package = pkgs.vesktop` (snowglobe `nixosModules/snowglobe-lib/default.nix:181`)
+Discord client is vesktop — snowglobe-factory's `programs.discord` weak-defaults
+`package = pkgs.vesktop` (snowglobe `nixosModules/snowglobe-factory/default.nix:181`)
 — and nixpkgs' vesktop builds from source with a **deliberately pinned**
 `pnpm_10_29_2`: pnpm 10.29.3+ made a breaking change
 ([pnpm/pnpm#10601](https://github.com/pnpm/pnpm/issues/10601)) that crashes

@@ -25,7 +25,7 @@ Darwin has no `programs.neovim` module, so it installs a customized
 `pkgs.neovim.override { viAlias; vimAlias; withPython3 = false; withRuby =
 false; }` and sets `EDITOR` at `mkOverride 900` (to beat nix-darwin's
 `mkDefault "nano"`), plus `VISUAL` and `MANPAGER = "nvim +Man!"`. NixOS uses
-snowglobe-lib's minimal `programs.neovim` (enable/viAlias/vimAlias —
+snowglobe-factory's minimal `programs.neovim` (enable/viAlias/vimAlias —
 snowglobe disables nixpkgs' own module) with `EDITOR = mkDefault "nvim"`.
 Known tool-list drift: nixos adds `gcc` (treesitter's `cc`; darwin relies on
 Xcode clang), overrides `vtsls` to build against `nodejs-slim_24` (avoiding a

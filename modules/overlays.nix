@@ -50,7 +50,7 @@
     # inputs.hyprland.packages in modules/hosts/nebula/hyprland.nix; everything
     # else hypr-adjacent stays pure nixpkgs (Hydra-cached).
 
-    # snowglobe-lib hardcodes `alacritty.terminfo` into environment.systemPackages
+    # snowglobe-factory hardcodes `alacritty.terminfo` into environment.systemPackages
     # (for ssh terminfo). Alacritty is otherwise removed on this system, so
     # neutralise its terminfo output to an empty dir to drop the leftover entirely.
     drop-alacritty-terminfo = final: prev: {

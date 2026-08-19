@@ -25,7 +25,7 @@ will not be fixed there.
 
 ## Decision
 
-Swap the Nix implementation, not the pattern, and keep snowglobe-lib
+Swap the Nix implementation, not the pattern, and keep snowglobe-factory
 unforked: snowglobe sets `nix.package = slib.setDefault pkgs.lix` at priority
 1337 (deliberately weaker than `mkDefault`), so the determinate flake's NixOS
 module — a plain priority-100 `nix.package` assignment — simply wins.

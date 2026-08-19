@@ -6,7 +6,7 @@ Nix-based dotfiles for **macOS (nix-darwin)** and **NixOS** in one flake; every 
 is a per-class system module + the shared GNU Stow tree under `home/`.
 Hosts: `k`, `mini`, `SOC-Kris-Williams` (aarch64-darwin) and
 `nebula` (x86_64-linux desktop: Hyprland/Noctalia on
-[snowglobe-lib](https://github.com/kriswill/snowglobe-lib)
+[snowglobe-factory](https://github.com/kriswill/snowglobe-factory)
 (GitHub fork of the Codeberg upstream)).
 Primary configs: Neovim (Lua), Tmux, Zsh, CLI tools;
 nebula adds the Wayland desktop stack. Flake-based, using flake-parts + `import-tree` (the Dendritic pattern):
@@ -99,7 +99,7 @@ must be typed explicitly):
 │   ├── flake-parts.nix  # systems list (aarch64-darwin + x86_64-linux) + plumbing
 │   ├── darwin.nix       # realises `configurations.darwin.<host>` → darwinConfigurations
 │   ├── nixos.nix        # realises `configurations.nixos.<host>` → nixosConfigurations
-│   │                    #   (through snowglobe-lib's mkNixosHost; hardware metadata in the registry)
+│   │                    #   (through snowglobe-factory's mkNixosHost; hardware metadata in the registry)
 │   ├── packages.nix, overlays.nix, dev.nix
 │   ├── darwin/          # nix-darwin feature modules (universal ungated; host-selective gated)
 │   ├── nixos/           # NixOS feature modules (all universal within the class today)

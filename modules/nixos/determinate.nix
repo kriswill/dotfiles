@@ -1,4 +1,4 @@
-# Determinate Nix replaces snowglobe-lib's Lix default: snowglobe sets
+# Determinate Nix replaces snowglobe-factory's Lix default: snowglobe sets
 # nix.package at priority 1337 (setDefault); the determinate module's plain
 # assignment wins — no fork, no mkForce. Its determinate-nixd owns
 # /etc/nix/nix.conf and includes the NixOS-generated settings via
