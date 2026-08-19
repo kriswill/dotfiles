@@ -20,7 +20,7 @@ desirable.
 
 ## Decision
 
-- `sops-nix` becomes an explicit flake input (snowglobe-lib `follows` it, so
+- `sops-nix` becomes an explicit flake input (snowglobe-factory `follows` it, so
   there is exactly one copy).
 - `modules/darwin/sops.nix` (universal) imports `darwinModules.sops` and sets
   `sops.age.sshKeyPaths = [ /etc/ssh/ssh_host_ed25519_key ]` — the age

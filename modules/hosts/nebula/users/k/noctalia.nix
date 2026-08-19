@@ -39,13 +39,6 @@
       ...
     }:
     {
-      # nixpkgs (2026-07, nixos-unstable) grew its own programs.noctalia module
-      # whose option declarations collide with the upstream noctalia-shell
-      # flake module that snowglobe-lib's mkNixosHost imports into every host.
-      # We keep the flake module — it IS upstream noctalia, pinned by our
-      # `noctalia` input — so nixpkgs' copy must leave the eval.
-      disabledModules = [ "programs/wayland/noctalia.nix" ];
-
       # Background daemons the shell surfaces (battery/power, bluetooth, power
       # profiles). networking.networkmanager is already on (k is in the
       # networkmanager group). Recommended by docs.noctalia.dev for full

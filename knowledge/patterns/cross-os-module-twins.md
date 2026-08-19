@@ -47,7 +47,7 @@ How twins stay in sync without drifting:
   LSP/formatter list means mirroring it in the other.
 - **The lib-extension asymmetry**: the darwin realiser hands modules an
   extended `nixpkgs.lib` (`lib.kanagawa`) via `specialArgs`; the nixos
-  evaluation goes through snowglobe-lib's `mkNixosHost` and does **not** —
+  evaluation goes through snowglobe-factory's `mkNixosHost` and does **not** —
   nixos twins import `lib/` files by path (see
   [host registry realisers](host-registry-realisers.md)).
 - **Content-level OS divergence inside shared stow packages** is handled at

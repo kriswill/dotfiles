@@ -63,7 +63,7 @@ merge drops the trees side by side with zero path collisions.
 
 **Amended 2026-07-03:** the merge landed — `modules/nixos/` is in-tree; nebula
 registers as `modules/hosts/nebula.nix` (flat registry entry through
-snowglobe-lib's `mkNixosHost`) plus a `nebula/` folder of host files, the
+snowglobe-factory's `mkNixosHost`) plus a `nebula/` folder of host files, the
 shape `okf scaffold` already recognizes.
 
 ## Consequences

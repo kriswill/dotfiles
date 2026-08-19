@@ -11,9 +11,9 @@ real gotchas in **Learned behaviours & workarounds** at the bottom.
 
 ```
 $ helium --version
-Helium 0.13.4.1 (Chromium 149.0.7827.155)
+Helium 0.15.5.1 (Chromium 151.0.7922.137)
 $ readlink -f $(command -v helium)
-/nix/store/2yk5a7k0pwibq15p8b7q9b2jn1vrmfh1-helium-0.13.4.1/bin/helium
+/nix/store/aq76fwangwprax06cs0pwv07fsqj9s0p-helium-0.15.5.1/bin/helium
 $ ls -la /etc/chromium/policies/managed/
 lrwxrwxrwx root root helium.json -> /etc/static/chromium/policies/managed/helium.json
 $ ls /etc/helium
@@ -34,12 +34,13 @@ it must be root-owned and not world-writable, and it is.
   ELF, and grep for any `/etc/*helium*` rebrand path comes up EMPTY). This is THE
   fact the whole manual hinges on (verified 2026-06-20).
 - **Install:** upstream `programs.helium.enable = true` (the nixpkgs NixOS
-  module), set in `modules/nixos/helium/default.nix`. helium 0.13.4.1 / Chromium
-  149.0.7827.155 at the pinned flake rev; re-verify after `nix flake update`.
+  module), set in `modules/nixos/helium/default.nix`. helium 0.15.5.1 / Chromium
+  151.0.7922.137 at the pinned flake rev (bumped 2026-08-16 in
+  kriswill/snowglobe-factory@cba33697); re-verify after `nix flake update`.
 - **Pinned rev / bump:** the `helium` derivation resolves from the
-  snowglobe-lib/nixpkgs input (`packages/helium/default.nix:133` in that source
+  snowglobe-factory/nixpkgs input (`packages/helium/default.nix:133` in that source
   tree); the pin lives in `flake.lock`. Bump with `nix flake update` (nixpkgs
-  follows `snowglobe-lib/nixpkgs`), then re-verify the version line above.
+  follows `snowglobe-factory/nixpkgs`), then re-verify the version line above.
 - **Live on the running system (2026-06-20):** the policy file
   (`/etc/chromium/policies/managed/helium.json`, root-owned symlink dated Jun 20
   10:49), `programs.helium.enable` (→ `true`), and `helium-config` on `k`'s PATH
@@ -688,7 +689,7 @@ installed binary body matches the committed `helium-config.sh` (verified 2026-06
 - `git filter-repo` — <https://github.com/newren/git-filter-repo> (used for the
   history scrub of the pre-encryption plaintext; absent locally, run via
   `nix run nixpkgs#git-filter-repo`).
-- Pinned `helium` flake input — resolves via the snowglobe-lib/nixpkgs input
+- Pinned `helium` flake input — resolves via the snowglobe-factory/nixpkgs input
   (`packages/helium/default.nix:133` in that source tree); pin recorded in
   `flake.lock` (bump via `nix flake update`).
 - Registered in the **`CLAUDE.md` manuals table** (the discoverability index for

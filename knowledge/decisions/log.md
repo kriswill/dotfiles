@@ -11,7 +11,7 @@
 - **Creation** — [noctalia-flake-module-over-nixpkgs](noctalia-flake-module-over-nixpkgs.md):
   nixpkgs' new `programs.noctalia` module is disabled on nebula
   (`disabledModules`) so the upstream noctalia-shell flake module — imported
-  by snowglobe-lib's `mkNixosHost`, pinned in lockstep with the installed
+  by snowglobe-factory's `mkNixosHost`, pinned in lockstep with the installed
   binary — keeps sole ownership of the `programs.noctalia` namespace.
   Linked from [modules/users-k-noctalia](../modules/users-k-noctalia.md).
 
@@ -201,8 +201,8 @@
 - **Update** — [ci-github-actions](ci-github-actions.md) /
   [okflight-extraction](okflight-extraction.md) / `.github/workflows/ci.yml`
   / AGENTS.md / README.md / [okf](../packages/okf.md) / okf-profile: stale-claim
-  sweep after two input moves. snowglobe-lib now comes from the
-  `github:kriswill/snowglobe-lib` fork (`16207cf`) — the Codeberg-5xx retry
+  sweep after two input moves. snowglobe-factory now comes from the
+  `github:kriswill/snowglobe-factory` fork (`16207cf`) — the Codeberg-5xx retry
   step left ci.yml (its reason to exist is gone; every input is GitHub or
   FlakeHub) and the snowglobe links point at the fork. okflight's
   public-since-2026-07 status corrected everywhere that still described the

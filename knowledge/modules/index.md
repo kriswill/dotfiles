@@ -13,11 +13,11 @@ interesting ones by hand — scaffolding never overwrites an existing doc.
 * [Cbissue](cbissue.md) - Codeberg (Forgejo) issue CLIs — cbissue opens issues, cbissues browses them; the API token is fetched at call time via 1Password `op read`, nothing secret is stored.
 * [Claude Account Selector](claude-account-selector.md) - zsh wrapper that auto-selects a Claude Code account/profile by launch directory, with per-profile config-dir isolation.
 * [Codebase Memory Mcp](codebase-memory-mcp.md) - Supervised codebase-memory-mcp MCP daemon (semantic code graph + HTTP UI on :9749) from the kriswill fork, whose flake ships both OS modules — a launchd user agent on darwin, a systemd user service on NixOS — plus the cbm-ctl control CLI.
-* [Configuration](configuration.md) - Nebula's baseline system config — locale/timezone, snowglobe-lib profile toggles, NVIDIA production driver, GRUB dual-boot via os-prober, initrd emergency access, sops-decrypted SSH host keys, and the host's package/program selections.
+* [Configuration](configuration.md) - Nebula's baseline system config — locale/timezone, snowglobe-factory profile toggles, NVIDIA production driver, GRUB dual-boot via os-prober, initrd emergency access, sops-decrypted SSH host keys, and the host's package/program selections.
 * [Console Quiet](console-quiet.md) - Sets boot.consoleLogLevel = 3 so the benign AMD i2c_piix4 SMBus probe-NAK errors stop flashing over the ly greeter; journald still records everything.
 * [Core](core.md) - The always-on darwin system baseline shared by every host — stateVersion, primary user, baseline packages, touch-ID sudo, fonts, shell enables, nix/nixpkgs settings.
 * [Darwin](darwin.md) - Declares `configurations.darwin.<name>` and realises each into a `darwinConfigurations.<name>` flake output (plus a toplevel build check).
-* [Determinate](determinate.md) - Determinate Nix replaces snowglobe-lib's Lix default: snowglobe sets nix.package at priority 1337 (setDefault); the determinate module's plain assignment wins — no fork, no mkForce.
+* [Determinate](determinate.md) - Determinate Nix replaces snowglobe-factory's Lix default: snowglobe sets nix.package at priority 1337 (setDefault); the determinate module's plain assignment wins — no fork, no mkForce.
 * [Dev](dev.md) - Development shell (deadnix, statix, nixfmt-tree, just, okf) and formatter.
 * [Devenv](devenv.md) - devenv.sh's Nix developer-environment CLI on both OSes; cd auto-activation comes from devenv 2.1's native zsh hook in the stowed integrations.zsh, not direnv.
 * [Diffnav](diffnav.md) - diffnav git diff pager.
@@ -26,7 +26,7 @@ interesting ones by hand — scaffolding never overwrites an existing doc.
 * [Disko](disko.md) - Declarative disko layout for the NixOS NVMe — GPT with a 1M bios-boot partition, a 512M vfat ESP at /boot, and an unencrypted ext4 root filling the rest.
 * [Dnsmasq](dnsmasq.md) - dnsmasq — lightweight DNS forwarder/cache, configured here as a loopback-bound local resolver for custom hostnames like `p4c`.
 * [Dotfiles Stow](dotfiles-stow.md) - Restows every home/ package into $HOME on each rebuild via the shared lib/stow-restow-script.nix builder — live-repo symlinks, self-healing, per-OS skip lists.
-* [Fastfetch](fastfetch.md) - Kris' fastfetch.
+* [Fastfetch](fastfetch.md) - fastfetch — fast neofetch-style system-info fetcher; both OSes wrap the binary so each host picks its logo image declaratively via programs.fastfetch.logo instead of config.jsonc.
 * [Flake Parts](flake-parts.md) - Top-level flake-parts wiring for the Dendritic pattern.
 * [Flatpak Repo User](flatpak-repo-user.md) - Masks snowglobe's system flatpak-repo service and replaces it with a per-user oneshot that registers Flathub in ~/.local/share/flatpak at login, gated on a DNS ExecCondition so offline logins skip cleanly.
 * [Ghostty](ghostty.md) - Ghostty terminal — each OS installs it its own way and generates its half of the split config (`config-file = ?os.conf`); the shared config is stowed.
@@ -42,8 +42,8 @@ interesting ones by hand — scaffolding never overwrites an existing doc.
 * [Herdr](herdr.md) - herdr — terminal agent multiplexer (run several coding agents in persistent, SSH-reachable sessions); pinned on both OSes to the upstream flake at stable v0.8.0 for in-pane image rendering.
 * [Homebrew](homebrew.md) - nix-darwin's homebrew module — declares the casks/brews/taps that must come from Homebrew rather than nixpkgs, with zap cleanup so anything not listed is uninstalled on rebuild.
 * [Htop](htop.md) - Kris' htop (system-level port of the old home-manager programs.htop).
-* [Hyprland](hyprland.md) - Enables Hyprland directly (programs.hyprland + withUWSM, package/portalPackage pinned to inputs.hyprland.packages with the hyprland.cachix.org substituter) instead of snowglobe-lib.desktop.hyprland — dodging its force-enabled hyprlock/kitty/dolphin — and asserts the shared snowglobe desktop layer plus fuzzel formerly implied by niri.
-* [Keyring](keyring.md) - snowglobe-lib installer key metadata (NOT GNOME Keyring) — user k's ssh-ed25519 public key and nebula's age recipient; do not remove.
+* [Hyprland](hyprland.md) - Enables Hyprland directly (programs.hyprland + withUWSM, package/portalPackage pinned to inputs.hyprland.packages with the hyprland.cachix.org substituter) instead of snowglobe-factory.desktop.hyprland — dodging its force-enabled hyprlock/kitty/dolphin — and asserts the shared snowglobe desktop layer plus fuzzel formerly implied by niri.
+* [Keyring](keyring.md) - snowglobe-factory installer key metadata (NOT GNOME Keyring) — user k's ssh-ed25519 public key and nebula's age recipient; do not remove.
 * [Kitty](kitty.md) - Kris' kitty.
 * [Libreoffice Paths](libreoffice-paths.md) - Moves LibreOffice's user-writable paths out of ~/.config/libreoffice into XDG data/state dirs by seeding both the modern and legacy path nodes into registrymodifications.xcu — idempotent, skip-if-running, subshell-confined.
 * [Localsearch](localsearch.md) - Enables services.gnome.localsearch (the tracker-miners package's new name), registering its D-Bus service file so GTK file managers can activate the Tracker3 filesystem indexer on demand instead of failing to find it.
@@ -52,7 +52,7 @@ interesting ones by hand — scaffolding never overwrites an existing doc.
 * [Codebase Memory Mcp](nebula-codebase-memory-mcp.md) - Flips services.codebase-memory-mcp.enable on nebula — the supervised code-graph daemon (systemd user service) + cbm-ctl from the fork's NixOS module.
 * [Neovim](neovim.md) - Installs Neovim plus every LSP/linter/formatter binary on the global PATH; the Lua config itself is stow-deployed and documented in the nvim knowledge area.
 * [Nh](nh.md) - nh (Nix Helper) plus the nrs/nrb/nrt rebuild helper executables (writeShellScriptBin, so they work in non-interactive shells and every shell alike).
-* [Nixos](nixos.md) - Declares `configurations.nixos.<name>` and realises each into a `nixosConfigurations.<name>` flake output (plus a toplevel build check), building through snowglobe-lib's `mkNixosHost` so all the `snowglobe-lib.profiles.*` / `snowglobe-lib.desktop.*` machinery and the hardware wiring are still applied.
+* [Nixos](nixos.md) - Declares `configurations.nixos.<name>` and realises each into a `nixosConfigurations.<name>` flake output (plus a toplevel build check), building through snowglobe-factory's `mkNixosHost` so all the `snowglobe-factory.profiles.*` / `snowglobe-factory.desktop.*` machinery and the hardware wiring are still applied.
 * [Node Runtime](node-runtime.md) - System-wide Node.js + Bun — infrastructure, not dev convenience: npx-launched MCP servers (Claude Code plugins) silently fail on NixOS without a node on PATH.
 * [Oksh](oksh.md) - Kris' oksh.
 * [OLED Resume Bump](oled-resume-bump.md) - DPMS off/on bounce of the DP-3 OLED after every resume from S3, via powerManagement.resumeCommands — works around the PG34WCDM panel staying black while Hyprland reports the output live.

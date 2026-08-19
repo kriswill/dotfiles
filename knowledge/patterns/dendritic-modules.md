@@ -20,7 +20,7 @@ Key consequences:
   realisers — [darwin](../modules/darwin.md) (`configurations.darwin.<host>`
   → `darwinConfigurations`) and [nixos](../modules/nixos.md)
   (`configurations.nixos.<host>` → `nixosConfigurations`, through
-  snowglobe-lib's `mkNixosHost`) — turn registrations into outputs (see
+  snowglobe-factory's `mkNixosHost`) — turn registrations into outputs (see
   [host registry realisers](host-registry-realisers.md)).
 - A path component prefixed with `_` is excluded from discovery
   (e.g. `yazi/_themes/`) — the escape hatch for non-module files that must

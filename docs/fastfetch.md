@@ -19,7 +19,7 @@ $ command -v fastfetch kitten
 /run/current-system/sw/bin/kitten        # required by logo type "kitty-icat"
 ```
 
-- **Install:** fastfetch comes from snowglobe-lib's package set (it's on the
+- **Install:** fastfetch comes from snowglobe-factory's package set (it's on the
   system `PATH`, not declared in this repo). `kitten` comes from
   `pkgs/kitten.nix` (prebuilt static binary, darwin-arm64 + linux-amd64),
   added to nebula's `environment.systemPackages` in
@@ -29,10 +29,13 @@ $ command -v fastfetch kitten
   ``running `kitten icat` failed command not found``).
 - **Config:** `home/fastfetch/.config/fastfetch/config.jsonc`, a **stowed**
   dotfile (symlinked into `~/.config/fastfetch/` by `dotfiles-stow.nix`, not
-  nix-managed). The logo image lives next to it as `Nebula.png` and is
-  referenced by `~/.config/fastfetch/Nebula.png`. Swap the file to change the
-  logo. (`logo.png` is the macOS Apple logo — the `76a05ff` macOS merge once
-  swapped the config's `source` to it; don't let that happen again.)
+  nix-managed). The config carries no logo `source`: each host sets
+  `programs.fastfetch.logo` (a filename beside the config in the stow tree —
+  `Nebula.png` here, `hexley-nix.png` on the Macs) and
+  `modules/{darwin,nixos}/fastfetch.nix` wrap the binary with `--logo` via
+  `lib/fastfetch-logo-wrapper.nix`; CLI flags beat config.jsonc, so a stray
+  `source` (the `76a05ff` merge once pointed it at the Apple `logo.png`)
+  can no longer change what renders.
 
 ## The logo image situation on nebula (the load-bearing facts)
 
@@ -127,7 +130,7 @@ Remarks that matter here:
 ```jsonc
 "logo": {
   "type": "kitty-icat",
-  "source": "~/.config/fastfetch/Nebula.png",
+  // source comes from the wrapper: programs.fastfetch.logo = "Nebula.png"
   "width": 27,
   "height": 20
 }
@@ -191,20 +194,24 @@ Hard-won gotchas from doing this (so the next session doesn't relearn them):
 
 ## Learned behaviours & workarounds
 
-- **macOS overrides the logo at the package layer, not in config.jsonc** —
-  `modules/darwin/fastfetch.nix` wraps the darwin binary
-  (symlinkJoin + wrapProgram, same idiom as `modules/darwin/diffnav.nix`) with
-  `--logo "$HOME/.config/fastfetch/hexley-nix.png"` (Hexley the platypus —
-  Darwin's mascot — on the Nix snowflake, 580×502; lives in the stow tree
-  beside Nebula.png, as does `dark-apple.png`, the old Apple logo renamed).
-  CLI flags beat the config's `source`, so the shared config keeps
-  `Nebula.png` for nebula — if macOS shows a platypus while this file says
-  Nebula, that's why. Logo type and the 27×20 box still come from config.jsonc;
-  `kitten icat` fits the image inside the box preserving aspect — by
-  screenshot this wide image width-fits at ~13 rows beside ~19 rows of
-  output, so the wrapper also passes `--logo-padding-top 3` to drop it toward
-  vertical center. Tune the number there, or add
-  `--logo-width`/`--logo-height` for independent sizing. (2026-08-03)
+- **Both OSes pick the logo at the package layer, not in config.jsonc** —
+  `modules/{darwin,nixos}/fastfetch.nix` declare `programs.fastfetch.logo`
+  (+ `logoPaddingTop`) and wrap the binary through
+  `lib/fastfetch-logo-wrapper.nix` (symlinkJoin + wrapProgram, same idiom as
+  `modules/darwin/diffnav.nix`) with `--logo
+  "$HOME/.config/fastfetch/<logo>"`; each host sets the option beside its
+  registration. On nixos the wrapped package rides in through snowglobe-factory's
+  own `programs.fastfetch.package` option (no colliding second copy); the
+  darwin twin adds it to `environment.systemPackages`. Darwin hosts use
+  `hexley-nix.png` (Hexley the platypus — Darwin's mascot — on the Nix
+  snowflake, 580×502; lives in the stow tree beside Nebula.png, as does
+  `dark-apple.png`, the old Apple logo renamed). Logo type and the 27×20 box
+  still come from config.jsonc; `kitten icat` fits the image inside the box
+  preserving aspect — by screenshot the wide Hexley image width-fits at ~13
+  rows beside ~19 rows of output, so darwin defaults `logoPaddingTop = 3` to
+  drop it toward vertical center (nebula uses 0). Tune the option, or add
+  `--logo-width`/`--logo-height` in the wrapper for independent sizing.
+  (2026-08-03)
 - **A root-owned `.cache/` inside a stow package silently kills its restow** —
   a sudo'd tool (most plausibly a root `fastfetch` run resolving the stowed
   config to its repo realpath and dropping its cache next to it) created

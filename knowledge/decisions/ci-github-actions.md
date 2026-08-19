@@ -125,11 +125,11 @@ observation removed the entire hard part.
 - First-run data (2026-07-10): `darwin-k` green in 41m8s fully uncached,
   and it DID fetch the private okf input (ssh-agent is required, not
   precautionary). `nixos-nebula` failed twice on **Codeberg 503/504
-  fetching snowglobe-lib** — reproduced from a residential IP, i.e. a real
+  fetching snowglobe-factory** — reproduced from a residential IP, i.e. a real
   Codeberg outage, and only the nebula eval forces that input (darwin
   never touches Codeberg). Mitigation was a retried `nix flake archive`
   step (~10 min backoff). **Resolved 2026-07-11:** the escalation happened
-  — snowglobe-lib moved to the `github:kriswill/snowglobe-lib` fork
+  — snowglobe-factory moved to the `github:kriswill/snowglobe-factory` fork
   (`16207cf`), every input is now GitHub or FlakeHub, and the retry step
   was removed.
 

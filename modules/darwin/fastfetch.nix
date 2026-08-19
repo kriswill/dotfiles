@@ -1,18 +1,36 @@
 {
   flake.modules.darwin.fastfetch =
-    { pkgs, ... }:
-    let
-      hexley = pkgs.symlinkJoin {
-        name = "hexley";
-        paths = [ pkgs.fastfetch ];
-        nativeBuildInputs = [ pkgs.makeWrapper ];
-        postBuild = ''
-          wrapProgram $out/bin/fastfetch \
-            --add-flags '--logo "$HOME/.config/fastfetch/hexley-nix.png" --logo-padding-top 3'
-        '';
-      };
-    in
+    # Nixos twin: modules/nixos/fastfetch.nix. Hosts pick their logo via
+    # programs.fastfetch.logo; the wrapper's CLI flags beat the stowed
+    # config.jsonc's `source` (docs/fastfetch.md).
     {
-      environment.systemPackages = [ hexley ];
+      config,
+      lib,
+      pkgs,
+      ...
+    }:
+    {
+      options.programs.fastfetch = {
+        logo = lib.mkOption {
+          type = lib.types.str;
+          default = "hexley-nix.png";
+          description = "Logo image filename under ~/.config/fastfetch/ (stow package `fastfetch`).";
+        };
+        logoPaddingTop = lib.mkOption {
+          type = lib.types.ints.unsigned;
+          # Hexley is wide: width-fit leaves ~13 rows beside ~19 rows of
+          # output, so drop it toward vertical center.
+          default = 3;
+          description = "Blank rows above the logo.";
+        };
+      };
+
+      config.environment.systemPackages = [
+        (import ../../lib/fastfetch-logo-wrapper.nix {
+          inherit pkgs;
+          inherit (config.programs.fastfetch) logo;
+          paddingTop = config.programs.fastfetch.logoPaddingTop;
+        })
+      ];
     };
 }
