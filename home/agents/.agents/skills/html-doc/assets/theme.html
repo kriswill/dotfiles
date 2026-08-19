@@ -1,0 +1,239 @@
+<!--
+  Dark/light theme block for standalone HTML documents.
+
+  Copy the three fragments below into the document VERBATIM. Do not retype or
+  "improve" them -- the point of this asset is that every document produced
+  this way behaves identically. The only thing you should change is the
+  palette values, and only when a document has a deliberate house style.
+
+  Design, so it is clear what breaks if a fragment is edited:
+
+    * The theme is ALWAYS an explicit light or dark. The system preference is
+      not a visible mode and is never presented to the reader -- it only seeds
+      the initial value, once, in fragment 2. Do not add an "auto" state.
+    * The reader's choice WINS PERMANENTLY once made. It is written to
+      localStorage, and the system-preference listener in fragment 3 backs off
+      as soon as anything is stored.
+    * SOURCE ORDER carries the override. :root[data-theme="dark"] and
+      :root:not([data-theme="light"]) have identical specificity, so the
+      explicit selector MUST come after the media query, or forcing dark on a
+      light system silently does nothing. (The media query is the no-JS
+      fallback; with script enabled fragment 2 always sets the attribute.)
+    * Fragment 2 goes in <head> so the theme resolves before first paint.
+      Moved to the end of <body>, it produces a visible flash of the wrong
+      theme on every load.
+    * The control is an ICON ONLY, showing the theme you would switch TO -- a
+      moon on a light page, a sun on a dark one. Both icons are in the markup
+      and CSS picks one, so switching never waits on script.
+    * localStorage is wrapped in try/catch: some browsers throw on access
+      under file://, which is exactly how these documents get opened.
+-->
+
+
+<!-- ===================================================================== -->
+<!-- FRAGMENT 1 of 3 -- into <style>, at the very top.                     -->
+<!-- Every colour in the document must resolve through these variables, or -->
+<!-- the themes drift apart. Add new colours here, not inline.             -->
+<!-- ===================================================================== -->
+
+  :root {
+    color-scheme: light;
+    --bg: #ffffff;
+    --ink: #1b1f24;
+    --muted: #57606a;
+    --rule: #d0d7de;
+    --code-bg: #f6f8fa;
+    --accent: #0969da;
+    --warn-bg: #fff8c5;
+    --warn-border: #d4a72c;
+    --danger-bg: #ffebe9;
+    --danger-border: #cf222e;
+    --ok-bg: #dafbe1;
+    --ok-border: #1a7f37;
+    --manual-bg: #ddf4ff;
+    --manual-fg: #0969da;
+    --config-bg: #fbefff;
+    --config-fg: #8250df;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --bg: #0d1117;
+      --ink: #e6edf3;
+      --muted: #9198a1;
+      --rule: #3d444d;
+      --code-bg: #151b23;
+      --accent: #4493f8;
+      --warn-bg: #2b2411;
+      --warn-border: #d29922;
+      --danger-bg: #2d1214;
+      --danger-border: #f85149;
+      --ok-bg: #0f2916;
+      --ok-border: #3fb950;
+      --manual-bg: #0c2d6b;
+      --manual-fg: #79c0ff;
+      --config-bg: #2c1a45;
+      --config-fg: #d2a8ff;
+    }
+  }
+
+  /* Must come after the media query: same specificity, so source order is what
+     lets an explicit "dark" win on a light system. */
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #0d1117;
+    --ink: #e6edf3;
+    --muted: #9198a1;
+    --rule: #3d444d;
+    --code-bg: #151b23;
+    --accent: #4493f8;
+    --warn-bg: #2b2411;
+    --warn-border: #d29922;
+    --danger-bg: #2d1214;
+    --danger-border: #f85149;
+    --ok-bg: #0f2916;
+    --ok-border: #3fb950;
+    --manual-bg: #0c2d6b;
+    --manual-fg: #79c0ff;
+    --config-bg: #2c1a45;
+    --config-fg: #d2a8ff;
+  }
+
+  /* body MUST set both, or dark text lands on the browser's white default. */
+  body {
+    background: var(--bg);
+    color: var(--ink);
+  }
+
+  /* Fixed rather than inline so it stays reachable in a long document. Hidden
+     from print, where a theme control means nothing. */
+  #theme-toggle {
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    padding: 0;
+    color: var(--muted);
+    background: var(--code-bg);
+    border: 1px solid var(--rule);
+    border-radius: 50%;
+    cursor: pointer;
+  }
+  #theme-toggle:hover { color: var(--ink); border-color: var(--muted); }
+  #theme-toggle svg { width: 1.05rem; height: 1.05rem; display: block; }
+
+  /* The icon shows the theme you would switch TO -- a moon on a light page, a
+     sun on a dark one. Both icons ship in the markup and CSS picks one, so
+     switching never waits on script. */
+  #theme-toggle .icon-sun { display: none; }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) #theme-toggle .icon-sun { display: block; }
+    :root:not([data-theme="light"]) #theme-toggle .icon-moon { display: none; }
+  }
+  :root[data-theme="dark"] #theme-toggle .icon-sun { display: block; }
+  :root[data-theme="dark"] #theme-toggle .icon-moon { display: none; }
+  @media print { #theme-toggle { display: none; } }
+
+
+<!-- ===================================================================== -->
+<!-- FRAGMENT 2 of 3 -- into <head>, after </style>. Must be in <head>.    -->
+<!-- ===================================================================== -->
+
+<script>
+  // In <head>, before any content renders: resolving the theme after first
+  // paint would show a flash of the wrong one.
+  //
+  // The system preference is not a mode the reader can see or select -- it is
+  // only the seed for the initial value. Once resolved, the theme is always an
+  // explicit light or dark, so the rest of the page never has to ask again.
+  (function () {
+    var saved = null;
+    try {
+      saved = localStorage.getItem("theme");
+    } catch (e) {
+      // Private mode, or file:// under a strict policy. The system preference
+      // below still applies; the choice just will not survive a reload.
+    }
+    if (saved !== "light" && saved !== "dark") {
+      saved = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches
+        ? "dark"
+        : "light";
+    }
+    document.documentElement.setAttribute("data-theme", saved);
+  })();
+</script>
+
+
+<!-- ===================================================================== -->
+<!-- FRAGMENT 3 of 3 -- first thing inside <body>.                         -->
+<!-- ===================================================================== -->
+
+<button id="theme-toggle" type="button" title="Switch theme" aria-label="Switch theme">
+  <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+       stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+  </svg>
+  <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+       stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <circle cx="12" cy="12" r="5"></circle>
+    <line x1="12" y1="1" x2="12" y2="3"></line>
+    <line x1="12" y1="21" x2="12" y2="23"></line>
+    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+    <line x1="1" y1="12" x2="3" y2="12"></line>
+    <line x1="21" y1="12" x2="23" y2="12"></line>
+    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+  </svg>
+</button>
+<script>
+  // A plain two-way switch. The system preference decided the starting value
+  // in <head>; from here on the reader's own choice is the only input, and it
+  // is written to localStorage so it survives a reload.
+  (function () {
+    var button = document.getElementById("theme-toggle");
+    var root = document.documentElement;
+
+    function isDark() {
+      return root.getAttribute("data-theme") === "dark";
+    }
+
+    function describe() {
+      var next = isDark() ? "light" : "dark";
+      button.title = "Switch to " + next + " theme";
+      button.setAttribute("aria-label", button.title);
+    }
+
+    button.addEventListener("click", function () {
+      var next = isDark() ? "light" : "dark";
+      root.setAttribute("data-theme", next);
+      try {
+        localStorage.setItem("theme", next);
+      } catch (e) {
+        // Non-persistent is still usable for this session.
+      }
+      describe();
+    });
+
+    // Track the system setting only until the reader overrides it -- after
+    // that their choice wins and changing the OS theme must not undo it.
+    if (window.matchMedia) {
+      window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", function (e) {
+        var saved = null;
+        try { saved = localStorage.getItem("theme"); } catch (err) { /* ignore */ }
+        if (saved !== "light" && saved !== "dark") {
+          root.setAttribute("data-theme", e.matches ? "dark" : "light");
+          describe();
+        }
+      });
+    }
+
+    describe();
+  })();
+</script>
