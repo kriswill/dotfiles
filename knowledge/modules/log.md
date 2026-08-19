@@ -1,5 +1,13 @@
 # Log
 
+## 2026-08-19
+
+- **Update** — [Yazi](yazi.md): yazi 26.8.15 version skew fixed — vendored
+  faster-piper patched for the `Url.spec.is_search` API, and new
+  `overlays/git-yazi.nix` (TEMPORARY) bumps `yaziPlugins.git` past the
+  stale nixpkgs pin whose pre-rewrite fetcher left "git" background tasks
+  pending until quit.
+
 ## 2026-08-06
 
 - **Update** — [macos-defaults](macos-defaults.md): fn/🌐 key tap set to

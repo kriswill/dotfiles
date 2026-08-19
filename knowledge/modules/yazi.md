@@ -18,12 +18,22 @@ and wires config from three sources:
   blank output; the fork renders in a detached daemon with atomic install).
 - **Activation script** (order 1600, after dotfiles-stow at 1500): links
   the store-only pieces under `~/.config/yazi/{plugins,flavors}` — the
-  `git` plugin (`pkgs.yaziPlugins.git`), the `types.yazi` LuaCATS stubs,
-  and the kanagawa-dragon flavor generated from `lib.kanagawa`
+  `git` plugin (`pkgs.yaziPlugins.git`, temporarily bumped past the nixpkgs
+  pin by `overlays/git-yazi.nix` — see below), the `types.yazi` LuaCATS
+  stubs, and the kanagawa-dragon flavor generated from `lib.kanagawa`
   (`_themes/kanagawa-dragon`).
 - **PATH expectations**: previews shell out to `glow` (markdown, styled by
   the stowed kanagawa glow theme) and `bat` (code), both installed
   elsewhere (core.nix).
+
+**Version-skew gotcha (2026-08-19):** yazi 26.8.15 changed the plugin
+fetcher API and deprecated `Url.is_search` (→ `Url.spec.is_search`). The
+vendored faster-piper fork was patched for the latter; for the former,
+nixpkgs' `yaziPlugins.git` snapshot (2026-08-03, pre-rewrite) left fetcher
+tasks permanently pending under 26.8.15 — yazi accumulated "git" background
+tasks and prompted to abort them on quit — so `overlays/git-yazi.nix` pins
+upstream HEAD (post "simplify with new fetcher API") until nixpkgs catches
+up.
 
 Mounted ungated on every darwin host (see the [host-mounted modules
 pattern](../patterns/host-mounted-modules.md)), auto-discovered via the
