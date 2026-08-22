@@ -1,5 +1,5 @@
 # Daily reminder to drop the herdr upstream-flake pin (flake.nix) once
-# nixos-unstable ships a herdr >= the pinned 0.8.0 — see docs/fastfetch.md.
+# nixos-unstable ships a herdr >= the pinned 0.8.2 — see docs/fastfetch.md.
 # One raw-file HTTP fetch, no nix eval. Pops a dismissable critical
 # notification; clicking the action opens the upstream releases page.
 # DELETE THIS FILE together with the pin.
@@ -8,7 +8,7 @@
     { pkgs, ... }:
     {
       systemd.user.services.herdr-update-check = {
-        description = "Notify when nixos-unstable carries herdr >= 0.8.0 (drop the upstream-flake pin)";
+        description = "Notify when nixos-unstable carries herdr >= 0.8.2 (drop the upstream-flake pin)";
         serviceConfig = {
           Type = "oneshot";
           # notify-send -A blocks until the notification is clicked or
@@ -22,7 +22,7 @@
           pkgs.xdg-utils
         ];
         script = ''
-          pinned="0.8.0" # the pinned version — drop the pin when nixpkgs catches up
+          pinned="0.8.2" # the pinned version — drop the pin when nixpkgs catches up
           v=$(curl -fsSL --max-time 30 \
             https://raw.githubusercontent.com/NixOS/nixpkgs/nixos-unstable/pkgs/by-name/he/herdr/package.nix \
             | sed -n 's/.*version = "\([0-9.]*\)".*/\1/p' | head -1) || true

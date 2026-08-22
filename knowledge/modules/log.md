@@ -1,5 +1,11 @@
 # Log
 
+## 2026-08-22
+
+- **Update** — [Herdr](herdr.md): upstream-flake pin bumped `v0.8.0` →
+  `v0.8.2`; [herdr-update-check](herdr-update-check.md)'s pinned version and
+  the docs/fastfetch.md notes updated to match. Nixpkgs still ships 0.7.5.
+
 ## 2026-08-19
 
 - **Update** — [Yazi](yazi.md): yazi 26.8.15 version skew fixed — vendored
