@@ -98,7 +98,7 @@
       url = "github:noctalia-dev/noctalia-shell/v5.0.0-beta.8";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    # herdr pinned to the upstream v0.8.0 stable tag (the repo ships its own
+    # herdr pinned to the upstream v0.8.2 stable tag (the repo ships its own
     # flake; no binary cache, builds from source) for the CSI 14t/16t
     # pixel-size fix (herdrdev/herdr#835) that 0.7.5 lacks — required for
     # image rendering (fastfetch/yazi) inside herdr panes, together with
@@ -106,7 +106,7 @@
     # docs/fastfetch.md. Drop back to nixpkgs' herdr once nixos-unstable
     # ships >= 0.8.0. (rust-overlay is left unfollowed — we don't carry one.)
     herdr = {
-      url = "github:herdrdev/herdr/v0.8.0";
+      url = "github:herdrdev/herdr/v0.8.2";
       inputs.nixpkgs.follows = "nixpkgs";
     };
     # tomato — Rust CLI to get/set TOML values preserving comments + formatting

@@ -259,11 +259,11 @@ Hard-won gotchas from doing this (so the next session doesn't relearn them):
     first shipped in preview `preview-2026-07-29-44b3adb12552`, now in stable
     [`v0.8.0`](https://github.com/herdrdev/herdr/releases/tag/v0.8.0)
     (released 2026-08-03), **which nixpkgs does not yet carry** (still 0.7.5).
-    Both OSes therefore pin the upstream flake at the `v0.8.0` tag via the
-    `herdr` flake input (upstream ships its own flake;
+    Both OSes therefore pin the upstream flake — bumped to the `v0.8.2` tag
+    (2026-08-22) — via the `herdr` flake input (upstream ships its own flake;
     `modules/{darwin,nixos}/herdr.nix` consume it, built from source — the
-    binary reports "0.8.0", unlike the earlier preview pin which still said
-    "0.7.5"). Drop the pin when nixos-unstable ships >= 0.8.0 — nebula's
+    binary reports the pinned version, unlike the earlier preview pin which
+    still said "0.7.5"). Drop the pin when nixos-unstable ships >= 0.8.2 — nebula's
     `herdr-update-check` timer watches for that daily. (2026-08-03)
 
 - **ASCII instead of the PNG inside tmux = `TERM=="screen"` guard**, not a
