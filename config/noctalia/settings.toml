@@ -186,6 +186,12 @@ transition_on_startup = true
     [wallpaper.monitors.HEADLESS-1]
     path = "/home/k/Pictures/Wallpapers/nebula-wall-vertical.png"
 
+    [wallpaper.monitors.HEADLESS-3]
+    path = "/home/k/Pictures/Wallpapers/nebula-wall-horizontal.png"
+
+    [wallpaper.monitors.HEADLESS-5]
+    path = "/home/k/Pictures/Wallpapers/horizontal-wide/nebula-landscape-right.png"
+
     [wallpaper.monitors.HEADLESS-7]
     path = "/home/k/Pictures/Wallpapers/horizontal-wide/nebula-landscape-right.png"
 
