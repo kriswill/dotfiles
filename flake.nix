@@ -73,6 +73,10 @@
         import-tree.follows = "import-tree";
         sops-nix.follows = "sops-nix";
         nixos-hardware.follows = "nixos-hardware";
+        # Prune Lix entirely — we run Determinate Nix everywhere (see above),
+        # and Lix-written lock entries break CppNix lock verification.
+        lix.follows = "";
+        lix-module.follows = "";
       };
     };
     # Explicit sops-nix (snowglobe-factory follows it, above): also provides
