@@ -100,10 +100,13 @@
     # image rendering (fastfetch/yazi) inside herdr panes, together with
     # `experimental.kitty_graphics = true` in the stow config.toml. See
     # docs/fastfetch.md. Drop back to nixpkgs' herdr once nixos-unstable
-    # ships >= 0.8.0. (rust-overlay is left unfollowed — we don't carry one.)
+    # ships >= 0.8.0. rust-overlay is bumped past the tag's pin because that
+    # pin predates upstream's stdenv.isLinux → hostPlatform fix and spams
+    # deprecation warnings on every eval; drop the override with the input.
     herdr = {
       url = "github:herdrdev/herdr/v0.8.2";
       inputs.nixpkgs.follows = "nixpkgs";
+      inputs.rust-overlay.url = "github:oxalica/rust-overlay";
     };
     # tomato — Rust CLI to get/set TOML values preserving comments + formatting
     # (built on toml_edit). Not a flake; built via rustPlatform in pkgs/tomato.nix
