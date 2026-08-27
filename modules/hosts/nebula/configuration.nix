@@ -21,6 +21,10 @@
       snowglobe-factory.profiles.hardware-tools.enable = true;
       snowglobe-factory.profiles.gaming.enable = true;
       snowglobe-factory.profiles.office.enable = true;
+      # snowglobe's default (libreoffice-fresh) is a deprecated nixpkgs alias
+      # since the upstream fresh/still split ended — it warns on every eval.
+      # Drop this override if snowglobe-factory moves to libreoffice-stable.
+      programs.libreoffice.package = pkgs.libreoffice-stable;
       snowglobe-factory.profiles.hacker-mode.enable = true;
       snowglobe-factory.profiles.nix-tools.enable = true;
       snowglobe-factory.profiles.harden.enable = true;

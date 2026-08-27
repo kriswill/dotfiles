@@ -15,7 +15,7 @@
 # On darwin, pass gh through untouched (FileVault disks; hosts.yml is fine).
 _final: prev: {
   gh =
-    if prev.stdenv.isLinux then
+    if prev.stdenv.hostPlatform.isLinux then
       prev.symlinkJoin {
         name = "gh-op-${prev.gh.version}";
         paths = [ prev.gh ];
