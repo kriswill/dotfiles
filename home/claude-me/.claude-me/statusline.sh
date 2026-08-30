@@ -42,7 +42,9 @@ esac
 # bar while this tab is focused. Singleton per pane; dies with claude ($PPID).
 # The weekly all-models % is free in the statusline JSON — publish it for the
 # watcher so only the Fable-scoped % ever needs the (touchy) OAuth endpoint.
-if [ "${HERDR_ENV:-}" = "1" ] && [ "$profile" = "me" ] && command -v bun >/dev/null 2>&1; then
+# "default" counts as personal: nebula's single-account setup has no
+# account-selector, so CLAUDE_CONFIG_DIR is unset there ("me" is macs-only).
+if [ "${HERDR_ENV:-}" = "1" ] && { [ "$profile" = "me" ] || [ "$profile" = "default" ]; } && command -v bun >/dev/null 2>&1; then
   weekly=$(echo "$input" | jq -r '.rate_limits.seven_day.used_percentage // empty')
   if [ -n "$weekly" ]; then
     printf '{"at":%s000,"all":%s}' "$(date +%s)" "$weekly" > /tmp/herdr-claude-weekly.json
