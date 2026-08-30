@@ -19,6 +19,12 @@ head of the upstream nix-flake PR (tlehman/dotbar#1) until flake packaging
 merges — bump to a tag (or drop the rev) once it does; the note lives beside
 the input in `flake.nix`.
 
+Consumed by the Claude Code statusline
+(`home/claude-me/.claude-me/statusline.sh`, dense context bar) and the
+[herdr](../modules/herdr.md) tab-bar usage indicator, which strips the ANSI
+colors and keeps the braille glyphs — see the
+[indicator decision](../decisions/herdr-usage-tab-indicator.md).
+
 ## Source
 
 - Input pin + comment: [`flake.nix`](../../flake.nix)
