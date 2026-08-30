@@ -100,17 +100,21 @@
       url = "github:noctalia-dev/noctalia-shell/v5.0.0-beta.8";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    # herdr pinned to the upstream v0.8.2 stable tag (the repo ships its own
-    # flake; no binary cache, builds from source) for the CSI 14t/16t
-    # pixel-size fix (herdrdev/herdr#835) that 0.7.5 lacks — required for
-    # image rendering (fastfetch/yazi) inside herdr panes, together with
-    # `experimental.kitty_graphics = true` in the stow config.toml. See
-    # docs/fastfetch.md. Drop back to nixpkgs' herdr once nixos-unstable
-    # ships >= 0.8.0. rust-overlay is bumped past the tag's pin because that
-    # pin predates upstream's stdenv.isLinux → hostPlatform fix and spams
-    # deprecation warnings on every eval; drop the override with the input.
+    # herdr from OUR staging fork's `custom` branch: upstream's v0.8.2 stable
+    # tag (the repo ships its own flake; no binary cache, builds from source)
+    # plus our patch commits — currently the tab-bar token/bar entries
+    # (knowledge/decisions/herdr-token-bar-patch.md). Rebase `custom` onto
+    # each new upstream tag (herdr-update-check is the reminder) and drop
+    # commits as they land upstream. v0.8.2 itself is needed for the CSI
+    # 14t/16t pixel-size fix (herdrdev/herdr#835) that nixpkgs' 0.7.5 lacks —
+    # required for image rendering (fastfetch/yazi) inside herdr panes,
+    # together with `experimental.kitty_graphics = true` in the stow
+    # config.toml; see docs/fastfetch.md. rust-overlay is bumped past the
+    # tag's pin because that pin predates upstream's stdenv.isLinux →
+    # hostPlatform fix and spams deprecation warnings on every eval; drop the
+    # override with the input.
     herdr = {
-      url = "github:herdrdev/herdr/v0.8.2";
+      url = "github:kriswill/herdr/custom";
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.rust-overlay.url = "github:oxalica/rust-overlay";
     };

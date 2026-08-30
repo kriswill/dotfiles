@@ -32,16 +32,12 @@
     ccglass = _final: prev: {
       ccglass = inputs.ccglass.packages.${prev.stdenv.hostPlatform.system}.ccglass;
     };
-    # herdr from its flake input, carrying our tab-bar token patch: a
-    # `{ type = "token", token = NAME, bar = true }` ui.tab_bar_right entry
-    # renders the focused workspace's metadata token as a color-graded braille
-    # bar (overlays/herdr-tab-bar-token.patch; candidate for upstreaming —
-    # drop when herdrdev/herdr ships an equivalent). Cargo.lock is untouched,
-    # so the vendored-deps hash survives the override.
+    # herdr from the kriswill/herdr staging fork's `custom` branch (upstream
+    # tag + our patch commits, e.g. the tab-bar token/bar entries — see
+    # knowledge/decisions/herdr-token-bar-patch.md); close over `inputs`
+    # like ccglass above.
     herdr = _final: prev: {
-      herdr = (inputs.herdr.packages.${prev.stdenv.hostPlatform.system}.herdr).overrideAttrs (old: {
-        patches = (old.patches or [ ]) ++ [ ../overlays/herdr-tab-bar-token.patch ];
-      });
+      herdr = inputs.herdr.packages.${prev.stdenv.hostPlatform.system}.herdr;
     };
     # dotbar comes from its flake input (pinned to the nix-flake PR head, see
     # flake.nix); close over `inputs` like ccglass above.

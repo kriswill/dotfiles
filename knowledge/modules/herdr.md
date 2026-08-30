@@ -1,7 +1,7 @@
 ---
 type: Dual Module
 title: Herdr
-description: 'herdr — terminal agent multiplexer (run several coding agents in persistent, SSH-reachable sessions); pinned on both OSes to the upstream flake at stable v0.8.2 for in-pane image rendering.'
+description: 'herdr — terminal agent multiplexer (run several coding agents in persistent, SSH-reachable sessions); built on both OSes from the kriswill/herdr staging fork (upstream v0.8.2 + our tab-bar token patch).'
 resource: modules/darwin/herdr.nix
 tags: [darwin-module, nixos-module]
 timestamp: '2026-07-28T01:39:41+00:00'
@@ -38,15 +38,18 @@ the preview-flake pin extended to darwin — both class modules now put the
 input's package plus `herdr-nav` on `environment.systemPackages`, per the
 [cross-OS module twins pattern](../patterns/cross-os-module-twins.md).
 
-The `config.toml` also carries a `ui.tab_bar_right` command entry rendering
-Claude weekly-usage [dotbar](../packages/dotbar.md) bars from a `/tmp` state
-file maintained by a statusline-spawned watcher — see the
-[usage tab-bar indicator decision](../decisions/herdr-usage-tab-indicator.md).
-Both class modules consume `pkgs.herdr` — the input's package plus our
-[token-bar patch](../decisions/herdr-token-bar-patch.md)
-(`overlays/herdr-tab-bar-token.patch`), which adds a
+The `config.toml` also renders Claude weekly-usage bars at the tab bar's
+right edge via token entries fed by a statusline-spawned watcher — see the
+[usage tab-bar indicator decision](../decisions/herdr-usage-tab-indicator.md)
+(the earlier [dotbar](../packages/dotbar.md) state-file mechanism it
+describes is retired).
+Both class modules consume `pkgs.herdr`, whose input now points at the
+`custom` branch of the [kriswill/herdr staging
+fork](https://github.com/kriswill/herdr) — upstream's tag plus our
+[token-bar patch](../decisions/herdr-token-bar-patch.md) commits (a
 `{ type = "token", bar = true }` tab-bar entry rendering workspace metadata
-tokens as full-color braille bars; rebase the patch on every input bump.
+tokens as full-color braille bars); rebase `custom` onto each new upstream
+tag when bumping.
 
 Mounted ungated on every host
 (see the [host-mounted modules pattern](../patterns/host-mounted-modules.md));

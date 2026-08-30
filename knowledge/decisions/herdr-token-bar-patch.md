@@ -6,11 +6,15 @@ tags: [herdr, patch, claude]
 timestamp: '2026-08-30T14:30:00-07:00'
 ---
 
-**Status:** active. **Where:**
-[`overlays/herdr-tab-bar-token.patch`](../../overlays/herdr-tab-bar-token.patch),
-wired in [`modules/overlays.nix`](../../modules/overlays.nix);
-both [herdr](../modules/herdr.md) class modules consume the overlaid
-`pkgs.herdr`.
+**Status:** active — since 2026-08-30 the change lives as commit `ec833adc`
+on the `custom` branch of the [kriswill/herdr staging
+fork](https://github.com/kriswill/herdr) (upstream tag + patch commits,
+rebased on each upstream release; the codebase-memory-mcp model), consumed
+directly as the `herdr` flake input. The in-repo
+`overlays/herdr-tab-bar-token.patch` + `overrideAttrs` wiring is retired.
+**Where:** [`flake.nix`](../../flake.nix) herdr input,
+[`modules/overlays.nix`](../../modules/overlays.nix);
+both [herdr](../modules/herdr.md) class modules consume `pkgs.herdr`.
 
 ## Context
 
@@ -58,10 +62,12 @@ was removed.
 - Full-color, poll-free bars once live; the token entry is workspace-scoped
   but the watcher still clears tokens on tab unfocus, preserving tab-level
   semantics.
-- The patch must be rebased on every herdr input bump (it touches UI
-  internals with no stability guarantee) — a good candidate to upstream,
-  which would also honor upstream's external-contributor policy noted in
-  their build banner.
+- The `custom` branch must be rebased onto every new upstream tag (the
+  change touches UI internals with no stability guarantee);
+  [herdr-update-check](../modules/herdr-update-check.md) is the reminder.
+  Still a good candidate to upstream from a clean feature branch — read
+  upstream's CONTRIBUTING.md / APPROVED_CONTRIBUTORS policy first; a merged
+  PR drops the commit from `custom` at the next tag.
 - **Plugins cannot replace this patch** (researched 2026-08-30 against the
   v0.8.2 source): plugin v1 explicitly excludes "native non-terminal plugin
   UI" — a plugin's only UI surface is terminal panes/popups, so nothing in
