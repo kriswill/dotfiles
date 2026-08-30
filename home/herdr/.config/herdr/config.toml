@@ -13,18 +13,19 @@ kitty_graphics = true
 agent_panel_sort = "spaces"
 
 # Right edge of the tab bar: Claude weekly usage (all-models + Fable) as
-# full-color braille bars. Requires our patched herdr
-# (overlays/herdr-tab-bar-token.patch): a token entry resolves the focused
-# workspace's metadata token at draw time — reactive, no polling. The tokens
+# full-color braille bars, rendered by dotbar. Requires our fork's `custom`
+# branch (kriswill/herdr, ANSI tab-bar command entries): argv runs
+# ~/.local/bin/dotbar-usage without a shell, ansi = true renders its SGR
+# output inline, and herdr injects the focused workspace's metadata tokens
+# as HERDR_TOKEN_* env and re-runs the command when they change — reactive,
+# no tight polling (the interval is only a safety refresh). The tokens
 # (usage / usage_fable, 15s TTL) are published by
 # ~/.claude/herdr-usage-watcher.ts (spawned from the Claude Code statusline)
 # only while the tab hosting the personal-profile claude is focused, and
-# cleared otherwise, so the indicator follows tab focus.
+# cleared otherwise, so the indicator follows tab focus. Empty command
+# output hides the entry.
 tab_bar_right = [
-  { type = "text", text = "wk" },
-  { type = "token", token = "usage", bar = true },
-  { type = "text", text = "F5" },
-  { type = "token", token = "usage_fable", bar = true },
+  { type = "command", argv = ["dotbar-usage"], ansi = true, interval_seconds = 300 },
 ]
 
 show_agent_labels_on_pane_borders = true
