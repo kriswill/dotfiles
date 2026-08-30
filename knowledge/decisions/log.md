@@ -2,6 +2,12 @@
 
 ## 2026-08-30
 
+- **Update** — [herdr-token-bar-patch](herdr-token-bar-patch.md) went live
+  (patched binary via nrs + server restart): config.toml now uses the
+  token/bar entries and the watcher is token-only.
+  [herdr-usage-tab-indicator](herdr-usage-tab-indicator.md) marked
+  superseded as a render channel (watcher/data-flow parts stay active).
+
 - **Creation** — [herdr-token-bar-patch](herdr-token-bar-patch.md): the
   pinned herdr input now carries a source patch adding a
   `{ type = "token", bar = true }` ui.tab_bar_right entry that renders

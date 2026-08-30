@@ -6,7 +6,10 @@ tags: [claude, herdr, statusline]
 timestamp: '2026-08-30T13:45:00-07:00'
 ---
 
-**Status:** active (experiment). **Where:**
+**Status:** superseded — the render channel moved to the
+[token-bar patch](herdr-token-bar-patch.md)'s `{ type = "token", bar = true }`
+entries (2026-08-30); the watcher, focus tracking, and data-source split
+below remain active. **Where:**
 [`home/claude-me/.claude-me/herdr-usage-watcher.ts`](../../home/claude-me/.claude-me/herdr-usage-watcher.ts),
 [`home/claude-me/.claude-me/statusline.sh`](../../home/claude-me/.claude-me/statusline.sh),
 [`home/herdr/.config/herdr/config.toml`](../../home/herdr/.config/herdr/config.toml)
@@ -71,9 +74,10 @@ refresh, so anything it spawns must be idempotent.
   untracked `~/.claude/settings.json`.
 - The 1 s `cat` poll runs on the herdr server whether or not claude is up;
   the `tab_bar_right` schema is undocumented upstream and may shift.
-- Superseded next by the [token-bar patch](herdr-token-bar-patch.md): the
-  watcher already dual-publishes `usage`/`usage_fable` workspace tokens, and
-  the state-file mechanism retires once the patched binary is live.
+- Superseded by the [token-bar patch](herdr-token-bar-patch.md): the watcher
+  now publishes only the `usage`/`usage_fable` workspace tokens; the
+  state-file + `command`-entry mechanism (and its 1 s poll and dotbar
+  shell-out) was retired once the patched binary went live.
 
 ## Citations
 

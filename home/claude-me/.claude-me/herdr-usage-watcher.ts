@@ -2,14 +2,16 @@
 // Herdr tab-bar usage indicator (experiment).
 //
 // Spawned by ~/.claude/statusline.sh when Claude Code runs inside a Herdr pane
-// on the personal ("me") profile. While this pane's tab is focused, it writes
-// plain-text weekly usage (all-models from the statusline-published file,
-// Fable-scoped from the OAuth usage endpoint, sparingly) as dotbar dense bars
-// to STATE_FILE, which a `command` entry in the herdr config's
-// ui.tab_bar_right renders right-aligned in the tab bar (polled at
-// interval_seconds, the render-latency floor). Focus changes arrive as pushed
-// tab.focused events over the herdr API socket, so the file flips within
-// milliseconds of a switch; the indicator clears on focus loss or claude exit.
+// on the personal ("me"/"default") profile. While this pane's tab is focused,
+// it publishes weekly usage (all-models from the statusline-published file,
+// Fable-scoped from the OAuth usage endpoint, sparingly) as the
+// usage/usage_fable workspace metadata tokens, which our patched herdr
+// (overlays/herdr-tab-bar-token.patch) renders right-aligned in the tab bar
+// as full-color braille bars via `{ type = "token", bar = true }` entries —
+// reactive at draw time, no polling. Focus changes arrive as pushed
+// tab.focused events over the herdr API socket, so the tokens flip within
+// milliseconds of a switch; they clear on focus loss or claude exit, and
+// their TTL clears them if this watcher dies uncleanly.
 //
 // Usage: bun herdr-usage-watcher.ts <claude-pid>
 
@@ -20,15 +22,9 @@ const sockPath = process.env.HERDR_SOCKET_PATH ?? "";
 const configDir = process.env.CLAUDE_CONFIG_DIR ?? `${process.env.HOME}/.claude`;
 if (!tabId || !sockPath || !claudePid) process.exit(0);
 
-const STATE_FILE = "/tmp/herdr-claude-usage.txt"; // read by ui.tab_bar_right
 const fs = require("node:fs");
 const workspaceId = process.env.HERDR_WORKSPACE_ID ?? "";
 
-// Transitional dual publish: the state file feeds the current `command` tab
-// bar entry; the workspace metadata tokens feed the patched herdr's
-// `{ type = "token", bar = true }` entries (overlays/herdr-tab-bar-token.patch)
-// which render them as color-graded braille bars. Drop the file path once the
-// patched binary + token config are live everywhere.
 const TOKEN_SOURCE = "claude-usage";
 const TOKEN_TTL_MS = 15_000; // refreshed by the 5s housekeeping tick
 
@@ -174,35 +170,18 @@ let usage: { all: number; fable: number | null } | null = null;
 let focused = false;
 let shown = false;
 
-// Dense braille bar + percentage, ANSI-stripped — the tab bar renders plain
-// text only, and the glyphs (⣿ vs ⣀) carry the fill level without color.
-function bar(pct: number): string {
-  const out = sh(["dotbar", "--dense", String(pct)]).replace(/\x1b\[[0-9;]*m/g, "");
-  return out || `${pct}%`;
-}
-
 function apply() {
   if (focused && usage) {
-    const f5 = usage.fable === null ? "" : ` · F5 ${bar(usage.fable)}`;
-    fs.writeFileSync(STATE_FILE, `wk ${bar(usage.all)}${f5}`);
     publishTokens(usage);
     shown = true;
   } else if (shown) {
-    try {
-      fs.unlinkSync(STATE_FILE);
-    } catch {}
     clearTokens();
     shown = false;
   }
 }
 
 function cleanup() {
-  if (shown) {
-    try {
-      fs.unlinkSync(STATE_FILE);
-    } catch {}
-    clearTokens();
-  }
+  if (shown) clearTokens();
   try {
     // Only remove the pidfile if we still own it — another instance may have
     // legitimately claimed it after ours was cleaned up externally.
@@ -281,16 +260,8 @@ setInterval(() => {
     cleanup();
     process.exit(0);
   }
-  // Re-assert the state file if something else removed it (e.g. another
-  // instance's exit cleanup) — otherwise the indicator stays gone until the
-  // next focus event — and keep the metadata tokens' TTL alive.
-  if (focused && usage) {
-    publishTokens(usage);
-    if (!fs.existsSync(STATE_FILE)) {
-      shown = false;
-      apply();
-    }
-  }
+  // Keep the metadata tokens' TTL alive while visible.
+  if (focused && usage) publishTokens(usage);
 }, 5000);
 
 // Every 60s: re-read the (free) weekly file; the Fable fetch inside is gated

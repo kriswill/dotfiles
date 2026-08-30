@@ -47,11 +47,11 @@ like ccglass) exposes `pkgs.herdr` as the input's package
 vendored-deps hash survives. Both class modules switched from
 `inputs.herdr.packages…` to `pkgs.herdr`.
 
-The watcher dual-publishes during the transition: the legacy `command`
-state-file entry keeps working under the running unpatched server, while
-`usage`/`usage_fable` workspace tokens (15 s TTL) feed the commented token
-config in `home/herdr/.config/herdr/config.toml`, to be swapped in after a
-rebuild + herdr server restart.
+The watcher publishes `usage`/`usage_fable` workspace tokens (15 s TTL,
+refreshed by its 5 s housekeeping tick, cleared on tab unfocus); the token
+entries went live in `home/herdr/.config/herdr/config.toml` after the
+rebuild + server restart, and the transitional state-file `command` entry
+was removed.
 
 ## Consequences
 
@@ -62,9 +62,10 @@ rebuild + herdr server restart.
   internals with no stability guarantee) — a good candidate to upstream,
   which would also honor upstream's external-contributor policy noted in
   their build banner.
-- Until the server restart, the token entries stay commented: the running
-  v0.8.2 binary's `deny_unknown_fields` config parse would reject
-  `type = "token"`.
+- Config with `type = "token"` entries requires the patched binary
+  everywhere it's parsed — an unpatched herdr's `deny_unknown_fields`
+  rejects it (relevant if nebula rebuilds lag the config, since the stow
+  tree is shared).
 
 ## Citations
 

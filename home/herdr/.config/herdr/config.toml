@@ -12,25 +12,20 @@ kitty_graphics = true
 [ui]
 agent_panel_sort = "spaces"
 
-# Right edge of the tab bar: Claude weekly usage (all-models + Fable),
-# maintained by ~/.claude/herdr-usage-watcher.ts (spawned from the Claude Code
-# statusline). The watcher writes the file only while the tab hosting the
-# personal-profile claude is focused and deletes it otherwise, so an empty cat
-# clears the indicator. Colorless text — the tab bar strips ANSI anyway.
+# Right edge of the tab bar: Claude weekly usage (all-models + Fable) as
+# full-color braille bars. Requires our patched herdr
+# (overlays/herdr-tab-bar-token.patch): a token entry resolves the focused
+# workspace's metadata token at draw time — reactive, no polling. The tokens
+# (usage / usage_fable, 15s TTL) are published by
+# ~/.claude/herdr-usage-watcher.ts (spawned from the Claude Code statusline)
+# only while the tab hosting the personal-profile claude is focused, and
+# cleared otherwise, so the indicator follows tab focus.
 tab_bar_right = [
-  { type = "command", command = "cat /tmp/herdr-claude-usage.txt 2>/dev/null || true", interval_seconds = 1, timeout_seconds = 5 },
+  { type = "text", text = "wk" },
+  { type = "token", token = "usage", bar = true },
+  { type = "text", text = "F5" },
+  { type = "token", token = "usage_fable", bar = true },
 ]
-# Once the patched herdr (overlays/herdr-tab-bar-token.patch) is live —
-# darwin-rebuild switch, then restart the herdr server — replace the command
-# entry above with these token entries: the watcher already publishes the
-# usage/usage_fable workspace metadata tokens, and the patch renders bar
-# tokens as full-color braille bars, reactive with no 1s poll.
-# tab_bar_right = [
-#   { type = "text", text = "wk" },
-#   { type = "token", token = "usage", bar = true },
-#   { type = "text", text = "F5" },
-#   { type = "token", token = "usage_fable", bar = true },
-# ]
 
 show_agent_labels_on_pane_borders = true
 [keys]
