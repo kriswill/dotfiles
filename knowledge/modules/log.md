@@ -1,5 +1,11 @@
 # Log
 
+## 2026-08-30
+
+- **Update** — [herdr](herdr.md): config.toml gained a `ui.tab_bar_right`
+  command entry rendering the Claude weekly-usage indicator; linked the
+  [herdr-usage-tab-indicator decision](../decisions/herdr-usage-tab-indicator.md).
+
 ## 2026-08-22
 
 - **Update** — [Herdr](herdr.md): upstream-flake pin bumped `v0.8.0` →

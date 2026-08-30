@@ -1,5 +1,15 @@
 # Log
 
+## 2026-08-30
+
+- **Creation** — [herdr-usage-tab-indicator](herdr-usage-tab-indicator.md):
+  Claude weekly-usage indicator in herdr's tab bar renders through a
+  `ui.tab_bar_right` command entry polling a /tmp state file kept by a
+  statusline-spawned watcher (pushed `tab.focused` socket events, ~35 ms);
+  weekly-all comes free from the statusline JSON, only the Fable-scoped %
+  hits the 429-prone OAuth usage endpoint (30-min shared cache). Linked from
+  [modules/herdr](../modules/herdr.md) and [packages/dotbar](../packages/dotbar.md).
+
 ## 2026-08-02
 
 - **Creation** — [devenv-lock-derived-from-flake-lock](devenv-lock-derived-from-flake-lock.md):

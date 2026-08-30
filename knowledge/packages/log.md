@@ -2,6 +2,10 @@
 
 ## 2026-08-30
 
+- **Update** — [dotbar](dotbar.md): noted its consumers — the Claude Code
+  statusline's dense context bar and the herdr tab-bar usage indicator
+  ([decision](../decisions/herdr-usage-tab-indicator.md)).
+
 - **Creation** — [dotbar](dotbar.md): braille-dot progress bar CLI from the
   tlehman/dotbar flake input (pinned to the nix-flake PR head, tlehman/dotbar#1).
   No `pkgs/` file — an inline overlay in `modules/overlays.nix` re-exports the

@@ -38,6 +38,11 @@ the preview-flake pin extended to darwin — both class modules now put the
 input's package plus `herdr-nav` on `environment.systemPackages`, per the
 [cross-OS module twins pattern](../patterns/cross-os-module-twins.md).
 
+The `config.toml` also carries a `ui.tab_bar_right` command entry rendering
+Claude weekly-usage [dotbar](../packages/dotbar.md) bars from a `/tmp` state
+file maintained by a statusline-spawned watcher — see the
+[usage tab-bar indicator decision](../decisions/herdr-usage-tab-indicator.md).
+
 Mounted ungated on every host
 (see the [host-mounted modules pattern](../patterns/host-mounted-modules.md));
 auto-discovered via the [Dendritic module layout](../patterns/dendritic-modules.md).
