@@ -1,0 +1,26 @@
+#!/bin/sh
+# dotbar-usage — Claude weekly usage bars for herdr's tab bar.
+#
+# Runs as a herdr `{ type = "command", argv = ["dotbar-usage"], ansi = true }`
+# tab-bar entry (our fork's custom branch). Herdr injects the focused
+# workspace's metadata tokens as HERDR_TOKEN_* env vars and re-runs this
+# command whenever they change, so it stays reactive without polling. The
+# usage / usage_fable tokens are published by ~/.claude/herdr-usage-watcher.ts
+# while the personal-profile Claude's tab is focused.
+#
+# Output: dim labels + dotbar --dense braille bars (SGR colors pass through
+# ansi = true). No output when usage is absent, which hides the entry.
+# Invocable as `dotbar usage` too, via dotbar's subcommand dispatch.
+
+dim=$(printf '\033[2m')
+rst=$(printf '\033[0m')
+out=""
+if [ -n "$HERDR_TOKEN_USAGE" ]; then
+  out="${dim}wk${rst} $(dotbar --dense "$HERDR_TOKEN_USAGE")"
+fi
+if [ -n "$HERDR_TOKEN_USAGE_FABLE" ]; then
+  [ -n "$out" ] && out="$out "
+  out="$out${dim}F5${rst} $(dotbar --dense "$HERDR_TOKEN_USAGE_FABLE")"
+fi
+[ -n "$out" ] && printf '%s\n' "$out"
+exit 0

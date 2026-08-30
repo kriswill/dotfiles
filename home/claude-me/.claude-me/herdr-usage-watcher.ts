@@ -5,13 +5,15 @@
 // on the personal ("me"/"default") profile. While this pane's tab is focused,
 // it publishes weekly usage (all-models from the statusline-published file,
 // Fable-scoped from the OAuth usage endpoint, sparingly) as the
-// usage/usage_fable workspace metadata tokens, which our patched herdr
-// (overlays/herdr-tab-bar-token.patch) renders right-aligned in the tab bar
-// as full-color braille bars via `{ type = "token", bar = true }` entries —
-// reactive at draw time, no polling. Focus changes arrive as pushed
-// tab.focused events over the herdr API socket, so the tokens flip within
-// milliseconds of a switch; they clear on focus loss or claude exit, and
-// their TTL clears them if this watcher dies uncleanly.
+// usage/usage_fable workspace metadata tokens. Our fork's herdr (custom
+// branch, ANSI tab-bar command entries) exposes those tokens to its
+// tab-bar command as HERDR_TOKEN_USAGE / HERDR_TOKEN_USAGE_FABLE env and
+// re-runs ~/.local/bin/dotbar-usage on every token change, which renders
+// them as full-color dotbar braille bars — reactive, no tight polling.
+// Focus changes arrive as pushed tab.focused events over the herdr API
+// socket, so the tokens flip within milliseconds of a switch; they clear on
+// focus loss or claude exit, and their TTL clears them if this watcher dies
+// uncleanly.
 //
 // Usage: bun herdr-usage-watcher.ts <claude-pid>
 

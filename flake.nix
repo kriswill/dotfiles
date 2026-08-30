@@ -102,8 +102,10 @@
     };
     # herdr from OUR staging fork's `custom` branch: upstream's v0.8.2 stable
     # tag (the repo ships its own flake; no binary cache, builds from source)
-    # plus our patch commits — currently the tab-bar token/bar entries
-    # (knowledge/decisions/herdr-token-bar-patch.md). Rebase `custom` onto
+    # plus our patch commits — currently ANSI tab-bar command entries
+    # (ui.tab_bar_right `argv`/`ansi` fields: run e.g. dotbar without a shell
+    # and render its SGR-colored output inline; HERDR_TOKEN_* env from
+    # workspace metadata with reactive re-runs). Rebase `custom` onto
     # each new upstream tag (herdr-update-check is the reminder) and drop
     # commits as they land upstream. v0.8.2 itself is needed for the CSI
     # 14t/16t pixel-size fix (herdrdev/herdr#835) that nixpkgs' 0.7.5 lacks —
