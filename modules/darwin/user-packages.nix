@@ -14,6 +14,7 @@
           bun # batteries included typescript runtime
           comma # run programs without installing — github.com/nix-community/comma
           cppcheck # static analysis for C/C++
+          dotbar # braille-dot progress bar for statuslines and terminals
           fd # file finding
           figlet # text to big fancy ASCII letters
           fzf # fuzzy finder (keybindings/env in the stow zshrc)

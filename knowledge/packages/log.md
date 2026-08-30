@@ -1,5 +1,15 @@
 # Log
 
+## 2026-08-30
+
+- **Creation** — [dotbar](dotbar.md): braille-dot progress bar CLI from the
+  tlehman/dotbar flake input (pinned to the nix-flake PR head, tlehman/dotbar#1).
+  No `pkgs/` file — an inline overlay in `modules/overlays.nix` re-exports the
+  input's package (ccglass pattern); installed via
+  `modules/darwin/user-packages.nix` and nebula's `users/k/default.nix`.
+- **Creation** — [git-yazi](git-yazi.md): catalog entry backfilled by
+  `okf scaffold` for the pre-existing TEMPORARY `overlays/git-yazi.nix`.
+
 ## 2026-08-02
 
 - **Change** — [kitten](kitten.md): now cross-platform (adds a linux-amd64

@@ -32,6 +32,11 @@
     ccglass = _final: prev: {
       ccglass = inputs.ccglass.packages.${prev.stdenv.hostPlatform.system}.ccglass;
     };
+    # dotbar comes from its flake input (pinned to the nix-flake PR head, see
+    # flake.nix); close over `inputs` like ccglass above.
+    dotbar = _final: prev: {
+      dotbar = inputs.dotbar.packages.${prev.stdenv.hostPlatform.system}.dotbar;
+    };
     # codebase-memory-mcp comes from our kriswill/codebase-memory-mcp `nix` fork.
     codebase-memory-mcp = _final: prev: {
       codebase-memory-mcp =
