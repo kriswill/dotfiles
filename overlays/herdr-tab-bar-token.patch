@@ -1,0 +1,342 @@
+diff --git a/src/app/mod.rs b/src/app/mod.rs
+index 85ad4fa..2f9058d 100644
+--- a/src/app/mod.rs
++++ b/src/app/mod.rs
+@@ -23,7 +23,7 @@ mod runtime;
+ mod runtime_mutations;
+ mod session;
+ pub mod state;
+-mod tab_bar_status;
++pub(crate) mod tab_bar_status;
+ mod terminal_targets;
+ mod terminal_titles;
+ mod theme_sync;
+diff --git a/src/app/state.rs b/src/app/state.rs
+index d9dcfc9..20871d1 100644
+--- a/src/app/state.rs
++++ b/src/app/state.rs
+@@ -1369,6 +1369,8 @@ pub(crate) struct PaneFocusTarget {
+ pub enum TabBarStatusSegment {
+     Zoom,
+     Text(Option<String>),
++    /// Focused workspace's metadata token, resolved at draw time.
++    Token { name: String, bar: bool },
+ }
+ 
+ pub struct AppState {
+diff --git a/src/app/tab_bar_status.rs b/src/app/tab_bar_status.rs
+index 4a617c1..01d4ca4 100644
+--- a/src/app/tab_bar_status.rs
++++ b/src/app/tab_bar_status.rs
+@@ -88,6 +88,15 @@ impl App {
+                         .tab_bar_right
+                         .push(TabBarStatusSegment::Text(sanitize_literal_text(text)));
+                 }
++                TabBarRightEntryConfig::Token { token, bar } => {
++                    if token.trim().is_empty() {
++                        continue;
++                    }
++                    self.state.tab_bar_right.push(TabBarStatusSegment::Token {
++                        name: token.clone(),
++                        bar: *bar,
++                    });
++                }
+                 TabBarRightEntryConfig::Command {
+                     command,
+                     interval_seconds,
+@@ -238,7 +247,7 @@ fn sanitize_literal_text(value: &str) -> Option<String> {
+     (!value.is_empty()).then_some(value)
+ }
+ 
+-fn sanitize_status_text(value: &str) -> Option<String> {
++pub(crate) fn sanitize_status_text(value: &str) -> Option<String> {
+     let value: String = value
+         .trim()
+         .chars()
+diff --git a/src/config/tab_bar.rs b/src/config/tab_bar.rs
+index 253b1b7..f9c77a4 100644
+--- a/src/config/tab_bar.rs
++++ b/src/config/tab_bar.rs
+@@ -37,6 +37,17 @@ pub enum TabBarRightEntryConfig {
+         #[serde(default = "default_command_timeout_seconds")]
+         timeout_seconds: u64,
+     },
++    /// Renders a workspace metadata token (reported via
++    /// `workspace report-metadata --token NAME=VALUE`) from the focused
++    /// workspace. With `bar = true` the value is parsed as a percentage
++    /// (0-100, an optional trailing % is ignored) and drawn as a compact
++    /// color-graded braille bar with a dimmed percent label; otherwise the
++    /// sanitized token text is shown. Absent tokens hide the entry.
++    Token {
++        token: String,
++        #[serde(default)]
++        bar: bool,
++    },
+ }
+ 
+ pub(crate) fn parse_tab_bar_datetime_format(
+@@ -103,6 +114,13 @@ pub(crate) fn tab_bar_right_diagnostics(entries: &[TabBarRightEntryConfig]) -> V
+                     ));
+                 }
+             }
++            TabBarRightEntryConfig::Token { token, .. } => {
++                if token.trim().is_empty() {
++                    diagnostics.push(format!(
++                        "ui.tab_bar_right[{index}] token name is empty; hiding entry"
++                    ));
++                }
++            }
+             TabBarRightEntryConfig::Zoom
+             | TabBarRightEntryConfig::Hostname
+             | TabBarRightEntryConfig::Text { .. } => {}
+diff --git a/src/ui/tabs.rs b/src/ui/tabs.rs
+index 603422f..8294375 100644
+--- a/src/ui/tabs.rs
++++ b/src/ui/tabs.rs
+@@ -1,6 +1,7 @@
+ use ratatui::{
+     layout::Rect,
+-    style::{Modifier, Style},
++    style::{Color, Modifier, Style},
++    text::{Line, Span},
+     widgets::Paragraph,
+     Frame,
+ };
+@@ -44,28 +45,72 @@ fn tab_chrome_label(ws: &crate::workspace::Workspace, tab_idx: usize) -> String
+     }
+ }
+ 
+-#[derive(Clone, Copy)]
+-struct VisibleStatusSegment<'a> {
+-    text: &'a str,
+-    accent: bool,
++#[derive(Clone)]
++enum VisibleStatusSegment {
++    Text { text: String, accent: bool },
++    Bar { pct: f64, label: String },
+ }
+ 
+-fn visible_status_segments(app: &AppState) -> Vec<VisibleStatusSegment<'_>> {
+-    let zoomed = app
+-        .active
+-        .and_then(|index| app.workspaces.get(index))
+-        .is_some_and(|workspace| workspace.zoomed);
++const BAR_CELLS: usize = 3;
++// Vertical-fill braille ramp, one glyph per eighth of a cell; empty cells
++// use the low rail so the bar's full extent stays visible.
++const BAR_FILL_GLYPHS: [char; 8] = ['⡀', '⡄', '⡆', '⡇', '⡏', '⡟', '⡿', '⣿'];
++const BAR_EMPTY_GLYPH: char = '⣀';
++
++fn parse_bar_percentage(value: &str) -> Option<f64> {
++    let trimmed = value.trim().trim_end_matches('%').trim_end();
++    let pct: f64 = trimmed.parse().ok()?;
++    pct.is_finite().then_some(pct.clamp(0.0, 100.0))
++}
++
++impl VisibleStatusSegment {
++    fn width(&self) -> u16 {
++        match self {
++            Self::Text { text, .. } => display_width_u16(text),
++            // bar cells + space + label
++            Self::Bar { label, .. } => {
++                u16::try_from(BAR_CELLS)
++                    .unwrap_or(u16::MAX)
++                    .saturating_add(1)
++                    .saturating_add(display_width_u16(label))
++            }
++        }
++    }
++}
++
++fn visible_status_segments(app: &AppState) -> Vec<VisibleStatusSegment> {
++    let focused_workspace = app.active.and_then(|index| app.workspaces.get(index));
++    let zoomed = focused_workspace.is_some_and(|workspace| workspace.zoomed);
++    let tokens = focused_workspace.map(|workspace| workspace.metadata_tokens.values());
+     app.tab_bar_right
+         .iter()
+         .filter_map(|segment| match segment {
+-            crate::app::state::TabBarStatusSegment::Zoom if zoomed => Some(VisibleStatusSegment {
+-                text: ZOOM_INDICATOR,
+-                accent: true,
+-            }),
++            crate::app::state::TabBarStatusSegment::Zoom if zoomed => {
++                Some(VisibleStatusSegment::Text {
++                    text: ZOOM_INDICATOR.to_string(),
++                    accent: true,
++                })
++            }
+             crate::app::state::TabBarStatusSegment::Text(Some(text))
+                 if display_width_u16(text) > 0 =>
+             {
+-                Some(VisibleStatusSegment {
++                Some(VisibleStatusSegment::Text {
++                    text: text.clone(),
++                    accent: false,
++                })
++            }
++            crate::app::state::TabBarStatusSegment::Token { name, bar } => {
++                let value = tokens.as_ref().and_then(|tokens| tokens.get(name))?;
++                if *bar {
++                    if let Some(pct) = parse_bar_percentage(value) {
++                        return Some(VisibleStatusSegment::Bar {
++                            pct,
++                            label: format!("{}%", pct.round() as u16),
++                        });
++                    }
++                }
++                let text = crate::app::tab_bar_status::sanitize_status_text(value)?;
++                (display_width_u16(&text) > 0).then_some(VisibleStatusSegment::Text {
+                     text,
+                     accent: false,
+                 })
+@@ -79,13 +124,49 @@ fn visible_status_segments(app: &AppState) -> Vec<VisibleStatusSegment<'_>> {
+ fn tab_bar_status_width(app: &AppState) -> u16 {
+     let segments = visible_status_segments(app);
+     let content_width = segments.iter().fold(0_u16, |width, segment| {
+-        width.saturating_add(display_width_u16(segment.text))
++        width.saturating_add(segment.width())
+     });
+     let separators = u16::try_from(segments.len().saturating_sub(1)).unwrap_or(u16::MAX);
+     content_width
+         .saturating_add(display_width_u16(&app.tab_bar_right_separator).saturating_mul(separators))
+ }
+ 
++// Green→yellow→red gradient across the bar's extent, matching dotbar's
++// dense palette; empty cells stay a neutral dark gray.
++fn bar_cell_color(cell: usize) -> Color {
++    let t = (cell as f64 + 0.5) / BAR_CELLS as f64;
++    if t < 0.5 {
++        Color::Rgb((510.0 * t).round().min(255.0) as u8, 255, 0)
++    } else {
++        Color::Rgb(255, (255.0 - 510.0 * (t - 0.5)).round().max(0.0) as u8, 0)
++    }
++}
++
++fn bar_line(pct: f64, label: &str, bg: Color, label_fg: Color) -> Line<'static> {
++    let mut spans = Vec::with_capacity(BAR_CELLS + 1);
++    for cell in 0..BAR_CELLS {
++        let fill = ((pct / 100.0) * BAR_CELLS as f64 - cell as f64).clamp(0.0, 1.0);
++        let eighths = (fill * 8.0).round() as usize;
++        let (glyph, fg) = if eighths == 0 {
++            (BAR_EMPTY_GLYPH, Color::Rgb(60, 60, 60))
++        } else {
++            (BAR_FILL_GLYPHS[eighths.min(8) - 1], bar_cell_color(cell))
++        };
++        spans.push(Span::styled(
++            glyph.to_string(),
++            Style::default().fg(fg).bg(bg),
++        ));
++    }
++    spans.push(Span::styled(
++        format!(" {label}"),
++        Style::default()
++            .fg(label_fg)
++            .bg(bg)
++            .add_modifier(Modifier::DIM),
++    ));
++    Line::from(spans)
++}
++
+ fn tab_bar_status_area(app: &AppState, area: Rect) -> Option<Rect> {
+     let width = tab_bar_status_width(app);
+     if width == 0 {
+@@ -485,17 +566,27 @@ pub(super) fn render_tab_bar(app: &AppState, frame: &mut Frame, area: Rect) {
+                 x = x.saturating_add(separator_width);
+             }
+ 
+-            let width = display_width_u16(segment.text);
++            let width = segment.width();
+             let rect = Rect::new(x, area.y, width, 1);
+-            let style = if segment.accent {
+-                Style::default()
+-                    .fg(panel_contrast_fg(p))
+-                    .bg(p.accent)
+-                    .add_modifier(Modifier::BOLD)
+-            } else {
+-                Style::default().fg(p.overlay1).bg(p.panel_bg)
+-            };
+-            frame.render_widget(Paragraph::new(segment.text).style(style), rect);
++            match segment {
++                VisibleStatusSegment::Text { text, accent } => {
++                    let style = if *accent {
++                        Style::default()
++                            .fg(panel_contrast_fg(p))
++                            .bg(p.accent)
++                            .add_modifier(Modifier::BOLD)
++                    } else {
++                        Style::default().fg(p.overlay1).bg(p.panel_bg)
++                    };
++                    frame.render_widget(Paragraph::new(text.as_str()).style(style), rect);
++                }
++                VisibleStatusSegment::Bar { pct, label } => {
++                    frame.render_widget(
++                        Paragraph::new(bar_line(*pct, label, p.panel_bg, p.overlay1)),
++                        rect,
++                    );
++                }
++            }
+             x = x.saturating_add(width);
+         }
+     }
+@@ -584,6 +675,61 @@ mod tests {
+         }
+     }
+ 
++    #[test]
++    fn token_bar_entry_renders_colored_bar_from_workspace_metadata() {
++        let mut app = AppState::test_new();
++        let mut ws = Workspace::test_new("test");
++        ws.metadata_tokens.patch(
++            std::collections::HashMap::from([
++                ("usage".to_string(), Some("40".to_string())),
++                ("plain".to_string(), Some("hello".to_string())),
++            ]),
++            None,
++            std::time::Instant::now(),
++        );
++        app.tab_bar_right = vec![
++            crate::app::state::TabBarStatusSegment::Token {
++                name: "usage".into(),
++                bar: true,
++            },
++            crate::app::state::TabBarStatusSegment::Token {
++                name: "plain".into(),
++                bar: false,
++            },
++            crate::app::state::TabBarStatusSegment::Token {
++                name: "missing".into(),
++                bar: true,
++            },
++        ];
++        app.tab_bar_right_separator = " · ".into();
++        app.workspaces = vec![ws];
++        app.active = Some(0);
++        app.view.tab_bar_rect = Rect::new(0, 0, 60, 1);
++
++        let backend = TestBackend::new(60, 1);
++        let mut terminal = Terminal::new(backend).unwrap();
++        terminal
++            .draw(|frame| render_tab_bar(&app, frame, app.view.tab_bar_rect))
++            .unwrap();
++
++        let buffer = terminal.backend().buffer();
++        let row = buffer_row_text(buffer, app.view.tab_bar_rect, 0);
++        // 40% of a 3-cell bar: cell 0 full, cell 1 partial, cell 2 empty rail;
++        // absent tokens hide their entry entirely.
++        assert!(row.ends_with("⣿⡄⣀ 40% · hello"), "tab row: {row:?}");
++        let bar_x = 60 - display_width_u16("⣿⡄⣀ 40% · hello");
++        assert_eq!(
++            buffer[(bar_x, 0)].style().fg,
++            Some(Color::Rgb(85, 255, 0)),
++            "first cell carries the gradient green"
++        );
++        assert_eq!(
++            buffer[(bar_x + 2, 0)].style().fg,
++            Some(Color::Rgb(60, 60, 60)),
++            "empty cell stays the neutral rail gray"
++        );
++    }
++
+     #[test]
+     fn hidden_status_entries_do_not_leave_dangling_separators() {
+         let mut app = AppState::test_new();
