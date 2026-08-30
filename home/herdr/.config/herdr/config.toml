@@ -20,6 +20,17 @@ agent_panel_sort = "spaces"
 tab_bar_right = [
   { type = "command", command = "cat /tmp/herdr-claude-usage.txt 2>/dev/null || true", interval_seconds = 1, timeout_seconds = 5 },
 ]
+# Once the patched herdr (overlays/herdr-tab-bar-token.patch) is live —
+# darwin-rebuild switch, then restart the herdr server — replace the command
+# entry above with these token entries: the watcher already publishes the
+# usage/usage_fable workspace metadata tokens, and the patch renders bar
+# tokens as full-color braille bars, reactive with no 1s poll.
+# tab_bar_right = [
+#   { type = "text", text = "wk" },
+#   { type = "token", token = "usage", bar = true },
+#   { type = "text", text = "F5" },
+#   { type = "token", token = "usage_fable", bar = true },
+# ]
 
 show_agent_labels_on_pane_borders = true
 [keys]

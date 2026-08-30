@@ -22,6 +22,35 @@ if (!tabId || !sockPath || !claudePid) process.exit(0);
 
 const STATE_FILE = "/tmp/herdr-claude-usage.txt"; // read by ui.tab_bar_right
 const fs = require("node:fs");
+const workspaceId = process.env.HERDR_WORKSPACE_ID ?? "";
+
+// Transitional dual publish: the state file feeds the current `command` tab
+// bar entry; the workspace metadata tokens feed the patched herdr's
+// `{ type = "token", bar = true }` entries (overlays/herdr-tab-bar-token.patch)
+// which render them as color-graded braille bars. Drop the file path once the
+// patched binary + token config are live everywhere.
+const TOKEN_SOURCE = "claude-usage";
+const TOKEN_TTL_MS = 15_000; // refreshed by the 5s housekeeping tick
+
+function publishTokens(u: { all: number; fable: number | null }) {
+  if (!workspaceId) return;
+  const args = [
+    "herdr", "workspace", "report-metadata", workspaceId,
+    "--source", TOKEN_SOURCE, "--ttl-ms", String(TOKEN_TTL_MS),
+    "--token", `usage=${u.all}`,
+  ];
+  if (u.fable !== null) args.push("--token", `usage_fable=${u.fable}`);
+  sh(args);
+}
+
+function clearTokens() {
+  if (!workspaceId) return;
+  sh([
+    "herdr", "workspace", "report-metadata", workspaceId,
+    "--source", TOKEN_SOURCE,
+    "--clear-token", "usage", "--clear-token", "usage_fable",
+  ]);
+}
 
 // Singleton per pane — exclusive create (wx) so concurrent spawns from rapid
 // statusline refreshes can't race past a read-then-write check.
@@ -156,11 +185,13 @@ function apply() {
   if (focused && usage) {
     const f5 = usage.fable === null ? "" : ` · F5 ${bar(usage.fable)}`;
     fs.writeFileSync(STATE_FILE, `wk ${bar(usage.all)}${f5}`);
+    publishTokens(usage);
     shown = true;
   } else if (shown) {
     try {
       fs.unlinkSync(STATE_FILE);
     } catch {}
+    clearTokens();
     shown = false;
   }
 }
@@ -170,6 +201,7 @@ function cleanup() {
     try {
       fs.unlinkSync(STATE_FILE);
     } catch {}
+    clearTokens();
   }
   try {
     // Only remove the pidfile if we still own it — another instance may have
@@ -251,10 +283,13 @@ setInterval(() => {
   }
   // Re-assert the state file if something else removed it (e.g. another
   // instance's exit cleanup) — otherwise the indicator stays gone until the
-  // next focus event.
-  if (focused && usage && !fs.existsSync(STATE_FILE)) {
-    shown = false;
-    apply();
+  // next focus event — and keep the metadata tokens' TTL alive.
+  if (focused && usage) {
+    publishTokens(usage);
+    if (!fs.existsSync(STATE_FILE)) {
+      shown = false;
+      apply();
+    }
   }
 }, 5000);
 
