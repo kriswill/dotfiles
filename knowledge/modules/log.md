@@ -2,6 +2,10 @@
 
 ## 2026-08-30
 
+- **Update** — [herdr](herdr.md): both class modules now consume overlaid
+  `pkgs.herdr` (input package + `overlays/herdr-tab-bar-token.patch`); see
+  the [token-bar patch decision](../decisions/herdr-token-bar-patch.md).
+
 - **Update** — [herdr](herdr.md): config.toml gained a `ui.tab_bar_right`
   command entry rendering the Claude weekly-usage indicator; linked the
   [herdr-usage-tab-indicator decision](../decisions/herdr-usage-tab-indicator.md).

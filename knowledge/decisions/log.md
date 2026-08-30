@@ -2,6 +2,15 @@
 
 ## 2026-08-30
 
+- **Creation** — [herdr-token-bar-patch](herdr-token-bar-patch.md): the
+  pinned herdr input now carries a source patch adding a
+  `{ type = "token", bar = true }` ui.tab_bar_right entry that renders
+  focused-workspace metadata tokens as full-color braille bars (ANSI can't
+  be smuggled — the tab bar strips control chars and hard-codes styles).
+  Watcher dual-publishes tokens; config swap staged as comments pending a
+  rebuild + server restart. Updated
+  [herdr-usage-tab-indicator](herdr-usage-tab-indicator.md) accordingly.
+
 - **Update** — [herdr-usage-tab-indicator](herdr-usage-tab-indicator.md):
   watcher + statusline mirrored into the `claude` stow package for nebula
   (repo-internal symlinks); the spawn gate now counts the `default` profile
