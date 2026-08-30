@@ -12,6 +12,15 @@ kitty_graphics = true
 [ui]
 agent_panel_sort = "spaces"
 
+# Right edge of the tab bar: Claude weekly usage (all-models + Fable),
+# maintained by ~/.claude/herdr-usage-watcher.ts (spawned from the Claude Code
+# statusline). The watcher writes the file only while the tab hosting the
+# personal-profile claude is focused and deletes it otherwise, so an empty cat
+# clears the indicator. Colorless text — the tab bar strips ANSI anyway.
+tab_bar_right = [
+  { type = "command", command = "cat /tmp/herdr-claude-usage.txt 2>/dev/null || true", interval_seconds = 1, timeout_seconds = 5 },
+]
+
 show_agent_labels_on_pane_borders = true
 [keys]
 prefix = "ctrl+space"
