@@ -10,10 +10,12 @@ flake consumes via relative-path inputs.
 * [Cbissues](cbissues.md) - cbissues — browse/filter a Codeberg (Forgejo) repo's issues (fzf TUI + --plain).
 * [ccglass](ccglass.md) - ccglass — local logging reverse-proxy + web dashboard for coding agents, built as a standalone binary.
 * [Direnv](direnv.md) - Nixpkgs overlay 'direnv'.
+* [dotbar](dotbar.md) - Braille-dot progress bar CLI for statuslines and terminals, consumed straight from the tlehman/dotbar flake.
 * [Dots Adopt](dots-adopt.md) - Custom Nix package 'dots-adopt'.
 * [Flatpak User](flatpak-user.md) - A drop-in `flatpak` that defaults the CLI to the per-user installation.
 * [Gh Config](gh-config.md) - Snapshot/restore gh's config.yml between ~/.config/gh (app-owned) and config/gh/ — gh's atomic-rename saves break stow symlinks, so it left the stow tree for the snapshot pattern.
 * [gh-op](gh-op.md) - Linux-only gh wrapper sourcing GH_TOKEN from 1Password at runtime — via a vault-scoped service-account token when deployed, desktop-app auth otherwise — so ~/.config/gh/hosts.yml holds no plain-text token on nebula's unencrypted disk.
+* [Git Yazi](git-yazi.md) - git.yazi — bump nixpkgs' pinned snapshot (0-unstable-2026-08-03, written for the pre-26.8 fetcher API) to upstream HEAD.
 * [Helium Config](helium-config.md) - Custom Nix package 'helium-config'.
 * [Herdr Nav](herdr-nav.md) - herdr-nav — a keybinding shim that gives herdr the vim-aware pane switching tmux gets from is_vim + if-shell — forwarding ctrl+h/j/k/l to a pane running vim instead of moving pane focus.
 * [Iv](iv.md) - A command-line image viewer using terminal graphics.

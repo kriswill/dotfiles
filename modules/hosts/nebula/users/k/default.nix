@@ -17,7 +17,10 @@
         ];
         # flatpak CLI defaulted to --user; shadows the system flatpak via the
         # per-user profile being ahead on PATH. See pkgs/flatpak-user.nix.
-        packages = [ pkgs.flatpak-user ];
+        packages = [
+          pkgs.flatpak-user
+          pkgs.dotbar # braille-dot progress bar for statuslines and terminals
+        ];
       };
     }
 
