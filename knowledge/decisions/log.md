@@ -2,6 +2,12 @@
 
 ## 2026-08-30
 
+- **Update** — [herdr-usage-tab-indicator](herdr-usage-tab-indicator.md):
+  watcher + statusline mirrored into the `claude` stow package for nebula
+  (repo-internal symlinks); the spawn gate now counts the `default` profile
+  as personal, and the Fable fetch degrades to wk-only without macOS
+  `security`.
+
 - **Creation** — [herdr-usage-tab-indicator](herdr-usage-tab-indicator.md):
   Claude weekly-usage indicator in herdr's tab bar renders through a
   `ui.tab_bar_right` command entry polling a /tmp state file kept by a

@@ -59,12 +59,16 @@ refresh, so anything it spawns must be idempotent.
 
 - Indicator appears/disappears within ~1 s of a tab switch; steady-state
   API cost is ~2 requests/hour regardless of pane count.
-- Deployed only on the macs via the `claude-me` stow package — on the macs
-  `~/.claude` is the account-selector's unowned symlink that stow refuses
-  to traverse, so mac-side `.claude` files live in `claude-me` (see
-  [split stow packages](claude-skills-split-stow-packages.md)). Nebula
-  runs herdr too but gets no indicator until the watcher is mirrored into
-  the `claude` package.
+- Deployed on both OSes per the
+  [split stow packages](claude-skills-split-stow-packages.md) convention:
+  the real files live in `claude-me` (on the macs `~/.claude` is the
+  account-selector's unowned symlink that stow refuses to traverse), with
+  repo-internal symlinks mirroring watcher + statusline into the `claude`
+  package for nebula. There the `default` profile (no account selector, so
+  `CLAUDE_CONFIG_DIR` unset) counts as personal in the spawn gate, and the
+  Fable fetch degrades to a wk-only indicator since macOS `security` is
+  absent. Nebula still needs `statusLine` pointed at the script in its
+  untracked `~/.claude/settings.json`.
 - The 1 s `cat` poll runs on the herdr server whether or not claude is up;
   the `tab_bar_right` schema is undocumented upstream and may shift.
 
