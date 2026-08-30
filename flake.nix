@@ -51,6 +51,12 @@
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.flake-parts.follows = "flake-parts";
     };
+    # dotbar pinned to the nix-flake PR head (tlehman/dotbar#1) while the flake
+    # packaging bakes upstream; bump to a tag (or drop the rev) once it merges.
+    dotbar = {
+      url = "github:tlehman/dotbar/ea59efe59527336206bffc2f1d05b87787568b87";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     codebase-memory-mcp = {
       url = "github:kriswill/codebase-memory-mcp/nix";
       inputs.nixpkgs.follows = "nixpkgs";

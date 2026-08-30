@@ -250,6 +250,27 @@
         "type": "github"
       }
     },
+    "dotbar": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1788117453,
+        "narHash": "sha256-w9qtTS3qUX0z/ADDLzj6qSC3RCK2PqE0+NayeJz6GY8=",
+        "owner": "tlehman",
+        "repo": "dotbar",
+        "rev": "ea59efe59527336206bffc2f1d05b87787568b87",
+        "type": "github"
+      },
+      "original": {
+        "owner": "tlehman",
+        "repo": "dotbar",
+        "rev": "ea59efe59527336206bffc2f1d05b87787568b87",
+        "type": "github"
+      }
+    },
     "flake-compat": {
       "flake": false,
       "locked": {
@@ -1122,6 +1143,7 @@
         "codebase-memory-mcp": "codebase-memory-mcp",
         "darwin": "darwin",
         "determinate": "determinate",
+        "dotbar": "dotbar",
         "flake-parts": "flake-parts_2",
         "herdr": "herdr",
         "hyprland": "hyprland",
