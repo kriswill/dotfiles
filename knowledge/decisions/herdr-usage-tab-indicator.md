@@ -71,6 +71,9 @@ refresh, so anything it spawns must be idempotent.
   untracked `~/.claude/settings.json`.
 - The 1 s `cat` poll runs on the herdr server whether or not claude is up;
   the `tab_bar_right` schema is undocumented upstream and may shift.
+- Superseded next by the [token-bar patch](herdr-token-bar-patch.md): the
+  watcher already dual-publishes `usage`/`usage_fable` workspace tokens, and
+  the state-file mechanism retires once the patched binary is live.
 
 ## Citations
 

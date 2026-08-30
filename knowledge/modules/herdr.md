@@ -42,6 +42,11 @@ The `config.toml` also carries a `ui.tab_bar_right` command entry rendering
 Claude weekly-usage [dotbar](../packages/dotbar.md) bars from a `/tmp` state
 file maintained by a statusline-spawned watcher — see the
 [usage tab-bar indicator decision](../decisions/herdr-usage-tab-indicator.md).
+Both class modules consume `pkgs.herdr` — the input's package plus our
+[token-bar patch](../decisions/herdr-token-bar-patch.md)
+(`overlays/herdr-tab-bar-token.patch`), which adds a
+`{ type = "token", bar = true }` tab-bar entry rendering workspace metadata
+tokens as full-color braille bars; rebase the patch on every input bump.
 
 Mounted ungated on every host
 (see the [host-mounted modules pattern](../patterns/host-mounted-modules.md));
