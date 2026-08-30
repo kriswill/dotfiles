@@ -2,6 +2,10 @@
 
 ## 2026-08-30
 
+- **Update** — [herdr](herdr.md): input swapped to the kriswill/herdr
+  staging fork's `custom` branch; the overlay is a plain re-export again and
+  `overlays/herdr-tab-bar-token.patch` is retired.
+
 - **Update** — [herdr](herdr.md): both class modules now consume overlaid
   `pkgs.herdr` (input package + `overlays/herdr-tab-bar-token.patch`); see
   the [token-bar patch decision](../decisions/herdr-token-bar-patch.md).

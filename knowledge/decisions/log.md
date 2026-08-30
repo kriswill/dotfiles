@@ -2,6 +2,12 @@
 
 ## 2026-08-30
 
+- **Update** — [herdr-token-bar-patch](herdr-token-bar-patch.md): the patch
+  moved from an in-repo `.patch` + overrideAttrs overlay to commit
+  `ec833adc` on the kriswill/herdr staging fork's `custom` branch (upstream
+  tag + patches, rebased per release — the codebase-memory-mcp model),
+  consumed directly as the herdr flake input.
+
 - **Update** — [herdr-token-bar-patch](herdr-token-bar-patch.md): researched
   herdr's plugin v1 surface as a patch alternative — plugins get no
   non-terminal UI, so the tab-bar renderer cannot be a plugin; only the
