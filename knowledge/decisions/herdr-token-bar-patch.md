@@ -62,6 +62,16 @@ was removed.
   internals with no stability guarantee) — a good candidate to upstream,
   which would also honor upstream's external-contributor policy noted in
   their build banner.
+- **Plugins cannot replace this patch** (researched 2026-08-30 against the
+  v0.8.2 source): plugin v1 explicitly excludes "native non-terminal plugin
+  UI" — a plugin's only UI surface is terminal panes/popups, so nothing in
+  the manifest (`[[actions]]`, `[[events]]`, `[[startup]]`, `[[panes]]`,
+  `[[link_handlers]]`) can draw in the tab bar. The *watcher* half could
+  become a plugin (manifest `[[events]]` hooks may subscribe to
+  `tab.focused` / `pane.exited` — only high-volume kinds are excluded —
+  with `HERDR_PLUGIN_EVENT_JSON` context and per-plugin config/state dirs),
+  but the renderer stays core. End state remains: upstream the token entry,
+  optionally ship the watcher as a marketplace plugin.
 - Config with `type = "token"` entries requires the patched binary
   everywhere it's parsed — an unpatched herdr's `deny_unknown_fields`
   rejects it (relevant if nebula rebuilds lag the config, since the stow

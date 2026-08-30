@@ -2,6 +2,12 @@
 
 ## 2026-08-30
 
+- **Update** — [herdr-token-bar-patch](herdr-token-bar-patch.md): researched
+  herdr's plugin v1 surface as a patch alternative — plugins get no
+  non-terminal UI, so the tab-bar renderer cannot be a plugin; only the
+  watcher half could (event hooks on tab.focused). Patch/upstreaming stays
+  required for rendering.
+
 - **Update** — [herdr-token-bar-patch](herdr-token-bar-patch.md) went live
   (patched binary via nrs + server restart): config.toml now uses the
   token/bar entries and the watcher is token-only.
