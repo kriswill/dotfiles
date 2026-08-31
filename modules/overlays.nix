@@ -38,7 +38,21 @@
     # knowledge/decisions/herdr-token-bar-patch.md); close over `inputs`
     # like ccglass above.
     herdr = _final: prev: {
-      herdr = inputs.herdr.packages.${prev.stdenv.hostPlatform.system}.herdr;
+      herdr =
+        (inputs.herdr.packages.${prev.stdenv.hostPlatform.system}.herdr).overrideAttrs
+          (old: {
+            # Build identity (upstream build_info.rs hooks, read at compile
+            # time): `herdr --version` / `herdr status` report e.g.
+            # 0.8.2-kriswill-custom.b1b9e98 so a glance shows this is our fork
+            # build and which commit it carries. Any channel other than
+            # "preview" behaves exactly like stable (update checks compare the
+            # plain base version); the `channel:` line in status is the update
+            # channel and stays "stable" independently.
+            env = (old.env or { }) // {
+              HERDR_BUILD_CHANNEL = "kriswill-custom";
+              HERDR_BUILD_ID = inputs.herdr.shortRev or "dirty";
+            };
+          });
     };
     # dotbar comes from its flake input (pinned to the nix-flake PR head, see
     # flake.nix); close over `inputs` like ccglass above.
