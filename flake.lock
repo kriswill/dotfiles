@@ -539,11 +539,11 @@
         "xdph": "xdph"
       },
       "locked": {
-        "lastModified": 1788100302,
-        "narHash": "sha256-21MFGYEl3m5SjN9kZGKb+gELVLlMCF1DkbwHqHzSK1w=",
+        "lastModified": 1788187241,
+        "narHash": "sha256-LtXqt/xbyR/FyKtuLTXJN5pxJoMAHzI/uWTw/ZxUxwA=",
         "owner": "hyprwm",
         "repo": "Hyprland",
-        "rev": "86c24e2e079aa62214421c76f01b603fc8178125",
+        "rev": "3b2dadd987fd9da19006a4969036777f44c98f61",
         "type": "github"
       },
       "original": {
@@ -1203,11 +1203,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1788124493,
-        "narHash": "sha256-o6b39n58YcorlSVzZo+D33o00youJSgB1GpgmttE6rg=",
+        "lastModified": 1788155257,
+        "narHash": "sha256-8clqJ5LIVtY/obMLjnxGlRD7B+gD17DnaKj+zJsUdiU=",
         "owner": "kriswill",
         "repo": "snowglobe-factory",
-        "rev": "a53e79f5c1363a985ec900bd4c9505677d88c007",
+        "rev": "24d173875f8339a67c170e10a185882532bb7868",
         "type": "github"
       },
       "original": {
