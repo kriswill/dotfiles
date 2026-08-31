@@ -19,7 +19,7 @@ if [ -n "$HERDR_TOKEN_USAGE" ]; then
   out="${dim}wk${rst} $(dotbar --dense "$HERDR_TOKEN_USAGE")"
 fi
 if [ -n "$HERDR_TOKEN_USAGE_FABLE" ]; then
-  [ -n "$out" ] && out="$out "
+  [ -n "$out" ] && out="$out ${dim}•${rst} "
   out="$out${dim}F5${rst} $(dotbar --dense "$HERDR_TOKEN_USAGE_FABLE")"
 fi
 [ -n "$out" ] && printf '%s\n' "$out"
