@@ -35,7 +35,7 @@
     # herdr from the kriswill/herdr staging fork's `custom` branch (upstream
     # tag + our patch commits, currently the ANSI tab-bar command entries
     # rendered by ~/.local/bin/dotbar-usage — see
-    # knowledge/decisions/herdr-token-bar-patch.md); close over `inputs`
+    # knowledge/decisions/herdr-ansi-tab-bar-entries.md); close over `inputs`
     # like ccglass above.
     herdr = _final: prev: {
       herdr =

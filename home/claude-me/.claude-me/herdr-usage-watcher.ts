@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 // Herdr tab-bar usage indicator (experiment).
 //
-// Spawned by ~/.claude/statusline.sh when Claude Code runs inside a Herdr pane
+// Spawned by ~/.claude-me/statusline.sh when Claude Code runs inside a Herdr pane
 // on the personal ("me"/"default") profile. While this pane's tab is focused,
 // it publishes weekly usage (all-models from the statusline-published file,
 // Fable-scoped from the OAuth usage endpoint, sparingly) as the

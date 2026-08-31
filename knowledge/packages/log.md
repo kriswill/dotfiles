@@ -2,6 +2,11 @@
 
 ## 2026-08-30
 
+- **Update** — [dotbar](dotbar.md): the herdr indicator no longer strips
+  its ANSI colors — `dotbar-usage` output renders inline through the fork's
+  `ansi = true` command entry ([ANSI tab-bar entries
+  decision](../decisions/herdr-ansi-tab-bar-entries.md)).
+
 - **Update** — [dotbar](dotbar.md): noted its consumers — the Claude Code
   statusline's dense context bar and the herdr tab-bar usage indicator
   ([decision](../decisions/herdr-usage-tab-indicator.md)).

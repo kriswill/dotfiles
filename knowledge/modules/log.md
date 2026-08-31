@@ -2,6 +2,13 @@
 
 ## 2026-08-30
 
+- **Update** — [herdr](herdr.md): tab-bar indicator description moved off
+  the retired `{ type = "token" }` patch to the fork's [ANSI command
+  entries](../decisions/herdr-ansi-tab-bar-entries.md) (`dotbar-usage`
+  renderer, build-identity stamp in `herdr --version`), and the pin story
+  corrected — dropping the fork now requires upstreaming the tab-bar change
+  first, not just nixpkgs ≥ 0.8.2.
+
 - **Update** — [herdr](herdr.md): input swapped to the kriswill/herdr
   staging fork's `custom` branch; the overlay is a plain re-export again and
   `overlays/herdr-tab-bar-token.patch` is retired.

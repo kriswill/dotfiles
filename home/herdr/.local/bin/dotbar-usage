@@ -5,7 +5,7 @@
 # tab-bar entry (our fork's custom branch). Herdr injects the focused
 # workspace's metadata tokens as HERDR_TOKEN_* env vars and re-runs this
 # command whenever they change, so it stays reactive without polling. The
-# usage / usage_fable tokens are published by ~/.claude/herdr-usage-watcher.ts
+# usage / usage_fable tokens are published by ~/.claude-me/herdr-usage-watcher.ts
 # while the personal-profile Claude's tab is focused.
 #
 # Output: dim labels + dotbar --dense braille bars (SGR colors pass through

@@ -2,6 +2,17 @@
 
 ## 2026-08-30
 
+- **Creation** — [herdr-ansi-tab-bar-entries](herdr-ansi-tab-bar-entries.md):
+  the fork's bespoke token renderer was replaced by generalized ANSI tab-bar
+  command entries (`argv`/`ansi` fields; `HERDR_TOKEN_*` env injection with
+  reactive re-runs), moving bar rendering into the userland `dotbar-usage`
+  script. [herdr-token-bar-patch](herdr-token-bar-patch.md) marked
+  superseded; [herdr-usage-tab-indicator](herdr-usage-tab-indicator.md)'s
+  supersession chain extended. Also fixed stale `~/.claude/` path comments
+  (canonical deployed path is `~/.claude-me/`; on macs `~/.claude` is only
+  the account-selector symlink) in config.toml, dotbar-usage, and the
+  watcher.
+
 - **Update** — [herdr-token-bar-patch](herdr-token-bar-patch.md): the patch
   moved from an in-repo `.patch` + overrideAttrs overlay to commit
   `ec833adc` on the kriswill/herdr staging fork's `custom` branch (upstream
