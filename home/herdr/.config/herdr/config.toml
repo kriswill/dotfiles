@@ -20,7 +20,7 @@ agent_panel_sort = "spaces"
 # as HERDR_TOKEN_* env and re-runs the command when they change — reactive,
 # no tight polling (the interval is only a safety refresh). The tokens
 # (usage / usage_fable, 15s TTL) are published by
-# ~/.claude/herdr-usage-watcher.ts (spawned from the Claude Code statusline)
+# ~/.claude-me/herdr-usage-watcher.ts (spawned from the Claude Code statusline)
 # only while the tab hosting the personal-profile claude is focused, and
 # cleared otherwise, so the indicator follows tab focus. Empty command
 # output hides the entry.

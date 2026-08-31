@@ -6,12 +6,16 @@ tags: [herdr, patch, claude]
 timestamp: '2026-08-30T14:30:00-07:00'
 ---
 
-**Status:** active — since 2026-08-30 the change lives as commit `ec833adc`
-on the `custom` branch of the [kriswill/herdr staging
+**Status:** superseded — the bespoke `{ type = "token", bar = true }`
+renderer was replaced the same day (2026-08-30) by the fork's generalized
+[ANSI tab-bar command entries](herdr-ansi-tab-bar-entries.md), which move
+rendering into the userland `dotbar-usage` script. Interim history: the
+change first shipped as an in-repo `.patch` + `overrideAttrs` overlay, then
+as commit `ec833adc` on the `custom` branch of the [kriswill/herdr staging
 fork](https://github.com/kriswill/herdr) (upstream tag + patch commits,
 rebased on each upstream release; the codebase-memory-mcp model), consumed
-directly as the `herdr` flake input. The in-repo
-`overlays/herdr-tab-bar-token.patch` + `overrideAttrs` wiring is retired.
+directly as the `herdr` flake input — the fork-consumption model survives;
+the token entry type does not.
 **Where:** [`flake.nix`](../../flake.nix) herdr input,
 [`modules/overlays.nix`](../../modules/overlays.nix);
 both [herdr](../modules/herdr.md) class modules consume `pkgs.herdr`.
@@ -82,6 +86,12 @@ was removed.
   everywhere it's parsed — an unpatched herdr's `deny_unknown_fields`
   rejects it (relevant if nebula rebuilds lag the config, since the stow
   tree is shared).
+- **Superseded** (2026-08-30, commit `40a9543`): the token entry type was
+  dropped from `custom` in favor of [ANSI command
+  entries](herdr-ansi-tab-bar-entries.md) — `argv`/`ansi` fields plus
+  `HERDR_TOKEN_*` env injection with reactive re-runs — so the hard-coded
+  bar rendering left the binary for `~/.local/bin/dotbar-usage`. The plugin
+  research above still holds for the replacement.
 
 ## Citations
 

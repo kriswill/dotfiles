@@ -21,9 +21,11 @@ the input in `flake.nix`.
 
 Consumed by the Claude Code statusline
 (`home/claude-me/.claude-me/statusline.sh`, dense context bar) and the
-[herdr](../modules/herdr.md) tab-bar usage indicator, which strips the ANSI
-colors and keeps the braille glyphs — see the
-[indicator decision](../decisions/herdr-usage-tab-indicator.md).
+[herdr](../modules/herdr.md) tab-bar usage indicator, where
+`~/.local/bin/dotbar-usage` renders `dotbar --dense` bars with the ANSI
+colors passing through the fork's `ansi = true` command entry — see the
+[ANSI tab-bar entries decision](../decisions/herdr-ansi-tab-bar-entries.md)
+and the [indicator decision](../decisions/herdr-usage-tab-indicator.md).
 
 ## Source
 
