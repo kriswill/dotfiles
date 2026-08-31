@@ -79,8 +79,12 @@ const pidFile = `/tmp/herdr-usage-${paneId.replace(/[^A-Za-z0-9]/g, "_")}.pid`;
 }
 
 function sh(cmd: string[]): string {
-  const p = Bun.spawnSync(cmd, { stdout: "pipe", stderr: "pipe" });
-  return p.success ? p.stdout.toString().trim() : "";
+  try {
+    const p = Bun.spawnSync(cmd, { stdout: "pipe", stderr: "pipe" });
+    return p.success ? p.stdout.toString().trim() : "";
+  } catch {
+    return ""; // e.g. binary missing on this OS
+  }
 }
 
 function alive(pid: number): boolean {
@@ -137,33 +141,42 @@ async function getFable(): Promise<number | null> {
     const f = await fetchFable();
     try {
       if (f !== null) fs.writeFileSync(CACHE_FILE, JSON.stringify({ at: now, fable: f }));
-      else fs.writeFileSync(CACHE_FILE, JSON.stringify({ ...c, failAt: now }));
+      else fs.writeFileSync(CACHE_FILE, JSON.stringify({ ...c, failAt: now, err: lastErr }));
     } catch {}
     if (f !== null) return f;
   }
   return typeof c.fable === "number" ? c.fable : null; // stale beats nothing
 }
 
+let lastErr = ""; // failure reason, surfaced as "err" in the cache file
 async function fetchFable(): Promise<number | null> {
-  const raw = sh(["security", "find-generic-password", "-s", keychainService(), "-w"]);
-  if (!raw) return null;
+  // Linux stores OAuth creds in a plain file; macOS uses the keychain.
+  let raw = "";
+  try {
+    raw = fs.readFileSync(`${configDir}/.credentials.json`, "utf8");
+  } catch {
+    raw = sh(["security", "find-generic-password", "-s", keychainService(), "-w"]);
+  }
+  if (!raw) { lastErr = "no-creds"; return null; }
   let token = "";
   try {
     token = JSON.parse(raw).claudeAiOauth?.accessToken ?? "";
   } catch {}
-  if (!token) return null;
+  if (!token) { lastErr = "no-token"; return null; }
   try {
     const res = await fetch("https://api.anthropic.com/api/oauth/usage", {
       headers: { Authorization: `Bearer ${token}`, "anthropic-beta": "oauth-2025-04-20" },
     });
-    if (!res.ok) return null;
+    if (!res.ok) { lastErr = `http-${res.status}`; return null; }
     const data: any = await res.json();
     const limits: any[] = data.limits ?? [];
     const fable = limits.find(
       (l) => l.kind === "weekly_scoped" && /fable/i.test(l.scope?.model?.display_name ?? ""),
     )?.percent;
-    return fable == null ? null : Math.round(fable);
-  } catch {
+    if (fable == null) { lastErr = "no-fable-limit"; return null; }
+    return Math.round(fable);
+  } catch (e: any) {
+    lastErr = `threw: ${e?.message ?? e}`;
     return null;
   }
 }
