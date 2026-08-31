@@ -169,7 +169,7 @@ transition_on_startup = true
     path = "/home/k/Pictures/Wallpapers/vertical-wide/nebula-photo-vertical-1440x3440.png"
 
     [wallpaper.last]
-    path = "/home/k/Pictures/Wallpapers/horizontal-wide/nebula-landscape-right.png"
+    path = "/home/k/Pictures/Wallpapers/vertical-wide/nebula-landscape-left.png"
 
     [wallpaper.monitor.DP-1]
     directory = "/home/k/Pictures/Wallpapers/vertical-wide"
@@ -184,7 +184,7 @@ transition_on_startup = true
     path = "/home/k/Pictures/Wallpapers/horizontal-wide/nebula-landscape-right.png"
 
     [wallpaper.monitors.HEADLESS-1]
-    path = "/home/k/Pictures/Wallpapers/nebula-wall-vertical.png"
+    path = "/home/k/Pictures/Wallpapers/vertical-wide/nebula-landscape-left.png"
 
     [wallpaper.monitors.HEADLESS-3]
     path = "/home/k/Pictures/Wallpapers/nebula-wall-horizontal.png"
