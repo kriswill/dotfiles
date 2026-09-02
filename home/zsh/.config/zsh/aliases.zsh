@@ -33,5 +33,10 @@ alias lg='lazygit'
 alias rtk-work='RTK_DB_PATH=$HOME/.local/share/rtk/history-work.db rtk'
 alias rtkw='rtk-work'
 
+## Pull the X11/XWayland clipboard into the Wayland one — Hyprland fails to
+## bridge the CLIPBOARD selection from XWayland apps (WoW under Proton), so a
+## copy in-game lands only in the X clipboard until pulled across.
+[[ $OSTYPE == linux* ]] && alias wowclip='nix shell nixpkgs#xclip -c xclip -o -selection clipboard -d :0 | wl-copy'
+
 ## man-page completion for bat-extras' `batman` (compinit ran in /etc/zshrc).
 compdef batman=man
