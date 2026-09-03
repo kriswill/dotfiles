@@ -54,6 +54,13 @@
             };
           });
     };
+    # devenv from the kriswill/devenv fork's `custom` branch (upstream tag +
+    # our patch commits, see flake.nix); close over `inputs` like ccglass
+    # above. Replaces pkgs.devenv wholesale so modules/{darwin,nixos}/devenv.nix
+    # keep installing `pkgs.devenv` unchanged.
+    devenv = _final: prev: {
+      devenv = inputs.devenv.packages.${prev.stdenv.hostPlatform.system}.devenv;
+    };
     # dotbar comes from its flake input (pinned to the nix-flake PR head, see
     # flake.nix); close over `inputs` like ccglass above.
     dotbar = _final: prev: {
