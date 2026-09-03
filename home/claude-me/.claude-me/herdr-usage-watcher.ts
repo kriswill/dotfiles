@@ -1,11 +1,18 @@
 #!/usr/bin/env bun
 // Herdr tab-bar usage indicator (experiment).
 //
-// Spawned by ~/.claude-me/statusline.sh when Claude Code runs inside a Herdr pane
-// on the personal ("me"/"default") profile. While this pane's tab is focused,
-// it publishes weekly usage (all-models from the statusline-published file,
-// Fable-scoped from the OAuth usage endpoint, sparingly) as the
-// usage/usage_fable workspace metadata tokens. Our fork's herdr (custom
+// Spawned by the profile's statusline when Claude Code runs inside a Herdr
+// pane. While this pane's tab is focused, it publishes that profile's usage as
+// workspace metadata tokens:
+//
+//   personal ("me"/"default") — weekly usage as usage/usage_fable (all-models
+//     from the statusline-published file, Fable-scoped from the OAuth usage
+//     endpoint, sparingly);
+//   work — the org's credit spend as usage_spend (percent) and
+//     usage_spend_amt ("$used/$limit"), read from the cache that
+//     ~/.claude-work/claude-usage-work.ts refreshes (no API call of our own).
+//
+// Our fork's herdr (custom
 // branch, ANSI tab-bar command entries) exposes those tokens to its
 // tab-bar command as HERDR_TOKEN_USAGE / HERDR_TOKEN_USAGE_FABLE env and
 // re-runs ~/.local/bin/dotbar-usage on every token change, which renders
@@ -30,24 +37,32 @@ const workspaceId = process.env.HERDR_WORKSPACE_ID ?? "";
 const TOKEN_SOURCE = "claude-usage";
 const TOKEN_TTL_MS = 15_000; // refreshed by the 5s housekeeping tick
 
-function publishTokens(u: { all: number; fable: number | null }) {
+// Which profile's tokens this instance owns. Both profiles can have a live
+// watcher, but only the focused tab publishes, so they never overlap — each
+// clears exactly the tokens it owns and leaves the other's alone.
+const isWork = /-work$/.test(configDir);
+const OWNED_TOKENS = isWork ? ["usage_spend", "usage_spend_amt"] : ["usage", "usage_fable"];
+
+type Usage = Record<string, string | number>;
+
+function publishTokens(u: Usage) {
   if (!workspaceId) return;
   const args = [
     "herdr", "workspace", "report-metadata", workspaceId,
     "--source", TOKEN_SOURCE, "--ttl-ms", String(TOKEN_TTL_MS),
-    "--token", `usage=${u.all}`,
   ];
-  if (u.fable !== null) args.push("--token", `usage_fable=${u.fable}`);
+  for (const [k, v] of Object.entries(u)) args.push("--token", `${k}=${v}`);
   sh(args);
 }
 
 function clearTokens() {
   if (!workspaceId) return;
-  sh([
+  const args = [
     "herdr", "workspace", "report-metadata", workspaceId,
     "--source", TOKEN_SOURCE,
-    "--clear-token", "usage", "--clear-token", "usage_fable",
-  ]);
+  ];
+  for (const k of OWNED_TOKENS) args.push("--clear-token", k);
+  sh(args);
 }
 
 // Singleton per pane — exclusive create (wx) so concurrent spawns from rapid
@@ -117,6 +132,20 @@ function readWeeklyAll(): number | null {
   return null;
 }
 
+// Work credit spend %: written by ~/.claude-work/claude-usage-work.ts, which
+// the work statusline already refreshes on its own schedule. Free to read.
+const SPEND_FILE = "/tmp/claude-usage-work.json";
+
+function readSpend(): { pct: number; amt: string } | null {
+  try {
+    const c = JSON.parse(fs.readFileSync(SPEND_FILE, "utf8"));
+    if (typeof c.pct === "number" && c.used && c.limit) {
+      return { pct: Math.round(c.pct), amt: `${c.used}/${c.limit}` };
+    }
+  } catch {}
+  return null;
+}
+
 // Fable-scoped weekly %: only available from the OAuth usage endpoint, which
 // rate-limits aggressively (it backs Claude Code's own /usage UI). Cache is
 // shared by all watcher instances; fetch at most every CACHE_FRESH_MS, and
@@ -181,7 +210,7 @@ async function fetchFable(): Promise<number | null> {
   }
 }
 
-let usage: { all: number; fable: number | null } | null = null;
+let usage: Usage | null = null;
 let focused = false;
 let shown = false;
 
@@ -215,11 +244,19 @@ try {
   focused = !!JSON.parse(sh(["herdr", "tab", "get", tabId])).result.tab.focused;
 } catch {}
 async function refreshUsage() {
-  const all = readWeeklyAll();
-  if (all === null) return; // no statusline data yet
-  const fable = await getFable();
-  if (all !== usage?.all || fable !== (usage?.fable ?? null)) {
-    usage = { all, fable };
+  let next: Usage | null = null;
+  if (isWork) {
+    const s = readSpend();
+    if (s) next = { usage_spend: s.pct, usage_spend_amt: s.amt };
+  } else {
+    const all = readWeeklyAll();
+    if (all === null) return; // no statusline data yet
+    const fable = await getFable();
+    next = fable === null ? { usage: all } : { usage: all, usage_fable: fable };
+  }
+  if (!next) return;
+  if (JSON.stringify(next) !== JSON.stringify(usage)) {
+    usage = next;
     apply();
   }
 }
