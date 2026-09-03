@@ -42,9 +42,10 @@ source "$ZDOTDIR/yazi.sh"
 ## Opt-in helper functions (stderred).
 source "$ZDOTDIR/functions.zsh"
 
-## `gh` wrapper for herdr's out-of-order terminal-query replies (see the file's
-## header). Self-guarded: no-op outside herdr.
-source "$ZDOTDIR/herdr-gh.zsh"
+## `gh` wrapper for out-of-order terminal-query replies under `devenv shell`
+## (see the file's header). Probes the live terminal once per shell; no-op
+## cost outside a misbehaving pty relay.
+source "$ZDOTDIR/devenv-gh.zsh"
 
 ## Darwin-specific setup — self-guarded, no-op elsewhere. Must precede the
 ## PATH export below (brew shellenv prepends its own paths).
