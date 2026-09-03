@@ -5,8 +5,11 @@
 # tab-bar entry (our fork's custom branch). Herdr injects the focused
 # workspace's metadata tokens as HERDR_TOKEN_* env vars and re-runs this
 # command whenever they change, so it stays reactive without polling. The
-# usage / usage_fable tokens are published by ~/.claude-me/herdr-usage-watcher.ts
-# while the personal-profile Claude's tab is focused.
+# usage / usage_fable / usage_spend tokens are published by
+# herdr-usage-watcher.ts while a Claude tab is focused: usage + usage_fable on
+# the personal profile (weekly rate-limit consumption), usage_spend on the work
+# profile (the org's credit budget — usage_spend_amt carries the "$used/$limit"
+# label, usage_spend the percent for the bar).
 #
 # Output: dim labels + dotbar --dense braille bars (SGR colors pass through
 # ansi = true). No output when usage is absent, which hides the entry.
@@ -21,6 +24,10 @@ fi
 if [ -n "$HERDR_TOKEN_USAGE_FABLE" ]; then
   [ -n "$out" ] && out="$out ${dim}•${rst} "
   out="$out${dim}F5${rst} $(dotbar --dense "$HERDR_TOKEN_USAGE_FABLE")"
+fi
+if [ -n "$HERDR_TOKEN_USAGE_SPEND" ]; then
+  [ -n "$out" ] && out="$out "
+  out="$out${dim}${HERDR_TOKEN_USAGE_SPEND_AMT:-\$}${rst} $(dotbar --dense "$HERDR_TOKEN_USAGE_SPEND")"
 fi
 [ -n "$out" ] && printf '%s\n' "$out"
 exit 0

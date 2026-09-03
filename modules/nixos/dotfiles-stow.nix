@@ -24,6 +24,7 @@
         # modules/darwin/dotfiles-stow.nix.
         skip = [
           "claude-me" # the ~/.claude-me profile split only exists on the macs (claude-account-selector); nebula uses plain ~/.claude via the claude package
+          "claude-work" # ditto for ~/.claude-work; its statusline also reads the Claude desktop app's macOS Keychain/cookie store
           "glow" # macOS Library/Preferences path
           "karabiner" # macOS-only hardware remapper
           "kitty" # not installed on nebula (ghostty is the terminal)
