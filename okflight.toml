@@ -33,7 +33,7 @@ Click a node to read its document."""
 max-bytes = 200000 # per-file source-embed cap
 
 [taxonomy]
-# Palette slot order: entry N -> CSS var --sN (12 theme slots; overflow types
+# Palette slot order: entry N -> CSS var --sN (32 theme slots — 12 curated + 20 derived; overflow types
 # get stable generated colors). Append-only — existing types keep their colors.
 types = [
   "Darwin Module",
