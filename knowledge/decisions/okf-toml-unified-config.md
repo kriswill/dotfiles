@@ -1,9 +1,9 @@
 ---
 type: Decision
 title: okf.toml — One Config File for Every okf Command
-description: Rename okf-viz.toml to okf.toml and route ALL commands (scaffold/index/validate/viz) through one strict build-side loader (config-cli.ts), so bundle.dir and future CLI sections apply uniformly; first step of the okf generalization arc.
+description: 'Rename okf-viz.toml to okf.toml and route ALL commands (scaffold/index/validate/viz) through one strict build-side loader (config-cli.ts), so bundle.dir and future CLI sections apply uniformly; first step of the okf generalization arc.'
 tags: [tooling, config, okf-generalization]
-timestamp: '2026-07-04T00:00:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-04T00:00:00-07:00 }
 ---
 
 **Status:** active. **Where:**

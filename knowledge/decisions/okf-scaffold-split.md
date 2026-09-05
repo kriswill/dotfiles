@@ -1,9 +1,16 @@
 ---
 type: Decision
-title: okf Scaffolder — Per-Type Passes, Bundle-Adjacent in knowledge/_okf-scaffold/
-description: The repo's scaffold pass split from one 520-line monolith into a main.ts entry plus one pass file per scaffolded type, relocated from scripts/ to knowledge/_okf-scaffold/ — the `_` prefix hides it from okf's walkers, so the bundle stays pure markdown and OKF v0.1-conformant.
+title: 'okf Scaffolder — Per-Type Passes, Bundle-Adjacent in knowledge/_okf-scaffold/'
+description: 'The repo''s scaffold pass split from one 520-line monolith into a main.ts entry plus one pass file per scaffolded type, relocated from scripts/ to knowledge/_okf-scaffold/ — the `_` prefix hides it from okf''s walkers, so the bundle stays pure markdown and OKF v0.1-conformant.'
 tags: [tooling, scaffold, okf]
-timestamp: '2026-07-05T00:00:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-05T00:00:00-07:00 }
+sources:
+  - id: okf-spec-md-9-conformance
+    resource: https://github.com/GoogleCloudPlatform/knowledge-catalog/blob/main/okf/SPEC.md
+    title: OKF SPEC.md §9 (conformance)
+  - id: okf-scaffold-hook
+    resource: okf-scaffold-hook.md
+    title: okf-scaffold-hook
 ---
 
 **Status:** active. **Where:**
@@ -53,8 +60,3 @@ was whether moving it under `knowledge/` would break OKF v0.1 conformance.
   `scripts/` is back to non-okf helpers only.
 - Anything else added under `knowledge/_okf-scaffold/` inherits the
   exclusion — it will never appear in the graph, by design.
-
-## Citations
-
-- [OKF SPEC.md §9 (conformance)](https://github.com/GoogleCloudPlatform/knowledge-catalog/blob/main/okf/SPEC.md)
-- [okf-scaffold-hook](okf-scaffold-hook.md) — the prior move out of the flake

@@ -1,10 +1,10 @@
 ---
 type: Neovim Plugin
 title: lualine.nvim
-description: Global statusline themed by kanagawa, built from lualine-so-fancy components (mode, diagnostics, branch/diff, LSP servers).
+description: 'Global statusline themed by kanagawa, built from lualine-so-fancy components (mode, diagnostics, branch/diff, LSP servers).'
 resource: home/nvim/.config/nvim/lua/plugins/lualine.lua
 tags: [nvim-plugin, ui]
-timestamp: '2026-07-02T00:00:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-02T00:00:00-07:00 }
 ---
 
 Single global statusline (`globalstatus = true`) using the

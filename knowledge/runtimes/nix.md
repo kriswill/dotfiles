@@ -3,7 +3,14 @@ type: Runtime
 title: Nix Runtime
 description: 'The executable half of Nix — evaluator, immutable /nix/store, and privileged nix-daemon realising derivations; every host here runs Determinate Nix, chosen for the ≥2.26 relative-path locking the sub-flakes depend on.'
 tags: [nix, runtime, determinate]
-timestamp: '2026-08-02T17:10:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-08-02T17:10:00-07:00 }
+sources:
+  - id: nix-reference-manual-the-nix-store
+    resource: https://nix.dev/manual/nix/stable/store/
+    title: Nix Reference Manual — the Nix store
+  - id: determinate-systems-documentation
+    resource: https://docs.determinate.systems/
+    title: Determinate Systems documentation
 ---
 
 Nix is two things wearing one name. The [language](../languages/nix.md) is
@@ -42,8 +49,3 @@ daemon.
   [the devenv lock decision](../decisions/devenv-lock-derived-from-flake-lock.md)),
   and [direnv](../modules/direnv.md)'s cached shells are snapshots of what
   this daemon last built.
-
-## Citations
-
-- [Nix Reference Manual — the Nix store](https://nix.dev/manual/nix/stable/store/)
-- [Determinate Systems documentation](https://docs.determinate.systems/)

@@ -3,7 +3,7 @@ type: Playbook
 title: Add a Feature Module
 description: Create a new darwin or NixOS feature module — universal (ungated) or host-selective (behind a programs./services. enable); registration is automatic.
 tags: [nix, module]
-timestamp: '2026-07-03T12:00:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-03T12:00:00-07:00 }
 ---
 
 ## Examples

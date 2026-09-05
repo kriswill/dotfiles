@@ -1,10 +1,10 @@
 ---
 type: Neovim Plugin
 title: gitsigns.nvim
-description: Git hunk signs in the sign column — stock setup, no options.
+description: 'Git hunk signs in the sign column — stock setup, no options.'
 resource: home/nvim/.config/nvim/lua/plugins/gitsigns.lua
 tags: [nvim-plugin, git]
-timestamp: '2026-07-02T00:00:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-02T00:00:00-07:00 }
 ---
 
 Default `setup()` — add/change/delete signs only. Hunk-level git

@@ -1,9 +1,16 @@
 ---
 type: Decision
 title: Herdr Tab-Bar Claude Usage Indicator via State File
-description: The Claude weekly-usage indicator renders through a ui.tab_bar_right command entry polling a /tmp state file that a per-pane watcher maintains from pushed tab.focused socket events — because herdr's right tab-bar edge is config-only and workspace metadata tokens render solely in the sidebar.
+description: 'The Claude weekly-usage indicator renders through a ui.tab_bar_right command entry polling a /tmp state file that a per-pane watcher maintains from pushed tab.focused socket events — because herdr''s right tab-bar edge is config-only and workspace metadata tokens render solely in the sidebar.'
 tags: [claude, herdr, statusline]
-timestamp: '2026-08-30T13:45:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-08-30T13:45:00-07:00 }
+sources:
+  - id: claude-code-statusline-json-reference
+    resource: https://code.claude.com/docs/en/statusline
+    title: Claude Code statusline JSON reference
+  - id: herdr-repository
+    resource: https://github.com/herdrdev/herdr
+    title: herdr repository
 ---
 
 **Status:** superseded — the render channel moved to the
@@ -87,5 +94,3 @@ refresh, so anything it spawns must be idempotent.
 ## Citations
 
 - Commits `1973a19` (watcher + herdr config), `dbe7e12` (statusline adoption)
-- [Claude Code statusline JSON reference](https://code.claude.com/docs/en/statusline)
-- [herdr repository](https://github.com/herdrdev/herdr)

@@ -1,10 +1,17 @@
 ---
 type: Neovim Config
 title: LSP & Formatting
-description: Native vim.lsp.config/enable with one file per server, efm-langserver as the single formatting/linting authority, format-on-save filtered to efm.
+description: 'Native vim.lsp.config/enable with one file per server, efm-langserver as the single formatting/linting authority, format-on-save filtered to efm.'
 resource: home/nvim/.config/nvim/lua/config/lsp.lua
 tags: [nvim, lsp]
-timestamp: '2026-07-02T00:00:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-02T00:00:00-07:00 }
+sources:
+  - id: lsp-efm-lua
+    resource: ../../home/nvim/.config/nvim/lsp/efm.lua
+    title: '`lsp/efm.lua`'
+  - id: languages-md
+    resource: ../../home/nvim/.config/nvim/LANGUAGES.md
+    title: '`LANGUAGES.md`'
 ---
 
 LSP is fully native — Neovim 0.11+'s `vim.lsp.config` format with one file
@@ -81,5 +88,3 @@ run through [snacks](plugins/snacks.md) pickers.
 
 - Commits `6c1b979` (efm added), `c622be3` (conform removed), `7458862`
   (shell lint moved off bashls)
-- [`lsp/efm.lua`](../../home/nvim/.config/nvim/lsp/efm.lua)
-- [`LANGUAGES.md`](../../home/nvim/.config/nvim/LANGUAGES.md)

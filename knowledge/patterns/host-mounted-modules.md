@@ -1,10 +1,10 @@
 ---
 type: Pattern
 title: Host-Mounted Modules
-description: Universal features are ungated deferred modules in flake.modules.<class>.* (darwin + nixos classes); host-selective features gate behind programs./services. enable options flipped in modules/hosts/<hostname>/default.nix; truly host-specific files live beside the host's registration.
+description: 'Universal features are ungated deferred modules in flake.modules.<class>.* (darwin + nixos classes); host-selective features gate behind programs./services. enable options flipped in modules/hosts/<hostname>/default.nix; truly host-specific files live beside the host''s registration.'
 resource: modules/darwin/podman-desktop.nix
 tags: [nix, module, convention]
-timestamp: '2026-07-03T12:00:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-03T12:00:00-07:00 }
 ---
 
 Feature selection is expressed at the host, not scattered through a fan-out of

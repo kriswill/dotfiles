@@ -4,7 +4,11 @@ title: Homebrew
 description: 'nix-darwin''s homebrew module — declares the casks/brews/taps that must come from Homebrew rather than nixpkgs, with zap cleanup so anything not listed is uninstalled on rebuild.'
 resource: modules/darwin/homebrew.nix
 tags: [darwin-module]
-timestamp: '2026-06-03T08:57:29-07:00'
+generated: { by: okflight/0.4.0, at: 2026-06-03T08:57:29-07:00 }
+sources:
+  - id: nix-darwin-homebrew-options
+    resource: https://nix-darwin.github.io/nix-darwin/manual/index.html
+    title: nix-darwin homebrew options
 ---
 
 Declarative Homebrew via nix-darwin: taps (`steipete/tap`, `marcus/tap`),
@@ -32,7 +36,3 @@ via the [Dendritic module layout](../patterns/dendritic-modules.md).
 ## Source
 
 - Module: [`modules/darwin/homebrew.nix`](../../modules/darwin/homebrew.nix)
-
-## Citations
-
-- nix-darwin homebrew options — <https://nix-darwin.github.io/nix-darwin/manual/index.html>

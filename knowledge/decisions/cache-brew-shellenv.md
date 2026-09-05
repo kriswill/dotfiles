@@ -3,7 +3,11 @@ type: Decision
 title: Cache brew shellenv Output in darwin.zsh
 description: 'brew shellenv re-execs and re-emits identical static exports on every zsh start (~30ms); cache its output to a file and refresh only when the brew binary changes, mirroring the existing determinate-nixd completion cache.'
 tags: [zsh, performance, darwin]
-timestamp: '2026-07-16T18:00:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-16T18:00:00-07:00 }
+sources:
+  - id: docs-shell-startup-performance-md
+    resource: ../../docs/shell-startup-performance.md
+    title: '`docs/shell-startup-performance.md`'
 ---
 
 **Status:** active. **Where:**
@@ -51,7 +55,3 @@ git info in the prompt, a UX call rather than a bug fix). A stray
 root-owned `.cache/` directory found during the same investigation (making
 every `git status` in this repo print a permission-denied warning) was
 removed and gitignored (`/.cache`) as a separate, unrelated cleanup.
-
-## Citations
-
-- [`docs/shell-startup-performance.md`](../../docs/shell-startup-performance.md) — full profiling methodology and numbers.

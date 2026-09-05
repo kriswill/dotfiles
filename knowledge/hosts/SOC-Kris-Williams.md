@@ -1,10 +1,10 @@
 ---
 type: Host
 title: SOC-Kris-Williams
-description: SOC-Kris-Williams - my work Apple M2 Pro, 32GB RAM hostname enforced by IT.
+description: 'SOC-Kris-Williams - my work Apple M2 Pro, 32GB RAM hostname enforced by IT.'
 resource: modules/hosts/SOC-Kris-Williams/default.nix
 tags: [host]
-timestamp: '2026-07-03T17:53:43+00:00'
+generated: { by: okflight/0.4.0, at: 2026-07-03T17:53:43+00:00 }
 ---
 
 SOC-Kris-Williams - my work Apple M2 Pro, 32GB RAM hostname enforced by IT.

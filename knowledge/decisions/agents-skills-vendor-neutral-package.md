@@ -1,9 +1,13 @@
 ---
 type: Decision
 title: Ship Tool-Agnostic Agent Skills From an agents Stow Package
-description: Skills that are not Claude-specific live in an agents stow package at ~/.agents/skills, with each Claude profile package carrying a repo-internal discovery symlink, so one copy serves every agent tool and every profile.
+description: 'Skills that are not Claude-specific live in an agents stow package at ~/.agents/skills, with each Claude profile package carrying a repo-internal discovery symlink, so one copy serves every agent tool and every profile.'
 tags: [claude, agents, stow, dotfiles]
-timestamp: '2026-08-19T11:35:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-08-19T11:35:00-07:00 }
+sources:
+  - id: adopt-a-dotfile-playbook
+    resource: ../playbooks/adopt-dotfile.md
+    title: Adopt a dotfile playbook
 ---
 
 **Status:** active. **Where:** [`home/agents/`](../../home/agents),
@@ -62,8 +66,3 @@ tracked in `~/.agents/.skill-lock.json`, and `--no-folding` leaves it alone.
 - Watch-out: `dots-adopt` moves the source, so adopting a directory that a
   skill manager owns would desync its lock file. Adopt only hand-authored
   skills.
-
-## Citations
-
-- [Adopt a dotfile playbook](../playbooks/adopt-dotfile.md) —
-  `dots-adopt agents .agents/skills/<name>`

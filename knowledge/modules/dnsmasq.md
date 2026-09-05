@@ -1,10 +1,20 @@
 ---
 type: Darwin Module
 title: Dnsmasq
-description: dnsmasq — lightweight DNS forwarder/cache, configured here as a loopback-bound local resolver for custom hostnames like `p4c`.
+description: 'dnsmasq — lightweight DNS forwarder/cache, configured here as a loopback-bound local resolver for custom hostnames like `p4c`.'
 resource: modules/darwin/dnsmasq.nix
 tags: [darwin-module]
-timestamp: '2026-07-04T00:00:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-04T00:00:00-07:00 }
+sources:
+  - id: dnsmasq-project-homepage-docs
+    resource: https://thekelleys.org.uk/dnsmasq/doc.html
+    title: dnsmasq project homepage & docs
+  - id: dnsmasq-man-page
+    resource: https://thekelleys.org.uk/dnsmasq/docs/dnsmasq-man.html
+    title: dnsmasq man page
+  - id: nix-darwin-services-dnsmasq-options-mynixos
+    resource: https://mynixos.com/nix-darwin/options/services.dnsmasq
+    title: nix-darwin `services.dnsmasq` options (MyNixOS)
 ---
 
 [dnsmasq](https://thekelleys.org.uk/dnsmasq/doc.html) is lightweight network
@@ -22,9 +32,3 @@ through to normal upstream resolution.
 ## Source
 
 - Module: [`modules/darwin/dnsmasq.nix`](../../modules/darwin/dnsmasq.nix)
-
-## Citations
-
-- [dnsmasq project homepage & docs](https://thekelleys.org.uk/dnsmasq/doc.html)
-- [dnsmasq man page](https://thekelleys.org.uk/dnsmasq/docs/dnsmasq-man.html)
-- [nix-darwin `services.dnsmasq` options (MyNixOS)](https://mynixos.com/nix-darwin/options/services.dnsmasq)

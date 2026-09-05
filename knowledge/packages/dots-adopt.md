@@ -4,7 +4,7 @@ title: Dots Adopt
 description: 'Custom Nix package ''dots-adopt''.'
 resource: pkgs/dots-adopt.nix
 tags: [package]
-timestamp: '2026-06-11T16:31:03-07:00'
+generated: { by: okflight/0.4.0, at: 2026-06-11T16:31:03-07:00 }
 ---
 
 Custom Nix package 'dots-adopt'.

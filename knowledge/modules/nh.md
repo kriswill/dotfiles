@@ -1,10 +1,10 @@
 ---
 type: Dual Module
 title: Nh
-description: nh (Nix Helper) plus the nrs/nrb/nrt rebuild helper executables (writeShellScriptBin, so they work in non-interactive shells and every shell alike).
+description: 'nh (Nix Helper) plus the nrs/nrb/nrt rebuild helper executables (writeShellScriptBin, so they work in non-interactive shells and every shell alike).'
 resource: modules/darwin/nh.nix
 tags: [darwin-module, nixos-module]
-timestamp: '2026-07-03T12:00:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-03T12:00:00-07:00 }
 ---
 
 nh (Nix Helper) — installs the package plus the rebuild helpers as real

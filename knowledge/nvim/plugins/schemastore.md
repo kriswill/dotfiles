@@ -4,7 +4,7 @@ title: schemastore.nvim
 description: JSON/YAML schema catalog consumed by the yaml language server (no setup — a pure data library).
 resource: home/nvim/.config/nvim/lua/plugins/schemastore.lua
 tags: [nvim-plugin, lsp]
-timestamp: '2026-07-02T00:00:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-02T00:00:00-07:00 }
 ---
 
 Pure data library — the spec has no `setup` at all; it just needs to be on

@@ -1,10 +1,10 @@
 ---
 type: Neovim Plugin
 title: nvim-highlight-colors
-description: Inline virtual-text color previews for hex/tailwind values, plus custom palettes — EFG design-system tokens and the full tmux 256-color set.
+description: 'Inline virtual-text color previews for hex/tailwind values, plus custom palettes — EFG design-system tokens and the full tmux 256-color set.'
 resource: home/nvim/.config/nvim/lua/plugins/highlight-colors.lua
 tags: [nvim-plugin, ui]
-timestamp: '2026-07-02T00:00:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-02T00:00:00-07:00 }
 ---
 
 Renders color swatches as virtual text next to color values (tailwind

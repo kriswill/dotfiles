@@ -1,10 +1,10 @@
 ---
 type: Neovim Plugin
 title: nvim-treesitter-textobjects
-description: Treesitter text objects (af/if, ac/ic, ao, as) and parameter swapping, main branch, keymaps set explicitly.
+description: 'Treesitter text objects (af/if, ac/ic, ao, as) and parameter swapping, main branch, keymaps set explicitly.'
 resource: home/nvim/.config/nvim/lua/plugins/treesitter-textobjects.lua
 tags: [nvim-plugin, treesitter, keymaps]
-timestamp: '2026-07-02T00:00:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-02T00:00:00-07:00 }
 ---
 
 Structural text objects on top of [treesitter](treesitter.md) parsers

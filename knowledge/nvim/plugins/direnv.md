@@ -1,10 +1,10 @@
 ---
 type: Neovim Plugin
 title: direnv.nvim
-description: direnv integration — manual allow/deny/reload under <leader>fe, statusline indicator, no autoload.
+description: 'direnv integration — manual allow/deny/reload under <leader>fe, statusline indicator, no autoload.'
 resource: home/nvim/.config/nvim/lua/plugins/direnv.lua
 tags: [nvim-plugin, tooling]
-timestamp: '2026-07-02T00:00:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-02T00:00:00-07:00 }
 ---
 
 Brings `.envrc` environments into Neovim. Autoload is deliberately **off**

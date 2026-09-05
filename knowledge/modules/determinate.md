@@ -4,7 +4,7 @@ title: Determinate
 description: 'Determinate Nix replaces snowglobe-factory''s Lix default: snowglobe sets nix.package at priority 1337 (setDefault); the determinate module''s plain assignment wins — no fork, no mkForce.'
 resource: modules/nixos/determinate.nix
 tags: [nixos-module]
-timestamp: '2026-07-03T21:31:10-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-03T21:31:10-07:00 }
 ---
 
 Determinate Nix replaces snowglobe-factory's Lix default: snowglobe sets nix.package at priority 1337 (setDefault); the determinate module's plain assignment wins — no fork, no mkForce. Its determinate-nixd owns /etc/nix/nix.conf and includes the NixOS-generated settings via /etc/nix/nix.custom.conf, so snowglobe's nix.settings survive. Why we left Lix: no Nix ≥2.26 relative-path input locking (lix#641), which made the ./flakes/* sub-flake inputs churn flake.lock on every rebuild.

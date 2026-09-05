@@ -1,10 +1,10 @@
 ---
 type: Sub-flake
 title: ccglass
-description: ccglass — local logging reverse-proxy + web dashboard for coding agents, built as a standalone binary.
+description: 'ccglass — local logging reverse-proxy + web dashboard for coding agents, built as a standalone binary.'
 resource: flakes/ccglass/
 tags: [sub-flake, package]
-timestamp: '2026-07-04T00:00:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-04T00:00:00-07:00 }
 ---
 
 ccglass — local logging reverse-proxy + web dashboard for coding agents, built as a standalone binary.

@@ -4,7 +4,7 @@ title: Git
 description: 'Installs the binaries the stow-managed git config invokes by bare name (git, gh, gh-config, git-lfs, difftastic, …); the config itself — including 1Password SSH signing — is stow, not nix.'
 resource: modules/darwin/git.nix
 tags: [darwin-module, nixos-module]
-timestamp: '2026-07-03T12:00:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-03T12:00:00-07:00 }
 ---
 
 Binaries-only module: it installs what the stow-managed git config

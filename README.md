@@ -26,7 +26,7 @@ Repo knowledge lives in two places:
 - [`AGENTS.md`](AGENTS.md) — conventions and working instructions for anyone
   (human or agent) making changes.
 - [`knowledge/`](knowledge/index.md) — an
-  [OKF](https://github.com/GoogleCloudPlatform/knowledge-catalog/tree/main/okf)
+  [OKF](https://github.com/GoogleCloudPlatform/open-knowledge-format)
   bundle of architecture patterns, decision records, playbooks, and a catalog
   of every module, package, and host, cross-linked into a graph. It captures
   the *why* behind the config — the part you can't recover from the code

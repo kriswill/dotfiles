@@ -1,10 +1,10 @@
 ---
 type: Neovim Plugin
 title: efmls-configs-nvim
-description: Prebuilt linter/formatter tool definitions for efm-langserver — a data dependency of lsp/efm.lua, no setup of its own.
+description: 'Prebuilt linter/formatter tool definitions for efm-langserver — a data dependency of lsp/efm.lua, no setup of its own.'
 resource: home/nvim/.config/nvim/lua/plugins/efmls-configs-nvim.lua
 tags: [nvim-plugin, lsp, formatting]
-timestamp: '2026-07-02T00:00:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-02T00:00:00-07:00 }
 ---
 
 Bare spec with no `setup` — it only needs to be on the runtimepath before

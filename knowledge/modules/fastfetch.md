@@ -1,10 +1,17 @@
 ---
 type: Dual Module
 title: Fastfetch
-description: 'fastfetch — fast neofetch-style system-info fetcher; both OSes wrap the binary so each host picks its logo image declaratively via programs.fastfetch.logo instead of config.jsonc.'
+description: fastfetch — fast neofetch-style system-info fetcher; both OSes wrap the binary so each host picks its logo image declaratively via programs.fastfetch.logo instead of config.jsonc.
 resource: modules/darwin/fastfetch.nix
 tags: [darwin-module, nixos-module]
-timestamp: '2026-06-11T16:31:03-07:00'
+generated: { by: okflight/0.4.0, at: 2026-06-11T16:31:03-07:00 }
+sources:
+  - id: fastfetch-repository
+    resource: https://github.com/fastfetch-cli/fastfetch
+    title: fastfetch repository
+  - id: fastfetch-logo-options
+    resource: https://github.com/fastfetch-cli/fastfetch/wiki/Logo-options
+    title: fastfetch logo options
 ---
 
 [fastfetch](https://github.com/fastfetch-cli/fastfetch) prints system info
@@ -39,8 +46,3 @@ the [Dendritic module layout](../patterns/dendritic-modules.md).
 - NixOS module: [`modules/nixos/fastfetch.nix`](../../modules/nixos/fastfetch.nix)
 - Shared wrapper builder: [`lib/fastfetch-logo-wrapper.nix`](../../lib/fastfetch-logo-wrapper.nix)
 - Stow package: [`home/fastfetch/`](../../home/fastfetch/) — see the [stow tree pattern](../patterns/stow-tree.md)
-
-## Citations
-
-- [fastfetch repository](https://github.com/fastfetch-cli/fastfetch)
-- [fastfetch logo options](https://github.com/fastfetch-cli/fastfetch/wiki/Logo-options)

@@ -4,7 +4,17 @@ title: Dendritic Module Layout
 description: Every .nix file under modules/ is auto-discovered as a flake-parts module via import-tree — no manual import lists anywhere.
 resource: flake.nix
 tags: [flake-parts, import-tree, architecture]
-timestamp: '2026-07-03T12:00:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-03T12:00:00-07:00 }
+sources:
+  - id: flake-parts
+    resource: https://flake.parts/
+    title: flake-parts
+  - id: import-tree
+    resource: https://github.com/vic/import-tree
+    title: import-tree
+  - id: dendritic-pattern
+    resource: https://github.com/mightyiam/dendritic
+    title: Dendritic pattern
 ---
 
 The flake is organized in the **Dendritic pattern**: `flake.nix` calls
@@ -38,9 +48,3 @@ Key consequences:
 
 Feature modules are mounted ungated per the
 [host-mounted modules pattern](host-mounted-modules.md).
-
-## Citations
-
-- [flake-parts](https://flake.parts/)
-- [import-tree](https://github.com/vic/import-tree)
-- [Dendritic pattern](https://github.com/mightyiam/dendritic)
