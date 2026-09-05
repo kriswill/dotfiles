@@ -1102,12 +1102,12 @@
         ]
       },
       "locked": {
-        "lastModified": 1785297306,
-        "narHash": "sha256-atIMvgzIwfMaCWnsQ/72Sum0n57pqoe8xKNmlq6F8XY=",
-        "rev": "9f4c82f6e53961dbbeb9348ffcec6a89852bd29c",
-        "revCount": 107,
+        "lastModified": 1788594291,
+        "narHash": "sha256-iMvm7RNdqDzKdUgiRXOMBaj6NC43WIpoCdu/RDa6COM=",
+        "rev": "26b0f908640a541315582fa49aa99ca6659c82a7",
+        "revCount": 138,
         "type": "tarball",
-        "url": "https://api.flakehub.com/f/pinned/kriswill/okflight/0.2.1/019fac04-533d-79f3-9419-35dc878a7223/source.tar.gz"
+        "url": "https://api.flakehub.com/f/pinned/kriswill/okflight/0.4.0/01a07089-1fd4-7653-855a-4125a1ec8c91/source.tar.gz"
       },
       "original": {
         "type": "tarball",
