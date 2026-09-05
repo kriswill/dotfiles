@@ -4,7 +4,7 @@ title: Darwin
 description: Declares `configurations.darwin.<name>` and realises each into a `darwinConfigurations.<name>` flake output (plus a toplevel build check).
 resource: modules/darwin.nix
 tags: [flake-parts]
-timestamp: '2026-05-24T19:25:21-07:00'
+generated: { by: okflight/0.4.0, at: 2026-05-24T19:25:21-07:00 }
 ---
 
 Declares `configurations.darwin.<name>` and realises each into a `darwinConfigurations.<name>` flake output (plus a toplevel build check). Adapted from the mightyiam/dendritic example `nixos.nix`.

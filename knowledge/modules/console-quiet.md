@@ -4,7 +4,7 @@ title: Console Quiet
 description: Sets boot.consoleLogLevel = 3 so the benign AMD i2c_piix4 SMBus probe-NAK errors stop flashing over the ly greeter; journald still records everything.
 resource: modules/hosts/nebula/console-quiet.nix
 tags: [nixos-module, host-specific]
-timestamp: '2026-07-03T12:00:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-03T12:00:00-07:00 }
 ---
 
 Sets `boot.consoleLogLevel = 3` so KERN_ERR messages stop rendering on the

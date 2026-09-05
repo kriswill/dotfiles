@@ -1,9 +1,19 @@
 ---
 type: Decision
 title: Keep One Set of Pane-Navigation Keys Across tmux and herdr
-description: Drop the nvim-tmux-navigation plugin for a local module with tmux and herdr backends, and give herdr the conditional binding it lacks via a herdr-nav shim rather than surrendering ctrl+h/j/k/l.
+description: 'Drop the nvim-tmux-navigation plugin for a local module with tmux and herdr backends, and give herdr the conditional binding it lacks via a herdr-nav shim rather than surrendering ctrl+h/j/k/l.'
 tags: [nvim, tmux, herdr, keymaps]
-timestamp: '2026-07-28T12:30:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-28T12:30:00-07:00 }
+sources:
+  - id: pkgs-herdr-nav-sh
+    resource: ../../pkgs/herdr-nav.sh
+    title: '`pkgs/herdr-nav.sh`'
+  - id: vim-tmux-navigator
+    resource: https://github.com/christoomey/vim-tmux-navigator
+    title: vim-tmux-navigator
+  - id: alexghergh-nvim-tmux-navigation
+    resource: https://github.com/alexghergh/nvim-tmux-navigation
+    title: alexghergh/nvim-tmux-navigation
 ---
 
 **Status:** active. **Where:** [multiplexer navigation](../nvim/multiplexer.md),
@@ -79,6 +89,3 @@ skips it.
 ## Citations
 
 - Commits `941d4d8` (herdr ctrl+hjkl binds), `6414751`
-- [`pkgs/herdr-nav.sh`](../../pkgs/herdr-nav.sh)
-- [vim-tmux-navigator](https://github.com/christoomey/vim-tmux-navigator)
-- [alexghergh/nvim-tmux-navigation](https://github.com/alexghergh/nvim-tmux-navigation) — the replaced plugin

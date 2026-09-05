@@ -4,7 +4,7 @@ title: User Packages
 description: 'The primary user''s per-user CLI toolbox on darwin (users.users.k.packages) — everyday tools from bat/fzf/ripgrep to lazygit and uv, and the darwin provisioner of the Bun and Node runtimes.'
 resource: modules/darwin/user-packages.nix
 tags: [darwin-module]
-timestamp: '2026-07-04T00:00:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-04T00:00:00-07:00 }
 ---
 
 The darwin per-user package list (`users.users.k.packages`): the everyday

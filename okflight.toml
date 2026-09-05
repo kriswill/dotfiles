@@ -25,7 +25,7 @@ date-format = "us"            # panel dates: "iso" (as written) | "us" (Jul 3, 2
 # name = "..."                # optional hard override of the git-derived owner/repo
 about-html = """A navigable map of this repository's <b>knowledge/</b> bundle — architecture patterns, \
 decision records, playbooks, and a catalog of every module, package, and host, authored in the \
-<a href="https://github.com/GoogleCloudPlatform/knowledge-catalog/blob/main/okf/SPEC.md" \
+<a href="https://github.com/GoogleCloudPlatform/open-knowledge-format/blob/main/SPEC.md" \
 target="_blank" rel="noopener">Open Knowledge Format</a> and cross-linked into a graph. \
 Click a node to read its document."""
 
@@ -33,7 +33,7 @@ Click a node to read its document."""
 max-bytes = 200000 # per-file source-embed cap
 
 [taxonomy]
-# Palette slot order: entry N -> CSS var --sN (12 theme slots; overflow types
+# Palette slot order: entry N -> CSS var --sN (32 theme slots — 12 curated + 20 derived; overflow types
 # get stable generated colors). Append-only — existing types keep their colors.
 types = [
   "Darwin Module",

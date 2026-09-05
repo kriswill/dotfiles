@@ -1,10 +1,17 @@
 ---
 type: Dual Module
 title: Codebase Memory Mcp
-description: Supervised codebase-memory-mcp MCP daemon (semantic code graph + HTTP UI on :9749) from the kriswill fork, whose flake ships both OS modules — a launchd user agent on darwin, a systemd user service on NixOS — plus the cbm-ctl control CLI.
+description: 'Supervised codebase-memory-mcp MCP daemon (semantic code graph + HTTP UI on :9749) from the kriswill fork, whose flake ships both OS modules — a launchd user agent on darwin, a systemd user service on NixOS — plus the cbm-ctl control CLI.'
 resource: modules/darwin/codebase-memory-mcp.nix
 tags: [darwin-module, nixos-module]
-timestamp: '2026-07-03T10:23:09-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-03T10:23:09-07:00 }
+sources:
+  - id: fork-supervision-layer-nix-tools-readme-md
+    resource: https://github.com/kriswill/codebase-memory-mcp/blob/nix/nix/tools/README.md
+    title: 'Fork supervision layer: nix/tools/README.md'
+  - id: upstream-server-deusdata-codebase-memory-mcp
+    resource: https://github.com/DeusData/codebase-memory-mcp
+    title: 'Upstream server: DeusData/codebase-memory-mcp'
 ---
 
 Both class files are one-line re-exports: the fork
@@ -32,11 +39,6 @@ Gated per host: enabled on [k](../hosts/k.md) and
 [nebula](../hosts/nebula.md) via
 [nebula-codebase-memory-mcp](nebula-codebase-memory-mcp.md); auto-discovered
 via the [Dendritic module layout](../patterns/dendritic-modules.md).
-
-## Citations
-
-- Fork supervision layer: [nix/tools/README.md](https://github.com/kriswill/codebase-memory-mcp/blob/nix/nix/tools/README.md)
-- Upstream server: [DeusData/codebase-memory-mcp](https://github.com/DeusData/codebase-memory-mcp)
 
 ## Source
 

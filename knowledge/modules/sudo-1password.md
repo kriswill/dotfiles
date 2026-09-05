@@ -1,10 +1,10 @@
 ---
 type: NixOS Module
 title: Sudo 1password
-description: sudo authentication via the 1Password SSH agent — pam_ssh_agent_auth installed as auth-sufficient on the sudo stack only, with the trusted key materialized via tmpfiles to pass StrictModes and gcr-ssh-agent disabled so the 1Password socket wins.
+description: 'sudo authentication via the 1Password SSH agent — pam_ssh_agent_auth installed as auth-sufficient on the sudo stack only, with the trusted key materialized via tmpfiles to pass StrictModes and gcr-ssh-agent disabled so the 1Password socket wins.'
 resource: modules/hosts/nebula/sudo-1password.nix
 tags: [nixos-module, host-specific]
-timestamp: '2026-07-03T12:00:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-03T12:00:00-07:00 }
 ---
 
 sudo authentication via the 1Password SSH agent using `pam_ssh_agent_auth`

@@ -1,9 +1,13 @@
 ---
 type: Decision
-title: Use Devenv's Native Hook, Not Direnv, for cd Auto-Activation
-description: devenv projects auto-activate via devenv 2.1's precmd hook instead of a direnvrc in ~/.config/direnv/lib, because devenv's direnvrc redefines nix-direnv helpers with different bodies.
+title: 'Use Devenv''s Native Hook, Not Direnv, for cd Auto-Activation'
+description: 'devenv projects auto-activate via devenv 2.1''s precmd hook instead of a direnvrc in ~/.config/direnv/lib, because devenv''s direnvrc redefines nix-direnv helpers with different bodies.'
 tags: [devenv, direnv, zsh]
-timestamp: '2026-08-01T18:07:17-07:00'
+generated: { by: okflight/0.4.0, at: 2026-08-01T18:07:17-07:00 }
+sources:
+  - id: devenv-2-1-announcement-devenv-hook
+    resource: https://devenv.sh/blog/2026/05/07/devenv-21-nix-with-zsh-fish-and-nushell-via-libghostty/
+    title: devenv 2.1 announcement — `devenv hook`
 ---
 
 **Status:** active. **Where:** [devenv](../modules/devenv.md),
@@ -46,6 +50,5 @@ shared direnv lib dir, no nix-direnv interference — direnv continues to own
 
 ## Citations
 
-- [devenv 2.1 announcement — `devenv hook`](https://devenv.sh/blog/2026/05/07/devenv-21-nix-with-zsh-fish-and-nushell-via-libghostty/)
 - Helper collision verified against devenv 2.1.2's `devenv direnvrc` output
   vs nix-direnv's `direnvrc` (nixpkgs pin, 2026-08-01).

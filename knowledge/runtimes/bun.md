@@ -3,7 +3,14 @@ type: Runtime
 title: Bun Runtime
 description: 'Bun — the single-binary, JavaScriptCore-based JS/TypeScript runtime, bundler, test runner, and package manager; this repo''s default script runtime, provisioned per-OS and consumed in three distinct modes by okf, ccglass, and qmd.'
 tags: [bun, runtime]
-timestamp: '2026-07-04T00:00:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-04T00:00:00-07:00 }
+sources:
+  - id: bun-sh
+    resource: https://bun.sh
+    title: bun.sh
+  - id: bun-documentation
+    resource: https://bun.sh/docs
+    title: Bun documentation
 ---
 
 [Bun](https://bun.sh) is a single-binary JavaScript/TypeScript toolkit: a
@@ -40,8 +47,3 @@ works before either host module is in play.
 - **Outside nix entirely** — qmd is `bun`-installed globally, which is why
   [qmd-sqlite](../modules/qmd-sqlite.md) has to paper over its hardcoded
   Homebrew paths from the nix side.
-
-## Citations
-
-- [bun.sh](https://bun.sh) — official site
-- [Bun documentation](https://bun.sh/docs)

@@ -1,9 +1,13 @@
 ---
 type: Decision
 title: Manage Neovim Plugins with Native vim.pack
-description: Drop lazy.nvim for Neovim 0.12's built-in vim.pack, recreating lazy-loading with a ~160-line dispatcher instead of a third-party plugin manager.
+description: 'Drop lazy.nvim for Neovim 0.12''s built-in vim.pack, recreating lazy-loading with a ~160-line dispatcher instead of a third-party plugin manager.'
 tags: [nvim, plugins]
-timestamp: '2026-07-02T00:00:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-02T00:00:00-07:00 }
+sources:
+  - id: nvim-pack-md-migration-notes-removed-in-a6f3bdf
+    resource: https://github.com/kriswill/dotfiles/blob/da708a24561e44dbf0006207a9ecbb3b3dc93e3d/NVIM_PACK.md
+    title: NVIM_PACK.md migration notes (removed in `a6f3bdf`)
 ---
 
 **Status:** active. **Where:** [Plugin & Startup Architecture](../nvim/architecture.md).
@@ -47,4 +51,3 @@ that vim.pack's own `active` flag can't answer.
 
 - Commits `267dd6f` (migration), `6148abd` (PR #4 merge), `2e76ea3`
   (lazy-lock.json removal), `e1b89c6` (plugin-inventory picker)
-- [NVIM_PACK.md migration notes (removed in `a6f3bdf`)](https://github.com/kriswill/dotfiles/blob/da708a24561e44dbf0006207a9ecbb3b3dc93e3d/NVIM_PACK.md)

@@ -1,10 +1,14 @@
 ---
 type: Neovim Config
 title: Plugin & Startup Architecture
-description: How the config boots and how plugins are managed — native vim.pack behind a hand-rolled trigger dispatcher (now/later/ft/cmd/keys), with explicit load order.
+description: 'How the config boots and how plugins are managed — native vim.pack behind a hand-rolled trigger dispatcher (now/later/ft/cmd/keys), with explicit load order.'
 resource: home/nvim/.config/nvim/lua/config/pack.lua
 tags: [nvim, architecture]
-timestamp: '2026-07-02T00:00:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-02T00:00:00-07:00 }
+sources:
+  - id: removed-migration-notes-nvim-pack-md
+    resource: https://github.com/kriswill/dotfiles/blob/da708a24561e44dbf0006207a9ecbb3b3dc93e3d/NVIM_PACK.md
+    title: Removed migration notes `NVIM_PACK.md`
 ---
 
 The whole config is plain [Lua](../languages/lua.md) on Neovim ≥ 0.12
@@ -85,4 +89,3 @@ files use hyphenated names (`oil-nvim.lua`, not `oil.nvim.lua`) because
 
 - Commits `267dd6f` (lazy.nvim → vim.pack migration), `1fb733b` (stow
   migration)
-- [Removed migration notes `NVIM_PACK.md`](https://github.com/kriswill/dotfiles/blob/da708a24561e44dbf0006207a9ecbb3b3dc93e3d/NVIM_PACK.md)

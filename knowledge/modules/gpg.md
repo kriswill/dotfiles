@@ -1,10 +1,10 @@
 ---
 type: Dual Module
 title: Gpg
-description: 'gpg-agent on both OSes with enableSSHSupport deliberately false — 1Password owns SSH_AUTH_SOCK; gpg only backs `pass` and ad-hoc gpg use.'
+description: gpg-agent on both OSes with enableSSHSupport deliberately false — 1Password owns SSH_AUTH_SOCK; gpg only backs `pass` and ad-hoc gpg use.
 resource: modules/darwin/gpg.nix
 tags: [darwin-module, nixos-module]
-timestamp: '2026-07-03T12:00:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-03T12:00:00-07:00 }
 ---
 
 Enables `programs.gnupg.agent.enable = true` with

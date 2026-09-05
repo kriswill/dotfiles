@@ -1,9 +1,16 @@
 ---
 type: Decision
 title: Sops-Encrypt Private SSH Host Entries
-description: Other people's hostnames stay out of the public repo — private ssh Host blocks live in a dedicated sops file deployed to ~/.ssh/config.d/, which the public stow config Include-globs.
+description: 'Other people''s hostnames stay out of the public repo — private ssh Host blocks live in a dedicated sops file deployed to ~/.ssh/config.d/, which the public stow config Include-globs.'
 tags: [ssh, sops, secrets, privacy]
-timestamp: '2026-07-11T12:40:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-11T12:40:00-07:00 }
+sources:
+  - id: sops-nix
+    resource: https://github.com/Mic92/sops-nix
+    title: sops-nix
+  - id: source-modules-hosts-ssh-hosts-yaml
+    resource: ../../modules/hosts/ssh-hosts.yaml
+    title: 'Source: modules/hosts/ssh-hosts.yaml'
 ---
 
 **Status:** active — generalised 2026-07-11 into the
@@ -69,12 +76,3 @@ loose, untracked `~/.ssh/config.d/k-mini` entry was folded into the secret.
   rebuild (duplicate `Host` blocks are harmless — first-obtained value wins)
   and should be deleted.
 - Recipients are `k`-only until the other Macs derive age keys.
-
-## Citations
-
-- [sops-nix](https://github.com/Mic92/sops-nix) — per-secret `owner`/`path`/
-  `sopsFile` options ("Set secret permission/owner", "Emit plain file to
-  another location" sections)
-- Source: [`modules/hosts/ssh-hosts.yaml`](../../modules/hosts/ssh-hosts.yaml),
-  [`modules/hosts/k/default.nix`](../../modules/hosts/k/default.nix),
-  [`home/ssh/.ssh/config`](../../home/ssh/.ssh/config)

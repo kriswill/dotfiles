@@ -1,5 +1,5 @@
 ---
-okf_version: '0.1'
+okf_version: '0.2'
 ---
 
 # knowledge
@@ -16,7 +16,7 @@ derived `.codebase-memory/` code graph.
 ## Concepts
 
 * [Task Manuals (docs/)](manuals.md) - Entry point to the docs/ manuals layer — task-focused, machine-verified operational references with dated learnings, complementing knowledge/'s durable rationale and catalog.
-* [OKF Profile](okf-profile.md) - This bundle's conventions on top of OKF v0.1 — required fields, link style, resource semantics, entry quality bar, type registry, and tooling.
+* [OKF Profile](okf-profile.md) - This bundle's conventions on top of OKF v0.2 — required fields, link style, resource semantics, entry quality bar, type registry, and tooling.
 
 ## Subdirectories
 

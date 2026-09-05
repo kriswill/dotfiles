@@ -1,9 +1,18 @@
 ---
 type: Decision
 title: Viz Viewer — Svelte 5 on the Pure-Bun One-Shot Pipeline
-description: Rebuild the okf viz viewer on Svelte 5 runes via bun-plugin-svelte inside the existing single Bun.build call, keeping the self-contained viz.html output and wrapping the imperative Three.js scene instead of rewriting it.
+description: 'Rebuild the okf viz viewer on Svelte 5 runes via bun-plugin-svelte inside the existing single Bun.build call, keeping the self-contained viz.html output and wrapping the imperative Three.js scene instead of rewriting it.'
 tags: [viz, svelte, tooling]
-timestamp: '2026-07-02T00:00:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-02T00:00:00-07:00 }
+sources:
+  - id: bun-plugin-svelte
+    resource: https://www.npmjs.com/package/bun-plugin-svelte
+    title: bun-plugin-svelte
+  - id: svelte-docs
+    resource: https://svelte.dev/docs/svelte/overview
+    title: Svelte docs
+  - id: docs-svelt-learnings-md
+    resource: ../../docs/svelt/learnings.md
 ---
 
 **Status:** active. **Where:** okflight's `viz-app/`, built by
@@ -59,11 +68,8 @@ need build-time resolution), so a small preload loader compiles via
 
 ## Citations
 
-- [bun-plugin-svelte](https://www.npmjs.com/package/bun-plugin-svelte) 0.0.6
   under bun 1.3.13, svelte 5.56.4 (npm registry, verified 2026-07-02)
-- [Svelte docs](https://svelte.dev/docs/svelte/overview) — runes,
   `{@attach}`, `svelte/reactivity`
-- [../../docs/svelt/learnings.md](../../docs/svelt/learnings.md) — spike
   gate outcome and bun-test loader recipe
 - Baseline parity verified against the pre-rebuild viz.html (screenshots,
   `__okf` hooks, hash routing, dark mode) via chrome-devtools

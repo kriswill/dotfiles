@@ -1,10 +1,17 @@
 ---
 type: Darwin Module
 title: GUI Path
-description: launchd user-domain PATH injection — macOS gives Dock/Finder-launched apps a bare PATH, so this module publishes the nix profile bins to every GUI app at activation (making gh visible to Claude Code desktop's CI monitoring, git to editors).
+description: 'launchd user-domain PATH injection — macOS gives Dock/Finder-launched apps a bare PATH, so this module publishes the nix profile bins to every GUI app at activation (making gh visible to Claude Code desktop''s CI monitoring, git to editors).'
 resource: modules/darwin/gui-path.nix
 tags: [darwin-module, launchd, path]
-timestamp: '2026-07-17T02:08:13+00:00'
+generated: { by: okflight/0.4.0, at: 2026-07-17T02:08:13+00:00 }
+sources:
+  - id: launchd-user-envvariables-mynixos-option-referen
+    resource: https://mynixos.com/nix-darwin/option/launchd.user.envVariables
+    title: launchd.user.envVariables — MyNixOS option reference
+  - id: claude-code-desktop-docs
+    resource: https://code.claude.com/docs/en/desktop.md
+    title: Claude Code desktop docs
 ---
 
 macOS launchd starts GUI apps with `/usr/bin:/bin:/usr/sbin:/sbin` — the
@@ -37,8 +44,3 @@ auto-discovered via the [Dendritic module layout](../patterns/dendritic-modules.
 
 - Module: [`modules/darwin/gui-path.nix`](../../modules/darwin/gui-path.nix)
 - Probe shim: [`home/zsh/.zshrc`](../../home/zsh/.zshrc)
-
-## Citations
-
-- [launchd.user.envVariables — MyNixOS option reference](https://mynixos.com/nix-darwin/option/launchd.user.envVariables)
-- [Claude Code desktop docs](https://code.claude.com/docs/en/desktop.md) — documents the ~/.zshrc PATH-extraction probe

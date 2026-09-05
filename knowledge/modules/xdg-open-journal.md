@@ -1,10 +1,17 @@
 ---
 type: NixOS Module
 title: Xdg Open Journal
-description: PATH-shadowing xdg-open wrapper that diverts stdout to the systemd journal when running on a tty, hiding the portal reply tuple gdbus prints on every URL open while keeping it inspectable via journalctl.
+description: 'PATH-shadowing xdg-open wrapper that diverts stdout to the systemd journal when running on a tty, hiding the portal reply tuple gdbus prints on every URL open while keeping it inspectable via journalctl.'
 resource: modules/nixos/xdg-open-journal.nix
 tags: [nixos-module]
-timestamp: '2026-08-03T05:58:29+00:00'
+generated: { by: okflight/0.4.0, at: 2026-08-03T05:58:29+00:00 }
+sources:
+  - id: org-freedesktop-portal-openuri
+    resource: https://flatpak.github.io/xdg-desktop-portal/docs/doc-org.freedesktop.portal.OpenURI.html
+    title: org.freedesktop.portal.OpenURI
+  - id: xdg-portal-xdgopenuseportal
+    resource: https://mynixos.com/nixpkgs/option/xdg.portal.xdgOpenUsePortal
+    title: xdg.portal.xdgOpenUsePortal
 ---
 
 Snowglobe's desktop profile (enabled on [nebula](../hosts/nebula.md)) sets
@@ -40,8 +47,3 @@ auto-discovered via the [Dendritic module layout](../patterns/dendritic-modules.
 ## Source
 
 - Module: [`modules/nixos/xdg-open-journal.nix`](../../modules/nixos/xdg-open-journal.nix)
-
-## Citations
-
-- [org.freedesktop.portal.OpenURI](https://flatpak.github.io/xdg-desktop-portal/docs/doc-org.freedesktop.portal.OpenURI.html) — the method returns a Request object path; that reply is what gdbus prints
-- [xdg.portal.xdgOpenUsePortal](https://mynixos.com/nixpkgs/option/xdg.portal.xdgOpenUsePortal) — sets `NIXOS_XDG_OPEN_USE_PORTAL=1`, which forces xdg-open onto the portal path

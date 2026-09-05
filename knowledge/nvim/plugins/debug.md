@@ -4,7 +4,7 @@ title: nvim-dap (debug)
 description: DAP debugging with dap-ui and the Go adapter — loads only on first debug keypress; UI auto-opens on launch and closes on exit.
 resource: home/nvim/.config/nvim/lua/plugins/debug/
 tags: [nvim-plugin, debugging, keymaps]
-timestamp: '2026-07-02T00:00:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-02T00:00:00-07:00 }
 ---
 
 The whole debug stack (nvim-dap + nvim-dap-ui + nvim-dap-go + nvim-nio) is

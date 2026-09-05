@@ -1,9 +1,9 @@
 ---
 type: Decision
 title: Home-manager Retirement
-description: home-manager was removed entirely — every config is now a darwin module plus the stow tree, one evaluation model instead of two.
+description: 'home-manager was removed entirely — every config is now a darwin module plus the stow tree, one evaluation model instead of two.'
 tags: [home-manager, architecture]
-timestamp: '2026-07-03T12:00:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-03T12:00:00-07:00 }
 ---
 
 **Status:** done (2026). **Where:** repo-wide.

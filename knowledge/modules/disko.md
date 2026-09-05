@@ -1,10 +1,10 @@
 ---
 type: NixOS Module
 title: Disko
-description: Declarative disko layout for the NixOS NVMe — GPT with a 1M bios-boot partition, a 512M vfat ESP at /boot, and an unencrypted ext4 root filling the rest.
+description: 'Declarative disko layout for the NixOS NVMe — GPT with a 1M bios-boot partition, a 512M vfat ESP at /boot, and an unencrypted ext4 root filling the rest.'
 resource: modules/hosts/nebula/disko.nix
 tags: [nixos-module, host-specific]
-timestamp: '2026-07-03T12:00:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-03T12:00:00-07:00 }
 ---
 
 Declarative disko layout for the NixOS NVMe

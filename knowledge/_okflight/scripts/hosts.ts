@@ -110,7 +110,7 @@ export function scaffoldHosts(
       description: firstSentence(desc),
       resource: srcRel,
       tags: [classTag(cls), "host-specific"],
-      timestamp: gitISO(srcRel),
+      generated: ctx.generated(srcRel),
     }, [
       mdSafe(sentence(desc)),
       "",
@@ -157,7 +157,7 @@ export function scaffoldHosts(
       description: firstSentence(desc),
       resource: srcRel,
       tags: ["host"],
-      timestamp: gitISO(srcRel),
+      generated: ctx.generated(srcRel),
     }, [
       mdSafe(sentence(desc)),
       "",

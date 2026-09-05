@@ -1,10 +1,10 @@
 ---
 type: Neovim Plugin
 title: oil.nvim
-description: Directories as editable buffers, opened floating with `-`; hidden files shown, icons via mini.icons.
+description: 'Directories as editable buffers, opened floating with `-`; hidden files shown, icons via mini.icons.'
 resource: home/nvim/.config/nvim/lua/plugins/oil-nvim.lua
 tags: [nvim-plugin, files]
-timestamp: '2026-07-02T00:00:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-02T00:00:00-07:00 }
 ---
 
 Edit the filesystem like a buffer: `-` opens the parent directory in a

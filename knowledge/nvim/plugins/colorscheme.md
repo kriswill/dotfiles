@@ -1,10 +1,10 @@
 ---
 type: Neovim Plugin
 title: kanagawa.nvim
-description: The kanagawa "wave" colorscheme, loaded first and transparent, with markdown highlight-link overrides.
+description: 'The kanagawa "wave" colorscheme, loaded first and transparent, with markdown highlight-link overrides.'
 resource: home/nvim/.config/nvim/lua/plugins/colorscheme.lua
 tags: [nvim-plugin, ui]
-timestamp: '2026-07-02T00:00:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-02T00:00:00-07:00 }
 ---
 
 Kanagawa is the repo-wide theme (the Nix side has a `lib.kanagawa` palette

@@ -4,7 +4,7 @@ title: Node Runtime
 description: 'System-wide Node.js + Bun — infrastructure, not dev convenience: npx-launched MCP servers (Claude Code plugins) silently fail on NixOS without a node on PATH.'
 resource: modules/nixos/node-runtime.nix
 tags: [nixos-module]
-timestamp: '2026-07-03T12:00:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-03T12:00:00-07:00 }
 ---
 
 Installs `pkgs.nodejs` (`node`/`npm`/`npx`) and

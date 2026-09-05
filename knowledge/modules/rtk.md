@@ -4,7 +4,14 @@ title: Rtk
 description: 'rtk — CLI proxy that filters dev command output (git, grep, cargo, npm, docker, aws, …) before it reaches an LLM''s context.'
 resource: modules/darwin/rtk.nix
 tags: [darwin-module, nixos-module]
-timestamp: '2026-07-19T00:06:40+00:00'
+generated: { by: okflight/0.4.0, at: 2026-07-19T00:06:40+00:00 }
+sources:
+  - id: rtk-repository-readme
+    resource: https://github.com/rtk-ai/rtk
+    title: rtk repository & README
+  - id: rtk-project-site
+    resource: https://www.rtk-ai.app
+    title: rtk project site
 ---
 
 [rtk](https://github.com/rtk-ai/rtk) (Rust Token Killer) is a single-binary
@@ -51,8 +58,3 @@ coverage to `nix`/`direnv` wrappers — see the
 
 - darwin module: [`modules/darwin/rtk.nix`](../../modules/darwin/rtk.nix)
 - NixOS module: [`modules/nixos/rtk.nix`](../../modules/nixos/rtk.nix)
-
-## Citations
-
-- [rtk repository & README](https://github.com/rtk-ai/rtk)
-- [rtk project site](https://www.rtk-ai.app)

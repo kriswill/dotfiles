@@ -4,7 +4,14 @@ title: Localsearch
 description: 'Enables services.gnome.localsearch (the tracker-miners package''s new name), registering its D-Bus service file so GTK file managers can activate the Tracker3 filesystem indexer on demand instead of failing to find it.'
 resource: modules/nixos/localsearch.nix
 tags: [nixos-module]
-timestamp: '2026-07-19T02:38:28+00:00'
+generated: { by: okflight/0.4.0, at: 2026-07-19T02:38:28+00:00 }
+sources:
+  - id: nixos-modules-services-desktops-gnome-localsearc
+    resource: https://github.com/NixOS/nixpkgs/blob/master/nixos/modules/services/desktops/gnome/localsearch.nix
+    title: nixos/modules/services/desktops/gnome/localsearch.nix
+  - id: gnome-localsearch
+    resource: https://gitlab.gnome.org/GNOME/localsearch
+    title: GNOME LocalSearch
 ---
 
 One line of substance: `services.gnome.localsearch.enable = true`, which
@@ -23,8 +30,3 @@ fix as [gtk-dark](gtk-dark.md)'s dconf addition — see the
 ## Source
 
 - Module: [`modules/nixos/localsearch.nix`](../../modules/nixos/localsearch.nix)
-
-## Citations
-
-- [nixos/modules/services/desktops/gnome/localsearch.nix](https://github.com/NixOS/nixpkgs/blob/master/nixos/modules/services/desktops/gnome/localsearch.nix) — module source; `tracker-miners.enable` is a `mkRenamedOptionModule` alias to this
-- [GNOME LocalSearch](https://gitlab.gnome.org/GNOME/localsearch) — upstream (renamed from `tracker-miners` in nixpkgs, 2025)

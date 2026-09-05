@@ -4,7 +4,7 @@ title: Diffnav
 description: diffnav git diff pager.
 resource: modules/darwin/diffnav.nix
 tags: [darwin-module]
-timestamp: '2026-06-28T18:27:01-07:00'
+generated: { by: okflight/0.4.0, at: 2026-06-28T18:27:01-07:00 }
 ---
 
 diffnav git diff pager.

@@ -4,7 +4,7 @@ title: Neovim
 description: Installs Neovim plus every LSP/linter/formatter binary on the global PATH; the Lua config itself is stow-deployed and documented in the nvim knowledge area.
 resource: modules/darwin/neovim.nix
 tags: [darwin-module, nixos-module]
-timestamp: '2026-07-03T12:00:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-03T12:00:00-07:00 }
 ---
 
 Provisions the editor: Neovim and ~45 supporting binaries (language servers,

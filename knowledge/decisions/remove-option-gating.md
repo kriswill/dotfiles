@@ -1,9 +1,9 @@
 ---
 type: Decision
 title: Remove Option Gating; Mount Modules Into Hosts
-description: Dropped the kriswill.* namespace and its core.nix mkDefault fan-out — universal modules are ungated, host-selective ones gate on idiomatic programs./services. enables flipped per host, and hosts became modules/hosts/<hostname>/ folders mirroring the nebula-snowglobe layout.
+description: 'Dropped the kriswill.* namespace and its core.nix mkDefault fan-out — universal modules are ungated, host-selective ones gate on idiomatic programs./services. enables flipped per host, and hosts became modules/hosts/<hostname>/ folders mirroring the nebula-snowglobe layout.'
 tags: [nix, module, architecture]
-timestamp: '2026-07-03T12:00:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-03T12:00:00-07:00 }
 ---
 
 **Status:** active. **Where:** [host-mounted modules pattern](../patterns/host-mounted-modules.md),

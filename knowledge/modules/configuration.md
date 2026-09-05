@@ -1,10 +1,10 @@
 ---
 type: NixOS Module
 title: Configuration
-description: Nebula's baseline system config — locale/timezone, snowglobe-factory profile toggles, NVIDIA production driver, GRUB dual-boot via os-prober, initrd emergency access, sops-decrypted SSH host keys, and the host's package/program selections.
+description: 'Nebula''s baseline system config — locale/timezone, snowglobe-factory profile toggles, NVIDIA production driver, GRUB dual-boot via os-prober, initrd emergency access, sops-decrypted SSH host keys, and the host''s package/program selections.'
 resource: modules/hosts/nebula/configuration.nix
 tags: [nixos-module, host-specific]
-timestamp: '2026-07-03T12:00:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-03T12:00:00-07:00 }
 ---
 
 Nebula's baseline system configuration — everything host-wide that doesn't

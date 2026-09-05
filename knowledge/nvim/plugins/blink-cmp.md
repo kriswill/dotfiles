@@ -4,7 +4,7 @@ title: blink.cmp
 description: Completion engine (super-tab preset) over LSP/path/snippets/buffer with lazydev ranked first; cmdline completion with ghost text.
 resource: home/nvim/.config/nvim/lua/plugins/blink-cmp.lua
 tags: [nvim-plugin, completion]
-timestamp: '2026-07-02T00:00:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-02T00:00:00-07:00 }
 ---
 
 The completion engine, pinned to `vim.version.range("1.*")` — the only

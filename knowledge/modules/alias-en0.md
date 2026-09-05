@@ -4,7 +4,7 @@ title: Alias En0
 description: Alias a local dev IP onto en0 (work host only).
 resource: modules/hosts/SOC-Kris-Williams/alias-en0.nix
 tags: [darwin-module, host-specific]
-timestamp: '2026-07-03T10:23:09-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-03T10:23:09-07:00 }
 ---
 
 Alias a local dev IP onto en0 (work host only).

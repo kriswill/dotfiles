@@ -4,7 +4,7 @@ title: Direnv
 description: 'direnv + nix-direnv on both OSes; links nix-direnv''s stdlib into ~/.config/direnv/lib so `use flake` works, with a filename that deliberately sorts before direnv-nom''s wrapper.'
 resource: modules/darwin/direnv.nix
 tags: [darwin-module, nixos-module]
-timestamp: '2026-07-03T12:00:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-03T12:00:00-07:00 }
 ---
 
 Installs `direnv` + `nix-direnv` and links nix-direnv's stdlib

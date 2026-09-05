@@ -1,10 +1,10 @@
 ---
 type: Dual Module
 title: Direnv Nom
-description: Wraps nix-direnv's _nix() to pipe `use flake` build logs through nix-output-monitor, with an nvd closure diff after successful builds; wrapper text shared via lib/direnv-nom-wrapper.nix.
+description: 'Wraps nix-direnv''s _nix() to pipe `use flake` build logs through nix-output-monitor, with an nvd closure diff after successful builds; wrapper text shared via lib/direnv-nom-wrapper.nix.'
 resource: modules/darwin/direnv-nom.nix
 tags: [darwin-module, nixos-module]
-timestamp: '2026-07-03T12:00:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-03T12:00:00-07:00 }
 ---
 
 Wraps nix-direnv's internal `_nix()` function to pipe build logs through
