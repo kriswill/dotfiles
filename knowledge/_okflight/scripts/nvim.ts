@@ -57,7 +57,7 @@ export function scaffoldNvim(ctx: ScaffoldContext, repo: Repo): void {
       description: firstSentence(desc),
       resource,
       tags: ["nvim-plugin"],
-      timestamp: gitISO(srcRel),
+      generated: ctx.generated(srcRel),
     }, lines.join("\n"));
   }
 }

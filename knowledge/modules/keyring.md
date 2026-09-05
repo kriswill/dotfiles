@@ -4,7 +4,7 @@ title: Keyring
 description: 'snowglobe-factory installer key metadata (NOT GNOME Keyring) — user k''s ssh-ed25519 public key and nebula''s age recipient; do not remove.'
 resource: modules/nixos/keyring.nix
 tags: [nixos-module]
-timestamp: '2026-07-03T12:00:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-03T12:00:00-07:00 }
 ---
 
 Despite the name, this is **not** GNOME Keyring. It declares the

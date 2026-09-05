@@ -4,7 +4,20 @@ title: Helium Chrome Shim
 description: 'Plants an exec-wrapper at the canonical Google Chrome.app binary path on every rebuild, so Chrome-only tooling (chrome-devtools-mcp / Puppeteer channel ''stable'') launches Helium — no per-tool --executablePath wiring.'
 resource: modules/darwin/helium-chrome-shim.nix
 tags: [darwin-module]
-timestamp: '2026-07-10T16:43:25+00:00'
+generated: { by: okflight/0.4.0, at: 2026-07-10T16:43:25+00:00 }
+sources:
+  - id: manual-docs-helium-md
+    resource: ../../docs/helium.md
+    title: 'Manual: docs/helium.md'
+  - id: chrome-devtools-mcp
+    resource: https://github.com/ChromeDevTools/chrome-devtools-mcp
+    title: chrome-devtools-mcp
+  - id: puppeteer-browser-resolution-puppeteer-browsers
+    resource: https://pptr.dev/browsers-api
+    title: Puppeteer browser resolution (`@puppeteer/browsers`)
+  - id: helium-browser
+    resource: https://helium.computer/
+    title: Helium browser
 ---
 
 Puppeteer resolves channel `stable` on macOS by probing exactly
@@ -33,11 +46,3 @@ auto-discovered via the [Dendritic module layout](../patterns/dendritic-modules.
 ## Source
 
 - Module: [`modules/darwin/helium-chrome-shim.nix`](../../modules/darwin/helium-chrome-shim.nix)
-
-## Citations
-
-- Manual: [`docs/helium.md`](../../docs/helium.md) — dated learned-behaviour
-  entry with the full verification matrix
-- chrome-devtools-mcp — <https://github.com/ChromeDevTools/chrome-devtools-mcp>
-- Puppeteer browser resolution (`@puppeteer/browsers`) — <https://pptr.dev/browsers-api>
-- Helium browser — <https://helium.computer/>

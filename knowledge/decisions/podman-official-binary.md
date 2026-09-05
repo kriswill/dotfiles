@@ -1,10 +1,10 @@
 ---
 type: Decision
-title: Podman From the Official Binary, Self-contained
-description: podman is packaged as a fixed-output derivation of the official darwin_arm64 release (nixpkgs' derivation is linux-only) with vfkit + gvproxy bundled into its own libexec.
+title: 'Podman From the Official Binary, Self-contained'
+description: 'podman is packaged as a fixed-output derivation of the official darwin_arm64 release (nixpkgs'' derivation is linux-only) with vfkit + gvproxy bundled into its own libexec.'
 resource: pkgs/podman.nix
 tags: [podman, containers, packaging]
-timestamp: '2026-07-03T12:00:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-03T12:00:00-07:00 }
 ---
 
 **Status:** active. **Where:** [podman](../packages/podman.md),

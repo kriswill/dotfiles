@@ -4,7 +4,17 @@ title: OLED Resume Bump
 description: 'DPMS off/on bounce of the DP-3 OLED after every resume from S3, via powerManagement.resumeCommands — works around the PG34WCDM panel staying black while Hyprland reports the output live.'
 resource: modules/hosts/nebula/oled-resume-bump.nix
 tags: [nixos-module, host-specific, hyprland, display]
-timestamp: '2026-07-16T00:40:55+00:00'
+generated: { by: okflight/0.4.0, at: 2026-07-16T00:40:55+00:00 }
+sources:
+  - id: powermanagement-resumecommands-option-reference
+    resource: https://search.nixos.org/options?channel=unstable&show=powerManagement.resumeCommands&query=powerManagement.resumeCommands
+    title: '`powerManagement.resumeCommands` option reference'
+  - id: docs-hyprland-md
+    resource: ../../docs/hyprland.md
+    title: '`docs/hyprland.md`'
+  - id: docs-suspend-md
+    resource: ../../docs/suspend.md
+    title: '`docs/suspend.md`'
 ---
 
 The PG34WCDM OLED (DP-3) sometimes doesn't wake after suspend: the panel shows
@@ -36,9 +46,3 @@ that host's configuration per the
 ## Source
 
 - Module: [`modules/hosts/nebula/oled-resume-bump.nix`](../../modules/hosts/nebula/oled-resume-bump.nix)
-
-## Citations
-
-- [`powerManagement.resumeCommands` option reference](https://search.nixos.org/options?channel=unstable&show=powerManagement.resumeCommands&query=powerManagement.resumeCommands)
-- [`docs/hyprland.md`](../../docs/hyprland.md) — DP-3 wake/blank failure class, hyprctl Lua syntax
-- [`docs/suspend.md`](../../docs/suspend.md) — nebula sleeps in S3 (`deep`); BIOS wake gotchas

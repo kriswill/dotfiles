@@ -1,10 +1,17 @@
 ---
 type: Pattern
 title: Snapshot-Synced Configs
-description: Apps that rewrite their config via atomic rename (Helium, Noctalia) can't be stowed — settings are git-tracked as snapshots under config/, synced explicitly with per-app capture/restore/diff CLIs; Helium's snapshots are age-encrypted at rest.
+description: 'Apps that rewrite their config via atomic rename (Helium, Noctalia) can''t be stowed — settings are git-tracked as snapshots under config/, synced explicitly with per-app capture/restore/diff CLIs; Helium''s snapshots are age-encrypted at rest.'
 resource: config/README.md
 tags: [config, snapshots, age, stow]
-timestamp: '2026-07-03T12:00:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-03T12:00:00-07:00 }
+sources:
+  - id: config-readme-md
+    resource: ../../config/README.md
+    title: '`config/README.md`'
+  - id: pkgs-helium-config-nix
+    resource: ../../pkgs/helium-config.nix
+    title: '`pkgs/helium-config.nix`'
 ---
 
 The repo's third config mechanism, beside the [stow tree](stow-tree.md) and
@@ -71,6 +78,4 @@ is actually needed.
 
 ## Citations
 
-- [`config/README.md`](../../config/README.md)
-- [`pkgs/helium-config.nix`](../../pkgs/helium-config.nix) + [`pkgs/helium-config.sh`](../../pkgs/helium-config.sh), [`pkgs/noctalia-config.nix`](../../pkgs/noctalia-config.nix)
 - Reached main with the dual-OS merge `76a05ff` (PR #22, `0b8a629`)

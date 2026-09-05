@@ -1,9 +1,9 @@
 ---
 type: Playbook
 title: Add a Custom Package
-description: Add a package under pkgs/ (or as a sub-flake), expose it via perSystem.packages and an overlay, and handle unfree licensing.
+description: 'Add a package under pkgs/ (or as a sub-flake), expose it via perSystem.packages and an overlay, and handle unfree licensing.'
 tags: [nix, packaging]
-timestamp: '2026-07-03T12:00:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-03T12:00:00-07:00 }
 ---
 
 ## Examples

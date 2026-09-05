@@ -1,9 +1,9 @@
 ---
 type: Decision
 title: Extract okf to Its Own Repository (okflight)
-description: Promote flakes/okf to the private github:kriswill/okflight repo via git subtree split — the input-URL swap the sub-flake pattern promised — trading live working-tree edits for a pinned, independently-versioned dependency.
+description: 'Promote flakes/okf to the private github:kriswill/okflight repo via git subtree split — the input-URL swap the sub-flake pattern promised — trading live working-tree edits for a pinned, independently-versioned dependency.'
 tags: [okf, sub-flake, extraction, okflight]
-timestamp: '2026-07-05T00:00:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-05T00:00:00-07:00 }
 ---
 
 **Status:** active; **2026-07-11 update:** okflight went public — the input

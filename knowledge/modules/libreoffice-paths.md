@@ -4,7 +4,7 @@ title: Libreoffice Paths
 description: 'Moves LibreOffice''s user-writable paths out of ~/.config/libreoffice into XDG data/state dirs by seeding both the modern and legacy path nodes into registrymodifications.xcu — idempotent, skip-if-running, subshell-confined.'
 resource: modules/nixos/libreoffice-paths.nix
 tags: [nixos-module]
-timestamp: '2026-07-03T12:00:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-03T12:00:00-07:00 }
 ---
 
 Redirects LibreOffice's user-writable paths (Backup, AutoCorrect, AutoText,

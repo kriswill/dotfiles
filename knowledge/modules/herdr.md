@@ -4,7 +4,14 @@ title: Herdr
 description: 'herdr — terminal agent multiplexer (run several coding agents in persistent, SSH-reachable sessions); built on both OSes from the kriswill/herdr staging fork (upstream v0.8.2 + our ANSI tab-bar command-entry commits).'
 resource: modules/darwin/herdr.nix
 tags: [darwin-module, nixos-module]
-timestamp: '2026-07-28T01:39:41+00:00'
+generated: { by: okflight/0.4.0, at: 2026-07-28T01:39:41+00:00 }
+sources:
+  - id: herdr-project-site
+    resource: https://herdr.dev
+    title: herdr project site
+  - id: herdr-repository
+    resource: https://github.com/herdrdev/herdr
+    title: herdr repository
 ---
 
 [herdr](https://herdr.dev) is a terminal multiplexer for coding agents: it
@@ -64,8 +71,3 @@ auto-discovered via the [Dendritic module layout](../patterns/dendritic-modules.
 
 - Darwin module: [`modules/darwin/herdr.nix`](../../modules/darwin/herdr.nix)
 - NixOS module: [`modules/nixos/herdr.nix`](../../modules/nixos/herdr.nix)
-
-## Citations
-
-- [herdr project site](https://herdr.dev)
-- [herdr repository](https://github.com/herdrdev/herdr)

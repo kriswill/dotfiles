@@ -1,10 +1,10 @@
 ---
 type: NixOS Module
 title: Flatpak Repo User
-description: Masks snowglobe's system flatpak-repo service and replaces it with a per-user oneshot that registers Flathub in ~/.local/share/flatpak at login, gated on a DNS ExecCondition so offline logins skip cleanly.
+description: 'Masks snowglobe''s system flatpak-repo service and replaces it with a per-user oneshot that registers Flathub in ~/.local/share/flatpak at login, gated on a DNS ExecCondition so offline logins skip cleanly.'
 resource: modules/hosts/nebula/flatpak-repo-user.nix
 tags: [nixos-module, host-specific]
-timestamp: '2026-07-03T12:00:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-03T12:00:00-07:00 }
 ---
 
 Masks snowglobe's *system* `flatpak-repo` service

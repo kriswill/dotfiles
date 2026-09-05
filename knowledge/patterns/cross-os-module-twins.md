@@ -4,7 +4,14 @@ title: Cross-OS Module Twins
 description: A cross-platform feature is a twin pair — one module per class dir (modules/darwin/<name>.nix ↔ modules/nixos/<name>.nix) — with non-trivial shared text extracted to pure builders in lib/ and package lists kept in sync by hand.
 resource: modules/darwin/tmux.nix
 tags: [nix, darwin, nixos, cross-platform]
-timestamp: '2026-07-03T12:00:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-03T12:00:00-07:00 }
+sources:
+  - id: darwin-module-modules-darwin-tmux-nix
+    resource: ../../modules/darwin/tmux.nix
+    title: 'darwin module: modules/darwin/tmux.nix'
+  - id: shared-builders-lib-stow-restow-script-nix
+    resource: ../../lib/stow-restow-script.nix
+    title: 'Shared builders: lib/stow-restow-script.nix'
 ---
 
 Since the [dual-OS unification](../decisions/nixos-darwin-unification.md) the
@@ -74,6 +81,4 @@ gating retrofit is deferred until a second NixOS host appears, per the
 
 ## Citations
 
-- darwin module: [`modules/darwin/tmux.nix`](../../modules/darwin/tmux.nix) ↔ NixOS module: [`modules/nixos/tmux.nix`](../../modules/nixos/tmux.nix)
-- Shared builders: [`lib/stow-restow-script.nix`](../../lib/stow-restow-script.nix), [`lib/direnv-nom-wrapper.nix`](../../lib/direnv-nom-wrapper.nix)
 - Dual-OS merge `76a05ff` (landed via PR #22, `0b8a629`); twin machinery ported in `0576bba`

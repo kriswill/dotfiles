@@ -3,7 +3,7 @@ type: Decision
 title: Facet Classify Providers — nix-optional-attrs and command
 description: Generalize the facet build-side source from the Nix-only nix-packages table to a tagged classify union — the built-in nix-optional-attrs parser or an arbitrary command printing a JSON name->value map — so non-Nix repos can classify concepts by anything.
 tags: [viz, tooling, config, okf-generalization]
-timestamp: '2026-07-04T00:00:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-04T00:00:00-07:00 }
 ---
 
 **Status:** active. **Where:** schema in

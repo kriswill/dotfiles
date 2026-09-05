@@ -1,9 +1,13 @@
 ---
 type: Decision
 title: Patch Herdr to Render Metadata Tokens as Color Bars
-description: The pinned herdr input carries a source patch adding a `{ type = "token", bar = true }` ui.tab_bar_right entry that renders a focused-workspace metadata token as a full-color braille bar — because the tab bar sanitizes away ANSI and hard-codes segment styles, leaving no smuggling route.
+description: 'The pinned herdr input carries a source patch adding a `{ type = "token", bar = true }` ui.tab_bar_right entry that renders a focused-workspace metadata token as a full-color braille bar — because the tab bar sanitizes away ANSI and hard-codes segment styles, leaving no smuggling route.'
 tags: [herdr, patch, claude]
-timestamp: '2026-08-30T14:30:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-08-30T14:30:00-07:00 }
+sources:
+  - id: herdr-repository
+    resource: https://github.com/herdrdev/herdr
+    title: herdr repository
 ---
 
 **Status:** superseded — the bespoke `{ type = "token", bar = true }`
@@ -96,5 +100,4 @@ was removed.
 ## Citations
 
 - Commit `959a9c8`
-- [herdr repository](https://github.com/herdrdev/herdr) (patched rev
   `9eb5214`, tag v0.8.2)

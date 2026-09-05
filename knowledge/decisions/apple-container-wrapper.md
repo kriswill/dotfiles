@@ -1,10 +1,17 @@
 ---
 type: Decision
-title: Apple container — Repackage and Wrap, Don't Build
-description: Apple's container CLI is repackaged from the signed .pkg (never built from source) and wrapped so its install root resolves to the store path where the plugins actually live.
+title: 'Apple container — Repackage and Wrap, Don''t Build'
+description: 'Apple''s container CLI is repackaged from the signed .pkg (never built from source) and wrapped so its install root resolves to the store path where the plugins actually live.'
 resource: flakes/apple-container/README.md
 tags: [containers, packaging, code-signing]
-timestamp: '2026-07-02T00:00:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-02T00:00:00-07:00 }
+sources:
+  - id: sub-flake-readme
+    resource: ../../flakes/apple-container/README.md
+    title: Sub-flake README
+  - id: apple-container-installroot-swift
+    resource: https://github.com/apple/container
+    title: apple/container InstallRoot.swift
 ---
 
 **Status:** active. **Where:** [apple-container](../packages/apple-container.md)
@@ -38,8 +45,3 @@ the profile (which links `bin/` but not `libexec/`) and fails with
 - Ships CLI only; the runtime is managed by Apple's own launchd tooling.
 - After each bump the apiserver must be re-pointed
   (`container system stop && container system start`).
-
-## Citations
-
-- [Sub-flake README](../../flakes/apple-container/README.md)
-- [apple/container InstallRoot.swift](https://github.com/apple/container)
