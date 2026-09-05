@@ -3,7 +3,14 @@ type: Decision
 title: Hyprland Un-follows Nixpkgs and Substitutes From hyprland.cachix.org
 description: 'The hyprland input no longer follows our nixpkgs and nebula consumes inputs.hyprland.packages directly instead of the hyprland-packages/hyprland-extras overlays, with hyprland.cachix.org wired as a substituter (nebula daemon, CI nebula job, flake nixConfig) — the hypr* stack downloads instead of source-building whenever our nixpkgs is drv-equivalent to upstream''s lock, and hyprpolkitagent de-taints back to Hydra-cached nixpkgs drvs.'
 tags: [nix, cache, hyprland, ci]
-timestamp: '2026-07-12T08:30:00Z'
+generated: { by: okflight/0.4.0, at: 2026-07-12T08:30:00Z }
+sources:
+  - id: hyprland-wiki-cachix-page-cache-url-key-do-not-o
+    resource: https://wiki.hypr.land/Nix/Cachix/
+    title: 'Hyprland wiki: Cachix page (cache URL + key, "do not override nixpkgs")'
+  - id: ci-github-actions
+    resource: ci-github-actions.md
+    title: ci-github-actions
 ---
 
 **Status:** active. **Where:** `flake.nix` (hyprland input + `nixConfig`),
@@ -72,7 +79,5 @@ hypr* stack. Investigating "can we add a trusted cache?" surfaced three facts
 
 ## Citations
 
-- [Hyprland wiki: Cachix page (cache URL + key, "do not override nixpkgs")](https://wiki.hypr.land/Nix/Cachix/)
-- [ci-github-actions](ci-github-actions.md) — the revised accepted-cost
   bullet; the FlakeHub fallback this decision layers on.
 - Commits `2c9e134` (branch `hyprland-drop-follows`) and the adoption PR.

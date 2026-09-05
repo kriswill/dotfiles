@@ -4,7 +4,14 @@ title: Herdr Nav
 description: herdr-nav — a keybinding shim that gives herdr the vim-aware pane switching tmux gets from is_vim + if-shell — forwarding ctrl+h/j/k/l to a pane running vim instead of moving pane focus.
 resource: pkgs/herdr-nav.nix
 tags: [package, herdr, nvim]
-timestamp: '2026-07-28T12:30:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-28T12:30:00-07:00 }
+sources:
+  - id: herdr-project-site
+    resource: https://herdr.dev
+    title: herdr project site
+  - id: vim-tmux-navigator
+    resource: https://github.com/christoomey/vim-tmux-navigator
+    title: vim-tmux-navigator
 ---
 
 [herdr](../modules/herdr.md) has no conditional keybindings — a key bound to
@@ -75,8 +82,3 @@ Added per the [add-package playbook](../playbooks/add-package.md).
 - Script: [`pkgs/herdr-nav.sh`](../../pkgs/herdr-nav.sh)
 - Overlay: [`overlays/herdr-nav.nix`](../../overlays/herdr-nav.nix) — exposes/replaces `pkgs.herdr-nav`
 - Installed alongside herdr on both OSes by the [herdr module twins](../modules/herdr.md): [`modules/nixos/herdr.nix`](../../modules/nixos/herdr.nix), [`modules/darwin/herdr.nix`](../../modules/darwin/herdr.nix)
-
-## Citations
-
-- [herdr project site](https://herdr.dev)
-- [vim-tmux-navigator](https://github.com/christoomey/vim-tmux-navigator) — the `is_vim` pattern this reimplements

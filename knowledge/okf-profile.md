@@ -1,12 +1,19 @@
 ---
 type: Reference
 title: OKF Profile
-description: This bundle's conventions on top of OKF v0.1 — required fields, link style, resource semantics, entry quality bar, type registry, and tooling.
+description: 'This bundle''s conventions on top of OKF v0.2 — required fields, link style, resource semantics, entry quality bar, type registry, and tooling.'
 tags: [okf, meta]
-timestamp: '2026-07-04T00:00:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-04T00:00:00-07:00 }
+sources:
+  - id: okf-spec-md
+    resource: https://github.com/GoogleCloudPlatform/open-knowledge-format/blob/main/SPEC.md
+    title: OKF SPEC.md
+  - id: how-the-open-knowledge-format-can-improve-data-s
+    resource: https://cloud.google.com/blog/products/data-analytics/how-the-open-knowledge-format-can-improve-data-sharing
+    title: How the Open Knowledge Format can improve data sharing
 ---
 
-This bundle follows [OKF v0.1](https://github.com/GoogleCloudPlatform/knowledge-catalog/blob/main/okf/SPEC.md)
+This bundle follows [OKF v0.2](https://github.com/GoogleCloudPlatform/open-knowledge-format/blob/main/SPEC.md)
 with the profile choices below. Where the draft spec and Google's reference
 tooling disagree, we pick one and record it here.
 
@@ -19,7 +26,7 @@ built-in defaults reproduce exactly the rules below — this repo's
 `repo-links` without touching okf).
 
 - **Required frontmatter:** `type` (hard error when missing/empty; the only
-  spec-mandated field, always enforced). `title`, `description`, `timestamp`
+  spec-mandated field, always enforced). `title`, `description`, `generated`
   are recommended — warnings, promoted to errors by `okf validate --strict`
   (this matches the reference tooling's stricter validator). `resource` and
   `tags` are encouraged but unchecked.
@@ -35,22 +42,32 @@ built-in defaults reproduce exactly the rules below — this repo's
   remote renames. Abstract concepts (decisions, playbooks) may omit it.
   `Dual Module` docs (cross-OS twins) point `resource:` at the darwin
   implementation; the body's Source section lists both class files, and the
-  scaffolded `timestamp` is the newer of the two twins' last-commit dates.
-- **`timestamp`** is ISO-8601, "last meaningful change" — scaffolded docs use
-  the source file's last commit date.
+  scaffolded `generated.at` is the newer of the two twins' last-commit dates.
+- **`generated`** is `{ by: <actor>, at: <ISO-8601> }` (OKF v0.2 §5.2) — `at`
+  is "last meaningful change"; scaffolded docs use the source file's last
+  commit date and `by: okflight/<version>`; hand-authored docs say
+  `human:kris`, agent-written ones `<agent>/<version>`. `verified: { by, at }`
+  is added only after a person (or a named process) has checked the content
+  against its sources; `status: deprecated` keeps a superseded entry for
+  links and history; `stale_after` marks facts with a shelf life. The v0.1
+  `timestamp` and body `## Citations` list were migrated by `okf migrate`
+  (2026-09-04).
 - **Body section headings are H2** (`## Schema`, `## Examples`,
-  `## Citations`). The spec's examples use H1, but heading level carries no
+  `## Computation`). The spec's examples use H1, but heading level carries no
   OKF semantics, and with a frontmatter `title` a body H1 reads as a second
   title (markdownlint MD025). Generated `index.md` files carry an H1 title.
-- **Citations** are a `## Citations` section with a bullet list of markdown
-  links (commit hashes cited as `` `abc1234` `` inline).
+- **Sources** live in frontmatter `sources` (`id`, `resource`, `title`, plus
+  the credibility signals when known); per-claim attribution is a footnote
+  whose label is a `sources[].id` (`…documented.[^nix-darwin-manual]`).
+  Commit hashes are cited inline in prose as `` `abc1234` ``, never as
+  sources.
 - **`index.md` files are generated** by `okf index`. The
   prose blurb above the first heading is hand-maintained and preserved on
   regeneration (a directory's parent uses its blurb's first sentence as the
   description); the listing sections are overwritten — don't hand-edit them.
 - **`log.md`** is hand-maintained, newest-first, `## YYYY-MM-DD` headings,
   entries lead with `**Creation**` / `**Update**` / `**Deprecation**`.
-  **Logs are bundle-scoped** — per SPEC §7, a `log.md` "MAY appear at any
+  **Logs are bundle-scoped** — per SPEC §9, a `log.md` "MAY appear at any
   level of the hierarchy to record the history of changes to that scope":
   an entry lives in the `log.md` of the bundle directory owning its primary
   subject (`modules/log.md`, `decisions/log.md`, `packages/log.md`, …;
@@ -77,11 +94,11 @@ bar in the same change. Reference shapes: [dnsmasq](modules/dnsmasq.md)
   deviations from defaults, constraints and gotchas. Cut anything that
   restates the description or the source code; a body that only repeats the
   description isn't done.
-- **Citations** — link where authority actually lives: upstream project
+- **Sources** — link where authority actually lives: upstream project
   docs / man page; the option reference for darwin/nixos modules
   (nix-darwin manual, search.nixos.org, MyNixOS); the in-repo `docs/`
-  manual when one exists; commit hashes for decisions. Verify every URL
-  resolves before citing — never guess a link.
+  manual when one exists; commit hashes for decisions in the body. Verify
+  every URL resolves before citing — never guess a link.
 - **Cross-links (network binding)** — link every concept the body names:
   the host that enables it, the overlay/package that provides it, the twin
   module, the decisions that shaped it. Add the backlink from the target
@@ -148,8 +165,3 @@ published as public documentation at <https://kris.net/dotfiles/> — rebuilt
 and deployed by GitHub Pages CI (`.github/workflows/pages.yml`) on every
 push; the workflow checks out okflight at the flake.lock-pinned rev via a
 read-only deploy key, so CI always builds with the same okf this repo pins.
-
-## Citations
-
-- [OKF SPEC.md](https://github.com/GoogleCloudPlatform/knowledge-catalog/blob/main/okf/SPEC.md)
-- [How the Open Knowledge Format can improve data sharing](https://cloud.google.com/blog/products/data-analytics/how-the-open-knowledge-format-can-improve-data-sharing)

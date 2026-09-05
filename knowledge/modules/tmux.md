@@ -4,7 +4,7 @@ title: Tmux
 description: 'Installs tmux and generates plugins.conf — the one tmux file that must embed a /nix/store path (tmux-which-key''s rtp); tmux.conf and which-key''s config.yaml are stowed.'
 resource: modules/darwin/tmux.nix
 tags: [darwin-module, nixos-module]
-timestamp: '2026-07-03T12:00:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-03T12:00:00-07:00 }
 ---
 
 Installs `pkgs.tmux` and generates `plugins.conf` via `writeText` (which-key

@@ -4,7 +4,7 @@ title: Atuin Desktop
 description: 'Installs pkgs.atuin-desktop, the Tauri GUI runbook editor companion to the atuin CLI (see zsh.md).'
 resource: modules/nixos/atuin-desktop.nix
 tags: [nixos-module]
-timestamp: '2026-07-19T05:08:50+00:00'
+generated: { by: okflight/0.4.0, at: 2026-07-19T05:08:50+00:00 }
 ---
 
 One line: `environment.systemPackages = [ pkgs.atuin-desktop ];`. The

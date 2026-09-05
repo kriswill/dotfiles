@@ -1,10 +1,14 @@
 ---
 type: Decision
 title: codebase-memory-mcp via Nix-aware Fork
-description: The codebase-memory MCP server is consumed from the kriswill fork's nix branch (Nix symbols + flake topology, PR #19 upstream) with its index artifact kept out of git for now.
+description: 'The codebase-memory MCP server is consumed from the kriswill fork''s nix branch (Nix symbols + flake topology, PR #19 upstream) with its index artifact kept out of git for now.'
 resource: modules/darwin/codebase-memory-mcp.nix
 tags: [mcp, codebase-memory, fork]
-timestamp: '2026-07-02T00:00:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-02T00:00:00-07:00 }
+sources:
+  - id: kriswill-codebase-memory-mcp-pr-19
+    resource: https://github.com/kriswill/codebase-memory-mcp
+    title: 'kriswill/codebase-memory-mcp PR #19'
 ---
 
 **Status:** active. **Where:**
@@ -39,4 +43,3 @@ was blind to this repo's primary language.
 ## Citations
 
 - Commits `b64c2ca`, `2f22430`
-- [kriswill/codebase-memory-mcp PR #19](https://github.com/kriswill/codebase-memory-mcp)

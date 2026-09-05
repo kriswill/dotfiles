@@ -3,7 +3,14 @@ type: Language
 title: TypeScript Language
 description: 'TypeScript — JavaScript with static types; this repo''s default tooling language, executed directly by Bun with no tsc build step, spanning the okf CLI/viz-app, the skill drivers, and ccglass''s patched upstream.'
 tags: [typescript, language]
-timestamp: '2026-07-04T00:00:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-04T00:00:00-07:00 }
+sources:
+  - id: typescriptlang-org
+    resource: https://www.typescriptlang.org/
+    title: typescriptlang.org
+  - id: typescript-handbook
+    resource: https://www.typescriptlang.org/docs/handbook/intro.html
+    title: TypeScript Handbook
 ---
 
 [TypeScript](https://www.typescriptlang.org/) is JavaScript with syntax for
@@ -28,8 +35,3 @@ serves plain `.ts`/`.tsx` (workspace TypeScript SDK, inlay hints) while the
 files — deliberately
 scoped so the two never fight over a buffer. Formatting is biome via efm,
 with root markers narrowed to real `biome.json` files.
-
-## Citations
-
-- [typescriptlang.org](https://www.typescriptlang.org/) — official site
-- [TypeScript Handbook](https://www.typescriptlang.org/docs/handbook/intro.html)

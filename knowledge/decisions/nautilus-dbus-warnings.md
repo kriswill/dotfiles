@@ -3,7 +3,17 @@ type: Decision
 title: Declare dconf color-scheme and enable localsearch for Nautilus
 description: 'Fixed two of Nautilus''s three startup warnings under Hyprland by declaring the dconf color-scheme key the portal broadcasts (instead of relying on the deprecated gtk-application-prefer-dark-theme fallback) and by enabling services.gnome.localsearch so its D-Bus service is activatable; the third (Mutter ServiceChannel) has no fix outside GNOME Shell.'
 tags: [gtk, nautilus, dconf, hyprland, nixos]
-timestamp: '2026-07-18T19:39:32-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-18T19:39:32-07:00 }
+sources:
+  - id: modules-nixos-gtk-dark-nix
+    resource: ../../modules/nixos/gtk-dark.nix
+    title: '`modules/nixos/gtk-dark.nix`'
+  - id: programs-dconf-profiles
+    resource: https://mynixos.com/nixpkgs/option/programs.dconf.profiles
+    title: '`programs.dconf.profiles`'
+  - id: nixos-modules-services-desktops-gnome-localsearc
+    resource: https://github.com/NixOS/nixpkgs/blob/master/nixos/modules/services/desktops/gnome/localsearch.nix
+    title: nixos/modules/services/desktops/gnome/localsearch.nix
 ---
 
 **Status:** active. **Where:** [gtk-dark](../modules/gtk-dark.md),
@@ -71,9 +81,3 @@ NixOS config closes that gap short of running Mutter itself.
   fixing the warning (localsearch actually runs now).
 - Verified live: rebuilt (`nrs`), `nautilus .` re-run — warnings 1 and 2
   gone, warning 3 unchanged as expected.
-
-## Citations
-
-- [`modules/nixos/gtk-dark.nix`](../../modules/nixos/gtk-dark.nix), [`modules/nixos/localsearch.nix`](../../modules/nixos/localsearch.nix)
-- [`programs.dconf.profiles`](https://mynixos.com/nixpkgs/option/programs.dconf.profiles)
-- [nixos/modules/services/desktops/gnome/localsearch.nix](https://github.com/NixOS/nixpkgs/blob/master/nixos/modules/services/desktops/gnome/localsearch.nix)

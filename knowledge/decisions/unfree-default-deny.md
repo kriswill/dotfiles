@@ -1,10 +1,10 @@
 ---
 type: Decision
 title: Unfree Packages Are Deny-by-default
-description: nixpkgs.config.allowUnfree is false; each unfree package needs an explicit allowUnfreePredicate entry in core.nix, making every exception reviewable.
+description: 'nixpkgs.config.allowUnfree is false; each unfree package needs an explicit allowUnfreePredicate entry in core.nix, making every exception reviewable.'
 resource: modules/darwin/core.nix
 tags: [nixpkgs, licensing, policy]
-timestamp: '2026-07-03T12:00:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-03T12:00:00-07:00 }
 ---
 
 **Status:** active. **Where:** [core](../modules/core.md).

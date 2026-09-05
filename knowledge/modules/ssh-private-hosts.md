@@ -1,10 +1,14 @@
 ---
 type: Dual Module
 title: Ssh Private Hosts
-description: Deploys the sops-encrypted private ssh Host entries (one shared file, modules/hosts/ssh-hosts.yaml) to ~/.ssh/config.d/private-hosts, where the public stow ssh config Include-globs them.
+description: 'Deploys the sops-encrypted private ssh Host entries (one shared file, modules/hosts/ssh-hosts.yaml) to ~/.ssh/config.d/private-hosts, where the public stow ssh config Include-globs them.'
 resource: modules/darwin/ssh-private-hosts.nix
 tags: [darwin-module, nixos-module]
-timestamp: '2026-07-11T21:42:47+00:00'
+generated: { by: okflight/0.4.0, at: 2026-07-11T21:42:47+00:00 }
+sources:
+  - id: sops-nix
+    resource: https://github.com/Mic92/sops-nix
+    title: sops-nix
 ---
 
 Both twins declare the same [sops](sops.md) secret from the **shared**
@@ -32,7 +36,6 @@ A cross-OS twin — parallel implementations in each class dir (see the
 
 ## Citations
 
-- [sops-nix](https://github.com/Mic92/sops-nix) — per-secret
   `owner`/`path`/`sopsFile` options
 - `ssh_config(5)` — `Include` (relative to `~/.ssh`), `Match exec`
 

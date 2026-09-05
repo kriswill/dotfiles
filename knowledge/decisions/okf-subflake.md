@@ -1,9 +1,9 @@
 ---
 type: Decision
 title: Extract okf into a Sub-flake
-description: Move scripts/okf to flakes/okf with a real package output (vendored bun deps), keeping the impure dev-shell wrapper for fast iteration.
+description: 'Move scripts/okf to flakes/okf with a real package output (vendored bun deps), keeping the impure dev-shell wrapper for fast iteration.'
 tags: [sub-flake, okf, bun]
-timestamp: '2026-07-04T23:20:00+00:00'
+generated: { by: okflight/0.4.0, at: 2026-07-04T23:20:00+00:00 }
 ---
 
 **Status:** superseded by [okflight-extraction](okflight-extraction.md)

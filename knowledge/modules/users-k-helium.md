@@ -1,10 +1,10 @@
 ---
 type: NixOS Module
 title: Users K Helium
-description: Installs pkgs.helium-config for user k — the snapshot/restore CLI that syncs Helium's user settings into config/helium/ without symlinking the live Chromium profile.
+description: 'Installs pkgs.helium-config for user k — the snapshot/restore CLI that syncs Helium''s user settings into config/helium/ without symlinking the live Chromium profile.'
 resource: modules/hosts/nebula/users/k/helium.nix
 tags: [nixos-module, host-specific]
-timestamp: '2026-07-03T12:00:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-03T12:00:00-07:00 }
 ---
 
 Installs `pkgs.helium-config` in `users.users.k.packages` — the

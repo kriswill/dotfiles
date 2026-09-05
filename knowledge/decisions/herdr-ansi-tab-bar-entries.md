@@ -1,9 +1,16 @@
 ---
 type: Decision
 title: Replace the Token-Bar Patch with ANSI Tab-Bar Command Entries
-description: The fork's bespoke `{ type = "token", bar = true }` renderer is replaced by generalized command entries (`argv` + `ansi` fields) — herdr injects workspace metadata tokens as HERDR_TOKEN_* env and re-runs the command reactively, so bar rendering moves out of the patched binary into the userland dotbar-usage script.
+description: 'The fork''s bespoke `{ type = "token", bar = true }` renderer is replaced by generalized command entries (`argv` + `ansi` fields) — herdr injects workspace metadata tokens as HERDR_TOKEN_* env and re-runs the command reactively, so bar rendering moves out of the patched binary into the userland dotbar-usage script.'
 tags: [herdr, claude, statusline]
-timestamp: '2026-08-30T17:45:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-08-30T17:45:00-07:00 }
+sources:
+  - id: kriswill-herdr-staging-fork
+    resource: https://github.com/kriswill/herdr
+    title: kriswill/herdr staging fork
+  - id: herdr-repository
+    resource: https://github.com/herdrdev/herdr
+    title: herdr repository
 ---
 
 **Status:** active — since 2026-08-30 (commit `40a9543`; fork rev `b1b9e98`,
@@ -71,6 +78,4 @@ the fork rev at a glance.
 ## Citations
 
 - Commits `40a9543` (config + script + input bump), `c4b2ced` (build identity)
-- [kriswill/herdr staging fork](https://github.com/kriswill/herdr) (`custom`
   branch, rev `b1b9e98`)
-- [herdr repository](https://github.com/herdrdev/herdr)

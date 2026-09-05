@@ -1,9 +1,13 @@
 ---
 type: Playbook
 title: Rotate the nebula-gh Service-Account Token
-description: ~90-day rotation of the 1Password service-account token behind the gh wrapper's prompt-free op read — web-UI rotate, re-bank, sops re-set, rebuild, verify.
+description: '~90-day rotation of the 1Password service-account token behind the gh wrapper''s prompt-free op read — web-UI rotate, re-bank, sops re-set, rebuild, verify.'
 tags: [secrets, 1password]
-timestamp: '2026-07-18T23:55:00+00:00'
+generated: { by: okflight/0.4.0, at: 2026-07-18T23:55:00+00:00 }
+sources:
+  - id: manage-service-accounts
+    resource: https://developer.1password.com/docs/service-accounts/manage-service-accounts/
+    title: Manage service accounts
 ---
 
 Current token expires **2026-10-18** (1Password alert Oct 11). Background:
@@ -48,7 +52,3 @@ CLI — service accounts there support only `create`/`ratelimit`.
 6. **Reset the clock**: set the next expiry/alert on the new token if the
    web UI didn't carry it over, and update the expiry date at the top of
    this playbook and in [gh-op](../packages/gh-op.md).
-
-## Citations
-
-- [Manage service accounts](https://developer.1password.com/docs/service-accounts/manage-service-accounts/)

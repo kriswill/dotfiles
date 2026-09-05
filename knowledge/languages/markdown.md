@@ -3,7 +3,14 @@ type: Language
 title: Markdown Language
 description: 'Markdown — the repo''s documentation language (this knowledge bundle, the docs/ manuals, agent instructions), linted and formatted by rumdl via efm, with MD013 deliberately disabled because prose reflow does more harm than good.'
 tags: [markdown, language]
-timestamp: '2026-07-04T00:00:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-04T00:00:00-07:00 }
+sources:
+  - id: commonmark
+    resource: https://commonmark.org
+    title: CommonMark
+  - id: rumdl
+    resource: https://github.com/rvben/rumdl
+    title: rumdl
 ---
 
 [Markdown](https://commonmark.org) is the plain-text markup language that
@@ -32,9 +39,3 @@ provisioned by both [neovim](../modules/neovim.md) module twins.
 [core](../modules/core.md), config stowed at `home/glow/`); in the browser,
 [okf](../packages/okf.md)'s viz-app renders each concept's markdown inside
 the graph viewer.
-
-## Citations
-
-- [CommonMark](https://commonmark.org) — the Markdown specification
-- [rumdl](https://github.com/rvben/rumdl) — the Rust markdown
-  linter/formatter

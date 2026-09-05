@@ -4,7 +4,17 @@ title: Gtk Dark
 description: 'Installs the adw-gtk3 theme so the portal-broadcast gtk-theme=adw-gtk3-dark resolves, and declares the dconf color-scheme=prefer-dark key the portal reads for GTK4/libadwaita apps — dark theming without the GTK_THEME env var that breaks libadwaita styling.'
 resource: modules/nixos/gtk-dark.nix
 tags: [nixos-module]
-timestamp: '2026-07-05T12:00:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-05T12:00:00-07:00 }
+sources:
+  - id: adw-gtk3
+    resource: https://github.com/lassekongo83/adw-gtk3
+    title: adw-gtk3
+  - id: libadwaita-styles-appearance
+    resource: https://gnome.pages.gitlab.gnome.org/libadwaita/doc/main/styles-and-appearance.html
+    title: libadwaita styles & appearance
+  - id: programs-dconf-profiles
+    resource: https://mynixos.com/nixpkgs/option/programs.dconf.profiles
+    title: '`programs.dconf.profiles`'
 ---
 
 Two parts: `environment.systemPackages = [ pkgs.adw-gtk3 ]`, and
@@ -36,9 +46,3 @@ auto-discovered via the
 
 - Module: [`modules/nixos/gtk-dark.nix`](../../modules/nixos/gtk-dark.nix)
 - Manual: [`docs/libreoffice.md`](../../docs/libreoffice.md)
-
-## Citations
-
-- [adw-gtk3](https://github.com/lassekongo83/adw-gtk3) — the Adwaita-for-GTK3 theme
-- [libadwaita styles & appearance](https://gnome.pages.gitlab.gnome.org/libadwaita/doc/main/styles-and-appearance.html) — libadwaita ships and manages its own stylesheet (traditional GTK theming is not supported)
-- [`programs.dconf.profiles`](https://mynixos.com/nixpkgs/option/programs.dconf.profiles) — NixOS option reference for declaring default dconf values without home-manager

@@ -1,10 +1,23 @@
 ---
 type: Overlay
 title: Ld64 Lld
-description: TEMPORARY overlay linking kitty/vfkit/starship with LLVM lld on darwin — works around the pinned nixpkgs' cctools ld64 1010.6 SIGTRAP until the staging fix reaches nixos-unstable.
+description: 'TEMPORARY overlay linking kitty/vfkit/starship with LLVM lld on darwin — works around the pinned nixpkgs'' cctools ld64 1010.6 SIGTRAP until the staging fix reaches nixos-unstable.'
 resource: overlays/ld64-lld.nix
 tags: [overlay, darwin, temporary]
-timestamp: '2026-07-11T13:15:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-11T13:15:00-07:00 }
+sources:
+  - id: nixos-nixpkgs-536365
+    resource: https://github.com/NixOS/nixpkgs/pull/536365
+    title: NixOS/nixpkgs#536365
+  - id: kitty-workaround-83cc719d53
+    resource: https://github.com/NixOS/nixpkgs/commit/83cc719d53
+    title: kitty workaround `83cc719d53`
+  - id: vfkit-workaround-559ebc0633
+    resource: https://github.com/NixOS/nixpkgs/commit/559ebc0633
+    title: vfkit workaround `559ebc0633`
+  - id: starship-workaround-883e799eb2
+    resource: https://github.com/NixOS/nixpkgs/commit/883e799eb2
+    title: starship workaround `883e799eb2`
 ---
 
 The pinned nixpkgs' cctools ld64 1010.6 crashes (SIGTRAP, "Trace/BPT trap:
@@ -26,13 +39,6 @@ isDarwin` → empty set; [nebula](../hosts/nebula.md) cross-eval verified).
 [`modules/overlays.nix`](../../modules/overlays.nix)) at the first
 flake.lock bump where all three packages build without it. vfkit reaches the
 darwin hosts through [podman](podman.md)'s bundled machine helpers.
-
-## Citations
-
-- [NixOS/nixpkgs#536365](https://github.com/NixOS/nixpkgs/pull/536365) — root-cause fix on staging
-- [kitty workaround `83cc719d53`](https://github.com/NixOS/nixpkgs/commit/83cc719d53)
-- [vfkit workaround `559ebc0633`](https://github.com/NixOS/nixpkgs/commit/559ebc0633)
-- [starship workaround `883e799eb2`](https://github.com/NixOS/nixpkgs/commit/883e799eb2)
 
 ## Source
 

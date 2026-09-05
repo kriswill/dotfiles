@@ -1,9 +1,19 @@
 ---
 type: Decision
-title: Derive a Project's devenv.lock From Its flake.lock
-description: devenv-enabled flake projects pin devenv.yaml's shared inputs to the exact revs flake.lock locks — a sync script re-derives devenv.lock, CI gates parity plus an enterTest contract, and the weekly update PR is opened with a repo-scoped GitHub App token.
+title: 'Derive a Project''s devenv.lock From Its flake.lock'
+description: 'devenv-enabled flake projects pin devenv.yaml''s shared inputs to the exact revs flake.lock locks — a sync script re-derives devenv.lock, CI gates parity plus an enterTest contract, and the weekly update PR is opened with a repo-scoped GitHub App token.'
 tags: [devenv, ci, locking]
-timestamp: '2026-08-02T16:23:53-07:00'
+generated: { by: okflight/0.4.0, at: 2026-08-02T16:23:53-07:00 }
+sources:
+  - id: flake-explorer-pr-131
+    resource: https://github.com/kriswill/flake-explorer/pull/131
+    title: 'flake-explorer PR #131'
+  - id: peter-evans-create-pull-request-concepts-guideli
+    resource: https://github.com/peter-evans/create-pull-request/blob/main/docs/concepts-guidelines.md
+    title: peter-evans/create-pull-request — concepts & guidelines
+  - id: actions-create-github-app-token
+    resource: https://github.com/actions/create-github-app-token
+    title: actions/create-github-app-token
 ---
 
 **Status:** active. **Where:** [devenv](../modules/devenv.md); first consumer
@@ -54,11 +64,3 @@ and the standard PAT workaround expires and rides on a user account.
   client-id variable, private-key secret) but never expires, unlike a
   fine-grained PAT's annual rotation, and its PRs author as the app bot.
 - No-diff weeks open no PR (verified by a `workflow_dispatch` rehearsal).
-
-## Citations
-
-- [flake-explorer PR #131](https://github.com/kriswill/flake-explorer/pull/131)
-  (merge `366d59e`; the environment itself landed in
-  [PR #129](https://github.com/kriswill/flake-explorer/pull/129))
-- [peter-evans/create-pull-request — concepts & guidelines](https://github.com/peter-evans/create-pull-request/blob/main/docs/concepts-guidelines.md)
-- [actions/create-github-app-token](https://github.com/actions/create-github-app-token)
