@@ -120,6 +120,19 @@
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.rust-overlay.url = "github:oxalica/rust-overlay";
     };
+    # devenv from OUR fork's `custom` branch: upstream's v2.2.2 tag plus our
+    # patch commits — currently the terminal-query reply ordering fix for the
+    # `devenv shell` virtual-terminal mux (cachix/devenv#3130: CPR is answered
+    # locally while OSC queries round-trip to the real terminal, so termenv
+    # users like gh/glow got the cursor report first and left the colour
+    # reply in the tty buffer for zsh to eat). Rebase `custom` onto each new
+    # upstream tag and drop commits as they land upstream. Builds from source
+    # (devenv.cachix.org only caches upstream commits); the nixpkgs follow is
+    # deliberate so it shares our package set rather than pulling a second one.
+    devenv = {
+      url = "github:kriswill/devenv/custom";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     # tomato — Rust CLI to get/set TOML values preserving comments + formatting
     # (built on toml_edit). Not a flake; built via rustPlatform in pkgs/tomato.nix
     # and exposed as pkgs.tomato. Used by the Hyprland gaps-toggle to flip
