@@ -3,7 +3,7 @@ type: Playbook
 title: Bump ccglass
 description: Update the ccglass sub-flake for a new upstream release via the patch-ccglass skill.
 tags: [ccglass, maintenance]
-timestamp: '2026-07-02T00:00:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-02T00:00:00-07:00 }
 ---
 
 [ccglass](../packages/ccglass.md) tracks an upstream that needs a fork patch

@@ -4,7 +4,7 @@ title: Hardware Configuration
 description: 'nixos-generate-config output in the two-line dendritic wrapper: initrd kernel modules, kvm-amd, x86_64-linux hostPlatform, and AMD microcode updates.'
 resource: modules/hosts/nebula/hardware-configuration.nix
 tags: [nixos-module, host-specific]
-timestamp: '2026-07-03T12:00:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-03T12:00:00-07:00 }
 ---
 
 DENDRITIC WRAPPER: the generated module body is held under

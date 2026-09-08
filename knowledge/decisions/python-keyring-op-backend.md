@@ -1,9 +1,19 @@
 ---
 type: Decision
-title: Back python-keyring with 1Password, Not a Keyring Daemon
+title: 'Back python-keyring with 1Password, Not a Keyring Daemon'
 description: 'Gajim needed a password store; instead of running gnome-keyring, a ~60-line vendored python-keyring backend shells out to `op`, keeping every secret in 1Password. Serializes `op` calls with a file lock so Gajim''s parallel connect fetches don''t collide and reset the desktop-app integration.'
 tags: [secrets, 1password, keyring, stow]
-timestamp: '2026-07-05T20:30:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-05T20:30:00-07:00 }
+sources:
+  - id: home-python-keyring
+    resource: ../../home/python-keyring/.config/python_keyring/backends/op_keyring.py
+    title: '`home/python-keyring/`'
+  - id: python-keyring-config-docs
+    resource: https://github.com/jaraco/keyring#configuring
+    title: python-keyring config docs
+  - id: op-item-create
+    resource: https://www.1password.dev/cli/reference/management-commands/item/#item-create
+    title: op item create
 ---
 
 **Status:** active. **Where:** `home/python-keyring/` (backend), plus
@@ -96,9 +106,3 @@ daemon or package:
   property, not the failure — the collisions above happen while unlocked.)
 - The config hardcodes `/home/k` (keyring-path can't expand `~`); a second
   Linux user would need their own copy.
-
-## Citations
-
-- [`home/python-keyring/`](../../home/python-keyring/.config/python_keyring/backends/op_keyring.py)
-- [python-keyring config docs](https://github.com/jaraco/keyring#configuring) — `keyringrc.cfg`, `keyring-path`
-- [op item create](https://www.1password.dev/cli/reference/management-commands/item/#item-create) — stdin JSON template

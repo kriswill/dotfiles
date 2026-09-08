@@ -4,7 +4,7 @@ title: Cbissue
 description: 'Codeberg (Forgejo) issue CLIs — cbissue opens issues, cbissues browses them; the API token is fetched at call time via 1Password `op read`, nothing secret is stored.'
 resource: modules/nixos/cbissue.nix
 tags: [nixos-module]
-timestamp: '2026-07-03T12:00:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-03T12:00:00-07:00 }
 ---
 
 Installs two CLIs for Codeberg (Forgejo) issue tracking into

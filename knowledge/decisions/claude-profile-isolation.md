@@ -1,10 +1,14 @@
 ---
 type: Decision
 title: Claude Profile Isolation Strategy
-description: The claude wrapper prefers each profile's own interactive login and uses the Keychain token only as a fallback; the desktop app is pinned via a launchd Aqua-domain setenv plus a shell scrub.
+description: 'The claude wrapper prefers each profile''s own interactive login and uses the Keychain token only as a fallback; the desktop app is pinned via a launchd Aqua-domain setenv plus a shell scrub.'
 resource: modules/darwin/claude-account-selector/README.md
 tags: [claude, credentials, macos]
-timestamp: '2026-07-02T00:00:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-02T00:00:00-07:00 }
+sources:
+  - id: module-readme
+    resource: ../../modules/darwin/claude-account-selector/README.md
+    title: Module README
 ---
 
 **Status:** active. **Where:**
@@ -52,7 +56,3 @@ login per `CLAUDE_CONFIG_DIR`.
 - With the fallback symlink, env-loss is silent (a work session that misses
   the env var lands in the personal profile) and the unsegregated `~/.claude`
   scope effectively ceases to exist.
-
-## Citations
-
-- [Module README](../../modules/darwin/claude-account-selector/README.md)

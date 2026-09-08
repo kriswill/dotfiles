@@ -1,10 +1,10 @@
 ---
 type: Flake-parts Module
 title: Dev
-description: Development shell (deadnix, statix, nixfmt-tree, just, okf) and formatter.
+description: 'Development shell (deadnix, statix, nixfmt-tree, just, okf) and formatter.'
 resource: modules/dev.nix
 tags: [flake-parts]
-timestamp: '2026-07-05T00:00:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-05T00:00:00-07:00 }
 ---
 
 Development shell and formatter. Besides the

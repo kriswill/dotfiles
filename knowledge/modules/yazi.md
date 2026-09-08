@@ -4,7 +4,14 @@ title: Yazi
 description: 'yazi — the Rust terminal file manager; here installed system-wide with stow-managed config, a generated kanagawa-dragon flavor, and a mix of store-linked and vendored preview plugins.'
 resource: modules/darwin/yazi/default.nix
 tags: [darwin-module]
-timestamp: '2026-06-28T17:04:23-07:00'
+generated: { by: okflight/0.4.0, at: 2026-06-28T17:04:23-07:00 }
+sources:
+  - id: yazi-toml-configuration-reference
+    resource: https://yazi-rs.github.io/docs/configuration/yazi
+    title: yazi.toml configuration reference
+  - id: alberti42-faster-piper-yazi
+    resource: https://github.com/alberti42/faster-piper.yazi
+    title: alberti42/faster-piper.yazi
 ---
 
 Installs `yazi` plus `imagemagick` (required by the `font-dark` previewer)
@@ -43,8 +50,3 @@ pattern](../patterns/host-mounted-modules.md)), auto-discovered via the
 
 - Module: [`modules/darwin/yazi/default.nix`](../../modules/darwin/yazi/default.nix)
 - Stow package: [`home/yazi/`](../../home/yazi/) — see the [stow tree pattern](../patterns/stow-tree.md)
-
-## Citations
-
-- [yazi.toml configuration reference](https://yazi-rs.github.io/docs/configuration/yazi) — previewer/preloader rules
-- [alberti42/faster-piper.yazi](https://github.com/alberti42/faster-piper.yazi) — upstream of the vendored fork

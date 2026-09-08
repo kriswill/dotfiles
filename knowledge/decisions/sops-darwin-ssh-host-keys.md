@@ -1,9 +1,9 @@
 ---
 type: Decision
 title: sops-nix on Darwin via SSH-Host-Key Age Identities
-description: Every host's sops age identity derives from its SSH host key (ssh-to-age) — no new key material; darwin imports sops-nix's darwinModules.sops universally and stays inert until a host defines secrets.
+description: 'Every host''s sops age identity derives from its SSH host key (ssh-to-age) — no new key material; darwin imports sops-nix''s darwinModules.sops universally and stays inert until a host defines secrets.'
 tags: [secrets, sops, age, darwin]
-timestamp: '2026-07-03T14:00:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-03T14:00:00-07:00 }
 ---
 
 **Status:** active. **Where:** [.sops.yaml](../../.sops.yaml),

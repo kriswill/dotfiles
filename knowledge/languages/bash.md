@@ -3,7 +3,14 @@ type: Language
 title: Bash Language
 description: 'Bash — the shell scripting substrate for standalone scripts and nix-embedded wrappers, under strict mode + shellcheck everywhere; the interactive shell is zsh, and new tooling prefers bun + TypeScript.'
 tags: [bash, shell, language]
-timestamp: '2026-07-04T00:00:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-04T00:00:00-07:00 }
+sources:
+  - id: gnu-bash-manual
+    resource: https://www.gnu.org/software/bash/manual/
+    title: GNU Bash manual
+  - id: shellcheck
+    resource: https://www.shellcheck.net/
+    title: ShellCheck
 ---
 
 [Bash](https://www.gnu.org/software/bash/manual/) is the GNU
@@ -31,9 +38,3 @@ format via efm for sh/bash/zsh, with shfmt anchored on `.editorconfig` for
 indent rules; bashls's built-in shellcheck is disabled so diagnostics
 aren't doubled. Extensionless scripts are filetype-detected by shebang
 ([filetypes](../nvim/filetypes.md)).
-
-## Citations
-
-- [GNU Bash manual](https://www.gnu.org/software/bash/manual/)
-- [ShellCheck](https://www.shellcheck.net/) — the static analyzer enforced
-  both in-editor and inside `writeShellApplication` builds

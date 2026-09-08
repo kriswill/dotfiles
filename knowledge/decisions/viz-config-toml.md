@@ -1,9 +1,9 @@
 ---
 type: Decision
 title: Viz Config — Repo Specifics in a Root okf-viz.toml
-description: Move every dotfiles-specific string and setting out of the viz code into an optional repo-root okf-viz.toml (strict-parsed at build, embedded normalized in the #data blob); without it okf viz builds a generic viewer with no facet filters, alphabetical types, and a flat legend.
+description: 'Move every dotfiles-specific string and setting out of the viz code into an optional repo-root okf-viz.toml (strict-parsed at build, embedded normalized in the #data blob); without it okf viz builds a generic viewer with no facet filters, alphabetical types, and a flat legend.'
 tags: [viz, tooling, config]
-timestamp: '2026-07-04T00:00:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-04T00:00:00-07:00 }
 ---
 
 **Status:** active, extended by

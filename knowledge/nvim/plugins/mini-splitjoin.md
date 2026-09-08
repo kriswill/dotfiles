@@ -4,7 +4,7 @@ title: mini.splitjoin
 description: Split/join argument lists across lines with sj/sk; the default toggle mapping is disabled in favor of explicit directions.
 resource: home/nvim/.config/nvim/lua/plugins/mini-splitjoin.lua
 tags: [nvim-plugin, editing, keymaps]
-timestamp: '2026-07-02T00:00:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-02T00:00:00-07:00 }
 ---
 
 Splits or joins bracketed constructs (argument lists, tables, arrays). The

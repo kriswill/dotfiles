@@ -1,10 +1,10 @@
 ---
 type: NixOS Module
 title: Codebase Memory Mcp
-description: Flips services.codebase-memory-mcp.enable on nebula — the supervised code-graph daemon (systemd user service) + cbm-ctl from the fork's NixOS module.
+description: 'Flips services.codebase-memory-mcp.enable on nebula — the supervised code-graph daemon (systemd user service) + cbm-ctl from the fork''s NixOS module.'
 resource: modules/hosts/nebula/codebase-memory-mcp.nix
 tags: [nixos-module, host-specific]
-timestamp: '2026-07-06T04:14:27+00:00'
+generated: { by: okflight/0.4.0, at: 2026-07-06T04:14:27+00:00 }
 ---
 
 One-setting file: enables

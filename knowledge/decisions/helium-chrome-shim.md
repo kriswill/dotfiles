@@ -3,7 +3,14 @@ type: Decision
 title: Shim The Chrome.app Path Instead Of Rewiring MCP Config
 description: 'Point Chrome-only tooling at Helium by planting an exec-wrapper at the path Puppeteer probes, rather than overriding the chrome-devtools-mcp plugin''s args or replacing its MCP server.'
 tags: [darwin, browser, mcp]
-timestamp: '2026-07-10T17:05:00+00:00'
+generated: { by: okflight/0.4.0, at: 2026-07-10T17:05:00+00:00 }
+sources:
+  - id: manual-entry-docs-helium-md
+    resource: ../../docs/helium.md
+    title: 'Manual entry: docs/helium.md'
+  - id: chrome-devtools-mcp
+    resource: https://github.com/ChromeDevTools/chrome-devtools-mcp
+    title: chrome-devtools-mcp
 ---
 
 **Status:** active. **Where:** [helium-chrome-shim](../modules/helium-chrome-shim.md).
@@ -54,8 +61,3 @@ real Chrome (Mach-O, not `#!`).
 - chrome-devtools-mcp 1.5.0 offers no close-browser tool; launched Helium
   windows close when the MCP server stops (session end / `/mcp` reconnect).
   Upstream behaviour, unchanged by the shim.
-
-## Citations
-
-- Manual entry: [`docs/helium.md`](../../docs/helium.md) (2026-07-10 learned behaviour)
-- chrome-devtools-mcp — <https://github.com/ChromeDevTools/chrome-devtools-mcp>

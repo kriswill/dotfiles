@@ -3,7 +3,14 @@ type: Decision
 title: Use a 1Password Service-Account Token for Non-Interactive op Reads
 description: 'A vault-scoped, expiring 1Password service-account token (sops → /run/secrets/op-sa-token) replaces per-tty desktop-app authorization for the gh wrapper''s op read, trading no at-rest secrecy nebula ever had for prompt-free operation plus audit, revocation, and expiry.'
 tags: [secrets, 1password]
-timestamp: '2026-07-18T23:45:00+00:00'
+generated: { by: okflight/0.4.0, at: 2026-07-18T23:45:00+00:00 }
+sources:
+  - id: manage-service-accounts
+    resource: https://developer.1password.com/docs/service-accounts/manage-service-accounts/
+    title: Manage service accounts
+  - id: op-cli-app-integration-security
+    resource: https://developer.1password.com/docs/cli/app-integration-security/
+    title: op CLI app-integration security
 ---
 
 **Status:** active. **Where:** [gh-op](../packages/gh-op.md),
@@ -54,6 +61,4 @@ non-interactive alternative: service-account tokens.
 
 ## Citations
 
-- [Manage service accounts](https://developer.1password.com/docs/service-accounts/manage-service-accounts/) — rotation, expiry
-- [op CLI app-integration security](https://developer.1password.com/docs/cli/app-integration-security/) — the per-tty/10-min/12-h limits this routes around
 - `overlays/gh-op.nix`, `modules/hosts/nebula/configuration.nix`, `modules/hosts/nebula/secrets.yaml`

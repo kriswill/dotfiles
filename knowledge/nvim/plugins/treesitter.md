@@ -1,10 +1,10 @@
 ---
 type: Neovim Plugin
 title: nvim-treesitter
-description: Treesitter parsers on the main branch (0.12+ API) — async install, highlight+indent per filetype, TSUpdate wired to PackChanged.
+description: 'Treesitter parsers on the main branch (0.12+ API) — async install, highlight+indent per filetype, TSUpdate wired to PackChanged.'
 resource: home/nvim/.config/nvim/lua/plugins/treesitter.lua
 tags: [nvim-plugin, treesitter]
-timestamp: '2026-07-02T00:00:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-02T00:00:00-07:00 }
 ---
 
 Tracks nvim-treesitter's `main` branch (the rewritten Neovim 0.12+ API, no

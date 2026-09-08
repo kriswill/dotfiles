@@ -1,10 +1,17 @@
 ---
 type: Decision
 title: rtk Custom Filters for nix/direnv Wrapper Noise
-description: Added user-global rtk TOML filters for nix run/shell/develop/build/flake-check and direnv exec, discovered via rtk discover usage data; requires filter_stderr since both tools log to stderr, and only fires when the rtk prefix is typed explicitly.
+description: 'Added user-global rtk TOML filters for nix run/shell/develop/build/flake-check and direnv exec, discovered via rtk discover usage data; requires filter_stderr since both tools log to stderr, and only fires when the rtk prefix is typed explicitly.'
 resource: AGENTS.md
 tags: [rtk, nix, direnv, token-optimization]
-timestamp: '2026-07-19T00:00:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-19T00:00:00-07:00 }
+sources:
+  - id: rtk-ai-rtk-custom-filters-guide
+    resource: https://github.com/rtk-ai/rtk/blob/master/docs/guide/getting-started/configuration.md
+    title: rtk-ai/rtk — custom filters guide
+  - id: rtk-ai-rtk-toml-filter-dsl-reference
+    resource: https://github.com/rtk-ai/rtk/blob/master/src/filters/README.md
+    title: rtk-ai/rtk — TOML filter DSL reference
 ---
 
 **Status:** active. **Where:** [rtk](../packages/rtk.md) /
@@ -98,8 +105,3 @@ Irrelevant for `nix`/`direnv` since neither is a native rtk subcommand.
 - `nix eval` remains unfiltered; revisit only if a stdin-capable compaction
   path appears (e.g. a future `rtk json -` or a `truncate_lines_at`-based
   filter proves acceptable for JSON).
-
-## Citations
-
-- [rtk-ai/rtk — custom filters guide](https://github.com/rtk-ai/rtk/blob/master/docs/guide/getting-started/configuration.md)
-- [rtk-ai/rtk — TOML filter DSL reference](https://github.com/rtk-ai/rtk/blob/master/src/filters/README.md)

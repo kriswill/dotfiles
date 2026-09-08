@@ -1,10 +1,14 @@
 ---
 type: Pattern
 title: Host Registry Realisers
-description: Hosts register into typed configurations.<class>.<hostname> option registries; per-class realiser modules (darwin.nix via darwinSystem, nixos.nix via snowglobe-factory's mkNixosHost) turn each entry into a flake output plus a per-host flake check.
+description: 'Hosts register into typed configurations.<class>.<hostname> option registries; per-class realiser modules (darwin.nix via darwinSystem, nixos.nix via snowglobe-factory''s mkNixosHost) turn each entry into a flake output plus a per-host flake check.'
 resource: modules/nixos.nix
 tags: [flake-parts, nix, architecture]
-timestamp: '2026-07-03T12:00:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-03T12:00:00-07:00 }
+sources:
+  - id: modules-darwin-nix
+    resource: ../../modules/darwin.nix
+    title: '`modules/darwin.nix`'
 ---
 
 Hosts are not direct `darwinSystem`/`mkNixosHost` calls. Each registers into a
@@ -58,5 +62,4 @@ desktop machinery come for free, the extended-lib asymmetry is the price.
 
 ## Citations
 
-- [`modules/darwin.nix`](../../modules/darwin.nix), [`modules/nixos.nix`](../../modules/nixos.nix), [`modules/hosts/nebula/default.nix`](../../modules/hosts/nebula/default.nix)
 - Realisers kept separate at the dual-OS merge `76a05ff` (PR #22, `0b8a629`); darwin realiser adapted from the mightyiam/dendritic example

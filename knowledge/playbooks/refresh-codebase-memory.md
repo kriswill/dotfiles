@@ -3,7 +3,7 @@ type: Playbook
 title: Refresh the Codebase-memory Index
 description: Bootstrap or refresh the code-graph index the codebase-memory MCP server keeps for this repo.
 tags: [mcp, codebase-memory, maintenance]
-timestamp: '2026-07-02T00:00:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-02T00:00:00-07:00 }
 ---
 
 Background in [codebase-memory via Nix-aware fork](../decisions/codebase-memory-fork.md);

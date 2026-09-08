@@ -4,7 +4,7 @@ title: Packages
 description: Custom package outputs (also surfaced into nix-darwin via ./overlays.nix).
 resource: modules/packages.nix
 tags: [flake-parts]
-timestamp: '2026-06-30T23:08:15-07:00'
+generated: { by: okflight/0.4.0, at: 2026-06-30T23:08:15-07:00 }
 ---
 
 Custom package outputs (also surfaced into nix-darwin via ./overlays.nix).

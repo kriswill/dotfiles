@@ -1,9 +1,9 @@
 ---
 type: Decision
 title: Unify nebula-snowglobe and main Into One Dual-OS Flake
-description: Merged the orphan NixOS branch into main with --allow-unrelated-histories — one flake builds three darwin hosts and nebula; single nixpkgs on nixos-unstable (pinned at merge to nebula's rev), nebula's packages/ dissolved into pkgs/ + overlays, and the two class realisers (darwin.nix / nixos.nix) coexist unchanged.
+description: 'Merged the orphan NixOS branch into main with --allow-unrelated-histories — one flake builds three darwin hosts and nebula; single nixpkgs on nixos-unstable (pinned at merge to nebula''s rev), nebula''s packages/ dissolved into pkgs/ + overlays, and the two class realisers (darwin.nix / nixos.nix) coexist unchanged.'
 tags: [nix, architecture, nixos, darwin, merge]
-timestamp: '2026-07-03T14:00:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-03T14:00:00-07:00 }
 ---
 
 **Status:** active. **Where:** [flake.nix](../../flake.nix),

@@ -1,9 +1,9 @@
 ---
 type: Decision
 title: okf Generalization Arc — Complete
-description: The eight-step arc that turned okf from a dotfiles-specific tool into a generic OKF knowledge-bundle CLI — one okf.toml for all commands, configurable profile policy, VCS provider adapters (git + none), forge-agnostic links, classify providers, repo-owned scaffold hooks, okf init — finished extraction-ready in-tree; verified by a three-way second-repo smoke test.
+description: 'The eight-step arc that turned okf from a dotfiles-specific tool into a generic OKF knowledge-bundle CLI — one okf.toml for all commands, configurable profile policy, VCS provider adapters (git + none), forge-agnostic links, classify providers, repo-owned scaffold hooks, okf init — finished extraction-ready in-tree; verified by a three-way second-repo smoke test.'
 tags: [tooling, okf-generalization]
-timestamp: '2026-07-04T00:00:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-04T00:00:00-07:00 }
 ---
 
 **Status:** complete (2026-07-04). **Umbrella over:**

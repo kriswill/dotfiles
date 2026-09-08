@@ -4,7 +4,7 @@ title: Oksh
 description: 'Kris'' oksh.'
 resource: modules/darwin/oksh.nix
 tags: [darwin-module]
-timestamp: '2026-06-11T16:52:35-07:00'
+generated: { by: okflight/0.4.0, at: 2026-06-11T16:52:35-07:00 }
 ---
 
 Kris' oksh.

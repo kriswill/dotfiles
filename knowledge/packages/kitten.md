@@ -1,10 +1,10 @@
 ---
 type: Nix Package
 title: Kitten
-description: Kitten - A collection of small, useful programs for the kitty terminal.
+description: 'Kitten - A collection of small, useful programs for the kitty terminal.'
 resource: pkgs/kitten.nix
 tags: [package]
-timestamp: '2025-08-06T17:06:42-07:00'
+generated: { by: okflight/0.4.0, at: 2025-08-06T17:06:42-07:00 }
 ---
 
 Kitten - A collection of small, useful programs for the kitty terminal.

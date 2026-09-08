@@ -4,7 +4,14 @@ title: gh-op
 description: 'Linux-only gh wrapper sourcing GH_TOKEN from 1Password at runtime — via a vault-scoped service-account token when deployed, desktop-app auth otherwise — so ~/.config/gh/hosts.yml holds no plain-text token on nebula''s unencrypted disk.'
 resource: overlays/gh-op.nix
 tags: [overlay, secrets]
-timestamp: '2026-07-04T05:22:04+00:00'
+generated: { by: okflight/0.4.0, at: 2026-07-04T05:22:04+00:00 }
+sources:
+  - id: 1password-service-accounts
+    resource: https://developer.1password.com/docs/service-accounts/
+    title: 1Password service accounts
+  - id: op-cli-app-integration-security-model
+    resource: https://developer.1password.com/docs/cli/app-integration-security/
+    title: op CLI app-integration security model
 ---
 
 On Linux, wraps `gh` (symlinkJoin, so completions/man survive) to source its
@@ -51,8 +58,3 @@ Operational facts:
 ## Source
 
 - Overlay: [`overlays/gh-op.nix`](../../overlays/gh-op.nix)
-
-## Citations
-
-- [1Password service accounts](https://developer.1password.com/docs/service-accounts/)
-- [op CLI app-integration security model](https://developer.1password.com/docs/cli/app-integration-security/)

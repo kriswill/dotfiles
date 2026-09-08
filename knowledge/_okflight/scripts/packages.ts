@@ -44,7 +44,7 @@ export function scaffoldPackages(ctx: ScaffoldContext, repo: Repo): void {
       description: firstSentence(desc),
       resource: srcRel,
       tags: ["package"],
-      timestamp: gitISO(srcRel),
+      generated: ctx.generated(srcRel),
     }, lines.join("\n"));
   }
 
@@ -61,7 +61,7 @@ export function scaffoldPackages(ctx: ScaffoldContext, repo: Repo): void {
       description: firstSentence(desc),
       resource: srcRel,
       tags: ["overlay"],
-      timestamp: gitISO(srcRel),
+      generated: ctx.generated(srcRel),
     }, [
       mdSafe(sentence(desc)),
       "",
@@ -98,7 +98,7 @@ export function scaffoldPackages(ctx: ScaffoldContext, repo: Repo): void {
       description: firstSentence(desc),
       resource: `flakes/${entry}/`,
       tags: ["sub-flake", "package"],
-      timestamp: gitISO(`flakes/${entry}`),
+      generated: ctx.generated(`flakes/${entry}`),
     }, lines.join("\n"));
   }
 }

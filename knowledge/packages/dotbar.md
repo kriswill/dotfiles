@@ -1,9 +1,16 @@
 ---
 type: Nix Package
 title: dotbar
-description: Braille-dot progress bar CLI for statuslines and terminals, consumed straight from the tlehman/dotbar flake.
+description: 'Braille-dot progress bar CLI for statuslines and terminals, consumed straight from the tlehman/dotbar flake.'
 tags: [package]
-timestamp: '2026-08-30T20:00:00+00:00'
+generated: { by: okflight/0.4.0, at: 2026-08-30T20:00:00+00:00 }
+sources:
+  - id: upstream
+    resource: https://github.com/tlehman/dotbar
+    title: Upstream
+  - id: packaging-pr-pinned-to
+    resource: https://github.com/tlehman/dotbar/pull/1
+    title: Packaging PR pinned to
 ---
 
 Braille-dot progress bar CLI for statuslines and terminals, consumed straight
@@ -32,8 +39,3 @@ and the [indicator decision](../decisions/herdr-usage-tab-indicator.md).
 - Input pin + comment: [`flake.nix`](../../flake.nix)
 - Overlay: [`modules/overlays.nix`](../../modules/overlays.nix)
 - Version at last update: `0.1.0`
-
-## Citations
-
-- Upstream: <https://github.com/tlehman/dotbar>
-- Packaging PR pinned to: <https://github.com/tlehman/dotbar/pull/1>

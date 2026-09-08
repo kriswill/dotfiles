@@ -1,9 +1,28 @@
 ---
 type: Decision
-title: CI Builds Both Host Closures — No Signing Key, No Age Key, Ever
+title: 'CI Builds Both Host Closures — No Signing Key, No Age Key, Ever'
 description: 'GitHub Actions builds darwinConfigurations.k.system (free arm64 macOS runner, public repo) and nebula''s NixOS toplevel on build-relevant PRs, pushing both closures to the private FlakeHub Cache via OIDC, plus a weekly update-flake-lock PR via a fine-grained PAT. Doubly gated since 2026-07-11: a paths filter skips changes that cannot alter the closures, and a tree-equality gate skips main-push builds whose tree the merged PR already built and cached. The load-bearing security property: builds never decrypt sops secrets and every flake input is a public fetch (okf went public 2026-07), so CI holds zero build credentials — the Developer ID signing key never touches GitHub, and the cache needs no key at all.'
 tags: [ci, security, codesigning, cache]
-timestamp: '2026-07-10T21:30:00Z'
+generated: { by: okflight/0.4.0, at: 2026-07-10T21:30:00Z }
+sources:
+  - id: flakehub-cache-ci-only-push-jwt-auth-determinate
+    resource: https://docs.determinate.systems/flakehub/cache/
+    title: 'FlakeHub Cache: CI-only push, JWT auth, `determinate-nixd login` to pull'
+  - id: determinatesystems-flakehub-cache-action
+    resource: https://github.com/DeterminateSystems/flakehub-cache-action
+    title: DeterminateSystems/flakehub-cache-action
+  - id: github-workflows-are-not-triggered-by-github-tok
+    resource: https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/trigger-a-workflow#triggering-a-workflow-from-a-workflow
+    title: 'GitHub: workflows are not triggered by GITHUB_TOKEN events'
+  - id: determinatesystems-update-flake-lock
+    resource: https://github.com/DeterminateSystems/update-flake-lock
+    title: DeterminateSystems/update-flake-lock
+  - id: webfactory-ssh-agent
+    resource: https://github.com/webfactory/ssh-agent
+    title: webfactory/ssh-agent
+  - id: github-hosted-runners-standard-runners-are-free
+    resource: https://docs.github.com/en/actions/reference/runners/github-hosted-runners
+    title: 'GitHub-hosted runners: standard runners are free for public repositories'
 ---
 
 **Status:** active. **Where:** `.github/workflows/ci.yml`,
@@ -135,12 +154,6 @@ observation removed the entire hard part.
 
 ## Citations
 
-- [FlakeHub Cache: CI-only push, JWT auth, `determinate-nixd login` to pull](https://docs.determinate.systems/flakehub/cache/)
-- [DeterminateSystems/flakehub-cache-action](https://github.com/DeterminateSystems/flakehub-cache-action)
-- [GitHub: workflows are not triggered by GITHUB_TOKEN events](https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/trigger-a-workflow#triggering-a-workflow-from-a-workflow)
-- [DeterminateSystems/update-flake-lock](https://github.com/DeterminateSystems/update-flake-lock)
-- [webfactory/ssh-agent](https://github.com/webfactory/ssh-agent)
-- [GitHub-hosted runners: standard runners are free for public repositories](https://docs.github.com/en/actions/reference/runners/github-hosted-runners)
 - Decision context: the nas-mount codesigning record and the
   `docs/darwin-codesigning.md` manual — both land with PR #32; re-link
   here once it merges.

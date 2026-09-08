@@ -4,7 +4,11 @@ title: Sops
 description: sops-nix on macOS — universal secrets machinery whose age identity derives from the host SSH key; inert until a host declares secrets.
 resource: modules/darwin/sops.nix
 tags: [darwin-module]
-timestamp: '2026-07-11T12:40:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-11T12:40:00-07:00 }
+sources:
+  - id: sops-nix
+    resource: https://github.com/Mic92/sops-nix
+    title: sops-nix
 ---
 
 Imports `sops-nix.darwinModules.sops` on every darwin host and points
@@ -28,11 +32,6 @@ Consumers today: [host k](../hosts/k.md) (smoke-test secret) and the
 [ssh-private-hosts twins](ssh-private-hosts.md) (shared
 `modules/hosts/ssh-hosts.yaml`, k + nebula recipients). Auto-discovered via the
 [Dendritic module layout](../patterns/dendritic-modules.md).
-
-## Citations
-
-- [sops-nix](https://github.com/Mic92/sops-nix) — darwin module, per-secret
-  `owner`/`mode`/`path` options
 
 ## Source
 

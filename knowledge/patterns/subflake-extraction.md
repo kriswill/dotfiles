@@ -4,7 +4,7 @@ title: Sub-flake Extraction
 description: Packages destined for standalone life live under flakes/<name>/ as self-contained flakes consumed via relative-path inputs — extraction to a separate repo is a one-line URL swap.
 resource: flakes/
 tags: [flake, packaging, modularity]
-timestamp: '2026-07-02T00:00:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-02T00:00:00-07:00 }
 ---
 
 A package that warrants its own flake — forked or patched source,

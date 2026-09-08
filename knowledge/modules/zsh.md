@@ -4,7 +4,7 @@ title: Zsh
 description: 'Zsh with ZDOTDIR moved to ~/.config/zsh (exported from shellInit so it precedes .zshrc lookup), XDG history placement, starship-owned prompt, and the tools the stowed .zshrc calls by bare name.'
 resource: modules/darwin/zsh.nix
 tags: [darwin-module, nixos-module]
-timestamp: '2026-07-03T12:00:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-03T12:00:00-07:00 }
 ---
 
 Configures `programs.zsh` on both OSes: `ZDOTDIR` is exported to

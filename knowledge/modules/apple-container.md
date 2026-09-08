@@ -4,7 +4,7 @@ title: Apple Container
 description: apple-container ships its nix-darwin module with its sub-flake (./flakes/apple-container/darwin-module.nix); re-export it into the Dendritic module set so hosts pick it up like any in-tree modules/darwin/* module.
 resource: modules/darwin/apple-container.nix
 tags: [darwin-module]
-timestamp: '2026-07-03T10:23:09-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-03T10:23:09-07:00 }
 ---
 
 apple-container ships its nix-darwin module with its sub-flake (./flakes/apple-container/darwin-module.nix); re-export it into the Dendritic module set so hosts pick it up like any in-tree modules/darwin/* module. The module defaults services.apple-container.package to the sub-flake's own package, so no overlay or pkgs wiring is needed. Enable per host with `services.apple-container.enable = true;`.

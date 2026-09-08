@@ -3,7 +3,14 @@ type: Language
 title: Lua Language
 description: 'Lua — the small embeddable scripting language, used here in its Lua 5.1/LuaJIT dialect exclusively as the Neovim configuration language, formatted by stylua and served by lua-ls + lazydev.'
 tags: [lua, language]
-timestamp: '2026-07-04T00:00:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-04T00:00:00-07:00 }
+sources:
+  - id: lua-5-1-reference-manual
+    resource: https://www.lua.org/manual/5.1/
+    title: Lua 5.1 Reference Manual
+  - id: neovim-lua-guide
+    resource: https://neovim.io/doc/user/lua-guide.html
+    title: Neovim Lua guide
 ---
 
 [Lua](https://www.lua.org/manual/5.1/) is a small, embeddable, dynamically
@@ -28,9 +35,3 @@ format-on-save is filtered to efm as the single formatting authority
 **Language server** is lua-ls with its workspace library set to all Neovim
 runtime files, paired with [lazydev](../nvim/plugins/lazydev-nvim.md) so
 editing the config gets plugin-and-API-aware completion.
-
-## Citations
-
-- [Lua 5.1 Reference Manual](https://www.lua.org/manual/5.1/) — the dialect
-  Neovim's LuaJIT implements
-- [Neovim Lua guide](https://neovim.io/doc/user/lua-guide.html)

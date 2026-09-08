@@ -1,9 +1,9 @@
 ---
 type: Decision
 title: Tolerate the pnpm-10.29.2 Whitelist for Vesktop (For Now)
-description: nebula permits insecure pnpm-10.29.2 because nixpkgs' vesktop deliberately pins it (newer pnpm breaks its electron-builder at runtime); the analyzed whitelist-free fix — repacking upstream's prebuilt AppImage like wowup — is deferred until the whitelist actually blocks something or upstream stalls.
+description: 'nebula permits insecure pnpm-10.29.2 because nixpkgs'' vesktop deliberately pins it (newer pnpm breaks its electron-builder at runtime); the analyzed whitelist-free fix — repacking upstream''s prebuilt AppImage like wowup — is deferred until the whitelist actually blocks something or upstream stalls.'
 tags: [nixos, security, discord, nixpkgs]
-timestamp: '2026-07-03T15:30:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-03T15:30:00-07:00 }
 ---
 
 **Status:** active (revisit on nixpkgs bumps). **Where:**

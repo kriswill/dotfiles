@@ -4,7 +4,14 @@ title: Filetype Detection & ftplugins
 description: Custom filetype registrations plus shebang-based detection for extensionless scripts; per-filetype tweaks under ftplugin/.
 resource: home/nvim/.config/nvim/lua/config/filetypes.lua
 tags: [nvim, filetypes]
-timestamp: '2026-07-02T00:00:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-02T00:00:00-07:00 }
+sources:
+  - id: lua-config-filetypes-lua
+    resource: ../../home/nvim/.config/nvim/lua/config/filetypes.lua
+    title: '`lua/config/filetypes.lua`'
+  - id: ftplugin-markdown-lua
+    resource: ../../home/nvim/.config/nvim/ftplugin/markdown.lua
+    title: '`ftplugin/markdown.lua`'
 ---
 
 Filetype is what drives LSP attach and treesitter, so
@@ -43,8 +50,3 @@ into the dotfiles repo ([stow tree](../patterns/stow-tree.md) path) so words
 added with `zg` are version-controlled. The other five (gotmpl, gowork,
 templ, terraform-vars, yaml.docker-compose) are intentionally empty
 placeholders for filetypes whose real config lives in [LSP](lsp.md).
-
-## Citations
-
-- [`lua/config/filetypes.lua`](../../home/nvim/.config/nvim/lua/config/filetypes.lua)
-- [`ftplugin/markdown.lua`](../../home/nvim/.config/nvim/ftplugin/markdown.lua)

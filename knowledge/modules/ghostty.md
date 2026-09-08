@@ -1,10 +1,10 @@
 ---
 type: Dual Module
 title: Ghostty
-description: 'Ghostty terminal — each OS installs it its own way and generates its half of the split config (`config-file = ?os.conf`); the shared config is stowed.'
+description: Ghostty terminal — each OS installs it its own way and generates its half of the split config (`config-file = ?os.conf`); the shared config is stowed.
 resource: modules/darwin/ghostty.nix
 tags: [darwin-module, nixos-module]
-timestamp: '2026-07-03T12:00:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-03T12:00:00-07:00 }
 ---
 
 Ghostty terminal with a **split config**: the stow-managed shared config

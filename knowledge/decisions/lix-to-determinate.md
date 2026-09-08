@@ -1,9 +1,9 @@
 ---
 type: Decision
 title: Replace Lix With Determinate Nix
-description: nebula's Nix moved from Lix to Determinate Nix because Lix lacks Nix ≥2.26 relative-path input locking, which made the ./flakes/* sub-flake inputs churn flake.lock on every rebuild.
+description: 'nebula''s Nix moved from Lix to Determinate Nix because Lix lacks Nix ≥2.26 relative-path input locking, which made the ./flakes/* sub-flake inputs churn flake.lock on every rebuild.'
 tags: [nix, flakes, sub-flakes]
-timestamp: '2026-07-03T21:45:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-03T21:45:00-07:00 }
 ---
 
 **Status:** active. **Where:** [determinate](../modules/determinate.md); only

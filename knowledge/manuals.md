@@ -1,10 +1,14 @@
 ---
 type: Reference
 title: Task Manuals (docs/)
-description: Entry point to the docs/ manuals layer — task-focused, machine-verified operational references with dated learnings, complementing knowledge/'s durable rationale and catalog.
+description: 'Entry point to the docs/ manuals layer — task-focused, machine-verified operational references with dated learnings, complementing knowledge/''s durable rationale and catalog.'
 resource: docs
 tags: [docs, manuals, reference]
-timestamp: '2026-07-03T12:00:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-03T12:00:00-07:00 }
+sources:
+  - id: agents-md-manuals-docs
+    resource: ../AGENTS.md
+    title: 'AGENTS.md — "Manuals (docs/)"'
 ---
 
 The repo keeps two documentation layers with a deliberate division of labor
@@ -83,7 +87,3 @@ versions live in the manuals themselves, which lead with verified state.
   (niri-session-only) finding that niri has no
   `wp_color_management_v1` and hence no HDR; superseded by the Hyprland HDR
   doc, and niri has since been removed.
-
-## Citations
-
-- [AGENTS.md — "Manuals (docs/)"](../AGENTS.md)

@@ -36,7 +36,14 @@ alias rtkw='rtk-work'
 ## Pull the X11/XWayland clipboard into the Wayland one — Hyprland fails to
 ## bridge the CLIPBOARD selection from XWayland apps (WoW under Proton), so a
 ## copy in-game lands only in the X clipboard until pulled across.
-[[ $OSTYPE == linux* ]] && alias wowclip='nix shell nixpkgs#xclip -c xclip -o -selection clipboard -d :0 | wl-copy'
+## A function (not an alias) so non-interactive shells like Claude Code's
+## Bash tool can call it; echoes the pulled text so the caller sees it.
+[[ $OSTYPE == linux* ]] && wowclip() {
+  local text
+  text=$(nix shell nixpkgs#xclip -c xclip -o -selection clipboard -d :0) || return $?
+  printf '%s' "$text" | wl-copy
+  printf '%s\n' "$text"
+}
 
 ## man-page completion for bat-extras' `batman` (compinit ran in /etc/zshrc).
 compdef batman=man

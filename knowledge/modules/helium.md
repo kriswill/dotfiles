@@ -4,7 +4,7 @@ title: Helium
 description: 'Helium browser — enables the upstream programs.helium module and declares a root-owned Chromium managed policy in /etc (privacy baseline, DuckDuckGo, force-installed extensions).'
 resource: modules/nixos/helium/default.nix
 tags: [nixos-module]
-timestamp: '2026-07-03T12:00:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-03T12:00:00-07:00 }
 ---
 
 Two sibling files merge into the one deferredModule

@@ -1,10 +1,10 @@
 ---
 type: Neovim Plugin
 title: lazydev.nvim
-description: Neovim-API aware lua-language-server workspace for config development; ft-lazy on lua, luv types on vim.uv.
+description: 'Neovim-API aware lua-language-server workspace for config development; ft-lazy on lua, luv types on vim.uv.'
 resource: home/nvim/.config/nvim/lua/plugins/lazydev-nvim.lua
 tags: [nvim-plugin, lsp, lua]
-timestamp: '2026-07-02T00:00:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-02T00:00:00-07:00 }
 ---
 
 Configures [luals](../lsp.md) for editing this very config: loads the luv

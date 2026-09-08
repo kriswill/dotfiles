@@ -1,10 +1,17 @@
 ---
 type: Neovim Config
 title: Keymap Topology
-description: Space-leader keymap layout — which namespace lives where, core non-leader maps, and which plugin owns each group.
+description: 'Space-leader keymap layout — which namespace lives where, core non-leader maps, and which plugin owns each group.'
 resource: home/nvim/.config/nvim/lua/config/keymaps.lua
 tags: [nvim, keymaps]
-timestamp: '2026-07-02T00:00:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-02T00:00:00-07:00 }
+sources:
+  - id: lua-config-keymaps-lua
+    resource: ../../home/nvim/.config/nvim/lua/config/keymaps.lua
+    title: '`lua/config/keymaps.lua`'
+  - id: lua-plugins-snacks-keymaps
+    resource: ../../home/nvim/.config/nvim/lua/plugins/snacks/keymaps/
+    title: '`lua/plugins/snacks/keymaps/`'
 ---
 
 Leader and localleader are both **space**. Core maps live in
@@ -53,8 +60,3 @@ preset, 300 ms delay) names the groups and pops up the reference; press
 - The which-key spec names groups (`<leader>t` test, `<leader>R` replace,
   `<leader>N` package-info, `<leader>x` diagnostics) that currently have no
   bound maps — leftovers from a previous config generation.
-
-## Citations
-
-- [`lua/config/keymaps.lua`](../../home/nvim/.config/nvim/lua/config/keymaps.lua)
-- [`lua/plugins/snacks/keymaps/`](../../home/nvim/.config/nvim/lua/plugins/snacks/keymaps/)

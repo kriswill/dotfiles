@@ -1,10 +1,10 @@
 ---
 type: NixOS Module
 title: Users K
-description: Defines user k — sops-managed password (neededForUsers), authorized SSH key from snowglobe's keyring, wheel/networkmanager/libvirtd groups, and pkgs.flatpak-user shadowing the system flatpak via PATH.
+description: 'Defines user k — sops-managed password (neededForUsers), authorized SSH key from snowglobe''s keyring, wheel/networkmanager/libvirtd groups, and pkgs.flatpak-user shadowing the system flatpak via PATH.'
 resource: modules/hosts/nebula/users/k/default.nix
 tags: [nixos-module, host-specific]
-timestamp: '2026-07-03T12:00:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-03T12:00:00-07:00 }
 ---
 
 Defines user `k`. The password comes from sops: `sops.secrets.k_password`

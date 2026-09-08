@@ -4,7 +4,11 @@ title: Rtk
 description: CLI proxy that filters dev command output to cut LLM token usage.
 resource: pkgs/rtk.nix
 tags: [package]
-timestamp: '2026-07-19T00:06:40+00:00'
+generated: { by: okflight/0.4.0, at: 2026-07-19T00:06:40+00:00 }
+sources:
+  - id: rtk-repository-readme
+    resource: https://github.com/rtk-ai/rtk
+    title: rtk repository & README
 ---
 
 `rustPlatform.buildRustPackage` for upstream
@@ -30,7 +34,3 @@ commands rtk has no built-in filter for — see the
 - Package: [`pkgs/rtk.nix`](../../pkgs/rtk.nix)
 - Version at last scaffold: `0.43.0`
 - Overlay: [`overlays/rtk.nix`](../../overlays/rtk.nix) — exposes/replaces `pkgs.rtk`
-
-## Citations
-
-- [rtk repository & README](https://github.com/rtk-ai/rtk)

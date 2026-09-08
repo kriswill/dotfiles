@@ -4,7 +4,17 @@ title: Podman
 description: 'Podman — the daemonless, Docker-compatible container engine; on macOS packaged from the official prebuilt darwin_arm64 remote client (nixpkgs'' podman refuses to evaluate on darwin) with vfkit + gvproxy bundled in, primarily serving minikube''s podman driver for work Kubernetes.'
 resource: pkgs/podman.nix
 tags: [package, containers, kubernetes]
-timestamp: '2026-07-04T00:00:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-04T00:00:00-07:00 }
+sources:
+  - id: podman-io
+    resource: https://podman.io
+    title: podman.io
+  - id: minikube-podman-driver
+    resource: https://minikube.sigs.k8s.io/docs/drivers/podman/
+    title: minikube podman driver
+  - id: podman-from-the-official-binary
+    resource: ../decisions/podman-official-binary.md
+    title: Podman From the Official Binary
 ---
 
 [Podman](https://podman.io) is a daemonless, Docker-CLI-compatible engine
@@ -50,10 +60,3 @@ no podman stack.
 - Package: [`pkgs/podman.nix`](../../pkgs/podman.nix)
 - Version at last scaffold: `6.0.0`
 - Overlay: [`overlays/podman.nix`](../../overlays/podman.nix) — exposes/replaces `pkgs.podman`
-
-## Citations
-
-- [podman.io](https://podman.io) — official site
-- [minikube podman driver](https://minikube.sigs.k8s.io/docs/drivers/podman/)
-- [Podman From the Official Binary](../decisions/podman-official-binary.md)
-  (commits `07684b6`, `4dc74e4`, `f3fb252`)

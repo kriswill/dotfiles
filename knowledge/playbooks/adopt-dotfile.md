@@ -1,9 +1,9 @@
 ---
 type: Playbook
 title: Adopt a Dotfile Into the Stow Tree
-description: Capture an existing $HOME config into home/, or pull live edits of a tracked file back into the repo.
+description: 'Capture an existing $HOME config into home/, or pull live edits of a tracked file back into the repo.'
 tags: [stow, dotfiles]
-timestamp: '2026-07-03T12:00:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-03T12:00:00-07:00 }
 ---
 
 Per the [stow tree pattern](../patterns/stow-tree.md), each dir under `home/`

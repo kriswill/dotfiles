@@ -155,9 +155,10 @@ export function scaffoldModules(ctx: ScaffoldContext, repo: Repo): Set<string> {
       tags: classes.map(classTag),
       // Newest of the twins' last-commit dates, so a nixos-only change still
       // moves the doc's freshness.
-      timestamp: sources
-        .map(({ rel }) => gitISO(rel))
-        .reduce((a, b) => (Date.parse(b) > Date.parse(a) ? b : a)),
+      generated: {
+        by: ctx.actor,
+        at: sources.map(({ rel }) => gitISO(rel)).reduce((a, b) => (Date.parse(b) > Date.parse(a) ? b : a)),
+      },
     }, lines.join("\n"));
   }
 
@@ -175,7 +176,7 @@ export function scaffoldModules(ctx: ScaffoldContext, repo: Repo): Set<string> {
       description: firstSentence(desc),
       resource: srcRel,
       tags: ["flake-parts"],
-      timestamp: gitISO(srcRel),
+      generated: ctx.generated(srcRel),
     }, [
       mdSafe(sentence(desc)),
       "",

@@ -1,9 +1,13 @@
 ---
 type: Decision
 title: Ship User-Level Claude Skills as Split Stow Packages
-description: User-level Claude Code skills deploy through two mirrored stow packages (claude for nixos, claude-me for the macs) sharing one copy via a repo-internal symlink, because stow cannot traverse the macs' unowned ~/.claude fallback symlink.
+description: 'User-level Claude Code skills deploy through two mirrored stow packages (claude for nixos, claude-me for the macs) sharing one copy via a repo-internal symlink, because stow cannot traverse the macs'' unowned ~/.claude fallback symlink.'
 tags: [claude, stow, dotfiles]
-timestamp: '2026-07-25T23:35:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-25T23:35:00-07:00 }
+sources:
+  - id: gnu-stow-manual
+    resource: https://www.gnu.org/software/stow/manual/stow.html
+    title: GNU Stow manual
 ---
 
 **Status:** active. **Where:** [`home/claude/`](../../home/claude),
@@ -68,5 +72,4 @@ file into self-tested scripts — see
 ## Citations
 
 - Commit `67d6f3c` (packages + skip lists), PR kriswill/dotfiles#45
-- [GNU Stow manual](https://www.gnu.org/software/stow/manual/stow.html) —
   ownership/conflict semantics

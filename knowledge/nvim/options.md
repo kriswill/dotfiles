@@ -1,10 +1,17 @@
 ---
 type: Neovim Config
 title: Editor Options
-description: Core vim.opt settings — 2-space indent defaults, treesitter folds, hidden cmdline, system clipboard, transparency-friendly UI.
+description: 'Core vim.opt settings — 2-space indent defaults, treesitter folds, hidden cmdline, system clipboard, transparency-friendly UI.'
 resource: home/nvim/.config/nvim/lua/config/options.lua
 tags: [nvim, options]
-timestamp: '2026-07-02T00:00:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-02T00:00:00-07:00 }
+sources:
+  - id: lua-config-options-lua
+    resource: ../../home/nvim/.config/nvim/lua/config/options.lua
+    title: '`lua/config/options.lua`'
+  - id: lua-config-transparency-lua
+    resource: ../../home/nvim/.config/nvim/lua/config/transparency.lua
+    title: '`lua/config/transparency.lua`'
 ---
 
 Baseline editor behavior set in
@@ -42,8 +49,3 @@ float, popup, sign/fold-column and nvim-notify highlight groups so the
 terminal's background (and blur) shows through; the
 [kanagawa colorscheme](plugins/colorscheme.md) is loaded with
 `transparent = true` to match.
-
-## Citations
-
-- [`lua/config/options.lua`](../../home/nvim/.config/nvim/lua/config/options.lua)
-- [`lua/config/transparency.lua`](../../home/nvim/.config/nvim/lua/config/transparency.lua)

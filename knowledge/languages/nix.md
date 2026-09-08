@@ -3,7 +3,17 @@ type: Language
 title: Nix Language
 description: 'The lazy, pure, functional DSL every .nix file here is written in — evaluated by Determinate Nix, authored in dendritic idioms, kept clean by deadnix/statix/nixfmt and nil_ls.'
 tags: [nix, language]
-timestamp: '2026-07-04T00:00:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-04T00:00:00-07:00 }
+sources:
+  - id: nix-reference-manual-language-chapter
+    resource: https://nix.dev/manual/nix/stable/language/
+    title: Nix Reference Manual — language chapter
+  - id: nix-dev-tutorial-nix-language-basics
+    resource: https://nix.dev/tutorials/nix-language
+    title: 'nix.dev tutorial: Nix language basics'
+  - id: noogle-dev
+    resource: https://noogle.dev
+    title: noogle.dev
 ---
 
 The [Nix language](https://nix.dev/manual/nix/stable/language/) is a
@@ -34,9 +44,3 @@ daemon — is the [Nix runtime](../runtimes/nix.md).
   [nvim LSP](../nvim/lsp.md)), which formats with the same nixfmt and ignores
   `unused_binding`/`unused_with` — dendritic modules legitimately keep
   unused args.
-
-## Citations
-
-- [Nix Reference Manual — language chapter](https://nix.dev/manual/nix/stable/language/)
-- [nix.dev tutorial: Nix language basics](https://nix.dev/tutorials/nix-language)
-- [noogle.dev](https://noogle.dev) — searchable Nix function/API reference

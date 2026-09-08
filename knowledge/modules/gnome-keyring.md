@@ -1,10 +1,10 @@
 ---
 type: NixOS Module
 title: Gnome Keyring
-description: 'Enables services.gnome.gnome-keyring — the Secret Service (org.freedesktop.secrets) provider atuin-desktop needs to save its Hub token.'
+description: Enables services.gnome.gnome-keyring — the Secret Service (org.freedesktop.secrets) provider atuin-desktop needs to save its Hub token.
 resource: modules/nixos/gnome-keyring.nix
 tags: [nixos-module]
-timestamp: '2026-07-19T05:49:26+00:00'
+generated: { by: okflight/0.4.0, at: 2026-07-19T05:49:26+00:00 }
 ---
 
 One line: `services.gnome.gnome-keyring.enable = true;`. `ly`'s own NixOS

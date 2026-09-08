@@ -1,10 +1,10 @@
 ---
 type: Neovim Plugin
 title: baleia.nvim
-description: Renders ANSI escape codes as real colors — automatic for *.log buffers, on demand via :BaleiaColorize.
+description: 'Renders ANSI escape codes as real colors — automatic for *.log buffers, on demand via :BaleiaColorize.'
 resource: home/nvim/.config/nvim/lua/plugins/baleia.lua
 tags: [nvim-plugin, ui]
-timestamp: '2026-07-02T00:00:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-02T00:00:00-07:00 }
 ---
 
 Turns raw ANSI escape sequences into highlighted text. A `BufWinEnter`

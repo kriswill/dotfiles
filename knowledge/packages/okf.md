@@ -1,9 +1,9 @@
 ---
 type: Nix Package
 title: okf
-description: okf — CLI for maintaining OKF knowledge bundles (scaffold/index/validate/viz), consumed from its own repo via FlakeHub (kriswill/okflight).
+description: 'okf — CLI for maintaining OKF knowledge bundles (scaffold/index/validate/viz), consumed from its own repo via FlakeHub (kriswill/okflight).'
 tags: [package, flake-input, okf]
-timestamp: '2026-07-05T00:00:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-05T00:00:00-07:00 }
 ---
 
 okf — CLI for maintaining OKF knowledge bundles (scaffold/index/validate/viz).

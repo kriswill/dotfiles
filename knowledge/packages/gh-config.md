@@ -1,10 +1,10 @@
 ---
 type: Nix Package
 title: Gh Config
-description: Snapshot/restore gh's config.yml between ~/.config/gh (app-owned) and config/gh/ — gh's atomic-rename saves break stow symlinks, so it left the stow tree for the snapshot pattern.
+description: 'Snapshot/restore gh''s config.yml between ~/.config/gh (app-owned) and config/gh/ — gh''s atomic-rename saves break stow symlinks, so it left the stow tree for the snapshot pattern.'
 resource: pkgs/gh-config.nix
 tags: [package, config-snapshot]
-timestamp: '2026-07-04T04:47:17+00:00'
+generated: { by: okflight/0.4.0, at: 2026-07-04T04:47:17+00:00 }
 ---
 
 Snapshot/restore CLI (`capture` / `restore` / `diff`) for gh's

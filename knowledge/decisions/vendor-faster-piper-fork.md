@@ -1,10 +1,14 @@
 ---
 type: Decision
 title: Vendor faster-piper.yazi with Detached Cache Generation
-description: The faster-piper yazi plugin is vendored into the stow tree as a patched fork whose cache generation runs in a detached daemon with atomic install, because upstream's in-place cache writes let interrupted previews cache blank/corrupt output.
+description: 'The faster-piper yazi plugin is vendored into the stow tree as a patched fork whose cache generation runs in a detached daemon with atomic install, because upstream''s in-place cache writes let interrupted previews cache blank/corrupt output.'
 resource: home/yazi/.config/yazi/plugins/faster-piper.yazi/main.lua
 tags: [yazi, fork, caching]
-timestamp: '2026-07-22T00:00:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-22T00:00:00-07:00 }
+sources:
+  - id: alberti42-faster-piper-yazi
+    resource: https://github.com/alberti42/faster-piper.yazi
+    title: alberti42/faster-piper.yazi
 ---
 
 **Status:** active. **Where:** [yazi](../modules/yazi.md).
@@ -53,7 +57,6 @@ hit mid-scroll previewed blank/broken afterwards.
 
 ## Citations
 
-- [alberti42/faster-piper.yazi](https://github.com/alberti42/faster-piper.yazi) — upstream, vendored at `8b794bf`
 - Verified by scenario tests: SIGKILL mid-render leaves the final cache
   untouched; detached render survives spawner death; stale-lock break;
   `.failed` marker lifecycle (2026-07-22)

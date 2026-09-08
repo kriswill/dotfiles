@@ -1,9 +1,16 @@
 ---
 type: Decision
 title: Graduate Session-Coordinator Lessons Into Deterministic Scripts
-description: Mechanical mission lessons from the session-coordinator skill's LESSONS.md are enforced by self-tested scripts (monitoring, status hygiene, CI/merge races, locking, spawn preflight) instead of prose the coordinator model must remember; prose stays only for judgment calls.
+description: 'Mechanical mission lessons from the session-coordinator skill''s LESSONS.md are enforced by self-tested scripts (monitoring, status hygiene, CI/merge races, locking, spawn preflight) instead of prose the coordinator model must remember; prose stays only for judgment calls.'
 tags: [claude, tooling]
-timestamp: '2026-07-28T20:08:06-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-28T20:08:06-07:00 }
+sources:
+  - id: lessons-md
+    resource: ../../home/claude/.claude/skills/session-coordinator/LESSONS.md
+    title: '`LESSONS.md`'
+  - id: skill-md
+    resource: ../../home/claude/.claude/skills/session-coordinator/SKILL.md
+    title: '`SKILL.md`'
 ---
 
 **Status:** active. **Where:**
@@ -83,7 +90,5 @@ check judgment would give false assurance.
 ## Citations
 
 - Commits `5e6871f`, `024351a`
-- [`LESSONS.md`](../../home/claude/.claude/skills/session-coordinator/LESSONS.md)
   — the lesson entries these scripts encode (`Action: APPLIED 2026-07-28`)
-- [`SKILL.md`](../../home/claude/.claude/skills/session-coordinator/SKILL.md)
   — Steps 4–6 reference the scripts

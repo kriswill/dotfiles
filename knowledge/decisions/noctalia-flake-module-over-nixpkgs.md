@@ -1,9 +1,13 @@
 ---
 type: Decision
-title: Keep Upstream Noctalia's NixOS Module Over Nixpkgs'
-description: nixpkgs' new programs.noctalia module is disabled on nebula so the upstream noctalia-shell flake module keeps sole ownership of the programs.noctalia option namespace — the flake input IS upstream, pinned in lockstep with the installed binary.
+title: 'Keep Upstream Noctalia''s NixOS Module Over Nixpkgs'''
+description: 'nixpkgs'' new programs.noctalia module is disabled on nebula so the upstream noctalia-shell flake module keeps sole ownership of the programs.noctalia option namespace — the flake input IS upstream, pinned in lockstep with the installed binary.'
 tags: [nixos, noctalia, modules]
-timestamp: '2026-08-02T15:00:13-07:00'
+generated: { by: okflight/0.4.0, at: 2026-08-02T15:00:13-07:00 }
+sources:
+  - id: nixpkgs-nixos-modules-programs-wayland-noctalia
+    resource: https://github.com/NixOS/nixpkgs/blob/master/nixos/modules/programs/wayland/noctalia.nix
+    title: nixpkgs `nixos/modules/programs/wayland/noctalia.nix`
 ---
 
 **Status:** active. **Where:** [users-k-noctalia](../modules/users-k-noctalia.md).
@@ -43,4 +47,3 @@ the channel happens to carry.
 
 - Commits `25f9332` (nixpkgs bump that introduced the collision), `bd81c2a`
   (flake.lock bump whose eval gate surfaced it)
-- [nixpkgs `nixos/modules/programs/wayland/noctalia.nix`](https://github.com/NixOS/nixpkgs/blob/master/nixos/modules/programs/wayland/noctalia.nix)

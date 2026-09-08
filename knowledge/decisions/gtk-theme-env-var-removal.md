@@ -3,7 +3,14 @@ type: Decision
 title: Drop GTK_THEME for Portal-Broadcast Theming
 description: 'Removed the GTK_THEME=Adwaita:dark session variable (it made libadwaita apps discard their stylesheet — cramped padding) in favor of installing adw-gtk3, which the running portal already broadcasts as the GTK3 theme.'
 tags: [gtk, theming, nixos]
-timestamp: '2026-07-05T12:00:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-05T12:00:00-07:00 }
+sources:
+  - id: modules-nixos-gtk-dark-nix
+    resource: ../../modules/nixos/gtk-dark.nix
+    title: '`modules/nixos/gtk-dark.nix`'
+  - id: adw-gtk3
+    resource: https://github.com/lassekongo83/adw-gtk3
+    title: adw-gtk3
 ---
 
 **Status:** active. **Where:** [gtk-dark](../modules/gtk-dark.md).
@@ -48,8 +55,3 @@ now-installed theme.
   undeclared, incidental dconf value rather than anything this repo set —
   see the follow-up [decision](nautilus-dbus-warnings.md) that made it
   reproducible.
-
-## Citations
-
-- [`modules/nixos/gtk-dark.nix`](../../modules/nixos/gtk-dark.nix), [`docs/libreoffice.md`](../../docs/libreoffice.md)
-- [adw-gtk3](https://github.com/lassekongo83/adw-gtk3)

@@ -5,7 +5,7 @@ description: Maintain the knowledge/ OKF bundle — the repo's authored knowledg
 
 # Maintaining the knowledge/ OKF bundle
 
-`knowledge/` is an [Open Knowledge Format v0.1](https://github.com/GoogleCloudPlatform/knowledge-catalog/blob/main/okf/SPEC.md)
+`knowledge/` is an [Open Knowledge Format v0.2](https://github.com/GoogleCloudPlatform/open-knowledge-format/blob/main/SPEC.md)
 bundle: markdown concept docs with YAML frontmatter, cross-linked into a
 graph. It exists so rationale survives outside commit bodies and chat
 history — **keep it current as part of any change, not as an afterthought.**
@@ -59,10 +59,17 @@ exemplars: `knowledge/modules/dnsmasq.md`,
 - **Body** says what the source can't: wiring, deliberate deviations,
   gotchas. Concise — delete anything that restates the description or the
   code.
-- **`## Citations`** links upstream docs / man page; the option reference
-  for darwin/nixos modules (nix-darwin manual, search.nixos.org, MyNixOS);
-  the `docs/` manual if one exists; commit hashes for decisions. WebFetch
+- **`sources`** (frontmatter) lists upstream docs / man page; the option
+  reference for darwin/nixos modules (nix-darwin manual, search.nixos.org,
+  MyNixOS); the `docs/` manual if one exists — each with an `id`, cited
+  from the body by footnote (`…as documented.[^nix-darwin-manual]`). Commit
+  hashes for decisions stay in the body prose (`Commits `<hash>``). WebFetch
   each URL to confirm it resolves — a guessed link is worse than none.
+- **`generated`** is `{ by: <actor>, at: <ISO-8601> }` — `human:kris` when
+  authored by hand, `<agent>/<version>` when an agent writes it. Add
+  `verified: { by: human:kris, at }` only after actually checking the content
+  against its sources; `status: deprecated` (never delete) when an entry
+  stops being current.
 - **Cross-links** — every concept the body names is a link (enabling host,
   providing overlay/package, module twin, related decisions), with a
   backlink from the target when the relationship is load-bearing. Aim for
@@ -78,10 +85,15 @@ type: Decision
 title: <Short Imperative Title>
 description: <one sentence — what was decided and the key why.>
 tags: [<topic>]
-timestamp: '<ISO-8601 now>'
+status: stable
+generated: { by: human:kris, at: <ISO-8601 now> }
+sources:
+  - id: <short-id>
+    resource: <URL or ../path/to/reference.md>
+    title: <what it is>
 ---
 
-**Status:** active. **Where:** [<concept>](../modules/<name>.md).
+**Where:** [<concept>](../modules/<name>.md).
 
 ## Context
 
@@ -93,19 +105,20 @@ timestamp: '<ISO-8601 now>'
 
 ## Consequences
 
-<what got better, what to watch out for>
+<what got better, what to watch out for — per the reference.[^<short-id>]>
+Landed in commits `<hash>`.
 
-## Citations
-
-- Commits `<hash>`
+[^<short-id>]: <what it is>
 ```
 
 ## Profile rules that trip people up
 
-- Frontmatter requires `type`, `title`, `description`, `timestamp` (ISO-8601).
+- Frontmatter requires `type`; `title`, `description`, `generated` are
+  recommended. Every footnote `[^x]` must match a `sources[].id`. A leftover
+  v0.1 `timestamp` or `## Citations` list is a warning that says `okf migrate`.
 - Links are **file-relative** (`../modules/nh.md`) — never `/`-rooted; links
   may escape into the repo (`../../modules/...`) but must resolve.
-- Body section headings are **H2** (`## Context`, `## Citations`); no H1 in
+- Body section headings are **H2** (`## Context`, `## Decision`); no H1 in
   concept bodies (frontmatter `title` is the H1).
 - Never hand-edit generated `index.md` listing sections — only the blurb
   above the first heading; `viz.html` is generated and gitignored.

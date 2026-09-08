@@ -4,7 +4,7 @@ title: colorful-winsep.nvim
 description: Colors the separator around the active split in kanagawa oniViolet; also publishes the palette as _G.kanagawa_colors.
 resource: home/nvim/.config/nvim/lua/plugins/colorful-winsep.lua
 tags: [nvim-plugin, ui]
-timestamp: '2026-07-02T00:00:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-02T00:00:00-07:00 }
 ---
 
 Draws the active window's separators in the [kanagawa](colorscheme.md)

@@ -1,9 +1,9 @@
 ---
 type: Decision
 title: Per-OS Stow Scoping via Skip Lists
-description: home/ stays one flat shared stow tree; each OS's dotfiles-stow module carries an explicit skip list of the other OS's packages, so a new package deploys on both OSes by default.
+description: 'home/ stays one flat shared stow tree; each OS''s dotfiles-stow module carries an explicit skip list of the other OS''s packages, so a new package deploys on both OSes by default.'
 tags: [stow, dotfiles, architecture]
-timestamp: '2026-07-03T14:00:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-03T14:00:00-07:00 }
 ---
 
 **Status:** active. **Where:**
