@@ -1,10 +1,10 @@
 ---
 type: Neovim Plugin
 title: which-key.nvim
-description: Keymap popup (helix preset, 300 ms) that names the leader namespaces; <leader>? shows buffer-local maps.
+description: 'Keymap popup (helix preset, 300 ms) that names the leader namespaces; <leader>? shows buffer-local maps.'
 resource: home/nvim/.config/nvim/lua/plugins/which-key.lua
 tags: [nvim-plugin, keymaps, ui]
-timestamp: '2026-07-02T00:00:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-02T00:00:00-07:00 }
 ---
 
 Names every leader namespace so the [keymap topology](../keymaps.md) is

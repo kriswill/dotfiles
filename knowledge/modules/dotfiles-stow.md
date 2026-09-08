@@ -4,7 +4,7 @@ title: Dotfiles Stow
 description: 'Restows every home/ package into $HOME on each rebuild via the shared lib/stow-restow-script.nix builder — live-repo symlinks, self-healing, per-OS skip lists.'
 resource: modules/darwin/dotfiles-stow.nix
 tags: [darwin-module, nixos-module]
-timestamp: '2026-07-03T12:00:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-03T12:00:00-07:00 }
 ---
 
 Restows every package directory under the live repo's `home/` tree into

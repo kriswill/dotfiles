@@ -1,9 +1,9 @@
 ---
 type: Decision
 title: okf VCS Provider Adapters and Forge-Agnostic Revision Links
-description: Put all version-control access behind a VcsProvider interface (okflight's vcs/) — git is the first provider, a no-VCS filesystem provider follows — and build outbound revision links from a configurable commit-url-template instead of a hardcoded GitHub URL shape.
+description: 'Put all version-control access behind a VcsProvider interface (okflight''s vcs/) — git is the first provider, a no-VCS filesystem provider follows — and build outbound revision links from a configurable commit-url-template instead of a hardcoded GitHub URL shape.'
 tags: [tooling, okf-generalization, vcs]
-timestamp: '2026-07-04T00:00:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-04T00:00:00-07:00 }
 ---
 
 **Status:** active. **Where:**

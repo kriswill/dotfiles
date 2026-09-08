@@ -1,10 +1,10 @@
 ---
 type: Neovim Plugin
 title: snacks.nvim
-description: The utility platform — picker, explorer, dashboard, terminal, zen, notifier — owning most of the leader keymap surface, plus a custom vim.pack plugin-inventory picker.
+description: 'The utility platform — picker, explorer, dashboard, terminal, zen, notifier — owning most of the leader keymap surface, plus a custom vim.pack plugin-inventory picker.'
 resource: home/nvim/.config/nvim/lua/plugins/snacks/
 tags: [nvim-plugin, picker, ui, keymaps]
-timestamp: '2026-07-02T00:00:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-02T00:00:00-07:00 }
 ---
 
 folke's snacks.nvim is the config's utility platform and the single biggest

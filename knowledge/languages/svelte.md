@@ -3,7 +3,14 @@ type: Language
 title: Svelte Language
 description: 'Svelte — the compiler-based UI framework whose .svelte component language extends HTML; here it builds okf''s viz-app in Svelte 5 runes syntax, backed by a full docs/svelt/ manual because most training data and web content is still Svelte 4.'
 tags: [svelte, language]
-timestamp: '2026-07-04T00:00:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-04T00:00:00-07:00 }
+sources:
+  - id: svelte-dev
+    resource: https://svelte.dev
+    title: svelte.dev
+  - id: docs-svelt-manual-md
+    resource: ../../docs/svelt/manual.md
+    title: '`docs/svelt/manual.md`'
 ---
 
 [Svelte](https://svelte.dev) is a UI framework built around a compiler: the
@@ -31,10 +38,3 @@ first, because most of that corpus predates runes.
 owns `.svelte` files including their embedded JS/TS/CSS, with vtsls
 deliberately scoped away ([TypeScript](typescript.md)); svelte is
 not in efm's language table, so `.svelte` files never auto-format.
-
-## Citations
-
-- [svelte.dev](https://svelte.dev) — official site and docs (LLM dumps at
-  `svelte.dev/llms.txt`)
-- [`docs/svelt/manual.md`](../../docs/svelt/manual.md) — in-repo manual,
-  version-stamped and verified against svelte.dev

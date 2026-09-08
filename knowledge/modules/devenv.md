@@ -4,7 +4,17 @@ title: Devenv
 description: 'devenv.sh''s Nix developer-environment CLI on both OSes; cd auto-activation comes from devenv 2.1''s native zsh hook in the stowed integrations.zsh, not direnv.'
 resource: modules/darwin/devenv.nix
 tags: [darwin-module, nixos-module]
-timestamp: '2026-08-01T18:07:17-07:00'
+generated: { by: okflight/0.4.0, at: 2026-08-01T18:07:17-07:00 }
+sources:
+  - id: devenv-sh-getting-started
+    resource: https://devenv.sh/getting-started/
+    title: devenv.sh getting started
+  - id: devenv-2-1-announcement-native-zsh-fish-nushell
+    resource: https://devenv.sh/blog/2026/05/07/devenv-21-nix-with-zsh-fish-and-nushell-via-libghostty/
+    title: devenv 2.1 announcement — native zsh/fish/nushell shells + `devenv hook`
+  - id: nixpkgs-devenv-package
+    resource: https://mynixos.com/nixpkgs/package/devenv
+    title: nixpkgs `devenv` package
 ---
 
 The module itself only installs `pkgs.devenv` — all integration lives in the
@@ -55,9 +65,3 @@ auto-discovered via the [Dendritic module layout](../patterns/dendritic-modules.
 - darwin module: [`modules/darwin/devenv.nix`](../../modules/darwin/devenv.nix)
 - NixOS module: [`modules/nixos/devenv.nix`](../../modules/nixos/devenv.nix)
 - Shell hook: [`home/zsh/.config/zsh/integrations.zsh`](../../home/zsh/.config/zsh/integrations.zsh) — see the [stow tree pattern](../patterns/stow-tree.md)
-
-## Citations
-
-- [devenv.sh getting started](https://devenv.sh/getting-started/)
-- [devenv 2.1 announcement — native zsh/fish/nushell shells + `devenv hook`](https://devenv.sh/blog/2026/05/07/devenv-21-nix-with-zsh-fish-and-nushell-via-libghostty/)
-- [nixpkgs `devenv` package](https://mynixos.com/nixpkgs/package/devenv)

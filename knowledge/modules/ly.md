@@ -1,10 +1,10 @@
 ---
 type: NixOS Module
 title: Ly
-description: Disables ly's F5/F6 brightness actions (and their hint-bar entries) by setting brightness_down_key/brightness_up_key to the literal "null" — ly itself is enabled by snowglobe's shared desktop layer.
+description: 'Disables ly''s F5/F6 brightness actions (and their hint-bar entries) by setting brightness_down_key/brightness_up_key to the literal "null" — ly itself is enabled by snowglobe''s shared desktop layer.'
 resource: modules/hosts/nebula/ly.nix
 tags: [nixos-module, host-specific]
-timestamp: '2026-07-03T12:00:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-03T12:00:00-07:00 }
 ---
 
 Tweaks the ly TUI login greeter. ly itself is enabled elsewhere — by

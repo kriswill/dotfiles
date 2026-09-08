@@ -32,6 +32,9 @@ export interface ScaffoldContext {
   vcs: ScaffoldVcs;
   /** --force was passed: existing docs are overwritten. */
   force: boolean;
+  /** The `generated.by` actor for docs this pass writes (OKF §7):
+   *  `[scaffold] actor` from okflight.toml, else `okflight/<version>`. */
+  actor: string;
 
   /** Write a concept doc at a bundle-relative path (skip-if-exists unless
    *  force; dirs created; frontmatter serialized; body trimmed). Returns
@@ -39,8 +42,12 @@ export interface ScaffoldContext {
   emit(rel: string, fm: FM, body: string): boolean;
 
   /** ISO-8601 last-modified of a workspace-relative path (VCS-backed,
-   *  falling back to the current time). */
+   *  falling back to the current time). Feed it to `generated.at`. */
   timestamp(path: string): string;
+
+  /** `generated: { by: ctx.actor, at: ctx.timestamp(path) }` — the OKF v0.2
+   *  trust stamp (§5.2) for a doc derived from a workspace path. */
+  generated(path: string): { by: string; at: string };
 
   /** Leading comment block at the top of a source file, joined to one
    *  string. `marker` is a line prefix ("#", "--", "//") or a RegExp whose
@@ -59,7 +66,7 @@ export interface ScaffoldContext {
   titleFromSlug(slug: string): string;
   fmToYaml(fm: FM): string;
   parseFrontmatter(raw: string): {
-    fm: Record<string, string | string[]> | null;
+    fm: FM | null;
     fmError: string | null;
     body: string;
   };

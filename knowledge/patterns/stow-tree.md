@@ -1,10 +1,10 @@
 ---
 type: Pattern
 title: Stow Tree
-description: Plain config files live in home/ as GNU Stow packages symlinked into $HOME — one tree shared by macOS and NixOS, pointing at the live repo so edits apply without a rebuild.
+description: 'Plain config files live in home/ as GNU Stow packages symlinked into $HOME — one tree shared by macOS and NixOS, pointing at the live repo so edits apply without a rebuild.'
 resource: modules/darwin/dotfiles-stow.nix
 tags: [stow, dotfiles, symlinks]
-timestamp: '2026-07-11T12:40:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-11T12:40:00-07:00 }
 ---
 
 Config files that don't need Nix evaluation live under `home/` as one GNU Stow

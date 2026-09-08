@@ -1,9 +1,9 @@
 ---
 type: Decision
 title: okf Scaffold Hooks — Repo-Owned Script plus Declarative Collect Tier
-description: okf scaffold becomes a generic driver — the metadata pass belongs to the repo, wired via okf.toml [scaffold] as a dynamically-imported script receiving an injected ScaffoldContext API, and/or declarative [[scaffold.collect]] glob+template entries; the 566-line dotfiles scaffolder moved out of the flake to scripts/okf-scaffold.ts.
+description: 'okf scaffold becomes a generic driver — the metadata pass belongs to the repo, wired via okf.toml [scaffold] as a dynamically-imported script receiving an injected ScaffoldContext API, and/or declarative [[scaffold.collect]] glob+template entries; the 566-line dotfiles scaffolder moved out of the flake to scripts/okf-scaffold.ts.'
 tags: [tooling, okf-generalization, scaffold]
-timestamp: '2026-07-04T00:00:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-04T00:00:00-07:00 }
 ---
 
 **Status:** active. **Where:**

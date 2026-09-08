@@ -4,7 +4,14 @@ title: Podman Desktop
 description: 'Podman Desktop — the GUI for podman containers and machines; a deliberately thin module (enable toggle + /libexec pathsToLink) with all real config stow-managed, including a git filter that scrubs the GUI''s volatile settings.json rewrites.'
 resource: modules/darwin/podman-desktop.nix
 tags: [darwin-module, containers, kubernetes]
-timestamp: '2026-07-04T00:00:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-04T00:00:00-07:00 }
+sources:
+  - id: podman-desktop-io
+    resource: https://podman-desktop.io
+    title: podman-desktop.io
+  - id: podman-from-the-official-binary
+    resource: ../decisions/podman-official-binary.md
+    title: Podman From the Official Binary
 ---
 
 [Podman Desktop](https://podman-desktop.io) is the graphical container and
@@ -43,9 +50,3 @@ git config) scrubs the volatile fields on commit instead.
 - Module: [`modules/darwin/podman-desktop.nix`](../../modules/darwin/podman-desktop.nix)
 - Options under: `programs.podman-desktop`
 - Stow package: [`home/podman-desktop/`](../../home/podman-desktop/) — see the [stow tree pattern](../patterns/stow-tree.md)
-
-## Citations
-
-- [podman-desktop.io](https://podman-desktop.io) — official site
-- [Podman From the Official Binary](../decisions/podman-official-binary.md)
-  — why `/libexec` must be linked

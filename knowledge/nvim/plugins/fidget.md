@@ -1,10 +1,10 @@
 ---
 type: Neovim Plugin
 title: fidget.nvim
-description: LSP progress spinner in the corner — stock setup, no options.
+description: 'LSP progress spinner in the corner — stock setup, no options.'
 resource: home/nvim/.config/nvim/lua/plugins/fidget.lua
 tags: [nvim-plugin, lsp, ui]
-timestamp: '2026-07-02T00:00:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-02T00:00:00-07:00 }
 ---
 
 Default `setup()` — shows [LSP](../lsp.md) server progress (indexing,

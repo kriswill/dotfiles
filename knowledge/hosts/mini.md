@@ -1,10 +1,10 @@
 ---
 type: Host
 title: mini
-description: mini - my personal mac mini M1, 16GB RAM.
+description: 'mini - my personal mac mini M1, 16GB RAM.'
 resource: modules/hosts/mini/default.nix
 tags: [host]
-timestamp: '2026-07-03T17:53:43+00:00'
+generated: { by: okflight/0.4.0, at: 2026-07-03T17:53:43+00:00 }
 ---
 
 mini - my personal mac mini M1, 16GB RAM.

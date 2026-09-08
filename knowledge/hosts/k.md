@@ -1,10 +1,10 @@
 ---
 type: Host
 title: k
-description: k - my personal macbook pro M1 max, 64GB RAM.
+description: 'k - my personal macbook pro M1 max, 64GB RAM.'
 resource: modules/hosts/k/default.nix
 tags: [host]
-timestamp: '2026-07-11T12:40:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-11T12:40:00-07:00 }
 ---
 
 k - my personal macbook pro M1 max, 64GB RAM.

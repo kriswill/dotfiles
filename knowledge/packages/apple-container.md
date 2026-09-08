@@ -4,7 +4,7 @@ title: apple-container
 description: 'apple-container — Apple''s native macOS container CLI, repackaged from the signed .pkg release.'
 resource: flakes/apple-container/
 tags: [sub-flake, package]
-timestamp: '2026-06-11T07:14:49-07:00'
+generated: { by: okflight/0.4.0, at: 2026-06-11T07:14:49-07:00 }
 ---
 
 apple-container — Apple's native macOS container CLI, repackaged from the signed .pkg release.

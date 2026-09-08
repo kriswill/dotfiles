@@ -1,10 +1,10 @@
 ---
 type: Darwin Module
 title: Core
-description: The always-on darwin system baseline shared by every host — stateVersion, primary user, baseline packages, touch-ID sudo, fonts, shell enables, nix/nixpkgs settings.
+description: 'The always-on darwin system baseline shared by every host — stateVersion, primary user, baseline packages, touch-ID sudo, fonts, shell enables, nix/nixpkgs settings.'
 resource: modules/darwin/core.nix
 tags: [darwin-module]
-timestamp: '2026-06-28T22:44:49-07:00'
+generated: { by: okflight/0.4.0, at: 2026-06-28T22:44:49-07:00 }
 ---
 
 The always-on darwin system baseline shared by every host: stateVersion,

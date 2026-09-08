@@ -1,10 +1,10 @@
 ---
 type: Darwin Module
 title: Claude Account Selector
-description: zsh wrapper that auto-selects a Claude Code account/profile by launch directory, with per-profile config-dir isolation.
+description: 'zsh wrapper that auto-selects a Claude Code account/profile by launch directory, with per-profile config-dir isolation.'
 resource: modules/darwin/claude-account-selector/default.nix
 tags: [darwin-module]
-timestamp: '2026-07-03T10:23:09-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-03T10:23:09-07:00 }
 ---
 
 zsh wrapper that auto-selects a Claude Code account/profile by launch

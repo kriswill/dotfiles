@@ -1,9 +1,9 @@
 ---
 type: Decision
 title: Route All Linting and Formatting Through efm-langserver
-description: One umbrella LSP (efm) runs every CLI linter and formatter; format-on-save filters to efm only, so no two tools ever compete over a buffer.
+description: 'One umbrella LSP (efm) runs every CLI linter and formatter; format-on-save filters to efm only, so no two tools ever compete over a buffer.'
 tags: [nvim, lsp, formatting]
-timestamp: '2026-07-03T12:00:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-03T12:00:00-07:00 }
 ---
 
 **Status:** active. **Where:** [LSP & Formatting](../nvim/lsp.md).

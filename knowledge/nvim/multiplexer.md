@@ -1,10 +1,26 @@
 ---
 type: Neovim Config
 title: Multiplexer Navigation
-description: One set of keys (<C-h/j/k/l>) walking nvim splits and then the surrounding terminal multiplexer's panes — a local module with tmux and herdr backends, chosen from the environment at startup.
+description: 'One set of keys (<C-h/j/k/l>) walking nvim splits and then the surrounding terminal multiplexer''s panes — a local module with tmux and herdr backends, chosen from the environment at startup.'
 resource: home/nvim/.config/nvim/lua/config/multiplexer.lua
 tags: [nvim, keymaps, tmux, herdr]
-timestamp: '2026-07-28T12:30:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-28T12:30:00-07:00 }
+sources:
+  - id: lua-config-multiplexer-lua
+    resource: ../../home/nvim/.config/nvim/lua/config/multiplexer.lua
+    title: '`lua/config/multiplexer.lua`'
+  - id: home-tmux-config-tmux-tmux-conf
+    resource: ../../home/tmux/.config/tmux/tmux.conf
+    title: '`home/tmux/.config/tmux/tmux.conf`'
+  - id: home-herdr-config-herdr-config-toml
+    resource: ../../home/herdr/.config/herdr/config.toml
+    title: '`home/herdr/.config/herdr/config.toml`'
+  - id: vim-tmux-navigator
+    resource: https://github.com/christoomey/vim-tmux-navigator
+    title: vim-tmux-navigator
+  - id: docs-tmux-md
+    resource: ../../docs/tmux.md
+    title: '`docs/tmux.md`'
 ---
 
 `<C-h/j/k/l>` move between nvim windows; once a motion runs off the edge of
@@ -79,11 +95,3 @@ are mapped in three modes:
   terminal mode). With nothing in that direction and no hand-off available the
   key does nothing at all, rather than dropping the user into normal mode as a
   side effect of a keypress that moved nothing.
-
-## Citations
-
-- [`lua/config/multiplexer.lua`](../../home/nvim/.config/nvim/lua/config/multiplexer.lua)
-- [`home/tmux/.config/tmux/tmux.conf`](../../home/tmux/.config/tmux/tmux.conf) — the `is_vim` half
-- [`home/herdr/.config/herdr/config.toml`](../../home/herdr/.config/herdr/config.toml) — the [herdr-nav](../packages/herdr-nav.md) half
-- [vim-tmux-navigator](https://github.com/christoomey/vim-tmux-navigator) — origin of the `is_vim` pattern
-- [`docs/tmux.md`](../../docs/tmux.md)

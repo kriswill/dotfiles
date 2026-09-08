@@ -1,10 +1,10 @@
 ---
 type: Neovim Plugin
 title: nvim-treesitter-context
-description: Sticky scope header (up to 3 lines, cursor mode) pinned to the top of the window; toggled with <leader>ut.
+description: 'Sticky scope header (up to 3 lines, cursor mode) pinned to the top of the window; toggled with <leader>ut.'
 resource: home/nvim/.config/nvim/lua/plugins/treesitter-context.lua
 tags: [nvim-plugin, treesitter, ui]
-timestamp: '2026-07-02T00:00:00-07:00'
+generated: { by: okflight/0.4.0, at: 2026-07-02T00:00:00-07:00 }
 ---
 
 Keeps the enclosing function/class signature visible at the top of the
