@@ -48,31 +48,29 @@ esac
 # Credit spend — $used/$budget plus a dense dotbar of the percentage.
 #
 # Unlike the personal profile, the work profile's statusline JSON carries no
-# rate_limits block, so the numbers come from claude.ai via the Claude desktop
-# app's session cookie (see claude-usage-work.ts). That's a network call, so
-# it never runs inline: read whatever the cache holds, and kick off a detached
-# refresh when it has gone stale. Stale numbers beat a stalled statusline.
+# rate_limits block, so the numbers come from the OAuth usage endpoint that
+# backs Claude Code's /usage panel (see claude-usage-work.ts). That's a
+# network call against a per-account quota, so it never runs inline: read
+# whatever the cache holds, and kick off a detached refresh only once the
+# cache says the next attempt is due. Stale numbers beat a stalled statusline.
 #
 # Inside Herdr the tab bar shows this (one copy per window, always visible),
 # so the statusline stays out of its way and only renders the segment when
 # there is no tab bar to carry it. The refresh still runs either way — the
 # watcher that feeds the tab bar reads this same cache and never fetches.
 USAGE_CACHE=/tmp/claude-usage-work.json
-USAGE_FRESH=60      # seconds a good reading stays authoritative
-USAGE_RETRY=300     # seconds to wait after a failed refresh
 
 spend_info=""
 spend_pct=""
 if [ "$profile" = "work" ]; then
   now=$(date +%s)
   cache=$(cat "$USAGE_CACHE" 2>/dev/null || echo '{}')
-  read -r at failat spend_pct spend_used spend_limit <<<"$(
-    echo "$cache" | jq -r '[((.at//0)/1000|floor), ((.failAt//0)/1000|floor),
+  read -r nextat spend_pct spend_used spend_limit <<<"$(
+    echo "$cache" | jq -r '[((.nextAt//0)/1000|floor),
                             (.pct//""), (.used//""), (.limit//"")] | @tsv' 2>/dev/null
   )" || true
-  at=${at:-0}; failat=${failat:-0}
-  if [ $((now - at)) -ge "$USAGE_FRESH" ] && [ $((now - failat)) -ge "$USAGE_RETRY" ] \
-     && command -v bun >/dev/null 2>&1; then
+  nextat=${nextat:-0}
+  if [ "$now" -ge "$nextat" ] && command -v bun >/dev/null 2>&1; then
     (nohup bun "$here/claude-usage-work.ts" >/dev/null 2>&1 &) || true
   fi
   if [ -n "$spend_pct" ] && [ "${HERDR_ENV:-}" != "1" ]; then

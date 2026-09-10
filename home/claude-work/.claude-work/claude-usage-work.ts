@@ -3,35 +3,72 @@
 //
 // Background refresher for ~/.claude-work/statusline-command.sh. The work
 // profile's statusline JSON carries no `rate_limits` block (that only ships
-// for consumer plans), and the profile's Claude Code token — the
-// `claude-token-work` Keychain item that claude-account-selector injects as
-// CLAUDE_CODE_OAUTH_TOKEN — is a `setup-token` without the `user:profile`
-// scope, so api.anthropic.com/api/oauth/usage answers 403 for it.
+// for consumer plans), so the spend numbers come from the OAuth usage
+// endpoint that backs Claude Code's own /usage panel:
 //
-// The Claude *desktop* app, however, holds a full claude.ai web session for
-// the same (work) account, and claude.ai/api/organizations/<org>/usage returns
-// the org's credit spend. So: pull the app's `sessionKey` cookie out of its
-// Chromium cookie store — AES-128-CBC under a PBKDF2 stretch of the "Claude
-// Safe Storage" Keychain password, the standard Electron safeStorage scheme —
-// and call that endpoint with it.
+//     GET https://api.anthropic.com/api/oauth/usage
 //
-// Writes /tmp/claude-usage-work.json for the statusline to read. Never blocks
-// it: the statusline spawns this detached when the cache goes stale and always
-// renders whatever the cache already holds.
+// This endpoint requires the `user:profile` scope, which means it needs a real
+// OAuth login: `claudeAiOauth.accessToken` from
+// `$CLAUDE_CONFIG_DIR/.credentials.json` (Linux) or the keychain item
+// `Claude Code-credentials-<sha256(configDir)[:8]>` (macOS; the plain
+// `Claude Code-credentials` name belongs to the default ~/.claude profile).
+//
+// The `claude-token-work` setup-token that the `claude` wrapper injects as
+// $CLAUDE_CODE_OAUTH_TOKEN is deliberately NOT used: it lacks `user:profile`
+// and this endpoint answers
+//
+//     403 oauth_scope_insufficient — required_scopes: ["user:profile"]
+//
+// for it. Worth knowing when debugging: a shared rate limiter sits in FRONT of
+// that scope check, so an unscoped token returns 429 with a long `retry-after`
+// for as long as the quota window is shut, and only reveals the 403 once the
+// window opens. A 429 here proves nothing about whether the token would work.
+//
+// If the work profile's credential item is an empty stub (zero-length
+// accessToken and refreshToken, expiresAt 0 — the state a cleared or expired
+// login leaves behind), there is no usable credential and the spend segment
+// stays dark until `claude /login` is run under CLAUDE_CONFIG_DIR=~/.claude-work.
+//
+// An earlier version of this script read the Claude *desktop* app's claude.ai
+// `sessionKey` cookie instead. That was wrong: the desktop app holds whatever
+// account you last signed it into — a personal one, in practice — so the
+// statusline reported a personal Max credit cap ($33.24/$100) while Claude
+// Code was billing the Perforce enterprise org ($214.35/$2,500). Reading the
+// same credentials Claude Code authenticates with makes the account correct
+// by construction.
+//
+// The endpoint is quota-limited per account (a 429 carries `retry-after`, and
+// the window can run ~50 min), and herdr-usage-watcher.ts draws on the same
+// bucket. So: refresh at most every FRESH_MS, honor `retry-after` exactly, and
+// serve the last good reading throughout. Writes
+// /tmp/claude-usage-work.json for the statusline and the herdr tab-bar watcher
+// to read. Never blocks either: they render whatever the cache already holds.
 
-import { Database } from "bun:sqlite";
 import crypto from "node:crypto";
 import fs from "node:fs";
 
 const CACHE = "/tmp/claude-usage-work.json";
 const LOCK = "/tmp/claude-usage-work.lock";
 const LOCK_STALE_MS = 60_000;
-const COOKIES = `${process.env.HOME}/Library/Application Support/Claude/Cookies`;
-const UA =
-  "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 " +
-  "(KHTML, like Gecko) Claude/1.0 Chrome/132.0.0.0 Electron/34.0.0 Safari/537.36";
 
-type Cache = { at?: number; failAt?: number; org?: string; pct?: number; used?: string; limit?: string };
+// Refresh cadence. The bucket is shared with herdr-usage-watcher.ts, so stay
+// well clear of it — spend moves in dollars over hours, not seconds.
+const FRESH_MS = 15 * 60_000;
+const FAIL_BACKOFF_MS = 10 * 60_000; // when a failure carries no retry-after
+
+// `nextAt` is the epoch ms before which a refresh is pointless — success
+// window or server-dictated backoff, whichever applies. The statusline just
+// compares it against now, so all the retry policy lives here.
+type Cache = {
+  at?: number;
+  failAt?: number;
+  nextAt?: number;
+  pct?: number;
+  used?: string;
+  limit?: string;
+  err?: string;
+};
 
 function readCache(): Cache {
   try {
@@ -47,9 +84,14 @@ function writeCache(c: Cache) {
   } catch {}
 }
 
+function fail(prev: Cache, err: string, nextAt: number) {
+  const now = Date.now();
+  writeCache({ ...prev, failAt: now, nextAt, err });
+}
+
 // Single refresher at a time — concurrent Claude sessions all share this cache
-// and would otherwise each open their own request. Exclusive create, with a
-// staleness escape so a killed refresher can't wedge the lock permanently.
+// and would otherwise each spend a request from the shared quota. Exclusive
+// create, with a staleness escape so a killed refresher can't wedge the lock.
 function lock(): boolean {
   for (let i = 0; i < 2; i++) {
     try {
@@ -67,104 +109,112 @@ function lock(): boolean {
   return false;
 }
 
-// Chromium safeStorage: key = PBKDF2-HMAC-SHA1(keychain password, "saltysalt",
-// 1003, 16), AES-128-CBC with an all-spaces IV. Recent Chromium prefixes the
-// plaintext with a 32-byte SHA-256 of the cookie's domain; detect that by the
-// first byte not being printable ASCII and skip it.
-function cookieReader() {
-  const pw = Bun.spawnSync([
-    "security", "find-generic-password", "-s", "Claude Safe Storage", "-a", "Claude Key", "-w",
-  ]).stdout.toString().trim();
-  if (!pw) return null;
-  const key = crypto.pbkdf2Sync(pw, "saltysalt", 1003, 16, "sha1");
-  const iv = Buffer.alloc(16, 0x20);
-  return (buf: Buffer): string => {
-    const tag = buf.subarray(0, 3).toString();
-    if (tag !== "v10" && tag !== "v11") return buf.toString("utf8");
-    const d = crypto.createDecipheriv("aes-128-cbc", key, iv);
-    d.setAutoPadding(false);
-    let out = Buffer.concat([d.update(buf.subarray(3)), d.final()]);
-    const pad = out[out.length - 1];
-    if (pad > 0 && pad <= 16) out = out.subarray(0, out.length - pad);
-    return /^[\x20-\x7e]/.test(out.toString("utf8")) ? out.toString("utf8") : out.subarray(32).toString("utf8");
-  };
+const configDir = process.env.CLAUDE_CONFIG_DIR || `${process.env.HOME}/.claude`;
+
+// Keychain service name Claude Code uses for this config dir. The default
+// profile gets the bare name; every other dir gets an 8-hex suffix.
+function keychainService(): string {
+  const base = "Claude Code-credentials";
+  if (configDir === `${process.env.HOME}/.claude`) return base;
+  const hash = crypto.createHash("sha256").update(configDir).digest("hex");
+  return `${base}-${hash.slice(0, 8)}`;
 }
 
-// Copy first: the app keeps the store open, and a readonly attach to a live
-// SQLite file can still fail on its journal.
-function readCookies(): { sessionKey: string; org: string } | null {
-  const dec = cookieReader();
-  if (!dec || !fs.existsSync(COOKIES)) return null;
-  const tmp = `/tmp/claude-usage-work-cookies.${process.pid}`;
+function keychain(service: string): string {
+  return Bun.spawnSync(["security", "find-generic-password", "-s", service, "-w"])
+    .stdout.toString()
+    .trim();
+}
+
+function accessToken(): string {
+  let raw = "";
   try {
-    fs.copyFileSync(COOKIES, tmp);
-    const db = new Database(tmp, { readonly: true });
-    const rows = db
-      .query("select name, encrypted_value from cookies where host_key like '%claude.ai' and name in ('sessionKey','lastActiveOrg')")
-      .all() as { name: string; encrypted_value: Uint8Array }[];
-    db.close();
-    const get = (n: string) => {
-      const r = rows.find((x) => x.name === n);
-      return r ? dec(Buffer.from(r.encrypted_value)) : "";
-    };
-    const sessionKey = get("sessionKey");
-    return sessionKey ? { sessionKey, org: get("lastActiveOrg") } : null;
+    raw = fs.readFileSync(`${configDir}/.credentials.json`, "utf8");
   } catch {
-    return null;
-  } finally {
-    try {
-      fs.unlinkSync(tmp);
-    } catch {}
+    raw = keychain(keychainService());
+  }
+  if (!raw) return "";
+  try {
+    // An empty string is what a cleared login leaves behind, not a token.
+    return JSON.parse(raw).claudeAiOauth?.accessToken?.trim() ?? "";
+  } catch {
+    return "";
   }
 }
 
-async function api(path: string, sessionKey: string): Promise<any | null> {
-  try {
-    const res = await fetch(`https://claude.ai${path}`, {
-      headers: {
-        Cookie: `sessionKey=${sessionKey}`,
-        "User-Agent": UA,
-        Accept: "application/json",
-        "anthropic-client-platform": "web_claude_ai",
-      },
-    });
-    return res.ok ? await res.json() : null;
-  } catch {
-    return null;
-  }
+type Money = { amount_minor: number; exponent: number };
+
+function isMoney(v: any): v is Money {
+  return v && typeof v.amount_minor === "number" && typeof v.exponent === "number";
 }
 
 // amount_minor is an integer in the currency's minor unit; `exponent` says how
-// many decimal places that is (2 → cents).
-function money(m: { amount_minor: number; exponent: number }, cents: boolean): string {
+// many decimal places that is (2 → cents). The used side wants cents (it
+// changes by cents); the limit is a round budget, so drop them.
+function money(m: Money, cents: boolean): string {
   const v = m.amount_minor / 10 ** m.exponent;
   return `$${cents ? v.toFixed(m.exponent) : Math.round(v)}`;
+}
+
+// The payload shape for an enterprise spend limit is unverified at time of
+// writing (the quota window was exhausted), so look in every plausible place
+// rather than hard-coding one path: a top-level `spend` object like claude.ai
+// returns, or a spend-flavored entry among `limits`. Anything with a
+// used/limit money pair counts.
+function findSpend(data: any): { used: Money; limit: Money } | null {
+  const candidates: any[] = [
+    data?.spend,
+    data?.credit_spend,
+    data?.organization_spend,
+    ...(Array.isArray(data?.limits) ? data.limits : []).filter((l: any) =>
+      /spend|credit|cost|budget/i.test(`${l?.kind ?? ""} ${l?.type ?? ""}`),
+    ),
+  ];
+  for (const c of candidates) {
+    if (!c || c.enabled === false) continue;
+    const used = c.used ?? c.spent ?? c.amount_used;
+    const limit = c.limit ?? c.cap?.money ?? c.cap?.credits ?? c.amount_limit;
+    if (isMoney(used) && isMoney(limit) && limit.amount_minor > 0) return { used, limit };
+  }
+  return null;
 }
 
 async function main() {
   if (!lock()) return;
   const prev = readCache();
   try {
-    const ck = readCookies();
-    if (!ck) return writeCache({ ...prev, failAt: Date.now() });
+    const token = accessToken();
+    if (!token) return fail(prev, "no-token", Date.now() + FAIL_BACKOFF_MS);
 
-    let org = ck.org || prev.org || "";
-    let usage = org ? await api(`/api/organizations/${org}/usage`, ck.sessionKey) : null;
-    if (!usage) {
-      // Stale or absent lastActiveOrg — resolve the org the session can chat in.
-      const orgs = await api("/api/organizations", ck.sessionKey);
-      org = (Array.isArray(orgs) ? orgs.find((o: any) => o.capabilities?.includes("chat")) : null)?.uuid ?? "";
-      usage = org ? await api(`/api/organizations/${org}/usage`, ck.sessionKey) : null;
+    let res: Response;
+    try {
+      res = await fetch("https://api.anthropic.com/api/oauth/usage", {
+        headers: { Authorization: `Bearer ${token}`, "anthropic-beta": "oauth-2025-04-20" },
+      });
+    } catch (e: any) {
+      return fail(prev, `threw: ${e?.message ?? e}`, Date.now() + FAIL_BACKOFF_MS);
     }
 
-    const spend = usage?.spend;
-    if (!spend?.enabled || !spend.used || !spend.limit || spend.limit.amount_minor <= 0) {
-      return writeCache({ ...prev, org: org || prev.org, failAt: Date.now() });
+    if (!res.ok) {
+      // Honor the server's own backoff when it gives one — this endpoint's
+      // 429 window is long, and hammering it just keeps it shut.
+      const ra = Number(res.headers.get("retry-after"));
+      const wait = Number.isFinite(ra) && ra > 0 ? ra * 1000 : FAIL_BACKOFF_MS;
+      return fail(prev, `http-${res.status}`, Date.now() + wait);
     }
 
+    const data = await res.json();
+    const spend = findSpend(data);
+    if (!spend) {
+      // Keep the shape we did get, so the next look at this cache says which
+      // keys to teach findSpend about.
+      return fail(prev, `no-spend: ${Object.keys(data ?? {}).join(",")}`, Date.now() + FRESH_MS);
+    }
+
+    const now = Date.now();
     writeCache({
-      at: Date.now(),
-      org,
+      at: now,
+      nextAt: now + FRESH_MS,
       pct: Math.round((spend.used.amount_minor / spend.limit.amount_minor) * 100),
       used: money(spend.used, true),
       limit: money(spend.limit, false),
