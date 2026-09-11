@@ -33,10 +33,7 @@ v0.9.0; the generated API schema artifact is regenerated to match.
  src/platform/mod.rs                           |  10 +
  src/protocol/wire.rs                          |  41 +-
  src/server/client_shell.rs                    |  21 +-
- tests/api_ping.rs                             |   2 +-
- tests/cli/sessions.rs                         |  12 +-
- tests/support/mod.rs                          |   2 +-
- 17 files changed, 814 insertions(+), 61 deletions(-)
+ 14 files changed, 806 insertions(+), 53 deletions(-)
 
 diff --git a/docs/next/api/herdr-api.schema.json b/docs/next/api/herdr-api.schema.json
 index b3990e96..af2947ca 100644
@@ -1343,85 +1340,3 @@ index 37470693..8a659667 100644
          })
          .collect();
  
-diff --git a/tests/api_ping.rs b/tests/api_ping.rs
-index b86d0378..fa45b21e 100644
---- a/tests/api_ping.rs
-+++ b/tests/api_ping.rs
-@@ -306,7 +306,7 @@ fn ping_over_socket_returns_version() {
-     assert_eq!(value["result"]["version"], env!("CARGO_PKG_VERSION"));
-     // Intentionally hardcoded so wire protocol bumps require updating this test.
-     // Changing this value means old clients/servers are no longer compatible.
--    assert_eq!(value["result"]["protocol"], 22);
-+    assert_eq!(value["result"]["protocol"], 23);
- 
-     cleanup_spawned_herdr(child, base);
- }
-diff --git a/tests/cli/sessions.rs b/tests/cli/sessions.rs
-index 8e5fc48f..ce9d48c5 100644
---- a/tests/cli/sessions.rs
-+++ b/tests/cli/sessions.rs
-@@ -389,7 +389,7 @@ fn status_commands_report_client_and_server_versions() {
-         "stdout: {full_stdout}"
-     );
-     assert!(
--        full_stdout.contains("  protocol: 22"),
-+        full_stdout.contains("  protocol: 23"),
-         "stdout: {full_stdout}"
-     );
-     assert!(full_stdout.contains("server:\n"), "stdout: {full_stdout}");
-@@ -430,7 +430,7 @@ fn status_commands_report_client_and_server_versions() {
-         "stdout: {server_stdout}"
-     );
-     assert!(
--        server_stdout.contains("private_protocol: 22"),
-+        server_stdout.contains("private_protocol: 23"),
-         "stdout: {server_stdout}"
-     );
- 
-@@ -442,7 +442,7 @@ fn status_commands_report_client_and_server_versions() {
-         "stdout: {client_stdout}"
-     );
-     assert!(
--        client_stdout.contains("protocol: 22"),
-+        client_stdout.contains("protocol: 23"),
-         "stdout: {client_stdout}"
-     );
-     assert!(
-@@ -456,7 +456,7 @@ fn status_commands_report_client_and_server_versions() {
- 
-     let full_json = run_cli_json(&socket_path, &["status", "--json"]);
-     assert_eq!(full_json["client"]["version"], env!("CARGO_PKG_VERSION"));
--    assert_eq!(full_json["client"]["protocol"], 22);
-+    assert_eq!(full_json["client"]["protocol"], 23);
-     assert_eq!(full_json["client"]["endpoint_protocol_generation"], 1);
-     assert_eq!(full_json["server"]["status"], "running");
-     assert_eq!(full_json["server"]["running"], true);
-@@ -474,13 +474,13 @@ fn status_commands_report_client_and_server_versions() {
-     let server_json = run_cli_json(&socket_path, &["status", "server", "--json"]);
-     assert_eq!(server_json["status"], "running");
-     assert_eq!(server_json["version"], env!("CARGO_PKG_VERSION"));
--    assert_eq!(server_json["protocol"], 22);
-+    assert_eq!(server_json["protocol"], 23);
-     assert_eq!(server_json["compatible"], true);
-     assert_eq!(server_json["endpoint_compatible"], true);
- 
-     let client_json = run_cli_json(&socket_path, &["status", "client", "--json"]);
-     assert_eq!(client_json["version"], env!("CARGO_PKG_VERSION"));
--    assert_eq!(client_json["protocol"], 22);
-+    assert_eq!(client_json["protocol"], 23);
-     assert_eq!(client_json["endpoint_protocol_generation"], 1);
-     assert!(client_json["binary"]
-         .as_str()
-diff --git a/tests/support/mod.rs b/tests/support/mod.rs
-index b2dae4be..4fb4cdc8 100644
---- a/tests/support/mod.rs
-+++ b/tests/support/mod.rs
-@@ -13,7 +13,7 @@ static INIT: Once = Once::new();
- static CLEANUP_GUARD: OnceLock<CleanupGuard> = OnceLock::new();
- const WATCHDOG_SCAN_INTERVAL: Duration = Duration::from_secs(1);
- const RUNTIME_OWNER_MARKER: &str = ".herdr-test-owner-pid";
--pub const CURRENT_PROTOCOL: u32 = 22;
-+pub const CURRENT_PROTOCOL: u32 = 23;
- pub const CURRENT_ENDPOINT_PROTOCOL_GENERATION: u32 = 1;
- pub const SERVER_MESSAGE_SERVER_SHUTDOWN: u32 = 3;
- pub const SERVER_MESSAGE_ENDPOINT_CONTROL: u32 = 20;
