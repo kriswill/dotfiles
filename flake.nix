@@ -119,15 +119,19 @@
     # cached by our CI on FlakeHub.
     herdr.url = "github:herdrdev/herdr/v0.9.0";
     # devenv from OUR fork's `custom` branch: upstream main plus our patch
-    # commits — currently the terminal-query reply ordering fix for the
-    # `devenv shell` virtual-terminal mux (cachix/devenv#3130: CPR is answered
-    # locally while OSC queries round-trip to the real terminal, so termenv
-    # users like gh/glow got the cursor report first and left the colour
-    # reply in the tty buffer for zsh to eat). Rebase `custom` onto upstream
-    # and drop commits as they land. The patch touches the devenv-shell
-    # workspace crate, which crate2nix builds as its own derivation and the
-    # upstream flake exposes no crate-override hook for — hence a fork rather
-    # than an overlay patch (contrast herdr above). Deliberately NO nixpkgs
+    # commits for the `devenv shell` virtual-terminal mux (both filed as
+    # cachix/devenv#3130): the terminal-query reply ordering fix (CPR was
+    # answered locally while OSC queries round-tripped to the real terminal,
+    # so termenv users like gh/glow got the cursor report first and left the
+    # colour reply in the tty buffer for zsh to eat), and kitty graphics
+    # passthrough (the VT stores images and answers `a=q`; the renderer
+    # mirrors placements onto the real terminal; a probed cell size gives the
+    # PTY pixel dimensions and answers `CSI 14 t`) so fastfetch/yazi/icat
+    # render images inside the shell. Rebase `custom` onto upstream and drop
+    # commits as they land. The patches touch the devenv-shell workspace
+    # crate, which crate2nix builds as its own derivation and the upstream
+    # flake exposes no crate-override hook for — hence a fork rather than an
+    # overlay patch (contrast herdr above). Deliberately NO nixpkgs
     # `follows`: with the fork's lock identical to upstream's, every
     # dependency crate hashes the same as upstream CI's and substitutes from
     # devenv.cachix.org (wired in modules/{darwin,nixos}/devenv.nix); only

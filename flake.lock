@@ -271,11 +271,11 @@
         "rust-overlay": "rust-overlay"
       },
       "locked": {
-        "lastModified": 1789082068,
-        "narHash": "sha256-kvSKHofabrlR7IhasLX2u1/TtDH+Krd3w5s6yzABANs=",
+        "lastModified": 1789090899,
+        "narHash": "sha256-Eg/YTq/nErX8fyql++m8tf/d1Sl6GEv2PtfULmcdpKU=",
         "owner": "kriswill",
         "repo": "devenv",
-        "rev": "25a2416a6a7f128f640aa6ff47b30329d2acb002",
+        "rev": "1ffa7650e337861757e801835e0be0bdb3910c49",
         "type": "github"
       },
       "original": {
