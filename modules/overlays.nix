@@ -71,6 +71,7 @@
             patches = [
               ../overlays/devenv/0001-reply-ordering.patch
               ../overlays/devenv/0002-kitty-graphics.patch
+              ../overlays/devenv/0003-kitty-virtual-placements.patch
             ];
           };
           flake = (import inputs.flake-compat { src = patched; }).defaultNix;

@@ -1,0 +1,394 @@
+From 4f9426011718846af74adfb8651e52be6c2679a1 Mon Sep 17 00:00:00 2001
+From: Kris Williams <115474+kriswill@users.noreply.github.com>
+Date: Thu, 10 Sep 2026 19:06:29 -0700
+Subject: [PATCH] devenv-shell: mirror Unicode-placeholder (virtual) kitty
+ placements
+
+yazi (and other `U=1` users) transmit the image with a virtual placement
+and draw placeholder cells whose foreground colour carries the image id.
+The row renderer already copies those cells to the real terminal; what was
+missing is the image itself and a virtual placement for it there. Mirror
+virtual placements by transmitting the image under the CHILD's own id
+(the cells reference it, so it cannot be remapped) and issuing
+`a=p,U=1` with the child's placement id and c/r, no cursor movement.
+---
+ devenv-shell/src/kitty_images.rs | 233 ++++++++++++++++++++++++++-----
+ 1 file changed, 199 insertions(+), 34 deletions(-)
+
+diff --git a/devenv-shell/src/kitty_images.rs b/devenv-shell/src/kitty_images.rs
+index d74d3b1f..8b565cfb 100644
+--- a/devenv-shell/src/kitty_images.rs
++++ b/devenv-shell/src/kitty_images.rs
+@@ -132,12 +132,29 @@ fn real_image_id(vt_image_id: u32) -> u32 {
+     REAL_ID_BASE | (vt_image_id & REAL_ID_MASK)
+ }
+ 
++/// How a placement is anchored on the real terminal.
++#[derive(Clone, Copy, Debug, PartialEq, Eq)]
++enum PlacementKind {
++    /// Pinned to grid cells: placed at an explicit cursor position under the
++    /// private image id range.
++    Pinned,
++    /// Unicode-placeholder placement (`U=1`, used by yazi and others): the
++    /// image is bound to placeholder cells whose foreground colour carries
++    /// the CHILD's image id. The row renderer already copies those cells, so
++    /// the real terminal must hold the image under that same id and a
++    /// virtual placement for it. Ids therefore go through unmapped.
++    Virtual,
++}
++
+ /// One placement as it should appear on the real terminal.
+ #[derive(Clone, Debug, PartialEq, Eq)]
+ struct Placement {
++    kind: PlacementKind,
++    /// Image id on the real terminal (`real_image_id` for pinned, the child's
++    /// own id for virtual).
+     image: u32,
+     /// Real-terminal row/column (already offset by the renderer's takeover
+-    /// offset and clipped to the content area).
++    /// offset and clipped to the content area). Unused for virtual.
+     row: u16,
+     col: u16,
+     cols: u32,
+@@ -243,9 +260,25 @@ fn transmit_commands(
+     out
+ }
+ 
+-/// `a=p` placement at the cursor. `C=1` keeps the real cursor where the
+-/// renderer put it.
++/// `a=p` placement. Pinned placements go at the cursor with `C=1` so the
++/// real cursor stays where the renderer put it; virtual ones bind to the
++/// placeholder cells by image id (the child's placement id, when it gave
++/// one, is what its cells may reference).
+ fn place_command(real_placement: u32, p: &Placement) -> String {
++    if p.kind == PlacementKind::Virtual {
++        let mut cmd = format!("\x1b_Ga=p,q=2,U=1,i={}", p.image);
++        if real_placement != 0 {
++            cmd.push_str(&format!(",p={real_placement}"));
++        }
++        if p.cols != 0 {
++            cmd.push_str(&format!(",c={}", p.cols));
++        }
++        if p.rows != 0 {
++            cmd.push_str(&format!(",r={}", p.rows));
++        }
++        cmd.push_str("\x1b\\");
++        return cmd;
++    }
+     format!(
+         "\x1b_Ga=p,q=2,C=1,i={},p={},c={},r={},x={},y={},w={},h={},X={},Y={},z={}\x1b\\",
+         p.image,
+@@ -262,8 +295,13 @@ fn place_command(real_placement: u32, p: &Placement) -> String {
+     )
+ }
+ 
+-/// Delete one placement, keeping the image data for reuse.
++/// Delete one placement, keeping the image data for reuse. A zero placement
++/// id (an id-less virtual placement) deletes the image's placements as a
++/// whole, which is all the protocol offers for it.
+ fn delete_placement_command(real_image: u32, real_placement: u32) -> String {
++    if real_placement == 0 {
++        return format!("\x1b_Ga=d,d=i,q=2,i={real_image}\x1b\\");
++    }
+     format!("\x1b_Ga=d,d=i,q=2,i={real_image},p={real_placement}\x1b\\")
+ }
+ 
+@@ -281,13 +319,25 @@ struct Transmitted {
+     generation: u64,
+ }
+ 
++/// Images are transmitted per (VT image id, unmapped?) — pinned placements
++/// use the private id range, virtual ones the child's id.
++type TransmitKey = (u32, bool);
++
++fn terminal_image_id(image_id: u32, raw: bool) -> u32 {
++    if raw {
++        image_id
++    } else {
++        real_image_id(image_id)
++    }
++}
++
+ /// Mirrors the VT's kitty placements onto the real terminal.
+ #[derive(Default)]
+ pub struct ImageSync {
+     iterator: Option<PlacementIterator<'static>>,
+-    /// VT image id → what the real terminal currently holds under
+-    /// `real_image_id(id)`.
+-    transmitted: HashMap<u32, Transmitted>,
++    /// What the real terminal currently holds, per VT image id and id
++    /// mapping (see `TransmitKey`).
++    transmitted: HashMap<TransmitKey, Transmitted>,
+     /// Placements currently shown on the real terminal, with their real
+     /// placement ids.
+     placed: HashMap<PlacementKey, (u32, Placement)>,
+@@ -335,11 +385,6 @@ impl ImageSync {
+             let mut placements = iterator.update(&graphics).map_err(vt_err)?;
+             placements.set_layer(Layer::All).map_err(vt_err)?;
+             while let Some(placement) = placements.next() {
+-                // Unicode-placeholder placements render through text cells
+-                // the row renderer already copies; nothing to mirror.
+-                if placement.is_virtual().unwrap_or(false) {
+-                    continue;
+-                }
+                 let (Ok(image_id), Ok(placement_id)) =
+                     (placement.image_id(), placement.placement_id())
+                 else {
+@@ -348,6 +393,34 @@ impl ImageSync {
+                 let Some(image) = graphics.image(image_id) else {
+                     continue;
+                 };
++                let ordinal = ordinals.entry((image_id, placement_id)).or_insert(0);
++                let key = (image_id, placement_id, *ordinal);
++                *ordinal += 1;
++                let generation = image.generation().unwrap_or(0);
++                if placement.is_virtual().unwrap_or(false) {
++                    desired.push((
++                        key,
++                        Placement {
++                            kind: PlacementKind::Virtual,
++                            image: image_id,
++                            row: 0,
++                            col: 0,
++                            cols: placement.columns().unwrap_or(0),
++                            rows: placement.rows().unwrap_or(0),
++                            src: SourceRect {
++                                x: 0,
++                                y: 0,
++                                width: 0,
++                                height: 0,
++                            },
++                            x_offset: 0,
++                            y_offset: 0,
++                            z: 0,
++                        },
++                        generation,
++                    ));
++                    continue;
++                }
+                 let Ok(info) = placement.placement_render_info(&image, vt) else {
+                     continue;
+                 };
+@@ -369,13 +442,10 @@ impl ImageSync {
+                 let Some((extent, src)) = clip(extent, src, visible_rows, visible_cols) else {
+                     continue;
+                 };
+-                let ordinal = ordinals.entry((image_id, placement_id)).or_insert(0);
+-                let key = (image_id, placement_id, *ordinal);
+-                *ordinal += 1;
+-                let generation = image.generation().unwrap_or(0);
+                 desired.push((
+                     key,
+                     Placement {
++                        kind: PlacementKind::Pinned,
+                         image: real_image_id(image_id),
+                         row: (extent.row as usize + row_offset as usize).min(u16::MAX as usize)
+                             as u16,
+@@ -396,9 +466,11 @@ impl ImageSync {
+ 
+         // Images: transmit new ones and re-transmit changed ones (a changed
+         // generation invalidates every placement of that image).
+-        for (key, _, generation) in &desired {
++        for (key, placement, generation) in &desired {
+             let image_id = key.0;
+-            let current = self.transmitted.get(&image_id).copied();
++            let raw = placement.kind == PlacementKind::Virtual;
++            let transmit_key = (image_id, raw);
++            let current = self.transmitted.get(&transmit_key).copied();
+             if current.map(|t| t.generation) == Some(*generation) {
+                 continue;
+             }
+@@ -419,14 +491,16 @@ impl ImageSync {
+             let (Ok(width), Ok(height)) = (image.width(), image.height()) else {
+                 continue;
+             };
+-            let real = real_image_id(image_id);
++            let real = terminal_image_id(image_id, raw);
+             if current.is_some() {
+                 stdout.write_all(delete_image_command(real).as_bytes())?;
+-                self.placed.retain(|k, _| k.0 != image_id);
++                self.placed.retain(|k, (_, p)| {
++                    !(k.0 == image_id && (p.kind == PlacementKind::Virtual) == raw)
++                });
+             }
+             stdout.write_all(&transmit_commands(real, format, width, height, zlib, data))?;
+             self.transmitted.insert(
+-                image_id,
++                transmit_key,
+                 Transmitted {
+                     generation: *generation,
+                 },
+@@ -454,7 +528,8 @@ impl ImageSync {
+ 
+         // New or moved placements.
+         for (key, placement, _) in desired {
+-            if !self.transmitted.contains_key(&key.0) {
++            let virtual_ = placement.kind == PlacementKind::Virtual;
++            if !self.transmitted.contains_key(&(key.0, virtual_)) {
+                 continue;
+             }
+             let real_placement = match self.placed.get(&key) {
+@@ -464,25 +539,30 @@ impl ImageSync {
+                     stdout.write_all(delete_placement_command(current.image, id).as_bytes())?;
+                     id
+                 }
++                // Virtual placements keep the child's placement id: its
++                // placeholder cells may name it.
++                None if virtual_ => key.1,
+                 None => self.allocate_placement_id(),
+             };
+-            queue!(stdout, cursor::MoveTo(placement.col, placement.row))?;
++            if !virtual_ {
++                queue!(stdout, cursor::MoveTo(placement.col, placement.row))?;
++            }
+             stdout.write_all(place_command(real_placement, &placement).as_bytes())?;
+             self.placed.insert(key, (real_placement, placement));
+             wrote = true;
+         }
+ 
+         // Images the VT dropped entirely can go from the real terminal too.
+-        let dropped: Vec<u32> = self
++        let dropped: Vec<TransmitKey> = self
+             .transmitted
+             .keys()
+-            .filter(|id| graphics.image(**id).is_none())
++            .filter(|(id, _)| graphics.image(*id).is_none())
+             .copied()
+             .collect();
+-        for image_id in dropped {
+-            self.transmitted.remove(&image_id);
++        for (image_id, raw) in dropped {
++            self.transmitted.remove(&(image_id, raw));
+             self.placed.retain(|k, _| k.0 != image_id);
+-            stdout.write_all(delete_image_command(real_image_id(image_id)).as_bytes())?;
++            stdout.write_all(delete_image_command(terminal_image_id(image_id, raw)).as_bytes())?;
+             wrote = true;
+         }
+ 
+@@ -503,8 +583,8 @@ impl ImageSync {
+     /// Remove everything this session put on the real terminal.
+     pub fn cleanup(&mut self, stdout: &mut impl Write) -> io::Result<()> {
+         self.placed.clear();
+-        for (image_id, _) in self.transmitted.drain() {
+-            stdout.write_all(delete_image_command(real_image_id(image_id)).as_bytes())?;
++        for ((image_id, raw), _) in self.transmitted.drain() {
++            stdout.write_all(delete_image_command(terminal_image_id(image_id, raw)).as_bytes())?;
+         }
+         Ok(())
+     }
+@@ -653,6 +733,7 @@ mod tests {
+     #[test]
+     fn placement_command_keeps_the_cursor_and_stays_quiet() {
+         let p = Placement {
++            kind: PlacementKind::Pinned,
+             image: real_image_id(3),
+             row: 5,
+             col: 2,
+@@ -683,14 +764,17 @@ mod tests {
+     #[test]
+     fn cleanup_deletes_every_transmitted_image_once() {
+         let mut sync = ImageSync::default();
+-        sync.transmitted.insert(4, Transmitted { generation: 1 });
+-        sync.transmitted.insert(9, Transmitted { generation: 2 });
++        sync.transmitted
++            .insert((4, false), Transmitted { generation: 1 });
++        sync.transmitted
++            .insert((9, true), Transmitted { generation: 2 });
+         let mut out = Vec::new();
+         sync.cleanup(&mut out).unwrap();
+         let text = String::from_utf8(out).unwrap();
+         assert_eq!(text.matches("a=d,d=I").count(), 2);
+-        assert!(text.contains(&format!("i={}", real_image_id(4))));
+-        assert!(text.contains(&format!("i={}", real_image_id(9))));
++        assert!(text.contains(&format!("i={}\x1b", real_image_id(4))));
++        // A virtual placement's image was transmitted under the child's id.
++        assert!(text.contains("i=9\x1b"));
+         assert!(sync.transmitted.is_empty());
+     }
+ 
+@@ -820,4 +904,85 @@ mod tests {
+         assert!(sync.sync(&mut out, &vt, 0, 24).unwrap(), "nothing mirrored");
+         assert!(String::from_utf8_lossy(&out).contains("a=p,q=2,C=1"));
+     }
++
++    #[test]
++    fn virtual_placement_binds_by_the_childs_image_id() {
++        let p = Placement {
++            kind: PlacementKind::Virtual,
++            image: 7,
++            row: 0,
++            col: 0,
++            cols: 20,
++            rows: 8,
++            src: src(0, 0, 0, 0),
++            x_offset: 0,
++            y_offset: 0,
++            z: 0,
++        };
++        assert_eq!(place_command(0, &p), "\x1b_Ga=p,q=2,U=1,i=7,c=20,r=8\x1b\\");
++        assert_eq!(
++            place_command(3, &p),
++            "\x1b_Ga=p,q=2,U=1,i=7,p=3,c=20,r=8\x1b\\"
++        );
++        let bare = Placement {
++            cols: 0,
++            rows: 0,
++            ..p
++        };
++        assert_eq!(place_command(0, &bare), "\x1b_Ga=p,q=2,U=1,i=7\x1b\\");
++        assert_eq!(
++            delete_placement_command(7, 0),
++            "\x1b_Ga=d,d=i,q=2,i=7\x1b\\"
++        );
++        assert_eq!(terminal_image_id(7, true), 7);
++        assert_eq!(terminal_image_id(7, false), real_image_id(7));
++    }
++
++    /// yazi's protocol: `a=T,U=1` then placeholder cells. The VT stores a
++    /// virtual placement; the mirror must transmit under the child's id and
++    /// create a `U=1` placement for it, without touching the cursor.
++    #[test]
++    fn vt_virtual_placement_is_mirrored_under_the_childs_id() {
++        install_png_decoder();
++        let mut vt = Terminal::new(80, 24).expect("terminal");
++        vt.resize(80, 24, 9, 20).expect("cell size");
++        enable(&mut vt).expect("enable");
++        vt.vt_write(
++            format!("\x1b_Ga=T,q=2,C=1,U=1,f=100,i=7,c=2,r=1;{ONE_PIXEL_PNG_B64}\x1b\\").as_bytes(),
++        );
++        // Placeholder cells: fg colour = image id 7, U+10EEEE + row/col marks.
++        vt.vt_write(
++            "\x1b[38;2;0;0;7m\u{10EEEE}\u{0305}\u{0305}\u{10EEEE}\u{0305}\u{030D}\x1b[0m"
++                .as_bytes(),
++        );
++
++        let mut sync = ImageSync::default();
++        let mut out = Vec::new();
++        assert!(sync.sync(&mut out, &vt, 0, 24).unwrap());
++        let text = String::from_utf8_lossy(&out).to_string();
++        assert!(
++            text.contains("\x1b_Ga=t,t=d,q=2,i=7,f=32,s=1,v=1,m=0;"),
++            "{text:?}"
++        );
++        assert!(
++            text.contains("\x1b_Ga=p,q=2,U=1,i=7,c=2,r=1\x1b\\"),
++            "{text:?}"
++        );
++        assert!(
++            !text.contains("\x1b["),
++            "virtual placements must not move the cursor: {text:?}"
++        );
++
++        // Steady state.
++        let mut out = Vec::new();
++        assert!(!sync.sync(&mut out, &vt, 0, 24).unwrap());
++
++        // Deleting the placement in the VT deletes it on the real terminal.
++        // (yazi's `d=A` only covers cell-visible placements in libghostty;
++        // a virtual placement whose cells are repainted shows nothing anyway.)
++        vt.vt_write(b"\x1b_Gq=2,a=d,d=i,i=7\x1b\\");
++        let mut out = Vec::new();
++        assert!(sync.sync(&mut out, &vt, 0, 24).unwrap());
++        assert_eq!(String::from_utf8_lossy(&out), "\x1b_Ga=d,d=i,q=2,i=7\x1b\\");
++    }
+ }
