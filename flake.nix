@@ -111,14 +111,10 @@
     # 14t/16t pixel-size fix (herdrdev/herdr#835) that nixpkgs' 0.7.5 lacks —
     # required for image rendering (fastfetch/yazi) inside herdr panes,
     # together with `experimental.kitty_graphics = true` in the stow
-    # config.toml; see docs/fastfetch.md. rust-overlay is bumped past the
-    # tag's pin because that pin predates upstream's stdenv.isLinux →
-    # hostPlatform fix and spams deprecation warnings on every eval; drop the
-    # override with the input.
+    # config.toml; see docs/fastfetch.md.
     herdr = {
       url = "github:kriswill/herdr/custom";
       inputs.nixpkgs.follows = "nixpkgs";
-      inputs.rust-overlay.url = "github:oxalica/rust-overlay";
     };
     # devenv from OUR fork's `custom` branch: upstream's v2.2.2 tag plus our
     # patch commits — currently the terminal-query reply ordering fix for the
