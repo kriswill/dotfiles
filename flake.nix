@@ -118,25 +118,36 @@
     # docs/fastfetch.md. Upstream has no binary cache; the patched build is
     # cached by our CI on FlakeHub.
     herdr.url = "github:herdrdev/herdr/v0.9.0";
-    # devenv from OUR fork's `custom` branch: upstream main plus our patch
-    # commits for the `devenv shell` virtual-terminal mux (both filed as
-    # cachix/devenv#3130): the terminal-query reply ordering fix (CPR was
-    # answered locally while OSC queries round-tripped to the real terminal,
-    # so termenv users like gh/glow got the cursor report first and left the
-    # colour reply in the tty buffer for zsh to eat), and kitty graphics
-    # passthrough (the VT stores images and answers `a=q`; the renderer
-    # mirrors placements onto the real terminal; a probed cell size gives the
-    # PTY pixel dimensions and answers `CSI 14 t`) so fastfetch/yazi/icat
-    # render images inside the shell. Rebase `custom` onto upstream and drop
-    # commits as they land. The patches touch the devenv-shell workspace
-    # crate, which crate2nix builds as its own derivation and the upstream
-    # flake exposes no crate-override hook for — hence a fork rather than an
-    # overlay patch (contrast herdr above). Deliberately NO nixpkgs
-    # `follows`: with the fork's lock identical to upstream's, every
-    # dependency crate hashes the same as upstream CI's and substitutes from
-    # devenv.cachix.org (wired in modules/{darwin,nixos}/devenv.nix); only
-    # devenv-shell and the devenv binary crate rebuild.
-    devenv.url = "github:kriswill/devenv/custom";
+    # devenv from UPSTREAM (pinned commit, NOT a flake input): the devenv
+    # overlay applies our patches from overlays/devenv/ to the source and
+    # evaluates the patched tree through flake-compat, so it builds with ITS
+    # OWN flake.lock (nixpkgs, rust-overlay, cachix, nix) exactly like
+    # upstream CI does — every dependency crate then substitutes from
+    # devenv.cachix.org (wired in modules/{darwin,nixos}/devenv.nix) and
+    # only the patched crates rebuild. Patches (both filed as
+    # cachix/devenv#3130) touch the `devenv shell` virtual-terminal mux:
+    # terminal-query reply ordering (CPR was answered locally while OSC
+    # queries round-tripped to the real terminal, so termenv users like
+    # gh/glow got the cursor report first and left the colour reply in the
+    # tty buffer for zsh to eat), and kitty graphics passthrough (the VT
+    # stores images and answers `a=q`; the renderer mirrors placements onto
+    # the real terminal; a probed cell size gives the PTY pixel dimensions and
+    # answers `CSI 14 t`) so fastfetch/yazi/icat render inside the shell.
+    # Bumping: move the rev, re-export the patches from a rebased branch
+    # (`git format-patch --no-signature <upstream>..HEAD`), drop patches as
+    # they land. The patched tree is a derivation, so evaluating it is
+    # import-from-derivation — cheap and cached, but an eval now needs a
+    # build step (the k host on darwin; nebula's Mac-side cross-eval already
+    # needs one for devenv's cachix input).
+    devenv-src = {
+      url = "github:cachix/devenv/2a399e9ea5e981f225d75b25c8fa8d76f730131d";
+      flake = false;
+    };
+    # Evaluates a patched flake source (the devenv overlay above).
+    flake-compat = {
+      url = "github:edolstra/flake-compat";
+      flake = false;
+    };
     # tomato — Rust CLI to get/set TOML values preserving comments + formatting
     # (built on toml_edit). Not a flake; built via rustPlatform in pkgs/tomato.nix
     # and exposed as pkgs.tomato. Used by the Hyprland gaps-toggle to flip

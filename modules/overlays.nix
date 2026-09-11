@@ -56,13 +56,26 @@
         };
       });
     };
-    # devenv from the kriswill/devenv fork's `custom` branch (upstream main +
-    # our patch commits, built with its own nixpkgs so dependency crates
-    # substitute from devenv.cachix.org — see flake.nix); close over `inputs`
-    # like ccglass above. Replaces pkgs.devenv wholesale so modules/{darwin,nixos}/devenv.nix
-    # keep installing `pkgs.devenv` unchanged.
+    # devenv: upstream's source (flake.nix `devenv-src`) plus our patches
+    # from overlays/devenv/, evaluated as a flake through flake-compat so it
+    # keeps upstream's own lock (see flake.nix for why). `applyPatches` runs
+    # on the build platform of the host being evaluated; the resulting
+    # `import` is import-from-derivation. Replaces pkgs.devenv wholesale so
+    # modules/{darwin,nixos}/devenv.nix keep installing `pkgs.devenv`.
     devenv = _final: prev: {
-      devenv = inputs.devenv.packages.${prev.stdenv.hostPlatform.system}.devenv;
+      devenv =
+        let
+          patched = prev.applyPatches {
+            name = "devenv-source-patched";
+            src = inputs.devenv-src;
+            patches = [
+              ../overlays/devenv/0001-reply-ordering.patch
+              ../overlays/devenv/0002-kitty-graphics.patch
+            ];
+          };
+          flake = (import inputs.flake-compat { src = patched; }).defaultNix;
+        in
+        flake.packages.${prev.stdenv.hostPlatform.system}.devenv;
     };
     # dotbar comes from its flake input (pinned to the nix-flake PR head, see
     # flake.nix); close over `inputs` like ccglass above.

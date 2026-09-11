@@ -1,0 +1,2123 @@
+From 1ffa7650e337861757e801835e0be0bdb3910c49 Mon Sep 17 00:00:00 2001
+From: Kris Williams <115474+kriswill@users.noreply.github.com>
+Date: Thu, 10 Sep 2026 18:41:39 -0700
+Subject: [PATCH 2/2] devenv-shell: kitty graphics passthrough for the
+ interactive shell
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Programs inside `devenv shell` could not draw images (cachix/devenv#3130):
+the child's output is fed to a libghostty virtual terminal and the real
+terminal is repainted from it, so kitty graphics APC sequences never left
+the VT, the capability query (`a=q`) was never answered, and `CSI 14 t`
+plus a zero-pixel PTY left `kitten icat` reporting "does not support
+reporting screen sizes in pixels". fastfetch, yazi and icat all fell back
+to text.
+
+Fix it from the VT side rather than forwarding raw bytes around it:
+
+* kitty_images.rs: enable kitty graphics in the VT (storage limit, local
+  transfer mediums, a PNG decoder on the `png` crate) so it stores images,
+  resolves placements and answers the child itself. After every rendered
+  frame `ImageSync` mirrors the VT's placements onto the real terminal:
+  images are transmitted once per (id, generation) under a private id
+  range, placements are made at explicit cursor positions on the rows the
+  renderer drew, clipped to the content area so nothing covers the status
+  line, deleted when the VT drops them, and removed on exit. All commands
+  carry `q=2`, so the real terminal's replies never reach stdin.
+* The VT's `ESC _ G … ESC \` replies pass the deny-by-default pty-write
+  filter; the child's own commands still never reach the real terminal.
+* cell_size.rs: probe the real terminal's cell size with `CSI 16 t` at
+  startup and after resizes, intercepting the reply on stdin. It gives the
+  PTY pixel dimensions (so `TIOCGWINSZ` works), the VT its cell geometry
+  (so placements resolve to grid cells) and answers `CSI 14 t` for the
+  child's area, which excludes the status row. Until the terminal answers,
+  `CSI 14 t` is forwarded as before.
+
+The PNG decoder is thread-local in libghostty-rs and must be installed on
+the VT thread before the terminal is created. Cargo.lock only gains png
+and fdeflate; Cargo.nix regenerated accordingly.
+
+Tests: unit tests for the clipping math, command encoding, probe
+interception and a libghostty-backed round trip; pty session tests for
+the `a=q` answer, a mirrored PNG placement and the `CSI 14 t` reply.
+---
+ Cargo.lock                            |  24 +
+ Cargo.nix                             |  63 +-
+ Cargo.toml                            |   1 +
+ devenv-shell/Cargo.toml               |   4 +
+ devenv-shell/src/cell_size.rs         | 269 +++++++++
+ devenv-shell/src/escape/mod.rs        |  33 +-
+ devenv-shell/src/escape_state.rs      |  22 +-
+ devenv-shell/src/kitty_images.rs      | 823 ++++++++++++++++++++++++++
+ devenv-shell/src/lib.rs               |   2 +
+ devenv-shell/src/session.rs           | 199 ++++++-
+ devenv-shell/src/terminal_commands.rs |  16 +
+ devenv-shell/tests/session_tests.rs   | 171 +++++-
+ 12 files changed, 1583 insertions(+), 44 deletions(-)
+ create mode 100644 devenv-shell/src/cell_size.rs
+ create mode 100644 devenv-shell/src/kitty_images.rs
+
+diff --git a/Cargo.lock b/Cargo.lock
+index 55afbd60..6e2f5f56 100644
+--- a/Cargo.lock
++++ b/Cargo.lock
+@@ -2722,6 +2722,7 @@ dependencies = [
+ name = "devenv-shell"
+ version = "2.3.1"
+ dependencies = [
++ "base64",
+  "crossterm",
+  "devenv-mailbox",
+  "insta",
+@@ -2729,6 +2730,7 @@ dependencies = [
+  "libc",
+  "libghostty-vt",
+  "libghostty-vt-sys",
++ "png",
+  "portable-pty",
+  "shell-escape",
+  "thiserror 2.0.18",
+@@ -3170,6 +3172,15 @@ dependencies = [
+  "windows-sys 0.52.0",
+ ]
+ 
++[[package]]
++name = "fdeflate"
++version = "0.3.7"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "1e6853b52649d4ac5c0bd02320cddc5ba956bdb407c4b75a2c6b75bf51500f8c"
++dependencies = [
++ "simd-adler32",
++]
++
+ [[package]]
+ name = "ff"
+ version = "0.13.1"
+@@ -6834,6 +6845,19 @@ version = "0.3.33"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "19f132c84eca552bf34cab8ec81f1c1dcc229b811638f9d283dceabe58c5569e"
+ 
++[[package]]
++name = "png"
++version = "0.18.1"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "60769b8b31b2a9f263dae2776c37b1b28ae246943cf719eb6946a1db05128a61"
++dependencies = [
++ "bitflags 2.13.0",
++ "crc32fast",
++ "fdeflate",
++ "flate2",
++ "miniz_oxide",
++]
++
+ [[package]]
+ name = "polling"
+ version = "3.11.0"
+diff --git a/Cargo.nix b/Cargo.nix
+index a8768b63..9b658166 100644
+--- a/Cargo.nix
++++ b/Cargo.nix
+@@ -9398,6 +9398,10 @@ rec {
+         src = lib.cleanSourceWith { filter = sourceFilter;  src = ./devenv-shell; };
+         libName = "devenv_shell";
+         dependencies = [
++          {
++            name = "base64";
++            packageId = "base64";
++          }
+           {
+             name = "crossterm";
+             packageId = "crossterm";
+@@ -9426,6 +9430,10 @@ rec {
+             usesDefaultFeatures = false;
+             features = [ "pkg-config" ];
+           }
++          {
++            name = "png";
++            packageId = "png";
++          }
+           {
+             name = "portable-pty";
+             packageId = "portable-pty";
+@@ -10827,6 +10835,22 @@ rec {
+           }
+         ];
+ 
++      };
++      "fdeflate" = rec {
++        crateName = "fdeflate";
++        version = "0.3.7";
++        edition = "2021";
++        sha256 = "130ga18vyxbb5idbgi07njymdaavvk6j08yh1dfarm294ssm6s0y";
++        authors = [
++          "The image-rs Developers"
++        ];
++        dependencies = [
++          {
++            name = "simd-adler32";
++            packageId = "simd-adler32";
++          }
++        ];
++
+       };
+       "ff" = rec {
+         crateName = "ff";
+@@ -19052,7 +19076,7 @@ rec {
+           "simd" = [ "simd-adler32" ];
+           "simd-adler32" = [ "dep:simd-adler32" ];
+         };
+-        resolvedDefaultFeatures = [ "simd" "simd-adler32" "with-alloc" ];
++        resolvedDefaultFeatures = [ "default" "simd" "simd-adler32" "with-alloc" ];
+       };
+       "mio" = rec {
+         crateName = "mio";
+@@ -22787,6 +22811,42 @@ rec {
+         ];
+ 
+       };
++      "png" = rec {
++        crateName = "png";
++        version = "0.18.1";
++        edition = "2021";
++        sha256 = "0qca282xp8a6d7mikxrwji3f52mjn4vnqxz2v9iz5adj665rnxk0";
++        authors = [
++          "The image-rs Developers"
++        ];
++        dependencies = [
++          {
++            name = "bitflags";
++            packageId = "bitflags 2.13.0";
++          }
++          {
++            name = "crc32fast";
++            packageId = "crc32fast";
++          }
++          {
++            name = "fdeflate";
++            packageId = "fdeflate";
++          }
++          {
++            name = "flate2";
++            packageId = "flate2";
++          }
++          {
++            name = "miniz_oxide";
++            packageId = "miniz_oxide";
++            features = [ "simd" ];
++          }
++        ];
++        features = {
++          "unstable" = [ "crc32fast/nightly" ];
++          "zlib-rs" = [ "flate2/zlib-rs" ];
++        };
++      };
+       "polling" = rec {
+         crateName = "polling";
+         version = "3.11.0";
+@@ -29052,6 +29112,7 @@ rec {
+         features = {
+           "default" = [ "std" "const-generics" ];
+         };
++        resolvedDefaultFeatures = [ "const-generics" "default" "std" ];
+       };
+       "simd_cesu8" = rec {
+         crateName = "simd_cesu8";
+diff --git a/Cargo.toml b/Cargo.toml
+index 9d53214f..fdc20e83 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -64,6 +64,7 @@ libghostty-vt-sys = { git = "https://github.com/Uzaaft/libghostty-rs.git", branc
+   "pkg-config",
+ ] }
+ base64 = "0.22"
++png = "0.18"
+ anyhow = "1.0.102"
+ async-priority-channel = "0.2.0"
+ async-trait = "0.1"
+diff --git a/devenv-shell/Cargo.toml b/devenv-shell/Cargo.toml
+index ebfcddf7..805d6dbb 100644
+--- a/devenv-shell/Cargo.toml
++++ b/devenv-shell/Cargo.toml
+@@ -19,6 +19,10 @@ iocraft.workspace = true
+ 
+ # Terminal state tracking
+ libghostty-vt.workspace = true
++# Kitty graphics passthrough (kitty_images.rs): PNG decoding for the virtual
++# terminal and base64 for re-transmitting pixels to the real terminal.
++png.workspace = true
++base64.workspace = true
+ # Direct dep required to enable the `pkg-config` feature on libghostty-vt-sys.
+ # Without it, libghostty-vt pulls libghostty-vt-sys with default features and
+ # its build.rs invokes `zig build`, which fails when zig is not installed.
+diff --git a/devenv-shell/src/cell_size.rs b/devenv-shell/src/cell_size.rs
+new file mode 100644
+index 00000000..32bf48ca
+--- /dev/null
++++ b/devenv-shell/src/cell_size.rs
+@@ -0,0 +1,269 @@
++//! Learn the real terminal's cell size in pixels.
++//!
++//! The child's PTY is created without pixel dimensions and the virtual
++//! terminal without a cell size, so anything that needs pixels — `kitten
++//! icat`'s `TIOCGWINSZ`, the kitty graphics grid math in libghostty-vt, a
++//! `CSI 14 t` query — sees zeros. The session asks the real terminal once at
++//! startup and again after every resize (`CSI 16 t`, XTWINOPS cell size) and
++//! intercepts the `CSI 6 ; height ; width t` answer on stdin before it can
++//! reach the child as keystrokes.
++
++use std::io::{self, Write};
++use std::time::{Duration, Instant};
++
++/// How long an unanswered probe stays armed. A terminal that does not
++/// implement XTWINOPS never replies; after this the interception stops so a
++/// later reply to the child's own forwarded `CSI 16 t` is not swallowed.
++pub const PROBE_TIMEOUT: Duration = Duration::from_secs(2);
++
++/// The physical terminal's cell size in pixels.
++#[derive(Clone, Copy, Debug, PartialEq, Eq)]
++pub struct CellSize {
++    pub width: u16,
++    pub height: u16,
++}
++
++/// Outstanding `CSI 16 t` probes and the stdin interception for their reply.
++#[derive(Debug, Default)]
++pub struct CellSizeProbe {
++    pending: usize,
++    since: Option<Instant>,
++    /// Tail of the previous stdin chunk that could be the start of a reply
++    /// split across reads.
++    carry: Vec<u8>,
++}
++
++impl CellSizeProbe {
++    /// Ask the real terminal for its cell size. The answer arrives on stdin
++    /// and is taken by [`Self::intercept`].
++    pub fn query(&mut self, stdout: &mut impl Write) -> io::Result<()> {
++        stdout.write_all(b"\x1b[16t")?;
++        if self.pending == 0 {
++            self.since = Some(Instant::now());
++        }
++        self.pending += 1;
++        Ok(())
++    }
++
++    fn expire_if_stale(&mut self) {
++        if self.pending > 0
++            && self
++                .since
++                .is_some_and(|since| since.elapsed() > PROBE_TIMEOUT)
++        {
++            self.pending = 0;
++            self.since = None;
++        }
++    }
++
++    /// Whether a probe is outstanding (and not yet timed out).
++    pub fn is_pending(&mut self) -> bool {
++        self.expire_if_stale();
++        self.pending > 0
++    }
++
++    /// Remove one cell-size reply from a stdin chunk. Everything else in the
++    /// chunk (and any carried-over tail) is appended to `out` in order. When a
++    /// reply is found it is returned and the probe count drops by one.
++    ///
++    /// Only used while a probe is pending; otherwise stdin is untouched.
++    pub fn intercept(&mut self, data: &[u8], out: &mut Vec<u8>) -> Option<CellSize> {
++        out.clear();
++        if !self.is_pending() {
++            out.extend_from_slice(&self.carry);
++            self.carry.clear();
++            out.extend_from_slice(data);
++            return None;
++        }
++        let mut buf = std::mem::take(&mut self.carry);
++        buf.extend_from_slice(data);
++
++        if let Some((start, end, size)) = find_reply(&buf) {
++            out.extend_from_slice(&buf[..start]);
++            out.extend_from_slice(&buf[end..]);
++            self.pending -= 1;
++            if self.pending == 0 {
++                self.since = None;
++            }
++            return Some(size);
++        }
++
++        // Hold back a tail that can only be the beginning of a reply
++        // (`ESC [ 6` or longer): terminal replies rarely straddle a read,
++        // but a lone ESC or `ESC [` is common keyboard input and passes.
++        let split = buf.len() - partial_reply_suffix(&buf);
++        out.extend_from_slice(&buf[..split]);
++        self.carry.extend_from_slice(&buf[split..]);
++        None
++    }
++}
++
++/// Locate `ESC [ 6 ; <height> ; <width> t`; returns its byte range and the
++/// parsed size.
++fn find_reply(buf: &[u8]) -> Option<(usize, usize, CellSize)> {
++    let mut i = 0;
++    while let Some(offset) = buf[i..].windows(4).position(|w| w == b"\x1b[6;") {
++        let start = i + offset;
++        let body_start = start + 4;
++        if let Some(rel_end) = buf[body_start..].iter().position(|&b| b == b't') {
++            let end = body_start + rel_end + 1;
++            let body = &buf[body_start..body_start + rel_end];
++            if let Some(size) = parse_body(body) {
++                return Some((start, end, size));
++            }
++        }
++        i = start + 1;
++    }
++    None
++}
++
++fn parse_body(body: &[u8]) -> Option<CellSize> {
++    let separator = body.iter().position(|&b| b == b';')?;
++    let (height, width) = (&body[..separator], &body[separator + 1..]);
++    let parse = |digits: &[u8]| -> Option<u16> {
++        (!digits.is_empty() && digits.iter().all(u8::is_ascii_digit))
++            .then(|| std::str::from_utf8(digits).ok()?.parse().ok())
++            .flatten()
++    };
++    let size = CellSize {
++        height: parse(height)?,
++        width: parse(width)?,
++    };
++    (size.width > 0 && size.height > 0).then_some(size)
++}
++
++/// Length of a suffix of `buf` that is a proper prefix of a reply, at least
++/// `ESC [ 6` long; 0 when the chunk ends cleanly.
++fn partial_reply_suffix(buf: &[u8]) -> usize {
++    let Some(esc) = buf.iter().rposition(|&b| b == 0x1b) else {
++        return 0;
++    };
++    let tail = &buf[esc..];
++    if tail.len() < 3 || !tail.starts_with(b"\x1b[6") {
++        return 0;
++    }
++    let rest = &tail[3..];
++    let mut separators = 0;
++    for &b in rest {
++        match b {
++            b';' => separators += 1,
++            b if b.is_ascii_digit() => {}
++            _ => return 0,
++        }
++    }
++    if separators > 2 {
++        return 0;
++    }
++    tail.len()
++}
++
++#[cfg(test)]
++mod tests {
++    use super::*;
++
++    fn armed() -> CellSizeProbe {
++        let mut probe = CellSizeProbe::default();
++        probe.query(&mut Vec::new()).unwrap();
++        probe
++    }
++
++    #[test]
++    fn query_writes_xtwinops_cell_size_request() {
++        let mut out = Vec::new();
++        let mut probe = CellSizeProbe::default();
++        probe.query(&mut out).unwrap();
++        assert_eq!(out, b"\x1b[16t");
++        assert!(probe.is_pending());
++    }
++
++    #[test]
++    fn reply_is_removed_from_stdin_and_parsed() {
++        let mut probe = armed();
++        let mut out = Vec::new();
++        let size = probe.intercept(b"ab\x1b[6;20;9tcd", &mut out);
++        assert_eq!(
++            size,
++            Some(CellSize {
++                width: 9,
++                height: 20
++            })
++        );
++        assert_eq!(out, b"abcd");
++        assert!(!probe.is_pending());
++    }
++
++    #[test]
++    fn stdin_passes_untouched_when_nothing_is_pending() {
++        let mut probe = CellSizeProbe::default();
++        let mut out = Vec::new();
++        assert_eq!(probe.intercept(b"\x1b[6;20;9t", &mut out), None);
++        assert_eq!(out, b"\x1b[6;20;9t");
++    }
++
++    #[test]
++    fn only_one_reply_is_taken_per_probe() {
++        let mut probe = armed();
++        let mut out = Vec::new();
++        // The child's own forwarded CSI 16 t may be answered in the same
++        // read; that copy must reach it.
++        let size = probe.intercept(b"\x1b[6;20;9t\x1b[6;20;9t", &mut out);
++        assert!(size.is_some());
++        assert_eq!(out, b"\x1b[6;20;9t");
++    }
++
++    #[test]
++    fn split_reply_is_reassembled_across_reads() {
++        let mut probe = armed();
++        let mut out = Vec::new();
++        assert_eq!(probe.intercept(b"x\x1b[6;2", &mut out), None);
++        assert_eq!(out, b"x");
++        let size = probe.intercept(b"0;9ty", &mut out);
++        assert_eq!(
++            size,
++            Some(CellSize {
++                width: 9,
++                height: 20
++            })
++        );
++        assert_eq!(out, b"y");
++    }
++
++    #[test]
++    fn bare_escape_and_csi_are_not_held_back() {
++        let mut probe = armed();
++        let mut out = Vec::new();
++        assert_eq!(probe.intercept(b"\x1b", &mut out), None);
++        assert_eq!(out, b"\x1b");
++        assert_eq!(probe.intercept(b"\x1b[", &mut out), None);
++        assert_eq!(out, b"\x1b[");
++        assert_eq!(probe.intercept(b"\x1b[6;1;1x", &mut out), None);
++        assert_eq!(out, b"\x1b[6;1;1x");
++    }
++
++    #[test]
++    fn other_xtwinops_reports_pass_through() {
++        let mut probe = armed();
++        let mut out = Vec::new();
++        assert_eq!(probe.intercept(b"\x1b[8;24;80t", &mut out), None);
++        assert_eq!(out, b"\x1b[8;24;80t");
++        assert!(probe.is_pending());
++    }
++
++    #[test]
++    fn zero_sizes_are_rejected() {
++        assert_eq!(parse_body(b"0;9"), None);
++        assert_eq!(parse_body(b"20;0"), None);
++        assert_eq!(parse_body(b"20"), None);
++        assert_eq!(parse_body(b"a;b"), None);
++    }
++
++    #[test]
++    fn stale_probe_stops_intercepting() {
++        let mut probe = armed();
++        probe.since = Some(Instant::now() - PROBE_TIMEOUT - Duration::from_millis(1));
++        let mut out = Vec::new();
++        assert_eq!(probe.intercept(b"\x1b[6;20;9t", &mut out), None);
++        assert_eq!(out, b"\x1b[6;20;9t");
++        assert!(!probe.is_pending());
++    }
++}
+diff --git a/devenv-shell/src/escape/mod.rs b/devenv-shell/src/escape/mod.rs
+index 2d00e15d..fcf4df11 100644
+--- a/devenv-shell/src/escape/mod.rs
++++ b/devenv-shell/src/escape/mod.rs
+@@ -247,6 +247,10 @@ pub enum SequenceEvent {
+     /// CSI 18 t — program is querying text area size in characters.
+     /// The session responds with PTY dimensions (not real terminal size).
+     TextAreaSizeQuery,
++    /// CSI 14 t — program is querying text area size in pixels. Answered
++    /// from PTY dimensions × the probed cell size once known (the child has
++    /// one row fewer than the real terminal); forwarded until then.
++    TextAreaPixelSizeQuery,
+     /// Query handled by the virtual terminal's narrowly filtered reply hook.
+     /// It must not be written to the physical terminal.
+     VirtualTerminalQuery(VirtualTerminalQuery),
+@@ -338,6 +342,9 @@ enum CsiClass {
+     /// CSI 18 t — text area size query. Intercepted so we can respond
+     /// with PTY dimensions instead of the real terminal size.
+     TextAreaSizeQuery,
++    /// CSI 14 t — text area pixel size query. Intercepted for the same
++    /// reason; see `SequenceEvent::TextAreaPixelSizeQuery`.
++    TextAreaPixelSizeQuery,
+     /// Query that must be answered from the virtual terminal state.
+     VirtualTerminalQuery(VirtualTerminalQuery),
+     /// AVT handles it, no forwarding needed.
+@@ -386,6 +393,7 @@ fn classify_csi(
+         // XTWINOPS queries (see FORWARDED_MODES doc comment for why
+         // size-reporting queries are not forwarded to the real terminal).
+         ([], b't') if first == 18 => CsiClass::TextAreaSizeQuery,
++        ([], b't') if first == 14 => CsiClass::TextAreaPixelSizeQuery,
+         ([], b't') if matches!(first, 16 | 21) => CsiClass::Forward,
+ 
+         // Erase — intercept for renderer coordination
+@@ -902,6 +910,9 @@ impl EscapeScanner {
+             CsiClass::TextAreaSizeQuery => {
+                 events.push(SequenceEvent::TextAreaSizeQuery);
+             }
++            CsiClass::TextAreaPixelSizeQuery => {
++                events.push(SequenceEvent::TextAreaPixelSizeQuery);
++            }
+             CsiClass::VirtualTerminalQuery(query) => {
+                 events.push(SequenceEvent::VirtualTerminalQuery(query));
+             }
+@@ -1121,10 +1132,10 @@ mod tests {
+     fn forwarded_queries_report_whether_the_terminal_answers() {
+         let mut scanner = EscapeScanner::new();
+         let cases: &[(&[u8], bool)] = &[
+-            (b"\x1b]11;?\x1b\\", true),       // OSC 11 background query
+-            (b"\x1b]10;?\x07", true),           // OSC 10 with BEL terminator
+-            (b"\x1b]4;1;?\x1b\\", true),      // OSC 4 palette query
+-            (b"\x1b]0;my title\x07", false),    // OSC 0 title set
++            (b"\x1b]11;?\x1b\\", true),          // OSC 11 background query
++            (b"\x1b]10;?\x07", true),            // OSC 10 with BEL terminator
++            (b"\x1b]4;1;?\x1b\\", true),         // OSC 4 palette query
++            (b"\x1b]0;my title\x07", false),     // OSC 0 title set
+             (b"\x1b]8;;https://x\x1b\\", false), // OSC 8 hyperlink
+             (b"\x1b[c", true),                   // DA1
+             (b"\x1b[>c", true),                  // DA2
+@@ -1135,8 +1146,8 @@ mod tests {
+             (b"\x1b[16t", true),                 // XTWINOPS cell size
+             (b"\x1b[2 q", false),                // DECSCUSR
+             (b"\x1b[>1s", false),                // XTSHIFTESCAPE
+-            (b"\x1bP+q544e\x1b\\", true),     // XTGETTCAP
+-            (b"\x1bP$qm\x1b\\", true),        // DECRQSS
++            (b"\x1bP+q544e\x1b\\", true),        // XTGETTCAP
++            (b"\x1bP$qm\x1b\\", true),           // DECRQSS
+         ];
+         for (input, expected) in cases {
+             let events = scanner.scan(input);
+@@ -1639,11 +1650,15 @@ mod tests {
+     }
+ 
+     #[test]
+-    fn ignores_xtwinops_pixel_size() {
+-        // CSI 14 t reports real terminal size; not forwarded (see FORWARDED_MODES).
++    fn intercepts_xtwinops_pixel_size() {
++        // CSI 14 t is intercepted so the session can answer with the PTY's
++        // pixel size (real cell size × the child's rows), never the whole
++        // window's.
+         let mut scanner = EscapeScanner::new();
+         let events = scanner.scan(b"\x1b[14t");
+-        assert!(events.is_empty());
++        assert_eq!(events.len(), 1);
++        assert!(matches!(events[0], SequenceEvent::TextAreaPixelSizeQuery));
++        assert!(!events[0].expects_physical_reply());
+     }
+ 
+     #[test]
+diff --git a/devenv-shell/src/escape_state.rs b/devenv-shell/src/escape_state.rs
+index f9457ab1..832f7627 100644
+--- a/devenv-shell/src/escape_state.rs
++++ b/devenv-shell/src/escape_state.rs
+@@ -8,7 +8,7 @@
+ use crate::escape::{CLEANUP_MODES, DecModeEvent, EscapeScanner, SequenceEvent};
+ use crate::pty::Pty;
+ use crate::terminal_commands::{
+-    ReportTextAreaSize, ResetDecMode, ResetModifyOtherKeys, SetKeypadMode,
++    ReportTextAreaPixelSize, ReportTextAreaSize, ResetDecMode, ResetModifyOtherKeys, SetKeypadMode,
+ };
+ use crossterm::event::PopKeyboardEnhancementFlags;
+ use crossterm::{Command, queue, terminal};
+@@ -307,6 +307,26 @@ pub fn process_escape_events(
+                 pty.write_all(buf.as_bytes())?;
+                 pty.flush()?;
+             }
++            SequenceEvent::TextAreaPixelSizeQuery => {
++                if pty_size.pixel_width > 0 && pty_size.pixel_height > 0 {
++                    // The cell size has been probed: answer for the child's
++                    // own area, which excludes the status row.
++                    let cmd = ReportTextAreaPixelSize {
++                        height_px: pty_size.pixel_height,
++                        width_px: pty_size.pixel_width,
++                    };
++                    let mut buf = String::new();
++                    cmd.write_ansi(&mut buf).unwrap();
++                    pty.write_all(buf.as_bytes())?;
++                    pty.flush()?;
++                } else {
++                    // Not probed yet (or the terminal never answered): let
++                    // the real terminal report, as the mature passthrough
++                    // path did for every other XTWINOPS query.
++                    stdout.write_all(b"\x1b[14t")?;
++                    esc.note_forwarded_query();
++                }
++            }
+             // The raw bytes still reach libghostty-vt, whose narrowly
+             // filtered `on_pty_write` effect responds from virtual state.
+             // Do not pass these through to stdout: the physical terminal
+diff --git a/devenv-shell/src/kitty_images.rs b/devenv-shell/src/kitty_images.rs
+new file mode 100644
+index 00000000..d74d3b1f
+--- /dev/null
++++ b/devenv-shell/src/kitty_images.rs
+@@ -0,0 +1,823 @@
++//! Kitty graphics passthrough.
++//!
++//! The child's output is fed to a libghostty virtual terminal and the real
++//! terminal is repainted from it, so an image the child transmits with the
++//! [Kitty graphics protocol](https://sw.kovidgoyal.net/kitty/graphics-protocol/)
++//! never reaches the real terminal on its own: the VT parses the APC
++//! sequence, stores the image and its placement, and answers the child.
++//!
++//! This module closes the gap from the VT side. After each rendered frame
++//! [`ImageSync::sync`] reads the placements the VT holds for the active
++//! screen and mirrors them on the real terminal: images are transmitted once
++//! per (id, generation) under a private id range, placements are positioned
++//! with explicit cursor moves so they land on the rows the renderer drew,
++//! clipped to the content area (never the status line), and removed again
++//! when the VT no longer has them. Every command carries `q=2` so the real
++//! terminal stays silent — its replies would otherwise arrive on stdin as
++//! keystrokes.
++//!
++//! The VT also needs a PNG decoder and a storage limit before it accepts any
++//! image data; see [`install_png_decoder`] and [`enable`].
++
++use base64::Engine;
++use base64::engine::general_purpose::STANDARD as BASE64;
++use crossterm::{cursor, queue};
++use libghostty_vt::alloc::{Allocator, Bytes};
++use libghostty_vt::kitty::graphics::{
++    self, Compression, DecodePng, DecodedImage, ImageFormat, Layer, PlacementIterator,
++};
++use libghostty_vt::terminal::Terminal;
++use std::collections::HashMap;
++use std::io::{self, Write};
++
++/// Image storage budget for the virtual terminal (Ghostty's own default).
++/// A non-zero limit is what enables kitty graphics in libghostty-vt.
++pub const IMAGE_STORAGE_LIMIT: u64 = 320 * 1024 * 1024;
++
++/// Image ids used on the real terminal live above this base so they never
++/// collide with images placed there before `devenv shell` took over (or by
++/// an outer multiplexer). The VT's own id space is the child's; the two are
++/// mapped through [`real_image_id`].
++const REAL_ID_BASE: u32 = 1 << 30;
++const REAL_ID_MASK: u32 = REAL_ID_BASE - 1;
++
++/// Kitty caps a single APC payload at 4096 bytes of base64.
++const CHUNK_BYTES: usize = 4096;
++
++/// PNG decoder for libghostty-vt, on the `png` crate. libghostty only stores
++/// RGBA8, so palette, grayscale and 16-bit images are expanded on the way in.
++#[derive(Default)]
++struct PngDecoder;
++
++impl DecodePng for PngDecoder {
++    fn decode_png<'alloc>(
++        &mut self,
++        alloc: &'alloc Allocator<'_>,
++        data: &[u8],
++    ) -> Option<DecodedImage<'alloc>> {
++        use png::{ColorType, Decoder, Transformations};
++
++        let mut decoder = Decoder::new(io::Cursor::new(data));
++        decoder.set_transformations(Transformations::ALPHA | Transformations::STRIP_16);
++        let mut reader = decoder.read_info().ok()?;
++        let mut buf = vec![0u8; reader.output_buffer_size()?];
++        let info = reader.next_frame(&mut buf).ok()?;
++        let pixels = &buf[..info.buffer_size()];
++        let rgba: Vec<u8> = match info.color_type {
++            ColorType::Rgba => pixels.to_vec(),
++            ColorType::Rgb => pixels
++                .chunks_exact(3)
++                .flat_map(|p| [p[0], p[1], p[2], 0xff])
++                .collect(),
++            ColorType::GrayscaleAlpha => pixels
++                .chunks_exact(2)
++                .flat_map(|p| [p[0], p[0], p[0], p[1]])
++                .collect(),
++            ColorType::Grayscale => pixels.iter().flat_map(|&g| [g, g, g, 0xff]).collect(),
++            ColorType::Indexed => return None,
++        };
++        let mut bytes = Bytes::new_with_alloc(alloc, rgba.len()).ok()?;
++        bytes.copy_from_slice(&rgba);
++        Some(DecodedImage {
++            width: info.width,
++            height: info.height,
++            data: bytes,
++        })
++    }
++}
++
++/// Register the PNG decoder with libghostty-vt for the calling thread.
++///
++/// libghostty-rs keeps the decoder in a thread-local (terminals are `!Send`,
++/// so decoding always happens on the thread that owns the terminal), which
++/// means it must be installed on the VT thread itself, before the terminal
++/// is created. Calling it again on the same thread is a no-op.
++pub fn install_png_decoder() {
++    thread_local! {
++        static INSTALLED: std::cell::Cell<bool> = const { std::cell::Cell::new(false) };
++    }
++    if INSTALLED.replace(true) {
++        return;
++    }
++    if let Err(e) = graphics::set_png_decoder(Some(Box::new(PngDecoder))) {
++        tracing::warn!("kitty graphics: failed to install PNG decoder: {e}");
++        INSTALLED.set(false);
++    }
++}
++
++/// Enable kitty graphics on a virtual terminal. Local transfer mediums are
++/// allowed because the child runs on this host: `kitten icat`, for one,
++/// prefers a temp file over inline base64 when it can. Temp-file transfers
++/// are confined to the process temp dir, which is where clients honouring
++/// `TMPDIR` write them.
++pub fn enable(vt: &mut Terminal<'_, '_>) -> Result<(), libghostty_vt::Error> {
++    let temp_dir = std::env::temp_dir();
++    vt.set_kitty_image_storage_limit(IMAGE_STORAGE_LIMIT)?
++        .set_kitty_image_from_file_allowed(true)?
++        .set_kitty_image_temp_file_dir(Some(&temp_dir))?
++        .set_kitty_image_from_shared_mem_allowed(true)?;
++    Ok(())
++}
++
++/// Whether an `on_pty_write` payload is a kitty graphics response
++/// (`ESC _ G … ESC \`). These are answers to the child's own image commands
++/// and must reach it: `kitten icat` waits for the `a=q` capability reply
++/// before it sends anything.
++pub fn is_kitty_graphics_reply(data: &[u8]) -> bool {
++    data.starts_with(b"\x1b_G") && data.ends_with(b"\x1b\\")
++}
++
++/// The id an image is known by on the real terminal.
++fn real_image_id(vt_image_id: u32) -> u32 {
++    REAL_ID_BASE | (vt_image_id & REAL_ID_MASK)
++}
++
++/// One placement as it should appear on the real terminal.
++#[derive(Clone, Debug, PartialEq, Eq)]
++struct Placement {
++    image: u32,
++    /// Real-terminal row/column (already offset by the renderer's takeover
++    /// offset and clipped to the content area).
++    row: u16,
++    col: u16,
++    cols: u32,
++    rows: u32,
++    src: SourceRect,
++    x_offset: u32,
++    y_offset: u32,
++    z: i32,
++}
++
++#[derive(Clone, Copy, Debug, PartialEq, Eq)]
++struct SourceRect {
++    x: u32,
++    y: u32,
++    width: u32,
++    height: u32,
++}
++
++/// A placement's position and extent inside the viewport, before clipping.
++#[derive(Clone, Copy, Debug, PartialEq, Eq)]
++struct Extent {
++    /// Viewport row/col of the top-left cell; negative when scrolled above.
++    row: i32,
++    col: i32,
++    rows: u32,
++    cols: u32,
++}
++
++/// Clip a placement to the visible content area, trimming the source
++/// rectangle proportionally so the visible part keeps its scale. Returns
++/// `None` when nothing is left.
++fn clip(
++    extent: Extent,
++    src: SourceRect,
++    visible_rows: usize,
++    visible_cols: usize,
++) -> Option<(Extent, SourceRect)> {
++    if extent.rows == 0 || extent.cols == 0 || visible_rows == 0 || visible_cols == 0 {
++        return None;
++    }
++    let cut = |pos: i32, len: u32, limit: usize| -> Option<(u32, u32, i32)> {
++        let start_cut = pos.min(0).unsigned_abs();
++        let end = pos as i64 + len as i64;
++        let end_cut = (end - limit as i64).max(0) as u32;
++        let kept = len.checked_sub(start_cut)?.checked_sub(end_cut)?;
++        (kept > 0).then_some((start_cut, kept, pos + start_cut as i32))
++    };
++    let (top_cut, rows, row) = cut(extent.row, extent.rows, visible_rows)?;
++    let (left_cut, cols, col) = cut(extent.col, extent.cols, visible_cols)?;
++    let scale = |value: u32, part: u32, whole: u32| -> u32 {
++        (value as u64 * part as u64 / whole as u64) as u32
++    };
++    let clipped_src = SourceRect {
++        x: src.x + scale(src.width, left_cut, extent.cols),
++        y: src.y + scale(src.height, top_cut, extent.rows),
++        width: scale(src.width, cols, extent.cols).max(1),
++        height: scale(src.height, rows, extent.rows).max(1),
++    };
++    Some((
++        Extent {
++            row,
++            col,
++            rows,
++            cols,
++        },
++        clipped_src,
++    ))
++}
++
++/// Chunked `a=t` transmission of raw pixel data under a real-terminal id.
++fn transmit_commands(
++    real_id: u32,
++    format: u8,
++    width: u32,
++    height: u32,
++    zlib: bool,
++    data: &[u8],
++) -> Vec<u8> {
++    let encoded = BASE64.encode(data);
++    let chunks: Vec<&[u8]> = if encoded.is_empty() {
++        vec![&[][..]]
++    } else {
++        encoded.as_bytes().chunks(CHUNK_BYTES).collect()
++    };
++    let last = chunks.len() - 1;
++    let mut out = Vec::with_capacity(encoded.len() + chunks.len() * 48);
++    for (index, chunk) in chunks.iter().enumerate() {
++        let more = u8::from(index != last);
++        if index == 0 {
++            out.extend_from_slice(
++                format!(
++                    "\x1b_Ga=t,t=d,q=2,i={real_id},f={format},s={width},v={height}{},m={more};",
++                    if zlib { ",o=z" } else { "" }
++                )
++                .as_bytes(),
++            );
++        } else {
++            out.extend_from_slice(format!("\x1b_Gm={more};").as_bytes());
++        }
++        out.extend_from_slice(chunk);
++        out.extend_from_slice(b"\x1b\\");
++    }
++    out
++}
++
++/// `a=p` placement at the cursor. `C=1` keeps the real cursor where the
++/// renderer put it.
++fn place_command(real_placement: u32, p: &Placement) -> String {
++    format!(
++        "\x1b_Ga=p,q=2,C=1,i={},p={},c={},r={},x={},y={},w={},h={},X={},Y={},z={}\x1b\\",
++        p.image,
++        real_placement,
++        p.cols,
++        p.rows,
++        p.src.x,
++        p.src.y,
++        p.src.width,
++        p.src.height,
++        p.x_offset,
++        p.y_offset,
++        p.z
++    )
++}
++
++/// Delete one placement, keeping the image data for reuse.
++fn delete_placement_command(real_image: u32, real_placement: u32) -> String {
++    format!("\x1b_Ga=d,d=i,q=2,i={real_image},p={real_placement}\x1b\\")
++}
++
++/// Delete an image and every placement of it.
++fn delete_image_command(real_image: u32) -> String {
++    format!("\x1b_Ga=d,d=I,q=2,i={real_image}\x1b\\")
++}
++
++/// Placements are keyed by the VT's (image, placement) ids plus an ordinal,
++/// since the protocol allows several id-less placements of one image.
++type PlacementKey = (u32, u32, u32);
++
++#[derive(Clone, Copy, Debug, PartialEq, Eq)]
++struct Transmitted {
++    generation: u64,
++}
++
++/// Mirrors the VT's kitty placements onto the real terminal.
++#[derive(Default)]
++pub struct ImageSync {
++    iterator: Option<PlacementIterator<'static>>,
++    /// VT image id → what the real terminal currently holds under
++    /// `real_image_id(id)`.
++    transmitted: HashMap<u32, Transmitted>,
++    /// Placements currently shown on the real terminal, with their real
++    /// placement ids.
++    placed: HashMap<PlacementKey, (u32, Placement)>,
++    next_placement_id: u32,
++}
++
++fn vt_err(e: libghostty_vt::Error) -> io::Error {
++    io::Error::other(format!("kitty graphics: {e}"))
++}
++
++impl ImageSync {
++    fn allocate_placement_id(&mut self) -> u32 {
++        self.next_placement_id = self.next_placement_id.wrapping_add(1).max(1) & REAL_ID_MASK;
++        self.next_placement_id.max(1)
++    }
++
++    /// Bring the real terminal's placements in line with the VT's active
++    /// screen. `row_offset` is the renderer's takeover offset (real row =
++    /// VT row + offset) and `visible_rows` how many VT rows are on screen
++    /// below it. Returns whether anything was written — the caller must then
++    /// reposition the cursor, because placements are made at the cursor.
++    pub fn sync(
++        &mut self,
++        stdout: &mut impl Write,
++        vt: &Terminal<'_, '_>,
++        row_offset: u16,
++        visible_rows: usize,
++    ) -> io::Result<bool> {
++        // Errors here mean kitty graphics is unavailable in this VT; behave
++        // as before this feature existed.
++        let Ok(graphics) = vt.kitty_graphics() else {
++            return Ok(false);
++        };
++        if self.iterator.is_none() {
++            self.iterator = PlacementIterator::new().ok();
++        }
++        let Some(iterator) = self.iterator.as_mut() else {
++            return Ok(false);
++        };
++
++        let visible_cols = vt.cols().unwrap_or(0) as usize;
++        let mut desired: Vec<(PlacementKey, Placement, u64)> = Vec::new();
++        let mut ordinals: HashMap<(u32, u32), u32> = HashMap::new();
++        {
++            let mut placements = iterator.update(&graphics).map_err(vt_err)?;
++            placements.set_layer(Layer::All).map_err(vt_err)?;
++            while let Some(placement) = placements.next() {
++                // Unicode-placeholder placements render through text cells
++                // the row renderer already copies; nothing to mirror.
++                if placement.is_virtual().unwrap_or(false) {
++                    continue;
++                }
++                let (Ok(image_id), Ok(placement_id)) =
++                    (placement.image_id(), placement.placement_id())
++                else {
++                    continue;
++                };
++                let Some(image) = graphics.image(image_id) else {
++                    continue;
++                };
++                let Ok(info) = placement.placement_render_info(&image, vt) else {
++                    continue;
++                };
++                if !info.viewport_visible {
++                    continue;
++                }
++                let extent = Extent {
++                    row: info.viewport_row,
++                    col: info.viewport_col,
++                    rows: info.grid_rows,
++                    cols: info.grid_cols,
++                };
++                let src = SourceRect {
++                    x: info.source_x,
++                    y: info.source_y,
++                    width: info.source_width,
++                    height: info.source_height,
++                };
++                let Some((extent, src)) = clip(extent, src, visible_rows, visible_cols) else {
++                    continue;
++                };
++                let ordinal = ordinals.entry((image_id, placement_id)).or_insert(0);
++                let key = (image_id, placement_id, *ordinal);
++                *ordinal += 1;
++                let generation = image.generation().unwrap_or(0);
++                desired.push((
++                    key,
++                    Placement {
++                        image: real_image_id(image_id),
++                        row: (extent.row as usize + row_offset as usize).min(u16::MAX as usize)
++                            as u16,
++                        col: (extent.col as usize).min(u16::MAX as usize) as u16,
++                        cols: extent.cols,
++                        rows: extent.rows,
++                        src,
++                        x_offset: placement.x_offset().unwrap_or(0),
++                        y_offset: placement.y_offset().unwrap_or(0),
++                        z: placement.z().unwrap_or(0),
++                    },
++                    generation,
++                ));
++            }
++        }
++
++        let mut wrote = false;
++
++        // Images: transmit new ones and re-transmit changed ones (a changed
++        // generation invalidates every placement of that image).
++        for (key, _, generation) in &desired {
++            let image_id = key.0;
++            let current = self.transmitted.get(&image_id).copied();
++            if current.map(|t| t.generation) == Some(*generation) {
++                continue;
++            }
++            let Some(image) = graphics.image(image_id) else {
++                continue;
++            };
++            let format = match image.format() {
++                Ok(ImageFormat::Rgba) => 32,
++                Ok(ImageFormat::Rgb) => 24,
++                // PNG is decoded to RGBA on the way in; gray formats have no
++                // kitty wire format.
++                _ => continue,
++            };
++            let Ok(Some(data)) = image.data() else {
++                continue;
++            };
++            let zlib = matches!(image.compression(), Ok(Compression::ZlibDeflate));
++            let (Ok(width), Ok(height)) = (image.width(), image.height()) else {
++                continue;
++            };
++            let real = real_image_id(image_id);
++            if current.is_some() {
++                stdout.write_all(delete_image_command(real).as_bytes())?;
++                self.placed.retain(|k, _| k.0 != image_id);
++            }
++            stdout.write_all(&transmit_commands(real, format, width, height, zlib, data))?;
++            self.transmitted.insert(
++                image_id,
++                Transmitted {
++                    generation: *generation,
++                },
++            );
++            wrote = true;
++        }
++
++        // Placements the VT no longer shows. Placements of an image the VT
++        // dropped altogether are skipped here: the image delete below takes
++        // them with it.
++        let stale: Vec<PlacementKey> = self
++            .placed
++            .keys()
++            .filter(|k| !desired.iter().any(|(dk, _, _)| dk == *k) && graphics.image(k.0).is_some())
++            .copied()
++            .collect();
++        for key in stale {
++            if let Some((real_placement, placement)) = self.placed.remove(&key) {
++                stdout.write_all(
++                    delete_placement_command(placement.image, real_placement).as_bytes(),
++                )?;
++                wrote = true;
++            }
++        }
++
++        // New or moved placements.
++        for (key, placement, _) in desired {
++            if !self.transmitted.contains_key(&key.0) {
++                continue;
++            }
++            let real_placement = match self.placed.get(&key) {
++                Some((_, current)) if *current == placement => continue,
++                Some((id, current)) => {
++                    let id = *id;
++                    stdout.write_all(delete_placement_command(current.image, id).as_bytes())?;
++                    id
++                }
++                None => self.allocate_placement_id(),
++            };
++            queue!(stdout, cursor::MoveTo(placement.col, placement.row))?;
++            stdout.write_all(place_command(real_placement, &placement).as_bytes())?;
++            self.placed.insert(key, (real_placement, placement));
++            wrote = true;
++        }
++
++        // Images the VT dropped entirely can go from the real terminal too.
++        let dropped: Vec<u32> = self
++            .transmitted
++            .keys()
++            .filter(|id| graphics.image(**id).is_none())
++            .copied()
++            .collect();
++        for image_id in dropped {
++            self.transmitted.remove(&image_id);
++            self.placed.retain(|k, _| k.0 != image_id);
++            stdout.write_all(delete_image_command(real_image_id(image_id)).as_bytes())?;
++            wrote = true;
++        }
++
++        Ok(wrote)
++    }
++
++    /// Remove every placement from the real terminal (images stay cached
++    /// there); the next `sync` places them afresh. Used across a resize,
++    /// when the renderer repaints from scratch.
++    pub fn reset_placements(&mut self, stdout: &mut impl Write) -> io::Result<()> {
++        for (_, (real_placement, placement)) in self.placed.drain() {
++            stdout
++                .write_all(delete_placement_command(placement.image, real_placement).as_bytes())?;
++        }
++        Ok(())
++    }
++
++    /// Remove everything this session put on the real terminal.
++    pub fn cleanup(&mut self, stdout: &mut impl Write) -> io::Result<()> {
++        self.placed.clear();
++        for (image_id, _) in self.transmitted.drain() {
++            stdout.write_all(delete_image_command(real_image_id(image_id)).as_bytes())?;
++        }
++        Ok(())
++    }
++}
++
++#[cfg(test)]
++mod tests {
++    use super::*;
++
++    fn src(x: u32, y: u32, width: u32, height: u32) -> SourceRect {
++        SourceRect {
++            x,
++            y,
++            width,
++            height,
++        }
++    }
++
++    #[test]
++    fn real_ids_live_above_the_private_base() {
++        assert_eq!(real_image_id(1), REAL_ID_BASE | 1);
++        assert_eq!(real_image_id(u32::MAX), REAL_ID_BASE | REAL_ID_MASK);
++        assert!(real_image_id(31) > 1_000_000);
++    }
++
++    #[test]
++    fn kitty_graphics_replies_are_recognized_exactly() {
++        assert!(is_kitty_graphics_reply(b"\x1b_Gi=31;OK\x1b\\"));
++        assert!(is_kitty_graphics_reply(b"\x1b_Gi=1;EINVAL:bad\x1b\\"));
++        assert!(!is_kitty_graphics_reply(b"\x1b_Gi=31;OK"));
++        assert!(!is_kitty_graphics_reply(b"\x1b[1;1R"));
++        assert!(!is_kitty_graphics_reply(b"\x1b]11;rgb:00/00/00\x1b\\"));
++    }
++
++    #[test]
++    fn fully_visible_placement_is_unchanged_by_clipping() {
++        let extent = Extent {
++            row: 2,
++            col: 3,
++            rows: 4,
++            cols: 8,
++        };
++        let (e, s) = clip(extent, src(0, 0, 80, 40), 24, 80).unwrap();
++        assert_eq!(e, extent);
++        assert_eq!(s, src(0, 0, 80, 40));
++    }
++
++    #[test]
++    fn placement_scrolled_above_the_viewport_loses_its_top() {
++        // 4 rows tall, top 2 rows above the viewport.
++        let extent = Extent {
++            row: -2,
++            col: 0,
++            rows: 4,
++            cols: 8,
++        };
++        let (e, s) = clip(extent, src(0, 0, 80, 40), 24, 80).unwrap();
++        assert_eq!(
++            e,
++            Extent {
++                row: 0,
++                col: 0,
++                rows: 2,
++                cols: 8
++            }
++        );
++        assert_eq!(s, src(0, 20, 80, 20));
++    }
++
++    #[test]
++    fn placement_over_the_status_row_is_cut_at_the_content_bottom() {
++        // Viewport has 10 visible rows; placement covers rows 8..12.
++        let extent = Extent {
++            row: 8,
++            col: 0,
++            rows: 4,
++            cols: 8,
++        };
++        let (e, s) = clip(extent, src(0, 0, 80, 40), 10, 80).unwrap();
++        assert_eq!(e.rows, 2);
++        assert_eq!(e.row, 8);
++        assert_eq!(s, src(0, 0, 80, 20));
++    }
++
++    #[test]
++    fn placement_entirely_off_screen_is_dropped() {
++        let extent = Extent {
++            row: 10,
++            col: 0,
++            rows: 4,
++            cols: 8,
++        };
++        assert!(clip(extent, src(0, 0, 80, 40), 10, 80).is_none());
++        let extent = Extent {
++            row: -4,
++            col: 0,
++            rows: 4,
++            cols: 8,
++        };
++        assert!(clip(extent, src(0, 0, 80, 40), 10, 80).is_none());
++    }
++
++    #[test]
++    fn placement_past_the_right_edge_is_cut_horizontally() {
++        let extent = Extent {
++            row: 0,
++            col: 76,
++            rows: 2,
++            cols: 8,
++        };
++        let (e, s) = clip(extent, src(0, 0, 80, 20), 24, 80).unwrap();
++        assert_eq!(e.cols, 4);
++        assert_eq!(s, src(0, 0, 40, 20));
++    }
++
++    #[test]
++    fn transmission_is_chunked_with_continuation_flags() {
++        let data = vec![0xabu8; 5000]; // 6668 base64 bytes → 2 chunks
++        let out = transmit_commands(real_image_id(7), 32, 50, 25, false, &data);
++        let text = String::from_utf8(out).unwrap();
++        let sequences: Vec<&str> = text.split("\x1b\\").filter(|s| !s.is_empty()).collect();
++        assert_eq!(sequences.len(), 2);
++        assert!(
++            sequences[0].starts_with(&format!(
++                "\x1b_Ga=t,t=d,q=2,i={},f=32,s=50,v=25,m=1;",
++                real_image_id(7)
++            )),
++            "{}",
++            &sequences[0][..60]
++        );
++        assert!(sequences[1].starts_with("\x1b_Gm=0;"));
++        let payload_len: usize = sequences
++            .iter()
++            .map(|s| s.split_once(';').unwrap().1.len())
++            .sum();
++        assert_eq!(payload_len, BASE64.encode(&data).len());
++        assert!(sequences[0].split_once(';').unwrap().1.len() == CHUNK_BYTES);
++    }
++
++    #[test]
++    fn compressed_images_keep_their_compression_flag() {
++        let out = transmit_commands(real_image_id(1), 24, 2, 2, true, &[1, 2, 3]);
++        assert!(String::from_utf8(out).unwrap().contains(",o=z,m=0;"));
++    }
++
++    #[test]
++    fn placement_command_keeps_the_cursor_and_stays_quiet() {
++        let p = Placement {
++            image: real_image_id(3),
++            row: 5,
++            col: 2,
++            cols: 10,
++            rows: 4,
++            src: src(1, 2, 30, 40),
++            x_offset: 0,
++            y_offset: 3,
++            z: -1,
++        };
++        assert_eq!(
++            place_command(9, &p),
++            format!(
++                "\x1b_Ga=p,q=2,C=1,i={},p=9,c=10,r=4,x=1,y=2,w=30,h=40,X=0,Y=3,z=-1\x1b\\",
++                real_image_id(3)
++            )
++        );
++        assert_eq!(
++            delete_placement_command(real_image_id(3), 9),
++            format!("\x1b_Ga=d,d=i,q=2,i={},p=9\x1b\\", real_image_id(3))
++        );
++        assert_eq!(
++            delete_image_command(real_image_id(3)),
++            format!("\x1b_Ga=d,d=I,q=2,i={}\x1b\\", real_image_id(3))
++        );
++    }
++
++    #[test]
++    fn cleanup_deletes_every_transmitted_image_once() {
++        let mut sync = ImageSync::default();
++        sync.transmitted.insert(4, Transmitted { generation: 1 });
++        sync.transmitted.insert(9, Transmitted { generation: 2 });
++        let mut out = Vec::new();
++        sync.cleanup(&mut out).unwrap();
++        let text = String::from_utf8(out).unwrap();
++        assert_eq!(text.matches("a=d,d=I").count(), 2);
++        assert!(text.contains(&format!("i={}", real_image_id(4))));
++        assert!(text.contains(&format!("i={}", real_image_id(9))));
++        assert!(sync.transmitted.is_empty());
++    }
++
++    #[test]
++    fn placement_ids_are_never_zero() {
++        let mut sync = ImageSync {
++            next_placement_id: REAL_ID_MASK,
++            ..Default::default()
++        };
++        for _ in 0..3 {
++            assert!(sync.allocate_placement_id() >= 1);
++        }
++    }
++
++    const ONE_PIXEL_PNG_B64: &str = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGP4z8DwHwAFAAH/iZk9HQAAAABJRU5ErkJggg==";
++
++    /// Drive a real libghostty terminal: enable graphics, transmit a PNG,
++    /// and mirror the resulting placement.
++    #[test]
++    fn vt_placement_is_mirrored_with_a_transmit_and_a_place() {
++        install_png_decoder();
++        let replies = std::cell::RefCell::new(Vec::new());
++        let mut vt = Terminal::new(80, 24).expect("terminal");
++        vt.resize(80, 24, 9, 20).expect("cell size");
++        vt.on_pty_write({
++            let replies = &replies;
++            move |_t, data| replies.borrow_mut().extend_from_slice(data)
++        })
++        .expect("hook");
++        enable(&mut vt).expect("enable kitty graphics");
++
++        vt.vt_write(
++            format!("\x1b_Ga=T,f=100,i=7,c=2,r=1,q=1;{ONE_PIXEL_PNG_B64}\x1b\\").as_bytes(),
++        );
++        let reply = String::from_utf8_lossy(&replies.borrow()).to_string();
++        assert!(
++            reply.is_empty() || reply.contains("OK"),
++            "VT rejected the image: {reply:?}"
++        );
++
++        {
++            let graphics = vt.kitty_graphics().expect("graphics handle");
++            let image = graphics.image(7).expect("image 7 stored in the VT");
++            assert_eq!((image.width().unwrap(), image.height().unwrap()), (1, 1));
++            assert_eq!(image.format().unwrap(), ImageFormat::Rgba);
++            let mut iterator = PlacementIterator::new().unwrap();
++            let mut placements = iterator.update(&graphics).unwrap();
++            let placement = placements.next().expect("one placement");
++            let info = placement.placement_render_info(&image, &vt).unwrap();
++            assert!(info.viewport_visible, "placement not visible: {info:?}");
++            assert_eq!((info.grid_cols, info.grid_rows), (2, 1), "{info:?}");
++        }
++
++        let mut sync = ImageSync::default();
++        let mut out = Vec::new();
++        assert!(sync.sync(&mut out, &vt, 0, 24).unwrap());
++        let text = String::from_utf8_lossy(&out).to_string();
++        let real = real_image_id(7);
++        assert!(
++            text.contains(&format!("\x1b_Ga=t,t=d,q=2,i={real},f=32,s=1,v=1,m=0;")),
++            "{text:?}"
++        );
++        assert!(
++            text.contains(&format!("\x1b_Ga=p,q=2,C=1,i={real},p=1,c=2,r=1,")),
++            "{text:?}"
++        );
++
++        // Steady state: nothing new to write.
++        let mut out = Vec::new();
++        assert!(!sync.sync(&mut out, &vt, 0, 24).unwrap());
++        assert!(out.is_empty());
++
++        // Deleting the image in the VT deletes it on the real terminal.
++        vt.vt_write(b"\x1b_Ga=d,d=I,i=7,q=2\x1b\\");
++        let mut out = Vec::new();
++        assert!(sync.sync(&mut out, &vt, 0, 24).unwrap());
++        assert_eq!(
++            String::from_utf8_lossy(&out),
++            format!("\x1b_Ga=d,d=I,q=2,i={real}\x1b\\")
++        );
++    }
++
++    /// Same call order as `ShellSession::run`: scrollback, pty-write hook,
++    /// enable, a zero-cell-size resize plus clear, then the probed cell size
++    /// arrives as a grid-preserving resize.
++    #[test]
++    fn session_call_order_still_mirrors_placements() {
++        install_png_decoder();
++        let replies = std::cell::RefCell::new(Vec::new());
++        let mut vt = Terminal::new(80, 24).expect("terminal");
++        vt.set_scrollback_max_bytes(Some(10_000_000)).unwrap();
++        vt.on_pty_write({
++            let replies = &replies;
++            move |_t, data| replies.borrow_mut().extend_from_slice(data)
++        })
++        .expect("hook");
++        enable(&mut vt).expect("enable");
++        vt.resize(80, 24, 0, 0).unwrap();
++        vt.vt_write(b"\x1b[2J\x1b[H");
++        vt.resize(80, 24, 9, 20).unwrap();
++
++        vt.vt_write(
++            format!("\x1b_Ga=T,f=100,i=7,c=2,r=1,q=0;{ONE_PIXEL_PNG_B64}\x1b\\").as_bytes(),
++        );
++        let reply = String::from_utf8_lossy(&replies.borrow()).to_string();
++        assert!(
++            reply.contains("OK"),
++            "VT did not accept the image: {reply:?}"
++        );
++
++        {
++            let graphics = vt.kitty_graphics().expect("graphics");
++            let image = graphics.image(7).expect("image stored");
++            let mut iterator = PlacementIterator::new().unwrap();
++            let mut placements = iterator.update(&graphics).unwrap();
++            let placement = placements.next().expect("one placement");
++            let info = placement.placement_render_info(&image, &vt);
++            assert!(info.is_ok(), "render info: {info:?}");
++            let info = info.unwrap();
++            assert!(info.viewport_visible, "{info:?}");
++            assert_eq!((info.grid_cols, info.grid_rows), (2, 1), "{info:?}");
++            eprintln!("render info: {info:?}");
++        }
++
++        let mut sync = ImageSync::default();
++        let mut out = Vec::new();
++        assert!(sync.sync(&mut out, &vt, 0, 24).unwrap(), "nothing mirrored");
++        assert!(String::from_utf8_lossy(&out).contains("a=p,q=2,C=1"));
++    }
++}
+diff --git a/devenv-shell/src/lib.rs b/devenv-shell/src/lib.rs
+index 4fc4ecae..43e266db 100644
+--- a/devenv-shell/src/lib.rs
++++ b/devenv-shell/src/lib.rs
+@@ -3,10 +3,12 @@
+ //! This crate provides shell session management with hot-reload support,
+ //! including PTY spawning, terminal handling, and status line rendering.
+ 
++pub mod cell_size;
+ pub mod dialect;
+ pub mod escape;
+ pub mod escape_state;
+ pub mod keybindings;
++pub mod kitty_images;
+ mod protocol;
+ mod pty;
+ mod session;
+diff --git a/devenv-shell/src/session.rs b/devenv-shell/src/session.rs
+index 2f777f85..4a143da4 100644
+--- a/devenv-shell/src/session.rs
++++ b/devenv-shell/src/session.rs
+@@ -3,12 +3,14 @@
+ //! This module provides the main `ShellSession` type that orchestrates
+ //! PTY lifecycle, terminal I/O, and status line rendering.
+ 
++use crate::cell_size::{CellSize, CellSizeProbe};
+ use crate::escape::EscapeScanner;
+ use crate::escape_state::{
+     EscapeState, cleanup_forwarded_modes as escape_state_cleanup,
+     process_escape_events as escape_state_process,
+ };
+ use crate::keybindings::{ShellAction, ShellKeybindings};
++use crate::kitty_images::{self, ImageSync};
+ use crate::protocol::{ShellCommand, ShellEvent};
+ use crate::pty::{Pty, PtyError, get_terminal_size};
+ use crate::status_line::{SPINNER_INTERVAL_MS, StatusLine};
+@@ -795,7 +797,12 @@ impl VirtualPtyReplies {
+ /// accepting a merely similar CSI response would make an unrelated physical
+ /// query leak back to the child PTY.
+ fn is_virtual_terminal_reply(data: &[u8]) -> bool {
+-    data == b"\x1b[0n" || is_cpr_reply(data) || is_in_band_resize_mode_report(data)
++    data == b"\x1b[0n"
++        || is_cpr_reply(data)
++        || is_in_band_resize_mode_report(data)
++        // Kitty graphics commands are consumed by the VT (kitty_images.rs
++        // mirrors the placements), so its responses are the only ones.
++        || kitty_images::is_kitty_graphics_reply(data)
+ }
+ 
+ fn is_cpr_reply(data: &[u8]) -> bool {
+@@ -883,7 +890,9 @@ fn count_physical_replies(data: &[u8]) -> usize {
+                     return count;
+                 };
+                 let body = &data[start..j];
+-                let private = body.first().is_some_and(|b| matches!(b, b'?' | b'>' | b'='));
++                let private = body
++                    .first()
++                    .is_some_and(|b| matches!(b, b'?' | b'>' | b'='));
+                 let is_reply = match final_byte {
+                     b'c' | b'n' | b'R' | b'u' => private,
+                     b'y' => body.last() == Some(&b'$'),
+@@ -976,6 +985,8 @@ struct Renderer<'a> {
+     /// Viewport lines scrolled off since the last render; tells `render` that
+     /// row content shifted so per-row dirty flags alone can't be trusted.
+     pending_scroll: usize,
++    /// Kitty graphics placements mirrored onto the real terminal.
++    images: ImageSync,
+ }
+ 
+ /// Screen rows `[start, end)` that a primary-screen height shrink moved from
+@@ -1011,6 +1022,7 @@ impl<'a> Renderer<'a> {
+             flush_boundary,
+             resize_exclusions: VecDeque::new(),
+             pending_scroll: 0,
++            images: ImageSync::default(),
+         })
+     }
+ 
+@@ -1472,10 +1484,35 @@ impl<'a> Renderer<'a> {
+     fn present(&mut self, stdout: &mut impl Write, vt: &mut Terminal<'a, '_>) -> io::Result<()> {
+         let primary = vt.active_screen().ok() == Some(Screen::Primary);
+         if !primary || self.row_offset > 0 {
+-            self.render(stdout, vt)
++            self.render(stdout, vt)?;
+         } else {
+-            self.render_with_scroll(stdout, vt)
++            self.render_with_scroll(stdout, vt)?;
+         }
++        self.sync_images(stdout, vt)
++    }
++
++    /// Mirror the VT's kitty graphics placements after the rows they sit on
++    /// have been drawn. Placements are made at the cursor, so put it back.
++    fn sync_images(&mut self, stdout: &mut impl Write, vt: &Terminal<'_, '_>) -> io::Result<()> {
++        let visible_rows = self.visible_rows();
++        if self
++            .images
++            .sync(stdout, vt, self.row_offset, visible_rows)?
++        {
++            self.write_cursor(stdout, vt)?;
++        }
++        Ok(())
++    }
++
++    /// Drop every placement from the real terminal ahead of a full repaint
++    /// (resize); the next `present` places them again.
++    fn reset_image_placements(&mut self, stdout: &mut impl Write) -> io::Result<()> {
++        self.images.reset_placements(stdout)
++    }
++
++    /// Remove this session's images from the real terminal on exit.
++    fn cleanup_images(&mut self, stdout: &mut impl Write) -> io::Result<()> {
++        self.images.cleanup(stdout)
+     }
+ 
+     /// Terminal resize: the takeover phase ends (the terminal reflowed the
+@@ -1595,6 +1632,7 @@ struct EventLoopContext<'a> {
+     stdout: &'a mut Box<dyn Write + Send>,
+     virtual_pty_replies: &'a RefCell<VirtualPtyReplies>,
+     pty_buffer_return_tx: &'a std::sync::mpsc::SyncSender<Vec<u8>>,
++    cell_size_probe: CellSizeProbe,
+ }
+ 
+ /// The terminal-facing dependencies needed to dispatch one stdin event. This
+@@ -1608,6 +1646,7 @@ struct StdinEventContext<'a, 'vt, 'cb> {
+     renderer: &'a mut Renderer<'vt>,
+     esc: &'a mut EscapeState,
+     virtual_pty_replies: &'a RefCell<VirtualPtyReplies>,
++    cell_size_probe: &'a mut CellSizeProbe,
+ }
+ 
+ #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+@@ -1657,6 +1696,10 @@ pub struct ShellSession {
+     size: PtySize,
+     status_line: StatusLine,
+     shutdown_token: Option<CancellationToken>,
++    /// Real terminal cell size in pixels, once `CellSizeProbe` has learned
++    /// it. Gives the PTY its pixel dimensions and the VT its kitty graphics
++    /// grid geometry.
++    cell_size: Option<CellSize>,
+ }
+ 
+ impl ShellSession {
+@@ -1672,20 +1715,59 @@ impl ShellSession {
+             size,
+             status_line,
+             shutdown_token: None,
++            cell_size: None,
+         }
+     }
+ 
+-    /// Get the PTY size, reserving 1 row for status line if enabled.
++    /// Get the PTY size, reserving 1 row for status line if enabled. Pixel
++    /// dimensions follow from the probed cell size (zero until known).
+     fn pty_size(&self) -> PtySize {
+-        if self.config.show_status_line {
+-            PtySize {
+-                rows: self.size.rows.saturating_sub(1).max(1),
+-                cols: self.size.cols,
+-                ..self.size
+-            }
++        let rows = if self.config.show_status_line {
++            self.size.rows.saturating_sub(1).max(1)
+         } else {
+-            self.size
++            self.size.rows
++        };
++        let cols = self.size.cols;
++        let (cell_width, cell_height) = self.cell_px();
++        PtySize {
++            rows,
++            cols,
++            pixel_width: (cols as u32 * cell_width).min(u16::MAX as u32) as u16,
++            pixel_height: (rows as u32 * cell_height).min(u16::MAX as u32) as u16,
++        }
++    }
++
++    /// Cell size for `Terminal::resize`, `(0, 0)` until probed.
++    fn cell_px(&self) -> (u32, u32) {
++        self.cell_size
++            .map(|c| (c.width as u32, c.height as u32))
++            .unwrap_or((0, 0))
++    }
++
++    /// The real terminal answered a cell-size probe: give the PTY its pixel
++    /// size (so `TIOCGWINSZ` works for `kitten icat` and friends) and the VT
++    /// its cell geometry (so kitty placements resolve to grid cells).
++    ///
++    /// Returns whether anything changed.
++    fn apply_cell_size(
++        &mut self,
++        cell_size: CellSize,
++        pty: &Pty,
++        vt: &mut Terminal<'_, '_>,
++    ) -> bool {
++        if self.cell_size == Some(cell_size) {
++            return false;
++        }
++        self.cell_size = Some(cell_size);
++        let pty_size = self.pty_size();
++        if let Err(e) = pty.resize(pty_size) {
++            tracing::debug!("session: failed to set PTY pixel size: {e}");
+         }
++        let (cell_width, cell_height) = self.cell_px();
++        if let Err(e) = vt.resize(pty_size.cols, pty_size.rows, cell_width, cell_height) {
++            tracing::warn!("session: failed to set VT cell size: {e}");
++        }
++        true
+     }
+ 
+     /// Create a new shell session with default configuration.
+@@ -1975,6 +2057,10 @@ impl ShellSession {
+             // This buffer therefore remains thread-local with the terminal;
+             // it is drained into the child PTY immediately after each feed.
+             let virtual_pty_replies = RefCell::new(VirtualPtyReplies::default());
++            // The kitty graphics PNG decoder is per thread in libghostty-rs
++            // and must be in place on this thread before the terminal is
++            // created (kitty_images.rs).
++            kitty_images::install_png_decoder();
+             // Create the VT on this thread (Terminal is !Send)
+             let mut vt = Terminal::new(pty_size.cols, pty_size.rows)?;
+             vt.set_scrollback_max_bytes(Some(DEFAULT_MAX_SCROLLBACK))?;
+@@ -1982,6 +2068,12 @@ impl ShellSession {
+                 let virtual_pty_replies = &virtual_pty_replies;
+                 move |_term, data| virtual_pty_replies.borrow_mut().capture(data)
+             })?;
++            // Let the VT store kitty graphics images so the renderer can
++            // mirror their placements (kitty_images.rs); it also answers the
++            // child's image commands through the hook above.
++            if let Err(e) = kitty_images::enable(&mut vt) {
++                tracing::warn!("session: kitty graphics unavailable in VT: {e}");
++            }
+ 
+             // Reset the VT after resize so any stale PTY output (the shell's
+             // PROMPT_COMMAND after task execution, SIGWINCH redraw from the
+@@ -2000,6 +2092,12 @@ impl ShellSession {
+                     .draw(&mut stdout, self.size.cols, self.size.rows)?;
+             }
+             renderer.write_cursor(&mut stdout, &vt)?;
++            // Ask the real terminal for its cell size; the reply is taken off
++            // stdin by the event loop. Unlike the blocking cursor query above
++            // this is asynchronous, so it is safe with injected I/O too: a
++            // peer that never answers just lets the probe expire.
++            let mut cell_size_probe = CellSizeProbe::default();
++            cell_size_probe.query(&mut stdout)?;
+             stdout.flush()?;
+ 
+             self.event_loop(
+@@ -2012,6 +2110,7 @@ impl ShellSession {
+                     stdout: &mut stdout,
+                     virtual_pty_replies: &virtual_pty_replies,
+                     pty_buffer_return_tx: &pty_buffer_return_tx_for_loop,
++                    cell_size_probe,
+                 },
+             )
+         });
+@@ -2051,6 +2150,7 @@ impl ShellSession {
+             stdout,
+             virtual_pty_replies,
+             pty_buffer_return_tx,
++            mut cell_size_probe,
+         } = context;
+         let spinner_interval = Duration::from_millis(SPINNER_INTERVAL_MS);
+         let mut scanner = EscapeScanner::new();
+@@ -2133,6 +2233,7 @@ impl ShellSession {
+                             renderer,
+                             esc: &mut esc,
+                             virtual_pty_replies,
++                            cell_size_probe: &mut cell_size_probe,
+                         },
+                     )?;
+                 }
+@@ -2193,6 +2294,7 @@ impl ShellSession {
+                                 let deferred_release = esc.has_deferred_synchronized_output_reset();
+                                 self.clear_status_row(stdout, esc.in_alternate_screen)?;
+                                 escape_state_cleanup(&esc, stdout)?;
++                                renderer.cleanup_images(stdout)?;
+                                 if !synchronized && !deferred_release {
+                                     begin_renderer_transaction(stdout, false)?;
+                                 }
+@@ -2214,6 +2316,7 @@ impl ShellSession {
+                                         renderer,
+                                         esc: &mut esc,
+                                         virtual_pty_replies,
++                                        cell_size_probe: &mut cell_size_probe,
+                                     },
+                                 )?;
+                             }
+@@ -2222,6 +2325,7 @@ impl ShellSession {
+                                 let deferred_release = esc.has_deferred_synchronized_output_reset();
+                                 self.clear_status_row(stdout, esc.in_alternate_screen)?;
+                                 escape_state_cleanup(&esc, stdout)?;
++                                renderer.cleanup_images(stdout)?;
+                                 if !synchronized && !deferred_release {
+                                     begin_renderer_transaction(stdout, false)?;
+                                 }
+@@ -2295,6 +2399,7 @@ impl ShellSession {
+                     }
+                     self.clear_status_row(stdout, esc.in_alternate_screen)?;
+                     escape_state_cleanup(&esc, stdout)?;
++                    renderer.cleanup_images(stdout)?;
+                     finish_renderer_transaction(
+                         stdout,
+                         &mut esc,
+@@ -2359,7 +2464,10 @@ impl ShellSession {
+                             cmd.write_ansi(&mut buf).unwrap();
+                             let _ = pty.write_all(buf.as_bytes());
+                         }
+-                        if let Err(e) = vt.resize(pty_size.cols, pty_size.rows, 0, 0) {
++                        let (cell_width, cell_height) = self.cell_px();
++                        if let Err(e) =
++                            vt.resize(pty_size.cols, pty_size.rows, cell_width, cell_height)
++                        {
+                             tracing::warn!("failed to resize terminal: {e}");
+                         } else {
+                             if let Some(start) = exclusion_start {
+@@ -2372,6 +2480,11 @@ impl ShellSession {
+                         // pending prefix; rows moved out of the old viewport
+                         // are already present in native scrollback.
+                         renderer.invalidate();
++                        // Placements move with the reflow; re-place them on
++                        // the next frame. A font zoom also changes the cell
++                        // size, so probe again.
++                        renderer.reset_image_placements(stdout)?;
++                        cell_size_probe.query(stdout)?;
+                         if !synchronized_output_active(vt) {
+                             renderer.render_with_scroll(stdout, vt)?;
+                             if self.config.show_status_line && !esc.in_alternate_screen {
+@@ -2400,6 +2513,7 @@ impl ShellSession {
+         }
+         self.clear_status_row(stdout, esc.in_alternate_screen)?;
+         escape_state_cleanup(&esc, stdout)?;
++        renderer.cleanup_images(stdout)?;
+         finish_renderer_transaction(stdout, &mut esc, synchronized || deferred_release)?;
+         stdout.flush()?;
+         Ok(None)
+@@ -2420,7 +2534,29 @@ impl ShellSession {
+             renderer,
+             esc,
+             virtual_pty_replies,
++            cell_size_probe,
+         } = context;
++        // While a cell-size probe is outstanding its reply is ours, not the
++        // child's; everything else in the chunk continues below.
++        let mut without_probe_reply = Vec::new();
++        let data: &[u8] = if cell_size_probe.is_pending() {
++            if let Some(cell_size) = cell_size_probe.intercept(data, &mut without_probe_reply)
++                && self.apply_cell_size(cell_size, pty, vt)
++                && present_stdin_error_immediately(presentation, synchronized_output_active(vt))
++            {
++                // Kitty placements the VT already holds could not be sized
++                // without a cell size; present again so they get mirrored.
++                // (A batched event leaves that to the surrounding frame.)
++                queue!(stdout, terminal::BeginSynchronizedUpdate)?;
++                renderer.present(stdout, vt)?;
++                self.draw_status_and_cursor(stdout, vt, renderer)?;
++                queue!(stdout, terminal::EndSynchronizedUpdate)?;
++                stdout.flush()?;
++            }
++            &without_probe_reply
++        } else {
++            data
++        };
+         match classify_stdin(&self.config.keybindings, data, local_keybindings_enabled) {
+             StdinDisposition::TogglePause => {
+                 if let Err(e) =
+@@ -3872,6 +4008,8 @@ mod tests {
+             (b"\x1b[?2048;2$y", true),
+             (b"\x1b[?2048;3$y", true),
+             (b"\x1b[?2048;4$y", true),
++            (b"\x1b_Gi=31;OK\x1b\\", true),
++            (b"\x1b_Gi=1;EINVAL:unknown\x1b\\", true),
+             // Responses from physical-owned queries must never reach the
+             // child through the virtual hook.
+             (b"\x1b[?7;1$y", false),
+@@ -3880,6 +4018,7 @@ mod tests {
+             (b"\x1bP>|libghostty\x1b\\", false),
+             (b"\x1b[48;23;80;0;0t", false),
+             (b"\x1b[;80R", false),
++            (b"\x1b_Gi=31;OK", false),
+         ];
+ 
+         for (reply, expected) in cases {
+@@ -3894,24 +4033,24 @@ mod tests {
+     #[test]
+     fn physical_reply_counter_matches_terminal_answers_only() {
+         let cases: &[(&[u8], usize)] = &[
+-            (b"\x1b]11;rgb:1010/1010/1414\x1b\\", 1),   // OSC 11 answer, ST
+-            (b"\x1b]10;rgb:c5c5/c9c9/c5c5\x07", 1),        // OSC 10 answer, BEL
+-            (b"\x1b[?62;22c", 1),                          // DA1
+-            (b"\x1b[>1;10;0c", 1),                         // DA2
+-            (b"\x1b[?2004;2$y", 1),                        // DECRQM
+-            (b"\x1b[?1u", 1),                              // kitty keyboard flags
+-            (b"\x1b[6;16;8t", 1),                          // XTWINOPS cell size
+-            (b"\x1bP>|libghostty\x1b\\", 1),            // XTVERSION (DCS)
+-            (b"\x1b[?5;1R", 1),                            // DEC DSR cursor report
+-            (b"\x1b]11;rgb:1/2/3\x1b\\\x1b[?62c", 2),  // two replies in one read
++            (b"\x1b]11;rgb:1010/1010/1414\x1b\\", 1), // OSC 11 answer, ST
++            (b"\x1b]10;rgb:c5c5/c9c9/c5c5\x07", 1),   // OSC 10 answer, BEL
++            (b"\x1b[?62;22c", 1),                     // DA1
++            (b"\x1b[>1;10;0c", 1),                    // DA2
++            (b"\x1b[?2004;2$y", 1),                   // DECRQM
++            (b"\x1b[?1u", 1),                         // kitty keyboard flags
++            (b"\x1b[6;16;8t", 1),                     // XTWINOPS cell size
++            (b"\x1bP>|libghostty\x1b\\", 1),          // XTVERSION (DCS)
++            (b"\x1b[?5;1R", 1),                       // DEC DSR cursor report
++            (b"\x1b]11;rgb:1/2/3\x1b\\\x1b[?62c", 2), // two replies in one read
+             (b"abc", 0),
+-            (b"\x1b[A\x1b[B", 0),                         // arrow keys
+-            (b"\x1b[97u", 0),                              // kitty keyboard key event
+-            (b"\x1b[<0;10;5M", 0),                         // SGR mouse
+-            (b"\x1b[I\x1b[O", 0),                         // focus events
+-            (b"\x1b[200~x\x1b[201~", 0),                  // bracketed paste
+-            (b"\x1b[1;1R", 0),                             // plain CPR is virtual-owned
+-            (b"\x1b]11;rgb:10", 0),                        // truncated: not yet a reply
++            (b"\x1b[A\x1b[B", 0),        // arrow keys
++            (b"\x1b[97u", 0),            // kitty keyboard key event
++            (b"\x1b[<0;10;5M", 0),       // SGR mouse
++            (b"\x1b[I\x1b[O", 0),        // focus events
++            (b"\x1b[200~x\x1b[201~", 0), // bracketed paste
++            (b"\x1b[1;1R", 0),           // plain CPR is virtual-owned
++            (b"\x1b]11;rgb:10", 0),      // truncated: not yet a reply
+         ];
+         for (input, expected) in cases {
+             assert_eq!(
+diff --git a/devenv-shell/src/terminal_commands.rs b/devenv-shell/src/terminal_commands.rs
+index 1454fa10..3a7cc254 100644
+--- a/devenv-shell/src/terminal_commands.rs
++++ b/devenv-shell/src/terminal_commands.rs
+@@ -18,6 +18,22 @@ impl Command for ReportTextAreaSize {
+     }
+ }
+ 
++/// XTWINOPS response: report text area size in pixels (CSI 4 ; height ; width t).
++///
++/// Answered from the PTY's dimensions and the real terminal's cell size (see
++/// `cell_size`), so `kitten icat` and friends measure the area the child
++/// actually owns rather than the whole window including the status line.
++pub struct ReportTextAreaPixelSize {
++    pub height_px: u16,
++    pub width_px: u16,
++}
++
++impl Command for ReportTextAreaPixelSize {
++    fn write_ansi(&self, f: &mut impl fmt::Write) -> fmt::Result {
++        write!(f, "\x1b[4;{};{}t", self.height_px, self.width_px)
++    }
++}
++
+ /// Mode 2048 in-band resize notification (CSI 48 ; rows ; cols ; height_px ; width_px t).
+ ///
+ /// Sent through the PTY to notify programs of a terminal size change.
+diff --git a/devenv-shell/tests/session_tests.rs b/devenv-shell/tests/session_tests.rs
+index cb5e1336..01552752 100644
+--- a/devenv-shell/tests/session_tests.rs
++++ b/devenv-shell/tests/session_tests.rs
+@@ -961,9 +961,9 @@ async fn test_virtual_cpr_waits_for_forwarded_osc_reply() {
+     // `od -c` renders ESC as `033`; stop before the ST so its backslash
+     // escaping does not matter.
+     let osc_reply = "033]11;rgb:1010/1010/1414";
+-    let osc_at = text.find(osc_reply).unwrap_or_else(|| {
+-        panic!("child never received the OSC 11 reply; child saw: {text}")
+-    });
++    let osc_at = text
++        .find(osc_reply)
++        .unwrap_or_else(|| panic!("child never received the OSC 11 reply; child saw: {text}"));
+     let cpr_at = text.find("033[").expect("child saw no CSI at all");
+     assert!(
+         osc_at < cpr_at,
+@@ -977,3 +977,168 @@ async fn test_virtual_cpr_waits_for_forwarded_osc_reply() {
+ 
+     let _ = handle.await;
+ }
++
++/// 1×1 PNG (red pixel), the same one libghostty's own docs use.
++const ONE_PIXEL_PNG_B64: &str = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGP4z8DwHwAFAAH/iZk9HQAAAABJRU5ErkJggg==";
++
++/// Image ids on the real terminal live in `kitty_images`' private range.
++fn real_kitty_image_id(vt_id: u32) -> u32 {
++    (1 << 30) | vt_id
++}
++
++/// Answer the session's startup cell-size probe (`CSI 16 t`) so the PTY gets
++/// pixel dimensions and the VT a cell geometry. Returns whatever stdout bytes
++/// were read past the probe, which belong to the caller's next read.
++fn answer_cell_size_probe(
++    stdin_ours: &mut UnixStream,
++    stdout_ours: &mut UnixStream,
++    width: u16,
++    height: u16,
++) -> Vec<u8> {
++    let collected = read_until(stdout_ours, b"\x1b[16t", Duration::from_secs(5));
++    assert!(
++        collected.windows(5).any(|w| w == b"\x1b[16t"),
++        "session did not probe the cell size: {:?}",
++        String::from_utf8_lossy(&collected)
++    );
++    stdin_ours
++        .write_all(format!("\x1b[6;{height};{width}t").as_bytes())
++        .unwrap();
++    stdin_ours.flush().unwrap();
++    // Anything read past the probe belongs to the caller's next read.
++    let end = collected
++        .windows(5)
++        .position(|w| w == b"\x1b[16t")
++        .map(|at| at + 5)
++        .unwrap();
++    collected[end..].to_vec()
++}
++
++/// The kitty graphics capability query (`a=q`) is what `kitten icat` sends
++/// before anything else; the virtual terminal must answer it and the answer
++/// must reach the child (cachix/devenv#3130).
++#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
++async fn test_kitty_graphics_query_is_answered_by_the_virtual_terminal() {
++    let (io, _stdin_ours, mut stdout_ours) = test_io();
++    let (cmd_tx, cmd_rx) = mpsc::channel(10);
++    let (event_tx, _event_rx) = mpsc::channel(10);
++
++    let session = test_session();
++    let handle = tokio::spawn(async move { session.run(cmd_rx, event_tx, io).await });
++
++    cmd_tx
++        .send(spawn_cmd(
++            "stty raw -echo; printf '\\033_Gi=31,s=1,v=1,a=q,t=d,f=24;AAAA\\033\\\\'; sleep 1; \
++             dd bs=512 count=1 2>/dev/null | od -An -c | tr -d ' \\n'; printf ' END\\n'; exit 0",
++        ))
++        .await
++        .unwrap();
++
++    let collected = read_until(&mut stdout_ours, b" END", Duration::from_secs(10));
++    let text = render_all_lines(&collected, 80, 24).join("\n");
++    assert!(
++        text.contains("033_Gi=31;OK033"),
++        "child never received the kitty graphics reply; child saw: {text}"
++    );
++    // The child's query is consumed by the VT and must not leak to the
++    // physical terminal, which would answer it a second time.
++    assert!(
++        !collected.windows(9).any(|w| w == b"\x1b_Gi=31,s"),
++        "child's a=q query was forwarded to the physical terminal"
++    );
++
++    let _ = handle.await;
++}
++
++/// A transmit-and-display command stores the image in the VT; the renderer
++/// then mirrors it to the real terminal under a private id, placed at the
++/// cursor with an explicit grid size and `q=2`.
++#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
++async fn test_kitty_image_placement_is_mirrored_to_the_real_terminal() {
++    let (io, mut stdin_ours, mut stdout_ours) = test_io();
++    let (cmd_tx, cmd_rx) = mpsc::channel(10);
++    let (event_tx, _event_rx) = mpsc::channel(10);
++
++    let session = test_session();
++    let handle = tokio::spawn(async move { session.run(cmd_rx, event_tx, io).await });
++
++    cmd_tx
++        .send(spawn_cmd(&format!(
++            "sleep 1; printf '\\033_Ga=T,f=100,i=7,c=2,r=1,q=2;{ONE_PIXEL_PNG_B64}\\033\\\\'; \
++             printf '\\nDONE\\n'; sleep 0.5; exit 0"
++        )))
++        .await
++        .unwrap();
++
++    // The probe goes out once the session has taken over the terminal; the
++    // child's leading sleep leaves time for the answer to land first.
++    let mut collected = answer_cell_size_probe(&mut stdin_ours, &mut stdout_ours, 9, 20);
++
++    collected.extend(read_until(
++        &mut stdout_ours,
++        b"DONE",
++        Duration::from_secs(10),
++    ));
++    let text = String::from_utf8_lossy(&collected);
++    let real_id = real_kitty_image_id(7);
++    let transmit = format!("\x1b_Ga=t,t=d,q=2,i={real_id},f=32,s=1,v=1,m=0;");
++    assert!(
++        text.contains(&transmit),
++        "image was not transmitted to the physical terminal; stdout: {text:?}"
++    );
++    let place = format!("\x1b_Ga=p,q=2,C=1,i={real_id},p=1,c=2,r=1,");
++    assert!(
++        text.contains(&place),
++        "placement was not mirrored to the physical terminal; stdout: {text:?}"
++    );
++    // The child's own PNG payload never reaches the physical terminal.
++    assert!(
++        !text.contains("a=T,f=100"),
++        "child's transmit command leaked to the physical terminal"
++    );
++
++    // Session end removes the mirrored image again.
++    let collected = read_until(&mut stdout_ours, b"a=d,d=I", Duration::from_secs(10));
++    let text = String::from_utf8_lossy(&collected);
++    assert!(
++        text.contains(&format!("\x1b_Ga=d,d=I,q=2,i={real_id}\x1b\\")),
++        "mirrored image was not deleted on exit; stdout: {text:?}"
++    );
++
++    let _ = handle.await;
++}
++
++/// `CSI 14 t` is answered for the child's area from the probed cell size:
++/// 80 columns × 9 px and 24 rows × 20 px here (no status line).
++#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
++async fn test_text_area_pixel_size_query_is_answered_from_probed_cell_size() {
++    let (io, mut stdin_ours, mut stdout_ours) = test_io();
++    let (cmd_tx, cmd_rx) = mpsc::channel(10);
++    let (event_tx, _event_rx) = mpsc::channel(10);
++
++    let session = test_session();
++    let handle = tokio::spawn(async move { session.run(cmd_rx, event_tx, io).await });
++
++    cmd_tx
++        .send(spawn_cmd(
++            "sleep 1; stty raw -echo; printf '\\033[14t'; sleep 1; \
++             dd bs=512 count=1 2>/dev/null | od -An -c | tr -d ' \\n'; printf ' END\\n'; exit 0",
++        ))
++        .await
++        .unwrap();
++
++    let _ = answer_cell_size_probe(&mut stdin_ours, &mut stdout_ours, 9, 20);
++
++    let collected = read_until(&mut stdout_ours, b" END", Duration::from_secs(10));
++    let text = render_all_lines(&collected, 80, 24).join("\n");
++    assert!(
++        text.contains("033[4;480;720t"),
++        "child did not get the PTY pixel size; child saw: {text}"
++    );
++    assert!(
++        !collected.windows(5).any(|w| w == b"\x1b[14t"),
++        "CSI 14 t was forwarded to the physical terminal despite a known cell size"
++    );
++
++    let _ = handle.await;
++}

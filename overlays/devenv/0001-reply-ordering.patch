@@ -1,0 +1,565 @@
+From 25a2416a6a7f128f640aa6ff47b30329d2acb002 Mon Sep 17 00:00:00 2001
+From: Kris Williams <115474+kriswill@users.noreply.github.com>
+Date: Thu, 3 Sep 2026 15:22:27 -0700
+Subject: [PATCH 1/2] devenv-shell: hold virtual replies behind outstanding
+ physical queries
+
+The shell session answers CSI 6n (CPR), CSI 5n and the mode 2048 DECRQM
+from the virtual terminal while forwarding OSC colour queries, DA, XTVERSION
+and the other allowlisted queries to the physical terminal. A program that
+sends `OSC 11 ; ?` followed by `CSI 6 n` and reads until the cursor report
+(termenv, hence gh, glow and every lipgloss v1 user) therefore received the
+CPR first, stopped reading, and left the colour reply in its tty input for
+the shell to consume as keystrokes.
+
+Count forwarded queries that expect an answer, hold captured virtual replies
+while any is outstanding, and release them once the physical replies have
+been written to the child. A 250 ms timeout covers terminals that never
+answer, so a CPR is delayed rather than lost.
+
+Verified against Ghostty inside `devenv shell`: the query pair now comes
+back in order and gh/glow leave nothing in the tty buffer.
+
+Ref: cachix/devenv#3130
+---
+ devenv-shell/src/escape/mod.rs      |  96 +++++++++++++++++
+ devenv-shell/src/escape_state.rs    |  64 ++++++++++-
+ devenv-shell/src/session.rs         | 160 +++++++++++++++++++++++++++-
+ devenv-shell/tests/session_tests.rs |  62 +++++++++++
+ 4 files changed, 375 insertions(+), 7 deletions(-)
+
+diff --git a/devenv-shell/src/escape/mod.rs b/devenv-shell/src/escape/mod.rs
+index bfb8e898..2d00e15d 100644
+--- a/devenv-shell/src/escape/mod.rs
++++ b/devenv-shell/src/escape/mod.rs
+@@ -252,6 +252,70 @@ pub enum SequenceEvent {
+     VirtualTerminalQuery(VirtualTerminalQuery),
+ }
+ 
++impl SequenceEvent {
++    /// Whether this event, once forwarded to the physical terminal, makes the
++    /// terminal send a reply back through stdin.
++    ///
++    /// Virtual replies (CPR, DSR, the mode 2048 report) are answered locally
++    /// and would otherwise reach the child before a reply the physical
++    /// terminal is still producing. Programs commonly send `OSC 11 ; ?`
++    /// followed by `CSI 6 n` and read until the CPR arrives, treating it as
++    /// the end of the OSC answer — termenv, and through it gh, glow and every
++    /// lipgloss v1 user, do exactly this. The session counts these forwarded
++    /// queries so it can hold virtual replies until the physical ones have
++    /// come back.
++    pub fn expects_physical_reply(&self) -> bool {
++        match self {
++            SequenceEvent::Osc(event) => osc_is_query(&event.raw_bytes),
++            SequenceEvent::ForwardCsi { raw_bytes } => forwarded_csi_expects_reply(raw_bytes),
++            SequenceEvent::ForwardDcs { raw_bytes } => forwarded_dcs_expects_reply(raw_bytes),
++            _ => false,
++        }
++    }
++}
++
++/// `OSC Ps ; ? ST` style colour and clipboard queries (`10;?`, `11;?`,
++/// `4;1;?`, `52;c;?`). The payload's last byte before the terminator is `?`.
++fn osc_is_query(raw_bytes: &[u8]) -> bool {
++    let Some(body) = raw_bytes.strip_prefix(b"\x1b]") else {
++        return false;
++    };
++    let payload = body
++        .strip_suffix(b"\x1b\\")
++        .or_else(|| body.strip_suffix(b"\x07"))
++        .unwrap_or(body);
++    payload.last() == Some(&b'?')
++}
++
++/// A CSI sequence that `classify_csi` forwards and that the terminal answers:
++/// DA1/DA2/DA3, DSR, XTVERSION, the kitty keyboard query, DECRQM and the
++/// XTWINOPS 16/21 reports. DECSCUSR and XTSHIFTESCAPE are forwarded but
++/// silent.
++fn forwarded_csi_expects_reply(raw_bytes: &[u8]) -> bool {
++    let Some(body) = raw_bytes.strip_prefix(b"\x1b[") else {
++        return false;
++    };
++    let Some((&final_byte, rest)) = body.split_last() else {
++        return false;
++    };
++    match final_byte {
++        b'c' | b'n' | b't' => true,
++        b'q' => rest.first() == Some(&b'>'),
++        b'u' => rest.first() == Some(&b'?'),
++        b'p' => rest.contains(&b'$'),
++        _ => false,
++    }
++}
++
++/// XTGETTCAP (`DCS + q … ST`) and DECRQSS (`DCS $ q … ST`) are the two DCS
++/// forms the terminal answers.
++fn forwarded_dcs_expects_reply(raw_bytes: &[u8]) -> bool {
++    matches!(
++        raw_bytes.strip_prefix(b"\x1bP"),
++        Some(body) if body.starts_with(b"+q") || body.starts_with(b"$q")
++    )
++}
++
+ /// Maximum number of CSI parameters to accumulate.
+ const MAX_CSI_PARAMS: usize = 16;
+ /// Maximum number of CSI intermediate bytes.
+@@ -1053,6 +1117,38 @@ mod tests {
+ 
+     // -- OSC tests --
+ 
++    #[test]
++    fn forwarded_queries_report_whether_the_terminal_answers() {
++        let mut scanner = EscapeScanner::new();
++        let cases: &[(&[u8], bool)] = &[
++            (b"\x1b]11;?\x1b\\", true),       // OSC 11 background query
++            (b"\x1b]10;?\x07", true),           // OSC 10 with BEL terminator
++            (b"\x1b]4;1;?\x1b\\", true),      // OSC 4 palette query
++            (b"\x1b]0;my title\x07", false),    // OSC 0 title set
++            (b"\x1b]8;;https://x\x1b\\", false), // OSC 8 hyperlink
++            (b"\x1b[c", true),                   // DA1
++            (b"\x1b[>c", true),                  // DA2
++            (b"\x1b[?6n", true),                 // DEC DSR
++            (b"\x1b[>q", true),                  // XTVERSION
++            (b"\x1b[?u", true),                  // kitty keyboard query
++            (b"\x1b[?2004$p", true),             // DECRQM
++            (b"\x1b[16t", true),                 // XTWINOPS cell size
++            (b"\x1b[2 q", false),                // DECSCUSR
++            (b"\x1b[>1s", false),                // XTSHIFTESCAPE
++            (b"\x1bP+q544e\x1b\\", true),     // XTGETTCAP
++            (b"\x1bP$qm\x1b\\", true),        // DECRQSS
++        ];
++        for (input, expected) in cases {
++            let events = scanner.scan(input);
++            assert_eq!(events.len(), 1, "one event for {input:?}");
++            assert_eq!(
++                events[0].expects_physical_reply(),
++                *expected,
++                "expects_physical_reply for {input:?}",
++            );
++        }
++    }
++
+     #[test]
+     fn osc_query_with_bel() {
+         let mut scanner = EscapeScanner::new();
+diff --git a/devenv-shell/src/escape_state.rs b/devenv-shell/src/escape_state.rs
+index 4b650f1a..f9457ab1 100644
+--- a/devenv-shell/src/escape_state.rs
++++ b/devenv-shell/src/escape_state.rs
+@@ -15,6 +15,14 @@ use crossterm::{Command, queue, terminal};
+ use portable_pty::PtySize;
+ use std::collections::BTreeSet;
+ use std::io::{self, Write};
++use std::time::{Duration, Instant};
++
++/// How long virtual replies wait behind a forwarded query whose answer never
++/// arrives. Terminals that ignore a query (an OSC 11 on a terminal without
++/// colour reporting, say) would otherwise pin the CPR forever; programs that
++/// use the CPR as their sentinel wait far longer than this for it (termenv
++/// allows five seconds), so a late CPR is harmless where a lost one is not.
++pub const PHYSICAL_REPLY_HOLD_TIMEOUT: Duration = Duration::from_millis(250);
+ 
+ /// Escape-sequence state tracked across PTY output processing.
+ ///
+@@ -48,6 +56,14 @@ pub struct EscapeState {
+     /// The application released mode 2026 in the virtual terminal, but the
+     /// physical reset is held until its deferred frame has been drawn.
+     deferred_synchronized_output_reset: Vec<u8>,
++    /// Queries forwarded to the physical terminal whose replies have not yet
++    /// come back through stdin. While non-zero, virtual replies are held so
++    /// the child sees answers in the order it asked (see
++    /// `SequenceEvent::expects_physical_reply`).
++    pending_physical_replies: usize,
++    /// When the oldest outstanding physical query was forwarded; bounds the
++    /// hold with `PHYSICAL_REPLY_HOLD_TIMEOUT`.
++    pending_physical_since: Option<Instant>,
+ }
+ 
+ impl EscapeState {
+@@ -63,9 +79,45 @@ impl EscapeState {
+             in_band_resize: false,
+             dec_mode_forward_buffer: Vec::new(),
+             deferred_synchronized_output_reset: Vec::new(),
++            pending_physical_replies: 0,
++            pending_physical_since: None,
+         }
+     }
+ 
++    /// A query that the physical terminal will answer was just forwarded.
++    pub fn note_forwarded_query(&mut self) {
++        if self.pending_physical_replies == 0 {
++            self.pending_physical_since = Some(Instant::now());
++        }
++        self.pending_physical_replies += 1;
++    }
++
++    /// `count` terminal replies were just forwarded from stdin to the child.
++    pub fn note_physical_replies(&mut self, count: usize) {
++        self.pending_physical_replies = self.pending_physical_replies.saturating_sub(count);
++        if self.pending_physical_replies == 0 {
++            self.pending_physical_since = None;
++        }
++    }
++
++    /// Whether virtual replies must wait for outstanding physical ones.
++    pub fn holding_virtual_replies(&self) -> bool {
++        self.pending_physical_replies > 0
++    }
++
++    /// Time left before an outstanding physical query is given up on, or
++    /// `None` when nothing is outstanding. `Some(ZERO)` means expired.
++    pub fn physical_reply_hold_remaining(&self) -> Option<Duration> {
++        self.pending_physical_since
++            .map(|since| PHYSICAL_REPLY_HOLD_TIMEOUT.saturating_sub(since.elapsed()))
++    }
++
++    /// Give up on every outstanding physical query.
++    pub fn expire_physical_replies(&mut self) {
++        self.pending_physical_replies = 0;
++        self.pending_physical_since = None;
++    }
++
+     /// Reset per-batch flags before processing a new `PtyOutput` batch.
+     pub fn reset_batch(&mut self) {
+         self.erase_display = false;
+@@ -198,6 +250,7 @@ pub fn process_escape_events(
+     events_buf.clear();
+     scanner.scan_into(data, events_buf);
+     for event in events_buf.drain(..) {
++        let expects_physical_reply = event.expects_physical_reply();
+         match event {
+             SequenceEvent::DecMode(event) => {
+                 // A program can release then immediately re-enter mode 2026
+@@ -214,6 +267,9 @@ pub fn process_escape_events(
+             }
+             SequenceEvent::Osc(event) => {
+                 stdout.write_all(&event.raw_bytes)?;
++                if expects_physical_reply {
++                    esc.note_forwarded_query();
++                }
+             }
+             SequenceEvent::EraseDisplay { .. } => {
+                 esc.erase_display = true;
+@@ -221,11 +277,11 @@ pub fn process_escape_events(
+             SequenceEvent::ClearScrollback { .. } => {
+                 esc.clear_scrollback = true;
+             }
+-            SequenceEvent::ForwardCsi { raw_bytes } => {
+-                stdout.write_all(&raw_bytes)?;
+-            }
+-            SequenceEvent::ForwardDcs { raw_bytes } => {
++            SequenceEvent::ForwardCsi { raw_bytes } | SequenceEvent::ForwardDcs { raw_bytes } => {
+                 stdout.write_all(&raw_bytes)?;
++                if expects_physical_reply {
++                    esc.note_forwarded_query();
++                }
+             }
+             SequenceEvent::ForwardScreenTitle { raw_bytes } => {
+                 stdout.write_all(&raw_bytes)?;
+diff --git a/devenv-shell/src/session.rs b/devenv-shell/src/session.rs
+index 35afa474..2f777f85 100644
+--- a/devenv-shell/src/session.rs
++++ b/devenv-shell/src/session.rs
+@@ -827,10 +827,80 @@ fn is_ascii_decimal(bytes: &[u8]) -> bool {
+     !bytes.is_empty() && bytes.iter().all(u8::is_ascii_digit)
+ }
+ 
+-fn flush_virtual_pty_replies(replies: &RefCell<VirtualPtyReplies>, pty: &Pty) -> io::Result<()> {
++/// Deliver captured virtual replies to the child unless a forwarded physical
++/// query is still unanswered, in which case they wait so the child receives
++/// replies in the order it sent the queries (see
++/// `SequenceEvent::expects_physical_reply`).
++fn flush_virtual_pty_replies(
++    replies: &RefCell<VirtualPtyReplies>,
++    pty: &Pty,
++    esc: &EscapeState,
++) -> io::Result<()> {
++    if esc.holding_virtual_replies() {
++        return Ok(());
++    }
+     replies.borrow_mut().flush_to_pty(pty)
+ }
+ 
++/// Count terminal replies in a chunk of stdin: OSC and DCS strings, and the
++/// CSI reports the physical terminal sends for the queries `classify_csi`
++/// forwards (DA1/2/3, DSR, DECRQM, kitty keyboard flags, XTWINOPS). Ordinary
++/// key and mouse input never takes these shapes. Kept deliberately narrow so
++/// a keystroke can never release a held virtual reply.
++fn count_physical_replies(data: &[u8]) -> usize {
++    let mut count = 0;
++    let mut i = 0;
++    while i < data.len() {
++        if data[i] != 0x1b || i + 1 >= data.len() {
++            i += 1;
++            continue;
++        }
++        match data[i + 1] {
++            // OSC … BEL | ST and DCS … ST
++            b']' | b'P' => {
++                let mut j = i + 2;
++                loop {
++                    match data.get(j) {
++                        None => return count,
++                        Some(0x07) if data[i + 1] == b']' => break,
++                        Some(0x1b) if data.get(j + 1) == Some(&b'\\') => {
++                            j += 1;
++                            break;
++                        }
++                        _ => j += 1,
++                    }
++                }
++                count += 1;
++                i = j + 1;
++            }
++            b'[' => {
++                let start = i + 2;
++                let mut j = start;
++                while j < data.len() && !(0x40..=0x7e).contains(&data[j]) {
++                    j += 1;
++                }
++                let Some(&final_byte) = data.get(j) else {
++                    return count;
++                };
++                let body = &data[start..j];
++                let private = body.first().is_some_and(|b| matches!(b, b'?' | b'>' | b'='));
++                let is_reply = match final_byte {
++                    b'c' | b'n' | b'R' | b'u' => private,
++                    b'y' => body.last() == Some(&b'$'),
++                    b't' => true,
++                    _ => false,
++                };
++                if is_reply {
++                    count += 1;
++                }
++                i = j + 1;
++            }
++            _ => i += 1,
++        }
++    }
++    count
++}
++
+ /// Differential renderer that draws VT state to a bounded terminal region.
+ ///
+ /// Instead of passing raw PTY output to stdout (which conflicts with the status
+@@ -1536,6 +1606,8 @@ struct StdinEventContext<'a, 'vt, 'cb> {
+     stdout: &'a mut Box<dyn Write + Send>,
+     vt: &'a mut Terminal<'vt, 'cb>,
+     renderer: &'a mut Renderer<'vt>,
++    esc: &'a mut EscapeState,
++    virtual_pty_replies: &'a RefCell<VirtualPtyReplies>,
+ }
+ 
+ #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+@@ -1993,6 +2065,19 @@ impl ShellSession {
+             let event = if resize_pending {
+                 resize_pending = false;
+                 Some(Event::Resize)
++            } else if let Some(remaining) = esc.physical_reply_hold_remaining() {
++                // A virtual reply may be waiting behind a forwarded query.
++                // Bound the wait so a terminal that never answers cannot
++                // withhold the CPR from the child indefinitely.
++                match event_rx.recv_timeout(remaining) {
++                    Ok(event) => Some(event),
++                    Err(std::sync::mpsc::RecvTimeoutError::Timeout) => {
++                        esc.expire_physical_replies();
++                        flush_virtual_pty_replies(virtual_pty_replies, pty, &esc)?;
++                        continue;
++                    }
++                    Err(std::sync::mpsc::RecvTimeoutError::Disconnected) => None,
++                }
+             } else if self.status_line.state().building {
+                 match event_rx.recv_timeout(spinner_interval) {
+                     Ok(event) => Some(event),
+@@ -2046,6 +2131,8 @@ impl ShellSession {
+                             stdout,
+                             vt,
+                             renderer,
++                            esc: &mut esc,
++                            virtual_pty_replies,
+                         },
+                     )?;
+                 }
+@@ -2075,7 +2162,7 @@ impl ShellSession {
+                         let filtered = vt_input_filter.filter(&data, &mut vt_input);
+                         renderer.feed(vt, filtered.as_bytes())?;
+                     }
+-                    flush_virtual_pty_replies(virtual_pty_replies, pty)?;
++                    flush_virtual_pty_replies(virtual_pty_replies, pty, &esc)?;
+                     return_pty_read_buffer(pty_buffer_return_tx, data);
+ 
+                     // Bound this render batch so sustained PTY output cannot
+@@ -2098,7 +2185,7 @@ impl ShellSession {
+                                     let filtered = vt_input_filter.filter(&more, &mut vt_input);
+                                     renderer.feed(vt, filtered.as_bytes())?;
+                                 }
+-                                flush_virtual_pty_replies(virtual_pty_replies, pty)?;
++                                flush_virtual_pty_replies(virtual_pty_replies, pty, &esc)?;
+                                 return_pty_read_buffer(pty_buffer_return_tx, more);
+                             }
+                             Event::PtyExit(exit_code) => {
+@@ -2125,6 +2212,8 @@ impl ShellSession {
+                                         stdout,
+                                         vt,
+                                         renderer,
++                                        esc: &mut esc,
++                                        virtual_pty_replies,
+                                     },
+                                 )?;
+                             }
+@@ -2329,6 +2418,8 @@ impl ShellSession {
+             stdout,
+             vt,
+             renderer,
++            esc,
++            virtual_pty_replies,
+         } = context;
+         match classify_stdin(&self.config.keybindings, data, local_keybindings_enabled) {
+             StdinDisposition::TogglePause => {
+@@ -2376,6 +2467,12 @@ impl ShellSession {
+             StdinDisposition::ForwardToPty if !data.is_empty() => {
+                 pty.write_all(data)?;
+                 pty.flush()?;
++                // Physical replies have now reached the child; any virtual
++                // reply held behind them may follow.
++                if esc.holding_virtual_replies() {
++                    esc.note_physical_replies(count_physical_replies(data));
++                    flush_virtual_pty_replies(virtual_pty_replies, pty, esc)?;
++                }
+             }
+             StdinDisposition::ForwardToPty => {}
+         }
+@@ -3794,6 +3891,63 @@ mod tests {
+         }
+     }
+ 
++    #[test]
++    fn physical_reply_counter_matches_terminal_answers_only() {
++        let cases: &[(&[u8], usize)] = &[
++            (b"\x1b]11;rgb:1010/1010/1414\x1b\\", 1),   // OSC 11 answer, ST
++            (b"\x1b]10;rgb:c5c5/c9c9/c5c5\x07", 1),        // OSC 10 answer, BEL
++            (b"\x1b[?62;22c", 1),                          // DA1
++            (b"\x1b[>1;10;0c", 1),                         // DA2
++            (b"\x1b[?2004;2$y", 1),                        // DECRQM
++            (b"\x1b[?1u", 1),                              // kitty keyboard flags
++            (b"\x1b[6;16;8t", 1),                          // XTWINOPS cell size
++            (b"\x1bP>|libghostty\x1b\\", 1),            // XTVERSION (DCS)
++            (b"\x1b[?5;1R", 1),                            // DEC DSR cursor report
++            (b"\x1b]11;rgb:1/2/3\x1b\\\x1b[?62c", 2),  // two replies in one read
++            (b"abc", 0),
++            (b"\x1b[A\x1b[B", 0),                         // arrow keys
++            (b"\x1b[97u", 0),                              // kitty keyboard key event
++            (b"\x1b[<0;10;5M", 0),                         // SGR mouse
++            (b"\x1b[I\x1b[O", 0),                         // focus events
++            (b"\x1b[200~x\x1b[201~", 0),                  // bracketed paste
++            (b"\x1b[1;1R", 0),                             // plain CPR is virtual-owned
++            (b"\x1b]11;rgb:10", 0),                        // truncated: not yet a reply
++        ];
++        for (input, expected) in cases {
++            assert_eq!(
++                count_physical_replies(input),
++                *expected,
++                "reply count for {input:?}",
++            );
++        }
++    }
++
++    #[test]
++    fn virtual_replies_wait_for_outstanding_physical_ones() {
++        let mut esc = EscapeState::new();
++        assert!(!esc.holding_virtual_replies());
++        assert!(esc.physical_reply_hold_remaining().is_none());
++
++        esc.note_forwarded_query();
++        esc.note_forwarded_query();
++        assert!(esc.holding_virtual_replies());
++        assert!(esc.physical_reply_hold_remaining().is_some());
++
++        esc.note_physical_replies(1);
++        assert!(esc.holding_virtual_replies());
++        esc.note_physical_replies(1);
++        assert!(!esc.holding_virtual_replies());
++        assert!(esc.physical_reply_hold_remaining().is_none());
++
++        // More replies than queries never underflows.
++        esc.note_physical_replies(3);
++        assert!(!esc.holding_virtual_replies());
++
++        esc.note_forwarded_query();
++        esc.expire_physical_replies();
++        assert!(!esc.holding_virtual_replies());
++    }
++
+     #[test]
+     fn virtual_query_hook_handles_mixed_and_split_queries() {
+         let replies = RefCell::new(VirtualPtyReplies::default());
+diff --git a/devenv-shell/tests/session_tests.rs b/devenv-shell/tests/session_tests.rs
+index 8dc41755..cb5e1336 100644
+--- a/devenv-shell/tests/session_tests.rs
++++ b/devenv-shell/tests/session_tests.rs
+@@ -915,3 +915,65 @@ async fn test_print_watched_files() {
+     drop(cmd_tx);
+     let _ = handle.await;
+ }
++
++/// Regression test for the reply ordering behind the virtual-terminal mux:
++/// a program sends `OSC 11 ; ?` followed by `CSI 6 n` and treats the cursor
++/// report as the end of the colour answer (termenv, hence gh/glow). The OSC
++/// is forwarded to the physical terminal while the CPR is answered from the
++/// virtual terminal, so without holding the CPR the child would see it
++/// first and leave the colour reply unread in its tty buffer.
++#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
++async fn test_virtual_cpr_waits_for_forwarded_osc_reply() {
++    let (io, mut stdin_ours, mut stdout_ours) = test_io();
++    let (cmd_tx, cmd_rx) = mpsc::channel(10);
++    let (event_tx, _event_rx) = mpsc::channel(10);
++
++    let session = test_session();
++    let handle = tokio::spawn(async move { session.run(cmd_rx, event_tx, io).await });
++
++    // Raw mode so the reply bytes reach `dd` unmodified and unechoed. After
++    // both answers have had time to arrive, print whatever the first read
++    // returns as a compact octal dump followed by a marker.
++    cmd_tx
++        .send(spawn_cmd(
++            "stty raw -echo; printf '\\033]11;?\\033\\\\\\033[6n'; sleep 1; \
++             dd bs=512 count=1 2>/dev/null | od -An -c | tr -d ' \\n'; printf ' END\\n'; exit 0",
++        ))
++        .await
++        .unwrap();
++
++    // The OSC query must reach the physical terminal verbatim.
++    let collected = read_until(&mut stdout_ours, b"\x1b]11;?\x1b\\", Duration::from_secs(5));
++    assert!(
++        collected.windows(6).any(|w| w == b"\x1b]11;?"),
++        "OSC 11 query was not forwarded to stdout: {:?}",
++        String::from_utf8_lossy(&collected)
++    );
++
++    // Play the terminal: answer the colour query through stdin.
++    stdin_ours
++        .write_all(b"\x1b]11;rgb:1010/1010/1414\x1b\\")
++        .unwrap();
++    stdin_ours.flush().unwrap();
++
++    let collected = read_until(&mut stdout_ours, b" END", Duration::from_secs(10));
++    let text = render_all_lines(&collected, 80, 24).join("\n");
++    // `od -c` renders ESC as `033`; stop before the ST so its backslash
++    // escaping does not matter.
++    let osc_reply = "033]11;rgb:1010/1010/1414";
++    let osc_at = text.find(osc_reply).unwrap_or_else(|| {
++        panic!("child never received the OSC 11 reply; child saw: {text}")
++    });
++    let cpr_at = text.find("033[").expect("child saw no CSI at all");
++    assert!(
++        osc_at < cpr_at,
++        "cursor report reached the child before the OSC 11 reply; child saw: {text}"
++    );
++    let dump_end = text.find(" END").unwrap();
++    assert!(
++        text[..dump_end].ends_with('R'),
++        "cursor report should follow the OSC reply; child saw: {text}"
++    );
++
++    let _ = handle.await;
++}
