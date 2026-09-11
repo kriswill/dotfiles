@@ -29,6 +29,7 @@ tab_bar_right = [
 ]
 
 show_agent_labels_on_pane_borders = true
+status_indicators = "symbols"
 [keys]
 prefix = "ctrl+space"
 previous_tab = "shift+left"
