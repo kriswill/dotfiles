@@ -37,26 +37,29 @@
     # rendered by ~/.local/bin/dotbar-usage — see
     # knowledge/decisions/herdr-ansi-tab-bar-entries.md); close over `inputs`
     # like ccglass above.
+    # herdr: upstream's flake package (built with ITS nixpkgs/rust-overlay, see
+    # flake.nix) plus our patches from overlays/herdr/. The patches touch only
+    # src/ (never Cargo.lock), so upstream's cargoLock stays valid.
     herdr = _final: prev: {
-      herdr =
-        (inputs.herdr.packages.${prev.stdenv.hostPlatform.system}.herdr).overrideAttrs
-          (old: {
-            # Build identity (upstream build_info.rs hooks, read at compile
-            # time): `herdr --version` / `herdr status` report e.g.
-            # 0.8.2-kriswill-custom.b1b9e98 so a glance shows this is our fork
-            # build and which commit it carries. Any channel other than
-            # "preview" behaves exactly like stable (update checks compare the
-            # plain base version); the `channel:` line in status is the update
-            # channel and stays "stable" independently.
-            env = (old.env or { }) // {
-              HERDR_BUILD_CHANNEL = "kriswill-custom";
-              HERDR_BUILD_ID = inputs.herdr.shortRev or "dirty";
-            };
-          });
+      herdr = (inputs.herdr.packages.${prev.stdenv.hostPlatform.system}.herdr).overrideAttrs (old: {
+        patches = (old.patches or [ ]) ++ [ ../overlays/herdr/ansi-tab-bar.patch ];
+        # Build identity (upstream build_info.rs hooks, read at compile
+        # time): `herdr --version` / `herdr status` report e.g.
+        # 0.9.0-kriswill-custom.ansi-tab-bar so a glance shows this is our
+        # patched build and which patch set it carries. Any channel other
+        # than "preview" behaves exactly like stable (update checks compare
+        # the plain base version); the `channel:` line in status is the
+        # update channel and stays "stable" independently.
+        env = (old.env or { }) // {
+          HERDR_BUILD_CHANNEL = "kriswill-custom";
+          HERDR_BUILD_ID = "ansi-tab-bar";
+        };
+      });
     };
-    # devenv from the kriswill/devenv fork's `custom` branch (upstream tag +
-    # our patch commits, see flake.nix); close over `inputs` like ccglass
-    # above. Replaces pkgs.devenv wholesale so modules/{darwin,nixos}/devenv.nix
+    # devenv from the kriswill/devenv fork's `custom` branch (upstream main +
+    # our patch commits, built with its own nixpkgs so dependency crates
+    # substitute from devenv.cachix.org — see flake.nix); close over `inputs`
+    # like ccglass above. Replaces pkgs.devenv wholesale so modules/{darwin,nixos}/devenv.nix
     # keep installing `pkgs.devenv` unchanged.
     devenv = _final: prev: {
       devenv = inputs.devenv.packages.${prev.stdenv.hostPlatform.system}.devenv;

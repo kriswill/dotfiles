@@ -14,5 +14,21 @@
     { pkgs, ... }:
     {
       environment.systemPackages = [ pkgs.devenv ];
+
+      # devenv is built from our fork against upstream's own nixpkgs lock, so
+      # its dependency crates (and the cachix/nix builds it links) hash the
+      # same as upstream CI's — substitute them instead of compiling ~1000
+      # crates. Keys from upstream's flake.nix nixConfig. Lands in
+      # /etc/nix/nix.custom.conf via modules/darwin/determinate.nix.
+      determinateNix.customSettings = {
+        extra-substituters = [
+          "https://devenv.cachix.org"
+          "https://cachix.cachix.org"
+        ];
+        extra-trusted-public-keys = [
+          "devenv.cachix.org-1:w1cLUi8dv3hnoSPGAuibQv+f9TZLr6cv/Hm9XgU50cw="
+          "cachix.cachix.org-1:eWNHQldwUO7G2VkjpnjDbWwy4KQ/HNxht7H4SSoMckM="
+        ];
+      };
     };
 }

@@ -267,9 +267,7 @@
         "git-hooks": "git-hooks",
         "nix": "nix_2",
         "nixd": "nixd",
-        "nixpkgs": [
-          "nixpkgs"
-        ],
+        "nixpkgs": "nixpkgs_3",
         "rust-overlay": "rust-overlay"
       },
       "locked": {
@@ -581,22 +579,20 @@
     },
     "herdr": {
       "inputs": {
-        "nixpkgs": [
-          "nixpkgs"
-        ],
+        "nixpkgs": "nixpkgs_4",
         "rust-overlay": "rust-overlay_2"
       },
       "locked": {
-        "lastModified": 1789083910,
-        "narHash": "sha256-uTOpqR+gA02aIgQLo0knEYXL+W11Q5MJ2dNIHJodIiQ=",
-        "owner": "kriswill",
+        "lastModified": 1788808373,
+        "narHash": "sha256-SUYF4bbaYwNgoe498VoCUzuLPcjBLQXR0o0DWjjoSnI=",
+        "owner": "herdrdev",
         "repo": "herdr",
-        "rev": "d4028cea3297185d5c16cf90dc84bd43db76f84d",
+        "rev": "b99002ac99b09e00b4ca692436cb15a6b0d676f1",
         "type": "github"
       },
       "original": {
-        "owner": "kriswill",
-        "ref": "custom",
+        "owner": "herdrdev",
+        "ref": "v0.9.0",
         "repo": "herdr",
         "type": "github"
       }
@@ -692,7 +688,7 @@
         "hyprutils": "hyprutils",
         "hyprwayland-scanner": "hyprwayland-scanner",
         "hyprwire": "hyprwire",
-        "nixpkgs": "nixpkgs_3",
+        "nixpkgs": "nixpkgs_5",
         "pre-commit-hooks": "pre-commit-hooks",
         "systems": "systems",
         "xdph": "xdph"
@@ -982,7 +978,7 @@
     "mcman": {
       "inputs": {
         "crane": "crane",
-        "nixpkgs": "nixpkgs_5"
+        "nixpkgs": "nixpkgs_7"
       },
       "locked": {
         "lastModified": 1766962671,
@@ -1219,6 +1215,23 @@
         "type": "github"
       }
     },
+    "nixpkgs-src": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1787394516,
+        "narHash": "sha256-pRGOQSClnXNI2iLUG6DYpsGvYcuw0drOutVZFTJNw90=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "c8f90650c15282fa8656a041bfbbd2403997a9a7",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "ref": "nixpkgs-unstable",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
     "nixpkgs-stable": {
       "locked": {
         "lastModified": 1787848966,
@@ -1250,6 +1263,41 @@
       }
     },
     "nixpkgs_3": {
+      "inputs": {
+        "nixpkgs-src": "nixpkgs-src"
+      },
+      "locked": {
+        "lastModified": 1787753358,
+        "narHash": "sha256-Tl77VbWyAKrOfRNQhL6JbQtb/MLzbYa/1RG1gWWfICk=",
+        "owner": "cachix",
+        "repo": "devenv-nixpkgs",
+        "rev": "256551e45f6303e142ab4a98be1bf243feb77dc0",
+        "type": "github"
+      },
+      "original": {
+        "owner": "cachix",
+        "ref": "rolling",
+        "repo": "devenv-nixpkgs",
+        "type": "github"
+      }
+    },
+    "nixpkgs_4": {
+      "locked": {
+        "lastModified": 1779911860,
+        "narHash": "sha256-ubcLAcKBDCZjhxw/kH5DL5GdBZQdzLqpkTe7HonvJVs=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "c0a89c379b4ac67c7b13b051ddbd4e0dbc9b0eaf",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "ref": "nixos-unstable",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
+    "nixpkgs_5": {
       "locked": {
         "lastModified": 1787736819,
         "narHash": "sha256-cV5xEJJK3BvhU8rEd4mC9UsmDi5qscv/kzGPhBRC5WA=",
@@ -1265,7 +1313,7 @@
         "type": "github"
       }
     },
-    "nixpkgs_4": {
+    "nixpkgs_6": {
       "locked": {
         "lastModified": 1788039129,
         "narHash": "sha256-pa4Q0qErvCvzCaaUph7Sm37RhR4xvPrYI8Lgz6k85+A=",
@@ -1281,7 +1329,7 @@
         "type": "github"
       }
     },
-    "nixpkgs_5": {
+    "nixpkgs_7": {
       "locked": {
         "lastModified": 1757347588,
         "narHash": "sha256-tLdkkC6XnsY9EOZW9TlpesTclELy8W7lL2ClL+nma8o=",
@@ -1375,7 +1423,7 @@
         "hyprland": "hyprland",
         "import-tree": "import-tree",
         "nixos-hardware": "nixos-hardware",
-        "nixpkgs": "nixpkgs_4",
+        "nixpkgs": "nixpkgs_6",
         "noctalia": "noctalia",
         "okf": "okf",
         "snowglobe-factory": "snowglobe-factory",

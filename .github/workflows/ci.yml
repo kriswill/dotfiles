@@ -106,6 +106,13 @@ jobs:
       - uses: actions/checkout@v7
 
       - uses: DeterminateSystems/determinate-nix-action@v3
+        with:
+          # devenv's dependency crates come from upstream's cache (the devenv
+          # input uses its own nixpkgs lock precisely so the hashes match);
+          # same pair as modules/{darwin,nixos}/devenv.nix.
+          extra-conf: |
+            extra-substituters = https://devenv.cachix.org https://cachix.cachix.org
+            extra-trusted-public-keys = devenv.cachix.org-1:w1cLUi8dv3hnoSPGAuibQv+f9TZLr6cv/Hm9XgU50cw= cachix.cachix.org-1:eWNHQldwUO7G2VkjpnjDbWwy4KQ/HNxht7H4SSoMckM=
 
       # Pushes builds to (and pulls prior builds from) the private FlakeHub
       # cache — replaces magic-nix-cache's ~10 GiB GHA-cache backend.
@@ -134,8 +141,8 @@ jobs:
           # Upstream cache for the hypr* stack (see header). extra-conf lands
           # in the daemon's nix.conf.
           extra-conf: |
-            extra-substituters = https://hyprland.cachix.org
-            extra-trusted-public-keys = hyprland.cachix.org-1:a7pgxzMz7+chwVL3/pzj6jIBMioiJM7ypFP8PwtkuGc=
+            extra-substituters = https://hyprland.cachix.org https://devenv.cachix.org https://cachix.cachix.org
+            extra-trusted-public-keys = hyprland.cachix.org-1:a7pgxzMz7+chwVL3/pzj6jIBMioiJM7ypFP8PwtkuGc= devenv.cachix.org-1:w1cLUi8dv3hnoSPGAuibQv+f9TZLr6cv/Hm9XgU50cw= cachix.cachix.org-1:eWNHQldwUO7G2VkjpnjDbWwy4KQ/HNxht7H4SSoMckM=
 
       - uses: DeterminateSystems/flakehub-cache-action@main
 

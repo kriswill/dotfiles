@@ -100,35 +100,39 @@
       url = "github:noctalia-dev/noctalia-shell/v5.0.0-beta.8";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    # herdr from OUR staging fork's `custom` branch: upstream's v0.8.2 stable
-    # tag (the repo ships its own flake; no binary cache, builds from source)
-    # plus our patch commits — currently ANSI tab-bar command entries
-    # (ui.tab_bar_right `argv`/`ansi` fields: run e.g. dotbar without a shell
-    # and render its SGR-colored output inline; HERDR_TOKEN_* env from
-    # workspace metadata with reactive re-runs). Rebase `custom` onto
-    # each new upstream tag (herdr-update-check is the reminder) and drop
-    # commits as they land upstream. v0.8.2 itself is needed for the CSI
-    # 14t/16t pixel-size fix (herdrdev/herdr#835) that nixpkgs' 0.7.5 lacks —
-    # required for image rendering (fastfetch/yazi) inside herdr panes,
-    # together with `experimental.kitty_graphics = true` in the stow
-    # config.toml; see docs/fastfetch.md.
-    herdr = {
-      url = "github:kriswill/herdr/custom";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-    # devenv from OUR fork's `custom` branch: upstream's v2.2.2 tag plus our
-    # patch commits — currently the terminal-query reply ordering fix for the
+    # herdr from UPSTREAM's v0.9.0 tag, built against ITS OWN locked nixpkgs
+    # and rust-overlay (no `follows`): the derivation then only changes when
+    # the herdr pin or our patch changes, not on every weekly nixpkgs bump.
+    # Our local changes ride as a patch applied by the herdr overlay
+    # (overlays/herdr/*.patch, exported with `git format-patch` from the
+    # kriswill/herdr `custom` branch) — currently the ANSI tab-bar command
+    # entries (ui.tab_bar_right `argv`/`ansi` fields: run e.g. dotbar without
+    # a shell and render its SGR-colored output inline; HERDR_TOKEN_* env
+    # from workspace metadata with reactive re-runs). On each new upstream
+    # tag: rebase `custom`, re-export the patch, bump the tag here, and drop
+    # the patch once it lands upstream (herdr-update-check is the reminder).
+    # v0.8.2+ is needed for the CSI 14t/16t pixel-size fix (herdrdev/herdr#835)
+    # that nixpkgs' 0.7.5 lacks — required for image rendering
+    # (fastfetch/yazi) inside herdr panes, together with
+    # `experimental.kitty_graphics = true` in the stow config.toml; see
+    # docs/fastfetch.md. Upstream has no binary cache; the patched build is
+    # cached by our CI on FlakeHub.
+    herdr.url = "github:herdrdev/herdr/v0.9.0";
+    # devenv from OUR fork's `custom` branch: upstream main plus our patch
+    # commits — currently the terminal-query reply ordering fix for the
     # `devenv shell` virtual-terminal mux (cachix/devenv#3130: CPR is answered
     # locally while OSC queries round-trip to the real terminal, so termenv
     # users like gh/glow got the cursor report first and left the colour
-    # reply in the tty buffer for zsh to eat). Rebase `custom` onto each new
-    # upstream tag and drop commits as they land upstream. Builds from source
-    # (devenv.cachix.org only caches upstream commits); the nixpkgs follow is
-    # deliberate so it shares our package set rather than pulling a second one.
-    devenv = {
-      url = "github:kriswill/devenv/custom";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
+    # reply in the tty buffer for zsh to eat). Rebase `custom` onto upstream
+    # and drop commits as they land. The patch touches the devenv-shell
+    # workspace crate, which crate2nix builds as its own derivation and the
+    # upstream flake exposes no crate-override hook for — hence a fork rather
+    # than an overlay patch (contrast herdr above). Deliberately NO nixpkgs
+    # `follows`: with the fork's lock identical to upstream's, every
+    # dependency crate hashes the same as upstream CI's and substitutes from
+    # devenv.cachix.org (wired in modules/{darwin,nixos}/devenv.nix); only
+    # devenv-shell and the devenv binary crate rebuild.
+    devenv.url = "github:kriswill/devenv/custom";
     # tomato — Rust CLI to get/set TOML values preserving comments + formatting
     # (built on toml_edit). Not a flake; built via rustPlatform in pkgs/tomato.nix
     # and exposed as pkgs.tomato. Used by the Hyprland gaps-toggle to flip

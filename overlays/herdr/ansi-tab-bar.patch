@@ -1,0 +1,1427 @@
+From ed023979be0a52fe4965a342df5cc6d45a7c379e Mon Sep 17 00:00:00 2001
+From: Kris Williams <115474+kriswill@users.noreply.github.com>
+Date: Sun, 30 Aug 2026 15:32:06 -0700
+Subject: [PATCH] feat(ui): ansi command entries in the tab bar
+
+Adds argv and ansi fields to ui.tab_bar_right command entries. argv runs
+the program directly without a shell; ansi = true preserves SGR styling
+from the command's last stdout line and renders it inline, stripping all
+other escape sequences. Status commands receive the focused workspace's
+metadata tokens as HERDR_TOKEN_<NAME> environment variables and re-run
+when those tokens change, so an external status producer like dotbar
+owns presentation without polling lag.
+
+Rebased onto v0.9.0, where the tab bar is rendered by the client from a
+server snapshot. Styled output now travels as an optional `spans` list
+on the tab status segment (packed fg/bg colors plus modifier bits) with
+`text` kept as the unstyled fallback, and the client tab bar renders the
+spans over the theme base style. The private protocol version is bumped
+to 23 because the snapshot's bincode layout changed after 22 shipped in
+v0.9.0; the generated API schema artifact is regenerated to match.
+---
+ docs/next/api/herdr-api.schema.json           |   2 +-
+ src/app/mod.rs                                |  11 +-
+ src/app/state.rs                              |  19 +
+ src/app/tab_bar_status.rs                     | 557 +++++++++++++++++-
+ src/client/shell/tabs.rs                      |  38 +-
+ .../shell/tests/keybindings_settings.rs       |  51 ++
+ src/client/shell/tests/mouse_selection.rs     |   1 +
+ src/config.rs                                 |   2 +-
+ src/config/tab_bar.rs                         |  91 ++-
+ src/events.rs                                 |   2 +-
+ src/metadata_tokens.rs                        |  13 +
+ src/platform/mod.rs                           |  10 +
+ src/protocol/wire.rs                          |  41 +-
+ src/server/client_shell.rs                    |  21 +-
+ tests/api_ping.rs                             |   2 +-
+ tests/cli/sessions.rs                         |  12 +-
+ tests/support/mod.rs                          |   2 +-
+ 17 files changed, 814 insertions(+), 61 deletions(-)
+
+diff --git a/docs/next/api/herdr-api.schema.json b/docs/next/api/herdr-api.schema.json
+index b3990e96..af2947ca 100644
+--- a/docs/next/api/herdr-api.schema.json
++++ b/docs/next/api/herdr-api.schema.json
+@@ -1,6 +1,6 @@
+ {
+   "$schema": "https://json-schema.org/draft/2020-12/schema",
+-  "protocol": 22,
++  "protocol": 23,
+   "schema_version": 1,
+   "schemas": {
+     "error_response": {
+diff --git a/src/app/mod.rs b/src/app/mod.rs
+index b327b5bb..751701af 100644
+--- a/src/app/mod.rs
++++ b/src/app/mod.rs
+@@ -144,6 +144,10 @@ pub struct App {
+     tab_bar_datetimes: Vec<tab_bar_status::TabBarDatetimeRuntime>,
+     tab_bar_commands: Vec<tab_bar_status::TabBarCommandRuntime>,
+     next_tab_bar_datetime_refresh: Option<Instant>,
++    /// Fingerprint of the focused workspace's metadata token values the last
++    /// time tab bar status tasks ran; a change re-runs status commands so
++    /// their `HERDR_TOKEN_*` environment stays current.
++    tab_bar_token_fingerprint: Option<u64>,
+     /// Parsed `ui.window_title` plus the hostname resolved when it was applied.
+     window_title_template: Option<(crate::config::WindowTitleTemplate, String)>,
+     pub(crate) persist_pane_history: bool,
+@@ -605,6 +609,7 @@ impl App {
+             tab_bar_datetimes: Vec::new(),
+             tab_bar_commands: Vec::new(),
+             next_tab_bar_datetime_refresh: None,
++            tab_bar_token_fingerprint: None,
+             window_title_template: None,
+             persist_pane_history: config.experimental.pane_history,
+             last_render_at: None,
+@@ -1063,6 +1068,8 @@ mod tests {
+         app.configure_tab_bar_status(
+             &[crate::config::TabBarRightEntryConfig::Command {
+                 command: "status".into(),
++                argv: Vec::new(),
++                ansi: false,
+                 interval_seconds: 5,
+                 timeout_seconds: 2,
+             }],
+@@ -1072,7 +1079,9 @@ mod tests {
+         let event = |generation, output: Option<&str>| AppEvent::TabBarCommandFinished {
+             generation,
+             segment_index: 0,
+-            result: Ok(output.map(str::to_string)),
++            result: Ok(crate::app::state::TabBarCommandOutput::Text(
++                output.map(str::to_string),
++            )),
+         };
+ 
+         assert!(!app.handle_internal_event_with_render_impact(event(generation, None)));
+diff --git a/src/app/state.rs b/src/app/state.rs
+index 892ec5e9..188013ce 100644
+--- a/src/app/state.rs
++++ b/src/app/state.rs
+@@ -784,6 +784,25 @@ pub(crate) struct PaneFocusTarget {
+ pub enum TabBarStatusSegment {
+     Zoom,
+     Text(Option<String>),
++    /// Output of an `ansi = true` tab bar command: SGR-styled spans parsed
++    /// from the command's last stdout line. `None` until a run succeeds.
++    Styled(Option<Vec<TabBarStyledSpan>>),
++}
++
++/// One run of styled text within an ANSI tab bar command's output. Only SGR
++/// styling survives parsing; all other escape sequences are stripped.
++#[derive(Debug, Clone, PartialEq, Eq)]
++pub struct TabBarStyledSpan {
++    pub text: String,
++    pub style: ratatui::style::Style,
++}
++
++/// Payload of a finished tab bar status command, matching how the segment
++/// was configured: plain sanitized text, or SGR-styled spans.
++#[derive(Debug, Clone, PartialEq, Eq)]
++pub enum TabBarCommandOutput {
++    Text(Option<String>),
++    Styled(Option<Vec<TabBarStyledSpan>>),
+ }
+ 
+ pub struct AppState {
+diff --git a/src/app/tab_bar_status.rs b/src/app/tab_bar_status.rs
+index 596c2117..f6f66096 100644
+--- a/src/app/tab_bar_status.rs
++++ b/src/app/tab_bar_status.rs
+@@ -9,7 +9,10 @@ use std::{
+ 
+ use tokio::io::AsyncReadExt;
+ 
+-use super::{state::TabBarStatusSegment, App};
++use super::{
++    state::{TabBarCommandOutput, TabBarStatusSegment, TabBarStyledSpan},
++    App,
++};
+ use crate::config::TabBarRightEntryConfig;
+ 
+ const DATETIME_REFRESH_INTERVAL: Duration = Duration::from_secs(1);
+@@ -21,13 +24,34 @@ pub(super) struct TabBarDatetimeRuntime {
+     format: time::format_description::OwnedFormatItem,
+ }
+ 
++/// How a status command is launched: through the platform shell, or directly
++/// as a program with arguments.
++#[derive(Clone)]
++pub(super) enum StatusCommandSpec {
++    Shell(String),
++    Argv(Vec<String>),
++}
++
++impl StatusCommandSpec {
++    fn describe(&self) -> String {
++        match self {
++            Self::Shell(command) => command.clone(),
++            Self::Argv(argv) => argv.join(" "),
++        }
++    }
++}
++
+ pub(super) struct TabBarCommandRuntime {
+     segment_index: usize,
+-    command: String,
++    spec: StatusCommandSpec,
++    ansi: bool,
+     interval: Duration,
+     timeout: Duration,
+     next_run_at: std::time::Instant,
+     task: Option<StatusCommandTask>,
++    /// A metadata token change arrived while a run was in flight; run again
++    /// as soon as that run finishes.
++    rerun_when_finished: bool,
+ }
+ 
+ impl Drop for TabBarCommandRuntime {
+@@ -90,11 +114,13 @@ impl App {
+                 }
+                 TabBarRightEntryConfig::Command {
+                     command,
++                    argv,
++                    ansi,
+                     interval_seconds,
+                     timeout_seconds,
+                 } => {
+                     if !crate::platform::status_commands_supported()
+-                        || command.trim().is_empty()
++                        || crate::config::command_entry_source_diagnostic(command, argv).is_some()
+                         || *interval_seconds == 0
+                         || *interval_seconds > crate::config::MAX_TAB_BAR_COMMAND_INTERVAL_SECONDS
+                         || *timeout_seconds == 0
+@@ -102,22 +128,32 @@ impl App {
+                     {
+                         continue;
+                     }
++                    let spec = if argv.is_empty() {
++                        StatusCommandSpec::Shell(command.clone())
++                    } else {
++                        StatusCommandSpec::Argv(argv.clone())
++                    };
+                     let segment_index = self.state.tab_bar_right.len();
+-                    self.state
+-                        .tab_bar_right
+-                        .push(TabBarStatusSegment::Text(None));
++                    self.state.tab_bar_right.push(if *ansi {
++                        TabBarStatusSegment::Styled(None)
++                    } else {
++                        TabBarStatusSegment::Text(None)
++                    });
+                     self.tab_bar_commands.push(TabBarCommandRuntime {
+                         segment_index,
+-                        command: command.clone(),
++                        spec,
++                        ansi: *ansi,
+                         interval: Duration::from_secs(*interval_seconds),
+                         timeout: Duration::from_secs(*timeout_seconds),
+                         next_run_at: now,
+                         task: None,
++                        rerun_when_finished: false,
+                     });
+                 }
+             }
+         }
+ 
++        self.tab_bar_token_fingerprint = None;
+         self.next_tab_bar_datetime_refresh =
+             (!self.tab_bar_datetimes.is_empty()).then_some(now + DATETIME_REFRESH_INTERVAL);
+     }
+@@ -141,6 +177,29 @@ impl App {
+             self.next_tab_bar_datetime_refresh = Some(now + DATETIME_REFRESH_INTERVAL);
+         }
+ 
++        if !self.tab_bar_commands.is_empty() {
++            let fingerprint = self
++                .state
++                .active
++                .and_then(|index| self.state.workspaces.get(index))
++                .map_or(0, |workspace| workspace.metadata_tokens.value_fingerprint());
++            if self.tab_bar_token_fingerprint != Some(fingerprint) {
++                // Skip the forced re-run on the first tick after a reconfigure:
++                // fresh runtimes are already due immediately.
++                let tokens_changed = self.tab_bar_token_fingerprint.is_some();
++                self.tab_bar_token_fingerprint = Some(fingerprint);
++                if tokens_changed {
++                    for runtime in &mut self.tab_bar_commands {
++                        if runtime.task.is_some() {
++                            runtime.rerun_when_finished = true;
++                        } else {
++                            runtime.next_run_at = now;
++                        }
++                    }
++                }
++            }
++        }
++
+         let command_due = self
+             .tab_bar_commands
+             .iter()
+@@ -150,7 +209,8 @@ impl App {
+         }
+ 
+         let generation = self.tab_bar_status_generation;
+-        let (environment, cwd) = self.custom_command_env();
++        let (mut environment, cwd) = self.custom_command_env();
++        environment.extend(focused_workspace_token_env(&self.state));
+         for runtime in &mut self.tab_bar_commands {
+             if runtime.task.is_some() || now < runtime.next_run_at {
+                 continue;
+@@ -160,7 +220,8 @@ impl App {
+                 self.event_tx.clone(),
+                 generation,
+                 runtime.segment_index,
+-                runtime.command.clone(),
++                runtime.spec.clone(),
++                runtime.ansi,
+                 runtime.timeout,
+                 environment.clone(),
+                 cwd.clone(),
+@@ -183,7 +244,7 @@ impl App {
+         &mut self,
+         generation: u64,
+         segment_index: usize,
+-        result: Result<Option<String>, String>,
++        result: Result<TabBarCommandOutput, String>,
+     ) -> bool {
+         if generation != self.tab_bar_status_generation {
+             return false;
+@@ -196,25 +257,71 @@ impl App {
+             return false;
+         };
+         runtime.task = None;
++        if runtime.rerun_when_finished {
++            runtime.rerun_when_finished = false;
++            runtime.next_run_at = std::time::Instant::now();
++        }
+ 
+         let output = match result {
+-            Ok(output) => output,
++            Ok(output) => Some(output),
+             Err(error) => {
+-                tracing::warn!(command = %runtime.command, error, "tab bar status command failed");
++                let command = runtime.spec.describe();
++                tracing::warn!(command = %command, error, "tab bar status command failed");
+                 None
+             }
+         };
+-        let Some(TabBarStatusSegment::Text(current)) =
+-            self.state.tab_bar_right.get_mut(segment_index)
+-        else {
+-            return false;
+-        };
+-        let changed = *current != output;
+-        *current = output;
+-        changed
++        match self.state.tab_bar_right.get_mut(segment_index) {
++            Some(TabBarStatusSegment::Text(current)) => {
++                let output = match output {
++                    Some(TabBarCommandOutput::Text(text)) => text,
++                    _ => None,
++                };
++                let changed = *current != output;
++                *current = output;
++                changed
++            }
++            Some(TabBarStatusSegment::Styled(current)) => {
++                let output = match output {
++                    Some(TabBarCommandOutput::Styled(spans)) => spans,
++                    _ => None,
++                };
++                let changed = *current != output;
++                *current = output;
++                changed
++            }
++            _ => false,
++        }
+     }
+ }
+ 
++/// Exposes the focused workspace's metadata tokens (reported via
++/// `workspace report-metadata`) to status commands as `HERDR_TOKEN_<NAME>`
++/// environment variables. Token keys are ASCII alphanumeric plus `_`/`-`;
++/// names are uppercased and `-` becomes `_`.
++fn focused_workspace_token_env(state: &super::AppState) -> Vec<(String, String)> {
++    let Some(workspace) = state.active.and_then(|index| state.workspaces.get(index)) else {
++        return Vec::new();
++    };
++    workspace
++        .metadata_tokens
++        .values()
++        .into_iter()
++        .map(|(key, value)| {
++            let name: String = key
++                .chars()
++                .map(|ch| {
++                    if ch.is_ascii_alphanumeric() {
++                        ch.to_ascii_uppercase()
++                    } else {
++                        '_'
++                    }
++                })
++                .collect();
++            (format!("HERDR_TOKEN_{name}"), value)
++        })
++        .collect()
++}
++
+ fn format_local_datetime(format: &time::format_description::OwnedFormatItem) -> Option<String> {
+     let datetime = crate::platform::local_datetime()?;
+     datetime
+@@ -346,6 +453,219 @@ fn strip_terminal_control_sequences(value: &[u8]) -> Vec<u8> {
+     output
+ }
+ 
++/// Parses the last output line into SGR-styled spans for an `ansi = true`
++/// command entry. Only SGR (`CSI ... m`) sequences affect styling; every
++/// other escape sequence is dropped, and the text itself passes through the
++/// same character sanitization and length cap as plain status text.
++fn styled_command_output(output: &[u8]) -> Option<Vec<TabBarStyledSpan>> {
++    use ratatui::style::Style;
++    use ControlSequenceState::*;
++
++    let mut raw_spans: Vec<(Vec<u8>, Style)> = Vec::new();
++    let mut current_text: Vec<u8> = Vec::new();
++    let mut current_style = Style::default();
++    let mut params: Vec<u8> = Vec::new();
++    let mut state = Text;
++    let flush = |text: &mut Vec<u8>, style: Style, spans: &mut Vec<(Vec<u8>, Style)>| {
++        if !text.is_empty() {
++            spans.push((std::mem::take(text), style));
++        }
++    };
++    for &byte in output {
++        state = match (state, byte) {
++            (Text, b'\x1b') => Escape,
++            (Text, _) => {
++                current_text.push(byte);
++                Text
++            }
++            (Escape, b'[') => {
++                params.clear();
++                Csi
++            }
++            (Escape, b']') => Osc,
++            (Escape, b'P' | b'X' | b'^' | b'_') => StString,
++            (Escape, 0x20..=0x2f) => EscapeIntermediate,
++            (Escape, 0x30..=0x7e) => Text,
++            (Escape, b'\x1b') => Escape,
++            (Escape, b'\x18' | b'\x1a') => Text,
++            (Escape, byte) if byte.is_ascii_control() => Escape,
++            (Escape, _) => {
++                current_text.push(byte);
++                Text
++            }
++            (Csi, 0x20..=0x3f) => {
++                if params.len() < 64 {
++                    params.push(byte);
++                }
++                Csi
++            }
++            (Csi, b'm') => {
++                let next_style = apply_sgr_params(current_style, &params);
++                if next_style != current_style {
++                    flush(&mut current_text, current_style, &mut raw_spans);
++                    current_style = next_style;
++                }
++                Text
++            }
++            (Csi, 0x40..=0x7e) => Text,
++            (Csi, b'\x1b') => Escape,
++            (Csi, b'\x18' | b'\x1a') => Text,
++            (Csi, byte) if byte.is_ascii_control() => Csi,
++            (Csi, _) => {
++                current_text.push(byte);
++                Text
++            }
++            (EscapeIntermediate, 0x20..=0x2f) => EscapeIntermediate,
++            (EscapeIntermediate, 0x30..=0x7e) => Text,
++            (EscapeIntermediate, b'\x1b') => Escape,
++            (EscapeIntermediate, b'\x18' | b'\x1a') => Text,
++            (EscapeIntermediate, byte) if byte.is_ascii_control() => EscapeIntermediate,
++            (EscapeIntermediate, _) => {
++                current_text.push(byte);
++                Text
++            }
++            (Osc, b'\x07') => Text,
++            (Osc, b'\x1b') => Escape,
++            (Osc, b'\x18' | b'\x1a') => Text,
++            (Osc, _) => Osc,
++            (StString, b'\x1b') => Escape,
++            (StString, b'\x18' | b'\x1a') => Text,
++            (StString, _) => StString,
++        };
++    }
++    flush(&mut current_text, current_style, &mut raw_spans);
++
++    let mut remaining = MAX_STATUS_TEXT_CHARS;
++    let mut spans: Vec<TabBarStyledSpan> = Vec::new();
++    for (bytes, style) in raw_spans {
++        if remaining == 0 {
++            break;
++        }
++        let text: String = String::from_utf8_lossy(&bytes)
++            .chars()
++            .filter(|ch| !ch.is_control() && !is_unicode_format_control(*ch))
++            .take(remaining)
++            .collect();
++        remaining -= text.chars().count();
++        if !text.is_empty() {
++            spans.push(TabBarStyledSpan { text, style });
++        }
++    }
++
++    // Trim outer whitespace across span boundaries, matching plain status
++    // text, without disturbing interior spacing.
++    while let Some(first) = spans.first_mut() {
++        first.text = first.text.trim_start().to_string();
++        if first.text.is_empty() {
++            spans.remove(0);
++        } else {
++            break;
++        }
++    }
++    while let Some(last) = spans.last_mut() {
++        last.text = last.text.trim_end().to_string();
++        if last.text.is_empty() {
++            spans.pop();
++        } else {
++            break;
++        }
++    }
++    (!spans.is_empty()).then_some(spans)
++}
++
++fn apply_sgr_params(mut style: ratatui::style::Style, raw: &[u8]) -> ratatui::style::Style {
++    use ratatui::style::{Modifier, Style};
++
++    // Private-mode or otherwise non-numeric parameter bytes: not SGR we
++    // understand; leave the style untouched.
++    if !raw
++        .iter()
++        .all(|byte| matches!(byte, b'0'..=b'9' | b';' | b':'))
++    {
++        return style;
++    }
++    let codes: Vec<u16> = raw
++        .split(|byte| matches!(byte, b';' | b':'))
++        .map(|part| {
++            if part.is_empty() {
++                0
++            } else {
++                std::str::from_utf8(part)
++                    .ok()
++                    .and_then(|part| part.parse().ok())
++                    .unwrap_or(u16::MAX)
++            }
++        })
++        .collect();
++    let codes = if codes.is_empty() { vec![0] } else { codes };
++
++    let mut index = 0;
++    while index < codes.len() {
++        match codes[index] {
++            0 => style = Style::default(),
++            1 => style = style.add_modifier(Modifier::BOLD),
++            2 => style = style.add_modifier(Modifier::DIM),
++            3 => style = style.add_modifier(Modifier::ITALIC),
++            4 => style = style.add_modifier(Modifier::UNDERLINED),
++            5 => style = style.add_modifier(Modifier::SLOW_BLINK),
++            6 => style = style.add_modifier(Modifier::RAPID_BLINK),
++            7 => style = style.add_modifier(Modifier::REVERSED),
++            8 => style = style.add_modifier(Modifier::HIDDEN),
++            9 => style = style.add_modifier(Modifier::CROSSED_OUT),
++            22 => style = style.remove_modifier(Modifier::BOLD | Modifier::DIM),
++            23 => style = style.remove_modifier(Modifier::ITALIC),
++            24 => style = style.remove_modifier(Modifier::UNDERLINED),
++            25 => style = style.remove_modifier(Modifier::SLOW_BLINK | Modifier::RAPID_BLINK),
++            27 => style = style.remove_modifier(Modifier::REVERSED),
++            28 => style = style.remove_modifier(Modifier::HIDDEN),
++            29 => style = style.remove_modifier(Modifier::CROSSED_OUT),
++            code @ 30..=37 => style.fg = Some(indexed_color(code - 30)),
++            38 => match parse_extended_color(&codes, &mut index) {
++                Some(color) => style.fg = Some(color),
++                None => break,
++            },
++            39 => style.fg = None,
++            code @ 40..=47 => style.bg = Some(indexed_color(code - 40)),
++            48 => match parse_extended_color(&codes, &mut index) {
++                Some(color) => style.bg = Some(color),
++                None => break,
++            },
++            49 => style.bg = None,
++            code @ 90..=97 => style.fg = Some(indexed_color(code - 90 + 8)),
++            code @ 100..=107 => style.bg = Some(indexed_color(code - 100 + 8)),
++            _ => {}
++        }
++        index += 1;
++    }
++    style
++}
++
++fn indexed_color(index: u16) -> ratatui::style::Color {
++    ratatui::style::Color::Indexed(u8::try_from(index).unwrap_or(u8::MAX))
++}
++
++/// Parses the `5;n` / `2;r;g;b` tail of an SGR 38/48 parameter, advancing
++/// `index` past the consumed values. `None` means the tail is malformed and
++/// the caller should stop interpreting this sequence.
++fn parse_extended_color(codes: &[u16], index: &mut usize) -> Option<ratatui::style::Color> {
++    use ratatui::style::Color;
++    match codes.get(*index + 1)? {
++        5 => {
++            let value = *codes.get(*index + 2)?;
++            *index += 2;
++            u8::try_from(value).ok().map(Color::Indexed)
++        }
++        2 => {
++            let red = u8::try_from(*codes.get(*index + 2)?).ok()?;
++            let green = u8::try_from(*codes.get(*index + 3)?).ok()?;
++            let blue = u8::try_from(*codes.get(*index + 4)?).ok()?;
++            *index += 4;
++            Some(Color::Rgb(red, green, blue))
++        }
++        _ => None,
++    }
++}
++
+ async fn read_last_output_line(
+     mut stdout: tokio::process::ChildStdout,
+ ) -> std::io::Result<Vec<u8>> {
+@@ -423,7 +743,8 @@ fn spawn_status_command(
+     event_tx: tokio::sync::mpsc::Sender<crate::events::AppEvent>,
+     generation: u64,
+     segment_index: usize,
+-    command: String,
++    spec: StatusCommandSpec,
++    ansi: bool,
+     timeout: Duration,
+     environment: Vec<(String, String)>,
+     cwd: Option<std::path::PathBuf>,
+@@ -437,7 +758,8 @@ fn spawn_status_command(
+     let task = tokio::spawn(async move {
+         let result = run_status_command(
+             task_control.as_ref(),
+-            command,
++            spec,
++            ansi,
+             timeout,
+             deadline,
+             environment,
+@@ -461,17 +783,23 @@ fn spawn_status_command(
+ 
+ async fn run_status_command(
+     control: &StatusCommandControl,
+-    command: String,
++    spec: StatusCommandSpec,
++    ansi: bool,
+     timeout: Duration,
+     deadline: tokio::time::Instant,
+     environment: Vec<(String, String)>,
+     cwd: Option<std::path::PathBuf>,
+-) -> Result<Option<String>, String> {
++) -> Result<TabBarCommandOutput, String> {
+     if control.is_terminated() || tokio::time::Instant::now() >= deadline {
+         return Err(format!("timed out after {}s", timeout.as_secs()));
+     }
+ 
+-    let mut process = crate::platform::detached_custom_command_process(&command);
++    let mut process = match &spec {
++        StatusCommandSpec::Shell(command) => {
++            crate::platform::detached_custom_command_process(command)
++        }
++        StatusCommandSpec::Argv(argv) => crate::platform::detached_argv_command_process(argv),
++    };
+     process
+         .stdin(Stdio::null())
+         .stdout(Stdio::piped())
+@@ -504,7 +832,11 @@ async fn run_status_command(
+         let status = status.map_err(|error| error.to_string())?;
+         let output = output.map_err(|error| error.to_string())?;
+         if status.success() {
+-            Ok(command_output_text(&output))
++            Ok(if ansi {
++                TabBarCommandOutput::Styled(styled_command_output(&output))
++            } else {
++                TabBarCommandOutput::Text(command_output_text(&output))
++            })
+         } else {
+             Err(format!("exited with {status}"))
+         }
+@@ -558,7 +890,8 @@ mod tests {
+             event_tx,
+             7,
+             3,
+-            MULTILINE_COMMAND.into(),
++            StatusCommandSpec::Shell(MULTILINE_COMMAND.into()),
++            false,
+             Duration::from_secs(2),
+             Vec::new(),
+             None,
+@@ -573,7 +906,7 @@ mod tests {
+             AppEvent::TabBarCommandFinished {
+                 generation: 7,
+                 segment_index: 3,
+-                result: Ok(Some(ref output)),
++                result: Ok(TabBarCommandOutput::Text(Some(ref output))),
+             } if output == "final"
+         ));
+     }
+@@ -588,7 +921,8 @@ mod tests {
+             event_tx,
+             7,
+             3,
+-            command,
++            StatusCommandSpec::Shell(command),
++            false,
+             Duration::from_secs(1),
+             Vec::new(),
+             None,
+@@ -619,7 +953,8 @@ mod tests {
+             event_tx,
+             7,
+             3,
+-            OVER_CAP_COMMAND.into(),
++            StatusCommandSpec::Shell(OVER_CAP_COMMAND.into()),
++            false,
+             Duration::from_secs(2),
+             Vec::new(),
+             None,
+@@ -632,7 +967,7 @@ mod tests {
+         assert!(matches!(
+             event,
+             AppEvent::TabBarCommandFinished {
+-                result: Ok(Some(ref output)),
++                result: Ok(TabBarCommandOutput::Text(Some(ref output))),
+                 ..
+             } if output == "READY"
+         ));
+@@ -644,6 +979,8 @@ mod tests {
+         app.configure_tab_bar_status(
+             &[TabBarRightEntryConfig::Command {
+                 command: MULTILINE_COMMAND.into(),
++                argv: Vec::new(),
++                ansi: false,
+                 interval_seconds: 5,
+                 timeout_seconds: 2,
+             }],
+@@ -657,7 +994,11 @@ mod tests {
+             " ",
+         );
+ 
+-        app.handle_tab_bar_command_finished(stale_generation, 0, Ok(Some("stale".into())));
++        app.handle_tab_bar_command_finished(
++            stale_generation,
++            0,
++            Ok(TabBarCommandOutput::Text(Some("stale".into()))),
++        );
+ 
+         assert_eq!(
+             app.state.tab_bar_right,
+@@ -679,6 +1020,8 @@ mod tests {
+         app.configure_tab_bar_status(
+             &[TabBarRightEntryConfig::Command {
+                 command,
++                argv: Vec::new(),
++                ansi: false,
+                 interval_seconds: 5,
+                 timeout_seconds: 20,
+             }],
+@@ -725,6 +1068,8 @@ mod tests {
+         app.configure_tab_bar_status(
+             &[TabBarRightEntryConfig::Command {
+                 command: MULTILINE_COMMAND.into(),
++                argv: Vec::new(),
++                ansi: false,
+                 interval_seconds: 5,
+                 timeout_seconds: 2,
+             }],
+@@ -819,6 +1164,154 @@ mod tests {
+         );
+     }
+ 
++    fn token_patch(items: &[(&str, &str)]) -> std::collections::HashMap<String, Option<String>> {
++        items
++            .iter()
++            .map(|(key, value)| ((*key).to_string(), Some((*value).to_string())))
++            .collect()
++    }
++
++    #[test]
++    fn styled_output_parses_sgr_colors_and_resets() {
++        use ratatui::style::{Color, Modifier, Style};
++
++        let spans = styled_command_output(b"\x1b[32mOK\x1b[0m plain \x1b[1;38;2;1;2;3mhot")
++            .expect("styled spans");
++        assert_eq!(spans.len(), 3);
++        assert_eq!(spans[0].text, "OK");
++        assert_eq!(spans[0].style.fg, Some(Color::Indexed(2)));
++        assert_eq!(spans[1].text, " plain ");
++        assert_eq!(spans[1].style, Style::default());
++        assert_eq!(spans[2].text, "hot");
++        assert_eq!(spans[2].style.fg, Some(Color::Rgb(1, 2, 3)));
++        assert!(spans[2].style.add_modifier.contains(Modifier::BOLD));
++    }
++
++    #[test]
++    fn styled_output_strips_non_sgr_sequences_and_hides_blank_output() {
++        use ratatui::style::Color;
++
++        let spans = styled_command_output(
++            b"\x1b]8;;https://example.com\x1b\\\x1b[91mred\x1b]8;;\x1b\\\x1b[2Kx",
++        )
++        .expect("styled spans");
++        assert_eq!(spans.len(), 1);
++        assert_eq!(spans[0].text, "redx");
++        assert_eq!(spans[0].style.fg, Some(Color::Indexed(9)));
++
++        assert_eq!(styled_command_output(b"\x1b[31m   \x1b[0m"), None);
++        assert_eq!(styled_command_output(b""), None);
++    }
++
++    #[test]
++    fn styled_output_caps_length_and_survives_malformed_sgr() {
++        let long = format!("\x1b[36m{}", "x".repeat(200));
++        let spans = styled_command_output(long.as_bytes()).expect("styled spans");
++        let total: usize = spans.iter().map(|span| span.text.chars().count()).sum();
++        assert_eq!(total, MAX_STATUS_TEXT_CHARS);
++
++        // A malformed extended color stops interpreting that sequence but
++        // keeps the text.
++        let spans = styled_command_output(b"\x1b[38;5mX").expect("styled spans");
++        assert_eq!(spans.len(), 1);
++        assert_eq!(spans[0].text, "X");
++        assert_eq!(spans[0].style.fg, None);
++    }
++
++    #[test]
++    fn focused_workspace_tokens_become_env_vars() {
++        let mut app = test_app();
++        app.state
++            .workspaces
++            .push(crate::workspace::Workspace::test_new("one"));
++        app.state.active = Some(0);
++        app.state.workspaces[0].metadata_tokens.patch(
++            token_patch(&[("cpu-load", "42%"), ("MEM_x", "ok")]),
++            None,
++            std::time::Instant::now(),
++        );
++
++        let mut env = focused_workspace_token_env(&app.state);
++        env.sort();
++        assert_eq!(
++            env,
++            vec![
++                ("HERDR_TOKEN_CPU_LOAD".to_string(), "42%".to_string()),
++                ("HERDR_TOKEN_MEM_X".to_string(), "ok".to_string()),
++            ]
++        );
++
++        app.state.active = None;
++        assert!(focused_workspace_token_env(&app.state).is_empty());
++    }
++
++    #[tokio::test]
++    async fn token_change_reruns_status_commands() {
++        let mut app = test_app();
++        if !crate::platform::status_commands_supported() {
++            return;
++        }
++        app.state
++            .workspaces
++            .push(crate::workspace::Workspace::test_new("one"));
++        app.state.active = Some(0);
++        app.configure_tab_bar_status(
++            &[TabBarRightEntryConfig::Command {
++                command: MULTILINE_COMMAND.into(),
++                argv: Vec::new(),
++                ansi: false,
++                interval_seconds: 500,
++                timeout_seconds: 2,
++            }],
++            " ",
++        );
++
++        let start = std::time::Instant::now();
++        app.handle_tab_bar_status_tasks(start);
++        assert!(app.tab_bar_commands[0].task.is_some());
++
++        // A token change while the run is in flight re-runs it on completion.
++        app.state.workspaces[0].metadata_tokens.patch(
++            token_patch(&[("cpu", "10")]),
++            None,
++            std::time::Instant::now(),
++        );
++        app.handle_tab_bar_status_tasks(start + Duration::from_millis(1));
++        assert!(app.tab_bar_commands[0].rerun_when_finished);
++        app.handle_tab_bar_command_finished(
++            app.tab_bar_status_generation,
++            0,
++            Ok(TabBarCommandOutput::Text(Some("ready".into()))),
++        );
++        assert!(!app.tab_bar_commands[0].rerun_when_finished);
++        let deadline = app
++            .next_tab_bar_status_deadline()
++            .expect("rerun deadline after token change");
++        assert!(deadline <= std::time::Instant::now());
++
++        // Run it, finish it: the next run sits a full interval out.
++        app.handle_tab_bar_status_tasks(std::time::Instant::now());
++        app.handle_tab_bar_command_finished(
++            app.tab_bar_status_generation,
++            0,
++            Ok(TabBarCommandOutput::Text(Some("ready".into()))),
++        );
++        let deadline = app
++            .next_tab_bar_status_deadline()
++            .expect("steady-state deadline");
++        assert!(deadline > std::time::Instant::now() + Duration::from_secs(400));
++
++        // An idle command re-runs immediately when a token changes.
++        app.state.workspaces[0].metadata_tokens.patch(
++            token_patch(&[("cpu", "99")]),
++            None,
++            std::time::Instant::now(),
++        );
++        let now = std::time::Instant::now();
++        app.handle_tab_bar_status_tasks(now);
++        assert!(app.tab_bar_commands[0].task.is_some());
++    }
++
+     #[test]
+     fn separator_preserves_printable_spacing_and_drops_controls() {
+         assert_eq!(sanitize_separator(" \x1b|\n "), " | ");
+diff --git a/src/client/shell/tabs.rs b/src/client/shell/tabs.rs
+index cf179d80..dba5830e 100644
+--- a/src/client/shell/tabs.rs
++++ b/src/client/shell/tabs.rs
+@@ -281,16 +281,34 @@ fn render_tab_bar_status(
+             x = x.saturating_add(separator_width);
+         }
+         let width = display_width(&segment.text);
+-        let style = if segment.accent {
+-            Style::default()
+-                .fg(panel_contrast_fg(palette))
+-                .bg(palette.accent)
+-                .add_modifier(Modifier::BOLD)
+-        } else {
+-            Style::default().fg(palette.overlay1).bg(palette.panel_bg)
+-        };
+-        put_text(buffer, x, area.y, width, &segment.text, style);
+-        x = x.saturating_add(width);
++        if segment.spans.is_empty() {
++            let style = if segment.accent {
++                Style::default()
++                    .fg(panel_contrast_fg(palette))
++                    .bg(palette.accent)
++                    .add_modifier(Modifier::BOLD)
++            } else {
++                Style::default().fg(palette.overlay1).bg(palette.panel_bg)
++            };
++            put_text(buffer, x, area.y, width, &segment.text, style);
++            x = x.saturating_add(width);
++            continue;
++        }
++        // Command SGR styling wins where set; theme colors fill in unset
++        // foreground/background so the entry sits on the bar.
++        let base = Style::default().fg(palette.overlay1).bg(palette.panel_bg);
++        for span in &segment.spans {
++            let span_width = display_width(&span.text);
++            put_text(
++                buffer,
++                x,
++                area.y,
++                span_width,
++                &span.text,
++                base.patch(span.style()),
++            );
++            x = x.saturating_add(span_width);
++        }
+     }
+ }
+ 
+diff --git a/src/client/shell/tests/keybindings_settings.rs b/src/client/shell/tests/keybindings_settings.rs
+index b8f17e57..6c707836 100644
+--- a/src/client/shell/tests/keybindings_settings.rs
++++ b/src/client/shell/tests/keybindings_settings.rs
+@@ -87,10 +87,12 @@ fn tab_bar_renders_endpoint_status_ellipses_and_clamps_to_useful_scroll() {
+         crate::protocol::ClientShellTabStatusSegment {
+             text: "ZOOM".into(),
+             accent: true,
++            spans: Vec::new(),
+         },
+         crate::protocol::ClientShellTabStatusSegment {
+             text: "host".into(),
+             accent: false,
++            spans: Vec::new(),
+         },
+     ];
+     projected.tab_bar_right_separator = " · ".into();
+@@ -773,3 +775,52 @@ fn resize_mode_reuses_endpoint_resize_and_stays_active_until_done() {
+     assert!(state.handle_input_bytes(b"\r").actions.is_empty());
+     assert_eq!(state.mode, ClientShellMode::Terminal);
+ }
++
++#[test]
++fn tab_bar_renders_styled_status_spans_with_command_colors() {
++    use ratatui::style::{Color, Style};
++
++    let mut projected = snapshot();
++    projected.tab_bar_right = vec![
++        crate::protocol::ClientShellTabStatusSegment {
++            text: "42% cpu".into(),
++            accent: false,
++            spans: vec![
++                crate::protocol::ClientShellTabStatusSpan::from_style(
++                    "42%".into(),
++                    Style::default().fg(Color::Indexed(1)),
++                ),
++                crate::protocol::ClientShellTabStatusSpan::from_style(
++                    " cpu".into(),
++                    Style::default(),
++                ),
++            ],
++        },
++        crate::protocol::ClientShellTabStatusSegment {
++            text: "14:30".into(),
++            accent: false,
++            spans: Vec::new(),
++        },
++    ];
++    projected.tab_bar_right_separator = " | ".into();
++    let mut config = ClientShellConfig::from_config(&Config::default());
++    config.mobile_width_threshold = 0;
++    let palette = config.palette.clone();
++    let mut state = ClientShellState::new(config);
++    state.set_snapshot(Box::new(projected));
++    state.set_pane_surface(surface());
++    let frame = state.compose(80, 20).expect("styled status frame");
++    let top = &frame.cells[..frame.width as usize];
++    let row = top
++        .iter()
++        .map(|cell| cell.symbol.as_str())
++        .collect::<String>();
++    assert!(row.ends_with("42% cpu | 14:30"), "tab row: {row:?}");
++    let status_x = 80 - "42% cpu | 14:30".len();
++    // The command's SGR color wins for its span; unstyled spans fall back to
++    // the theme, and everything sits on the panel background.
++    let packed = crate::protocol::color_to_u32;
++    assert_eq!(top[status_x].fg, packed(Color::Indexed(1)));
++    assert_eq!(top[status_x].bg, packed(palette.panel_bg));
++    assert_eq!(top[status_x + 4].fg, packed(palette.overlay1));
++}
+diff --git a/src/client/shell/tests/mouse_selection.rs b/src/client/shell/tests/mouse_selection.rs
+index a8f5c532..0321156c 100644
+--- a/src/client/shell/tests/mouse_selection.rs
++++ b/src/client/shell/tests/mouse_selection.rs
+@@ -130,6 +130,7 @@ fn pane_split_drag_uses_projected_handle_and_stable_tab_path() {
+         .push(crate::protocol::ClientShellTabStatusSegment {
+             text: "updated".into(),
+             accent: false,
++            spans: Vec::new(),
+         });
+     let mut replacement_surface = surface();
+     replacement_surface.projection_revision = 2;
+diff --git a/src/config.rs b/src/config.rs
+index 60a22a1e..2d5ebd75 100644
+--- a/src/config.rs
++++ b/src/config.rs
+@@ -43,7 +43,7 @@ pub(crate) use self::write::{update_file_at, write_edit, ConfigEdit};
+ pub(crate) use self::{
+     io::upsert_top_level_bool,
+     tab_bar::{
+-        parse_tab_bar_datetime_format, tab_bar_right_diagnostics,
++        command_entry_source_diagnostic, parse_tab_bar_datetime_format, tab_bar_right_diagnostics,
+         MAX_TAB_BAR_COMMAND_INTERVAL_SECONDS, MAX_TAB_BAR_COMMAND_TIMEOUT_SECONDS,
+         MAX_TAB_BAR_RIGHT_ENTRIES,
+     },
+diff --git a/src/config/tab_bar.rs b/src/config/tab_bar.rs
+index 253b1b74..f9f4bb09 100644
+--- a/src/config/tab_bar.rs
++++ b/src/config/tab_bar.rs
+@@ -31,7 +31,18 @@ pub enum TabBarRightEntryConfig {
+         text: String,
+     },
+     Command {
++        /// Shell command line. Mutually exclusive with `argv`.
++        #[serde(default)]
+         command: String,
++        /// Program and arguments, run directly without a shell. Mutually
++        /// exclusive with `command`.
++        #[serde(default)]
++        argv: Vec<String>,
++        /// Preserve SGR (color/attribute) escape sequences from the command's
++        /// output and render them inline. All other escape sequences are
++        /// stripped. Defaults to plain sanitized text.
++        #[serde(default)]
++        ansi: bool,
+         #[serde(default = "default_command_interval_seconds")]
+         interval_seconds: u64,
+         #[serde(default = "default_command_timeout_seconds")]
+@@ -39,6 +50,20 @@ pub enum TabBarRightEntryConfig {
+     },
+ }
+ 
++pub(crate) fn command_entry_source_diagnostic(
++    command: &str,
++    argv: &[String],
++) -> Option<&'static str> {
++    let has_command = !command.trim().is_empty();
++    let has_argv = !argv.is_empty();
++    match (has_command, has_argv) {
++        (true, true) => Some("sets both command and argv; hiding entry"),
++        (false, false) => Some("needs a command or argv; hiding entry"),
++        (false, true) if argv[0].trim().is_empty() => Some("argv program is empty; hiding entry"),
++        _ => None,
++    }
++}
++
+ pub(crate) fn parse_tab_bar_datetime_format(
+     value: &str,
+ ) -> Result<time::format_description::OwnedFormatItem, String> {
+@@ -74,13 +99,13 @@ pub(crate) fn tab_bar_right_diagnostics(entries: &[TabBarRightEntryConfig]) -> V
+             }
+             TabBarRightEntryConfig::Command {
+                 command,
++                argv,
+                 interval_seconds,
+                 timeout_seconds,
++                ..
+             } => {
+-                if command.trim().is_empty() {
+-                    diagnostics.push(format!(
+-                        "ui.tab_bar_right[{index}] command is empty; hiding entry"
+-                    ));
++                if let Some(message) = command_entry_source_diagnostic(command, argv) {
++                    diagnostics.push(format!("ui.tab_bar_right[{index}] {message}"));
+                 }
+                 if *interval_seconds == 0 {
+                     diagnostics.push(format!(
+@@ -158,11 +183,15 @@ entries = [
+             },
+             TabBarRightEntryConfig::Command {
+                 command: String::new(),
++                argv: Vec::new(),
++                ansi: false,
+                 interval_seconds: 0,
+                 timeout_seconds: 0,
+             },
+             TabBarRightEntryConfig::Command {
+                 command: "status.sh".into(),
++                argv: Vec::new(),
++                ansi: false,
+                 interval_seconds: MAX_TAB_BAR_COMMAND_INTERVAL_SECONDS + 1,
+                 timeout_seconds: MAX_TAB_BAR_COMMAND_TIMEOUT_SECONDS + 1,
+             },
+@@ -171,11 +200,63 @@ entries = [
+         let diagnostics = tab_bar_right_diagnostics(&entries).join("\n");
+         assert!(diagnostics.contains("invalid datetime format"));
+         assert!(diagnostics.contains("unsupported datetime format"));
+-        assert!(diagnostics.contains("command is empty"));
++        assert!(diagnostics.contains("needs a command or argv"));
+         assert!(diagnostics.contains("interval_seconds must be at least 1"));
+         assert!(diagnostics.contains("interval_seconds may be at most"));
+         assert!(diagnostics.contains("timeout_seconds must be at least 1"));
+         assert!(diagnostics.contains("timeout_seconds may be at most"));
+         assert!(parse_tab_bar_datetime_format("").is_err());
+     }
++
++    #[test]
++    fn tab_bar_command_entry_parses_argv_and_ansi() {
++        #[derive(Deserialize)]
++        struct Wrapper {
++            entries: Vec<TabBarRightEntryConfig>,
++        }
++
++        let parsed: Wrapper = toml::from_str(
++            r#"
++entries = [
++  { type = "command", argv = ["dotbar", "cpu"], ansi = true, interval_seconds = 2 },
++]
++"#,
++        )
++        .expect("parse argv command entry");
++
++        assert_eq!(
++            parsed.entries[0],
++            TabBarRightEntryConfig::Command {
++                command: String::new(),
++                argv: vec!["dotbar".into(), "cpu".into()],
++                ansi: true,
++                interval_seconds: 2,
++                timeout_seconds: DEFAULT_TAB_BAR_COMMAND_TIMEOUT_SECONDS,
++            }
++        );
++    }
++
++    #[test]
++    fn diagnostics_reject_ambiguous_and_empty_command_sources() {
++        let command = |command: &str, argv: &[&str]| TabBarRightEntryConfig::Command {
++            command: command.into(),
++            argv: argv.iter().map(|arg| (*arg).into()).collect(),
++            ansi: false,
++            interval_seconds: 5,
++            timeout_seconds: 2,
++        };
++        let entries = vec![
++            command("status.sh", &["dotbar"]),
++            command("", &[]),
++            command("", &[" "]),
++            command("status.sh", &[]),
++            command("", &["dotbar", "cpu"]),
++        ];
++
++        let diagnostics = tab_bar_right_diagnostics(&entries);
++        assert_eq!(diagnostics.len(), 3);
++        assert!(diagnostics[0].contains("sets both command and argv"));
++        assert!(diagnostics[1].contains("needs a command or argv"));
++        assert!(diagnostics[2].contains("argv program is empty"));
++    }
+ }
+diff --git a/src/events.rs b/src/events.rs
+index 95638991..3240a229 100644
+--- a/src/events.rs
++++ b/src/events.rs
+@@ -158,7 +158,7 @@ pub enum AppEvent {
+     TabBarCommandFinished {
+         generation: u64,
+         segment_index: usize,
+-        result: Result<Option<String>, String>,
++        result: Result<crate::app::state::TabBarCommandOutput, String>,
+     },
+     /// A plugin action or event command finished.
+     PluginCommandFinished {
+diff --git a/src/metadata_tokens.rs b/src/metadata_tokens.rs
+index f79e8ae2..a02d6eaf 100644
+--- a/src/metadata_tokens.rs
++++ b/src/metadata_tokens.rs
+@@ -88,6 +88,19 @@ impl MetadataTokens {
+             .collect()
+     }
+ 
++    /// Order-independent hash of the current key/value pairs. Deterministic
++    /// within a process and allocation-free, so callers can poll it cheaply to
++    /// detect token changes.
++    pub(crate) fn value_fingerprint(&self) -> u64 {
++        use std::hash::{Hash, Hasher};
++        self.entries.iter().fold(0_u64, |acc, (key, token)| {
++            let mut hasher = std::collections::hash_map::DefaultHasher::new();
++            key.hash(&mut hasher);
++            token.value.hash(&mut hasher);
++            acc ^ hasher.finish()
++        })
++    }
++
+     pub(crate) fn next_expiry(&self) -> Option<Instant> {
+         self.entries
+             .values()
+diff --git a/src/platform/mod.rs b/src/platform/mod.rs
+index d48ad4fa..e10839df 100644
+--- a/src/platform/mod.rs
++++ b/src/platform/mod.rs
+@@ -61,6 +61,16 @@ pub(crate) fn detached_custom_command_process(command: &str) -> std::process::Co
+     process
+ }
+ 
++/// Like [`detached_custom_command_process`] but runs the program directly
++/// with the given arguments, without a shell.
++pub(crate) fn detached_argv_command_process(argv: &[String]) -> std::process::Command {
++    let mut process =
++        std::process::Command::new(argv.first().map(String::as_str).unwrap_or_default());
++    process.args(argv.iter().skip(1));
++    configure_background_command(&mut process);
++    process
++}
++
+ pub(crate) fn pane_custom_command_pty_builder(command: &str) -> portable_pty::CommandBuilder {
+     pane_custom_command_pty_builder_platform(command)
+ }
+diff --git a/src/protocol/wire.rs b/src/protocol/wire.rs
+index 96881b14..22fb285d 100644
+--- a/src/protocol/wire.rs
++++ b/src/protocol/wire.rs
+@@ -17,7 +17,7 @@ use serde::{Deserialize, Serialize};
+ // ---------------------------------------------------------------------------
+ 
+ /// Current protocol version. Bumped when wire format changes incompatibly.
+-pub const PROTOCOL_VERSION: u32 = 22;
++pub const PROTOCOL_VERSION: u32 = 23;
+ 
+ /// Maximum allowed frame payload size (2 MB). Frames larger than this are
+ /// rejected to prevent denial-of-service via oversized length prefixes.
+@@ -1006,6 +1006,44 @@ pub struct ClientShellCommand {
+ pub struct ClientShellTabStatusSegment {
+     pub text: String,
+     pub accent: bool,
++    /// SGR-styled runs for an `ansi = true` status command. Empty for plain
++    /// segments; when present, `text` holds the same content unstyled so an
++    /// older client renders the entry without color instead of dropping it.
++    #[serde(default)]
++    pub spans: Vec<ClientShellTabStatusSpan>,
++}
++
++/// One styled run within a tab bar status segment. Colors use the packed
++/// `color_to_u32` encoding; `modifier` carries ratatui modifier bits.
++#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
++pub struct ClientShellTabStatusSpan {
++    pub text: String,
++    pub fg: Option<u32>,
++    pub bg: Option<u32>,
++    #[serde(default)]
++    pub modifier: u16,
++}
++
++impl ClientShellTabStatusSpan {
++    pub fn from_style(text: String, style: ratatui::style::Style) -> Self {
++        Self {
++            text,
++            fg: style.fg.map(color_to_u32),
++            bg: style.bg.map(color_to_u32),
++            modifier: modifier_to_u16(style.add_modifier),
++        }
++    }
++
++    pub fn style(&self) -> ratatui::style::Style {
++        let mut style = ratatui::style::Style::default();
++        if let Some(fg) = self.fg {
++            style = style.fg(u32_to_color(fg));
++        }
++        if let Some(bg) = self.bg {
++            style = style.bg(u32_to_color(bg));
++        }
++        style.add_modifier(u16_to_modifier(self.modifier))
++    }
+ }
+ 
+ #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+@@ -2639,6 +2677,7 @@ mod tests {
+             tab_bar_right: vec![ClientShellTabStatusSegment {
+                 text: "host".into(),
+                 accent: false,
++                spans: Vec::new(),
+             }],
+             tab_bar_right_separator: " · ".into(),
+             agent_view_label: None,
+diff --git a/src/server/client_shell.rs b/src/server/client_shell.rs
+index 37470693..8a659667 100644
+--- a/src/server/client_shell.rs
++++ b/src/server/client_shell.rs
+@@ -184,16 +184,35 @@ pub(super) fn snapshot(
+                 Some(protocol::ClientShellTabStatusSegment {
+                     text: "ZOOM".to_owned(),
+                     accent: true,
++                    spans: Vec::new(),
+                 })
+             }
+             crate::app::state::TabBarStatusSegment::Text(Some(text)) if !text.is_empty() => {
+                 Some(protocol::ClientShellTabStatusSegment {
+                     text: text.clone(),
+                     accent: false,
++                    spans: Vec::new(),
++                })
++            }
++            crate::app::state::TabBarStatusSegment::Styled(Some(spans)) => {
++                let text: String = spans.iter().map(|span| span.text.as_str()).collect();
++                (!text.is_empty()).then(|| protocol::ClientShellTabStatusSegment {
++                    text,
++                    accent: false,
++                    spans: spans
++                        .iter()
++                        .map(|span| {
++                            protocol::ClientShellTabStatusSpan::from_style(
++                                span.text.clone(),
++                                span.style,
++                            )
++                        })
++                        .collect(),
+                 })
+             }
+             crate::app::state::TabBarStatusSegment::Zoom
+-            | crate::app::state::TabBarStatusSegment::Text(_) => None,
++            | crate::app::state::TabBarStatusSegment::Text(_)
++            | crate::app::state::TabBarStatusSegment::Styled(_) => None,
+         })
+         .collect();
+ 
+diff --git a/tests/api_ping.rs b/tests/api_ping.rs
+index b86d0378..fa45b21e 100644
+--- a/tests/api_ping.rs
++++ b/tests/api_ping.rs
+@@ -306,7 +306,7 @@ fn ping_over_socket_returns_version() {
+     assert_eq!(value["result"]["version"], env!("CARGO_PKG_VERSION"));
+     // Intentionally hardcoded so wire protocol bumps require updating this test.
+     // Changing this value means old clients/servers are no longer compatible.
+-    assert_eq!(value["result"]["protocol"], 22);
++    assert_eq!(value["result"]["protocol"], 23);
+ 
+     cleanup_spawned_herdr(child, base);
+ }
+diff --git a/tests/cli/sessions.rs b/tests/cli/sessions.rs
+index 8e5fc48f..ce9d48c5 100644
+--- a/tests/cli/sessions.rs
++++ b/tests/cli/sessions.rs
+@@ -389,7 +389,7 @@ fn status_commands_report_client_and_server_versions() {
+         "stdout: {full_stdout}"
+     );
+     assert!(
+-        full_stdout.contains("  protocol: 22"),
++        full_stdout.contains("  protocol: 23"),
+         "stdout: {full_stdout}"
+     );
+     assert!(full_stdout.contains("server:\n"), "stdout: {full_stdout}");
+@@ -430,7 +430,7 @@ fn status_commands_report_client_and_server_versions() {
+         "stdout: {server_stdout}"
+     );
+     assert!(
+-        server_stdout.contains("private_protocol: 22"),
++        server_stdout.contains("private_protocol: 23"),
+         "stdout: {server_stdout}"
+     );
+ 
+@@ -442,7 +442,7 @@ fn status_commands_report_client_and_server_versions() {
+         "stdout: {client_stdout}"
+     );
+     assert!(
+-        client_stdout.contains("protocol: 22"),
++        client_stdout.contains("protocol: 23"),
+         "stdout: {client_stdout}"
+     );
+     assert!(
+@@ -456,7 +456,7 @@ fn status_commands_report_client_and_server_versions() {
+ 
+     let full_json = run_cli_json(&socket_path, &["status", "--json"]);
+     assert_eq!(full_json["client"]["version"], env!("CARGO_PKG_VERSION"));
+-    assert_eq!(full_json["client"]["protocol"], 22);
++    assert_eq!(full_json["client"]["protocol"], 23);
+     assert_eq!(full_json["client"]["endpoint_protocol_generation"], 1);
+     assert_eq!(full_json["server"]["status"], "running");
+     assert_eq!(full_json["server"]["running"], true);
+@@ -474,13 +474,13 @@ fn status_commands_report_client_and_server_versions() {
+     let server_json = run_cli_json(&socket_path, &["status", "server", "--json"]);
+     assert_eq!(server_json["status"], "running");
+     assert_eq!(server_json["version"], env!("CARGO_PKG_VERSION"));
+-    assert_eq!(server_json["protocol"], 22);
++    assert_eq!(server_json["protocol"], 23);
+     assert_eq!(server_json["compatible"], true);
+     assert_eq!(server_json["endpoint_compatible"], true);
+ 
+     let client_json = run_cli_json(&socket_path, &["status", "client", "--json"]);
+     assert_eq!(client_json["version"], env!("CARGO_PKG_VERSION"));
+-    assert_eq!(client_json["protocol"], 22);
++    assert_eq!(client_json["protocol"], 23);
+     assert_eq!(client_json["endpoint_protocol_generation"], 1);
+     assert!(client_json["binary"]
+         .as_str()
+diff --git a/tests/support/mod.rs b/tests/support/mod.rs
+index b2dae4be..4fb4cdc8 100644
+--- a/tests/support/mod.rs
++++ b/tests/support/mod.rs
+@@ -13,7 +13,7 @@ static INIT: Once = Once::new();
+ static CLEANUP_GUARD: OnceLock<CleanupGuard> = OnceLock::new();
+ const WATCHDOG_SCAN_INTERVAL: Duration = Duration::from_secs(1);
+ const RUNTIME_OWNER_MARKER: &str = ".herdr-test-owner-pid";
+-pub const CURRENT_PROTOCOL: u32 = 22;
++pub const CURRENT_PROTOCOL: u32 = 23;
+ pub const CURRENT_ENDPOINT_PROTOCOL_GENERATION: u32 = 1;
+ pub const SERVER_MESSAGE_SERVER_SHUTDOWN: u32 = 3;
+ pub const SERVER_MESSAGE_ENDPOINT_CONTROL: u32 = 20;
