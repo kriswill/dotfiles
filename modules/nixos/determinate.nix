@@ -7,18 +7,27 @@
 # which made the ./flakes/* sub-flake inputs churn flake.lock on every rebuild.
 { inputs, ... }:
 {
-  flake.modules.nixos.determinate = {
-    imports = [ inputs.determinate.nixosModules.default ];
+  flake.modules.nixos.determinate =
+    { config, ... }:
+    {
+      imports = [ inputs.determinate.nixosModules.default ];
 
-    nix.settings = {
-      extra-substituters = [ "https://install.determinate.systems" ];
-      extra-trusted-public-keys = [
-        "cache.flakehub.com-3:hJuILl5sVK4iKm86JzgdXW12Y2Hwd5G07qKtHTOcDCM="
+      nix.settings = {
+        extra-substituters = [ "https://install.determinate.systems" ];
+        extra-trusted-public-keys = [
+          "cache.flakehub.com-3:hJuILl5sVK4iKm86JzgdXW12Y2Hwd5G07qKtHTOcDCM="
+        ];
+      };
+
+      # Keep `nix run nixpkgs#…` on this flake's nixpkgs; without this,
+      # determinate pins the registry to FlakeHub's nixpkgs-weekly tarball.
+      nix.registry.nixpkgs.flake = inputs.nixpkgs;
+
+      # comma (nix-index-database's comma-with-db) bakes nixpkgs' plain nix into
+      # its wrapper; that nix rejects Determinate-only settings in /etc/nix/nix.conf
+      # ("unknown setting 'eval-cores' / 'lazy-trees'"). Point it at the system nix.
+      nixpkgs.overlays = [
+        (_final: prev: { comma = prev.comma.override { nix = config.nix.package; }; })
       ];
     };
-
-    # Keep `nix run nixpkgs#…` on this flake's nixpkgs; without this,
-    # determinate pins the registry to FlakeHub's nixpkgs-weekly tarball.
-    nix.registry.nixpkgs.flake = inputs.nixpkgs;
-  };
 }
