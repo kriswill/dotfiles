@@ -26,5 +26,6 @@ flake consumes via relative-path inputs.
 * [Pass Xdg](pass-xdg.md) - pass-xdg — a drop-in `pass` (standard unix password manager) that defaults its store to an XDG-compliant location instead of the upstream default `~/.password-store`.
 * [Podman](podman.md) - Podman — the daemonless, Docker-compatible container engine; on macOS packaged from the official prebuilt darwin_arm64 remote client (nixpkgs' podman refuses to evaluate on darwin) with vfkit + gvproxy bundled in, primarily serving minikube's podman driver for work Kubernetes.
 * [Rtk](rtk.md) - CLI proxy that filters dev command output to cut LLM token usage.
+* [System Update Report](system-update-report.md) - HTML "what changed" page after a rebuild: nvd diff of the booted (NixOS) or previous (darwin) generation vs current, plus the latest flake.lock commit parsed into a flake-input from/to table.
 * [Tomato](tomato.md) - CLI to get/set TOML values preserving comments and formatting.
 * [Wowup](wowup.md) - WowUp-CF (the CurseForge fork of WowUp), packaged from the upstream AppImage (github.com/WowUp/WowUp.CF releases).

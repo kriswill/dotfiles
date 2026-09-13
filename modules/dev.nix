@@ -1,7 +1,12 @@
 # Development shell and formatter.
 {
   perSystem =
-    { pkgs, inputs', ... }:
+    {
+      pkgs,
+      inputs',
+      self',
+      ...
+    }:
     {
       formatter = pkgs.nixfmt-tree;
       devShells.default = pkgs.mkShell {
@@ -28,6 +33,8 @@
           # (`bun ~/src/okflight/okf.ts <cmd>`) or rebuild this shell with
           # `--override-input okf path:$HOME/src/okflight`.
           okf = inputs'.okf.packages.okf;
+          # HTML "what changed" report after an nrs (nvd diff + flake-update commit).
+          inherit (self'.packages) system-update-report;
         };
         shellHook = ''
           # plain export: works under both direnv (use flake) and nix develop

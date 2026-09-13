@@ -1,5 +1,11 @@
 # Log
 
+## 2026-09-13
+
+- **Creation** — [system-update-report](system-update-report.md): cross-platform
+  bun CLI rendering an HTML report of `nvd diff` (booted/previous vs current
+  generation) plus the latest flake.lock commit; on the dev-shell PATH.
+
 ## 2026-08-30
 
 - **Update** — [dotbar](dotbar.md): the herdr indicator no longer strips
