@@ -87,8 +87,13 @@
         };
       };
 
+      # No channels: drops the dead /nix/var/nix/profiles/per-user/root/channels
+      # NIX_PATH entry that every nix invocation (e.g. `, foo`) warned about.
+      nix.channel.enable = false;
+
       environment.systemPackages = [
         # git + gh/delta/diffnav/difftastic/git-lfs come from modules/nixos/git.nix
+        pkgs.nvtopPackages.nvidia # GPU monitor; `, nvtop` picks a non-NVIDIA build that sees no GPU
         pkgs.cliphist # clipboard history (used with fuzzel --dmenu)
         pkgs.fd # fast file finder
         pkgs.gimp # raster image editor
@@ -132,6 +137,7 @@
       };
 
       programs.gajim.enable = true;
+      programs.stoat-desktop.enable = true; # snowglobe: Stoat (Revolt) chat client
       programs.gthumb.enable = true;
       # vesktop (snowglobe's discord client) builds with pnpm, which nixpkgs
       # b5aa0fb marks insecure (CVE-2026-48995 + 6 more — pnpm CLI issues,
