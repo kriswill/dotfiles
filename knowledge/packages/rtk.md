@@ -32,5 +32,5 @@ commands rtk has no built-in filter for — see the
 ## Source
 
 - Package: [`pkgs/rtk.nix`](../../pkgs/rtk.nix)
-- Version at last scaffold: `0.43.0`
+- Version at last scaffold: `0.49.0`
 - Overlay: [`overlays/rtk.nix`](../../overlays/rtk.nix) — exposes/replaces `pkgs.rtk`

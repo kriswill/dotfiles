@@ -18,7 +18,6 @@
     cbissues = import ../overlays/cbissues.nix;
     flatpak-user = import ../overlays/flatpak-user.nix;
     gh-config = import ../overlays/gh-config.nix;
-    git-yazi = import ../overlays/git-yazi.nix; # TEMPORARY, see file header
     gh-op = import ../overlays/gh-op.nix;
     herdr-nav = import ../overlays/herdr-nav.nix;
     helium-config = import ../overlays/helium-config.nix;

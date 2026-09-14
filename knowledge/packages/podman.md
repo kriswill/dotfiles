@@ -58,5 +58,5 @@ no podman stack.
 ## Source
 
 - Package: [`pkgs/podman.nix`](../../pkgs/podman.nix)
-- Version at last scaffold: `6.0.0`
+- Version at last scaffold: `6.1.1`
 - Overlay: [`overlays/podman.nix`](../../overlays/podman.nix) — exposes/replaces `pkgs.podman`
