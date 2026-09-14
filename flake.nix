@@ -97,7 +97,7 @@
     # defeat the cache anyway.
     hyprland.url = "github:hyprwm/Hyprland";
     noctalia = {
-      url = "github:noctalia-dev/noctalia-shell/v5.0.0-beta.8";
+      url = "github:noctalia-dev/noctalia-shell/v5.1.0";
       inputs.nixpkgs.follows = "nixpkgs";
     };
     # herdr from OUR staging fork's `custom` branch: upstream's v0.8.2 stable
