@@ -6,18 +6,18 @@
 
 stdenv.mkDerivation rec {
   pname = "kitten";
-  version = "0.42.2";
+  version = "0.48.2";
 
   src =
     fetchurl
       {
         aarch64-darwin = {
           url = "https://github.com/kovidgoyal/kitty/releases/download/v${version}/kitten-darwin-arm64";
-          hash = "sha256-quDlS0S3U/z8lcNfkBWlBwmDrv8DBKxmLSrhIOhpSxk=";
+          hash = "sha256-l5Y+OIUBLj2PpxHPwyAdszgAAuuZJ/Iw87CEAPGux/A=";
         };
         x86_64-linux = {
           url = "https://github.com/kovidgoyal/kitty/releases/download/v${version}/kitten-linux-amd64";
-          hash = "sha256-BE2wPrBpx2VauFdUP7lUFirrafkg0R/E+k/knDfvMIM=";
+          hash = "sha256-KfH8I1P/zIgLkLxKQZnxh8rvG2CNp4COSl9GQE6HWZE=";
         };
       }
       .${stdenv.hostPlatform.system};

@@ -14,7 +14,7 @@ Added per the [add-package playbook](../playbooks/add-package.md).
 ## Source
 
 - Package: [`pkgs/kitten.nix`](../../pkgs/kitten.nix)
-- Version at last scaffold: `0.42.2`
+- Version at last scaffold: `0.48.2`
 - Overlay: [`overlays/kitten.nix`](../../overlays/kitten.nix) — exposes/replaces `pkgs.kitten`
 
 ## Notes

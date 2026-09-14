@@ -14,5 +14,5 @@ Added per the [add-package playbook](../playbooks/add-package.md).
 ## Source
 
 - Package: [`pkgs/wowup.nix`](../../pkgs/wowup.nix)
-- Version at last scaffold: `2.22.0`
+- Version at last scaffold: `2.23.1`
 - Overlay: [`overlays/wowup.nix`](../../overlays/wowup.nix) — exposes/replaces `pkgs.wowup`

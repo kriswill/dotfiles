@@ -2,6 +2,17 @@
 
 ## 2026-09-13
 
+- **Removal** — git-yazi overlay retired: nixpkgs' `yaziPlugins.git` snapshot
+  (0-unstable-2026-09-01) reached the upstream commit the overlay pinned, so
+  `overlays/git-yazi.nix` and its `modules/overlays.nix` line are gone.
+
+- **Update** — version bumps: [rtk](rtk.md) 0.45.0 → 0.49.0, [kitten](kitten.md)
+  0.42.2 → 0.48.2, [wowup](wowup.md) 2.22.0 → 2.23.1, [podman](podman.md)
+  6.0.0 → 6.1.1 (darwin remote client), [iv](iv.md) 0.7.2 → 0.17.3 — iv now
+  builds with `buildGo127Module` (go.mod requires 1.27) and `proxyVendor`,
+  because xo/magic and xo/blitz ship prebuilt static archives that
+  `go mod vendor` strips; its decode tests need network, so `doCheck = false`.
+
 - **Creation** — [system-update-report](system-update-report.md): cross-platform
   bun CLI rendering an HTML report of `nvd diff` (booted/previous vs current
   generation) plus the latest flake.lock commit; on the dev-shell PATH.
@@ -22,7 +33,7 @@
   No `pkgs/` file — an inline overlay in `modules/overlays.nix` re-exports the
   input's package (ccglass pattern); installed via
   `modules/darwin/user-packages.nix` and nebula's `users/k/default.nix`.
-- **Creation** — [git-yazi](git-yazi.md): catalog entry backfilled by
+- **Creation** — git-yazi (retired 2026-09-13): catalog entry backfilled by
   `okf scaffold` for the pre-existing TEMPORARY `overlays/git-yazi.nix`.
 
 ## 2026-08-02

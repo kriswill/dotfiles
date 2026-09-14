@@ -14,4 +14,4 @@ Added per the [add-package playbook](../playbooks/add-package.md).
 ## Source
 
 - Package: [`pkgs/iv.nix`](../../pkgs/iv.nix)
-- Version at last scaffold: `0.7.2`
+- Version at last scaffold: `0.17.3`

@@ -14,13 +14,13 @@
 }:
 stdenvNoCC.mkDerivation (finalAttrs: {
   pname = "podman";
-  version = "6.0.0";
+  version = "6.1.1";
 
   # FOD: fetchzip strips the single `podman-6.0.0/` top-level dir, leaving
   # usr/ and docs/ at the source root.
   src = fetchzip {
     url = "https://github.com/containers/podman/releases/download/v${finalAttrs.version}/podman-remote-release-darwin_arm64.zip";
-    hash = "sha256-Jf5RHa4IZ5cSwX6nKyDWEYfFfObHWsO+uqZ//fHarmg=";
+    hash = "sha256-uzjpf1FotWOnDhISSGNDecZcIvdEFPU/B1G1yqSF7HA=";
   };
 
   # The binaries are adhoc (linker-signed) Mach-O and depend only on system

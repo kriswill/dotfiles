@@ -1,26 +1,42 @@
 {
   lib,
-  buildGoModule,
+  buildGo127Module,
   fetchFromGitHub,
   pkg-config,
   resvg,
   vips,
   makeWrapper,
+  zlib,
+  bzip2,
+  xz,
+  zstd,
+  fontconfig,
+  freetype,
 }:
-buildGoModule rec {
+# iv >= 0.15 needs go 1.27; nixpkgs' default buildGoModule is still 1.26
+buildGo127Module rec {
   pname = "iv";
-  version = "0.7.2";
+  version = "0.17.3";
 
   src = fetchFromGitHub {
     owner = "kenshaw";
     repo = "iv";
     rev = "v${version}";
-    hash = "sha256-cdsyrtXWkOQKeq6FmVCNUdoFABJhy9FUaGVX4Akmjf4=";
+    hash = "sha256-QnWb2VFIZCKMZjf74kWbWIV22qr76ivgTSZkWknppJk=";
   };
 
-  vendorHash = "sha256-pNhDgv6l2qCmz+e0Kwd/AtYX6qfaZzfbtsKT/dC4300=";
+  # xo/magic and xo/blitz carry prebuilt static archives (libmagic/, libblitz/)
+  # inside their modules; `go mod vendor` drops non-Go dirs, so keep the module cache.
+  proxyVendor = true;
+  vendorHash = "sha256-Hoxpk/z0as0OlX2F2JjonOvS0Ii3UDvwKVs1FWq2B0c=";
 
   buildInputs = [
+    zlib
+    bzip2
+    xz
+    zstd
+    fontconfig
+    freetype
     resvg
     vips
   ];
@@ -33,6 +49,8 @@ buildGoModule rec {
   ];
 
   trimpath = true;
+  # decode tests render HTML/markdown through blitz, whose http client needs network
+  doCheck = false;
   # env.CGO_LD_FLAGS = "-L ${resvg}/lib -lresvg";
   nativeBuildInputs = [
     pkg-config

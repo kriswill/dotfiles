@@ -337,17 +337,17 @@
         ]
       },
       "locked": {
-        "lastModified": 1788117453,
-        "narHash": "sha256-w9qtTS3qUX0z/ADDLzj6qSC3RCK2PqE0+NayeJz6GY8=",
+        "lastModified": 1788138527,
+        "narHash": "sha256-EmGkUXSVigGPNelc4wFfri8ljBc1sBCptrtnIeSmC1k=",
         "owner": "tlehman",
         "repo": "dotbar",
-        "rev": "ea59efe59527336206bffc2f1d05b87787568b87",
+        "rev": "040777d76bb3350d2052976670a026dccdcd9ccc",
         "type": "github"
       },
       "original": {
         "owner": "tlehman",
+        "ref": "040777d",
         "repo": "dotbar",
-        "rev": "ea59efe59527336206bffc2f1d05b87787568b87",
         "type": "github"
       }
     },

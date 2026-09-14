@@ -54,7 +54,7 @@
     # dotbar pinned to the nix-flake PR head (tlehman/dotbar#1) while the flake
     # packaging bakes upstream; bump to a tag (or drop the rev) once it merges.
     dotbar = {
-      url = "github:tlehman/dotbar/ea59efe59527336206bffc2f1d05b87787568b87";
+      url = "github:tlehman/dotbar/040777d";
       inputs.nixpkgs.follows = "nixpkgs";
     };
     codebase-memory-mcp = {
@@ -120,8 +120,8 @@
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.rust-overlay.url = "github:oxalica/rust-overlay";
     };
-    # devenv from OUR fork's `custom` branch: upstream's v2.2.2 tag plus our
-    # patch commits — currently the terminal-query reply ordering fix for the
+    # devenv from OUR fork's `custom` branch: upstream's v2.3.1 tag plus our
+    # patch commits — the kitty graphics patch and the terminal-query reply ordering fix for the
     # `devenv shell` virtual-terminal mux (cachix/devenv#3130: CPR is answered
     # locally while OSC queries round-trip to the real terminal, so termenv
     # users like gh/glow got the cursor report first and left the colour
