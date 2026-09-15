@@ -20,7 +20,7 @@ stdenvNoCC.mkDerivation (finalAttrs: {
   # usr/ and docs/ at the source root.
   src = fetchzip {
     url = "https://github.com/containers/podman/releases/download/v${finalAttrs.version}/podman-remote-release-darwin_arm64.zip";
-    hash = "sha256-uzjpf1FotWOnDhISSGNDecZcIvdEFPU/B1G1yqSF7HA=";
+    hash = "sha256-m1PSipDzO/9p3iwGQ1HM886becBR8mjxvwvMqjb/egA=";
   };
 
   # The binaries are adhoc (linker-signed) Mach-O and depend only on system

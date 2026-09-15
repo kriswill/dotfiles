@@ -1,5 +1,11 @@
 # Log
 
+## 2026-09-15
+
+- **Fix** — [podman](podman.md) 6.1.1: the fetchzip hash committed with the
+  bump was wrong (upstream asset unchanged); corrected to the real hash after
+  the weekly flake-update CI failed on the FOD mismatch.
+
 ## 2026-09-13
 
 - **Removal** — git-yazi overlay retired: nixpkgs' `yaziPlugins.git` snapshot
