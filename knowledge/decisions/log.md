@@ -1,5 +1,14 @@
 # Log
 
+## 2026-09-16
+
+- **Creation** — [devenv-fork-deterministic-openssl](devenv-fork-deterministic-openssl.md):
+  the devenv fork pins `OPENSSL_LIB_DIR`/`OPENSSL_INCLUDE_DIR` for
+  openssl-sys and gives `devenv-proxy` the openssl override, because the
+  build script's Homebrew-first probe on darwin made the proxy derivation
+  link on a clean Mac but fail (`-lssl` not found) on GitHub macOS runners
+  after every nixpkgs bump.
+
 ## 2026-08-30
 
 - **Creation** — [herdr-ansi-tab-bar-entries](herdr-ansi-tab-bar-entries.md):
