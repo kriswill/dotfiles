@@ -1301,11 +1301,11 @@
     },
     "nixpkgs_4": {
       "locked": {
-        "lastModified": 1789149629,
-        "narHash": "sha256-H6GwaZzZf+4npqv0tph94w9tZddSjFjmQrVsW0z78uk=",
+        "lastModified": 1789286504,
+        "narHash": "sha256-eiEK7cKZORNEvX0GeF3RtNEF/JXhgf2RqSp3230q13E=",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "eaad089433ca2bb662274377d33df3d0e51ef28b",
+        "rev": "ef34387ddd751e1ab8857adf4676492d32eb24ec",
         "type": "github"
       },
       "original": {
@@ -1590,11 +1590,11 @@
     "tomato": {
       "flake": false,
       "locked": {
-        "lastModified": 1785216700,
-        "narHash": "sha256-xZxdxJSpg4AskzxT56X+IKXxaR7aIVdKXtWxh+SgA/4=",
+        "lastModified": 1789359324,
+        "narHash": "sha256-cXK1qt2YuqshRfaCVxOy1qsvUTf0KbOk6WoyAHa3XYo=",
         "owner": "ceejbot",
         "repo": "tomato",
-        "rev": "0090d1cb6b56245d33e212b355f1e5d9e330ab64",
+        "rev": "f345f1fc02e8cbe93a9dc741824e578f8ce8e9ad",
         "type": "github"
       },
       "original": {
