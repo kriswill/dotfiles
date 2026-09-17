@@ -1,0 +1,60 @@
+#!/usr/bin/env bash
+#
+# herdr-pane-run — run ONE command in another herdr pane and return just that
+# command's output, plus its exit status on stderr.
+#
+# Why this exists: a herdr pane is a teletype, not an API. `herdr pane run`
+# returns as soon as the keystrokes are delivered (not when the command
+# finishes), and `herdr pane read` hands back the whole scrollback — MOTD,
+# prompts, previous commands. This wrapper makes a pane behave like a
+# request/response call: mint a unique sentinel, run `<cmd> ; echo <sentinel>
+# rc=$?`, block until the sentinel prints on a line of its own, then slice the
+# scrollback between the echoed command and the sentinel.
+#
+# Usage:  herdr-pane-run <pane-id> <command...>
+#   e.g.  herdr-pane-run w2V:p1 'sudo tail -5 /var/log/syslog'
+#
+# Env:    HPR_TIMEOUT  seconds to wait for the sentinel (default 90; keep it
+#                      under the caller's own tool timeout)
+#         HPR_LINES    scrollback lines to read back (default 500; raise for
+#                      commands with long output)
+#
+# Find pane ids with `herdr pane list`. Quote the command so YOUR shell does not
+# expand it — it is meant to run in the pane, which may be on another host.
+#
+set -uo pipefail
+
+if [ "$#" -lt 2 ] || [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
+  sed -n '3,28p' "$0" | sed 's/^# \{0,1\}//'
+  exit 64
+fi
+
+pane="$1"; shift
+sent="HPRDONE$$$RANDOM"
+
+if ! herdr pane run "$pane" "$* ; echo \"$sent rc=\$?\"" >/dev/null 2>&1; then
+  echo "herdr-pane-run: 'herdr pane run $pane' failed - is the pane id right? (herdr pane list)" >&2
+  exit 2
+fi
+
+# Anchored regex, NOT --match: a substring match also matches the ECHOED
+# command line (which contains the sentinel), firing before the command runs.
+timeout "${HPR_TIMEOUT:-90}" herdr pane wait-output "$pane" \
+  --regex "^${sent} rc=" --source recent-unwrapped >/dev/null 2>&1 \
+  || echo "herdr-pane-run: timed out waiting for sentinel; output below may be partial" >&2
+
+out=$(herdr pane read "$pane" --lines "${HPR_LINES:-500}" --source recent-unwrapped --format text 2>/dev/null)
+
+printf '%s\n' "$out" | awk -v s="$sent" '
+  f && $0 ~ "^" s " rc=" { exit }
+  f { print }
+  $0 ~ "echo \"" s " rc=" { f = 1 }
+'
+
+rc=$(printf '%s\n' "$out" | sed -n "s/^${sent} rc=\([0-9][0-9]*\).*/\1/p" | tail -1)
+if [ -n "${rc:-}" ]; then
+  echo "herdr-pane-run: exit=${rc}" >&2
+  exit "$rc"
+fi
+echo "herdr-pane-run: no exit status captured (command may still be running)" >&2
+exit 1
