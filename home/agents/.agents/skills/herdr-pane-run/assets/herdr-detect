@@ -1,0 +1,108 @@
+#!/usr/bin/env bash
+#
+# herdr-detect — am I running inside a herdr pane, and what else is in this
+# workspace? Prints a short inventory of sibling panes, flagging ssh sessions
+# that can be driven with `herdr-pane-run <pane-id> '<cmd>'`.
+#
+# Usage:
+#   herdr-detect          human/agent-readable summary; exit 0 under herdr, 1 if not
+#   herdr-detect --quiet  no output, exit status only
+#   herdr-detect --hook   for a SessionStart hook: prints nothing when not under
+#                         herdr, and ALWAYS exits 0 so session start never fails
+#
+set -uo pipefail
+
+mode=${1:-}
+[ "$mode" = "-h" ] || [ "$mode" = "--help" ] && { sed -n '3,15p' "$0" | sed 's/^# \{0,1\}//'; exit 64; }
+
+if [ -z "${HERDR_ENV:-}" ] && [ -z "${HERDR_PANE_ID:-}" ]; then
+  case "$mode" in
+    --hook)  exit 0 ;;
+    --quiet) exit 1 ;;
+    *)       echo "herdr: no (HERDR_ENV unset) - pane tooling unavailable"; exit 1 ;;
+  esac
+fi
+[ "$mode" = "--quiet" ] && exit 0
+
+pane_id=${HERDR_PANE_ID:-unknown}
+ws=${HERDR_WORKSPACE_ID:-unknown}
+tab=${HERDR_TAB_ID:-unknown}
+
+# Pane inventory needs JSON parsing; degrade to the env-only facts if either
+# bun or the herdr socket is unavailable.
+inv=""
+if command -v bun >/dev/null 2>&1 && command -v herdr >/dev/null 2>&1; then
+  inv=$(herdr pane list 2>/dev/null | bun -e '
+    const raw = await new Response(Bun.stdin.stream()).text();
+    let panes = [];
+    try { panes = JSON.parse(raw).result.panes ?? []; } catch { process.exit(0); }
+    const me = process.env.HERDR_PANE_ID, ws = process.env.HERDR_WORKSPACE_ID;
+    const mine = panes.filter(p => p.workspace_id === ws && p.pane_id !== me);
+    if (!mine.length) { console.log("  (no sibling panes in this workspace)"); process.exit(0); }
+    const rows = mine.slice(0, 14).map(p => {
+      const title = (p.terminal_title_stripped || p.label || "").trim();
+      const kind = p.agent ? `agent:${p.agent}/${p.agent_status || "unknown"}`
+        : /@/.test(title) ? "ssh?"
+        : "shell";
+      const where = (p.foreground_cwd || p.cwd || "").split("/").filter(Boolean).pop() || "";
+      const tabSuffix = (p.tab_id || "").split(":").pop();
+      return `  ${p.pane_id.padEnd(8)} tab ${String(tabSuffix).padEnd(4)} ${kind.padEnd(12)} ${title || "(" + where + ")"}`.slice(0, 160);
+    });
+    if (mine.length > 14) rows.push(`  ... and ${mine.length - 14} more`);
+    // Other workspaces: a one-line roll-up, not a dump. An ssh session worth
+    // driving may be parked outside this workspace, and without this the whole
+    // rest of the session tree is invisible.
+    const others = new Map();
+    for (const p of panes) {
+      if (p.workspace_id === ws) continue;
+      const o = others.get(p.workspace_id) ?? { n: 0, ssh: 0 };
+      o.n++;
+      if (p.agent !== "claude" && /@/.test(p.terminal_title_stripped || "")) o.ssh++;
+      others.set(p.workspace_id, o);
+    }
+    if (others.size) {
+      const parts = [...others].map(([id, o]) => `${id} (${o.n}${o.ssh ? `, ${o.ssh} ssh?` : ""})`);
+      rows.push(`other workspaces: ${parts.join("  ")}  - run herdr workspace list for names`);
+    }
+    // Agents outside this workspace are otherwise invisible, and a blocked one
+    // is waiting on a human right now - that is worth surfacing unprompted.
+    const rank = { blocked: 0, working: 1, idle: 2, done: 3 };
+    const agents = panes
+      .filter(p => p.agent && p.workspace_id !== ws)
+      .sort((a, b) => (rank[a.agent_status] ?? 9) - (rank[b.agent_status] ?? 9));
+    if (agents.length) {
+      rows.push("agents elsewhere:");
+      for (const p of agents.slice(0, 6)) {
+        const st = p.agent_status || "unknown";
+        const flag = st === "blocked" ? "  <- waiting for input" : "";
+        const title = (p.terminal_title_stripped || "").trim().slice(0, 52);
+        rows.push(`  ${p.pane_id.padEnd(8)} ${st.padEnd(8)} ${title}${flag}`);
+      }
+      if (agents.length > 6) rows.push(`  ... and ${agents.length - 6} more`);
+    }
+    console.log(rows.join("\n"));
+  ' 2>/dev/null)
+fi
+
+summary="herdr: yes - this pane ${pane_id} (workspace ${ws}, tab ${tab})"
+if [ -n "$inv" ]; then
+  summary="${summary}
+sibling panes in this workspace:
+${inv}
+to run a command in one: herdr-pane-run <pane-id> '<cmd>'  (skill: herdr-pane-run)
+never type into an agent:claude pane; treat ssh panes as someone else's session (read-only by default)"
+fi
+
+if [ "$mode" = "--hook" ]; then
+  # Emit the SessionStart hook contract explicitly rather than relying on bare
+  # stdout being injected, so the summary reliably reaches the model's context.
+  if command -v bun >/dev/null 2>&1; then
+    printf '%s' "$summary" | bun -e 'const t = await new Response(Bun.stdin.stream()).text(); console.log(JSON.stringify({ hookSpecificOutput: { hookEventName: "SessionStart", additionalContext: t }, suppressOutput: true }));'
+  else
+    printf '%s' "$summary" | python3 -c 'import json,sys; print(json.dumps({"hookSpecificOutput":{"hookEventName":"SessionStart","additionalContext":sys.stdin.read()},"suppressOutput":True}))'
+  fi
+  exit 0
+fi
+
+printf '%s\n' "$summary"
+exit 0
