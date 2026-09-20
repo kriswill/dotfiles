@@ -43,6 +43,7 @@ interesting ones by hand — scaffolding never overwrites an existing doc.
 * [Homebrew](homebrew.md) - nix-darwin's homebrew module — declares the casks/brews/taps that must come from Homebrew rather than nixpkgs, with zap cleanup so anything not listed is uninstalled on rebuild.
 * [Htop](htop.md) - Kris' htop (system-level port of the old home-manager programs.htop).
 * [Hyprland](hyprland.md) - Enables Hyprland directly (programs.hyprland + withUWSM, package/portalPackage pinned to inputs.hyprland.packages with the hyprland.cachix.org substituter) instead of snowglobe-factory.desktop.hyprland — dodging its force-enabled hyprlock/kitty/dolphin — and asserts the shared snowglobe desktop layer plus fuzzel formerly implied by niri.
+* [Iv](iv.md) - iv — command-line image viewer using terminal graphics (kitty/sixel).
 * [Keyring](keyring.md) - snowglobe-factory installer key metadata (NOT GNOME Keyring) — user k's ssh-ed25519 public key and nebula's age recipient; do not remove.
 * [Kitty](kitty.md) - Kris' kitty.
 * [Libreoffice Paths](libreoffice-paths.md) - Moves LibreOffice's user-writable paths out of ~/.config/libreoffice into XDG data/state dirs by seeding both the modern and legacy path nodes into registrymodifications.xcu — idempotent, skip-if-running, subshell-confined.
