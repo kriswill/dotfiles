@@ -9,7 +9,7 @@
 #   - each worktree fully pushed (no commit unreachable from every remote
 #     ref — catches unpushed work regardless of upstream configuration).
 #
-# THE PUSHED CHECK IS POLICY-DEPENDENT. Under `no-github` and `local-merge`,
+# THE PUSHED CHECK IS POLICY-DEPENDENT. Under `no-github`, `no-submit` and `local-merge`,
 # unpushed commits are the DESIGNED state - there may be no remote at all, in
 # which case `rev-list --not --remotes` counts every commit and the check
 # false-FAILs the whole mission (3 spurious FAILs in one local-merge run). The
@@ -128,7 +128,7 @@ if [ -n "$policy_file" ] && [ -r "$policy_file" ]; then
   policy="$(tr -d '[:space:]' < "$policy_file" 2>/dev/null || true)"
 fi
 case "$policy" in
-  no-github|local-merge) remote_optional=1 ;;
+  no-github|no-submit|local-merge) remote_optional=1 ;;
   *)                     remote_optional=0 ;;
 esac
 [ -n "$policy" ] && echo "---  mission policy: $policy"
