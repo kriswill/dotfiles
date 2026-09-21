@@ -163,3 +163,87 @@ Situational or domain-shaped. Worth knowing; too specific to encode as a rule.
   and the all-false-positives case where mutation is the only evidence (brief template); script fixes
   to `msg-teammate.sh` (refuses `--`-leading messages, probes both CLI spellings) and
   `spawn-teammate.sh` (seeds the inbox file, probes both wait flags).
+
+## 2026-09-18 — p4-history-in-serve (Perforce tree, no git; 4 then 5 teammates; herdr; Fable-5.1-low implementers) — DRAFT, P5 addendum pending
+
+**Mission shape.** Plan-driven build of 5 phases over a shared Perforce client (no worktrees possible). Policy `no-github` mapped to
+"nobody submits; per-agent numbered changelists; file ownership by directory". Verdicts: P1, P1b, P2, P2b, P3, P4 all MERGE-OK.
+
+### Lessons general enough to encode
+- **A precondition must be verified on the SAME process the tests use.** The runner checked the browser on the port it was told and
+  the suites drove the default port; the gate certified one browser while the tests exercised another for hours. Detector: the suite
+  asserts the identity (port/pid/URL) of the thing it drove, inside the suite.
+- **Static "is it wired" checks do not find "delivered to no page".** A route existed, a fetch for it existed in an inline client, and
+  no page ever received that client. Only a runtime drive (open the affordance, observe the effect) catches this. A grep of route
+  names reported it wired. → review checklist: drive every affordance once in a browser.
+- **A count-only decisive test passes a meaning-inverting bug.** Record counts came out right while a marker attached to the wrong
+  record. Decisive tests assert MEANING (which record carries the field), never just cardinality.
+- **Audit the output FORMAT the parser consumes.** Two rulings were wrong because the author audited plain output while the parser
+  read -ztag (which carries fields plain output omits; which has no phrase the plain form has).
+- **A measurement taken outside the allowlist cannot detect the allowlist.** A discriminator was costed by running p4 in a shell;
+  through the code path it could never run (verb not allowed). Measure through the wrapper the code uses.
+- **Contract conforms to gated code.** When a document revision lands after a phase is gated, shipped shapes that satisfy the rule ARE
+  the contract; new style applies from the next phase. Prevented two retrofit churns.
+- **"Present and inert" beats "absent" for dark-mode features.** An absent section is bytes in a region no mask covers; present-and-
+  inert is byte-identical by construction. The same author ruled "absent" three times before this became a rule.
+- **Every non-ok outcome must change something observable — in BOTH directions.** Four variants found in one afternoon: falsy return;
+  flag no consumer reads; bare catch mapping our bug to "outage"; empty collection presented as silence. One grep-able rule per variant.
+- **Briefs cite revisions that move.** A brief naming "REV 4" cost the implementer a wrong build when the contract was at REV 6 by
+  spawn time. Briefs cite the FILE and say "read the change log first".
+- **The predecessor's scratch scripts belong in the handover brief.** Each agent's reds live in its own session scratchpad; the
+  checkpoint must list them by absolute path with what each proves.
+- **Compaction at ~80% with (a) a fresh checkpoint, (b) a role-specific focus line, (c) the coordinator re-sending the held directive
+  list afterward** held every directive across four compactions BY SELF-REPORT (5/5, 4/4, 5/5, 4/4; no independent instrument) and no directive needed re-issuing afterward. Cheaper than handover; do it first.
+- **A handover to a cheaper model worked** (Opus → Fable 5.1 low for both implementers) when the brief pointed at a checkpoint and
+  said "trust it over memory; re-verify, do not inherit".
+- **The validator's own floors catch the coordinator.** An anti-vacuity floor (≥8 stable golden pages) rejected a coordinator ruling
+  that would have dropped coverage; keep such floors and let them bind rulings.
+- **Never assert a teammate's evidence for it** — done twice by the coordinator this mission (count attribution; "you verified this
+  in R0-24"). Both corrected by the teammate. Cite the artifact or say "per X's report".
+- **Never narrate a clock time you did not read.** Coordinator prose drifted an hour ahead of the measured stamps.
+
+### Drop candidates
+- Wall-time ceilings again never bound (2nd strike): 1.5 s blame pending, 700 ms scan — structural spawn counts decided everything.
+
+### Numbers
+- Contract revisions: P1 34, P2 5, P2b 13, P3 7, P4 16, P5 4. Review findings ~70, of which ~8 withdrawn by review itself.
+- Coordinator retractions: 9 (docs-check cause; count attribution ×2; count-only test; fstat probe; "ask design" in a rule; invented
+  timestamps; grep detector; golden ruling vs floor; 503 "names the feature").
+- **(design retro) 29 published errors in one document lineage shared FOUR shapes; the largest (7) was an ALL-claim short a
+  member; 3 were "ruled before I read the shipped code".** Rule: a total set is written as a table with its enumeration command
+  beside it; a ruling on shipped code is preceded by reading the file, and says so.
+- **(review retro) 11 wrong findings in two shapes; the early shape was "the claim outran the enumeration" (an absolute measured on
+  one case; a positive control that proved the command emits output rather than that the search key exists; the warm half of a
+  biconditional reported as the property).** Rule: an ALL/EVERY/NEVER finding publishes with the enumeration command, its scope
+  string, and a positive control that finds a KNOWN MEMBER of the specific key being searched.
+- **(review retro) Write the COUNTING-TRAPS page at spawn, one shared document.** Five traps hit by three agents independently: `$?`
+  after a pipe; plain vs -ztag output; `2>&1 >/dev/null` order under zsh; `grep -c '^//'` matching p4's error line; a missing wrapper
+  (`timeout`) whose absence reads as a zero result. → brief template: a "measurement traps for this toolchain" section, appended to
+  as they are found.
+- **A correction filed in a new section while the section a reader hits first keeps the old claim** — four instances in one document
+  lineage in one afternoon, one of them an hour after its author wrote the rule against it. Rule: corrections REWRITE the ruling
+  block in place (with a dated note) — never annotate elsewhere; a reviewer greps the OLD sentence and expects zero hits.
+- **Two agreeing measurements are not a control if they share a method.** Design and review independently got 2,146 rows by the same
+  `-/+/space` count and agreed to the unit; testing's 2,221 by a different method was right, and the gap was exactly the hunk-header
+  count. Rule: "independently verified" requires a DIFFERENT instrument, not a different person.
+- **A p4 count is a function of the CLIENT, and the client is selected by the cwd.** The same fstat from the tree root and from a
+  sub-tree gave 74,848 vs 77,492 at the same instant; design's "irreproducible" stored count reproduced exactly from the other
+  directory. Rule: every recorded p4 figure carries its command, its client (or cwd), and its date. (The tree's own CLAUDE.md said
+  "cd decides which client p4 talks to" in its first paragraph; three agents still hit it.)
+- **(dev1 retro) A handover checkpoint must carry INSTRUMENTS, not only state:** the check scripts by path, the scratch browser's
+  real viewport width (every width-dependent assertion silently reads against it), the byte-identity masks as regexes (not prose),
+  which shell tools are reliable in the sandbox, and the compaction trigger so a teammate can front-load its own checkpoint.
+- **(dev2 retro) The one defect no suite found (a warm route re-spawning) would have been found by asserting rule (b)'s WARM half from
+  a fixture table of every immutable route, plus a cache inventory beside the cache module** — not by hoping someone thinks of it.
+- **(dev1 retro) Protocol steps that earned nothing for an implementer:** HOLDING lines, re-pasting unchanged `p4 opened`, duplicate
+  say lines to two recipients. Post once, to the status file; the coordinator reads it.
+- **(P5 addendum) State a budget in the unit the work ITERATES OVER.** The split budget was corrected twice for scope (whole change ->
+  largest file) and never for unit (hunks -> rows); the largest-by-hunks block was 85% lighter than the real worst case. Design's
+  Phase 5 alone produced 9 published errors against a 176-line contract (mission total 38); the last phase was its worst.
+- **(P5 addendum) The refetch that a p4-spawn count could not see cost 4 ms and logged nothing on the shim** (testing measured the
+  disclosure fill at 18.6/4.1/3.7 ms). A guard that counts the wrong resource passes at zero cost; count the resource the
+  behaviour actually consumes (browser fetches here).
+- **(report refutation) The coordinator's report named a server hostname that appeared in no p4 output field, and listed as
+  unexercised a path the team had driven and captured three artefacts for.** The refutation step exists for exactly this; it
+  produced 8 findings, 2 HIGH, on a 60-line draft.
+- **APPLIED 2026-09-18 (p4-history-in-serve retro, user-approved):** `no-submit` policy + Perforce mode in `spawn-teammate.sh`/`merge-pr.sh`/`stand-down.sh`; "Measurement traps for this toolchain", "Contract citations" (cite the file, not the REV), same-process precondition, same-tree-state byte-identity, different-instrument independence, and rewrite-in-place corrections in `mission-prompt.md`; "Context compaction" in `protocols.md`; the drive-every-affordance and different-instrument rules in SKILL.md Step 3. The mission entry above stays as evidence.

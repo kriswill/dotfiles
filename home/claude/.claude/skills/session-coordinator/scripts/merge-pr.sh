@@ -8,6 +8,7 @@
 #
 #   (no --policy)    REFUSE - no policy declared, no merge, ever
 #   no-github        REFUSE - the charter forbids touching GitHub at all
+#   no-submit        REFUSE - Perforce form of no-github: numbered changelists, nobody submits
 #   local-merge      REFUSE - integration is local git merges by the
 #                    coordinator; GitHub PRs/merges are out of scope
 #   push-only        REFUSE - branches may be pushed, but PRs and merges are
@@ -104,11 +105,11 @@ case "$policy" in
       echo "*** REFUSED *** policy prs-user-merge: each merge needs the user's explicit per-PR approval (their adversarial review may still be pending) - ask the user, then re-run with --user-approved" >&2
       exit 4
     fi ;;
-  no-github|local-merge|push-only)
+  no-github|no-submit|local-merge|push-only)
     echo "*** REFUSED *** policy '$policy' forbids GitHub PRs/merges - if a PR exists it already violates the charter; escalate to the user, do not merge" >&2
     exit 4 ;;
   *)
-    echo "*** REFUSED *** missing or invalid policy in $policy_file ('${policy:-empty}') - expected no-github|local-merge|push-only|prs-user-merge|prs-auto-merge" >&2
+    echo "*** REFUSED *** missing or invalid policy in $policy_file ('${policy:-empty}') - expected no-github|no-submit|local-merge|push-only|prs-user-merge|prs-auto-merge" >&2
     exit 4 ;;
 esac
 

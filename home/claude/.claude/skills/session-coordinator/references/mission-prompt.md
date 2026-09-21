@@ -17,10 +17,12 @@ teammates — treat a cross-stream contradiction as a first-class finding to rai
 loudly, never to smooth over>
 
 ## Integration policy (binding)
-Integration policy: <no-github|local-merge|push-only|prs-user-merge|prs-auto-merge>
+Integration policy: <no-github|no-submit|local-merge|push-only|prs-user-merge|prs-auto-merge>
 What the levels mean:
 - no-github: do NOT push, open PRs, or touch GitHub in any way. Commit locally on
   your branch and report readiness in your status file.
+- no-submit (Perforce trees): nobody submits — not you, not the coordinator. Open every file in
+  YOUR numbered changelist; never revert, sync, shelve or reconcile; the user reviews and submits.
 - local-merge: no GitHub (no pushes, no PRs); the COORDINATOR merges branches into
   the mission mainline locally. You never merge; report readiness in your status file.
 - push-only: push your branch; do NOT open PRs. Review and merging belong to the user.
@@ -62,6 +64,11 @@ PHASED MISSIONS — acceptance-criteria cadence and hygiene:
 <DATA-FORMAT MISSIONS: have two teammates derive the load-bearing format/field table
 independently before implementation — their agreement is what makes "the reference is
 wrong" trustworthy.>
+
+## Contract citations
+Cite the contract/design FILE, never a revision number ("read CONTRACT-P2.md, change log first"): a
+brief that says "REV 4" is wrong by spawn time when the contract is at REV 6, and the implementer builds
+the stale one. Handed-down facts carry the file and section, not the REV.
 
 ## Your working directory
 <worktree path> — a git worktree on branch <branch>. Never touch the main checkout or
@@ -176,8 +183,21 @@ new entries and acknowledge them in your status file.
 - **"Builds but ships nothing" is worse than a build failure** — when grading a build,
   assert the artifact's CONTENTS, not just its exit status.
 - Keep condemned designs as separate commits under their fix; post corrections on merged
-  PRs rather than editing history. If you discover one of your published claims is wrong,
+  PRs rather than editing history.
+- Corrections REWRITE the ruling block in place (with a dated note), never annotate elsewhere: a
+  correction filed in a new section while the section a reader hits first keeps the old claim
+  recurred four times in one document lineage in one afternoon. A reviewer greps the OLD sentence
+  and expects zero hits. If you discover one of your published claims is wrong,
   say so immediately and loudly — self-correction is rewarded, not punished.
+
+## Measurement traps for this toolchain (append as found; seed below is p4/zsh/bun)
+- `$?` after a pipe is the LAST command's status — capture with `cmd >out 2>err; echo $?`.
+- Audit the output FORMAT the parser consumes (`-ztag`), never the plain form: plain omits fields -ztag
+  carries, and has phrases -ztag does not.
+- A p4 count is a function of the CLIENT, which the cwd selects: every figure carries command + client + date.
+- `2>&1 >/dev/null` under zsh is not `>/dev/null 2>&1`; `grep -c '^//'` matches p4's error line; a
+  missing wrapper (`timeout`) reads as a zero result. Run a positive control on the SPECIFIC KEY first.
+- A probe run outside the code's wrapper (e.g. p4 in a shell vs through the allowlist) cannot detect the wrapper.
 
 ## Measurement regime (non-negotiable, from minute one)
 - Heavy runs (long benchmarks, big builds, memory measurement) run under the exclusive
@@ -193,6 +213,13 @@ new entries and acknowledge them in your status file.
   writing next to every number.
 - Counts (operation censuses) are contention-immune; wall/RSS numbers measured outside
   the lock are void.
+- A PRECONDITION IS VERIFIED ON THE SAME PROCESS THE TESTS USE: the suite asserts the identity
+  (port/pid/URL) of the thing it drove, inside the suite. A gate once certified one browser while
+  every suite drove another for hours.
+- Two servers compared for byte-identity are started from the SAME tree state in the SAME run; a
+  stale one reads as a backwards product defect.
+- "Independently verified" requires a DIFFERENT instrument, not a different person: two agreeing
+  measurements that share a method carry zero control information.
 
 ## CI gates for this repo (verified by the coordinator)
 <list the actual gates: formatter commands, lint with warnings-as-errors, coverage bars
