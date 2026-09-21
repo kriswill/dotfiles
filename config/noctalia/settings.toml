@@ -88,7 +88,15 @@ allow_empty_password = true
 [lockscreen_widgets]
 enabled = false
 schema_version = 2
-widget_order = [ "lockscreen-login-box@DP-3", "lockscreen-login-box@DP-1" ]
+widget_order = [
+    "lockscreen-login-box@HEADLESS-5",
+    "lockscreen-login-box@HEADLESS-4",
+    "lockscreen-login-box@HEADLESS-3",
+    "lockscreen-login-box@HEADLESS-2",
+    "lockscreen-login-box@HEADLESS-1",
+    "lockscreen-login-box@DP-3",
+    "lockscreen-login-box@DP-1"
+]
 
     [lockscreen_widgets.grid]
     cell_size = 16
@@ -149,6 +157,141 @@ widget_order = [ "lockscreen-login-box@DP-3", "lockscreen-login-box@DP-1" ]
         show_unlock_hint = true
         show_weather = true
 
+    [lockscreen_widgets.widget."lockscreen-login-box@HEADLESS-1"]
+    box_height = 196.0
+    box_width = 810.0
+    cx = 960.0
+    cy = 716.0
+    output = "HEADLESS-1"
+    placement_height = 1080.0
+    placement_width = 1920.0
+    rotation = 0.0
+    type = "login_box"
+
+        [lockscreen_widgets.widget."lockscreen-login-box@HEADLESS-1".settings]
+        background_color = "surface_variant"
+        background_opacity = 0.88
+        background_radius = 12.0
+        center_password_text = false
+        input_opacity = 1.0
+        input_radius = 6.0
+        layout = "regular"
+        show_caps_lock = true
+        show_keyboard_layout = true
+        show_login_button = true
+        show_media = true
+        show_session_buttons = true
+        show_unlock_hint = true
+        show_weather = true
+
+    [lockscreen_widgets.widget."lockscreen-login-box@HEADLESS-2"]
+    box_height = 196.0
+    box_width = 810.0
+    cx = 960.0
+    cy = 716.0
+    output = "HEADLESS-2"
+    placement_height = 1080.0
+    placement_width = 1920.0
+    rotation = 0.0
+    type = "login_box"
+
+        [lockscreen_widgets.widget."lockscreen-login-box@HEADLESS-2".settings]
+        background_color = "surface_variant"
+        background_opacity = 0.88
+        background_radius = 12.0
+        center_password_text = false
+        input_opacity = 1.0
+        input_radius = 6.0
+        layout = "regular"
+        show_caps_lock = true
+        show_keyboard_layout = true
+        show_login_button = true
+        show_media = true
+        show_session_buttons = true
+        show_unlock_hint = true
+        show_weather = true
+
+    [lockscreen_widgets.widget."lockscreen-login-box@HEADLESS-3"]
+    box_height = 196.0
+    box_width = 810.0
+    cx = 480.0
+    cy = 358.0
+    output = "HEADLESS-3"
+    placement_height = 540.0
+    placement_width = 960.0
+    rotation = 0.0
+    type = "login_box"
+
+        [lockscreen_widgets.widget."lockscreen-login-box@HEADLESS-3".settings]
+        background_color = "surface_variant"
+        background_opacity = 0.88
+        background_radius = 12.0
+        center_password_text = false
+        input_opacity = 1.0
+        input_radius = 6.0
+        layout = "regular"
+        show_caps_lock = true
+        show_keyboard_layout = true
+        show_login_button = true
+        show_media = true
+        show_session_buttons = true
+        show_unlock_hint = true
+        show_weather = true
+
+    [lockscreen_widgets.widget."lockscreen-login-box@HEADLESS-4"]
+    box_height = 196.0
+    box_width = 810.0
+    cx = 960.0
+    cy = 716.0
+    output = "HEADLESS-4"
+    placement_height = 1080.0
+    placement_width = 1920.0
+    rotation = 0.0
+    type = "login_box"
+
+        [lockscreen_widgets.widget."lockscreen-login-box@HEADLESS-4".settings]
+        background_color = "surface_variant"
+        background_opacity = 0.88
+        background_radius = 12.0
+        center_password_text = false
+        input_opacity = 1.0
+        input_radius = 6.0
+        layout = "regular"
+        show_caps_lock = true
+        show_keyboard_layout = true
+        show_login_button = true
+        show_media = true
+        show_session_buttons = true
+        show_unlock_hint = true
+        show_weather = true
+
+    [lockscreen_widgets.widget."lockscreen-login-box@HEADLESS-5"]
+    box_height = 196.0
+    box_width = 810.0
+    cx = 960.0
+    cy = 716.0
+    output = "HEADLESS-5"
+    placement_height = 1080.0
+    placement_width = 1920.0
+    rotation = 0.0
+    type = "login_box"
+
+        [lockscreen_widgets.widget."lockscreen-login-box@HEADLESS-5".settings]
+        background_color = "surface_variant"
+        background_opacity = 0.88
+        background_radius = 12.0
+        center_password_text = false
+        input_opacity = 1.0
+        input_radius = 6.0
+        layout = "regular"
+        show_caps_lock = true
+        show_keyboard_layout = true
+        show_login_button = true
+        show_media = true
+        show_session_buttons = true
+        show_unlock_hint = true
+        show_weather = true
+
 [notification]
 background_opacity = 0.8399999812245369
 monitors = [ "DP-3" ]
@@ -189,10 +332,10 @@ transition_on_startup = true
     enabled = true
 
     [wallpaper.default]
-    path = "/home/k/Pictures/Wallpapers/vertical-wide/nebula-photo-vertical-1440x3440.png"
+    path = "/home/k/Pictures/Wallpapers/nebula-wall-horizontal.png"
 
     [wallpaper.last]
-    path = "/home/k/Pictures/Wallpapers/vertical-wide/nebula-landscape-left.png"
+    path = "/home/k/Pictures/Wallpapers/horizontal-wide/nebula-landscape-right.png"
 
     [wallpaper.monitor.DP-1]
     directory = "/home/k/Pictures/Wallpapers/vertical-wide"
@@ -207,7 +350,7 @@ transition_on_startup = true
     path = "/home/k/Pictures/Wallpapers/horizontal-wide/nebula-landscape-right.png"
 
     [wallpaper.monitors.HEADLESS-1]
-    path = "/home/k/Pictures/Wallpapers/vertical-wide/nebula-landscape-left.png"
+    path = "/home/k/Pictures/Wallpapers/nebula-wall-horizontal.png"
 
     [wallpaper.monitors.HEADLESS-3]
     path = "/home/k/Pictures/Wallpapers/nebula-wall-horizontal.png"
