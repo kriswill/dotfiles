@@ -1,5 +1,11 @@
 # Log
 
+## 2026-09-13
+
+- **Creation** — [iv](iv.md): `pkgs/iv.nix` had been a flake output only
+  (`nix run .#iv`), never installed; added the `iv` overlay plus ungated
+  darwin/nixos twins so `iv` lands on PATH everywhere.
+
 ## 2026-08-30
 
 - **Update** — [herdr](herdr.md): tab-bar indicator description moved off
