@@ -628,6 +628,32 @@ the hardware keys to drive DDC too.
 
 ## Learned behaviours & workarounds
 
+- **`nixos-rebuild switch` does NOT restart the running noctalia (2026-09-21).**
+  The running process keeps executing the old `/nix/store/...-noctalia-5.1.0`
+  path (check with `readlink -f /proc/$(pgrep -n noctalia)/exe` vs
+  `readlink -f /etc/profiles/per-user/k/bin/noctalia`) until it's killed and
+  relaunched — a rebuild alone never picks up a bumped noctalia derivation,
+  even a structural one. Use the documented restart pattern above
+  (`pkill -f '/bin/noctalia'; noctalia --daemon`, or
+  `hyprctl dispatch 'hl.dsp.exec_cmd("noctalia --daemon")'` from an
+  agent/ssh shell).
+- **Workspaces bar widget rendered nothing on nebula's Hyprland build
+  (2026-09-21).** v5.1.0 logs `rejecting mixed or malformed Hyprland
+  workspace IPC schema` and silently renders zero pills — a regression
+  against nebula's bleeding-edge `hyprwm/Hyprland` pin
+  (hyprwm/Hyprland#16269 changed the IPC format;
+  noctalia-dev/noctalia#4477). Fixed upstream 2026-09-18 in `960d4d4`, not
+  yet tagged; the dotfiles flake pins the noctalia input past `v5.1.0` to a
+  commit that includes it (see `flake.nix`). Also: `[bar.bar]` had no
+  `start` lane at all in any tracked snapshot — added
+  `start = [ "workspaces", "active_window" ]`. Confirmed working (pills
+  render) after a rebuild + manual noctalia restart per the bullet above.
+- **`hooks.logging_out`/`rebooting`/`shutting_down` abort the session action
+  on a failing hook command (2026-09-21).** `helium-quit` (the configured
+  hook) `exit(1)`s whenever Helium isn't running in CDP debug mode — the
+  common case — which silently blocked logout/reboot/shutdown from the
+  Noctalia session menu. Fixed by exiting 0 instead; confirmed logout now
+  proceeds.
 - **Time/date format strings are Rust `chrono` strftime, NOT Qt tokens
   (2026-06-20).** `[widget.clock].format` (and `[shell].time_format`/`date_format`)
   are passed straight to chrono — proven by `{:%H:%M}` literals in the binary.
