@@ -97,7 +97,12 @@
     # defeat the cache anyway.
     hyprland.url = "github:hyprwm/Hyprland";
     noctalia = {
-      url = "github:noctalia-dev/noctalia-shell/v5.1.0";
+      # Pinned past v5.1.0 to pick up 960d4d4 "fix(hyprland): support normal
+      # workspace IPC identities" (2026-09-18) — v5.1.0 rejects nebula's
+      # bleeding-edge Hyprland's workspace IPC schema, so the workspaces bar
+      # widget never renders. Revert to a `vX.Y.Z` tag once one ships past
+      # that commit.
+      url = "github:noctalia-dev/noctalia-shell/e7acd065406bdac81b631e1a336611bfcfaca711";
       inputs.nixpkgs.follows = "nixpkgs";
     };
     # herdr from OUR staging fork's `custom` branch: upstream's v0.8.2 stable
