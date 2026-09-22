@@ -1,6 +1,9 @@
 config_version = 14
 hooks = { logging_out = "/home/k/.local/bin/helium-quit", rebooting = "/home/k/.local/bin/helium-quit", shutting_down = "/home/k/.local/bin/helium-quit" }
 
+[accessibility]
+ui_scale = 1.2500000111758709
+
 [bar]
 order = [ "bar" ]
 
@@ -16,6 +19,7 @@ order = [ "bar" ]
     position = "bottom"
     radius = 15
     shadow = false
+    start = [ "workspaces", "active_window" ]
     widget_spacing = 23
 
         [[bar.bar.capsule_group]]
@@ -313,6 +317,9 @@ ui_scale = 1.4000000134110451
 
     [shell.screenshot]
     directory = "/home/k/Pictures/Screenshots"
+
+    [shell.window_switcher]
+    mru = true
 
 [theme]
 builtin = "Rosé Pine"
