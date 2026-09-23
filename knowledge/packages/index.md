@@ -9,6 +9,7 @@ flake consumes via relative-path inputs.
 * [Cbissue](cbissue.md) - cbissue — open Codeberg (Forgejo) issues from the CLI.
 * [Cbissues](cbissues.md) - cbissues — browse/filter a Codeberg (Forgejo) repo's issues (fzf TUI + --plain).
 * [ccglass](ccglass.md) - ccglass — local logging reverse-proxy + web dashboard for coding agents, built as a standalone binary.
+* [Diffnav](diffnav.md) - Nixpkgs overlay 'diffnav'.
 * [Direnv](direnv.md) - Nixpkgs overlay 'direnv'.
 * [dotbar](dotbar.md) - Braille-dot progress bar CLI for statuslines and terminals, consumed straight from the tlehman/dotbar flake.
 * [Dots Adopt](dots-adopt.md) - Custom Nix package 'dots-adopt'.
