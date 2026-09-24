@@ -1,5 +1,14 @@
 # Log
 
+## 2026-09-23
+
+- **Creation** — [diffnav](diffnav.md) patch overlay: diffnav 0.12.0 hard-codes
+  its diff-pane footer pill as ANSI 7 on ANSI 8, unreadable under our
+  kanagawabones palette (8 lifted to `#a6a69c`); `postPatch` flips the text to
+  ANSI 0. diffnav has no theme config, so a source patch is the only lever.
+  Same change: the `home/diffnav` stow package (`hideHeader: true`) now also
+  deploys on darwin — diffnav reads `~/.config/diffnav/config.yml` on macOS.
+
 ## 2026-09-15
 
 - **Fix** — [podman](podman.md) 6.1.1: the fetchzip hash committed with the
