@@ -108,10 +108,10 @@ must be typed explicitly):
 │       └── nebula.nix + nebula/                 (nixos; registry entry + host files,
 │                                                 secrets.yaml, users/k/, disko.nix, …)
 ├── home/                # GNU Stow tree — one package per dir mirroring $HOME, SHARED by both OSes
-│   ├── nvim/, tmux/, zsh/, git/, ghostty/, starship/, fastfetch/, direnv/
+│   ├── nvim/, tmux/, zsh/, git/, ghostty/, starship/, fastfetch/, direnv/, diffnav/
 │   │                    #   …cross-platform (deployed everywhere)
 │   ├── ssh/, kitty/, karabiner/, glow/, oksh/, podman-desktop/, yazi/   # macOS-only (skip-listed on nixos)
-│   ├── hyprland/, fuzzel/, gtk/, mimeapps/, pupgui/, desktop-entries/, diffnav/   # Linux-only (skip-listed on darwin)
+│   ├── hyprland/, fuzzel/, gtk/, mimeapps/, pupgui/, desktop-entries/   # Linux-only (skip-listed on darwin)
 │   │                    #   deployed by modules/{darwin,nixos}/dotfiles-stow.nix on every rebuild
 ├── config/              # NON-symlinkable app-owned configs (Helium, Noctalia, gh) — snapshot
 │                        #   sync via helium-config/noctalia-config/gh-config CLIs; see config/README.md
