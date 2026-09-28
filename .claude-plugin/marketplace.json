@@ -1,0 +1,20 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "kriswill",
+  "description": "Pointer marketplace: re-exports upstream plugins whose repo layout Claude Desktop's account-synced reader rejects. No code is vendored — each entry references the upstream repo, so syncs track upstream.",
+  "owner": {
+    "name": "Kris Williams",
+    "url": "https://github.com/kriswill"
+  },
+  "plugins": [
+    {
+      "name": "typesafe",
+      "description": "Agent skills for building with the TypeSafe System One API (upstream: typesafe-ai/skills).",
+      "homepage": "https://typesafe.ai",
+      "source": {
+        "source": "github",
+        "repo": "typesafe-ai/skills"
+      }
+    }
+  ]
+}
