@@ -1,5 +1,13 @@
 # Log
 
+## 2026-09-27
+
+- **Update** — [configuration](configuration.md), [hyprland](hyprland.md):
+  snowglobe-factory bump — `mkNixosHost` dropped `nixImplementation` (no lix
+  default left to opt out of), `desktop.installWaylandDeps` → `installWaylandTools`,
+  `profiles.hardware-tools` removed (payload inlined), vesktop re-added via its
+  own `programs.vesktop` key, pnpm-10.29.2 whitelist dropped.
+
 ## 2026-09-13
 
 - **Creation** — [iv](iv.md): `pkgs/iv.nix` had been a flake output only

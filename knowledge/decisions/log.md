@@ -1,5 +1,10 @@
 # Log
 
+## 2026-09-27
+
+- **Update** — [vesktop-pnpm-whitelist](vesktop-pnpm-whitelist.md): superseded;
+  nixpkgs vesktop 1.6.7 no longer needs insecure pnpm, whitelist removed.
+
 ## 2026-09-16
 
 - **Creation** — [devenv-fork-deterministic-openssl](devenv-fork-deterministic-openssl.md):

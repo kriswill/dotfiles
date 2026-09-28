@@ -29,7 +29,7 @@ overlays — full rationale in the
 Since niri was removed, nebula has no other desktop, so this file also
 asserts the shared snowglobe desktop layer that niri used to pull in:
 `snowglobe-factory.system.hasDesktop` plus `snowglobe-factory.desktop.enable` /
-`installWaylandDeps` (xdg portals, pipewire, bluetooth,
+`installWaylandTools` (renamed from `installWaylandDeps` 2026-09; xdg portals, pipewire, bluetooth,
 grim/slurp/wl-clipboard, swaync, fonts, the [ly](ly.md) greeter,
 `NIXOS_OZONE_WL`), and `programs.fuzzel.enable` for the Hyprland keybind
 launcher.

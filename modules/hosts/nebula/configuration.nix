@@ -18,7 +18,6 @@
       snowglobe-factory.qemu.enable = true;
 
       # custom profiles
-      snowglobe-factory.profiles.hardware-tools.enable = true;
       snowglobe-factory.profiles.gaming.enable = true;
       snowglobe-factory.profiles.office.enable = true;
       # snowglobe's default (libreoffice-fresh) is a deprecated nixpkgs alias
@@ -104,7 +103,24 @@
         pkgs.rose-pine-hyprcursor # native hyprcursor theme (BreezeX shape, Rose Pine palette); selected via HYPRCURSOR_THEME in hyprland.lua
         pkgs.umu-launcher # standalone Proton runner; launches Battle.net.desktop in GE-Proton without opening the Steam client
         pkgs.wowup # WowUp-CF (WoW addon manager); WoW path defaults in pkgs/wowup.nix
-      ];
+      ]
+      # snowglobe-factory dropped its hardware-tools profile; keep its payload.
+      ++ (with pkgs; [
+        usbutils
+        smartmontools
+        hdparm
+        nvme-cli
+        lm_sensors
+        pciutils
+        lshw
+        hwinfo
+        inxi
+        vdpauinfo
+        libva-utils
+        mesa-demos
+        vulkan-tools
+        clinfo
+      ]);
 
       programs.firefox.enable = false;
       programs.chromium.enable = false;
@@ -136,14 +152,10 @@
         # package = pkgs.discord;
       };
 
+      programs.vesktop.enable = true;
       programs.gajim.enable = true;
       programs.stoat-desktop.enable = true; # snowglobe: Stoat (Revolt) chat client
       programs.gthumb.enable = true;
-      # vesktop (snowglobe's discord client) builds with pnpm, which nixpkgs
-      # b5aa0fb marks insecure (CVE-2026-48995 + 6 more — pnpm CLI issues,
-      # build-time-only exposure here). Remove once vesktop migrates off the
-      # flagged pnpm (2026-07-03).
-      nixpkgs.config.permittedInsecurePackages = [ "pnpm-10.29.2" ];
     }
 
   ;

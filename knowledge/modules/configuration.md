@@ -12,8 +12,10 @@ warrant its own file:
 
 - **Locale/keymap/timezone:** `en_US.UTF-8`, `us`, `America/Los_Angeles`.
 - **snowglobe-factory toggles:** `qemu` (libvirtd + qemu_kvm + virt-manager) plus
-  the `hardware-tools`, `gaming`, `office`, `hacker-mode`, `nix-tools`, and
-  `harden` profiles. `programs.corefreq.enable = false` — the out-of-tree
+  the `gaming`, `office`, `hacker-mode`, `nix-tools`, and
+  `harden` profiles (snowglobe dropped `hardware-tools` in 2026-09; its
+  payload — usbutils, smartmontools, nvme-cli, lshw, inxi, vulkan-tools, … —
+  is inlined into `environment.systemPackages`). `programs.corefreq.enable = false` — the out-of-tree
   kernel module doesn't build on kernel 7.1 (CPPC struct field
   `reference_perf` → `reference`); re-enable when upstream catches up.
 - **NVIDIA/gaming:** `hardware.nvidia.package` pinned to
@@ -36,9 +38,10 @@ warrant its own file:
 - **Substituters:** disables the untrusted `nix-store.earthgman.dev` cache.
 - **Packages/programs:** desktop additions (cliphist, fd, gimp, breeze-icons,
   rose-pine-hyprcursor, umu-launcher, wowup); firefox/chromium/alacritty/
-  batsignal disabled; 1Password CLI + GUI; nix-ld (cc + zlib); discord
-  (vesktop) with `permittedInsecurePackages = ["pnpm-10.29.2"]` per the
-  [vesktop pnpm whitelist decision](../decisions/vesktop-pnpm-whitelist.md);
+  batsignal disabled; 1Password CLI + GUI; nix-ld (cc + zlib); discord plus
+  vesktop (its own `programs.vesktop` key since 2026-09; the pnpm whitelist
+  is gone — see the
+  [vesktop pnpm whitelist decision](../decisions/vesktop-pnpm-whitelist.md));
   hyprpolkitagent runs as a user service (polkit-gnome off).
 
 Host-specific file for [nebula](../hosts/nebula.md) — merged straight into
