@@ -204,7 +204,18 @@ Chrome Web Store CRX endpoint `https://clients2.google.com/service/update2/crx`:
 |---|---|---|---|
 | Dark Reader | `eimadpbcbfnmbkopoojfekhnkhdbieeh` | 4.9.125 | `7` (EXTERNAL_POLICY_DOWNLOAD) |
 | 1Password | `aeblfdkhhhdcdjpifhhbdiojplfjncoa` | 8.12.24.34 | `7` (EXTERNAL_POLICY_DOWNLOAD) |
+| Claude | `fcoeoabgfenejglbffodgkkbkcdhcgfn` | 1.0.94 | `7` (EXTERNAL_POLICY_DOWNLOAD) |
 | uBlock Origin | `blockjmkbacgjkknlgpkjjiijinjdanf` | 1.71.0 (bundled) | `5` (COMPONENT — built in, **NOT** force-listed) |
+
+> **Update URL must carry `?prodversion=999.0` (2026-09-28, Helium 0.18.1.1).**
+> Helium strips `prodversion` from its CWS update checks (it sends
+> `os=win&arch=x64&prod=chromecrx` only), and the Web Store answers
+> `<updatecheck status="noupdate"/>` for every extension without it — so NEW
+> force-installs silently never land (`force_installed_metrics` logs
+> `failure_reason: 25 … no_update_info: 1`). Chromium appends its params after the
+> policy URL's own query, so `policies.nix` bakes `prodversion` into a shared
+> `cws` URL. Diagnose with `--enable-logging=stderr
+> --vmodule='*extension_downloader*=2'` on a throwaway `--user-data-dir`.
 
 Both force-listed extensions show `location=7` (`EXTERNAL_POLICY_DOWNLOAD`) in
 `Preferences.extensions.settings` — on-disk proof the forcelist policy actually
