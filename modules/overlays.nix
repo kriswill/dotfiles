@@ -33,7 +33,7 @@
     ccglass = _final: prev: {
       ccglass = inputs.ccglass.packages.${prev.stdenv.hostPlatform.system}.ccglass;
     };
-    # herdr from the kriswill/herdr staging fork's `custom` branch (upstream
+    # herdr from the kriswill/herdr staging fork's `vX.Y.Z-custom` tag (upstream
     # tag + our patch commits, currently the ANSI tab-bar command entries
     # rendered by ~/.local/bin/dotbar-usage — see
     # knowledge/decisions/herdr-ansi-tab-bar-entries.md); close over `inputs`

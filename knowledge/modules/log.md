@@ -8,6 +8,10 @@
   `profiles.hardware-tools` removed (payload inlined), vesktop re-added via its
   own `programs.vesktop` key, pnpm-10.29.2 whitelist dropped.
 
+- **Update** — [herdr](herdr.md): fork `custom` rebased onto upstream
+  `v0.9.1` and tagged `v0.9.1-custom`; the `herdr` input now pins that tag
+  instead of tracking the branch.
+
 ## 2026-09-13
 
 - **Creation** — [iv](iv.md): `pkgs/iv.nix` had been a flake output only

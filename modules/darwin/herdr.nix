@@ -3,7 +3,7 @@ _: {
     # herdr — agent multiplexer that lives in your terminal. Pinned to the
     # upstream flake's tag (see the herdr input in flake.nix) instead of
     # nixpkgs' 0.7.5, for in-pane image rendering (docs/fastfetch.md).
-    # pkgs.herdr is the flake input's package — our fork's `custom` branch,
+    # pkgs.herdr is the flake input's package — our fork's `v0.9.1-custom` tag,
     # which carries the ANSI tab-bar command entries (modules/overlays.nix).
     # NixOS twin: modules/nixos/herdr.nix.
     { pkgs, ... }:
