@@ -11,9 +11,9 @@ real gotchas in **Learned behaviours & workarounds** at the bottom.
 
 ```
 $ helium --version
-Helium 0.15.5.1 (Chromium 151.0.7922.137)
+Helium 0.18.1.1 (Chromium 154.0.8037.57)
 $ readlink -f $(command -v helium)
-/nix/store/aq76fwangwprax06cs0pwv07fsqj9s0p-helium-0.15.5.1/bin/helium
+/nix/store/hhls5b49mhwxdjacp4i87n3j78hqv3j9-helium-0.18.1.1/bin/helium
 $ ls -la /etc/chromium/policies/managed/
 lrwxrwxrwx root root helium.json -> /etc/static/chromium/policies/managed/helium.json
 $ ls /etc/helium
@@ -34,13 +34,15 @@ it must be root-owned and not world-writable, and it is.
   ELF, and grep for any `/etc/*helium*` rebrand path comes up EMPTY). This is THE
   fact the whole manual hinges on (verified 2026-06-20).
 - **Install:** upstream `programs.helium.enable = true` (the nixpkgs NixOS
-  module), set in `modules/nixos/helium/default.nix`. helium 0.15.5.1 / Chromium
-  151.0.7922.137 at the pinned flake rev (bumped 2026-08-16 in
-  kriswill/snowglobe-factory@cba33697); re-verify after `nix flake update`.
-- **Pinned rev / bump:** the `helium` derivation resolves from the
-  snowglobe-factory/nixpkgs input (`packages/helium/default.nix:133` in that source
-  tree); the pin lives in `flake.lock`. Bump with `nix flake update` (nixpkgs
-  follows `snowglobe-factory/nixpkgs`), then re-verify the version line above.
+  module), set in `modules/nixos/helium/default.nix`. helium 0.18.1.1 / Chromium
+  154.0.8037.57 at the pinned flake rev (bumped 2026-09-28 in
+  kriswill/snowglobe-factory@bbb93fdc); re-verify after `nix flake update`.
+- **Pinned rev / bump:** the `helium` derivation is a prebuilt-tarball package in
+  the kriswill/snowglobe-factory fork (`packages/helium/package.nix`); the pin
+  lives in `flake.lock`. Bump: check `gh release list -R imputnet/helium-linux`,
+  set `version` + both hashes (`nix store prefetch-file --json <url> | jq -r .hash`
+  for the `x86_64_linux` and `arm64_linux` tarballs), commit + push the fork, then
+  `nix flake update snowglobe-factory` here and re-verify the version line above.
 - **Live on the running system (2026-06-20):** the policy file
   (`/etc/chromium/policies/managed/helium.json`, root-owned symlink dated Jun 20
   10:49), `programs.helium.enable` (→ `true`), and `helium-config` on `k`'s PATH

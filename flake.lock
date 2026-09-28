@@ -1332,11 +1332,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1790486838,
-        "narHash": "sha256-1Y6RYisBzNrPmKWc07Tb/1U7G27N2WD1fYL2ql2GRuU=",
+        "lastModified": 1790557366,
+        "narHash": "sha256-OCzmyOAAyaCfl2cBWsQFxlDf7gADzp3upZ0OsMTQykE=",
         "owner": "kriswill",
         "repo": "snowglobe-factory",
-        "rev": "d071c293274996d3e03f59f58212279be55bed21",
+        "rev": "bbb93fdce2f142dab89b06eeb884622f878bff7e",
         "type": "github"
       },
       "original": {
