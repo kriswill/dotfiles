@@ -59,9 +59,6 @@ in
         isVM
         stateVersion
         ;
-      # We run Determinate Nix (modules/nixos/determinate.nix), so opt out of
-      # mkNixosHost's lix default — "nix" means it leaves nix.package alone.
-      nixImplementation = "nix";
       # mkNixosHost does not inject these; our host modules expect `inputs`.
       specialArgs = { inherit inputs; };
       modules = [ cfg.module ];

@@ -27,7 +27,7 @@
       snowglobe-factory.system.hasDesktop = true;
       snowglobe-factory.desktop = {
         enable = true;
-        installWaylandDeps = true;
+        installWaylandTools = true;
       };
 
       programs.hyprland = {
