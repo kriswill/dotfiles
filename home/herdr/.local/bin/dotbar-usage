@@ -2,7 +2,7 @@
 # dotbar-usage — Claude weekly usage bars for herdr's tab bar.
 #
 # Runs as a herdr `{ type = "command", argv = ["dotbar-usage"], ansi = true }`
-# tab-bar entry (our fork's custom branch). Herdr injects the focused
+# tab-bar entry (our fork's vX.Y.Z-custom tag). Herdr injects the focused
 # workspace's metadata tokens as HERDR_TOKEN_* env vars and re-runs this
 # command whenever they change, so it stays reactive without polling. The
 # usage / usage_fable / usage_spend tokens are published by

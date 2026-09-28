@@ -261,7 +261,7 @@ Hard-won gotchas from doing this (so the next session doesn't relearn them):
     (released 2026-08-03), **which nixpkgs does not yet carry** (still 0.7.5).
     Both OSes therefore pin ≥ v0.8.2 via the `herdr` flake input — bumped to
     the `v0.8.2` tag (2026-08-22), and since 2026-08-30 pointing at the
-    kriswill/herdr staging fork's `custom` branch (that tag + our tab-bar
+    kriswill/herdr staging fork's `custom` branch, now its `v0.9.1-custom` tag (upstream tag + our tab-bar
     commits; see knowledge/decisions/herdr-ansi-tab-bar-entries.md).
     `modules/{darwin,nixos}/herdr.nix` consume it, built from source — the
     binary reports the pinned version + fork rev (e.g.
