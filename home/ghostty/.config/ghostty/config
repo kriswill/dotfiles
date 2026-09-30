@@ -32,5 +32,7 @@ selection-foreground = #c8c093
 background-opacity = 0.95
 
 keybind = shift+enter=text:\n
+# default toggle_fullscreen (Linux) steals ctrl+enter from TUIs; Hyprland owns fullscreen
+keybind = ctrl+enter=unbind
 
 config-file = ?os.conf
