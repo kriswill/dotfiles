@@ -4,7 +4,8 @@ title: rtk Custom Filters for nix/direnv Wrapper Noise
 description: 'Added user-global rtk TOML filters for nix run/shell/develop/build/flake-check and direnv exec, discovered via rtk discover usage data; requires filter_stderr since both tools log to stderr, and only fires when the rtk prefix is typed explicitly.'
 resource: AGENTS.md
 tags: [rtk, nix, direnv, token-optimization]
-generated: { by: okflight/0.4.0, at: 2026-07-19T00:00:00-07:00 }
+status: deprecated
+generated: { by: claude-code/opus-5.5, at: 2026-09-30T15:49:50-07:00 }
 sources:
   - id: rtk-ai-rtk-custom-filters-guide
     resource: https://github.com/rtk-ai/rtk/blob/master/docs/guide/getting-started/configuration.md
@@ -14,8 +15,11 @@ sources:
     title: rtk-ai/rtk — TOML filter DSL reference
 ---
 
-**Status:** active. **Where:** [rtk](../packages/rtk.md) /
-[rtk module](../modules/rtk.md) / [stow tree](../patterns/stow-tree.md) /
+**Status:** deprecated (2026-09-30) — rtk was removed from the repo: the
+`pkgs/rtk.nix` package, its overlay, the darwin/nixos `rtk` modules, the
+`home/rtk` stow package, the `rtk-work` zsh aliases, and the `AGENTS.md`
+wrapper instructions. Kept for history. **Where (formerly):** `pkgs/rtk.nix` /
+`modules/{darwin,nixos}/rtk.nix` / [stow tree](../patterns/stow-tree.md) /
 `AGENTS.md`.
 
 ## Context
@@ -80,7 +84,7 @@ not-yet-cached-package runs):
   so on darwin hosts the stowed files were silently invisible (rtk fell back
   to builtin filters and default config; `rtk config` reporting
   "(default config, file not created)" is the tell). Bridged in the
-  [rtk darwin module](../modules/rtk.md): a `postActivation` script (order
+  rtk darwin module (`modules/darwin/rtk.nix`): a `postActivation` script (order
   1600, after dotfiles-stow) symlinks
   `~/Library/Application Support/rtk/{config,filters}.toml` →
   `~/.config/rtk/*`. Per-file, not whole-dir — rtk also writes mutable data
@@ -100,7 +104,7 @@ Irrelevant for `nix`/`direnv` since neither is a native rtk subcommand.
 - Being in the `home/rtk` stow package, the filters (and `config.toml`)
   propagate to every host on the next `dotfiles-stow` restow — on Linux
   directly, on darwin through the Application Support symlink bridge in the
-  [rtk darwin module](../modules/rtk.md) (see the 2026-07-20 correction
+  rtk darwin module (`modules/darwin/rtk.nix`) (see the 2026-07-20 correction
   above).
 - `nix eval` remains unfiltered; revisit only if a stdin-capable compaction
   path appears (e.g. a future `rtk json -` or a `truncate_lines_at`-based

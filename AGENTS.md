@@ -65,15 +65,6 @@ nix-built from okf's own repo (`kriswill/okflight`, public — consumed as a Fla
 - `nix fmt` — format all Nix files (nixfmt-tree)
 - `statix check .` / `deadnix .` — lint Nix code
 
-**Token-optimized wrappers (rtk):** prefix these with `rtk` — custom filters in
-`~/.config/rtk/filters.toml` strip nix/direnv store-fetch and loading noise
-(agents only, not auto-rewritten by the Claude Code hook, so the `rtk` prefix
-must be typed explicitly):
-
-- `rtk nix run …` / `rtk nix shell …` / `rtk nix develop -c …`
-- `rtk nix build …` / `rtk nix flake check …`
-- `rtk direnv exec . …`
-
 ## Code Style - Shell Scripts
 
 - Always start with: `set -euo pipefail`
