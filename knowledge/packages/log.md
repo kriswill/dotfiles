@@ -1,5 +1,10 @@
 # Log
 
+## 2026-09-30
+
+- **Deprecation** — rtk: removed `pkgs/rtk.nix`, `overlays/rtk.nix`, the
+  `packages.<system>.rtk` export, and the catalog doc.
+
 ## 2026-09-23
 
 - **Creation** — [diffnav](diffnav.md) patch overlay: diffnav 0.12.0 hard-codes
@@ -21,7 +26,7 @@
   (0-unstable-2026-09-01) reached the upstream commit the overlay pinned, so
   `overlays/git-yazi.nix` and its `modules/overlays.nix` line are gone.
 
-- **Update** — version bumps: [rtk](rtk.md) 0.45.0 → 0.49.0, [kitten](kitten.md)
+- **Update** — version bumps: rtk 0.45.0 → 0.49.0, [kitten](kitten.md)
   0.42.2 → 0.48.2, [wowup](wowup.md) 2.22.0 → 2.23.1, [podman](podman.md)
   6.0.0 → 6.1.1 (darwin remote client), [iv](iv.md) 0.7.2 → 0.17.3 — iv now
   builds with `buildGo127Module` (go.mod requires 1.27) and `proxyVendor`,
@@ -92,7 +97,7 @@
 
 ## 2026-07-19
 
-- **Creation** — [rtk](rtk.md): `rustPlatform.buildRustPackage` for
+- **Creation** — rtk: `rustPlatform.buildRustPackage` for
   [rtk-ai/rtk](https://github.com/rtk-ai/rtk) v0.43.0, a CLI proxy that
   filters dev command output to cut LLM token usage. Pinned via
   `fetchFromGitHub` (not a flake input — no fork, all deps from crates.io) with
@@ -100,7 +105,7 @@
   `doCheck = false`: its integration tests shell out to git/docker/aws/etc.
   and expect a live tool-populated environment.
 
-- **Update** — [rtk](rtk.md): cross-linked the
+- **Update** — rtk: cross-linked the
   [nix/direnv custom filters decision](../decisions/rtk-nix-direnv-filters.md).
 
 ## 2026-07-18

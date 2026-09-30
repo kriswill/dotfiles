@@ -1,5 +1,13 @@
 # Log
 
+## 2026-09-30
+
+- **Deprecation** — rtk: removed the cross-OS twin (`modules/darwin/rtk.nix`
+  / `modules/nixos/rtk.nix`) and its catalog doc, including the darwin
+  `postActivation` bridge that symlinked `~/Library/Application Support/rtk/`
+  to the stowed config. [claude-account-selector](claude-account-selector.md)
+  no longer uses rtk as its per-profile hook example.
+
 ## 2026-09-27
 
 - **Update** — [configuration](configuration.md), [hyprland](hyprland.md):
@@ -173,7 +181,7 @@
 
 ## 2026-07-20
 
-- **Update** — [rtk](rtk.md) /
+- **Update** — rtk /
   [claude-account-selector](claude-account-selector.md): the darwin rtk twin
   now bridges rtk's macOS config path — rtk reads user-global
   config/filters from `dirs::config_dir()` = `~/Library/Application
@@ -243,8 +251,8 @@
   time. Fixed by hand (`rm` the stray file, `stow --restow atuin`);
   full gotcha in `docs/atuin.md` Learned behaviours.
 
-- **Creation** — [rtk](rtk.md): cross-OS twin (`modules/darwin/rtk.nix` /
-  `modules/nixos/rtk.nix`) mounting the [rtk package](../packages/rtk.md) onto
+- **Creation** — rtk: cross-OS twin (`modules/darwin/rtk.nix` /
+  `modules/nixos/rtk.nix`) mounting the rtk package onto
   `environment.systemPackages`. Registering `pkgs.rtk` under
   `perSystem.packages` alone (as first done) only creates a flake output
   (`nix build .#rtk`) — it never reaches a host's own `pkgs`, so `nrs`/nixos-
@@ -252,7 +260,7 @@
   module twins were added (see the [add-package playbook](../playbooks/add-package.md)
   step 3, easy to skip for a package that also happens to build standalone).
 
-- **Update** — [rtk](rtk.md): cross-linked the
+- **Update** — rtk: cross-linked the
   [nix/direnv custom filters decision](../decisions/rtk-nix-direnv-filters.md).
 
 ## 2026-07-18

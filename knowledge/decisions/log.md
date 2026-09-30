@@ -1,5 +1,13 @@
 # Log
 
+## 2026-09-30
+
+- **Deprecation** — [rtk-nix-direnv-filters](rtk-nix-direnv-filters.md):
+  rtk was removed from the repo, taking with it the `home/rtk` stow package
+  (`config.toml` + the nix/direnv `filters.toml`), the `AGENTS.md` `rtk <cmd>`
+  wrapper instructions, and the `rtk-work`/`rtkw` zsh aliases. The record is
+  kept with `status: deprecated`.
+
 ## 2026-09-28
 
 - **Creation** — [claude-desktop-pointer-marketplace](claude-desktop-pointer-marketplace.md):
@@ -168,14 +176,14 @@
   `~/.config/rtk/` on macOS (`dirs::config_dir()` returns
   `~/Library/Application Support`, XDG ignored), so the custom nix/direnv
   filters only ever fired on Linux. Now bridged by per-file symlinks in the
-  [rtk darwin module](../modules/rtk.md); `rtk config` printing
+  rtk darwin module; `rtk config` printing
   "(default config, file not created)" is the diagnostic tell for a broken
   bridge.
 
 ## 2026-07-19
 
 - **Creation** — [rtk-nix-direnv-filters](rtk-nix-direnv-filters.md) /
-  [rtk](../packages/rtk.md) / [rtk module](../modules/rtk.md) / `AGENTS.md`:
+  rtk / rtk module / `AGENTS.md`:
   added user-global rtk TOML filters stripping `nix run/shell/develop/build/
   flake check` store-fetch noise and `direnv exec` loading noise, sourced
   from real usage data (`rtk discover -a -s 90`). `filter_stderr = true` is

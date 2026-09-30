@@ -19,8 +19,8 @@ Imported on every darwin host but disabled by default — hosts opt in with
 via the [Dendritic module layout](../patterns/dendritic-modules.md).
 
 Profile isolation means anything that installs into a Claude config dir must
-be repeated per profile with `CLAUDE_CONFIG_DIR` set — e.g.
-[rtk](rtk.md)'s `rtk init -g` hook registration. It also shapes how
+be repeated per profile with `CLAUDE_CONFIG_DIR` set — e.g. a tool's
+`init -g`-style hook registration. It also shapes how
 user-level Claude *skills* deploy: the fallback `~/.claude -> ~/.claude-me`
 symlink is unowned by stow, so skills ship as
 [split stow packages](../decisions/claude-skills-split-stow-packages.md)

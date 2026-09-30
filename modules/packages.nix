@@ -35,8 +35,6 @@
         # herdr-nav — vim-aware ctrl+h/j/k/l pane navigation for herdr; the
         # herdr-side half of nvim's config/multiplexer.lua integration.
         herdr-nav = pkgs.callPackage ../pkgs/herdr-nav.nix { };
-        # rtk — CLI proxy that filters dev command output to cut LLM token usage.
-        rtk = pkgs.callPackage ../pkgs/rtk.nix { };
         # kitten — prebuilt standalone binary (darwin-arm64 + linux-amd64);
         # fastfetch's kitty-icat logo shells out to it on both OSes.
         kitten = pkgs.callPackage ../pkgs/kitten.nix { };
