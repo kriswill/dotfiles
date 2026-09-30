@@ -1,5 +1,14 @@
 # Log
 
+## 2026-09-28
+
+- **Creation** — [claude-desktop-pointer-marketplace](claude-desktop-pointer-marketplace.md):
+  the repo root gains `.claude-plugin/marketplace.json`, a pointer marketplace
+  whose single entry references `typesafe-ai/skills` as a `github` source —
+  because Claude Desktop's account-synced reader rejects root-layout (`"./"`)
+  plugin marketplaces that the CLI accepts. Nothing vendored; syncs track
+  upstream.
+
 ## 2026-09-27
 
 - **Update** — [vesktop-pnpm-whitelist](vesktop-pnpm-whitelist.md): superseded;
