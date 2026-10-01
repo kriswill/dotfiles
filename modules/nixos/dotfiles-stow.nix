@@ -33,7 +33,12 @@
           "yazi" # yazi module (plugins/flavor links) not ported to nixos yet
         ];
         skipReason = "darwin-only";
-        runAsUser = "${pkgs.util-linux}/bin/runuser -u ${user} -- env HOME=${home}";
+        # setpriv, not runuser: runuser opens a PAM session per package, and
+        # nixos-rebuild-ng streams the activation unit's journal, so every
+        # pam_unix "session opened/closed" pair landed in the rebuild output.
+        runAsUser = "${pkgs.util-linux}/bin/setpriv --reuid=${user} --regid=${
+          config.users.users.${user}.group
+        } --init-groups -- env HOME=${home} USER=${user} LOGNAME=${user}";
       };
       # Restow churn (self-heal rm + recreate) kills Hyprland's inotify watch on
       # the deleted link, so it never sees the file return and shows a stale
