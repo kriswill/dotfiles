@@ -665,9 +665,18 @@ Real findings on nebula — append as you discover more; correct/remove stale on
   `hyprctl dispatch '<lua expr>'` shorthand works and is simpler than
   `hyprctl eval 'hl.dispatch(...)'`. Since sleep/wake is the usual trigger,
   `modules/hosts/nebula/oled-resume-bump.nix` now runs this bounce on every
-  resume via `powerManagement.resumeCommands` (as root → `runuser -u k` with
-  `XDG_RUNTIME_DIR` + `HYPRLAND_INSTANCE_SIGNATURE` exported, hyprctl taken
-  from `config.programs.hyprland.package`).
+  resume via `powerManagement.resumeCommands` (as root → `runuser -u k --
+  hyprctl -i <sig> dispatch …`, hyprctl taken from
+  `config.programs.hyprland.package`).
+  **(2026-10-01) Don't wrap hyprctl in `env VAR=… <path>`:** git-dated
+  hyprland store paths contain `=` (`hyprland-0.56.0+date=2026-09-27_…`), so
+  `env` parsed the hyprctl path as an assignment and failed with
+  `env: 'dispatch': No such file or directory` (visible in
+  `journalctl -b | grep sleep-actions-pre-stop`) — the bump silently did
+  nothing on every resume. `hyprctl -i <sig>` + its `/run/user/<uid>/hypr`
+  fallback needs no env vars. Also: `hl.dsp.dpms` with an **unmatched**
+  monitor name (incl. `desc:…` — not accepted there) returns `ok` and applies
+  to **all** outputs.
 - **OLED (DP-3, PG34WCDM) blanks at login at 240Hz — DSC won't negotiate; capped
   to 143.97Hz (2026-06-16).** Symptom: on Hyprland login the OLED showed nothing;
   its own OSD read **"no DisplayPort signal"** while `hyprctl monitors` still
