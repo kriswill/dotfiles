@@ -126,12 +126,14 @@
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.rust-overlay.url = "github:oxalica/rust-overlay";
     };
-    # devenv from OUR fork's `custom` branch: upstream's v2.3.1 tag plus our
+    # devenv from OUR fork's `custom` branch: upstream's v2.4.0 tag plus our
     # patch commits — the kitty graphics patch and the terminal-query reply ordering fix for the
     # `devenv shell` virtual-terminal mux (cachix/devenv#3130: CPR is answered
     # locally while OSC queries round-trip to the real terminal, so termenv
     # users like gh/glow got the cursor report first and left the colour
-    # reply in the tty buffer for zsh to eat). Rebase `custom` onto each new
+    # reply in the tty buffer for zsh to eat), and a meson build-dir fix for
+    # the static nix-store (libstore's `build/` subdir collides with meson's
+    # default build dir; meson >= 1.12 then fails the unity build). Rebase `custom` onto each new
     # upstream tag and drop commits as they land upstream. Builds from source
     # (devenv.cachix.org only caches upstream commits); the nixpkgs follow is
     # deliberate so it shares our package set rather than pulling a second one.
