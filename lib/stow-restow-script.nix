@@ -13,7 +13,7 @@
 #   skip        — stow packages belonging to the other OS (list of names)
 #   skipReason  — label in the skip log line ("linux-only" | "darwin-only")
 #   runAsUser   — command prefix that runs the stow invocation as the user
-#                 (darwin: sudo -u <user> --set-home; nixos: runuser + env HOME)
+#                 (darwin: sudo -u <user> --set-home; nixos: setpriv + env HOME)
 {
   pkgs,
   home,
