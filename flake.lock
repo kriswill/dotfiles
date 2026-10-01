@@ -104,29 +104,6 @@
       },
       "parent": []
     },
-    "chaotic": {
-      "inputs": {
-        "flake-schemas": "flake-schemas",
-        "home-manager": "home-manager",
-        "nixpkgs": [
-          "snowglobe-factory",
-          "nixpkgs"
-        ]
-      },
-      "locked": {
-        "lastModified": 1790421597,
-        "narHash": "sha256-D0xy1Tmc0/cOIUZr7Rn4Iw2gN23QG3yqaxc7puN3t7c=",
-        "owner": "chaotic-cx",
-        "repo": "nyx",
-        "rev": "9ef94eb5bba8e1aed415a809f0f6e716e4595467",
-        "type": "github"
-      },
-      "original": {
-        "owner": "chaotic-cx",
-        "repo": "nyx",
-        "type": "github"
-      }
-    },
     "codebase-memory-mcp": {
       "inputs": {
         "nixpkgs": [
@@ -446,20 +423,6 @@
         "type": "github"
       }
     },
-    "flake-schemas": {
-      "locked": {
-        "lastModified": 1780327564,
-        "narHash": "sha256-HiRPtA0spK+Dkgbhz/1zW9glXxNVB+L4Rj2VYmdawb8=",
-        "rev": "6cc9bd98891b1fc6bb2b8cb3277df8bc72799ca6",
-        "revCount": 149,
-        "type": "tarball",
-        "url": "https://api.flakehub.com/f/pinned/DeterminateSystems/flake-schemas/0.5.0/019e83cf-9af3-78b1-ac5b-70e68ad1efe1/source.tar.gz"
-      },
-      "original": {
-        "type": "tarball",
-        "url": "https://flakehub.com/f/DeterminateSystems/flake-schemas/%3D0.5.0.tar.gz"
-      }
-    },
     "flake-utils": {
       "inputs": {
         "systems": "systems_2"
@@ -561,28 +524,6 @@
         "owner": "kriswill",
         "ref": "v0.9.1-custom",
         "repo": "herdr",
-        "type": "github"
-      }
-    },
-    "home-manager": {
-      "inputs": {
-        "nixpkgs": [
-          "snowglobe-factory",
-          "chaotic",
-          "nixpkgs"
-        ]
-      },
-      "locked": {
-        "lastModified": 1790365885,
-        "narHash": "sha256-iQ0ebhiVo64NktTnwft9hNxlFu4j5cvljVxyJaEVIP4=",
-        "owner": "nix-community",
-        "repo": "home-manager",
-        "rev": "7b4c5ec4bedaf1e062bbc1bcaeddbc6bd242aa1b",
-        "type": "github"
-      },
-      "original": {
-        "owner": "nix-community",
-        "repo": "home-manager",
         "type": "github"
       }
     },
@@ -962,30 +903,6 @@
         "type": "github"
       }
     },
-    "nix-post-build-hook-queue": {
-      "inputs": {
-        "nixpkgs": [
-          "snowglobe-factory",
-          "nixpkgs"
-        ],
-        "treefmt": [
-          "snowglobe-factory"
-        ]
-      },
-      "locked": {
-        "lastModified": 1790427743,
-        "narHash": "sha256-2wXSkWbPnz2G7LYJtbnOuqS6LMHyf7YioZCCTFBUj8w=",
-        "owner": "newam",
-        "repo": "nix-post-build-hook-queue",
-        "rev": "9b051ff6421ad90a31b7ebfc7bbf765b9ee5f0d1",
-        "type": "github"
-      },
-      "original": {
-        "owner": "newam",
-        "repo": "nix-post-build-hook-queue",
-        "type": "github"
-      }
-    },
     "nix_2": {
       "inputs": {
         "flake-compat": [
@@ -1312,14 +1229,12 @@
     },
     "snowglobe-factory": {
       "inputs": {
-        "chaotic": "chaotic",
         "disko": "disko",
         "distro-grub-themes": "distro-grub-themes",
         "import-tree": [
           "import-tree"
         ],
         "nix-index-database": "nix-index-database",
-        "nix-post-build-hook-queue": "nix-post-build-hook-queue",
         "nixos-hardware": [
           "nixos-hardware"
         ],
@@ -1332,11 +1247,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1790557366,
-        "narHash": "sha256-OCzmyOAAyaCfl2cBWsQFxlDf7gADzp3upZ0OsMTQykE=",
+        "lastModified": 1790889215,
+        "narHash": "sha256-9Ik3MJr2EcYfUx/Ys/4CbdxhgRtj5s2ZGmQLPeYI094=",
         "owner": "kriswill",
         "repo": "snowglobe-factory",
-        "rev": "bbb93fdce2f142dab89b06eeb884622f878bff7e",
+        "rev": "e03b5a41c3c694b6b3dfb4d0c0f748f5547fd666",
         "type": "github"
       },
       "original": {
