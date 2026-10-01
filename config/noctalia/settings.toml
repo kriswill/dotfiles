@@ -342,7 +342,7 @@ transition_on_startup = true
     path = "/home/k/Pictures/Wallpapers/nebula-wall-horizontal.png"
 
     [wallpaper.last]
-    path = "/home/k/Pictures/Nebula-comic.png"
+    path = "/home/k/Pictures/profile.jpeg"
 
     [wallpaper.monitor.DP-1]
     directory = "/home/k/Pictures/Wallpapers/vertical-wide"
@@ -358,6 +358,9 @@ transition_on_startup = true
 
     [wallpaper.monitors.HEADLESS-1]
     path = "/home/k/Pictures/Nebula-comic.png"
+
+    [wallpaper.monitors.HEADLESS-2]
+    path = "/home/k/Pictures/profile.jpeg"
 
     [wallpaper.monitors.HEADLESS-3]
     path = "/home/k/Pictures/Wallpapers/nebula-wall-horizontal.png"
