@@ -54,6 +54,9 @@
         apple-container = inputs.apple-container.packages.${system}.apple-container;
         # Official prebuilt podman macOS remote client (aarch64-darwin only).
         podman = pkgs.callPackage ../pkgs/podman.nix { };
+        # slack-leave-devopsinc — leave the Slack devopsinc-N incident channels
+        # (CLI + Spotlight app); Keychain token + osascript notifications.
+        slack-leave-devopsinc = pkgs.callPackage ../pkgs/slack-leave-devopsinc.nix { };
       }
       # Linux-only: wowup wraps an AppImage (needs the appimage runtime);
       # flatpak-user shims a Linux-only package manager.
