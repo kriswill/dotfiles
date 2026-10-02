@@ -1,5 +1,12 @@
 # Log
 
+## 2026-10-02
+
+- **Creation** — [slack-leave-devopsinc](slack-leave-devopsinc.md): universal
+  darwin module installing the package via `environment.systemPackages`
+  (not user packages) so nix-darwin copies its app into
+  `/Applications/Nix Apps` for Spotlight.
+
 ## 2026-09-30
 
 - **Deprecation** — rtk: removed the cross-OS twin (`modules/darwin/rtk.nix`

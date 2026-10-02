@@ -25,6 +25,7 @@ flake consumes via relative-path inputs.
 * [okf](okf.md) - okf — CLI for maintaining OKF knowledge bundles (scaffold/index/validate/viz), consumed from its own repo via FlakeHub (kriswill/okflight).
 * [Pass Xdg](pass-xdg.md) - pass-xdg — a drop-in `pass` (standard unix password manager) that defaults its store to an XDG-compliant location instead of the upstream default `~/.password-store`.
 * [Podman](podman.md) - Podman — the daemonless, Docker-compatible container engine; on macOS packaged from the official prebuilt darwin_arm64 remote client (nixpkgs' podman refuses to evaluate on darwin) with vfkit + gvproxy bundled in, primarily serving minikube's podman driver for work Kubernetes.
+* [Slack Leave Devopsinc](slack-leave-devopsinc.md) - Bash CLI (+ Spotlight app) that leaves every Slack `devopsinc-N` incident channel (N >= 1000) the PagerDuty routine auto-adds Kris to, via the Slack Web API with a Keychain-held user token.
 * [System Update Report](system-update-report.md) - HTML "what changed" page after a rebuild: nvd diff of the booted (NixOS) or previous (darwin) generation vs current, plus the latest flake.lock commit parsed into a flake-input from/to table.
 * [Tomato](tomato.md) - CLI to get/set TOML values preserving comments and formatting.
 * [Wowup](wowup.md) - WowUp-CF (the CurseForge fork of WowUp), packaged from the upstream AppImage (github.com/WowUp/WowUp.CF releases).

@@ -1,5 +1,13 @@
 # Log
 
+## 2026-10-02
+
+- **Creation** — [slack-leave-devopsinc](slack-leave-devopsinc.md): bash CLI
+  + "Leave devopsinc Channels.app" (binary-wrapper bundle executable) that
+  leaves every Slack `devopsinc-N` (N >= 1000) incident channel via the Web
+  API, token from the login Keychain. Replaces Kris' AppleScript UI driver;
+  see [the decision](../decisions/slack-leave-devopsinc-api.md).
+
 ## 2026-09-30
 
 - **Deprecation** — rtk: removed `pkgs/rtk.nix`, `overlays/rtk.nix`, the
