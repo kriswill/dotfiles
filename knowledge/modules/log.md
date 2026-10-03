@@ -6,6 +6,11 @@
   `programs.swaync.enable = false`. Noctalia owns the notification bus name, so
   snowglobe's swaync crash-looped (5k+ restarts).
 
+- **Update** — [users-k-noctalia](users-k-noctalia.md), [nh](nh.md): bare
+  linux-pam module names in `/etc/pam.d/login`, so the lock screen survives
+  glibc bumps; `nrs`/`nrt` warn when PAM's glibc differs from the booted
+  system's.
+
 ## 2026-09-30
 
 - **Deprecation** — rtk: removed the cross-OS twin (`modules/darwin/rtk.nix`

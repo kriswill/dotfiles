@@ -22,6 +22,11 @@ entirely, passing its arguments to `darwin-rebuild check`.
   test — activate without a bootloader entry, real test semantics unlike
   darwin's check). Flake dir resolved via `readlink -f "$HOME/src/dotfiles"`
   because nix's `--flake <path>` won't follow nebula's symlinked checkout.
+  After a successful `nrs`/`nrt`, the helper compares the glibc that
+  linux-pam links against in `/run/booted-system` with the one in
+  `/run/current-system`. If they differ, it warns you to reboot before
+  logging out: ly, started at boot, can't load the new PAM session modules
+  (see [users-k-noctalia](users-k-noctalia.md)).
 
 Package lists in sync (nh + three helpers each); see the
 [cross-OS module twins pattern](../patterns/cross-os-module-twins.md).

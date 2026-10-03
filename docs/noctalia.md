@@ -646,9 +646,17 @@ the hardware keys to drive DDC too.
   `pam_unix` marked faulty, the correct password is rejected. Logging out
   doesn't help either: ly (display-manager, never restarted by a switch)
   fails the same way. Only a reboot fixed it. To diagnose, run
-  `journalctl -b -1 | grep 'PAM unable to dlopen'`. When a switch changes
-  glibc, reboot before locking or suspending. Restarting Noctalia alone
-  would fix the lock screen but not ly.
+  `journalctl -b -1 | grep 'PAM unable to dlopen'`.
+  **Fixed for the lock screen (2026-10-02):** `users/k/noctalia.nix`
+  rewrites `/etc/pam.d/login` (Noctalia's PAM service; ly includes it) so
+  linux-pam's own modules use bare names (`pam_unix.so`). libpam resolves
+  bare names against its compiled-in `<linux-pam>/lib/security/`, so each
+  process loads the modules matching its own glibc. This was verified with a
+  `pam_start_confdir` test client. ly's session stack still has
+  absolute-path util-linux (`pam_lastlog2`) and systemd modules, so logging
+  out and back in after a glibc bump can still fail. `nrs`/`nrt` print
+  `warning: PAM glibc changed since boot …` when that applies. Reboot before
+  logging out.
 - **Workspaces bar widget rendered nothing on nebula's Hyprland build
   (2026-09-21).** v5.1.0 logs `rejecting mixed or malformed Hyprland
   workspace IPC schema` and silently renders zero pills — a regression
