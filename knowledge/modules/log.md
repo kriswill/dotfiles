@@ -1,5 +1,11 @@
 # Log
 
+## 2026-10-02
+
+- **Update** — [users-k-noctalia](users-k-noctalia.md), [hyprland](hyprland.md):
+  `programs.swaync.enable = false`. Noctalia owns the notification bus name, so
+  snowglobe's swaync crash-looped (5k+ restarts).
+
 ## 2026-09-30
 
 - **Deprecation** — rtk: removed the cross-OS twin (`modules/darwin/rtk.nix`

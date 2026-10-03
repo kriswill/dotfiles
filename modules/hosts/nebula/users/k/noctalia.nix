@@ -47,6 +47,11 @@
       services.power-profiles-daemon.enable = true;
       hardware.bluetooth.enable = true;
 
+      # Noctalia owns org.freedesktop.Notifications; snowglobe's desktop module
+      # enables swaync, which then crash-loops on "Could not acquire
+      # notification name" (5k+ restarts by 2026-10-02).
+      programs.swaync.enable = false;
+
       # DDC/CI for external-monitor brightness (Noctalia's ddcutil backend).
       # Loads the i2c-dev module, creates the i2c group, and installs the udev
       # rules that group-own /dev/i2c-*. Pair with [brightness].enable_ddcutil.
