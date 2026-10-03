@@ -11,6 +11,11 @@
   glibc bumps; `nrs`/`nrt` warn when PAM's glibc differs from the booted
   system's.
 
+- **Creation** — [slack-leave-devopsinc](slack-leave-devopsinc.md): universal
+  darwin module installing the package via `environment.systemPackages`
+  (not user packages) so nix-darwin copies its app into
+  `/Applications/Nix Apps` for Spotlight.
+
 ## 2026-09-30
 
 - **Deprecation** — rtk: removed the cross-OS twin (`modules/darwin/rtk.nix`
