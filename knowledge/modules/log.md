@@ -2,6 +2,15 @@
 
 ## 2026-10-02
 
+- **Update** — [users-k-noctalia](users-k-noctalia.md), [hyprland](hyprland.md):
+  `programs.swaync.enable = false`. Noctalia owns the notification bus name, so
+  snowglobe's swaync crash-looped (5k+ restarts).
+
+- **Update** — [users-k-noctalia](users-k-noctalia.md), [nh](nh.md): bare
+  linux-pam module names in `/etc/pam.d/login`, so the lock screen survives
+  glibc bumps; `nrs`/`nrt` warn when PAM's glibc differs from the booted
+  system's.
+
 - **Creation** — [slack-leave-devopsinc](slack-leave-devopsinc.md): universal
   darwin module installing the package via `environment.systemPackages`
   (not user packages) so nix-darwin copies its app into

@@ -53,6 +53,21 @@ carries `disabledModules = [ "programs/wayland/noctalia.nix" ]` to keep the
 flake module — see the
 [decision record](../decisions/noctalia-flake-module-over-nixpkgs.md).
 
+Notification daemon (2026-10-02): Noctalia owns
+`org.freedesktop.Notifications`, so this file sets
+`programs.swaync.enable = false`. Snowglobe's desktop layer (see
+[hyprland](hyprland.md)) enables swaync, which otherwise crash-loops on
+"Could not acquire notification name".
+
+Lock screen vs glibc bumps (2026-10-02): Noctalia authenticates through PAM
+service `login`. A daemon started before a switch that bumps glibc couldn't
+dlopen the new absolute-path PAM modules, so it rejected every password.
+This file rewrites `/etc/pam.d/login` to give linux-pam's own modules bare
+names. libpam resolves those against its own compiled-in module dir, so
+every process gets modules matching its glibc. Modules from other packages
+keep their absolute paths. That leaves ly's re-login exposed, which is
+covered by the [nh](nh.md) `nrs` warning.
+
 Host-specific file for [nebula](../hosts/nebula.md) — merged straight into
 that host's configuration per the
 [host-mounted modules pattern](../patterns/host-mounted-modules.md).

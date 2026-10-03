@@ -869,7 +869,7 @@ Real findings on nebula — append as you discover more; correct/remove stale on
   (`snowglobe-factory.system.hasDesktop` + `snowglobe-factory.desktop.{enable,
   installWaylandDeps}`) that the niri module used to provide — that's what gates
   `desktop.nix` (xdg portals, pipewire, bluetooth, grim/slurp/wl-clipboard,
-  swaync, fonts, the **ly** greeter, `hardware.graphics`, `NIXOS_OZONE_WL`, …) —
+  swaync (off — Noctalia does notifications; `users/k/noctalia.nix`), fonts, the **ly** greeter, `hardware.graphics`, `NIXOS_OZONE_WL`, …) —
   plus `programs.fuzzel.enable` (the launcher, formerly a niri-module default).
   The session is `hyprland-uwsm` (`displayManager.defaultSession`); Hyprland runs
   under **uwsm**.

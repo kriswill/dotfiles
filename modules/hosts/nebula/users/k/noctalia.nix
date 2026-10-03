@@ -33,6 +33,7 @@
 {
   configurations.nixos.nebula.module =
     {
+      config,
       lib,
       pkgs,
       inputs,
@@ -46,6 +47,20 @@
       services.upower.enable = true;
       services.power-profiles-daemon.enable = true;
       hardware.bluetooth.enable = true;
+
+      # Noctalia owns org.freedesktop.Notifications; snowglobe's desktop module
+      # enables swaync, which then crash-loops on "Could not acquire
+      # notification name" (5k+ restarts by 2026-10-02).
+      programs.swaync.enable = false;
+
+      # Bare module names: libpam loads them from its own dir, so a lock
+      # screen older than a glibc bump still unlocks. See docs/noctalia.md.
+      environment.etc."pam.d/login".source = lib.mkForce (
+        pkgs.writeText "login.pam" (
+          builtins.replaceStrings [ "${config.security.pam.package}/lib/security/" ] [ "" ]
+            config.security.pam.services.login.text
+        )
+      );
 
       # DDC/CI for external-monitor brightness (Noctalia's ddcutil backend).
       # Loads the i2c-dev module, creates the i2c group, and installs the udev

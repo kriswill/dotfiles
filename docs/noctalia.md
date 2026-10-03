@@ -637,6 +637,26 @@ the hardware keys to drive DDC too.
   (`pkill -f '/bin/noctalia'; noctalia --daemon`, or
   `hyprctl dispatch 'hl.dsp.exec_cmd("noctalia --daemon")'` from an
   agent/ssh shell).
+- **A glibc bump in a switch breaks the lock screen until reboot
+  (2026-10-02).** The 10-01 switch (nixpkgs 0928→1001) moved glibc
+  2.42→2.44. The Noctalia daemon started before it kept glibc 2.42, and
+  every unlock attempt loaded the *new* PAM modules from `/etc/pam.d`:
+  `PAM unable to dlopen(…linux-pam-1.7.2/lib/security/pam_unix.so): …
+  glibc-2.42-84/lib/libc.so.6: version 'GLIBC_2.43' not found`. With
+  `pam_unix` marked faulty, the correct password is rejected. Logging out
+  doesn't help either: ly (display-manager, never restarted by a switch)
+  fails the same way. Only a reboot fixed it. To diagnose, run
+  `journalctl -b -1 | grep 'PAM unable to dlopen'`.
+  **Fixed for the lock screen (2026-10-02):** `users/k/noctalia.nix`
+  rewrites `/etc/pam.d/login` (Noctalia's PAM service; ly includes it) so
+  linux-pam's own modules use bare names (`pam_unix.so`). libpam resolves
+  bare names against its compiled-in `<linux-pam>/lib/security/`, so each
+  process loads the modules matching its own glibc. This was verified with a
+  `pam_start_confdir` test client. ly's session stack still has
+  absolute-path util-linux (`pam_lastlog2`) and systemd modules, so logging
+  out and back in after a glibc bump can still fail. `nrs`/`nrt` print
+  `warning: PAM glibc changed since boot …` when that applies. Reboot before
+  logging out.
 - **Workspaces bar widget rendered nothing on nebula's Hyprland build
   (2026-09-21).** v5.1.0 logs `rejecting mixed or malformed Hyprland
   workspace IPC schema` and silently renders zero pills — a regression

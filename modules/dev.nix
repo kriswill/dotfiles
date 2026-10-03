@@ -19,7 +19,6 @@
             just
             # Nix tooling (from nebula's old shell.nix)
             nil
-            nix-output-monitor
             # Secrets (sops-nix age keys — see .sops.yaml)
             sops
             age
@@ -35,6 +34,9 @@
           okf = inputs'.okf.packages.okf;
           # HTML "what changed" report after an nrs (nvd diff + flake-update commit).
           inherit (self'.packages) system-update-report;
+          # perSystem pkgs carries no overlays; apply the TEMPORARY nom patch
+          # here too (drop with overlays/nix-output-monitor.nix).
+          inherit (import ../overlays/nix-output-monitor.nix pkgs pkgs) nix-output-monitor;
         };
         shellHook = ''
           # plain export: works under both direnv (use flake) and nix develop

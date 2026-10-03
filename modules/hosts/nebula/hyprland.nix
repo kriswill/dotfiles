@@ -22,7 +22,7 @@
       # shared snowglobe desktop layer here — previously this came for free from
       # the niri module. `snowglobe-factory.desktop.enable` gates desktop.nix, which
       # provides xdg portals, pipewire, bluetooth, screenshot/clipboard tools
-      # (grim/slurp/wl-clipboard), swaync, fonts, the ly greeter, hardware.graphics,
+      # (grim/slurp/wl-clipboard), swaync (off: users/k/noctalia.nix), fonts, the ly greeter, hardware.graphics,
       # NIXOS_OZONE_WL, etc. (see snowglobe nixosModules/snowglobe-factory/desktop.nix).
       snowglobe-factory.system.hasDesktop = true;
       snowglobe-factory.desktop = {
