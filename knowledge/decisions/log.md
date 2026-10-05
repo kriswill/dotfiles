@@ -1,5 +1,12 @@
 # Log
 
+## 2026-10-02
+
+- **Creation** — [slack-leave-devopsinc-api](slack-leave-devopsinc-api.md):
+  leave the PagerDuty-created `devopsinc-N` Slack channels through the Web
+  API (Keychain user token) launched from a Spotlight app, instead of the
+  keystroke-driven AppleScript.
+
 ## 2026-09-30
 
 - **Deprecation** — [rtk-nix-direnv-filters](rtk-nix-direnv-filters.md):
