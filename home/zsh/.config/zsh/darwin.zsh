@@ -24,4 +24,13 @@ if [ -x /opt/homebrew/bin/brew ]; then
   fi
   source "$_brew_cache"
   unset _brew_bin _brew_cache
+
+  ## Inside `devenv shell` or `nix develop` this rc runs after the project
+  ## environment has built PATH, so the prepend above puts Homebrew's tools
+  ## (its own `go`, say) in front of the project's pinned ones. Keep brew on
+  ## PATH, but behind them.
+  if [[ -n ${DEVENV_ROOT-}${IN_NIX_SHELL-} ]]; then
+    path=(${path:#/opt/homebrew/bin})
+    path=(${path:#/opt/homebrew/sbin} /opt/homebrew/bin /opt/homebrew/sbin)
+  fi
 fi
