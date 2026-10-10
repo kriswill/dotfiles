@@ -1,5 +1,15 @@
 # Log
 
+## 2026-10-09
+
+- **Update** — [helium-chrome-shim](helium-chrome-shim.md): new host-selective
+  option `programs.helium-chrome-shim.purgeGoogleChrome` (enabled on
+  [k](../hosts/k.md)) that boots out and deletes Google's system updater
+  (GoogleUpdater/Keystone) and any real `Google Chrome.app` before planting
+  the shim. Google's stale Chrome ticket had been reinstalling real Chrome
+  over the version-less shim since 2026-08-27 (see the
+  [decision record](../decisions/helium-chrome-shim.md), amended).
+
 ## 2026-10-02
 
 - **Update** — [users-k-noctalia](users-k-noctalia.md), [hyprland](hyprland.md):

@@ -55,6 +55,13 @@ real Chrome (Mach-O, not `#!`).
   (no `Info.plist`), invisible to the tooling's version checks (there are
   none), but a human browsing /Applications may be briefly confused — the
   wrapper's comment points at the module.
+- **Amended 2026-10-09:** the "no `Info.plist`" shortcut had a bite. Google's
+  system updater still held a Keystone ticket for `com.google.Chrome`; the
+  shim made the ticket's path exist again with no readable version, so the
+  updater reinstalled a real Chrome over it (2026-08-27) and the Mach-O guard
+  then protected the intruder. New host-selective option
+  `purgeGoogleChrome` (on for k) evicts the updater and any real Chrome on
+  every rebuild — the shim now owns the path outright on hosts that opt in.
 - If real Google Chrome is ever wanted on a Mac, the guard yields to it, and
   Chrome-channel tooling silently switches back from Helium — remove the
   module (or Helium) consciously at that point.

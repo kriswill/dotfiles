@@ -38,6 +38,9 @@
     programs.ssh-private-hosts.enable = true;
     services.codebase-memory-mcp.enable = true;
     programs.podman-desktop.enable = true;
+    # Chrome is gone for good: Helium is the browser; Google's updater kept
+    # reinstalling Chrome over the Helium shim (modules/darwin/helium-chrome-shim.nix).
+    programs.helium-chrome-shim.purgeGoogleChrome = true;
 
     # Hexley the platypus on the Nix snowflake (modules/darwin/fastfetch.nix).
     programs.fastfetch.logo = "hexley-nix.png";

@@ -35,7 +35,14 @@ SIGTERM/stdin-EOF. Why a filesystem shim and not MCP config: see the
 
 Guards make it safe as a universal module: no-op (and self-cleaning) when
 `Helium.app` is absent, and it refuses to touch a real Google Chrome (Mach-O
-magic, not `#!`). Helium itself is installed manually on the Macs (not a cask,
+magic, not `#!`). One host-selective option, `programs.helium-chrome-shim.purgeGoogleChrome`
+(on for [k](../hosts/k.md)), flips that last guard: it boots out and deletes
+Google's system updater (GoogleUpdater/Keystone daemons, install dirs, ticket
+stores) and any real `Google Chrome.app` before re-planting the shim. Needed
+because the updater's stale `com.google.Chrome` ticket treated the version-less
+shim as "Chrome 0.0.0.0" and reinstalled a real Chrome over it (2026-08-27);
+see the [decision record](../decisions/helium-chrome-shim.md). Not for hosts
+running Google Drive for desktop (shares Keystone). Helium itself is installed manually on the Macs (not a cask,
 unlike [nebula's nix-managed Helium](helium.md)). MCP-launched sessions use a
 separate profile (`~/.cache/chrome-devtools-mcp/`), never the user's real one.
 
