@@ -36,6 +36,8 @@ not expand it — it runs in the pane, which may be on another host.
 
 Env: `HPR_TIMEOUT` (default 90 s — keep it under your own tool timeout),
 `HPR_LINES` (default 500 scrollback lines; raise for chatty commands).
+It needs only `herdr`, `awk`, `sed` and `perl`, so it runs from a plain macOS
+shell as well as from inside a nix dev shell.
 
 ## Why not raw herdr calls
 
@@ -71,6 +73,16 @@ parses `rc=` back out.
   ambiguous.
 - **Randomise the sentinel per call** (the wrapper does). A repeated command
   otherwise matches the previous run's marker still in the scrollback.
+- **Do not wrap the wait in GNU `timeout`.** It is on the PATH only inside a
+  nix shell. Without it, the wait fails at once and the wrapper reads the pane
+  before the command has run, so you get empty output and "no exit status
+  captured". The wrapper uses `herdr pane wait-output --timeout <ms>`, plus a
+  backstop that falls back from `timeout` to `gtimeout` to perl's `alarm`
+  (`/usr/bin/perl` is always on macOS).
+- **A timed-out command is still running in the pane.** If you call the wrapper
+  again before it finishes, your keystrokes are typed ahead, and the new call's
+  output starts with the old command's tail. After a timeout, wait for the pane
+  first: `herdr pane wait-output <pane> --regex '<prompt>' --timeout <ms>`.
 
 ## Operating in someone else's session
 
