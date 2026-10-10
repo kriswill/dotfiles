@@ -37,9 +37,22 @@ if ! herdr pane run "$pane" "$* ; echo \"$sent rc=\$?\"" >/dev/null 2>&1; then
   exit 2
 fi
 
+# Backstop in case herdr itself hangs: kill the command after $1 seconds.
+# GNU timeout is only on the PATH inside a nix shell, and macOS ships neither
+# timeout nor gtimeout. It always has perl, whose alarm survives the exec.
+guard() {
+  local secs=$1; shift
+  if command -v timeout >/dev/null 2>&1; then timeout "$secs" "$@"
+  elif command -v gtimeout >/dev/null 2>&1; then gtimeout "$secs" "$@"
+  else perl -e 'alarm shift; exec @ARGV or exit 127' "$secs" "$@"
+  fi
+}
+
+# herdr's own --timeout (milliseconds) is the real limit; guard is the backstop.
 # Anchored regex, NOT --match: a substring match also matches the ECHOED
 # command line (which contains the sentinel), firing before the command runs.
-timeout "${HPR_TIMEOUT:-90}" herdr pane wait-output "$pane" \
+wait_s=${HPR_TIMEOUT:-90}
+guard $((wait_s + 5)) herdr pane wait-output "$pane" --timeout $((wait_s * 1000)) \
   --regex "^${sent} rc=" --source recent-unwrapped >/dev/null 2>&1 \
   || echo "herdr-pane-run: timed out waiting for sentinel; output below may be partial" >&2
 
