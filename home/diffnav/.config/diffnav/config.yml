@@ -1,3 +1,9 @@
 ui:
   # Drop the DIFFNAV ASCII banner at the top; reclaim the rows for the diff.
   hideHeader: true
+  # diffnav ≥ 0.13 themes its UI with bubbletint instead of the terminal's ANSI
+  # palette (default: tokyo_night). Stay on kanagawa. bubbletint's kanagawabones
+  # keeps ANSI 8 dark (#3c3c51), so the diff-pane footer pill is readable here
+  # even though our terminal palette lifts 8 to #a6a69c — the overlay that used
+  # to patch that pill was dropped with 0.13.0.
+  theme: kanagawabones

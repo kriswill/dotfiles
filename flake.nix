@@ -87,6 +87,15 @@
       url = "github:Mic92/sops-nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    # Weekly prebuilt nix-index database (command-not-found + `, <prog>` via
+    # comma-with-db). snowglobe-factory used to carry this input and enable it
+    # by default; its 2026-10 debloat dropped both, so nebula wires it itself
+    # (modules/nixos/user-packages.nix).
+    nix-index-database = {
+      url = "github:nix-community/nix-index-database";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     # Deliberately NO nixpkgs follows (unlike everything else here): following
     # rebuilds the whole hypr* stack against our nixpkgs, which only matches
     # hyprland.cachix.org when our rev happens to be

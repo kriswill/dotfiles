@@ -12,10 +12,14 @@ warrant its own file:
 
 - **Locale/keymap/timezone:** `en_US.UTF-8`, `us`, `America/Los_Angeles`.
 - **snowglobe-factory toggles:** `qemu` (libvirtd + qemu_kvm + virt-manager) plus
-  the `gaming`, `office`, `hacker-mode`, `nix-tools`, and
-  `harden` profiles (snowglobe dropped `hardware-tools` in 2026-09; its
-  payload — usbutils, smartmontools, nvme-cli, lshw, inxi, vulkan-tools, … —
-  is inlined into `environment.systemPackages`). `programs.corefreq.enable = false` — the out-of-tree
+  the `gaming`, `office`, `hacker-mode`, and
+  `harden` profiles. Two profiles snowglobe has since deleted live on as
+  inlined `environment.systemPackages` lists: `hardware-tools` (dropped
+  2026-09; usbutils, smartmontools, nvme-cli, lshw, inxi, vulkan-tools, …)
+  and `nix-tools` (dropped 2026-10 in snowglobe-factory b0a0d97b; nurl,
+  nix-prefetch-git, deadnix, nixpkgs-hammering, statix, nix-init,
+  nix-update, nixpkgs-review, nixfmt — its direnv half is already
+  [direnv](direnv.md)). `programs.corefreq.enable = false` — the out-of-tree
   kernel module doesn't build on kernel 7.1 (CPPC struct field
   `reference_perf` → `reference`); re-enable when upstream catches up.
 - **NVIDIA/gaming:** `hardware.nvidia.package` pinned to
