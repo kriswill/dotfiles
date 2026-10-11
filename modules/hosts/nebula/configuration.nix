@@ -25,7 +25,8 @@
       # Drop this override if snowglobe-factory moves to libreoffice-stable.
       programs.libreoffice.package = pkgs.libreoffice-stable;
       snowglobe-factory.profiles.hacker-mode.enable = true;
-      snowglobe-factory.profiles.nix-tools.enable = true;
+      # nix-tools profile: dropped upstream (snowglobe-factory b0a0d97b, 2026-10);
+      # its package payload is inlined into environment.systemPackages below.
       snowglobe-factory.profiles.harden.enable = true;
       # corefreq's out-of-tree module doesn't build on kernel 7.1 (CPPC struct
       # field reference_perf → reference). Disable until upstream catches up.
@@ -120,6 +121,21 @@
         mesa-demos
         vulkan-tools
         clinfo
+      ])
+      # snowglobe-factory dropped its nix-tools profile too (b0a0d97b, 2026-10);
+      # keep its payload. direnv (the profile's other half) is already explicit
+      # in modules/nixos/direnv.nix; deadnix/statix/nixfmt also live in the dev
+      # shell (modules/dev.nix) — these are the system-wide copies.
+      ++ (with pkgs; [
+        nurl
+        nix-prefetch-git
+        deadnix
+        nixpkgs-hammering
+        statix
+        nix-init
+        nix-update
+        nixpkgs-review
+        nixfmt
       ]);
 
       programs.firefox.enable = false;

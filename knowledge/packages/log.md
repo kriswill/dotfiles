@@ -1,5 +1,16 @@
 # Log
 
+## 2026-10-11
+
+- **Deprecation** — diffnav: removed `overlays/diffnav.nix`, its
+  `flake.overlays` registration, and the catalog doc. nixpkgs' diffnav 0.13.0
+  restyled the diff-pane footer pill on top of a bubbletint theme
+  (`ui.theme`, default `tokyo_night`), so the 2026-09-23 `postPatch` no longer
+  matched (`Foreground(lipgloss.White)` is gone) and broke the nebula build.
+  No patch is needed any more: `home/diffnav` now sets
+  `ui.theme: kanagawabones`, and bubbletint's kanagawabones keeps ANSI 8 dark
+  (`#3c3c51`), so the pill reads fine regardless of the terminal palette.
+
 ## 2026-10-02
 
 - **Creation** — [slack-leave-devopsinc](slack-leave-devopsinc.md): bash CLI
@@ -15,7 +26,7 @@
 
 ## 2026-09-23
 
-- **Creation** — [diffnav](diffnav.md) patch overlay: diffnav 0.12.0 hard-codes
+- **Creation** — diffnav patch overlay (removed 2026-10-11, see above): diffnav 0.12.0 hard-codes
   its diff-pane footer pill as ANSI 7 on ANSI 8, unreadable under our
   kanagawabones palette (8 lifted to `#a6a69c`); `postPatch` flips the text to
   ANSI 0. diffnav has no theme config, so a source patch is the only lever.

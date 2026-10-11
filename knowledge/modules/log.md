@@ -1,5 +1,26 @@
 # Log
 
+## 2026-10-11
+
+- **Update** — [configuration](configuration.md), [neovim](neovim.md):
+  snowglobe-factory's debloat (eb2429a1) deleted the `nix-tools` profile
+  (b0a0d97b), which broke `nrs` with "option
+  `snowglobe-factory.profiles.nix-tools` does not exist". Its package payload
+  is now inlined into nebula's `environment.systemPackages`, beside the
+  `hardware-tools` inline from 2026-09. The same debloat (dd10b7e0) stopped
+  force-enabling neovim and defaults `programs.vim.enable = true` instead, so
+  the NixOS neovim module pins `programs.vim.enable = false` to keep the
+  `vim` → `nvim` alias collision-free.
+
+- **Creation** — [user-packages](user-packages.md) gains a NixOS twin
+  (`modules/nixos/user-packages.nix`): the same debloat (1f9de238) flipped
+  snowglobe's default-on bat, lazygit, ripgrep, yazi, jq, zip, brightnessctl
+  and nix-index-database/comma to off, which the `nvd diff` exposed as nine
+  binaries the stow zsh/git/nvim/Hyprland configs call by name. The module
+  re-enables them (nixpkgs modules for bat/lazygit, snowglobe's program
+  modules for the rest) and imports the new `nix-index-database` flake input
+  for the prebuilt command-not-found db and comma-with-db.
+
 ## 2026-10-09
 
 - **Update** — [helium-chrome-shim](helium-chrome-shim.md): new host-selective

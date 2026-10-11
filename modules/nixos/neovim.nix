@@ -10,6 +10,10 @@
         viAlias = true;
         vimAlias = true;
       };
+      # snowglobe-factory (dd10b7e0, 2026-10) stopped force-enabling neovim and
+      # now installs real vim by default instead. Keep it off: its `vim` binary
+      # would collide with the vimAlias → nvim symlink above.
+      programs.vim.enable = false;
 
       environment.sessionVariables.EDITOR = lib.mkDefault "nvim";
 

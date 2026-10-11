@@ -9,7 +9,6 @@ flake consumes via relative-path inputs.
 * [Cbissue](cbissue.md) - cbissue — open Codeberg (Forgejo) issues from the CLI.
 * [Cbissues](cbissues.md) - cbissues — browse/filter a Codeberg (Forgejo) repo's issues (fzf TUI + --plain).
 * [ccglass](ccglass.md) - ccglass — local logging reverse-proxy + web dashboard for coding agents, built as a standalone binary.
-* [Diffnav](diffnav.md) - Nixpkgs overlay 'diffnav'.
 * [Direnv](direnv.md) - Nixpkgs overlay 'direnv'.
 * [dotbar](dotbar.md) - Braille-dot progress bar CLI for statuslines and terminals, consumed straight from the tlehman/dotbar flake.
 * [Dots Adopt](dots-adopt.md) - Custom Nix package 'dots-adopt'.
@@ -21,6 +20,7 @@ flake consumes via relative-path inputs.
 * [Iv](iv.md) - A command-line image viewer using terminal graphics.
 * [Kitten](kitten.md) - Kitten - A collection of small, useful programs for the kitty terminal.
 * [Ld64 Lld](ld64-lld.md) - TEMPORARY overlay linking kitty/vfkit/starship with LLVM lld on darwin — works around the pinned nixpkgs' cctools ld64 1010.6 SIGTRAP until the staging fix reaches nixos-unstable.
+* [Nix Output Monitor](nix-output-monitor.md) - TEMPORARY — nom 2.2.0 rejects any internal-json activity or result type it doesn't know, printing a ParseNixJSONMessageError line per event.
 * [Noctalia Config](noctalia-config.md) - Custom Nix package 'noctalia-config'.
 * [okf](okf.md) - okf — CLI for maintaining OKF knowledge bundles (scaffold/index/validate/viz), consumed from its own repo via FlakeHub (kriswill/okflight).
 * [Pass Xdg](pass-xdg.md) - pass-xdg — a drop-in `pass` (standard unix password manager) that defaults its store to an XDG-compliant location instead of the upstream default `~/.password-store`.
