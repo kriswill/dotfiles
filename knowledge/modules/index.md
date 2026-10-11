@@ -9,6 +9,7 @@ interesting ones by hand — scaffolding never overwrites an existing doc.
 
 * [Alias En0](alias-en0.md) - Alias a local dev IP onto en0 (work host only).
 * [Apple Container](apple-container.md) - apple-container ships its nix-darwin module with its sub-flake (./flakes/apple-container/darwin-module.nix); re-export it into the Dendritic module set so hosts pick it up like any in-tree modules/darwin/* module.
+* [ASTRO MixAmp Priority](astro-mixamp.md) - WirePlumber monitor.alsa.rules drop-in raising the ASTRO MixAmp Pro headset nodes' priority.session above the motherboard USB audio, so nebula falls back to the headset when a suspend/resume renames it.
 * [Atuin Desktop](atuin-desktop.md) - Installs pkgs.atuin-desktop, the Tauri GUI runbook editor companion to the atuin CLI (see zsh.md).
 * [Cbissue](cbissue.md) - Codeberg (Forgejo) issue CLIs — cbissue opens issues, cbissues browses them; the API token is fetched at call time via 1Password `op read`, nothing secret is stored.
 * [Claude Account Selector](claude-account-selector.md) - zsh wrapper that auto-selects a Claude Code account/profile by launch directory, with per-profile config-dir isolation.

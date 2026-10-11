@@ -65,6 +65,7 @@ Non-declarative BIOS facts, invisible to the flake:
 ## Host-selective features
 
 - [nebula-codebase-memory-mcp](../modules/nebula-codebase-memory-mcp.md) (enable-gate for the code-graph daemon)
+- [astro-mixamp](../modules/astro-mixamp.md) (host-specific file)
 - [configuration](../modules/configuration.md) (host-specific file)
 - [console-quiet](../modules/console-quiet.md) (host-specific file)
 - [disko](../modules/disko.md) (host-specific file)

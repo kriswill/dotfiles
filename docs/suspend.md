@@ -70,7 +70,8 @@ echo s2idle   | sudo tee /sys/power/mem_sleep                      # switch slee
 - **`xhci_hcd 0000:13:00.0 / 0000:11:00.0: xHC error in resume, USBSTS 0x401,
   Reinit`** appears in the log on *every* resume. It looked like the smoking gun
   (present in 100% of failed cycles) but was a red herring — it persists on
-  successful resumes too. Don't chase it.
+  successful resumes too. Don't chase it as a *wake* cause — but it does reset
+  USB devices, see the ASTRO MixAmp entry below.
 - **`pcieport 0000:00:02.2: PME: Spurious native interrupt!`** is intermittent
   noise (fires on only some cycles, even with that port's wakeup disabled), not a
   wake cause. `00:02.2` heads the USB4/Thunderbolt subtree.
@@ -78,6 +79,13 @@ echo s2idle   | sudo tee /sys/power/mem_sleep                      # switch slee
   wakes it, but being suspend-to-idle the board stays in S0 — **fans and RGB stay
   on**, near-zero power saving. Only useful as a fallback if S3 can't be fixed.
   To make it permanent: `boot.kernelParams = [ "mem_sleep_default=s2idle" ]`.
+- **(2026-10-02) The xHCI reinit can rename the ASTRO MixAmp and silence
+  Discord.** The MixAmp re-enumerated twice after resume; the second card
+  appeared before the first was gone, so WirePlumber named it `…-00.2`. The
+  configured default no longer matched, so the default dropped to the
+  motherboard Generic USB Audio. Fixed by
+  `modules/hosts/nebula/astro-mixamp.nix` (`priority.session = 3000` on the
+  MixAmp nodes). Live recovery: `systemctl --user restart wireplumber`.
 - **Mouse does not wake the machine; keyboard does.** That's the Linux default
   with OS-controlled wake — no extra config needed.
 
