@@ -12,6 +12,10 @@
 
 ## 2026-10-02
 
+- **Creation** — [astro-mixamp](astro-mixamp.md): WirePlumber rule raising the
+  ASTRO MixAmp Pro's `priority.session` to 3000, so a suspend/resume that
+  renames it (`…-00.2`) no longer drops the default to the motherboard USB audio.
+
 - **Update** — [users-k-noctalia](users-k-noctalia.md), [hyprland](hyprland.md):
   `programs.swaync.enable = false`. Noctalia owns the notification bus name, so
   snowglobe's swaync crash-looped (5k+ restarts).
