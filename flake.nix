@@ -131,7 +131,7 @@
     # hostPlatform fix and spams deprecation warnings on every eval; drop the
     # override with the input.
     herdr = {
-      url = "github:kriswill/herdr/v0.9.1-custom";
+      url = "github:kriswill/herdr/v0.9.3-custom";
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.rust-overlay.url = "github:oxalica/rust-overlay";
     };
