@@ -8,6 +8,7 @@ onboarding = false
 # See docs/fastfetch.md.
 [experimental]
 kitty_graphics = true
+follow_nested_shells = true
 
 [ui]
 agent_panel_sort = "spaces"
