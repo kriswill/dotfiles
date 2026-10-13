@@ -114,12 +114,15 @@
       url = "github:noctalia-dev/noctalia-shell/e7acd065406bdac81b631e1a336611bfcfaca711";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    # herdr from OUR staging fork's `v0.9.1-custom` tag (the `custom` branch
-    # rebased onto upstream's v0.9.1 stable tag; the repo ships its own flake; no binary cache, builds from source)
+    # herdr from OUR staging fork's `v0.9.4-custom` tag (the `custom` branch
+    # rebased onto upstream's v0.9.4 stable tag; the repo ships its own flake; no binary cache, builds from source)
     # plus our patch commits — currently ANSI tab-bar command entries
     # (ui.tab_bar_right `argv`/`ansi` fields: run e.g. dotbar without a shell
     # and render its SGR-colored output inline; HERDR_TOKEN_* env from
-    # workspace metadata with reactive re-runs). Rebase `custom` onto
+    # workspace metadata with reactive re-runs) and opt-in nested-shell agent
+    # detection (`experimental.follow_nested_shells`: agents under
+    # `devenv shell`/`script` are detected, clear on return to the nested
+    # prompt, and survive ctrl-z/fg). Rebase `custom` onto
     # each new upstream tag, tag it `vX.Y.Z-custom`, and repoint the url
     # (herdr-update-check is the reminder); drop commits as they land
     # upstream. ≥ v0.8.2 is needed for the CSI
@@ -131,7 +134,7 @@
     # hostPlatform fix and spams deprecation warnings on every eval; drop the
     # override with the input.
     herdr = {
-      url = "github:kriswill/herdr/v0.9.3-custom";
+      url = "github:kriswill/herdr/v0.9.4-custom";
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.rust-overlay.url = "github:oxalica/rust-overlay";
     };
