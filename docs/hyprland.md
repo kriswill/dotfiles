@@ -780,6 +780,18 @@ Real findings on nebula — append as you discover more; correct/remove stale on
   rewrites on exit, so edit it only while WoW is fully closed; WoW `gxApi` is
   `D3D12` (vkd3d) — switch to `D3D11` if you hit shader-compilation hitching.
 
+- **New WoW branch (e.g. `_classic_beta_`) opens at a portrait 1440×3440 /
+  200 % render scale (2026-10-12).** WoW enumerates X11 monitors in Hyprland ID
+  order, so "Display1" is the rotated PG348Q (DP-1, `1440x3440`) and a fresh
+  branch defaults to `WindowSize: 1440x3440`, `GxMaximize "1"`, `RenderScale
+  "2"` (see `Logs/gx.log`). Retail only looks right because its saved
+  `Config.wtf` overrides that. Fix per branch, with the game closed: copy
+  retail's display cvars into `<branch>/WTF/Config.wtf` — `gxMonitor "2"`,
+  `gxWindow "0"`, `gxFullscreenResolution`/`GxWindowedResolution "3440x1440"`,
+  `GxMaximize "0"`, `RenderScale "1"`, `useUiScale "1"` + `uiScale`. The
+  `wow-fullscreen` window rule matches the title regex, so the beta window is
+  pinned to ws9/DP-3 like retail.
+
 - **`.conf` shadows `.lua` (2026-06-13).** With both
   `~/.config/hypr/hyprland.conf` and `hyprland.lua` present, Hyprland 0.55.0
   loads the `.conf` and **silently ignores the `.lua`**. Observed: the 13 KB
