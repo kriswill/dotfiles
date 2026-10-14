@@ -8,6 +8,10 @@ onboarding = false
 # See docs/fastfetch.md.
 [experimental]
 kitty_graphics = true
+# kriswill/herdr custom build only: detect agents inside nested shells
+# (`devenv shell`, `script`, subshells) and clear them as soon as the shell
+# returns to its prompt. Set false to restore upstream detection; applies on
+# `herdr server reload-config`.
 follow_nested_shells = true
 
 [ui]
