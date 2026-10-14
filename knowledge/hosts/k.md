@@ -20,6 +20,12 @@ are opted into below per the
 - [codebase-memory-mcp](../modules/codebase-memory-mcp.md)
 - [podman-desktop](../modules/podman-desktop.md)
 
+## Apps
+
+Installs P4V, P4Admin and P4Merge 2026.3 into `/Applications/Nix Apps`
+through `environment.systemPackages`, built with `dontStrip` so Perforce's
+signature survives ([decision](../decisions/p4v-nix-apps-dont-strip.md)).
+
 ## Secrets
 
 Consumes [sops](../modules/sops.md) secrets: `sops-smoke-test` (end-to-end

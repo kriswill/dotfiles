@@ -1,5 +1,12 @@
 # Log
 
+## 2026-10-14
+
+- **Update** — [k](k.md): installs P4V, P4Admin and P4Merge 2026.3 through
+  `environment.systemPackages` (`/Applications/Nix Apps`, Spotlight-indexed),
+  replacing the drag-installed DMG copies
+  ([decision](../decisions/p4v-nix-apps-dont-strip.md)).
+
 ## 2026-08-02
 
 - **Addition** — [nebula](nebula.md):
