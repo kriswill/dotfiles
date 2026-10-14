@@ -11,7 +11,10 @@ The always-on darwin system baseline shared by every host: stateVersion,
 primary user, baseline packages (iproute2mac, pstree, glow,
 codebase-memory-mcp CLI), touch-ID sudo (pam-reattach), fonts, fish/zsh
 enables, `nix.enable = false` (Determinate owns nix), and
-`allowUnfree = false`. The rebuild helpers live in [nh](nh.md).
+`allowUnfree = false` with a per-package `allowUnfreePredicate` list
+([unfree-default-deny](../decisions/unfree-default-deny.md); first entry `p4v`,
+see [p4v-nix-apps-dont-strip](../decisions/p4v-nix-apps-dont-strip.md)).
+The rebuild helpers live in [nh](nh.md).
 
 Mounted ungated on every darwin host (see the [host-mounted modules pattern](../patterns/host-mounted-modules.md)), auto-discovered
 via the [Dendritic module layout](../patterns/dendritic-modules.md).

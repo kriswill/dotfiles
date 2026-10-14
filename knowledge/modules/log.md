@@ -1,5 +1,11 @@
 # Log
 
+## 2026-10-14
+
+- **Update** — [core](core.md): `nixpkgs.config` gains an
+  `allowUnfreePredicate` list with its first entry, `p4v`
+  ([decision](../decisions/p4v-nix-apps-dont-strip.md)).
+
 ## 2026-10-11
 
 - **Update** — [configuration](configuration.md), [neovim](neovim.md):

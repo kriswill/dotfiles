@@ -1,5 +1,12 @@
 # Log
 
+## 2026-10-14
+
+- **Creation** — [p4v-nix-apps-dont-strip](p4v-nix-apps-dont-strip.md):
+  P4V comes from nixpkgs `p4v` bumped to 2026.3 with `dontStrip`, because
+  stdenv's strip of `Applications/` breaks Perforce's notarized signature;
+  `p4v` becomes the first `allowUnfreePredicate` entry.
+
 ## 2026-10-02
 
 - **Creation** — [slack-leave-devopsinc-api](slack-leave-devopsinc-api.md):
