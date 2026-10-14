@@ -20,6 +20,23 @@
               socat # TCP port plumbing tool
               ;
           };
+
+          # GUI apps go in systemPackages: nix-darwin copies only those into
+          # /Applications/Nix Apps, where Spotlight indexes them.
+          environment.systemPackages = [
+            # P4V/P4Admin/P4Merge, bumped past nixpkgs' 2026.1. dontStrip: stdenv
+            # strips Applications/ on darwin, invalidating Perforce's notarized
+            # signature. Perforce reissues patch builds at the same URL, so a
+            # hash mismatch here means a new 26.3 build shipped.
+            (pkgs.p4v.overrideAttrs {
+              version = "2026.3";
+              dontStrip = true;
+              src = pkgs.fetchurl {
+                url = "https://cdist2.perforce.com/perforce/r26.3/bin.macosx12u/P4V.dmg";
+                hash = "sha256-oHTNzypdtcEzT7sYGIaToTKLsUKqQOroxrB9jrfePQY=";
+              };
+            })
+          ];
         }
       )
     ];

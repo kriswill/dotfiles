@@ -67,7 +67,15 @@
       # Cannot let nix-darwin control nix when using determinate
       nix.enable = lib.mkForce false;
       nixpkgs = {
-        config.allowUnfree = false;
+        config = {
+          allowUnfree = false;
+          # Per-package exceptions (knowledge/decisions/unfree-default-deny.md).
+          allowUnfreePredicate =
+            pkg:
+            builtins.elem (lib.getName pkg) [
+              "p4v" # Perforce P4V/P4Admin/P4Merge (modules/hosts/k)
+            ];
+        };
       };
     };
 }
