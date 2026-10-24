@@ -1,5 +1,15 @@
 # Log
 
+## 2026-10-23
+
+- **Creation** — [xpad-noone](xpad-noone.md): TEMPORARY overlay via
+  `kernelPackagesExtensions` backporting NixOS/nixpkgs#576469. nixpkgs now
+  signs out-of-tree kernel modules with kmodigest during `modules_install`,
+  and the module aggregator expects a `<module>.ko.cer` per external module;
+  xpad-noone (enabled by `hardware.xone` through snowglobe's gaming profile)
+  installed its `.ko` with a plain `install`, so `linux-7.3-modules` failed on
+  the missing cert. Delete once the nixos-unstable lock contains ffcd595.
+
 ## 2026-10-11
 
 - **Deprecation** — diffnav: removed `overlays/diffnav.nix`, its
