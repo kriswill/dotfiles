@@ -218,11 +218,11 @@ widget_order = [
     [lockscreen_widgets.widget."lockscreen-login-box@HEADLESS-3"]
     box_height = 196.0
     box_width = 810.0
-    cx = 480.0
-    cy = 358.0
+    cx = 960.0
+    cy = 716.0
     output = "HEADLESS-3"
-    placement_height = 540.0
-    placement_width = 960.0
+    placement_height = 1080.0
+    placement_width = 1920.0
     rotation = 0.0
     type = "login_box"
 
@@ -342,7 +342,7 @@ transition_on_startup = true
     path = "/home/k/Pictures/Wallpapers/nebula-wall-horizontal.png"
 
     [wallpaper.last]
-    path = "/home/k/Pictures/profile.jpeg"
+    path = "/home/k/Pictures/Nebula.png"
 
     [wallpaper.monitor.DP-1]
     directory = "/home/k/Pictures/Wallpapers/vertical-wide"
@@ -357,7 +357,7 @@ transition_on_startup = true
     path = "/home/k/Pictures/Wallpapers/horizontal-wide/nebula-landscape-right.png"
 
     [wallpaper.monitors.HEADLESS-1]
-    path = "/home/k/Pictures/Nebula-comic.png"
+    path = "/home/k/Pictures/Nebula.png"
 
     [wallpaper.monitors.HEADLESS-2]
     path = "/home/k/Pictures/profile.jpeg"
