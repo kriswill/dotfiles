@@ -11,9 +11,9 @@ real gotchas in **Learned behaviours & workarounds** at the bottom.
 
 ```
 $ helium --version
-Helium 0.18.1.1 (Chromium 154.0.8037.57)
+Helium 0.20.1.1 (Chromium 156.0.8078.47)
 $ readlink -f $(command -v helium)
-/nix/store/hhls5b49mhwxdjacp4i87n3j78hqv3j9-helium-0.18.1.1/bin/helium
+/nix/store/zwg4b211v4qphq3r6ww05phr8cq4i896-helium-0.20.1.1/bin/helium
 $ ls -la /etc/chromium/policies/managed/
 lrwxrwxrwx root root helium.json -> /etc/static/chromium/policies/managed/helium.json
 $ ls /etc/helium
@@ -34,15 +34,20 @@ it must be root-owned and not world-writable, and it is.
   ELF, and grep for any `/etc/*helium*` rebrand path comes up EMPTY). This is THE
   fact the whole manual hinges on (verified 2026-06-20).
 - **Install:** upstream `programs.helium.enable = true` (the nixpkgs NixOS
-  module), set in `modules/nixos/helium/default.nix`. helium 0.18.1.1 / Chromium
-  154.0.8037.57 at the pinned flake rev (bumped 2026-09-28 in
-  kriswill/snowglobe-factory@bbb93fdc); re-verify after `nix flake update`.
+  module), set in `modules/nixos/helium/default.nix`. helium 0.20.1.1 / Chromium
+  156.0.8078.47 at the pinned flake rev (bumped 2026-10-23 in
+  kriswill/snowglobe-factory@4af47f78); re-verify after `nix flake update`.
 - **Pinned rev / bump:** the `helium` derivation is a prebuilt-tarball package in
   the kriswill/snowglobe-factory fork (`packages/helium/package.nix`); the pin
   lives in `flake.lock`. Bump: check `gh release list -R imputnet/helium-linux`,
   set `version` + both hashes (`nix store prefetch-file --json <url> | jq -r .hash`
   for the `x86_64_linux` and `arm64_linux` tarballs), commit + push the fork, then
   `nix flake update snowglobe-factory` here and re-verify the version line above.
+  The fork's `unstable` history gets rewritten by upstream merges, so a local
+  checkout can sit stale and diverged (seen 2026-10-23: 26 ahead / 47 behind,
+  every local commit superseded on origin) — do the bump in a
+  `git worktree add --detach <dir> origin/unstable` and `git push origin
+  HEAD:unstable`, rather than on the local branch.
 - **Live on the running system (2026-06-20):** the policy file
   (`/etc/chromium/policies/managed/helium.json`, root-owned symlink dated Jun 20
   10:49), `programs.helium.enable` (→ `true`), and `helium-config` on `k`'s PATH
