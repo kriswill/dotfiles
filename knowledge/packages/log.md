@@ -1,5 +1,17 @@
 # Log
 
+## 2026-10-24
+
+- **Deprecation** — nix-output-monitor: removed
+  `overlays/nix-output-monitor.nix`, its `flake.overlays` registration, the
+  dev-shell re-import in `modules/dev.nix` (back to plain `pkgs`), and the
+  catalog doc. nixpkgs now applies upstream nom commit d48ff79, which parses
+  unknown activity types as `OtherType` (handled as `Unknown`) and unknown
+  result types as `OtherResult` instead of failing, the same fix as the
+  2026-10-01 overlay (maralorn/nix-output-monitor#309). The patch rewrote the
+  `fail` lines the overlay's `--replace-fail` targeted, so the overlay broke
+  the build as its header said it would.
+
 ## 2026-10-23
 
 - **Creation** — [xpad-noone](xpad-noone.md): TEMPORARY overlay via
