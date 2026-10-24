@@ -15,13 +15,15 @@
       # updates the repo working tree — review + commit stays manual. Debounce
       # is a sleep in the service (path triggers are suppressed while it runs);
       # deliberately NOT TriggerLimit*, which puts the path unit into a failed,
-      # no-longer-watching state when exceeded. Darwin twin: launchd WatchPaths
+      # no-longer-watching state when exceeded. restartIfChanged = false: don't
+      # make a switch wait out the sleep. Darwin twin: launchd WatchPaths
       # agent in modules/darwin/git.nix.
       systemd.user.paths.gh-config-capture = {
         wantedBy = [ "paths.target" ];
         pathConfig.PathChanged = "%h/.config/gh/config.yml";
       };
       systemd.user.services.gh-config-capture = {
+        restartIfChanged = false;
         serviceConfig.Type = "oneshot";
         serviceConfig.ExecStart = pkgs.writeShellScript "gh-config-capture" ''
           sleep 5

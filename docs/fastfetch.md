@@ -261,13 +261,16 @@ Hard-won gotchas from doing this (so the next session doesn't relearn them):
     (released 2026-08-03), **which nixpkgs does not yet carry** (still 0.7.5).
     Both OSes therefore pin ≥ v0.8.2 via the `herdr` flake input — bumped to
     the `v0.8.2` tag (2026-08-22), and since 2026-08-30 pointing at the
-    kriswill/herdr staging fork's `custom` branch, now its `v0.9.1-custom` tag (upstream tag + our tab-bar
+    kriswill/herdr staging fork's `custom` branch, now its `v0.9.5-custom` tag (upstream tag + our tab-bar
     commits; see knowledge/decisions/herdr-ansi-tab-bar-entries.md).
     `modules/{darwin,nixos}/herdr.nix` consume it, built from source — the
     binary reports the pinned version + fork rev (e.g.
     `0.8.2-kriswill-custom.b1b9e98`), unlike the earlier preview pin which
-    still said "0.7.5". Drop the pin when nixos-unstable ships >= 0.8.2 — nebula's
-    `herdr-update-check` timer watches for that daily. (2026-08-03)
+    still said "0.7.5". (2026-08-03) The pin no longer tracks nixpkgs at all: the
+    fork carries patches nixpkgs will never ship, so nebula's
+    `herdr-update-check` timer instead flags each new upstream (herdrdev/herdr)
+    stable release newer than the fork's base, the cue to rebase `custom` and
+    retag. (2026-10-24)
 
 - **ASCII instead of the PNG inside tmux = `TERM=="screen"` guard**, not a
   terminal/passthrough problem. Proof: raw `kitten icat ~/.config/fastfetch/Nebula.png`

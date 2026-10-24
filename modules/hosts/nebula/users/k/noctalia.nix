@@ -101,11 +101,13 @@
       # only — review + commit stays manual). Debounce is the sleep (path
       # triggers are suppressed while the service runs); no TriggerLimit* —
       # exceeding it would fail the path unit and stop the watching.
+      # restartIfChanged = false: don't make a switch wait out the sleep.
       systemd.user.paths.noctalia-config-capture = {
         wantedBy = [ "paths.target" ];
         pathConfig.PathChanged = "%h/.local/state/noctalia/settings.toml";
       };
       systemd.user.services.noctalia-config-capture = {
+        restartIfChanged = false;
         serviceConfig.Type = "oneshot";
         serviceConfig.ExecStart = pkgs.writeShellScript "noctalia-config-capture" ''
           sleep 5

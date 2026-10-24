@@ -1,5 +1,14 @@
 # Log
 
+## 2026-10-24
+
+- **Creation** — [user-oneshots-skip-switch-restart](user-oneshots-skip-switch-restart.md):
+  `nrs` hung at "Activating configuration" because switch-to-configuration-ng
+  now restarts changed user units and blocks on them before restarting the
+  system units it stopped; `herdr-update-check` (oneshot waiting on a
+  notification click) becomes `Type=exec`, and it plus the helium/noctalia/gh
+  capture oneshots set `restartIfChanged = false`.
+
 ## 2026-10-14
 
 - **Creation** — [p4v-nix-apps-dont-strip](p4v-nix-apps-dont-strip.md):

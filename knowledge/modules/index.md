@@ -39,7 +39,7 @@ interesting ones by hand — scaffolding never overwrites an existing doc.
 * [Hardware Configuration](hardware-configuration.md) - nixos-generate-config output in the two-line dendritic wrapper: initrd kernel modules, kvm-amd, x86_64-linux hostPlatform, and AMD microcode updates.
 * [Helium Chrome Shim](helium-chrome-shim.md) - Plants an exec-wrapper at the canonical Google Chrome.app binary path on every rebuild, so Chrome-only tooling (chrome-devtools-mcp / Puppeteer channel 'stable') launches Helium — no per-tool --executablePath wiring.
 * [Helium](helium.md) - Helium browser — enables the upstream programs.helium module and declares a root-owned Chromium managed policy in /etc (privacy baseline, DuckDuckGo, force-installed extensions).
-* [Herdr Update Check](herdr-update-check.md) - Daily reminder to drop the herdr upstream-flake pin (flake.nix) once nixos-unstable ships a herdr >= the pinned 0.8.2 — see docs/fastfetch.md.
+* [Herdr Update Check](herdr-update-check.md) - Daily nebula user timer that notifies when upstream herdr (herdrdev/herdr) publishes a stable release newer than the base of our vX.Y.Z-custom fork tag, the cue to rebase the fork.
 * [Herdr](herdr.md) - herdr — terminal agent multiplexer (run several coding agents in persistent, SSH-reachable sessions); built on both OSes from the kriswill/herdr staging fork (upstream v0.9.1 + our ANSI tab-bar command-entry commits).
 * [Homebrew](homebrew.md) - nix-darwin's homebrew module — declares the casks/brews/taps that must come from Homebrew rather than nixpkgs, with zap cleanup so anything not listed is uninstalled on rebuild.
 * [Htop](htop.md) - Kris' htop (system-level port of the old home-manager programs.htop).

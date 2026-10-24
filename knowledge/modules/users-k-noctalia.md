@@ -72,6 +72,8 @@ Host-specific file for [nebula](../hosts/nebula.md) — merged straight into
 that host's configuration per the
 [host-mounted modules pattern](../patterns/host-mounted-modules.md).
 
+The capture service sets `restartIfChanged = false` so a switch never waits out its debounce — see [user oneshots skip switch restart](../decisions/user-oneshots-skip-switch-restart.md).
+
 ## Source
 
 - Module: [`modules/hosts/nebula/users/k/noctalia.nix`](../../modules/hosts/nebula/users/k/noctalia.nix)

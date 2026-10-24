@@ -1,5 +1,20 @@
 # Log
 
+## 2026-10-24
+
+- **Update** — [herdr-update-check](herdr-update-check.md): retargeted from
+  "nixos-unstable ≥ 0.8.2, drop the pin" (stale since the fork; it nagged
+  daily) to "upstream herdrdev/herdr `releases/latest` newer than our
+  `vX.Y.Z-custom` base (`pkgs.herdr.version`), rebase the fork". The check
+  moved to a standalone `herdr-update-check.sh` under `writeShellApplication`,
+  and the unit is now `Type=exec` + `restartIfChanged = false`
+  ([decision](../decisions/user-oneshots-skip-switch-restart.md)).
+- **Update** — [users-k-helium](users-k-helium.md),
+  [users-k-noctalia](users-k-noctalia.md), [git](git.md): capture oneshots
+  set `restartIfChanged = false`; same decision.
+- **Update** — [herdr](herdr.md): fork tag is `v0.9.5-custom`; nixpkgs'
+  herdr no longer figures in the pin.
+
 ## 2026-10-14
 
 - **Update** — [core](core.md): `nixpkgs.config` gains an
