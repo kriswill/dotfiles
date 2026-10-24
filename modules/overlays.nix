@@ -10,7 +10,6 @@
   flake.overlays = {
     kitten = import ../overlays/kitten.nix;
     ld64-lld = import ../overlays/ld64-lld.nix; # TEMPORARY, see file header
-    nix-output-monitor = import ../overlays/nix-output-monitor.nix; # TEMPORARY, see file header
     xpad-noone = import ../overlays/xpad-noone.nix; # TEMPORARY, see file header
 
     direnv = import ../overlays/direnv.nix;
