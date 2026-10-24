@@ -1,47 +1,46 @@
-# Daily reminder to drop the herdr upstream-flake pin (flake.nix) once
-# nixos-unstable ships a herdr >= the pinned 0.8.2 — see docs/fastfetch.md.
-# One raw-file HTTP fetch, no nix eval. Pops a dismissable critical
-# notification; clicking the action opens the upstream releases page.
-# DELETE THIS FILE together with the pin.
+# Daily reminder to remake our herdr fork: fires when upstream
+# (herdrdev/herdr) publishes a stable release newer than the base of our
+# `vX.Y.Z-custom` tag — the signal to rebase the `custom` branch onto the new
+# release, tag it `vA.B.C-custom`, and repoint the herdr input in flake.nix.
+# Our side is pkgs.herdr.version (the fork package's own X.Y.Z, so it tracks
+# the input with no number to keep in sync); upstream's is one GitHub API call
+# to releases/latest, which skips the `preview-*` prereleases. nixpkgs' herdr
+# is irrelevant. Pops a dismissable critical notification; clicking the action
+# opens the new release's page. The check itself: ./herdr-update-check.sh.
 {
   configurations.nixos.nebula.module =
-    { pkgs, ... }:
-    {
-      systemd.user.services.herdr-update-check = {
-        description = "Notify when nixos-unstable carries herdr >= 0.8.2 (drop the upstream-flake pin)";
-        serviceConfig = {
-          Type = "oneshot";
-          # notify-send -A blocks until the notification is clicked or
-          # dismissed; give it all day instead of systemd's default 90s
-          # (which would kill notify-send and tear the notification down).
-          TimeoutStartSec = "13h";
-        };
-        path = [
+    { lib, pkgs, ... }:
+    let
+      check = pkgs.writeShellApplication {
+        name = "herdr-update-check";
+        runtimeInputs = [
+          pkgs.coreutils
           pkgs.curl
+          pkgs.jq
           pkgs.libnotify
           pkgs.xdg-utils
         ];
-        script = ''
-          pinned="0.8.2" # the pinned version — drop the pin when nixpkgs catches up
-          v=$(curl -fsSL --max-time 30 \
-            https://raw.githubusercontent.com/NixOS/nixpkgs/nixos-unstable/pkgs/by-name/he/herdr/package.nix \
-            | sed -n 's/.*version = "\([0-9.]*\)".*/\1/p' | head -1) || true
-          [ -n "$v" ] || exit 0 # network/path hiccup — try again tomorrow
-          newest=$(printf '%s\n' "$pinned" "$v" | sort -V | tail -1)
-          # fire on v >= pinned (equality included — nixpkgs landing exactly
-          # the pinned version is the drop signal)
-          if [ "$newest" = "$v" ]; then
-            # timeout < TimeoutStartSec so an ignored notification ends the
-            # run cleanly (it re-fires next day anyway).
-            action=$(timeout 12h notify-send -u critical -A open="Open herdr releases" \
-              "herdr $v is in nixos-unstable" \
-              "nixpkgs has caught up to the pinned $pinned — drop the pin (flake.nix, modules/{darwin,nixos}/herdr.nix); see docs/fastfetch.md" \
-              || true)
-            if [ "$action" = "open" ]; then
-              xdg-open "https://github.com/ogulcancelik/herdr/releases"
-            fi
-          fi
-        '';
+        text = builtins.readFile ./herdr-update-check.sh;
+      };
+    in
+    {
+      systemd.user.services.herdr-update-check = {
+        description = "Notify when upstream herdr releases past our v${pkgs.herdr.version}-custom fork (rebase the patches)";
+        # notify-send -A blocks until the notification is clicked or
+        # dismissed (up to the script's 12h timeout). Type=exec, not oneshot: a
+        # oneshot stays "activating" that whole time, so anything that starts
+        # it synchronously waits on the click — switch-to-configuration
+        # restarts changed active/activating user units and blocks on the job
+        # BEFORE starting the system units it stopped, so an unanswered
+        # notification hung `nrs` at "Activating configuration" with
+        # NetworkManager & co. down. restartIfChanged = false keeps a switch
+        # from tearing down (and re-popping) a pending notification.
+        restartIfChanged = false;
+        environment.HERDR_FORK_VERSION = pkgs.herdr.version;
+        serviceConfig = {
+          Type = "exec";
+          ExecStart = lib.getExe check;
+        };
       };
 
       systemd.user.timers.herdr-update-check = {

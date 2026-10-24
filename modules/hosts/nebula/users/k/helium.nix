@@ -25,7 +25,9 @@
       # Local State on clean exit, and THOSE events fire the real capture once
       # the browser is gone. Debounce is the sleep (path triggers are
       # suppressed while the service runs); no TriggerLimit* — exceeding it
-      # would fail the path unit and stop the watching.
+      # would fail the path unit and stop the watching. restartIfChanged =
+      # false: a switch landing mid-debounce would otherwise restart the
+      # unit and block activation on the 30s sleep.
       systemd.user.paths.helium-config-capture = {
         wantedBy = [ "paths.target" ];
         pathConfig.PathChanged = [
@@ -37,6 +39,7 @@
         ];
       };
       systemd.user.services.helium-config-capture = {
+        restartIfChanged = false;
         path = [ pkgs.procps ];
         serviceConfig.Type = "oneshot";
         serviceConfig.ExecStart = pkgs.writeShellScript "helium-config-capture" ''
