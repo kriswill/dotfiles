@@ -1261,11 +1261,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1792670774,
-        "narHash": "sha256-2w5OvXCDrFA2Ri7u8htSIe5mTo0H7fOuqwe3ysVwQSE=",
+        "lastModified": 1792812904,
+        "narHash": "sha256-J4PyvYwhY1PnwgAYesLhhssF8wgmNWck8oego/H8pbA=",
         "owner": "kriswill",
         "repo": "snowglobe-factory",
-        "rev": "ffaec6347e2e62ab2ca35bcc08e4253043be23c4",
+        "rev": "4af47f78970c735213c81ca44847f6eb6831f92b",
         "type": "github"
       },
       "original": {
