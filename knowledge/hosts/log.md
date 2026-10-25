@@ -2,6 +2,11 @@
 
 ## 2026-10-25
 
+- **Update**: [nebula](nebula.md) turns off VLC (snowglobe's desktop layer)
+  and Tor Browser (its hacker-mode profile; the tor daemon stays). They were
+  the only things pulling in ffmpeg 7.1.5 (41 nixploit findings, see
+  [nebula-nixploit](../modules/nebula-nixploit.md)). The closure drops by
+  about 550 MiB.
 - **Update**: [nebula](nebula.md) turns off Lutris
   (`programs.lutris.enable = false`, overriding snowglobe's gaming profile).
   Its FHS runtime was the only thing pulling in ffmpeg 6.1.6 (39 nixploit
