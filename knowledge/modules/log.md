@@ -2,6 +2,14 @@
 
 ## 2026-10-24
 
+- **Update**: [nrs2](nrs2.md) changes after a code review. Its boot-step skip
+  now reads `grub.cfg` under its existing sudo instead of trusting a
+  user-local record, so it also repairs the menu after a manual GC or a
+  rollback. The [configuration](configuration.md) `nix-gc` `ExecStartPost`
+  hook is removed. `--dry --test` is an error instead of activating;
+  `--boot` warns where it does nothing; generation numbers prefer the
+  profile's selection and compare as numbers
+  ([decision](../decisions/nrs2-boot-menu-check.md)).
 - **Update**: [nrs2](nrs2.md) skips the profile and boot steps when the boot
   default already is the new build and its own record says it wrote that
   boot entry (`--boot` forces them). To compensate,

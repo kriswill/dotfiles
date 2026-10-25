@@ -8,7 +8,9 @@
 #
 # Same stages and order as nh, per OS:
 #   NixOS   build (nom) → diff (dix) → validate → switch-to-configuration test
-#           → system profile → switch-to-configuration boot
+#           → system profile → switch-to-configuration boot (the last two
+#           skipped when GRUB's menu already boots this build and lists no
+#           collected generation; see bootloader_current)
 #   darwin  build (nom) → diff (dix) → validate → system profile
 #           → <new generation>/sw/bin/darwin-rebuild activate
 # What changes, each a finding in docs/nrs-pipeline.html:
@@ -29,8 +31,9 @@
 #     --dry   build, diff and validate only; no root (like nrb)
 #     --test  NixOS: activate without touching the profile or GRUB (like nrt)
 #             darwin: darwin-rebuild check — run system.checks, no activation
-#     --boot  NixOS: rewrite the boot menu even when the boot default is
-#             unchanged (normally skipped then; see bootloader_current)
+#     --boot  NixOS switch: rewrite the boot menu even when it is current
+#     --dry and --test are mutually exclusive; --boot warns where it does
+#     nothing (with either of them, and on darwin, which has no boot menu).
 set -euo pipefail
 
 RED=$'\e[1;31m' GREEN=$'\e[1;32m' YELLOW=$'\e[1;33m' BLUE=$'\e[1;34m' NC=$'\e[0m'
@@ -46,24 +49,30 @@ UNIT=nrs2-switch-to-configuration
 STALL_AFTER=45 # seconds of activation before the watchdog first speaks
 STALL_EVERY=30 # … and how often it repeats
 
-# nrs2 records the store path it last wrote to the bootloader. /boot is
-# root-only, so this is how it knows the menu is current without reading it.
-BOOT_STAMP="${XDG_STATE_HOME:-$HOME/.local/state}/nrs2/bootloader"
+GRUB_CFG=/boot/grub/grub.cfg # root-only on nebula (the ESP is mounted 0700)
+
+step() { printf '%s>%s %s\n' "$BLUE" "$NC" "$*" >&2; }
+warn() { printf '%swarning:%s %s\n' "$YELLOW" "$NC" "$*" >&2; }
+fail() { printf '%serror:%s %s\n' "$RED" "$NC" "$*" >&2; }
 
 mode='switch'
 force_boot=0
 while [ $# -gt 0 ]; do
   case "$1" in
-    --dry) mode='dry'; shift ;;
-    --test) mode='test'; shift ;;
+    --dry | --test)
+      # A dry run must never activate, so a second, different mode is an error
+      # rather than last-one-wins.
+      if [ "$mode" != switch ] && [ "$mode" != "${1#--}" ]; then
+        fail "--dry and --test are mutually exclusive"
+        exit 2
+      fi
+      mode="${1#--}"
+      shift
+      ;;
     --boot) force_boot=1; shift ;;
     *) break ;;
   esac
 done
-
-step() { printf '%s>%s %s\n' "$BLUE" "$NC" "$*" >&2; }
-warn() { printf '%swarning:%s %s\n' "$YELLOW" "$NC" "$*" >&2; }
-fail() { printf '%serror:%s %s\n' "$RED" "$NC" "$*" >&2; }
 
 # nix's --flake <path> does not follow a path that is itself a symlink, and
 # ~/src/dotfiles is one on nebula.
@@ -86,6 +95,13 @@ case "$os" in
     exit 1
     ;;
 esac
+if [ "$force_boot" -eq 1 ]; then
+  if [ "$os" = Darwin ]; then
+    warn "--boot does nothing on darwin (no boot menu); ignoring it"
+  elif [ "$mode" != switch ]; then
+    warn "--boot does nothing with --$mode (no boot entry is written); ignoring it"
+  fi
+fi
 # Resolved before sudo, whose secure path may not carry it.
 nix_bin="$(command -v nix)"
 
@@ -107,15 +123,24 @@ lap() { # lap <label>: record the time since the previous lap
 }
 
 generation_of() { # generation_of <store path>: "gen N", or the bare name
-  local link
+  # Several generations can point at one build (a revert re-adds it), so
+  # prefer the one the profile selects, then the newest. Compared as numbers:
+  # glob order is lexicographic and goes wrong past 999 → 1000.
+  local link n best=''
+  if [ "$(readlink -f "$SYSTEM_PROFILE")" = "$1" ]; then
+    link="$(readlink "$SYSTEM_PROFILE")"
+    link="${link##*system-}"
+    echo "gen ${link%-link}"
+    return
+  fi
   for link in "$SYSTEM_PROFILE"-*-link; do
     if [ "$(readlink -f "$link")" = "$1" ]; then
-      link="${link##*/system-}"
-      echo "gen ${link%-link}"
-      return
+      n="${link##*/system-}"
+      n="${n%-link}"
+      if [ -z "$best" ] || [ "$n" -gt "$best" ]; then best=$n; fi
     fi
   done
-  echo "${1##*/}"
+  if [ -n "$best" ]; then echo "gen $best"; else echo "${1##*/}"; fi
 }
 
 pam_glibc() { # pam_glibc <system>: the glibc that system's linux-pam links
@@ -420,15 +445,29 @@ render_activity() { # render_activity: style the activation stream on stdin, to 
   clear_status
 }
 
-# True when there is nothing for the profile + boot steps to do: the boot
-# default already IS this build, and nrs2 itself wrote its boot entry. Both
-# matter. A run cut off between setting the profile and writing the
-# bootloader leaves the profile current but the menu stale; the stamp catches
-# that, and also a boot entry written by something else (nh, nixos-rebuild).
-# Setting the profile to the same path adds no generation either way.
+# True when the profile + boot steps have nothing to do, judged from GRUB's
+# own menu rather than any record of nrs2's: the boot default already IS this
+# build, GRUB's default entry boots it, and every generation the menu lists
+# still exists. The last check catches any GC since the menu was written
+# (nightly timer, manual nix-collect-garbage, nh clean), whose dead entries
+# drop into emergency mode when picked (2026-06-16); the first two catch a run
+# cut off between profile and bootloader, and a menu someone else rewrote.
+# install-grub writes each entry with init=<system>/init and the default
+# "NixOS" entry first. grub.cfg is root-only, so it is read with the sudo
+# credentials activation already obtained. Anything unexpected (no file, no
+# entries, a changed format) answers "not current": the safe direction is to
+# rewrite. Setting the profile to the same path adds no generation either way.
 bootloader_current() {
-  [ "$(readlink -f "$SYSTEM_PROFILE")" = "$out" ] &&
-    [ "$(cat "$BOOT_STAMP" 2>/dev/null || true)" = "$out" ]
+  local cfg entry
+  local -a inits
+  [ "$(readlink -f "$SYSTEM_PROFILE")" = "$out" ] || return 1
+  cfg="$(sudo cat "$GRUB_CFG" 2>/dev/null)" || return 1
+  mapfile -t inits < <(grep -o 'init=/nix/store/[^ ]*/init' <<<"$cfg" | sed 's/^init=//' || true)
+  [ "${#inits[@]}" -gt 0 ] || return 1
+  [ "${inits[0]}" = "$out/init" ] || return 1
+  for entry in "${inits[@]}"; do
+    [ -e "$entry" ] || return 1
+  done
 }
 
 set_profile() {
@@ -494,7 +533,7 @@ activate_nixos() {
   esac
   if [ "$mode" = test ]; then return; fi
   if [ "$force_boot" -eq 0 ] && bootloader_current; then
-    step "boot default is already $(generation_of "$out"); bootloader untouched (--boot rewrites it)"
+    step "boot menu is current ($(generation_of "$out") is the default, no collected generations listed); bootloader untouched (--boot rewrites it)"
     return
   fi
 
@@ -513,8 +552,6 @@ activate_nixos() {
     report
     exit "$rc"
   fi
-  mkdir -p "${BOOT_STAMP%/*}"
-  printf '%s\n' "$out" >"$BOOT_STAMP"
 }
 
 # ---- activation, darwin -----------------------------------------------------

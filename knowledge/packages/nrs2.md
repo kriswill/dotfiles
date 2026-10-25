@@ -24,7 +24,9 @@ One script serves both OSes, picked by `uname -s`. Each OS keeps nh's stage
 order:
 - **NixOS:** `switch-to-configuration test` runs as a transient
   `systemd-run` unit, then the profile is set, then `switch-to-configuration
-  boot`.
+  boot`. Those last two are skipped when `grub.cfg` (read under sudo)
+  already boots this build and lists no collected generation; `--boot`
+  forces them.
 - **darwin:** the profile is set, then the new generation's own
   `darwin-rebuild activate` runs.
 
