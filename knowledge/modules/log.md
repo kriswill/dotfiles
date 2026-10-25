@@ -1,5 +1,23 @@
 # Log
 
+## 2026-10-25
+
+- **Update**: [nebula-nixploit](nebula-nixploit.md): the report viewer
+  explains each finding. `nixploit-report-graph` embeds the system's
+  reference graph and generation membership, and the page shows:
+  - who pulls each vulnerable path in;
+  - which package owns it (dominator or hub);
+  - the shortest route;
+  - whether a fixed copy is already installed;
+  - which generations keep it.
+
+  It also adds rule-based "What to do" and "When it runs" advice, a Causes
+  view, and a "via" line in the tables.
+- **Update**: [nebula-nixploit](nebula-nixploit.md) adds a standalone HTML
+  viewer for the scan report (`modules/hosts/nebula/nixploit-report.html`).
+  After each run, `nixploit-report-html` renders it with the report embedded
+  to `/var/lib/nixploit/report.html`, which opens straight from `file://`.
+
 ## 2026-10-24
 
 - **Update**: [nebula-nixploit](nebula-nixploit.md) adds k to the `nixploit`

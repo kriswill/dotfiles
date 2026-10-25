@@ -1,0 +1,2019 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>nixploit report</title>
+<style>
+  :root {
+    color-scheme: light;
+    --bg: #ffffff;
+    --ink: #1b1f24;
+    --muted: #57606a;
+    --rule: #d0d7de;
+    --code-bg: #f6f8fa;
+    --accent: #0969da;
+    --warn-bg: #fff8c5;
+    --warn-border: #d4a72c;
+    --danger-bg: #ffebe9;
+    --danger-border: #cf222e;
+    --ok-bg: #dafbe1;
+    --ok-border: #1a7f37;
+    --manual-bg: #ddf4ff;
+    --manual-fg: #0969da;
+    --config-bg: #fbefff;
+    --config-fg: #8250df;
+    --sev-critical: #a40e26;
+    --sev-high: #bc4c00;
+    --sev-medium: #9a6700;
+    --sev-low: #0969da;
+    --sev-none: #6e7781;
+    /* The current row's severity tone; each .np-sev-* class repoints it. */
+    --sev: var(--sev-none);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --bg: #0d1117;
+      --ink: #e6edf3;
+      --muted: #9198a1;
+      --rule: #3d444d;
+      --code-bg: #151b23;
+      --accent: #4493f8;
+      --warn-bg: #2b2411;
+      --warn-border: #d29922;
+      --danger-bg: #2d1214;
+      --danger-border: #f85149;
+      --ok-bg: #0f2916;
+      --ok-border: #3fb950;
+      --manual-bg: #0c2d6b;
+      --manual-fg: #79c0ff;
+      --config-bg: #2c1a45;
+      --config-fg: #d2a8ff;
+      --sev-critical: #ff7b72;
+      --sev-high: #ffa657;
+      --sev-medium: #e3b341;
+      --sev-low: #79c0ff;
+      --sev-none: #8b949e;
+      --sev: var(--sev-none);
+    }
+  }
+
+  /* Must come after the media query: same specificity, so source order is what
+     lets an explicit "dark" win on a light system. */
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #0d1117;
+    --ink: #e6edf3;
+    --muted: #9198a1;
+    --rule: #3d444d;
+    --code-bg: #151b23;
+    --accent: #4493f8;
+    --warn-bg: #2b2411;
+    --warn-border: #d29922;
+    --danger-bg: #2d1214;
+    --danger-border: #f85149;
+    --ok-bg: #0f2916;
+    --ok-border: #3fb950;
+    --manual-bg: #0c2d6b;
+    --manual-fg: #79c0ff;
+    --config-bg: #2c1a45;
+    --config-fg: #d2a8ff;
+    --sev-critical: #ff7b72;
+    --sev-high: #ffa657;
+    --sev-medium: #e3b341;
+    --sev-low: #79c0ff;
+    --sev-none: #8b949e;
+    --sev: var(--sev-none);
+  }
+
+  /* body MUST set both, or dark text lands on the browser's white default. */
+  body {
+    background: var(--bg);
+    color: var(--ink);
+  }
+
+  /* Fixed rather than inline so it stays reachable in a long document. Hidden
+     from print, where a theme control means nothing. */
+  #theme-toggle {
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    padding: 0;
+    color: var(--muted);
+    background: var(--code-bg);
+    border: 1px solid var(--rule);
+    border-radius: 50%;
+    cursor: pointer;
+  }
+  #theme-toggle:hover { color: var(--ink); border-color: var(--muted); }
+  #theme-toggle svg { width: 1.05rem; height: 1.05rem; display: block; }
+
+  /* The icon shows the theme you would switch TO -- a moon on a light page, a
+     sun on a dark one. Both icons ship in the markup and CSS picks one, so
+     switching never waits on script. */
+  #theme-toggle .icon-sun { display: none; }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) #theme-toggle .icon-sun { display: block; }
+    :root:not([data-theme="light"]) #theme-toggle .icon-moon { display: none; }
+  }
+  :root[data-theme="dark"] #theme-toggle .icon-sun { display: block; }
+  :root[data-theme="dark"] #theme-toggle .icon-moon { display: none; }
+  @media print { #theme-toggle { display: none; } }
+
+  /* ---- page ------------------------------------------------------------ */
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code, .np-mono {
+    font-family: ui-monospace, "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace;
+    font-size: 0.86em;
+  }
+  code {
+    white-space: nowrap;
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
+    background: var(--code-bg);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    padding: 0 0.3em;
+  }
+  code[data-wrap] { white-space: normal; overflow-wrap: anywhere; }
+  th, td { overflow-wrap: break-word; }
+
+  .np-page { max-width: 1240px; margin: 0 auto; padding: 1.25rem 1rem 4rem; }
+  /* Until the viewport is wide enough to centre the page clear of the fixed
+     theme toggle, keep the right edge (and the sticky table header) out from
+     under it. */
+  @media (min-width: 721px) and (max-width: 1420px) {
+    .np-page { padding-right: 3.75rem; }
+    .np-head { padding-right: 0; }
+  }
+
+  .np-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 1rem;
+    padding-right: 3.25rem;
+    margin-bottom: 1.25rem;
+  }
+  .np-head h1 { font-size: 1.35rem; margin: 0; letter-spacing: -0.01em; }
+  .np-head h1 span { color: var(--muted); font-weight: 400; }
+  .np-source { color: var(--muted); font-size: 0.875rem; flex: 1 1 auto; }
+
+  .np-btn {
+    font: inherit;
+    font-size: 0.85rem;
+    padding: 0.3rem 0.75rem;
+    color: var(--ink);
+    background: var(--code-bg);
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  .np-btn:hover { border-color: var(--muted); }
+
+  .np-error {
+    border: 1px solid var(--danger-border);
+    background: var(--danger-bg);
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    margin-bottom: 1rem;
+  }
+
+  /* empty state */
+  .np-drop {
+    border: 2px dashed var(--rule);
+    border-radius: 12px;
+    padding: 3rem 1.5rem;
+    text-align: center;
+    color: var(--muted);
+  }
+  .np-drop h2 { color: var(--ink); font-size: 1.15rem; margin: 0 0 0.5rem; }
+  .np-drop p { margin: 0.5rem 0; }
+  body.np-dragging .np-drop,
+  body.np-dragging .np-page { outline: 2px dashed var(--accent); outline-offset: 4px; }
+
+  /* summary cards */
+  .np-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(175px, 1fr));
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+  }
+  .np-card {
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    padding: 0.7rem 0.9rem;
+    min-width: 0;
+  }
+  .np-card[data-wide] { grid-column: span 2; }
+  .np-card[data-wide="full"] { grid-column: 1 / -1; }
+  .np-card[data-tone="danger"] { border-color: var(--danger-border); background: var(--danger-bg); }
+  .np-card[data-tone="ok"] { border-color: var(--ok-border); background: var(--ok-bg); }
+  .np-label {
+    color: var(--muted);
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .np-num {
+    font-size: 1.65rem;
+    font-weight: 650;
+    line-height: 1.25;
+    font-variant-numeric: tabular-nums;
+  }
+  .np-sub { color: var(--muted); font-size: 0.8rem; }
+
+  .np-bar {
+    display: flex;
+    height: 0.6rem;
+    border-radius: 999px;
+    overflow: hidden;
+    background: var(--code-bg);
+    margin: 0.55rem 0 0.5rem;
+  }
+  .np-bar span { display: block; height: 100%; }
+  .np-legend { display: flex; flex-wrap: wrap; gap: 0.15rem 0.9rem; font-size: 0.8rem; }
+  .np-legend b { font-variant-numeric: tabular-nums; }
+  .np-dot {
+    display: inline-block;
+    width: 0.6rem;
+    height: 0.6rem;
+    border-radius: 50%;
+    margin-right: 0.3rem;
+    vertical-align: baseline;
+  }
+
+  .np-sev-critical { --sev: var(--sev-critical); }
+  .np-sev-high { --sev: var(--sev-high); }
+  .np-sev-medium { --sev: var(--sev-medium); }
+  .np-sev-low { --sev: var(--sev-low); }
+  .np-sev-none, .np-sev-unscored { --sev: var(--sev-none); }
+  .np-bar span, .np-dot { background: var(--sev); }
+
+  .np-badge {
+    display: inline-block;
+    min-width: 4.6rem;
+    padding: 0.05rem 0.45rem;
+    border-radius: 999px;
+    font-size: 0.76rem;
+    font-weight: 600;
+    text-align: center;
+    white-space: nowrap;
+    color: var(--sev);
+    background: color-mix(in srgb, var(--sev) 13%, transparent);
+    border: 1px solid color-mix(in srgb, var(--sev) 45%, transparent);
+  }
+  .np-badge small { font-weight: 500; opacity: 0.85; margin-left: 0.25rem; font-variant-numeric: tabular-nums; }
+
+  .np-tag {
+    display: inline-block;
+    padding: 0 0.4rem;
+    border-radius: 4px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    white-space: nowrap;
+    border: 1px solid var(--rule);
+    color: var(--muted);
+    vertical-align: 1px;
+  }
+  .np-tag[data-kind="kev"] { color: var(--danger-border); border-color: var(--danger-border); background: var(--danger-bg); }
+  .np-tag[data-kind="disputed"] { color: var(--warn-border); border-color: var(--warn-border); background: var(--warn-bg); }
+  .np-tag[data-kind="cna"] { color: var(--manual-fg); background: var(--manual-bg); border-color: transparent; }
+  .np-tag[data-kind="cpe"] { color: var(--ok-border); background: var(--ok-bg); border-color: transparent; }
+  .np-tag[data-kind="osv"] { color: var(--config-fg); background: var(--config-bg); border-color: transparent; }
+
+  /* controls */
+  .np-controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.6rem 1rem;
+    margin-bottom: 0.6rem;
+  }
+  .np-seg { display: inline-flex; border: 1px solid var(--rule); border-radius: 7px; overflow: hidden; }
+  .np-seg button {
+    font: inherit;
+    font-size: 0.85rem;
+    padding: 0.3rem 0.8rem;
+    color: var(--muted);
+    background: transparent;
+    border: 0;
+    border-right: 1px solid var(--rule);
+    cursor: pointer;
+  }
+  .np-seg button:last-child { border-right: 0; }
+  .np-seg button[aria-pressed="true"] { color: var(--ink); background: var(--code-bg); font-weight: 600; }
+  .np-seg button small { font-variant-numeric: tabular-nums; margin-left: 0.3rem; }
+  .np-search {
+    flex: 1 1 16rem;
+    min-width: 12rem;
+    font: inherit;
+    font-size: 0.9rem;
+    padding: 0.35rem 0.65rem;
+    color: var(--ink);
+    background: var(--bg);
+    border: 1px solid var(--rule);
+    border-radius: 7px;
+  }
+  .np-search:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+  .np-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; align-items: center; }
+  .np-chip {
+    font: inherit;
+    font-size: 0.78rem;
+    padding: 0.12rem 0.55rem;
+    border-radius: 999px;
+    cursor: pointer;
+    color: var(--muted);
+    background: transparent;
+    border: 1px solid var(--rule);
+  }
+  .np-chip[aria-pressed="true"] {
+    color: var(--sev, var(--ink));
+    background: color-mix(in srgb, var(--sev, var(--ink)) 12%, transparent);
+    border-color: color-mix(in srgb, var(--sev, var(--ink)) 45%, transparent);
+  }
+  .np-chip b { font-variant-numeric: tabular-nums; font-weight: 600; }
+  .np-check { font-size: 0.85rem; color: var(--muted); display: inline-flex; gap: 0.35rem; align-items: center; cursor: pointer; }
+  .np-select {
+    font: inherit;
+    font-size: 0.85rem;
+    padding: 0.25rem 0.4rem;
+    color: var(--ink);
+    background: var(--bg);
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+  }
+  .np-filter-pill {
+    font: inherit;
+    font-size: 0.8rem;
+    padding: 0.1rem 0.55rem;
+    border-radius: 999px;
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    background: transparent;
+    cursor: pointer;
+  }
+  .np-count { color: var(--muted); font-size: 0.85rem; margin: 0.4rem 0 0.4rem; }
+
+  /* table */
+  .np-table { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 0.9rem; }
+  .np-table th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    text-align: left;
+    padding: 0.45rem 0.6rem;
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--muted);
+    background: var(--bg);
+    border-bottom: 1px solid var(--rule);
+  }
+  .np-table td { padding: 0.5rem 0.6rem; border-bottom: 1px solid var(--rule); vertical-align: top; }
+  .np-table .np-numcol { text-align: right; font-variant-numeric: tabular-nums; }
+  .np-row { cursor: pointer; }
+  .np-row:hover > td { background: var(--code-bg); }
+  .np-row:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+  .np-row[aria-expanded="true"] > td { background: var(--code-bg); border-bottom-color: transparent; }
+  .np-pkg { font-weight: 600; }
+  .np-ver { color: var(--muted); }
+  .np-id { font-weight: 600; white-space: nowrap; }
+  .np-aliases { color: var(--muted); font-size: 0.8rem; margin-left: 0.35rem; }
+  .np-line {
+    color: var(--muted);
+    font-size: 0.82rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .np-zero { color: var(--rule); }
+
+  .np-detail > td { background: var(--code-bg); padding: 0.1rem 1rem 1.1rem; }
+  .np-detail h3 {
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--muted);
+    margin: 0.9rem 0 0.35rem;
+  }
+  .np-detail p { margin: 0.25rem 0; white-space: pre-line; }
+  .np-detail ul { margin: 0.2rem 0; padding-left: 1.1rem; }
+  .np-detail li { margin: 0.12rem 0; }
+  .np-ev { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 0.84rem; }
+  .np-ev td, .np-ev th { padding: 0.3rem 0.5rem; border-bottom: 1px solid var(--rule); vertical-align: top; text-align: left; }
+  .np-ev th { font-weight: 600; color: var(--muted); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; }
+  .np-supp {
+    border-left: 3px solid var(--ok-border);
+    background: var(--ok-bg);
+    padding: 0.4rem 0.7rem;
+    border-radius: 0 6px 6px 0;
+    margin-top: 0.8rem;
+  }
+  .np-snippet {
+    position: relative;
+    margin: 0.2rem 0 0;
+    padding: 0.6rem 0.75rem;
+    background: var(--bg);
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    overflow-x: auto;
+    font-size: 0.82rem;
+    line-height: 1.45;
+  }
+  .np-snippet-bar { display: flex; gap: 0.5rem; align-items: center; margin-top: 0.4rem; }
+
+  .np-more { display: block; margin: 0.9rem auto 0; }
+
+  .np-gaps { margin-top: 2.5rem; border-top: 1px solid var(--rule); padding-top: 1rem; }
+  .np-gaps details { margin: 0.4rem 0; }
+  .np-gaps summary { cursor: pointer; color: var(--muted); font-size: 0.9rem; }
+  .np-gaps ul { columns: 2 30rem; font-size: 0.8rem; margin: 0.5rem 0; padding-left: 1.1rem; }
+  .np-gaps table { font-size: 0.82rem; border-collapse: collapse; margin: 0.5rem 0; }
+  .np-gaps th, .np-gaps td { padding: 0.2rem 0.9rem 0.2rem 0; text-align: left; border-bottom: 1px solid var(--rule); }
+
+  /* dependency analysis */
+  .np-via {
+    color: var(--muted);
+    font-size: 0.78rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .np-causes-mini { margin: 0.35rem 0 0; padding-left: 1.2rem; font-size: 0.86rem; columns: 2 24rem; column-gap: 2.5rem; }
+  .np-causes-mini li { margin: 0.12rem 0; }
+  .np-linkish {
+    font: inherit;
+    padding: 0;
+    color: var(--accent);
+    background: none;
+    border: 0;
+    cursor: pointer;
+    text-align: left;
+  }
+  .np-linkish:hover { text-decoration: underline; }
+  .np-todo {
+    border-left: 3px solid var(--manual-fg);
+    background: var(--manual-bg);
+    border-radius: 0 6px 6px 0;
+    padding: 0.55rem 0.85rem;
+    margin-top: 0.8rem;
+  }
+  .np-todo ul { margin: 0.3rem 0 0; padding-left: 1.1rem; }
+  .np-todo li { margin: 0.25rem 0; }
+  .np-why {
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    background: var(--bg);
+    padding: 0.55rem 0.75rem;
+    margin: 0.4rem 0;
+  }
+  .np-why-title { margin-bottom: 0.3rem; }
+  .np-why-row {
+    display: grid;
+    grid-template-columns: 9.5rem 1fr;
+    gap: 0.6rem;
+    padding: 0.18rem 0;
+    font-size: 0.85rem;
+  }
+  .np-why-k { color: var(--muted); }
+  .np-arrow { color: var(--muted); }
+  .np-pills { display: flex; flex-wrap: wrap; gap: 0.3rem; align-items: baseline; }
+  .np-pill {
+    display: inline-block;
+    padding: 0 0.45rem;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    white-space: nowrap;
+    background: var(--code-bg);
+    border: 1px solid var(--rule);
+  }
+  .np-pill[data-kind="svc"] { color: var(--config-fg); background: var(--config-bg); border-color: transparent; }
+  .np-pill[data-kind="core"] { color: var(--warn-border); background: var(--warn-bg); border-color: transparent; }
+  .np-pill[data-kind="cfg"] { color: var(--muted); }
+  .np-pill[data-kind="direct"] { color: var(--manual-fg); background: var(--manual-bg); border-color: transparent; font-weight: 600; }
+  .np-more-names summary { cursor: pointer; color: var(--accent); font-size: 0.78rem; }
+  .np-more-names[open] { flex-basis: 100%; }
+  .np-more-names[open] .np-pill { margin: 0.15rem 0.3rem 0 0; }
+  .np-c-kind { width: 9rem; }
+
+  /* Column widths live on the header cells (table-layout: fixed reads the
+     first row), so a narrow screen can drop whole columns by hiding cells. */
+  .np-c-sev { width: 7.5rem; }
+  .np-c-pkg { width: 24%; }
+  .np-c-fix { width: 7.5rem; }
+  .np-c-builds { width: 4.5rem; }
+  .np-c-ver { width: 16%; }
+  .np-c-n { width: 5.8rem; }
+  .np-short, .np-show-narrow { display: none; }
+
+  @media (max-width: 720px) {
+    .np-card[data-wide] { grid-column: auto; }
+    .np-hide-narrow { display: none; }
+    .np-show-narrow, .np-short { display: revert; }
+    .np-long { display: none; }
+    .np-c-sev { width: 3.6rem; }
+    .np-badge { min-width: 0; padding: 0.05rem 0.4rem; }
+    .np-badge small { margin-left: 0; }
+    .np-id { white-space: normal; overflow-wrap: anywhere; }
+    .np-why-row { grid-template-columns: 1fr; gap: 0.05rem; }
+    .np-via { white-space: normal; }
+    .np-seg button { padding: 0.3rem 0.5rem; font-size: 0.8rem; }
+    .np-controls:first-of-type { padding-right: 2.75rem; }
+    .np-c-pkg { width: 34%; }
+    .np-c-n { width: 2.1rem; }
+    .np-table th, .np-table td { padding-left: 0.35rem; padding-right: 0.35rem; }
+  }
+</style>
+<script>
+  // In <head>, before any content renders: resolving the theme after first
+  // paint would show a flash of the wrong one.
+  //
+  // The system preference is not a mode the reader can see or select -- it is
+  // only the seed for the initial value. Once resolved, the theme is always an
+  // explicit light or dark, so the rest of the page never has to ask again.
+  (function () {
+    var saved = null;
+    try {
+      saved = localStorage.getItem("theme");
+    } catch (e) {
+      // Private mode, or file:// under a strict policy. The system preference
+      // below still applies; the choice just will not survive a reload.
+    }
+    if (saved !== "light" && saved !== "dark") {
+      saved = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches
+        ? "dark"
+        : "light";
+    }
+    document.documentElement.setAttribute("data-theme", saved);
+  })();
+</script>
+</head>
+<body>
+<button id="theme-toggle" type="button" title="Switch theme" aria-label="Switch theme">
+  <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+       stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+  </svg>
+  <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+       stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <circle cx="12" cy="12" r="5"></circle>
+    <line x1="12" y1="1" x2="12" y2="3"></line>
+    <line x1="12" y1="21" x2="12" y2="23"></line>
+    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+    <line x1="1" y1="12" x2="3" y2="12"></line>
+    <line x1="21" y1="12" x2="23" y2="12"></line>
+    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+  </svg>
+</button>
+<script>
+  // A plain two-way switch. The system preference decided the starting value
+  // in <head>; from here on the reader's own choice is the only input, and it
+  // is written to localStorage so it survives a reload.
+  (function () {
+    var button = document.getElementById("theme-toggle");
+    var root = document.documentElement;
+
+    function isDark() {
+      return root.getAttribute("data-theme") === "dark";
+    }
+
+    function describe() {
+      var next = isDark() ? "light" : "dark";
+      button.title = "Switch to " + next + " theme";
+      button.setAttribute("aria-label", button.title);
+    }
+
+    button.addEventListener("click", function () {
+      var next = isDark() ? "light" : "dark";
+      root.setAttribute("data-theme", next);
+      try {
+        localStorage.setItem("theme", next);
+      } catch (e) {
+        // Non-persistent is still usable for this session.
+      }
+      describe();
+    });
+
+    // Track the system setting only until the reader overrides it -- after
+    // that their choice wins and changing the OS theme must not undo it.
+    if (window.matchMedia) {
+      window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", function (e) {
+        var saved = null;
+        try { saved = localStorage.getItem("theme"); } catch (err) { /* ignore */ }
+        if (saved !== "light" && saved !== "dark") {
+          root.setAttribute("data-theme", e.matches ? "dark" : "light");
+          describe();
+        }
+      });
+    }
+
+    describe();
+  })();
+</script>
+
+<div class="np-page">
+  <header class="np-head">
+    <h1>nixploit <span>report</span></h1>
+    <div class="np-source" id="source"></div>
+    <button class="np-btn" id="open" type="button">Open report…</button>
+    <input id="file" type="file" accept=".json,application/json" hidden>
+  </header>
+
+  <div id="error" class="np-error" hidden></div>
+
+  <section id="empty" class="np-drop">
+    <h2>Open a nixploit report</h2>
+    <p>Choose a <code>report.json</code> or drop one anywhere on this page.</p>
+    <p>The scheduled scan keeps its latest report at <code>/var/lib/nixploit/report.json</code>.</p>
+    <p><button class="np-btn" id="open-empty" type="button">Choose file…</button></p>
+  </section>
+
+  <section id="report" hidden>
+    <div class="np-cards" id="cards"></div>
+
+    <div class="np-controls">
+      <div class="np-seg" id="buckets" role="group" aria-label="Bucket"></div>
+      <div class="np-seg" id="views" role="group" aria-label="View"></div>
+      <input class="np-search" id="search" type="search" placeholder="Filter: package, CVE, GHSA, words in the description…" aria-label="Filter findings">
+    </div>
+    <div class="np-controls">
+      <div class="np-chips" id="sevs" role="group" aria-label="Severity"></div>
+      <label class="np-check"><input type="checkbox" id="kev"> Known exploited only</label>
+      <label class="np-check">Sort
+        <select class="np-select" id="sort">
+          <option value="score">Severity</option>
+          <option value="package">Package</option>
+          <option value="id">Newest ID</option>
+        </select>
+      </label>
+      <span id="pkg-filter"></span>
+    </div>
+
+    <div class="np-count" id="count"></div>
+    <div id="list"></div>
+
+    <div class="np-gaps" id="gaps"></div>
+  </section>
+</div>
+
+<!-- @NIXPLOIT_REPORT@ -->
+<script>
+(function () {
+  "use strict";
+
+  const SEVERITIES = ["critical", "high", "medium", "low", "none", "unscored"];
+  const SEV_LABEL = { critical: "Critical", high: "High", medium: "Medium", low: "Low", none: "None", unscored: "Unscored" };
+  const BUCKETS = ["affected", "unknown", "suppressed"];
+  const BUCKET_LABEL = { affected: "Affected", unknown: "Unknown", suppressed: "Suppressed" };
+  const PAGE = 100;
+
+  const state = {
+    groups: null,
+    raw: null,
+    bucket: "affected",
+    view: "findings",
+    sev: new Set(SEVERITIES),
+    q: "",
+    kev: false,
+    pkg: null,
+    cause: null,
+    sort: "score",
+    shown: PAGE,
+    open: new Set(),
+    graph: null,
+    analyzed: new Set(),
+  };
+
+  const $ = (id) => document.getElementById(id);
+  const nf = new Intl.NumberFormat();
+  const fmt = (n) => nf.format(n);
+
+  // Build DOM without innerHTML: advisory text is untrusted.
+  function h(tag, props, ...kids) {
+    const n = document.createElement(tag);
+    if (props) {
+      for (const [k, v] of Object.entries(props)) {
+        if (v == null || v === false) continue;
+        if (k === "class") n.className = v;
+        else if (k === "text") n.textContent = v;
+        else if (k.startsWith("on")) n.addEventListener(k.slice(2), v);
+        else n.setAttribute(k, v === true ? "" : v);
+      }
+    }
+    for (const c of kids.flat(Infinity)) {
+      if (c == null || c === false) continue;
+      n.append(c instanceof Node ? c : String(c));
+    }
+    return n;
+  }
+
+  // ---- version helpers ---------------------------------------------------
+
+  function tokens(v) {
+    return String(v).toLowerCase().match(/\d+|[a-z]+/g) || [];
+  }
+
+  // Natural version order: numbers numerically, a release above its
+  // pre-releases (6.0.0 > 6.0.0-alpha5), a number above a word.
+  function cmpVersion(a, b) {
+    const x = tokens(a);
+    const y = tokens(b);
+    const n = Math.max(x.length, y.length);
+    for (let i = 0; i < n; i++) {
+      const p = x[i];
+      const q = y[i];
+      if (p === undefined) return /^\d/.test(q) ? -1 : 1;
+      if (q === undefined) return /^\d/.test(p) ? 1 : -1;
+      const pn = /^\d/.test(p);
+      const qn = /^\d/.test(q);
+      if (pn && qn) {
+        const d = Number(p) - Number(q);
+        if (d) return d < 0 ? -1 : 1;
+      } else if (pn !== qn) {
+        return pn ? 1 : -1;
+      } else if (p !== q) {
+        return p < q ? -1 : 1;
+      }
+    }
+    return 0;
+  }
+
+  // Release boundaries the affected evidence names as fixed, mirroring
+  // nixploit's Finding::fixed_in over the serialized claims.
+  function fixCandidates(f) {
+    const out = [];
+    for (const e of f.evidence || []) {
+      if (e.bucket !== "affected") continue;
+      if (e.kind === "cpe") {
+        if (e.criteria && e.criteria.versionEndExcluding) out.push(e.criteria.versionEndExcluding);
+        continue;
+      }
+      for (const v of (e.affected && e.affected.versions) || []) {
+        const text = v.version || "";
+        if (v.status === "affected") {
+          if (v.lessThan && v.lessThan !== "*") out.push(v.lessThan);
+          else {
+            const m = /<\s*([^\s,=<>]+)\s*$/.exec(text);
+            if (m) out.push(m[1]);
+          }
+        } else if (v.status === "unaffected" && !v.lessThan && !v.lessThanOrEqual && !/[<>=*,\s]/.test(text)) {
+          out.push(text);
+        }
+        for (const c of v.changes || []) if (c.status === "unaffected" && c.at) out.push(c.at);
+      }
+    }
+    return out;
+  }
+
+  function fixedIn(f) {
+    const later = fixCandidates(f).filter((v) => v && cmpVersion(v, f.version) > 0);
+    later.sort(cmpVersion);
+    return later[0] || "";
+  }
+
+  function scoreOf(f) {
+    return f.cvss && typeof f.cvss.baseScore === "number" ? f.cvss.baseScore : null;
+  }
+
+  function severity(score) {
+    if (score === null) return "unscored";
+    if (score >= 9) return "critical";
+    if (score >= 7) return "high";
+    if (score >= 4) return "medium";
+    if (score > 0) return "low";
+    return "none";
+  }
+
+  function advisoryUrl(id) {
+    if (/^CVE-\d+-\d+$/.test(id)) return "https://nvd.nist.gov/vuln/detail/" + id;
+    if (/^GHSA-/.test(id)) return "https://github.com/advisories/" + id;
+    return "https://osv.dev/vulnerability/" + encodeURIComponent(id);
+  }
+
+  function ago(seconds) {
+    const d = Math.max(0, Date.now() / 1000 - seconds);
+    if (d < 90) return "just now";
+    if (d < 5400) return Math.round(d / 60) + " min ago";
+    if (d < 129600) return Math.round(d / 3600) + " h ago";
+    return Math.round(d / 86400) + " days ago";
+  }
+
+  function when(seconds) {
+    return new Date(seconds * 1000).toLocaleString();
+  }
+
+  // ---- dependency graph ----------------------------------------------------
+
+  // The service's renderer embeds the running system's reference graph (every
+  // path in /run/current-system's closure and the paths it references) plus
+  // which system generations hold each path. A report opened from a file has
+  // none of that, and the page shows the plain findings.
+  const OUTPUTS = new Set(["bin", "lib", "dev", "out", "man", "doc", "info", "data", "static", "debug",
+    "devdoc", "modules", "terminfo", "py", "python", "perl", "tools", "udev", "scripts"]);
+  const SHARED = 12;
+
+  // Store name → pname, version and output, splitting like
+  // builtins.parseDrvName at the first dash followed by a digit.
+  function parseName(label) {
+    const m = /^(.+?)-(\d.*)$/.exec(label);
+    if (!m) return { pname: label, version: "", output: "" };
+    let version = m[2];
+    let output = "";
+    const o = /^(.*)-([a-z][a-z0-9]*)$/.exec(version);
+    if (o && OUTPUTS.has(o[2])) {
+      version = o[1];
+      output = o[2];
+    }
+    return { pname: m[1], version, output };
+  }
+
+  function makeGraph(raw) {
+    const nodes = raw.nodes;
+    const n = nodes.length;
+    const labels = nodes.map((b) => b.replace(/^[a-z0-9]{32}-/, ""));
+    const index = new Map(nodes.map((b, i) => [b, i]));
+    const refs = raw.refs;
+    const preds = Array.from({ length: n }, () => []);
+    refs.forEach((rs, i) => { for (const r of rs) if (r !== i) preds[r].push(i); });
+    const top = index.get(raw.current);
+    if (top === undefined) throw new Error("the embedded graph doesn't contain its own system");
+    const find = (l) => labels.indexOf(l);
+    const sysPath = find("system-path");
+    const etc = find("etc");
+    const sysUnits = find("system-units");
+    const userUnits = find("user-units");
+    // Nodes that join everything together. Walking through them makes every
+    // path look like it belongs to every package.
+    const aggregate = new Set([top, sysPath, etc, sysUnits, userUnits].filter((i) => i >= 0));
+    const trigger = labels.map((l) => /^X-Restart-Triggers-/.test(l));
+
+    // Shortest route from the toplevel, preferring environment.systemPackages
+    // and taking restart-trigger hops only when nothing else reaches a path.
+    const parent = new Int32Array(n).fill(-1);
+    parent[top] = top;
+    const queue = [];
+    const late = [];
+    const firstHops = [sysPath, ...refs[top].filter((r) => r !== sysPath)].filter((i) => i >= 0 && i !== top);
+    for (const c of firstHops) if (parent[c] < 0) { parent[c] = top; queue.push(c); }
+    for (let qi = 0; qi < queue.length || late.length; qi++) {
+      if (qi >= queue.length) queue.push(late.shift());
+      const x = queue[qi];
+      for (const r of refs[x]) {
+        if (r === x || parent[r] >= 0) continue;
+        parent[r] = x;
+        (trigger[r] ? late : queue).push(r);
+      }
+    }
+    const route = (i) => {
+      if (parent[i] < 0) return [];
+      const out = [];
+      for (let x = i; x !== top; x = parent[x]) out.unshift(x);
+      return out;
+    };
+
+    // Dominators (Cooper, Harvey and Kennedy): idom[x] is the closest node
+    // every route from the toplevel to x passes through.
+    const order = [];
+    const visited = new Uint8Array(n);
+    const stack = [[top, 0]];
+    visited[top] = 1;
+    while (stack.length) {
+      const frame = stack[stack.length - 1];
+      const x = frame[0];
+      if (frame[1] < refs[x].length) {
+        const r = refs[x][frame[1]++];
+        if (r !== x && !visited[r]) {
+          visited[r] = 1;
+          stack.push([r, 0]);
+        }
+      } else {
+        stack.pop();
+        order.push(x);
+      }
+    }
+    order.reverse();
+    const rpo = new Int32Array(n).fill(-1);
+    order.forEach((x, i) => { rpo[x] = i; });
+    const idom = new Int32Array(n).fill(-1);
+    idom[top] = top;
+    const intersect = (a, b) => {
+      while (a !== b) {
+        while (rpo[a] > rpo[b]) a = idom[a];
+        while (rpo[b] > rpo[a]) b = idom[b];
+      }
+      return a;
+    };
+    for (let changed = true; changed;) {
+      changed = false;
+      for (const x of order) {
+        if (x === top) continue;
+        let d = -1;
+        for (const p of preds[x]) if (idom[p] >= 0) d = d < 0 ? p : intersect(p, d);
+        if (d >= 0 && idom[x] !== d) {
+          idom[x] = d;
+          changed = true;
+        }
+      }
+    }
+    const throughAll = (i) => {
+      const out = [];
+      for (let x = idom[i]; x >= 0 && x !== top; x = idom[x]) if (!aggregate.has(x) && !trigger[x]) out.push(x);
+      return out;
+    };
+
+    // Who pulls a path in: climb its referrers until reaching something the
+    // system lists directly. environment.systemPackages entries sit under
+    // system-path, units under system-units/user-units, config files under
+    // etc, and base components (kernel, systemd, firmware) under the toplevel.
+    const memo = new Map();
+    const consumers = (t) => {
+      let c = memo.get(t);
+      if (c) return c;
+      const sets = { pkgs: new Set(), services: new Set(), configs: new Set(), core: new Set() };
+      const seen = new Uint8Array(n);
+      seen[t] = 1;
+      const q = [t];
+      while (q.length) {
+        const x = q.pop();
+        for (const p of preds[x]) {
+          if (p === sysPath) sets.pkgs.add(x);
+          // Unit files are services; anything else under system-units is a
+          // package installed for its units (systemd.packages).
+          else if (p === sysUnits || p === userUnits) (/^unit-/.test(labels[x]) ? sets.services : sets.pkgs).add(x);
+          else if (p === etc) { if (!aggregate.has(x)) sets.configs.add(x); }
+          else if (p === top) { if (!aggregate.has(x)) sets.core.add(x); }
+          else if (!trigger[p] && !aggregate.has(p) && !seen[p]) {
+            seen[p] = 1;
+            q.push(p);
+          }
+        }
+      }
+      c = Object.fromEntries(Object.entries(sets).map(([k, s]) => [k, [...s]]));
+      memo.set(t, c);
+      return c;
+    };
+
+    // Same-name builds of other versions anywhere in the closure.
+    const versions = new Map();
+    labels.forEach((l) => {
+      const p = parseName(l);
+      if (!p.version) return;
+      if (!versions.has(p.pname)) versions.set(p.pname, new Set());
+      versions.get(p.pname).add(p.version);
+    });
+    const fixedCopies = (i, fix) => {
+      if (!fix) return [];
+      const vs = versions.get(parseName(labels[i]).pname) || [];
+      return [...vs].filter((v) => cmpVersion(v, fix) >= 0).sort(cmpVersion);
+    };
+
+    // Forward reachability, memoized per start node (only consumers ask).
+    const forward = new Map();
+    const reaches = (a, b) => {
+      if (a === b) return true;
+      let r = forward.get(a);
+      if (!r) {
+        r = new Uint8Array(n);
+        r[a] = 1;
+        const q = [a];
+        while (q.length) for (const y of refs[q.pop()]) if (!r[y]) { r[y] = 1; q.push(y); }
+        forward.set(a, r);
+      }
+      return r[b] === 1;
+    };
+
+    const generations = (raw.generations || []).map((g) => ({
+      n: g.n,
+      date: g.date,
+      has: g.has || "",
+      current: g.top === raw.current,
+      booted: g.top === raw.booted,
+    })).sort((a, b) => a.n - b.n);
+    const keptBy = (i) => generations.filter((g) => g.has[i] === "1");
+
+    return { n, labels, index, top, route, throughAll, consumers, reaches, fixedCopies, generations, keptBy, booted: raw.booted, current: raw.current };
+  }
+
+  const base = (p) => p.replace(/^\/nix\/store\//, "");
+
+  function consumerName(i, kind) {
+    const l = state.graph.labels[i];
+    if (kind === "services") return l.replace(/^unit-/, "");
+    if (kind === "configs") return l;
+    return parseName(l).pname;
+  }
+
+  function listNames(names, max) {
+    if (names.length <= 1) return names.join("");
+    if (names.length <= max) return names.slice(0, -1).join(", ") + " and " + names[names.length - 1];
+    return names.slice(0, max).join(", ") + " and " + (names.length - max) + " more";
+  }
+
+  // One build of a finding (a derivation's outputs that carry the package).
+  function analyzeBuild(paths, f, fix) {
+    const G = state.graph;
+    const idxs = [...paths].map((p) => G.index.get(base(p))).filter((i) => i !== undefined);
+    if (!idxs.length) {
+      return { missing: true, label: base([...paths][0] || f.package).replace(/^[a-z0-9]{32}-/, ""),
+        causeKey: "none", causeLabel: "Outputs not in this system", via: "no outputs in this system" };
+    }
+    const main = idxs[0];
+    const sets = { pkgs: new Set(), services: new Set(), configs: new Set(), core: new Set() };
+    for (const i of idxs) {
+      const c = G.consumers(i);
+      for (const k of Object.keys(sets)) for (const x of c[k]) if (!idxs.includes(x) || k === "pkgs") sets[k].add(x);
+    }
+    const by = Object.fromEntries(Object.entries(sets).map(([k, s]) => [k, [...s]]));
+    const names = (k) => [...new Set(by[k].map((i) => consumerName(i, k)))].sort();
+    const direct = by.pkgs.filter((i) => idxs.includes(i));
+    const pkgNames = names("pkgs");
+    const svcNames = names("services");
+    const users = [...new Set([...pkgNames, ...svcNames])].sort();
+    const through = G.throughAll(main);
+    const fhsNode = through.find((i) => /-fhsenv-rootfs$/.test(G.labels[i]));
+    // The outermost package every route passes through, skipping the build's
+    // own other outputs and FHS plumbing: the thing whose update changes it.
+    const self = parseName(G.labels[main]);
+    const ownerNode = through.slice().reverse().find((i) => {
+      const p = parseName(G.labels[i]);
+      return !(p.pname === self.pname && p.version === self.version) && !/-(fhsenv-rootfs|bwrap)$/.test(G.labels[i]);
+    });
+    const kept = new Map();
+    for (const i of idxs) for (const g of G.keptBy(i)) kept.set(g.n, g);
+    const b = {
+      idxs,
+      main,
+      label: G.labels[main],
+      pname: parseName(G.labels[main]).pname,
+      by,
+      direct: direct.length > 0,
+      pkgNames,
+      svcNames,
+      cfgNames: names("configs"),
+      coreNames: names("core"),
+      users,
+      through,
+      fhs: fhsNode === undefined ? null : parseName(G.labels[fhsNode].replace(/-fhsenv-rootfs$/, "")).pname,
+      owner: ownerNode === undefined ? null : parseName(G.labels[ownerNode]).pname,
+      hub: false,
+      kept: [...kept.values()].sort((x, y) => x.n - y.n),
+      stale: G.fixedCopies(main, fix),
+    };
+    // Not dominated, but one consumer that all the others depend on (Nix
+    // itself, for the tools and services built on it) owns it in practice.
+    if (!b.owner) {
+      const cands = [...by.pkgs, ...by.services];
+      const hubNode = cands.length >= 2 && cands.length <= SHARED
+        ? by.pkgs.find((c) => !idxs.includes(c) && cands.every((x) => G.reaches(x, c)))
+        : undefined;
+      if (hubNode !== undefined) {
+        b.owner = parseName(G.labels[hubNode]).pname;
+        b.hub = true;
+      }
+    }
+    if (b.owner) {
+      b.kind = "owner";
+      b.causeKey = "owner:" + b.owner;
+      b.causeLabel = b.owner;
+      b.via = b.owner;
+    } else if (users.length > SHARED) {
+      b.kind = "shared";
+      b.causeKey = "shared";
+      b.causeLabel = "Libraries shared by many packages";
+      b.via = users.length + " packages";
+    } else if (users.length) {
+      b.kind = "app";
+      // A single consumer groups with the paths it dominates.
+      b.causeKey = users.length === 1 ? "owner:" + users[0] : "via:" + users.join(",");
+      b.causeLabel = listNames(users, 3);
+      b.via = listNames(users, 2);
+    } else if (b.coreNames.length) {
+      b.kind = "core";
+      b.causeKey = "core:" + b.coreNames.join(",");
+      b.causeLabel = "Base system: " + listNames(b.coreNames, 3);
+      b.via = "base system";
+    } else {
+      b.kind = "config";
+      b.causeKey = "config:" + b.cfgNames.join(",");
+      b.causeLabel = "Config: " + listNames(b.cfgNames, 3);
+      b.via = "config";
+    }
+    return b;
+  }
+
+  // Analysis is per bucket and on first use: the unknown bucket alone has
+  // thousands of builds.
+  function ensureAnalysis(bucket) {
+    if (!state.graph || state.analyzed.has(bucket)) return;
+    state.analyzed.add(bucket);
+    for (const g of state.groups[bucket]) {
+      // nixploit can list several .drv files producing the same outputs; only
+      // the first claims them, the rest arrive with none. Skip those.
+      const builds = [...g.builds.entries()];
+      const real = builds.filter(([, paths]) => paths.size);
+      g.analysis = (real.length ? real : builds.slice(0, 1))
+        .map(([drv, paths]) => Object.assign(analyzeBuild(paths.size ? paths : [drv], g.f, g.fix), { drv, paths }));
+      g.causeKeys = new Set(g.analysis.map((b) => b.causeKey));
+      g.search += " " + g.analysis.map((b) => (b.users || []).join(" ") + " " + b.causeLabel).join(" ").toLowerCase();
+    }
+  }
+
+  function causesOf(groups) {
+    const map = new Map();
+    for (const g of groups) {
+      for (const b of g.analysis || []) {
+        let c = map.get(b.causeKey);
+        if (!c) {
+          c = { key: b.causeKey, label: b.causeLabel, kind: b.kind, fhs: b.fhs, findings: new Set(), counts: Object.fromEntries(SEVERITIES.map((s) => [s, 0])) };
+          map.set(b.causeKey, c);
+        }
+        if (!c.findings.has(g.key)) {
+          c.findings.add(g.key);
+          c.counts[g.sev]++;
+        }
+      }
+    }
+    const rank = (c) => [c.counts.critical, c.counts.high, c.findings.size];
+    return [...map.values()].sort((a, b) => {
+      const x = rank(a);
+      const y = rank(b);
+      return y[0] - x[0] || y[1] - x[1] || y[2] - x[2] || a.label.localeCompare(b.label);
+    });
+  }
+
+  // ---- model -------------------------------------------------------------
+
+  // A finding appears once per derivation that ships the package; collapse
+  // those into one row per package, version and vulnerability.
+  function group(list, bucket) {
+    const map = new Map();
+    for (const f of list) {
+      const key = f.package + "\u0000" + f.version + "\u0000" + f.id;
+      let g = map.get(key);
+      if (!g) {
+        const score = scoreOf(f);
+        g = {
+          key,
+          bucket,
+          f,
+          score,
+          sev: severity(score),
+          pkgKey: f.package + "\u0000" + f.version,
+          kev: false,
+          builds: new Map(),
+        };
+        map.set(key, g);
+      }
+      g.kev = g.kev || !!f.known_exploited;
+      const drv = f.derivation || (f.store_paths && f.store_paths[0]) || "";
+      if (!g.builds.has(drv)) g.builds.set(drv, new Set());
+      for (const p of f.store_paths || []) g.builds.get(drv).add(p);
+    }
+    const out = [...map.values()];
+    for (const g of out) {
+      // Builds that own installed outputs (see ensureAnalysis on the rest).
+      g.buildCount = [...g.builds.values()].filter((s) => s.size).length || g.builds.size;
+      g.fix = bucket === "affected" ? fixedIn(g.f) : "";
+      g.search = [g.f.package, g.f.version, g.f.id, ...(g.f.aliases || []), g.f.description || "", g.f.suppression || ""]
+        .join(" ")
+        .toLowerCase();
+    }
+    return out;
+  }
+
+  function load(report, source, graph) {
+    for (const b of BUCKETS) {
+      if (!Array.isArray(report[b])) throw new Error("This doesn't look like a nixploit report: no \"" + b + "\" array.");
+    }
+    state.report = report;
+    state.raw = Object.fromEntries(BUCKETS.map((b) => [b, report[b].length]));
+    state.groups = Object.fromEntries(BUCKETS.map((b) => [b, group(report[b], b)]));
+    Object.assign(state, { bucket: "affected", view: "findings", q: "", kev: false, pkg: null, cause: null, shown: PAGE, open: new Set() });
+    state.sev = new Set(SEVERITIES);
+    state.graph = graph || null;
+    state.analyzed = new Set();
+    ensureAnalysis("affected");
+    $("search").value = "";
+    $("kev").checked = false;
+    $("error").hidden = true;
+    $("empty").hidden = true;
+    $("report").hidden = false;
+    $("source").textContent = source;
+    renderCards();
+    renderGaps();
+    render();
+  }
+
+  function fail(message) {
+    const box = $("error");
+    box.replaceChildren(h("strong", { text: "Couldn't load the report. " }), message);
+    box.hidden = false;
+  }
+
+  // ---- summary -----------------------------------------------------------
+
+  function card(label, num, sub, tone, wide) {
+    return h("div", { class: "np-card", "data-tone": tone, "data-wide": wide },
+      h("div", { class: "np-label", text: label }),
+      num == null ? null : h("div", { class: "np-num", text: typeof num === "number" ? fmt(num) : num }),
+      sub);
+  }
+
+  function sevCounts(groups) {
+    const c = Object.fromEntries(SEVERITIES.map((s) => [s, 0]));
+    for (const g of groups) c[g.sev]++;
+    return c;
+  }
+
+  function renderCards() {
+    const r = state.report;
+    const G = state.groups;
+    const kevAffected = G.affected.filter((g) => g.kev).length;
+    const kevOther = G.unknown.filter((g) => g.kev).length + G.suppressed.filter((g) => g.kev).length;
+    const counts = sevCounts(G.affected);
+    const total = G.affected.length || 1;
+
+    const bar = h("div", { class: "np-bar", role: "img", "aria-label": "Affected findings by severity" },
+      SEVERITIES.filter((s) => counts[s]).map((s) =>
+        h("span", { class: "np-sev-" + s, style: "width:" + (100 * counts[s] / total) + "%", title: SEV_LABEL[s] + ": " + counts[s] })));
+    const legend = h("div", { class: "np-legend" },
+      SEVERITIES.filter((s) => counts[s]).map((s) =>
+        h("span", { class: "np-sev-" + s }, h("span", { class: "np-dot" }), SEV_LABEL[s] + " ", h("b", { text: fmt(counts[s]) }))));
+
+    const db = r.database || {};
+    const providers = (db.providers || []).map((p) => p.provider + " " + fmt(p.records)).join(" · ");
+    const feeds = db.feeds || [];
+    const oldest = feeds.length ? Math.min(...feeds.map((f) => f.checked_at)) : null;
+
+    $("cards").replaceChildren(
+      card("Affected", G.affected.length, h("div", { class: "np-sub", text: fmt(G.affected.reduce((n, g) => n + g.buildCount, 0)) + " across builds" })),
+      card("Known exploited", kevAffected,
+        h("div", { class: "np-sub", text: kevAffected ? "affected and on CISA's KEV list" : (kevOther ? kevOther + " more outside affected" : "none affected") }),
+        kevAffected ? "danger" : "ok"),
+      card("Affected by severity", null, [bar, legend], null, true),
+      card("Unknown", G.unknown.length, h("div", { class: "np-sub", text: "product matched, version unsettled" })),
+      card("Suppressed", G.suppressed.length, h("div", { class: "np-sub", text: "patched, or fixed upstream" })),
+      card("Scanned packages", r.scanned_packages,
+        h("div", { class: "np-sub", text: fmt((r.skipped_paths || []).length) + " paths skipped · " + fmt((r.missing_derivations || []).length) + " without a derivation" })),
+      card("Advisories", db.vulnerabilities,
+        h("div", { class: "np-sub" }, providers, oldest ? h("br") : null, oldest ? "oldest feed check " + ago(oldest) : null),
+        null, true),
+      state.graph ? card("Main causes", null, h("ol", { class: "np-causes-mini" }, causesOf(G.affected).slice(0, 6).map((c) =>
+        h("li", null, h("button", {
+          type: "button",
+          class: "np-linkish",
+          title: "Show the findings this pulls in",
+          onclick: () => pickCause(c.key, "affected"),
+        }, c.label), " ", h("span", { class: "np-sub", text: causeCounts(c) })))), null, "full") : null,
+    );
+  }
+
+  // ---- controls ----------------------------------------------------------
+
+  function seg(container, items, current, onPick) {
+    container.replaceChildren(...items.map(([value, label, count]) =>
+      h("button", {
+        type: "button",
+        "aria-pressed": String(value === current),
+        onclick: () => onPick(value),
+      }, label, count == null ? null : h("small", { text: fmt(count) }))));
+  }
+
+  function filtered(ignoreSeverity) {
+    const terms = state.q.trim().toLowerCase().split(/\s+/).filter(Boolean);
+    return state.groups[state.bucket].filter((g) =>
+      (ignoreSeverity || state.sev.has(g.sev)) &&
+      (!state.kev || g.kev) &&
+      (!state.pkg || g.pkgKey === state.pkg) &&
+      (!state.cause || (g.causeKeys && g.causeKeys.has(state.cause))) &&
+      terms.every((t) => g.search.includes(t)));
+  }
+
+  function causeCounts(c) {
+    const parts = [];
+    if (c.counts.critical) parts.push(c.counts.critical + " critical");
+    if (c.counts.high) parts.push(c.counts.high + " high");
+    parts.push(fmt(c.findings.size) + " total");
+    return parts.join(" · ");
+  }
+
+  function pickCause(key, bucket) {
+    if (bucket) state.bucket = bucket;
+    ensureAnalysis(state.bucket);
+    state.cause = key;
+    state.pkg = null;
+    state.view = "findings";
+    state.shown = PAGE;
+    render();
+    window.scrollTo({ top: $("buckets").getBoundingClientRect().top + window.scrollY - 12 });
+  }
+
+  function filterPill(text, title, clear) {
+    return h("button", {
+      type: "button",
+      class: "np-filter-pill",
+      title,
+      onclick: () => {
+        clear();
+        state.shown = PAGE;
+        render();
+      },
+    }, text + "  ×");
+  }
+
+  function renderControls() {
+    seg($("buckets"), BUCKETS.map((b) => [b, BUCKET_LABEL[b], state.groups[b].length]), state.bucket, (b) => {
+      state.bucket = b;
+      state.cause = null;
+      state.shown = PAGE;
+      ensureAnalysis(b);
+      render();
+    });
+    const views = [["findings", "Findings"], ["packages", "Packages"]];
+    if (state.graph) views.push(["causes", "Causes"]);
+    seg($("views"), views, state.view, (v) => {
+      state.view = v;
+      state.shown = PAGE;
+      render();
+    });
+
+    const counts = sevCounts(filtered(true));
+    $("sevs").replaceChildren(...SEVERITIES.filter((s) => counts[s] > 0 || !state.sev.has(s)).map((s) =>
+      h("button", {
+        type: "button",
+        class: "np-chip np-sev-" + s,
+        "aria-pressed": String(state.sev.has(s)),
+        title: "Click to toggle, double-click to show only " + SEV_LABEL[s].toLowerCase(),
+        onclick: () => {
+          if (state.sev.has(s)) state.sev.delete(s);
+          else state.sev.add(s);
+          state.shown = PAGE;
+          render();
+        },
+        ondblclick: () => {
+          state.sev = new Set([s]);
+          state.shown = PAGE;
+          render();
+        },
+      }, SEV_LABEL[s] + " ", h("b", { text: fmt(counts[s]) }))));
+
+    const pills = [];
+    if (state.pkg) {
+      const [name, version] = state.pkg.split("\u0000");
+      pills.push(filterPill("package: " + name + " " + version, "Clear the package filter", () => { state.pkg = null; }));
+    }
+    if (state.cause) {
+      const c = causesOf(state.groups[state.bucket]).find((x) => x.key === state.cause);
+      pills.push(filterPill("via: " + (c ? c.label : state.cause), "Clear the cause filter", () => { state.cause = null; }));
+    }
+    $("pkg-filter").replaceChildren(...pills);
+    $("sort").disabled = state.view !== "findings";
+  }
+
+  // ---- findings view -----------------------------------------------------
+
+  const SORTS = {
+    score: (a, b) => (b.score ?? -1) - (a.score ?? -1) || a.f.package.localeCompare(b.f.package) || a.f.id.localeCompare(b.f.id),
+    package: (a, b) => a.f.package.localeCompare(b.f.package) || cmpVersion(a.f.version, b.f.version) || (b.score ?? -1) - (a.score ?? -1),
+    id: (a, b) => cmpVersion(b.f.id, a.f.id),
+  };
+
+  function badge(g) {
+    return h("span", { class: "np-badge np-sev-" + g.sev, title: SEV_LABEL[g.sev] },
+      h("span", { class: "np-long", text: SEV_LABEL[g.sev] }),
+      g.score === null ? h("span", { class: "np-short", text: "n/a" }) : h("small", { text: g.score.toFixed(1) }));
+  }
+
+  function idLink(id) {
+    return h("a", { href: advisoryUrl(id), target: "_blank", rel: "noopener noreferrer", onclick: (e) => e.stopPropagation(), text: id });
+  }
+
+  function findingRow(g) {
+    const f = g.f;
+    const open = state.open.has(g.key);
+    const aliases = (f.aliases || []).filter((a) => a !== f.id);
+    const row = h("tr", {
+      class: "np-row",
+      tabindex: "0",
+      "aria-expanded": String(open),
+      onclick: () => toggle(g),
+      onkeydown: (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          toggle(g);
+        }
+      },
+    },
+      h("td", null, badge(g)),
+      h("td", null, h("span", { class: "np-pkg", text: f.package }), " ", h("span", { class: "np-ver np-mono", text: f.version }),
+        viaLine(g),
+        g.fix ? h("div", { class: "np-sub np-show-narrow" }, "fixed in ", h("span", { class: "np-mono", text: g.fix })) : null),
+      h("td", null,
+        h("div", null,
+          h("span", { class: "np-id" }, idLink(f.id)),
+          aliases.length ? h("span", { class: "np-aliases np-hide-narrow", text: aliases.join(", ") }) : null,
+          g.kev ? [" ", h("span", { class: "np-tag", "data-kind": "kev", text: "KEV" })] : null,
+          f.disputed ? [" ", h("span", { class: "np-tag", "data-kind": "disputed", text: "disputed" })] : null),
+        h("div", { class: "np-line", text: g.bucket === "suppressed" ? f.suppression || f.description || "" : f.description || "" })),
+      h("td", { class: "np-mono np-hide-narrow" }, g.fix || (g.bucket === "affected" ? h("span", { class: "np-zero", text: "—" }) : null)),
+      h("td", { class: "np-numcol np-hide-narrow", text: String(g.buildCount) }));
+    const rows = [row];
+    if (open) rows.push(h("tr", { class: "np-detail" }, h("td", { colspan: "5" }, detail(g))));
+    return rows;
+  }
+
+  function viaLine(g) {
+    if (!g.analysis || !g.analysis.length) return null;
+    const vias = [...new Set(g.analysis.map((b) => b.via))];
+    return h("div", { class: "np-via", title: g.analysis.map((b) => b.label + ": " + b.causeLabel).join("\n") },
+      "via " + vias[0], vias.length > 1 ? " · " + (vias.length - 1) + " other route" + (vias.length > 2 ? "s" : "") : null);
+  }
+
+  function toggle(g) {
+    if (state.open.has(g.key)) state.open.delete(g.key);
+    else state.open.add(g.key);
+    renderList();
+  }
+
+  function versionsText(versions) {
+    return versions.map((v) => {
+      let s = v.version || "";
+      const floor = s === "0" || s === "0.0.0-0" || s === "*" ? "" : "≥ " + s + ", ";
+      if (v.lessThan && v.lessThan !== "*") s = floor + "< " + v.lessThan;
+      else if (v.lessThanOrEqual && v.lessThanOrEqual !== "*") s = floor + "≤ " + v.lessThanOrEqual;
+      if (v.status && v.status !== "affected") s += " (" + v.status + ")";
+      for (const c of v.changes || []) s += ", " + c.status + " at " + c.at;
+      return s;
+    });
+  }
+
+  function cpeText(c) {
+    const parts = [];
+    if (c.versionStartIncluding) parts.push("≥ " + c.versionStartIncluding);
+    if (c.versionStartExcluding) parts.push("> " + c.versionStartExcluding);
+    if (c.versionEndIncluding) parts.push("≤ " + c.versionEndIncluding);
+    if (c.versionEndExcluding) parts.push("< " + c.versionEndExcluding);
+    return parts.length ? parts.join(", ") : "any version in the CPE";
+  }
+
+  function rangeCell(list) {
+    if (!list.length) return h("span", { class: "np-zero", text: "—" });
+    const head = list.slice(0, 4);
+    const cell = [h("ul", null, head.map((s) => h("li", null, h("code", { "data-wrap": true, text: s }))))];
+    if (list.length > head.length) {
+      cell.push(h("details", null,
+        h("summary", { text: (list.length - head.length) + " more" }),
+        h("ul", null, list.slice(head.length).map((s) => h("li", null, h("code", { "data-wrap": true, text: s }))))));
+    }
+    return cell;
+  }
+
+  function evidenceTable(f) {
+    const rows = (f.evidence || []).map((e) => {
+      let claim;
+      let ranges;
+      if (e.kind === "cpe") {
+        const c = e.criteria || {};
+        claim = h("code", { "data-wrap": true, text: c.criteria || "" });
+        ranges = rangeCell([cpeText(c)]);
+      } else {
+        const a = e.affected || {};
+        claim = [a.vendor || "", a.vendor && a.product ? " / " : "", a.product || "", e.ecosystem ? " (" + e.ecosystem + ")" : "",
+          a.packageName ? [" ", h("code", { "data-wrap": true, text: a.packageName })] : null];
+        ranges = rangeCell(versionsText(a.versions || []));
+      }
+      return h("tr", null,
+        h("td", null, h("span", { class: "np-tag", "data-kind": e.kind, text: e.kind }), e.primary ? h("div", { class: "np-sub", text: "primary" }) : null),
+        h("td", null, claim, h("div", { class: "np-sub", text: e.source || "" })),
+        h("td", null, ranges),
+        h("td", null, h("b", { text: e.bucket }), h("div", { class: "np-sub", text: e.reason || "" })));
+    });
+    return h("table", { class: "np-ev" },
+      h("colgroup", null, h("col", { style: "width:4.5rem" }), h("col", { style: "width:30%" }), h("col", { style: "width:28%" }), h("col")),
+      h("thead", null, h("tr", null, h("th", { text: "Kind" }), h("th", { text: "Claim" }), h("th", { text: "Versions" }), h("th", { text: "Verdict" }))),
+      h("tbody", null, rows));
+  }
+
+  function nixString(s) {
+    return JSON.stringify(String(s)).replace(/\$\{/g, "\\${");
+  }
+
+  function ignoreSnippet(g) {
+    const f = g.f;
+    const fields = [
+      ["package", f.package],
+      ["id", f.id],
+      ["bucket", g.bucket],
+      ["fingerprint", f.fingerprint],
+      ["reason", "TODO: why this does not apply"],
+    ].filter(([, v]) => v);
+    const nix = "services.nixploit.settings.ignore = [\n  {\n" +
+      fields.map(([k, v]) => "    " + k + " = " + nixString(v) + ";").join("\n") + "\n  }\n];";
+    const toml = "[[ignore]]\n" + fields.map(([k, v]) => k + " = " + JSON.stringify(String(v))).join("\n");
+    const pre = h("pre", { class: "np-snippet np-mono", text: nix });
+    let showing = "nix";
+    const copyBtn = h("button", { class: "np-btn", type: "button", text: "Copy", onclick: (e) => copy(pre.textContent, e.currentTarget) });
+    const swapBtn = h("button", {
+      class: "np-btn",
+      type: "button",
+      text: "Show TOML",
+      onclick: (e) => {
+        showing = showing === "nix" ? "toml" : "nix";
+        pre.textContent = showing === "nix" ? nix : toml;
+        e.currentTarget.textContent = showing === "nix" ? "Show TOML" : "Show Nix";
+      },
+    });
+    return [pre, h("div", { class: "np-snippet-bar" }, copyBtn, swapBtn)];
+  }
+
+  async function copy(text, button) {
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch (e) {
+      const ta = h("textarea", { style: "position:fixed;opacity:0" });
+      ta.value = text;
+      document.body.append(ta);
+      ta.select();
+      document.execCommand("copy");
+      ta.remove();
+    }
+    button.textContent = "Copied";
+    setTimeout(() => { button.textContent = "Copy"; }, 1200);
+  }
+
+  // Rule-based advice from where a build sits in the graph. It reads the
+  // dependency structure only: whether the vulnerable code is reachable from
+  // untrusted input is still the reader's call, from the description.
+  function advice(g) {
+    const f = g.f;
+    const fix = g.fix;
+    const items = [];
+    if (g.bucket === "unknown") {
+      const reason = (f.evidence || []).map((e) => e.reason).find(Boolean) || "the evidence doesn't settle it";
+      items.push(["Check it.", "nixploit couldn't tell whether this applies: " + reason.charAt(0).toLowerCase() + reason.slice(1) +
+        ". Compare the advisory's affected versions with " + f.version + ". If it doesn't apply, add the ignore rule below."]);
+    }
+    const run = { pkgs: new Set(), svcs: new Set(), fhs: new Set(), shared: 0, core: false };
+    const older = new Map();
+    for (const b of g.analysis || []) {
+      if (b.missing) {
+        items.push(["Nothing installed.", "None of " + b.label + "'s outputs are in the current system: either nixploit listed the derivation without its outputs, or the system changed after the scan."]);
+        continue;
+      }
+      const n = b.users.length;
+      const one = n === 1;
+      const who = listNames(b.users, 3);
+      const later = fix ? f.package + " " + fix + " or later" : "";
+      const nixpkgsFix = fix
+        ? "Once nixpkgs ships " + later + ", update the nixpkgs input and rebuild, or override the version in an overlay."
+        : "No advisory names a fixed release yet, so there's nothing to update to.";
+      const staleNote = b.stale.length
+        ? "This system already has " + b.pname + " " + listNames(b.stale, 2) + ", which has the fix, so " + b.label +
+          " is a second, older copy (from a separately pinned package set, or an older major version). "
+        : "";
+      if (b.kind === "owner") {
+        const inside = b.fhs ? b.owner + "'s bundled FHS runtime" : b.owner;
+        const others = b.users.filter((u) => u !== b.owner);
+        const how = b.hub
+          ? b.label + " comes in with " + b.owner + ": " + listNames(others, 3) + (others.length === 1 ? " also pulls" : " also pull") +
+            " it in, but only through " + b.owner + ". "
+          : "Every route to " + b.label + " goes through " + inside + ". ";
+        items.push([b.stale.length ? "Update " + b.owner + "." : fix ? "Update or remove " + b.owner + "." : "Remove " + b.owner + ", or accept it.",
+          staleNote + how + "It changes when " + b.owner + " does. " +
+          (fix ? "A " + b.owner + " built with " + later + " fixes it; removing " + b.owner + " drops it."
+            : "No advisory names a fixed release, so removing " + b.owner + " is the only way to drop it.")]);
+      } else if (b.kind === "app" && b.direct && one) {
+        items.push([fix ? "Update or remove." : "Remove, or accept it.", b.pname + " is installed directly (environment.systemPackages). " +
+          (fix ? "It goes once nixpkgs ships " + fix + " or later and you update; removing it drops it now."
+            : "No advisory names a fixed release, so removing it is the only way to drop it.")]);
+      } else if (b.kind === "app") {
+        items.push([fix ? "Update or remove." : "Remove, or accept it.", staleNote +
+          (n <= 3 ? "Only " + who + (one ? " pulls" : " pull") + " in " + b.label : b.label + " is pulled in by " + who) + ". " +
+          (fix ? "Removing " + (one ? "it" : "them") + " drops it; otherwise it goes once " + (one ? "it ships" : "they ship") + " with " + later + "."
+            : "No advisory names a fixed release, so removing " + (one ? "it" : "them") + " is the only way to drop it.")]);
+      } else {
+        const where = b.kind === "shared" ? "shared by " + n + " installed packages"
+          : b.kind === "core" ? "part of the base system (" + listNames(b.coreNames, 3) + ")"
+            : "referenced by system config (" + listNames(b.cfgNames, 3) + ")";
+        items.push([fix ? "Wait for nixpkgs." : "No fix yet.", b.label + " is " + where + ", so only a newer " + b.pname + " build removes it. " + nixpkgsFix +
+          (b.stale.length ? " A fixed " + b.pname + " (" + listNames(b.stale, 2) + ") is already installed for other packages." : "")]);
+      }
+      if (b.kind === "shared") run.shared = Math.max(run.shared, n);
+      else {
+        for (const s of b.svcNames) run.svcs.add(s);
+        if (b.fhs) run.fhs.add(b.fhs);
+        else for (const p of b.pkgNames) run.pkgs.add(p);
+      }
+      if (b.kind === "core") run.core = true;
+      for (const k of b.kept) if (!k.current) older.set(k.n, k);
+    }
+    const runs = [];
+    if (run.svcs.size) runs.push("in the background, as " + listNames([...run.svcs].sort(), 3));
+    if (run.fhs.size) runs.push("inside " + listNames([...run.fhs].sort(), 2) + "'s sandbox while it runs");
+    if (run.pkgs.size) runs.push("when you run " + listNames([...run.pkgs].sort(), 3));
+    if (run.shared) runs.push((runs.length ? "and " : "") + "in whichever of the " + run.shared + " packages and services sharing it you run");
+    if (run.core) runs.push("as part of the base system");
+    if (runs.length) {
+      items.push(["When it runs:", runs.join("; ") + ". nixploit only matched the version; whether the vulnerable code sees untrusted input depends on what these do with it (see the description)."]);
+    }
+    if (older.size) {
+      const gens = [...older.values()].sort((a, b) => a.n - b.n).map((k) => k.n + (k.booted ? " (booted)" : ""));
+      items.push(["Older generations", gens.join(", ") + " also hold it. They only run if you boot one, and go away when pruned."]);
+    }
+    const seen = new Set();
+    return items.filter(([lead, text]) => {
+      const k = lead + text;
+      if (seen.has(k)) return false;
+      seen.add(k);
+      return true;
+    });
+  }
+
+  function nameChips(names, kind, max) {
+    const chip = (t) => h("span", { class: "np-pill", "data-kind": kind, text: t });
+    if (names.length <= max) return names.map(chip);
+    return [names.slice(0, max).map(chip), h("details", { class: "np-more-names" },
+      h("summary", { text: (names.length - max) + " more" }), names.slice(max).map(chip))];
+  }
+
+  function why(b) {
+    const G = state.graph;
+    if (b.missing) return h("div", { class: "np-why" }, h("code", { "data-wrap": true, text: b.label }), h("div", { class: "np-sub", text: "Not in the current system." }));
+    const routeNodes = G.route(b.main);
+    const rows = [];
+    rows.push(h("div", { class: "np-why-row" }, h("span", { class: "np-why-k", text: "Route" }),
+      h("span", { class: "np-route" }, ["system", ...routeNodes.map((i) => G.labels[i])].map((l, i) =>
+        [i ? h("span", { class: "np-arrow", text: " → " }) : null, h("code", { "data-wrap": true, text: l })]))));
+    const by = [];
+    if (b.direct) by.push(h("span", { class: "np-pill", "data-kind": "direct", text: "installed directly" }));
+    by.push(nameChips(b.pkgNames.filter((nm) => !(b.direct && nm === b.pname)), "pkg", 14));
+    if (b.svcNames.length) by.push(nameChips(b.svcNames, "svc", 8));
+    if (b.coreNames.length) by.push(nameChips(b.coreNames, "core", 8));
+    if (b.cfgNames.length) by.push(nameChips(b.cfgNames, "cfg", 6));
+    rows.push(h("div", { class: "np-why-row" }, h("span", { class: "np-why-k", text: "Pulled in by" }), h("span", { class: "np-pills" }, by)));
+    if (b.through.length) {
+      rows.push(h("div", { class: "np-why-row" }, h("span", { class: "np-why-k", text: "All routes via" }),
+        h("span", { class: "np-pills" }, b.through.slice().reverse().map((i) => h("code", { "data-wrap": true, text: G.labels[i] })))));
+    }
+    rows.push(h("div", { class: "np-why-row" }, h("span", { class: "np-why-k", text: "Kept by" }),
+      h("span", { text: b.kept.length ? b.kept.map((k) => "generation " + k.n + (k.current ? " (current)" : "") + (k.booted ? " (booted)" : "")).join(", ") : "the current system" })));
+    const outputs = [...b.paths].map(base).map((p) => p.replace(/^[a-z0-9]{32}-/, ""));
+    return h("div", { class: "np-why" },
+      h("div", { class: "np-why-title" }, h("code", { "data-wrap": true, text: b.label }),
+        outputs.length > 1 ? h("span", { class: "np-sub", text: "  " + outputs.length + " outputs: " + outputs.join(", ") }) : null),
+      rows,
+      h("div", { class: "np-sub" }, "built by ", h("code", { "data-wrap": true, text: b.drv })));
+  }
+
+  function detail(g) {
+    const f = g.f;
+    const out = [];
+    if (g.bucket === "suppressed") {
+      out.push(h("div", { class: "np-supp" }, h("b", { text: "Suppressed: " }), f.suppression || "",
+        h("div", { class: "np-sub", text: "Would otherwise be " + f.bucket + "." })));
+    } else if (g.analysis) {
+      out.push(h("div", { class: "np-todo" }, h("div", { class: "np-label", text: "What to do" }),
+        h("ul", null, advice(g).map(([lead, text]) => h("li", null, h("b", { text: lead }), " ", text)))));
+    }
+    if (g.analysis) out.push(h("h3", { text: "Why it's here" }), g.analysis.map(why));
+    if (f.description) out.push(h("h3", { text: "Description" }), h("p", { text: f.description }));
+    if (f.cvss) {
+      out.push(h("h3", { text: "CVSS " + (f.cvss.version || "") }),
+        h("p", null, h("b", { text: typeof f.cvss.baseScore === "number" ? f.cvss.baseScore.toFixed(1) : String(f.cvss.baseScore) }), " ", f.cvss.vectorString ? h("code", { "data-wrap": true, text: f.cvss.vectorString }) : null));
+    }
+    if (g.fix) out.push(h("h3", { text: "Fixed in" }), h("p", null, h("code", { text: g.fix }), h("span", { class: "np-sub", text: "  first fixed release the evidence names above " + f.version })));
+    out.push(h("h3", { text: "Evidence" }), evidenceTable(f));
+
+    if (!g.analysis) {
+      const builds = [...g.builds.entries()];
+      out.push(h("h3", { text: builds.length === 1 ? "Build" : builds.length + " builds" }),
+        h("ul", null, builds.map(([drv, paths]) => h("li", null,
+          h("code", { "data-wrap": true, text: drv }),
+          paths.size ? h("ul", null, [...paths].map((p) => h("li", null, h("code", { "data-wrap": true, text: p })))) : null))));
+    }
+
+    if ((f.source_urls || []).length) {
+      out.push(h("h3", { text: "Sources" }),
+        h("ul", null, f.source_urls.map((u) => h("li", null, /^https?:\/\//.test(u)
+          ? h("a", { href: u, target: "_blank", rel: "noopener noreferrer", text: u })
+          : h("code", { "data-wrap": true, text: u })))));
+    }
+    if (g.bucket !== "suppressed") {
+      out.push(h("h3", { text: "Ignore rule" }), ignoreSnippet(g));
+    }
+    return out;
+  }
+
+  function renderFindings(list) {
+    list.sort(SORTS[state.sort]);
+    const shown = list.slice(0, state.shown);
+    const table = h("table", { class: "np-table" },
+      h("thead", null, h("tr", null,
+        h("th", { class: "np-c-sev" }, h("span", { class: "np-long", text: "Severity" }), h("span", { class: "np-short", text: "CVSS" })),
+        h("th", { class: "np-c-pkg", text: "Package" }),
+        h("th", { text: "Vulnerability" }),
+        h("th", { class: "np-c-fix np-hide-narrow", text: state.bucket === "affected" ? "Fixed in" : "" }),
+        h("th", { class: "np-c-builds np-numcol np-hide-narrow", text: "Builds" }))),
+      h("tbody", null, shown.map(findingRow)));
+    const parts = [table];
+    if (list.length > shown.length) {
+      parts.push(h("button", {
+        class: "np-btn np-more",
+        type: "button",
+        text: "Show " + Math.min(PAGE, list.length - shown.length) + " more",
+        onclick: () => {
+          state.shown += PAGE;
+          renderList();
+        },
+      }));
+    }
+    const raw = list.reduce((n, g) => n + g.buildCount, 0);
+    $("count").textContent = list.length
+      ? "Showing " + fmt(shown.length) + " of " + fmt(list.length) + " " + (list.length === 1 ? "finding" : "findings") +
+        (raw !== list.length ? " (" + fmt(raw) + " across builds)" : "") + ". Click a row for its evidence."
+      : "No findings match.";
+    $("list").replaceChildren(...parts);
+  }
+
+  // ---- packages view -----------------------------------------------------
+
+  function renderPackages(list) {
+    const map = new Map();
+    for (const g of list) {
+      let p = map.get(g.pkgKey);
+      if (!p) {
+        p = { key: g.pkgKey, name: g.f.package, version: g.f.version, counts: Object.fromEntries(SEVERITIES.map((s) => [s, 0])), total: 0, kev: 0, g };
+        map.set(g.pkgKey, p);
+      }
+      p.counts[g.sev]++;
+      p.total++;
+      if (g.kev) p.kev++;
+    }
+    const pkgs = [...map.values()].sort((a, b) =>
+      b.counts.critical - a.counts.critical || b.counts.high - a.counts.high || b.total - a.total || a.name.localeCompare(b.name));
+    const shown = pkgs.slice(0, state.shown);
+    const cols = ["critical", "high", "medium", "low", "unscored"];
+    const num = (n, s) => h("td", { class: "np-numcol" }, n ? h("span", { class: "np-sev-" + s, style: "color:var(--sev);font-weight:600", text: fmt(n) }) : h("span", { class: "np-zero", text: "·" }));
+    const short = { critical: "C", high: "H", medium: "M", low: "L", unscored: "?" };
+    const table = h("table", { class: "np-table" },
+      h("thead", null, h("tr", null,
+        h("th", { text: "Package" }), h("th", { class: "np-c-ver np-hide-narrow", text: "Version" }),
+        cols.map((s) => h("th", { class: "np-c-n np-numcol", title: SEV_LABEL[s] },
+          h("span", { class: "np-long", text: s === "unscored" ? "N/A" : SEV_LABEL[s] }), h("span", { class: "np-short", text: short[s] }))),
+        h("th", { class: "np-c-n np-numcol" }, h("span", { class: "np-long", text: "Total" }), h("span", { class: "np-short", text: "Σ" })))),
+      h("tbody", null, shown.map((p) => h("tr", {
+        class: "np-row",
+        tabindex: "0",
+        title: "Show this package's findings",
+        onclick: () => pickPackage(p.key),
+        onkeydown: (e) => { if (e.key === "Enter") pickPackage(p.key); },
+      },
+        h("td", null, h("span", { class: "np-pkg", text: p.name }), p.kev ? [" ", h("span", { class: "np-tag", "data-kind": "kev", text: "KEV" })] : null,
+          h("div", { class: "np-ver np-mono np-sub np-show-narrow", text: p.version }), viaLine(p.g)),
+        h("td", { class: "np-mono np-ver np-hide-narrow", text: p.version }),
+        cols.map((s) => num(s === "unscored" ? p.counts.unscored + p.counts.none : p.counts[s], s)),
+        h("td", { class: "np-numcol" }, h("b", { text: fmt(p.total) }))))));
+    const parts = [table];
+    if (pkgs.length > shown.length) {
+      parts.push(h("button", { class: "np-btn np-more", type: "button", text: "Show more", onclick: () => { state.shown += PAGE; renderList(); } }));
+    }
+    $("count").textContent = pkgs.length
+      ? fmt(pkgs.length) + " package versions with " + fmt(list.length) + " " + BUCKET_LABEL[state.bucket].toLowerCase() + " findings. Click one to list them."
+      : "No packages match.";
+    $("list").replaceChildren(...parts);
+  }
+
+  function pickPackage(key) {
+    state.pkg = key;
+    state.view = "findings";
+    state.shown = PAGE;
+    render();
+    window.scrollTo({ top: $("buckets").getBoundingClientRect().top + window.scrollY - 12 });
+  }
+
+  // ---- causes view ---------------------------------------------------------
+
+  const KIND_LABEL = {
+    owner: "one package",
+    app: "few packages",
+    shared: "shared library",
+    core: "base system",
+    config: "system config",
+  };
+
+  function renderCauses(list) {
+    const causes = causesOf(list);
+    const shown = causes.slice(0, state.shown);
+    const cols = ["critical", "high", "medium", "low", "unscored"];
+    const short = { critical: "C", high: "H", medium: "M", low: "L", unscored: "?" };
+    const num = (n, s) => h("td", { class: "np-numcol" }, n ? h("span", { class: "np-sev-" + s, style: "color:var(--sev);font-weight:600", text: fmt(n) }) : h("span", { class: "np-zero", text: "·" }));
+    const table = h("table", { class: "np-table" },
+      h("thead", null, h("tr", null,
+        h("th", { text: "Pulled in by" }),
+        h("th", { class: "np-c-kind np-hide-narrow", text: "Kind" }),
+        cols.map((s) => h("th", { class: "np-c-n np-numcol", title: SEV_LABEL[s] },
+          h("span", { class: "np-long", text: s === "unscored" ? "N/A" : SEV_LABEL[s] }), h("span", { class: "np-short", text: short[s] }))),
+        h("th", { class: "np-c-n np-numcol" }, h("span", { class: "np-long", text: "Total" }), h("span", { class: "np-short", text: "Σ" })))),
+      h("tbody", null, shown.map((c) => h("tr", {
+        class: "np-row",
+        tabindex: "0",
+        title: "Show the findings this pulls in",
+        onclick: () => pickCause(c.key),
+        onkeydown: (e) => { if (e.key === "Enter") pickCause(c.key); },
+      },
+        h("td", null, h("span", { class: "np-pkg", text: c.label }), c.fhs ? h("div", { class: "np-via", text: "bundled FHS runtime" }) : null),
+        h("td", { class: "np-hide-narrow np-ver", text: KIND_LABEL[c.kind] || "" }),
+        cols.map((s) => num(s === "unscored" ? c.counts.unscored + c.counts.none : c.counts[s], s)),
+        h("td", { class: "np-numcol" }, h("b", { text: fmt(c.findings.size) }))))));
+    const parts = [table];
+    if (causes.length > shown.length) {
+      parts.push(h("button", { class: "np-btn np-more", type: "button", text: "Show more", onclick: () => { state.shown += PAGE; renderList(); } }));
+    }
+    $("count").textContent = causes.length
+      ? fmt(causes.length) + " ways " + fmt(list.length) + " " + BUCKET_LABEL[state.bucket].toLowerCase() +
+        " findings get into the system. A finding with several builds can count under more than one. Click one to list its findings."
+      : "No findings match.";
+    $("list").replaceChildren(...parts);
+  }
+
+  // ---- coverage gaps -------------------------------------------------------
+
+  function lazyList(title, items) {
+    const d = h("details", null, h("summary", { text: title + " (" + fmt(items.length) + ")" }));
+    d.addEventListener("toggle", () => {
+      if (d.open && d.children.length === 1) {
+        d.append(h("ul", null, items.map((s) => h("li", null, h("code", { "data-wrap": true, text: typeof s === "string" ? s : JSON.stringify(s) })))));
+      }
+    }, { once: false });
+    return d;
+  }
+
+  function renderGaps() {
+    const r = state.report;
+    const db = r.database || {};
+    const parts = [];
+    if (state.graph) {
+      const gen = state.graph.generations.find((g) => g.current);
+      parts.push(h("p", { class: "np-sub", text: "Scope: the running system's runtime closure (" + (gen ? "generation " + gen.n + ", " : "") +
+        fmt(state.graph.n) + " store paths). Dev shells (direnv, devenv), build-time dependencies and other GC roots aren't part of this scan." }));
+    } else {
+      parts.push(h("p", { class: "np-sub", text: "This report was opened from a file, so the dependency analysis (why a package is here, what to do) isn't available. The copy the scan service writes to /var/lib/nixploit/report.html has it." }));
+    }
+    if ((r.unused_rules || []).length) {
+      parts.push(h("div", { class: "np-error" }, h("b", { text: fmt(r.unused_rules.length) + " ignore rules matched nothing. " }),
+        "They may have expired or the evidence changed.", lazyList("Unused rules", r.unused_rules)));
+    }
+    if ((db.providers || []).length) {
+      parts.push(h("details", null, h("summary", { text: "Advisory database (" + fmt(db.vulnerabilities || 0) + " vulnerabilities)" }),
+        h("table", null,
+          h("thead", null, h("tr", null, ["Provider", "Records", "Rejected", "With claims", "With CPE", "Without product"].map((t) => h("th", { text: t })))),
+          h("tbody", null, db.providers.map((p) => h("tr", null,
+            h("td", { text: p.provider }), [p.records, p.rejected, p.with_claims, p.with_cpe, p.without_product].map((n) => h("td", { class: "np-numcol", text: fmt(n || 0) }))))))));
+    }
+    if ((db.feeds || []).length) {
+      parts.push(h("details", null, h("summary", { text: "Feeds (" + fmt(db.feeds.length) + ")" }),
+        h("table", null,
+          h("thead", null, h("tr", null, h("th", { text: "Feed" }), h("th", { text: "Records" }), h("th", { text: "Checked" }))),
+          h("tbody", null, db.feeds.map((f) => h("tr", null,
+            h("td", null, h("code", { text: f.name })), h("td", { class: "np-numcol", text: fmt(f.records || 0) }), h("td", { text: when(f.checked_at) + " (" + ago(f.checked_at) + ")" })))))));
+    }
+    parts.push(lazyList("Paths without usable versions", r.skipped_paths || []));
+    parts.push(lazyList("Outputs without derivation metadata", r.missing_derivations || []));
+    if (typeof r.inventory_duration_seconds === "number") {
+      parts.push(h("p", { class: "np-sub", text: "Inventory took " + r.inventory_duration_seconds.toFixed(2) + " s." }));
+    }
+    $("gaps").replaceChildren(h("div", { class: "np-label", text: "Coverage" }), ...parts);
+  }
+
+  // ---- render --------------------------------------------------------------
+
+  function renderList() {
+    const list = filtered(false);
+    if (state.view === "packages") renderPackages(list);
+    else if (state.view === "causes" && state.graph) renderCauses(list);
+    else renderFindings(list);
+  }
+
+  function render() {
+    renderControls();
+    renderList();
+  }
+
+  // ---- wiring --------------------------------------------------------------
+
+  let searchTimer = 0;
+  $("search").addEventListener("input", (e) => {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(() => {
+      state.q = e.target.value;
+      state.shown = PAGE;
+      render();
+    }, 140);
+  });
+  $("kev").addEventListener("change", (e) => {
+    state.kev = e.target.checked;
+    state.shown = PAGE;
+    render();
+  });
+  $("sort").addEventListener("change", (e) => {
+    state.sort = e.target.value;
+    renderList();
+  });
+
+  async function readFile(file) {
+    let text;
+    try {
+      text = await file.text();
+    } catch (e) {
+      fail("The browser couldn't read " + file.name + ". If it's /var/lib/nixploit/report.json, the browser's session needs the nixploit group.");
+      return;
+    }
+    try {
+      load(JSON.parse(text), file.name + " · modified " + new Date(file.lastModified).toLocaleString());
+    } catch (e) {
+      fail(e.message);
+    }
+  }
+
+  const input = $("file");
+  const pick = () => input.click();
+  $("open").addEventListener("click", pick);
+  $("open-empty").addEventListener("click", pick);
+  input.addEventListener("change", () => {
+    if (input.files[0]) readFile(input.files[0]);
+    input.value = "";
+  });
+
+  let dragDepth = 0;
+  window.addEventListener("dragenter", (e) => {
+    e.preventDefault();
+    dragDepth++;
+    document.body.classList.add("np-dragging");
+  });
+  window.addEventListener("dragleave", () => {
+    dragDepth = Math.max(0, dragDepth - 1);
+    if (!dragDepth) document.body.classList.remove("np-dragging");
+  });
+  window.addEventListener("dragover", (e) => e.preventDefault());
+  window.addEventListener("drop", (e) => {
+    e.preventDefault();
+    dragDepth = 0;
+    document.body.classList.remove("np-dragging");
+    const file = e.dataTransfer && e.dataTransfer.files[0];
+    if (file) readFile(file);
+  });
+
+  // The service renders a copy of this page with the latest report embedded.
+  const data = document.getElementById("report-data");
+  if (data) {
+    let meta = {};
+    try {
+      const m = document.getElementById("report-meta");
+      if (m) meta = JSON.parse(m.textContent);
+    } catch (e) {
+      // Metadata is decoration; the report itself still loads.
+    }
+    // The dependency graph is optional: without it the findings still load.
+    let graph = null;
+    const rawGraph = document.getElementById("report-graph");
+    if (rawGraph) {
+      try {
+        graph = makeGraph(JSON.parse(rawGraph.textContent));
+      } catch (e) {
+        console.warn("nixploit report: ignoring the embedded dependency graph:", e);
+      }
+    }
+    try {
+      const gen = graph && graph.generations.find((g) => g.current);
+      const source = [meta.host, gen ? "generation " + gen.n : null,
+        meta.generated ? "scanned " + new Date(meta.generated).toLocaleString() : null].filter(Boolean).join(" · ");
+      load(JSON.parse(data.textContent), source || "embedded report", graph);
+    } catch (e) {
+      fail(e.message);
+    }
+  }
+})();
+</script>
+</body>
+</html>
