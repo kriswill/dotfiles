@@ -2,6 +2,13 @@
 
 ## 2026-10-24
 
+- **Creation**: [nixploit](nixploit.md) and
+  [nebula-nixploit](nebula-nixploit.md). The new `nixploit` input
+  (manic-systems/nixploit, follows nixpkgs) provides a NixOS module that runs
+  a daily NVD and OSV scan of nebula's running closure, with the Kbuild
+  filter for the running kernel and the upstream-history check that OSV's
+  GIT dump turns on. The module enables node_exporter, so the host file
+  binds it to 127.0.0.1.
 - **Update**: P11 and P13 measured ([determinate](determinate.md),
   [store-optimise](store-optimise.md)). A cached miss expired at t=303 s with
   300, while 3600 still hid the path at t=343 s. Deduplicating a
