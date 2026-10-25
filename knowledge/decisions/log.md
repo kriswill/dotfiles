@@ -2,6 +2,11 @@
 
 ## 2026-10-25
 
+- **Creation**: [battlenet-runtime-install](battlenet-runtime-install.md).
+  Nix owns only the runtime: Battle.net installs into a user-owned prefix on
+  first run, from Blizzard's unpinned installer URL, and Proton runs directly
+  in `steam.buildRuntimeEnv` instead of through umu.
+
 - **Creation**: [nixploit-rescan-on-switch](nixploit-rescan-on-switch.md).
   `services.nixploit.rescanOnSwitch` keys `nixploit.timer` to a hash of the
   installed packages (`X-Packages`), so a switch that changes them restarts

@@ -2,6 +2,11 @@
 
 ## 2026-10-25
 
+- **Creation**: [battlenet](battlenet.md), the `flakes/battlenet/` sub-flake.
+  It runs Battle.net in nixpkgs' GE-Proton inside `steam.buildRuntimeEnv`,
+  without Steam or umu, and installs it into a configurable prefix on first
+  run ([decision](../decisions/battlenet-runtime-install.md)).
+
 - **Update**: [nixploit](nixploit.md) adds
   `services.nixploit.rescanOnSwitch`, an `X-Packages` hash on
   `nixploit.timer` that rescans after a switch that changes the installed

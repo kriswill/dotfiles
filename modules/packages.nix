@@ -72,6 +72,9 @@
         # flake (./flakes/nixploit), which is NixOS-only.
         nixploit = inputs.nixploit.packages.${system}.nixploit;
         nixploit-report = inputs.nixploit.packages.${system}.nixploit-report;
+        # battlenet (./flakes/battlenet) is x86_64-linux only, the root's one
+        # Linux system.
+        battlenet = inputs.battlenet.packages.${system}.battlenet;
       };
     };
 

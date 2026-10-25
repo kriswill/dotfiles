@@ -52,6 +52,25 @@
         "type": "github"
       }
     },
+    "battlenet": {
+      "inputs": {
+        "flake-parts": [
+          "flake-parts"
+        ],
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "path": "./flakes/battlenet",
+        "type": "path"
+      },
+      "original": {
+        "path": "./flakes/battlenet",
+        "type": "path"
+      },
+      "parent": []
+    },
     "bdwgc": {
       "flake": false,
       "locked": {
@@ -1199,6 +1218,7 @@
     "root": {
       "inputs": {
         "apple-container": "apple-container",
+        "battlenet": "battlenet",
         "ccglass": "ccglass",
         "codebase-memory-mcp": "codebase-memory-mcp",
         "darwin": "darwin",
