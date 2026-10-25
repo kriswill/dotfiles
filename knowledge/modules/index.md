@@ -61,6 +61,7 @@ interesting ones by hand — scaffolding never overwrites an existing doc.
 * [Nixploit](nixploit.md) - Re-export of the nixploit sub-flake's NixOS module: upstream's scheduled vulnerability scanner (the running system's Nix closure matched against NVD, plus optional OSV/VulnCheck, published as a JSON report and node_exporter metrics) plus services.nixploit.report for the HTML viewer and its readers; enabled on nebula.
 * [Node Runtime](node-runtime.md) - System-wide Node.js + Bun — infrastructure, not dev convenience: npx-launched MCP servers (Claude Code plugins) silently fail on NixOS without a node on PATH.
 * [Nrs](nrs.md) - The rebuild helpers nrs, nrb (nrs --dry) and nrt (nrs --test): nom for the build tree, dix for the diff, and each OS's own activation, with output streamed and a state report on every exit. They replaced nh on 2026-10-24.
+* [ntsync on nebula](ntsync.md) - Loads the kernel's ntsync driver at boot on nebula (boot.kernelModules), giving Wine and Proton /dev/ntsync, kernel-side NT synchronisation objects that GE-Proton uses instead of fsync whenever the device is there.
 * [Oksh](oksh.md) - Kris' oksh.
 * [OLED Resume Bump](oled-resume-bump.md) - DPMS off/on bounce of the DP-3 OLED after every resume from S3, via powerManagement.resumeCommands — works around the PG34WCDM panel staying black while Hyprland reports the output live.
 * [Overlays](overlays.md) - Nixpkgs overlays, exposed as flake outputs and consumed by the host modules via `nixpkgs.overlays = builtins.attrValues config.flake.overlays`.

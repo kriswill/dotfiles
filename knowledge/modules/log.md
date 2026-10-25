@@ -2,6 +2,11 @@
 
 ## 2026-10-25
 
+- **Creation**: [ntsync](ntsync.md) loads the kernel's ntsync driver on nebula
+  (`boot.kernelModules`). GE-Proton uses `/dev/ntsync` instead of fsync
+  whenever it exists, and a logged WoW session showed it missing. Verified
+  on generation 184: `ntsync: up and running.`, with WoW on it.
+
 - **Update**: [configuration](configuration.md) drops `umu-launcher`, and the
   stowed "Battle.net (umu)" entry is removed.
   [nebula-battlenet](nebula-battlenet.md)'s GE-Proton launcher is now the only
