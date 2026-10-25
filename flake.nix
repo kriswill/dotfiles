@@ -88,12 +88,15 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    # Nix closure vulnerability scanner (NVD + CNA ranges, optional OSV/VulnCheck);
-    # ships the NixOS module re-exported by modules/nixos/nixploit.nix. No
-    # binary cache, builds from source — the nixpkgs follow shares our set.
+    # Nix closure vulnerability scanner (manic-systems/nixploit) wrapped with
+    # the HTML report step (./flakes/nixploit); its NixOS module is
+    # re-exported by modules/nixos/nixploit.nix. Upstream is pinned in the
+    # sub-flake's flake.lock and follows our nixpkgs through it (no binary
+    # cache, builds from source).
     nixploit = {
-      url = "github:manic-systems/nixploit";
+      url = "./flakes/nixploit";
       inputs.nixpkgs.follows = "nixpkgs";
+      inputs.flake-parts.follows = "flake-parts";
     };
 
     # Weekly prebuilt nix-index database (command-not-found + `, <prog>` via

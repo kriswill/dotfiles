@@ -107,7 +107,7 @@ nix-built from okf's own repo (`kriswill/okflight`, public — consumed as a Fla
 ├── config/              # NON-symlinkable app-owned configs (Helium, Noctalia, gh) — snapshot
 │                        #   sync via helium-config/noctalia-config/gh-config CLIs; see config/README.md
 ├── pkgs/                # Custom package definitions (*.nix files or subdirectories)
-├── flakes/              # Self-contained sub-flakes consumed via relative-path inputs (ccglass, apple-container)
+├── flakes/              # Self-contained sub-flakes consumed via relative-path inputs (ccglass, apple-container, nixploit)
 ├── overlays/            # Nixpkgs overlays (makes custom packages available)
 ├── lib/                 # Pure lib helpers (kanagawa, direnv-nom-wrapper) — outside modules/ so import-tree skips them
 ├── docs/                # Task-focused manuals (hyprland, noctalia, helium, tmux, fastfetch, …)

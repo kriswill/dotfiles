@@ -1113,23 +1113,23 @@
     },
     "nixploit": {
       "inputs": {
+        "flake-parts": [
+          "flake-parts"
+        ],
         "nixpkgs": [
           "nixpkgs"
-        ]
+        ],
+        "upstream": "upstream"
       },
       "locked": {
-        "lastModified": 1792865523,
-        "narHash": "sha256-8acB69PC8bxHiMQ/pGUhy9FcIrk64AcbjjuBKg8bdts=",
-        "owner": "manic-systems",
-        "repo": "nixploit",
-        "rev": "845724aabc502c1b9d37aacaa0b9adc98ea8d686",
-        "type": "github"
+        "path": "./flakes/nixploit",
+        "type": "path"
       },
       "original": {
-        "owner": "manic-systems",
-        "repo": "nixploit",
-        "type": "github"
-      }
+        "path": "./flakes/nixploit",
+        "type": "path"
+      },
+      "parent": []
     },
     "noctalia": {
       "inputs": {
@@ -1381,6 +1381,27 @@
       "original": {
         "owner": "numtide",
         "repo": "treefmt-nix",
+        "type": "github"
+      }
+    },
+    "upstream": {
+      "inputs": {
+        "nixpkgs": [
+          "nixploit",
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1792865523,
+        "narHash": "sha256-8acB69PC8bxHiMQ/pGUhy9FcIrk64AcbjjuBKg8bdts=",
+        "owner": "manic-systems",
+        "repo": "nixploit",
+        "rev": "845724aabc502c1b9d37aacaa0b9adc98ea8d686",
+        "type": "github"
+      },
+      "original": {
+        "owner": "manic-systems",
+        "repo": "nixploit",
         "type": "github"
       }
     },
