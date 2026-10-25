@@ -92,6 +92,40 @@ Two problems, one cause each:
 
 - The GRUB menu shrinks to what is kept: about 4–5 entries, each either
   boot-proven or the default and its predecessor.
+- **Root directory access: `root:root 0755`, never writable by others.**
+  These reasons come from Nix's source (`gc.cc`, `local-store.cc`,
+  `daemon.cc`, checked 2026-10-24):
+  - **Write must stay root-only.** Whoever can delete a root can let GC take
+    a menu entry, which is the June failure. Adding roots would only let
+    users pin paths, which the daemon already allows through `gcroots/auto`.
+  - **World-read hides nothing.** The daemon's `FindRoots` censors only
+    runtime and temp roots for untrusted clients, so `nix-store --gc
+    --print-roots` already shows these links to any user. The world-readable
+    `profiles/system-*-link` show the same store paths.
+  - **0700 has a latent failure mode.** `findRoots` treats
+    `permission_denied` as "cannot read potential root" and skips the
+    directory. Its roots would then silently not count for any collector
+    that isn't root. In multi-user mode GC always runs as root through the
+    daemon, so it works today, but 0755 doesn't depend on that.
+  - **Symlink modes don't matter on Linux**, and the directory isn't sticky,
+    so `fs.protected_symlinks` doesn't apply.
+  - **`/boot` is 0700 for a different reason.** The ESP is mounted with
+    `fmask/dmask=0077`, and that need doesn't carry over to the roots.
+- **Any directory under `gcroots` counts as roots**, because `findRoots`
+  recurses into every subdirectory. So a temp set left by an interrupted run
+  would pin its closures forever. `grub-menu-roots` therefore uses no temp
+  directory, and removes the temp sets of earlier versions.
+- **Roots are announced, not just linked.** A plain `ln -s` root, which the
+  manual documents, isn't seen by a GC that is already running. `nix-store
+  --add-root` (`IndirectRootStore::addPermRoot`) first calls `addTempRoot`,
+  which hands the path to a running collector through its socket, then
+  links it and records a back-pointer in `gcroots/auto`. The case it
+  closes: a midnight `nix-gc` prunes a generation between `install-grub.pl`
+  listing it and its root landing. Because of the back-pointers, the set is
+  updated in place, adding first and then removing what the menu dropped,
+  not swapped as a directory, which would leave every back-pointer
+  dangling. A dropped entry's back-pointer goes stale and the next GC
+  removes it ("removing stale link").
 - A pruned generation stays in the menu, and bootable, until the next switch
   rewrites the menu. Its closure is freed by the GC after that, so disk is
   freed one switch late.

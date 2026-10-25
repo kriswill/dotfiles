@@ -57,6 +57,7 @@
           pkgs.coreutils
           pkgs.gnugrep
           pkgs.gnused
+          config.nix.package # nix-store --add-root, the system's own
         ];
         text = builtins.readFile ./grub-menu-roots.sh;
       };
