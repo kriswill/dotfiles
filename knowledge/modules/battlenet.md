@@ -29,7 +29,8 @@ Options under `programs.battlenet`:
 - `proton` (default `pkgs.proton-ge-bin`): a package with a `steamcompattool`
   output, or a package holding `proton`.
 - `locale` (installer `--lang`, default `enUS`), `icon`, and `environment`
-  (extra Proton variables).
+  (extra Proton variables, as defaults that a variable set for one run
+  overrides).
 - `package` (read-only) is the launcher built from these options.
 
 Imported on every NixOS host but disabled by default; hosts opt in with

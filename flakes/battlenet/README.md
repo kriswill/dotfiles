@@ -144,6 +144,7 @@ From a logged session on 2026-10-25 (GE-Proton11-11, `PROTON_LOG=1` and
 | Controllers | `xinput1_4.dll` + `hid.dll` → `winebus.sys` in `winedevice.exe` | sdl2-compat → SDL3 |
 | Network, login | `bcrypt.dll`, `winhttp.dll` | gnutls, Kerberos |
 | Synchronisation | | fsync; ntsync when `/dev/ntsync` exists (`PROTON_NO_NTSYNC=1` opts out) |
+| Display | `winex11.drv` (XWayland) by default; `winewayland.drv` with `PROTON_ENABLE_WAYLAND=1` | X server or Wayland compositor |
 
 The loader trace had no version errors and no missing libraries in WoW. These
 are normal in its logs:
@@ -220,6 +221,34 @@ link in it, so `$prefix/pfx` still resolves. Don't run the umu launcher and
 this one on the prefix at the same time: `battlenet` refuses while umu's
 wineserver is up. `programs.battlenet.package` is the launcher built from
 these options (read-only).
+
+## Native Wayland
+
+GE-Proton uses Wine's X11 driver, so Battle.net and WoW run under XWayland,
+unless `PROTON_ENABLE_WAYLAND=1`. With it, Proton selects Wine's Wayland
+driver and EGL for OpenGL, turns off its fullscreen hack, and forces Xalia
+off: Wayland lets no client position its own windows. Set it through
+`programs.battlenet.environment`. Those values are defaults, so
+`PROTON_ENABLE_WAYLAND=0 battlenet` tries XWayland again for one run. What
+to expect:
+
+- **Set `PROTON_WAYLAND_MONITOR` to the game's monitor.** Proton tells Wine
+  which monitor is primary by looking for xrandr's `primary` output. XWayland
+  under wlroots compositors such as Hyprland marks none, so Wine picks one
+  itself, and WoW may size itself for the wrong screen.
+- **Window classes change** to the executable names (`battle.net.exe`,
+  `wow.exe`). Under XWayland both share one `steam_app_…` class, so
+  compositor rules that match on title keep working.
+- **WoW's exclusive fullscreen** (`gxWindow "0"`) asks the compositor to
+  leave fullscreen while its window isn't monitor-sized. A compositor rule
+  that forces fullscreen has to ignore WoW's own fullscreen requests too (in
+  Hyprland, `suppress_event = "fullscreen"`).
+- **Battle.net's window** lays out oddly for a few seconds after it opens,
+  then settles.
+- **Mesa EGL warnings** (`pci id for fd N: 10de:…, driver (null)`, `failed to
+  create dri2 screen`) on NVIDIA are harmless. Wine's desktop process loads
+  both Mesa's and NVIDIA's EGL through glvnd, Mesa finds no driver for the GPU,
+  and NVIDIA's EGL takes over. The games render through Vulkan anyway.
 
 ## Moving a prefix out of Steam
 

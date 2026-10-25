@@ -58,7 +58,12 @@ in
         PROTON_ENABLE_WAYLAND = "1";
         PROTON_LOG = "1";
       };
-      description = "Extra environment variables for Proton.";
+      description = ''
+        Extra environment variables for Proton. They are defaults: a variable
+        already set when `battlenet` runs wins, so
+        `PROTON_ENABLE_WAYLAND=0 battlenet` overrides
+        `PROTON_ENABLE_WAYLAND = "1"` for one run.
+      '';
     };
 
     package = lib.mkOption {

@@ -792,6 +792,26 @@ Real findings on nebula — append as you discover more; correct/remove stale on
   `wow-fullscreen` window rule matches the title regex, so the beta window is
   pinned to ws9/DP-3 like retail.
 
+- **WoW on Wine's Wayland driver (2026-10-25).** The `battlenet` launcher
+  (`flakes/battlenet`) now runs Battle.net and WoW natively under Wayland on
+  nebula (`PROTON_ENABLE_WAYLAND=1`), and WoW ran a little faster than under
+  XWayland. The classes become `battle.net.exe` and `wow.exe`; the
+  title-matching rules still apply. Two things needed fixing:
+  1. *Wrong monitor.* Proton tells Wine's driver which monitor is primary
+     (`WAYLANDDRV_PRIMARY_MONITOR`) by finding xrandr's `primary` output.
+     XWayland under Hyprland marks none, so Wine chose its own, and WoW sized
+     its window for the wrong screen. Fix: `PROTON_WAYLAND_MONITOR=DP-3`.
+  2. *Fullscreen dropped.* In its exclusive fullscreen mode (`gxWindow "0"`),
+     WoW asks to leave fullscreen while its window isn't monitor-sized, and
+     Hyprland obeyed. That left a floating window with gaps and the bar
+     showing, which took Super+F twice to fix. The `wow-fullscreen` rule now
+     has `suppress_event = "fullscreen maximize"`.
+
+  Battle.net's window lays out oddly for a few seconds after it opens, then
+  settles. A manual `hyprctl reload` while WoW was fullscreen seemed to knock
+  it out of fullscreen. Hyprland reloads the config on save anyway, so don't
+  reload by hand mid-game.
+
 - **`.conf` shadows `.lua` (2026-06-13).** With both
   `~/.config/hypr/hyprland.conf` and `hyprland.lua` present, Hyprland 0.55.0
   loads the `.conf` and **silently ignores the `.lua`**. Observed: the 13 KB

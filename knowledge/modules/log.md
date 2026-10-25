@@ -2,6 +2,10 @@
 
 ## 2026-10-25
 
+- **Update**: [nebula-battlenet](nebula-battlenet.md) runs Battle.net and WoW on
+  Wine's Wayland driver (`PROTON_ENABLE_WAYLAND`, `PROTON_WAYLAND_MONITOR=DP-3`).
+  The Hyprland `wow-fullscreen` rule ignores WoW's own fullscreen requests.
+
 - **Update**: [nebula-battlenet](nebula-battlenet.md) moved the Battle.net/WoW
   prefix out of Steam's `compatdata/3082075026` to the module's new default,
   `~/.local/share/battlenet`. It is now in Proton's layout, and its 30 links into

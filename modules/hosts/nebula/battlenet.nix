@@ -8,6 +8,18 @@
     programs.battlenet = {
       enable = true;
       icon = "/home/k/Downloads/wow-icon.png";
+      environment = {
+        # Wine's Wayland driver instead of XWayland: WoW ran a little faster
+        # (2026-10-25). Battle.net's window lays out oddly for a few seconds
+        # after it opens, then settles.
+        PROTON_ENABLE_WAYLAND = "1";
+        # Wine's primary monitor. Proton looks for xrandr's "primary" output,
+        # and XWayland under Hyprland marks none, so Wine picked its own. DP-1
+        # is portrait, and WoW sized its fullscreen window for the wrong
+        # screen. DP-3 is the OLED that workspace 9 (WoW's, see
+        # home/hyprland/.config/hypr/window-rules.lua) lives on.
+        PROTON_WAYLAND_MONITOR = "DP-3";
+      };
     };
   };
 }

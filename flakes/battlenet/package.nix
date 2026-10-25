@@ -84,9 +84,18 @@ let
       BATTLENET_PROTON = "${protonDir}";
       BATTLENET_LOCALE = locale;
       BATTLENET_INSTALLER_URL = "https://downloader.battle.net/download/getInstaller?os=win&installer=Battle.net-Setup.exe";
-    }
-    // environment;
-    text = builtins.readFile ./battlenet-proton.sh;
+    };
+    # `environment` sets defaults rather than runtimeEnv's unconditional
+    # exports, so a variable set for one run wins, e.g.
+    # `PROTON_ENABLE_WAYLAND=0 battlenet` to try XWayland again.
+    text =
+      lib.concatStrings (
+        lib.mapAttrsToList (name: value: ''
+          : "''${${name}=${lib.escapeShellArg value}}"
+          export ${name}
+        '') environment
+      )
+      + builtins.readFile ./battlenet-proton.sh;
   };
 
   fhs = steam.buildRuntimeEnv {

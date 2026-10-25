@@ -78,14 +78,15 @@ hl.window_rule({
   float = true,
 })
 
--- World of Warcraft (Battle.net under Steam/Proton) runs as a normal XWayland
--- fullscreen window now that DP-3 is at native scale 1 (see monitor config) — no
--- gamescope. float + fullscreen keeps it out of the dwindle tiling flow so it
--- gets the whole monitor at native 3440x1440; Hyprland direct-scanout + VRR
--- (misc.vrr=2) handle smoothness. Match on TITLE, not class: WoW and the
--- Battle.net launcher share class "steam_app_3862034770"; only the title
--- distinguishes them, so a class rule would wrongly grab the launcher too.
--- Workspace 9 lives on the right OLED (DP-3) and WoW always opens there.
+-- World of Warcraft (the `battlenet` launcher, GE-Proton) runs as a native
+-- Wayland fullscreen window on DP-3 at native scale 1 (see monitor config), with
+-- no gamescope. Under Wine's Wayland driver (PROTON_ENABLE_WAYLAND=1, since
+-- 2026-10-25) the classes are "wow.exe" and "battle.net.exe". Under XWayland
+-- both shared one "steam_app_…" class, which is why these rules match on TITLE.
+-- float + fullscreen keeps WoW out of the dwindle tiling flow so it gets the
+-- whole monitor at native 3440x1440; Hyprland direct scanout + VRR (misc.vrr=2)
+-- handle smoothness. Workspace 9 lives on the right OLED (DP-3) and WoW always
+-- opens there.
 hl.workspace_rule({
   workspace = "9",
   monitor = "desc:ASUSTek COMPUTER INC PG34WCDM RCLMRS022510",
@@ -106,6 +107,13 @@ hl.window_rule({
   workspace = "8 silent",
 })
 
+-- suppress_event: under Wine's Wayland driver, WoW (in its exclusive fullscreen
+-- mode) asks to leave fullscreen while its window isn't yet monitor-sized.
+-- Hyprland obeyed, leaving a floating window with gaps and the bar showing,
+-- and it took Super+F twice to recover (2026-10-25). Ignoring WoW's own
+-- fullscreen requests keeps this rule's fullscreen. "maximize" repeats the
+-- global suppress-maximize-events rule, which this one would otherwise replace
+-- (last match wins).
 hl.window_rule({
   name = "wow-fullscreen",
   match = { title = "World of Warcraft" },
@@ -113,4 +121,5 @@ hl.window_rule({
   workspace = "9 silent", -- pinned to ws9 (right OLED via the workspace rule above)
   float = true,
   fullscreen = true,
+  suppress_event = "fullscreen maximize",
 })
