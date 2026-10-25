@@ -2,6 +2,10 @@
 
 ## 2026-10-24
 
+- **Creation**: [stow-ndjson-activity](stow-ndjson-activity.md). The
+  restow emits NDJSON events instead of prose because it never has a
+  terminal (a systemd unit, darwin-rebuild, boot; not launchd on macOS), and
+  nrs2 renders them.
 - **Creation** — [user-oneshots-skip-switch-restart](user-oneshots-skip-switch-restart.md):
   `nrs` hung at "Activating configuration" because switch-to-configuration-ng
   now restarts changed user units and blocks on them before restarting the

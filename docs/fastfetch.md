@@ -217,7 +217,9 @@ Hard-won gotchas from doing this (so the next session doesn't relearn them):
   config to its repo realpath and dropping its cache next to it) created
   root-owned `home/fastfetch/.config/fastfetch/.cache/`. User-level stow
   couldn't read it → errored → activation logged only
-  `stow: WARNING conflict/error on fastfetch, skipped` → files added/renamed
+  `stow: WARNING conflict/error on fastfetch, skipped` (since 2026-10-24 a
+  `{"stow":"conflict","pkg":"fastfetch",…}` event that carries stow's own
+  message; nrs2 renders it as `✗ fastfetch conflicted, skipped`) → files added/renamed
   in the package after that point never got symlinked (the wrapper's
   `--logo` path dangled, so macOS fell back to the builtin ASCII apple; git
   isn't involved anywhere — stow deploys the live working tree, tracked or

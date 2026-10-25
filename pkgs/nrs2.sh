@@ -12,7 +12,10 @@
 #   darwin  build (nom) → diff (dix) → validate → system profile
 #           → <new generation>/sw/bin/darwin-rebuild activate
 # What changes, each a finding in docs/nrs-pipeline.html:
-#   - activation output is streamed live, not captured (F1) — both OSes;
+#   - activation output is streamed live, not captured (F1), and rendered:
+#     the dotfiles restow's NDJSON events become a live spinner + progress
+#     line and a one-line summary, and switch-to-configuration's plan lines
+#     get glyphs and colours — both OSes;
 #   - every exit ends with a state report and per-stage timings (F4, F12) —
 #     both OSes; failed units, kernel and PAM glibc drift are NixOS-only;
 #   - NixOS only: activation runs as a transient unit under PID 1
@@ -29,7 +32,12 @@
 set -euo pipefail
 
 RED=$'\e[1;31m' GREEN=$'\e[1;32m' YELLOW=$'\e[1;33m' BLUE=$'\e[1;34m' NC=$'\e[0m'
-if [ ! -t 2 ]; then RED='' GREEN='' YELLOW='' BLUE='' NC=''; fi
+MAGENTA=$'\e[1;35m' CYAN=$'\e[1;36m' BOLD=$'\e[1m' DIM=$'\e[2m'
+LIVE=1 # redraw a progress line in place; needs a terminal
+if [ ! -t 2 ]; then
+  RED='' GREEN='' YELLOW='' BLUE='' NC='' MAGENTA='' CYAN='' BOLD='' DIM=''
+  LIVE=0
+fi
 
 SYSTEM_PROFILE=/nix/var/nix/profiles/system
 UNIT=nrs2-switch-to-configuration
@@ -271,6 +279,136 @@ stop_watchdog() {
   fi
 }
 
+# ---- activity rendering -----------------------------------------------------
+# Activation output streams in line by line. The dotfiles restow
+# (lib/stow-restow-script.nix) speaks NDJSON: its events drive a live
+# spinner + progress line on a terminal and end in a one-line summary, with
+# heals, conflicts and reloads listed under it. switch-to-configuration's own
+# plan lines get a glyph and a colour; anything else passes through.
+SPINNER=(⠋ ⠙ ⠹ ⠸ ⠼ ⠴ ⠦ ⠧ ⠇ ⠏)
+r_status='' # the live line currently drawn, if any
+r_total=0 r_done=0 r_spin=0 r_pkg='' r_reason='' r_links=0
+r_notes=()
+
+draw_status() { # draw_status <text>: (re)draw the live line
+  if [ "$LIVE" -eq 1 ]; then
+    r_status="$1"
+    printf '\r\e[K%s' "$1" >&2
+  fi
+}
+
+clear_status() {
+  if [ -n "$r_status" ]; then
+    printf '\r\e[K' >&2
+    r_status=''
+  fi
+}
+
+emit() { # emit <line>: print a whole line above the live line
+  local keep="$r_status"
+  clear_status
+  printf '%s\n' "$1" >&2
+  if [ -n "$keep" ]; then draw_status "$keep"; fi
+}
+
+progress_bar() { # progress_bar <done> <total> <width>
+  local fill i filled='' empty='' total=$2
+  if [ "$total" -lt 1 ]; then total=1; fi
+  fill=$(($1 * $3 / total))
+  for ((i = 0; i < $3; i++)); do
+    if [ "$i" -lt "$fill" ]; then filled+='█'; else empty+='░'; fi
+  done
+  printf '%s%s%s%s%s' "$GREEN" "$filled" "$DIM" "$empty" "$NC"
+}
+
+stow_status() {
+  local frame="${SPINNER[r_spin % ${#SPINNER[@]}]}"
+  r_spin=$((r_spin + 1))
+  printf '  %s%s%s %sstow%s %s %s%d/%d%s %s%s%s' "$CYAN" "$frame" "$NC" "$BOLD" "$NC" \
+    "$(progress_bar "$r_done" "$r_total" 20)" "$BOLD" "$r_done" "$r_total" "$NC" "$DIM" "$r_pkg" "$NC"
+}
+
+stow_event() { # stow_event <ndjson line>
+  local ev pkg files ms reason link what packages skipped ok conflicts healed dir msg m glyph summary
+  IFS=$'\x1f' read -r ev pkg files ms reason link what packages skipped ok conflicts healed dir < <(
+    jq -r '[.stow, .pkg, .files, .ms, .reason, .link, .what, .packages, .skipped, .ok, .conflicts, .healed, .dir]
+      | map(if . == null then "" else tostring end) | join("\u001f")' <<<"$1" 2>/dev/null || true
+  )
+  case "$ev" in
+    begin)
+      r_total=$packages r_done=0 r_pkg='' r_links=0 r_notes=()
+      draw_status "$(stow_status)"
+      ;;
+    skip) r_reason=$reason ;;
+    heal)
+      r_notes+=("    ${YELLOW}↺${NC} healed ${DIM}${link/#"$HOME"/\~}${NC}")
+      draw_status "$(stow_status)"
+      ;;
+    ok | conflict)
+      r_done=$((r_done + 1)) r_pkg=$pkg
+      if [ "$ev" = ok ]; then r_links=$((r_links + ${files:-0})); fi
+      msg="$(jq -r '.msg // ""' <<<"$1" 2>/dev/null || true)"
+      if [ "$ev" = conflict ]; then
+        r_notes+=("    ${RED}✗${NC} ${BOLD}${pkg}${NC} conflicted, skipped")
+      elif [ -n "$msg" ]; then
+        r_notes+=("    ${YELLOW}!${NC} ${BOLD}${pkg}${NC} stow said:")
+      fi
+      if [ -n "$msg" ]; then
+        while IFS= read -r m; do r_notes+=("        ${DIM}${m}${NC}"); done < <(head -6 <<<"$msg")
+      fi
+      draw_status "$(stow_status)"
+      ;;
+    end)
+      clear_status
+      glyph="${GREEN}✔${NC}"
+      if [ "$conflicts" -gt 0 ]; then glyph="${YELLOW}⚠${NC}"; fi
+      summary="  $glyph ${BOLD}stow${NC}  ${BOLD}${ok}${NC} packages ${DIM}·${NC} ${BOLD}${r_links}${NC} links"
+      if [ "$conflicts" -gt 0 ]; then summary+=" ${DIM}·${NC} ${RED}${conflicts} conflicted${NC}"; fi
+      if [ "$healed" -gt 0 ]; then summary+=" ${DIM}·${NC} ${YELLOW}${healed} healed${NC}"; fi
+      if [ "$skipped" -gt 0 ]; then summary+=" ${DIM}· ${skipped} skipped${r_reason:+ ($r_reason)}${NC}"; fi
+      summary+=" ${DIM}· $((ms / 1000)).$(printf '%02d' $((ms % 1000 / 10)))s${NC}"
+      emit "$summary"
+      for m in "${r_notes[@]}"; do emit "$m"; done
+      r_notes=()
+      ;;
+    reload) emit "  ${MAGENTA}↻${NC} reloaded ${BOLD}${what}${NC}" ;;
+    absent) emit "  ${YELLOW}⚠${NC} stow: ${dir} not present, skipped" ;;
+    *) emit "  $1" ;; # not a stow event after all
+  esac
+}
+
+plan_line() { # plan_line <line>: style one line of activation output
+  local l="$1" who='' rest
+  case "$l" in
+    'Starting [systemd-run] '* | 'Started [systemd-run] '*) return ;; # our step header covers it
+    *'the following user units: '*) who=" ${DIM}(user)${NC}" ;;
+  esac
+  rest="${l#*: }"
+  case "$l" in
+    'NOT restarting'*'the following '*) emit "  ${DIM}· not restarting${NC}${who} ${DIM}${rest}${NC}" ;;
+    'stopping'*'the following '*) emit "  ${RED}■${NC} stopping${who}   ${rest}" ;;
+    'reloading'*'the following '*) emit "  ${BLUE}⟳${NC} reloading${who}  ${rest}" ;;
+    'restarting'*'the following '*) emit "  ${YELLOW}↻${NC} restarting${who} ${rest}" ;;
+    'starting'*'the following '*) emit "  ${GREEN}▶${NC} starting${who}   ${rest}" ;;
+    'the following new units were started: '*) emit "  ${GREEN}+${NC} new units  ${rest}" ;;
+    *[Ee]rror* | *[Ff]ailed*) emit "  ${RED}${l}${NC}" ;;
+    *[Ww]arning* | *WARN*) emit "  ${YELLOW}${l}${NC}" ;;
+    *... | 'Checking '* | 'restarting '* | 'reloading '*) emit "  ${DIM}● ${l%...}${NC}" ;;
+    *) emit "  $l" ;;
+  esac
+}
+
+render_activity() { # render_activity: style the activation stream on stdin, to stderr
+  local line
+  while IFS= read -r line || [ -n "$line" ]; do
+    case "$line" in
+      '{"stow":'*) stow_event "$line" ;;
+      *) plan_line "$line" ;;
+    esac
+  done
+  clear_status
+}
+
 set_profile() {
   step "setting $SYSTEM_PROFILE"
   # -H: macOS sudo keeps the caller's $HOME, and nix then warns about it.
@@ -299,14 +437,15 @@ activate_nixos() {
   set +e
   sudo "$systemd_run" --collect --no-ask-password --quiet --service-type=exec \
     --unit="$UNIT" --wait --verbose --output=cat "${env_args[@]}" \
-    "$out/bin/switch-to-configuration" test
-  rc=$?
+    "$out/bin/switch-to-configuration" test 2>&1 | render_activity
+  rc=${PIPESTATUS[0]}
   set -e
   stop_watchdog
   trap - INT
   lap activate
 
   if [ "$interrupted" -eq 1 ] || [ "$rc" -eq 130 ]; then
+    if [ "$LIVE" -eq 1 ]; then printf '\r\e[K' >&2; fi # the renderer died mid-line
     warn "detached; activation carries on as $UNIT.service under PID 1"
     printf '  follow: journalctl -fu %s\n  stop:   sudo systemctl stop %s\n' "$UNIT" "$UNIT" >&2
     printf '  then re-run nrs2 to set the profile and the boot entry\n' >&2
@@ -338,8 +477,16 @@ activate_nixos() {
   # The pre-switch checks already ran in the `test` step above, against this
   # same generation; for `boot` they would only print "Not checking switch
   # inhibitors (action = boot)".
-  sudo env NIXOS_NO_CHECK=1 "$out/bin/switch-to-configuration" boot
+  set +e
+  sudo env NIXOS_NO_CHECK=1 "$out/bin/switch-to-configuration" boot 2>&1 | render_activity
+  rc=${PIPESTATUS[0]}
+  set -e
   lap boot
+  if [ "$rc" -ne 0 ]; then
+    fail "bootloader update failed (exit $rc); the profile is set, the boot menu may still default to the old generation"
+    report
+    exit "$rc"
+  fi
 }
 
 # ---- activation, darwin -----------------------------------------------------
@@ -351,8 +498,8 @@ activate_darwin() {
   if [ "$mode" = test ]; then
     step "checking: darwin-rebuild check (system.checks, no activation)"
     set +e
-    sudo -H "$out/sw/bin/darwin-rebuild" check --flake "$flake#$host"
-    rc=$?
+    sudo -H "$out/sw/bin/darwin-rebuild" check --flake "$flake#$host" 2>&1 | render_activity
+    rc=${PIPESTATUS[0]}
     set -e
     lap check
     if [ "$rc" -ne 0 ]; then fail "darwin-rebuild check failed (exit $rc)"; report; exit "$rc"; fi
@@ -362,8 +509,8 @@ activate_darwin() {
   set_profile
   step "activating: darwin-rebuild activate"
   set +e
-  sudo -H "$out/sw/bin/darwin-rebuild" activate
-  rc=$?
+  sudo -H "$out/sw/bin/darwin-rebuild" activate 2>&1 | render_activity
+  rc=${PIPESTATUS[0]}
   set -e
   lap activate
   if [ "$rc" -ne 0 ]; then

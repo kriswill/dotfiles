@@ -2,6 +2,11 @@
 
 ## 2026-10-24
 
+- **Update**: [dotfiles-stow](dotfiles-stow.md) reports as an NDJSON event
+  stream, and [nrs2](nrs2.md) renders it, plus switch-to-configuration's plan
+  lines, as a live progress line and a colored summary
+  ([decision](../decisions/stow-ndjson-activity.md)). The card's stale
+  `runuser` claim is corrected to `setpriv`.
 - **Update**: [configuration](configuration.md). `useOSProber` is off and
   Windows is a static GRUB chainload entry (`extraEntries`, `mkBefore`, ESP
   UUID `B658-8653`). This removes os-prober's per-rebuild rescan of the

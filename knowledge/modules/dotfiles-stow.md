@@ -14,7 +14,11 @@ stable across rebuilds and the adopt workflow works (see the
 builder [`lib/stow-restow-script.nix`](../../lib/stow-restow-script.nix))
 canonicalizes the stow dir, self-heals links that reach repo files through a
 non-canonical convenience symlink, then runs `stow --no-folding --restow` per
-package with per-package conflict tolerance (log + skip, never abort). Stow
+package with per-package conflict tolerance (report + skip, never abort). It
+reports as an NDJSON event stream on stderr (`begin`/`skip`/`heal`/`ok`/
+`conflict`/`end`), which [nrs2](nrs2.md) renders as a live progress line
+and a one-line summary. See the
+[NDJSON activity decision](../decisions/stow-ndjson-activity.md). Stow
 runs with `--ignore='\.cache'` and `--ignore='\.DS_Store'`: sudo'd tools
 occasionally drop root-owned droppings *inside* a stow package (a root-owned
 `.cache/` in `home/fastfetch` was unreadable to the user-level stow, which
@@ -32,8 +36,9 @@ Both classes consume the same builder with different arguments — darwin:
 `home=/Users/k`, `runAsUser = sudo -u k --set-home`, hook = `postActivation`
 at `mkOrder 1500` (the anchor that generated
 [store-path configs](../patterns/store-path-configs.md) link after); nixos:
-`home=/home/k`, `runAsUser = runuser -u k -- env
-HOME=…`, hook = named activation script `stowDotfiles` with
+`home=/home/k`, `runAsUser = setpriv --reuid=k … -- env
+HOME=…` (not runuser, which opened a PAM session per package and flooded
+the streamed rebuild output), hook = named activation script `stowDotfiles` with
 `deps = ["users"]`. Each carries a skip list of the other OS's 7 packages —
 intentionally different lists that mirror-comment each other, not drift (see
 the [skip-lists decision](../decisions/stow-os-skip-lists.md) and the

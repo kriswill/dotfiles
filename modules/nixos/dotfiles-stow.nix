@@ -43,6 +43,7 @@
       # Restow churn (self-heal rm + recreate) kills Hyprland's inotify watch on
       # the deleted link, so it never sees the file return and shows a stale
       # "cannot open" error banner. Reload any running instance to clear it.
+      # Reported as a "reload" event in the restow script's NDJSON stream.
       hyprReload = ''
         (
         for sock in /run/user/*/hypr/*/.socket.sock; do
@@ -51,7 +52,7 @@
           sig="''${sock%/.socket.sock}"; sig="''${sig##*/}"
           if XDG_RUNTIME_DIR="$rundir" HYPRLAND_INSTANCE_SIGNATURE="$sig" \
                ${config.programs.hyprland.package}/bin/hyprctl reload >/dev/null 2>&1; then
-            echo "stow: reloaded hyprland ($sig)" >&2
+            printf '{"stow":"reload","what":"hyprland","instance":"%s"}\n' "$sig" >&2
           fi
         done
         )
