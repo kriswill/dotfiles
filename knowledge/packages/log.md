@@ -2,6 +2,12 @@
 
 ## 2026-10-24
 
+- **Deprecation**: xpad-noone. The TEMPORARY overlay `overlays/xpad-noone.nix`,
+  its `flake.overlays` registration and its catalog doc are removed.
+  snowglobe-factory a618d543 (2026-10-23) dropped `hardware.xone.enable` from
+  the gaming profile, so nothing builds xpad-noone any more, and nebula has no
+  Xbox controller to need it. nebula's toplevel `.drv` is identical with and
+  without the overlay.
 - **Creation**: [nrs2](nrs2.md), `pkgs/nrs2.{nix,sh}`, surfaced as
   `pkgs.nrs2` by `overlays/nrs2.nix`. It is one `writeShellApplication`
   script for NixOS and nix-darwin, behind the [nrs2 modules](../modules/nrs2.md).
@@ -17,7 +23,7 @@
 
 ## 2026-10-23
 
-- **Creation** — [xpad-noone](xpad-noone.md): TEMPORARY overlay via
+- **Creation** — xpad-noone (removed 2026-10-24): TEMPORARY overlay via
   `kernelPackagesExtensions` backporting NixOS/nixpkgs#576469. nixpkgs now
   signs out-of-tree kernel modules with kmodigest during `modules_install`,
   and the module aggregator expects a `<module>.ko.cer` per external module;
