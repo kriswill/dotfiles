@@ -67,6 +67,18 @@ root per system the menu boots (the store path of each entry's `init=`).
   that step visibly.
 - **An unrecognized menu** (no `init=`) keeps the previous roots instead of
   failing the install.
+- **Access:** `root:root 0755`, with root-owned symlinks; an explicit `chmod`
+  means the umask can't change it. That is Nix's own convention: `gcroots`,
+  `gcroots/auto` and both `per-user` dirs, the latter chmodded to 0755 by
+  `local-store.cc` itself. The reasons are in the
+  [decision](../decisions/generation-retention.md). The first deploy made it
+  0700 (`mktemp -d`); corrected 2026-10-24.
+- **Updated in place:** the script adds before it removes. Each root goes in
+  through `nix-store --add-root`, which announces it to a GC already running
+  before linking it, and leaves a back-pointer in `gcroots/auto`. Then the
+  links the menu dropped are deleted. The set never holds fewer roots than
+  either menu needs. With no temp directory, nothing can be left behind, and
+  earlier versions' temp sets are removed on the next run.
 
 Auto-discovered via the [Dendritic module layout](../patterns/dendritic-modules.md);
 ungated on every NixOS host (see the
