@@ -2,6 +2,11 @@
 
 ## 2026-10-24
 
+- **Update**: [nrs2](nrs2.md) skips the profile and boot steps when the boot
+  default already is the new build and its own record says it wrote that
+  boot entry (`--boot` forces them). To compensate,
+  [configuration](configuration.md) adds a GRUB-refresh `ExecStartPost` to
+  `nix-gc.service`, so the menu never lists collected generations.
 - **Update**: [dotfiles-stow](dotfiles-stow.md) reports as an NDJSON event
   stream, and [nrs2](nrs2.md) renders it, plus switch-to-configuration's plan
   lines, as a live progress line and a colored summary

@@ -25,10 +25,12 @@
 #     no systemd-run equivalent wired here, so on darwin Ctrl-C interrupts
 #     activation exactly as it does under nh.
 #
-#   nrs2 [--dry | --test] [nix build args…]
+#   nrs2 [--dry | --test] [--boot] [nix build args…]
 #     --dry   build, diff and validate only; no root (like nrb)
 #     --test  NixOS: activate without touching the profile or GRUB (like nrt)
 #             darwin: darwin-rebuild check — run system.checks, no activation
+#     --boot  NixOS: rewrite the boot menu even when the boot default is
+#             unchanged (normally skipped then; see bootloader_current)
 set -euo pipefail
 
 RED=$'\e[1;31m' GREEN=$'\e[1;32m' YELLOW=$'\e[1;33m' BLUE=$'\e[1;34m' NC=$'\e[0m'
@@ -44,11 +46,20 @@ UNIT=nrs2-switch-to-configuration
 STALL_AFTER=45 # seconds of activation before the watchdog first speaks
 STALL_EVERY=30 # … and how often it repeats
 
+# nrs2 records the store path it last wrote to the bootloader. /boot is
+# root-only, so this is how it knows the menu is current without reading it.
+BOOT_STAMP="${XDG_STATE_HOME:-$HOME/.local/state}/nrs2/bootloader"
+
 mode='switch'
-case "${1:-}" in
-  --dry) mode='dry'; shift ;;
-  --test) mode='test'; shift ;;
-esac
+force_boot=0
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --dry) mode='dry'; shift ;;
+    --test) mode='test'; shift ;;
+    --boot) force_boot=1; shift ;;
+    *) break ;;
+  esac
+done
 
 step() { printf '%s>%s %s\n' "$BLUE" "$NC" "$*" >&2; }
 warn() { printf '%swarning:%s %s\n' "$YELLOW" "$NC" "$*" >&2; }
@@ -409,6 +420,17 @@ render_activity() { # render_activity: style the activation stream on stdin, to 
   clear_status
 }
 
+# True when there is nothing for the profile + boot steps to do: the boot
+# default already IS this build, and nrs2 itself wrote its boot entry. Both
+# matter. A run cut off between setting the profile and writing the
+# bootloader leaves the profile current but the menu stale; the stamp catches
+# that, and also a boot entry written by something else (nh, nixos-rebuild).
+# Setting the profile to the same path adds no generation either way.
+bootloader_current() {
+  [ "$(readlink -f "$SYSTEM_PROFILE")" = "$out" ] &&
+    [ "$(cat "$BOOT_STAMP" 2>/dev/null || true)" = "$out" ]
+}
+
 set_profile() {
   step "setting $SYSTEM_PROFILE"
   # -H: macOS sudo keeps the caller's $HOME, and nix then warns about it.
@@ -471,6 +493,10 @@ activate_nixos() {
       ;;
   esac
   if [ "$mode" = test ]; then return; fi
+  if [ "$force_boot" -eq 0 ] && bootloader_current; then
+    step "boot default is already $(generation_of "$out"); bootloader untouched (--boot rewrites it)"
+    return
+  fi
 
   set_profile
   step "adding the configuration to the bootloader"
@@ -487,6 +513,8 @@ activate_nixos() {
     report
     exit "$rc"
   fi
+  mkdir -p "${BOOT_STAMP%/*}"
+  printf '%s\n' "$out" >"$BOOT_STAMP"
 }
 
 # ---- activation, darwin -----------------------------------------------------
