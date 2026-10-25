@@ -61,11 +61,12 @@ a rewrite.
 - **Self-repair after any GC.** Any `nrs2` after a GC repairs the menu,
   whatever ran the GC, and so does a run after an interrupted switch or a
   rollback.
-- **The gap left.** Between a GC and the next switch, GRUB can still list
-  collected generations, as it always could. The full fix is retention by
-  count plus a refresh hook done properly (`ExecStopPost`, failures
-  surfaced). That is proposal P15 in the pipeline report, still
-  open.[^nrs-pipeline]
+- **The gap left, closed 2026-10-24.** Between a GC and the next switch, GRUB
+  could still list collected generations. P15 closed this without a GC
+  hook: every bootloader install now GC-roots each system the menu lists
+  ([Retain Generations by Boot History; Root What GRUB Lists](generation-retention.md)),
+  so a listed generation can't be collected at all.[^nrs-pipeline] nrs2's
+  check stays, as a backstop for menus written before the roots existed.
 - **A format dependency.** The check depends on install-grub's entry format
   (`init=` paths, default first). If that format changes, the check stops
   matching and nrs2 just rewrites every time: no worse than nh.
