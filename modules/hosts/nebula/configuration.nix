@@ -28,6 +28,11 @@
       # Drop this override if snowglobe-factory moves to libreoffice-stable.
       programs.libreoffice.package = pkgs.libreoffice-stable;
       snowglobe-factory.profiles.hacker-mode.enable = true;
+      # Off since 2026-10-25, with VLC from snowglobe's desktop layer: the two
+      # were the only things pulling in ffmpeg 7.1.5 (41 nixploit findings).
+      # The tor daemon hacker-mode also enables stays.
+      programs.tor-browser.enable = false;
+      programs.vlc.enable = false;
       # nix-tools profile: dropped upstream (snowglobe-factory b0a0d97b, 2026-10);
       # its package payload is inlined into environment.systemPackages below.
       snowglobe-factory.profiles.harden.enable = true;
