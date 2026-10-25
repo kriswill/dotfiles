@@ -2,6 +2,15 @@
 
 ## 2026-10-24
 
+- **Creation**: [generations](generations.md) (report P15). `nix-gc` becomes
+  collect-only behind a prune step. The system profile keeps:
+  - the current boot and the two before it (from the journal);
+  - the last other kernel;
+  - the boot default, the running system, and the generation before the
+    default.
+
+  Other profiles keep 7 days. Every bootloader install GC-roots what the
+  GRUB menu lists ([decision](../decisions/generation-retention.md)).
 - **Update**: [nrs2](nrs2.md) gains `--plan` (report P10) and `--status`
   (P17). `--plan` is dry-activate plus stc-ng's user pass run dry as the
   user, because dry-activate exits before that pass. It flags units the

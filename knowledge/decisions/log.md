@@ -2,6 +2,13 @@
 
 ## 2026-10-24
 
+- **Creation**: [generation-retention](generation-retention.md). The system
+  profile is retained by boot history read from the journal; other profiles
+  keep 7 days. GRUB's menu is GC-rooted at each bootloader install, which
+  replaces the rejected GC-hook refresh. nh clean was not used, because it can
+  delete a rolled-back profile's current generation.
+- **Update**: [nrs2-boot-menu-check](nrs2-boot-menu-check.md): its open gap
+  (stale menu between a GC and the next switch) is closed by the menu roots.
 - **Creation**: [nrs2-plan-user-pass](nrs2-plan-user-pass.md). dry-activate
   exits before switch-to-configuration-ng's per-user pass, so `nrs2 --plan`
   runs that pass itself, dry and as the user, through stc-ng's internal

@@ -1285,7 +1285,7 @@ fi</code></pre>
 <!-- ================================================================== -->
 <h2 id="proposals">15. Proposals</h2>
 
-<p>Ordered by payoff per unit of effort. The kinds: <span class="kind use">usability</span>, <span class="kind res">resilience</span>, <span class="kind perf">performance</span>. The code is the original sketch to be tested before use. <strong>Status 2026-10-24:</strong> P5, P7, P8, P11 and P14 are done, and each one's block says where it lives. P1–P4, P6, P10 and P17 are implemented in <code>nrs2</code> (see the note at the end of this section) but not in <code>nrs</code>. P16 was already in place. The rest are still proposals.</p>
+<p>Ordered by payoff per unit of effort. The kinds: <span class="kind use">usability</span>, <span class="kind res">resilience</span>, <span class="kind perf">performance</span>. The code is the original sketch to be tested before use. <strong>Status 2026-10-24:</strong> P5, P7, P8, P11, P14 and P15 are done, and each one's block says where it lives. P1–P4, P6, P10 and P17 are implemented in <code>nrs2</code> (see the note at the end of this section) but not in <code>nrs</code>. P16 was already in place. The rest are still proposals.</p>
 
 <div class="table-scroll"><table>
   <colgroup><col style="width:6%"><col style="width:9%"><col style="width:41%"><col style="width:14%"><col style="width:10%"><col></colgroup>
@@ -1455,7 +1455,12 @@ boot.loader.grub.extraEntries = ''
 <p>This produces the same menu without mounting the other disk on every switch. It probably recovers most of stage 8's 2.37 s; confirm with <code>sudo time os-prober</code> first. The memory note about why GRUB came back still holds: GRUB stays, only the probing goes.</p></div>
 
 <div class="proposal" id="p15"><h4>P15 · Keep N generations, and refresh GRUB after GC <span class="kind res">resilience</span></h4>
-<p><strong>Status 2026-10-24: not done.</strong> Retention is still age-only (snowglobe's <code>nix.gc</code>, 7 days), and GC does not rewrite <code>grub.cfg</code>. nrs2 narrows the gap: every run reads the menu and rewrites it if any listed generation has been collected, so the menu goes stale only between a GC and the next switch. A GC-triggered refresh was tried and dropped after review (see <code>knowledge/decisions/nrs2-boot-menu-check.md</code>).</p>
+<p><strong>Done 2026-10-24, differently from the sketch below</strong> (<code>modules/nixos/generations.nix</code>; decision record <code>knowledge/decisions/generation-retention.md</code>):</p>
+<ul>
+  <li><strong>The menu is rooted instead of refreshed.</strong> Every bootloader install GC-roots each system the GRUB menu lists, from <code>extraInstallCommands</code>, right after <code>install-grub.pl</code>. So no GC can collect a listed closure, whoever runs it. There is no GC hook, no new lock user, and no swallowed failures, which were the review's objections to the hook.</li>
+  <li><strong>Retention follows boot history, not count.</strong> The system profile keeps the current boot, the previous two successful boots (from the journal: <code>init=</code> on the kernel command line, plus systemd's "Startup finished"), the newest boot on a different kernel version, the boot default, the running system, and the generation before the default. Other profiles keep the 7-day rule. <code>nix-gc</code> only collects; a <code>preStart</code> does the pruning through nix-env.</li>
+  <li><strong>nh clean was not used.</strong> In 4.4.2 it can delete a rolled-back profile's current generation; nix-env refuses to.</li>
+</ul>
 <pre><code>nix.gc.automatic = false;
 programs.nh.clean = { enable = true; extraArgs = "--keep 5 --keep-since 7d"; };
 systemd.services.nh-clean.serviceConfig.ExecStartPost =
