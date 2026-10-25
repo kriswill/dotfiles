@@ -3,7 +3,7 @@
 # the new generation's own `darwin-rebuild activate`, output streamed, then a
 # state report. It replaced nh on 2026-10-24. No detach-on-Ctrl-C here: that
 # rides on systemd-run, which the NixOS twin has and launchd does not.
-# Why: docs/nrs-pipeline.html (§14–15).
+# Manual: docs/nrs-pipeline.html.
 #
 #   nrs           build + switch
 #   nrb           nrs --dry: build and diff only, no root

@@ -5,6 +5,16 @@ types or directories, root-level concept docs, `docs/` manuals, bundle-wide
 sweeps, and workspace tooling conventions. Changes scoped to one bundle log
 in that bundle's own `log.md` (e.g. [modules/log.md](modules/log.md)).
 
+## 2026-10-24
+
+- **Update** — `docs/nrs-pipeline.html` is now the manual for nrs, `nrb` and
+  `nrt`, listed in [manuals](manuals.md). It used to be the analysis that
+  led to nrs; that version is `git show b95c62b:docs/nrs-pipeline.html`.
+  Its finding and proposal numbers are kept in the manual's §10.
+  `docs/nrs-pipeline.md` carries the same manual for GitHub, with diagrams
+  exported from the HTML as theme-aware SVGs by
+  `docs/nrs-pipeline/export-svgs.ts` (bun).
+
 ## 2026-08-02
 
 - **Creation** — [runtimes/](runtimes/index.md): new `Runtime` bundle type,

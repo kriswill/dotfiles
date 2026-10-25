@@ -3,7 +3,7 @@
 # switch-to-configuration test as a transient systemd unit (output streamed;
 # Ctrl-C or a lost terminal detaches instead of killing it) → system profile →
 # boot entry, then a state report. It replaced nh on 2026-10-24.
-# Why: docs/nrs-pipeline.html (§14–15).
+# Manual: docs/nrs-pipeline.html.
 #
 #   nrs           build + switch
 #   nrb           nrs --dry: build and diff only, no root

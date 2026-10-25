@@ -8,7 +8,7 @@ generated: { by: claude-code/opus-5.5, at: 2026-10-24T17:20:00-07:00 }
 sources:
   - id: nrs-pipeline
     resource: ../../docs/nrs-pipeline.html
-    title: 'docs/nrs-pipeline.html: the nrs pipeline, design interrogation and proposals'
+    title: 'docs/nrs-pipeline.html: the nrs manual (its §10 maps F1–F12 and P1–P17)'
   - id: stc-ng-source
     resource: https://github.com/NixOS/nixpkgs/blob/master/pkgs/by-name/sw/switch-to-configuration-ng/src/main.rs
     title: switch-to-configuration-ng source
@@ -142,5 +142,5 @@ auto-discovered via the [Dendritic module layout](../patterns/dendritic-modules.
 - NixOS module: [`modules/nixos/nrs.nix`](../../modules/nixos/nrs.nix)
 - Package: [`pkgs/nrs.nix`](../../pkgs/nrs.nix) + [`pkgs/nrs.sh`](../../pkgs/nrs.sh)
 
-[^nrs-pipeline]: docs/nrs-pipeline.html: the nrs pipeline, design interrogation and proposals
+[^nrs-pipeline]: docs/nrs-pipeline.html: the nrs manual (its §10 maps F1–F12 and P1–P17)
 [^stc-ng-source]: switch-to-configuration-ng source

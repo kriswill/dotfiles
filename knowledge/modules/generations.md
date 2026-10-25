@@ -8,7 +8,7 @@ generated: { by: claude-code/opus-5.5, at: 2026-10-24T22:10:00-07:00 }
 sources:
   - id: nrs-pipeline
     resource: ../../docs/nrs-pipeline.html
-    title: 'docs/nrs-pipeline.html: the nrs pipeline, design interrogation and proposals'
+    title: 'docs/nrs-pipeline.html: the nrs manual (its §10 maps F1–F12 and P1–P17)'
 ---
 
 Report proposal P15, done another way than the report sketched.[^nrs-pipeline]
@@ -90,4 +90,4 @@ ungated on every NixOS host (see the
 - Scripts: [`prune-generations.sh`](../../modules/nixos/prune-generations.sh),
   [`grub-menu-roots.sh`](../../modules/nixos/grub-menu-roots.sh)
 
-[^nrs-pipeline]: docs/nrs-pipeline.html: the nrs pipeline, design interrogation and proposals
+[^nrs-pipeline]: docs/nrs-pipeline.html: the nrs manual (its §10 maps F1–F12 and P1–P17)

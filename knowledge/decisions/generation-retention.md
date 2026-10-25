@@ -8,7 +8,7 @@ generated: { by: claude-code/opus-5.5, at: 2026-10-24T22:10:00-07:00 }
 sources:
   - id: nrs-pipeline
     resource: ../../docs/nrs-pipeline.html
-    title: 'docs/nrs-pipeline.html: the nrs pipeline, design interrogation and proposals'
+    title: 'docs/nrs-pipeline.html: the nrs manual (its §10 maps F1–F12 and P1–P17)'
   - id: nix-env-delete-generations
     resource: https://nix.dev/manual/nix/latest/command-ref/nix-env/delete-generations
     title: nix-env --delete-generations
@@ -142,5 +142,5 @@ Two problems, one cause each:
   - **`grub-menu-roots`:** checked on synthetic menus, including the
     replacement and an empty menu.
 
-[^nrs-pipeline]: docs/nrs-pipeline.html: the nrs pipeline, design interrogation and proposals
+[^nrs-pipeline]: docs/nrs-pipeline.html: the nrs manual (its §10 maps F1–F12 and P1–P17)
 [^nix-env-delete-generations]: nix-env --delete-generations
