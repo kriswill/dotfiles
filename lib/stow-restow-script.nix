@@ -28,12 +28,39 @@ in
 ''
   # Activation snippets share one shell, so `exit`/`set -u` must be confined to
   # a subshell or they'd abort/alter the rest of activation.
+  #
+  # Output is an NDJSON event stream on stderr, one object per line. This runs
+  # without a terminal (inside switch-to-configuration, under a systemd unit or
+  # darwin-rebuild, and at every NixOS boot), so it can't draw progress itself;
+  # a front-end that owns the terminal (nrs2) renders the events, and the raw
+  # lines stay readable in a captured log or the boot journal:
+  #   {"stow":"begin","packages":N,"skipped":M}
+  #   {"stow":"skip","pkg":P,"reason":R}
+  #   {"stow":"heal","pkg":P,"link":L}           stale non-canonical link removed
+  #   {"stow":"ok","pkg":P,"files":F,"ms":T}     plus "msg" if stow printed anything
+  #   {"stow":"conflict","pkg":P,"ms":T,"msg":S} stow's own output; package skipped
+  #   {"stow":"end","ok":N,"conflicts":C,"healed":H,"skipped":M,"ms":T}
+  #   {"stow":"absent","dir":D}                  no stow tree yet
+  # (modules/nixos/dotfiles-stow.nix adds {"stow":"reload","what":"hyprland",…})
+  # Strings are escaped in bash rather than with jq: no extra process per event
+  # on every activation and boot.
   (
   set -u
+  json_str() { # json_str <text>: <text> as a JSON string literal
+    local s="$1"
+    s="''${s//\\/\\\\}"
+    s="''${s//\"/\\\"}"
+    s="''${s//$'\n'/\\n}"
+    s="''${s//$'\t'/\\t}"
+    s="''${s//$'\r'/\\r}"
+    printf '"%s"' "$s"
+  }
+  now_ms() { echo $(( $(${pkgs.coreutils}/bin/date +%s%N) / 1000000 )); }
   if [ ! -d "${stowDir}" ]; then
-    echo "stow: ${stowDir} not present yet, skipping" >&2
+    printf '{"stow":"absent","dir":%s}\n' "$(json_str "${stowDir}")" >&2
     exit 0
   fi
+  started="$(now_ms)"
   # Canonical (symlink-resolved) stow dir. stow resolves --dir before
   # computing link targets, so the links it OWNS go through this path. A
   # link reaching the same file via a ~/src/dotfiles convenience symlink
@@ -43,16 +70,29 @@ in
   canon="$(${pkgs.coreutils}/bin/realpath "${stowDir}")"
   # Auto-discover packages: every directory under home/ is one stow package,
   # so newly adopted apps are deployed on the next rebuild with no nix edit.
+  # Classified up front so "begin" can carry the total for a progress display;
+  # packages that belong to the other OS are skipped.
+  todo=()
+  skipped=()
   for pkgdir in "${stowDir}"/*/; do
     [ -d "$pkgdir" ] || continue
     pkg="$(${pkgs.coreutils}/bin/basename "$pkgdir")"
-    # Per-OS scoping: skip packages that belong to the other OS.
     case "$pkg" in
-      ${skipPattern})
-        echo "stow: skipping $pkg (${skipReason})" >&2
-        continue
-        ;;
+      ${skipPattern}) skipped+=("$pkg") ;;
+      *) todo+=("$pkg") ;;
     esac
+  done
+  printf '{"stow":"begin","packages":%d,"skipped":%d}\n' "''${#todo[@]}" "''${#skipped[@]}" >&2
+  for pkg in "''${skipped[@]}"; do
+    printf '{"stow":"skip","pkg":%s,"reason":%s}\n' "$(json_str "$pkg")" "$(json_str "${skipReason}")" >&2
+  done
+  ok=0
+  conflicts=0
+  healed=0
+  for pkg in "''${todo[@]}"; do
+    pkgdir="${stowDir}/$pkg"
+    t0="$(now_ms)"
+    files=0
     # Self-heal: drop any target symlink that IS one of this package's files
     # but reaches it through a symlinked (non-canonical) path, so the restow
     # below recreates it canonically instead of conflict-skipping the whole
@@ -60,8 +100,8 @@ in
     # repo yet its textual target (NO symlink-follow) does not — i.e. it only
     # lands in-repo via the convenience symlink. Already-canonical links fail
     # the first test and are left untouched, so healthy packages see no churn.
-    ( cd "$pkgdir" && ${pkgs.findutils}/bin/find . \( -type f -o -type l \) -printf '%P\n' ) |
     while IFS= read -r rel; do
+      files=$((files + 1))
       link="${home}/$rel"
       [ -L "$link" ] || continue
       raw="$(${pkgs.coreutils}/bin/readlink "$link")"
@@ -77,27 +117,37 @@ in
       case "$real" in
         "$canon"/*)                                      # our file, wrong path
           rm -f "$link"
-          echo "stow: healed stale link $link" >&2 ;;
+          healed=$((healed + 1))
+          printf '{"stow":"heal","pkg":%s,"link":%s}\n' "$(json_str "$pkg")" "$(json_str "$link")" >&2 ;;
       esac
-    done
+    done < <(cd "$pkgdir" && ${pkgs.findutils}/bin/find . \( -type f -o -type l \) -printf '%P\n')
     # --no-folding keeps ~/.config/<app> a real dir (only files symlinked),
     # so app-generated siblings don't leak into the repo. Tolerate per-package
-    # conflicts (log + continue) so one bad package never fails the rebuild.
-    # --ignore: apps that canonicalize a stowed file's path leak droppings
-    # NEXT TO the real files anyway — a sudo'd fastfetch left a root-owned
-    # .cache/ inside home/fastfetch, unreadable to the user, so this stow
-    # invocation errored and the package was skipped on every restow. Ignore
-    # matching is by name, before stow ever opens the dir, so unreadable
-    # droppings can't take the package down. (Patterns full-match basenames.)
-    if ${runAsUser} \
+    # conflicts (report + continue) so one bad package never fails the
+    # rebuild. --ignore: apps that canonicalize a stowed file's path leak
+    # droppings NEXT TO the real files anyway — a sudo'd fastfetch left a
+    # root-owned .cache/ inside home/fastfetch, unreadable to the user, so
+    # this stow invocation errored and the package was skipped on every
+    # restow. Ignore matching is by name, before stow ever opens the dir, so
+    # unreadable droppings can't take the package down. (Patterns full-match
+    # basenames.)
+    if out="$(${runAsUser} \
          ${pkgs.stow}/bin/stow \
            --dir="${stowDir}" --target="${home}" \
            --ignore='\.cache' --ignore='\.DS_Store' \
-           --no-folding --restow "$pkg"; then
-      echo "stow: restowed $pkg" >&2
+           --no-folding --restow "$pkg" 2>&1)"; then
+      ok=$((ok + 1))
+      note=""
+      if [ -n "$out" ]; then note=",\"msg\":$(json_str "$out")"; fi
+      printf '{"stow":"ok","pkg":%s,"files":%d,"ms":%d%s}\n' \
+        "$(json_str "$pkg")" "$files" "$(( $(now_ms) - t0 ))" "$note" >&2
     else
-      echo "stow: WARNING conflict/error on $pkg, skipped" >&2
+      conflicts=$((conflicts + 1))
+      printf '{"stow":"conflict","pkg":%s,"ms":%d,"msg":%s}\n' \
+        "$(json_str "$pkg")" "$(( $(now_ms) - t0 ))" "$(json_str "$out")" >&2
     fi
   done
+  printf '{"stow":"end","ok":%d,"conflicts":%d,"healed":%d,"skipped":%d,"ms":%d}\n' \
+    "$ok" "$conflicts" "$healed" "''${#skipped[@]}" "$(( $(now_ms) - started ))" >&2
   )
 ''

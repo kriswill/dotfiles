@@ -6,6 +6,7 @@
   gnugrep,
   gnused,
   gzip,
+  jq,
   nix-output-monitor,
   xz,
   zstd,
@@ -30,6 +31,8 @@ writeShellApplication {
     gnused
     # gzip/xz/zstd: unpacking the new kernel image for the reboot report
     gzip
+    # jq: parsing the restow's NDJSON activity events
+    jq
     nix-output-monitor
     xz
     zstd

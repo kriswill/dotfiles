@@ -27,7 +27,11 @@ Both OSes keep nh's stage order:
 5. a state report with per-stage timings. It runs on every exit, failures
    included.
 
-Activation output is streamed rather than captured.
+Activation output is streamed rather than captured, and rendered. The
+[dotfiles-stow](dotfiles-stow.md) restow's NDJSON events become a live
+spinner and progress line, then a one-line summary, with heals, conflicts
+and reloads listed under it. switch-to-configuration's plan lines get glyphs
+and colors ([decision](../decisions/stow-ndjson-activity.md)).
 
 **NixOS** (`modules/nixos/nrs2.nix`):
 - **Activation runs as a unit.** `switch-to-configuration test` runs as
