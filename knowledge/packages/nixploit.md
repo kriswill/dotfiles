@@ -1,7 +1,7 @@
 ---
 type: Sub-flake
 title: nixploit
-description: 'Sub-flake wrapping the manic-systems/nixploit vulnerability scanner for NixOS: re-exports its package and module and adds services.nixploit.report (an HTML viewer rendered after every scan, which explains why each vulnerable package is installed and what to do about it, plus the users who can read it); enabled on nebula.'
+description: 'Sub-flake wrapping the manic-systems/nixploit vulnerability scanner for NixOS: re-exports its package and module and adds services.nixploit.report (an HTML viewer rendered after every scan, which explains why each vulnerable package is installed and what to do about it, plus the users who can read it) and services.nixploit.rescanOnSwitch; enabled on nebula.'
 resource: flakes/nixploit/
 tags: [sub-flake, package]
 generated: { by: claude-code/opus-5.5, at: 2026-10-25T12:00:00-07:00 }
@@ -22,10 +22,11 @@ it the root's) and adds the report step. It exposes:[^subflake-readme]
   `x86_64-linux` and `aarch64-linux` (`default` is `nixploit`). The root
   re-exports the first two in `modules/packages.nix`.
 - `nixosModules.{nixploit, default}`. This imports upstream's module and adds
-  `services.nixploit.report.enable` and `services.nixploit.report.readers`.
-  The root re-exports it as the [nixploit module](../modules/nixploit.md).
+  `services.nixploit.report.enable`, `services.nixploit.report.readers` and
+  `services.nixploit.rescanOnSwitch`. The root re-exports it as the
+  [nixploit module](../modules/nixploit.md).
 
-The two options:
+The three options:
 
 - **`report.readers`** joins users to the `nixploit` group and runs
   `chmod g+r` on `report.json` after every run, because upstream creates it
@@ -33,6 +34,9 @@ The two options:
 - **`report.enable`** runs `nixploit-report` after every run. It renders
   `/var/lib/nixploit/report.html` (`0640`): the standalone viewer
   `report.html` with the report embedded.
+- **`rescanOnSwitch`** keys `nixploit.timer` to the installed packages, so a
+  switch that adds or drops one rescans 2 to 17 min later. See
+  [the decision](../decisions/nixploit-rescan-on-switch.md).
 
 The data is embedded because browsers block `fetch()` from `file://` pages.
 Every `<` in the embedded JSON is escaped as `\u003c`, so advisory text can't

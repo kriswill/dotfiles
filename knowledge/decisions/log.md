@@ -1,5 +1,13 @@
 # Log
 
+## 2026-10-25
+
+- **Creation**: [nixploit-rescan-on-switch](nixploit-rescan-on-switch.md).
+  `services.nixploit.rescanOnSwitch` keys `nixploit.timer` to a hash of the
+  installed packages (`X-Packages`), so a switch that changes them restarts
+  the timer and rescans after `OnActiveSec`. The activation restart list
+  (deprecated) and a path unit on `/run/current-system` were rejected.
+
 ## 2026-10-24
 
 - **Update**: the three nrs2 decisions are renamed with the tool:

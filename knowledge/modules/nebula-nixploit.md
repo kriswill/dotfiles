@@ -36,6 +36,15 @@ nebula, new group membership only reaches the desktop after a reboot: Hyprland
 runs under the systemd user manager, which survives logout because ly keeps
 the old session until the next login.
 
+`rescanOnSwitch = true` makes the report follow `nrs`: a switch that adds or
+drops a package rescans 2 to 17 min later, instead of leaving the report
+stale until the daily run
+([decision](../decisions/nixploit-rescan-on-switch.md)). The first use was
+disabling Lutris on 2026-10-25. Its FHS runtime was the only thing holding
+ffmpeg 6.1.6, which carried 39 of the 85 ffmpeg findings. The other two
+builds stay: 7.1.5 comes from VLC and Tor Browser, and 9.0.2 comes from Qt
+multimedia, Thunderbird, Wireshark and others.
+
 The NVD-only baseline scan (2026-10-24, run before OSV was added) found 397
 unique package/version/CVE matches: 17 critical, none known-exploited. Most
 critical findings came from Determinate Nix's own bundled closure (curl,

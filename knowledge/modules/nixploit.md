@@ -19,7 +19,8 @@ sources:
 
 A one-line re-export of `inputs.nixploit.nixosModules.nixploit`, from the
 [nixploit sub-flake](../packages/nixploit.md). That module imports upstream's
-module and adds `services.nixploit.report.{enable,readers}`.[^subflake-readme]
+module and adds `services.nixploit.report.{enable,readers}` and
+`services.nixploit.rescanOnSwitch`.[^subflake-readme]
 `services.nixploit.package` defaults to upstream's own build, so no overlay is
 needed. It builds from source, because upstream has no binary
 cache.[^nixploit-readme]
@@ -33,7 +34,10 @@ Enabling upstream's part brings in more than a timer:[^nixploit-module]
   kept at `/var/lib/nixploit/report.json`. A failed update still scans against
   the cache, and a failed scan keeps the previous report.
 - **`nixploit.timer`** fires on `calendar`, plus 2 min after activation, with
-  `Persistent` and 15 min of jitter.
+  `Persistent` and 15 min of jitter. A switch restarts it (and so rescans)
+  only when its unit file changes: upstream's `X-Job` key covers the job
+  config, and `rescanOnSwitch`'s `X-Packages` key covers the installed
+  packages.
 - **node_exporter** is force-enabled with the textfile collector reading
   `/var/lib/nixploit/metrics`. Its default listen address is `0.0.0.0:9100`.
   Nebula's host file pins it to loopback.

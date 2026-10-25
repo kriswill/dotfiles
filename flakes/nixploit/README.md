@@ -7,19 +7,21 @@ vulnerable package, why it's on the system and what to do about it.
 Upstream does the scanning: it lists the running system's runtime closure,
 matches package versions against NVD (plus optional OSV and VulnCheck) data,
 and writes `/var/lib/nixploit/report.json` on a systemd timer. This flake
-re-exports upstream's package and NixOS module, and adds two options:
+re-exports upstream's package and NixOS module, and adds three options:
 
 - `services.nixploit.report.enable` renders `/var/lib/nixploit/report.html`
   after every run.
 - `services.nixploit.report.readers` lists the users who can read the reports
   without sudo.
+- `services.nixploit.rescanOnSwitch` rescans after a switch that changes the
+  installed packages.
 
 ## Files
 
 | File | Purpose |
 | --- | --- |
 | [`flake.nix`](flake.nix) | flake-parts flake: packages and `nixosModules` for `x86_64-linux` and `aarch64-linux`. |
-| [`nixos-module.nix`](nixos-module.nix) | Imports upstream's module and adds the `services.nixploit.report.*` options. |
+| [`nixos-module.nix`](nixos-module.nix) | Imports upstream's module and adds the `services.nixploit.report.*` and `rescanOnSwitch` options. |
 | [`report.html`](report.html) | The viewer: one self-contained page, with no network access and a dark/light theme. |
 | [`report.nix`](report.nix), [`report.sh`](report.sh) | `nixploit-report`: renders the viewer with a report embedded. |
 | [`report-graph.nix`](report-graph.nix), [`report-graph.sh`](report-graph.sh) | `nixploit-report-graph`: the running system's dependency graph as JSON. |
@@ -47,12 +49,13 @@ re-exports upstream's package and NixOS module, and adds two options:
       enable = true;                # render /var/lib/nixploit/report.html
       readers = [ "alice" ];        # nixploit group + group-readable report.json
     };
+    rescanOnSwitch = true;          # rescan when a switch changes the packages
   };
 }
 ```
 
 All of upstream's `services.nixploit.*` options are unchanged; see
-[upstream's README](https://github.com/manic-systems/nixploit#nixos). Our two
+[upstream's README](https://github.com/manic-systems/nixploit#nixos). Our three
 options:
 
 - **`report.enable`** runs `nixploit-report` from the unit's `ExecStopPost`.
@@ -62,8 +65,20 @@ options:
   it `0600`. On a desktop whose systemd user manager survives logout, new
   membership only takes effect after a reboot. Until then,
   `sg nixploit -c 'cat /var/lib/nixploit/report.html'` works.
+- **`rescanOnSwitch`** adds an `X-Packages` key to `nixploit.timer`: a hash of
+  `system-path` and every user's `packages`. Upstream already rescans when the
+  job config changes. Its timer carries the config's path as `X-Job`, a switch
+  restarts any timer whose unit file changed, and the restarted timer fires
+  after `OnActiveSec=2min` plus upstream's `RandomizedDelaySec=15min`, which
+  applies to that trigger too. The new key extends that to package changes, so
+  the report follows a switch (2 to 17 minutes later) instead of waiting for
+  the next `calendar` run. A manual `systemctl start nixploit` in that window
+  cancels the pending run.
+  Changes outside those packages (a service's own package, say) still wait.
+  The key can't follow the whole system, because the toplevel contains the
+  timer unit.
 
-Both only apply when `services.nixploit.enable` is set. Upstream's
+All three only apply when `services.nixploit.enable` is set. Upstream's
 `ExecStopPost` is a single string; ours are lists, and NixOS merges all of
 them, so every entry runs. A `-` prefix keeps a missing first report from
 failing the unit.

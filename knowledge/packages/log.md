@@ -2,6 +2,11 @@
 
 ## 2026-10-25
 
+- **Update**: [nixploit](nixploit.md) adds
+  `services.nixploit.rescanOnSwitch`, an `X-Packages` hash on
+  `nixploit.timer` that rescans after a switch that changes the installed
+  packages ([decision](../decisions/nixploit-rescan-on-switch.md)).
+
 - **Creation**: [nixploit](nixploit.md), the `flakes/nixploit/` sub-flake. It
   wraps manic-systems/nixploit (pinned as its `upstream` input), and carries
   the HTML report viewer and its renderer and graph collector, which moved in
