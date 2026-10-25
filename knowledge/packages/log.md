@@ -2,6 +2,9 @@
 
 ## 2026-10-25
 
+- **Update**: [battlenet](battlenet.md)'s `environment` values are defaults, so
+  a variable set for one run wins. The README has a "Native Wayland" section.
+
 - **Update**: [battlenet](battlenet.md) defaults its prefix to
   `$XDG_DATA_HOME/battlenet` (it was `~/Games/battlenet`). The README explains
   how to move a Steam or umu prefix out of Steam. [wowup](wowup.md) points at

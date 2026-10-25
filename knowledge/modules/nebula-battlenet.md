@@ -57,6 +57,17 @@ lines that are normal are in the README's "What WoW runs on"):[^subflake-readme]
 - **Shaders:** the first session rebuilt vkd3d-proton's pipeline cache
   (`_retail_/vkd3d-proton.cache`), which the umu and Valve Proton runs had
   written for a different build.
+- **Display:** native Wayland since 2026-10-25. `environment` sets
+  `PROTON_ENABLE_WAYLAND = "1"` (WoW ran a little faster than under XWayland)
+  and `PROTON_WAYLAND_MONITOR = "DP-3"`. Proton finds the primary monitor
+  through xrandr's `primary` flag, which XWayland under Hyprland never sets,
+  so Wine picked its own and WoW sized itself for the portrait DP-1. Classes
+  are now `battle.net.exe` and `wow.exe`. WoW's exclusive fullscreen asked
+  Hyprland to leave fullscreen, so the `wow-fullscreen` rule gained
+  `suppress_event = "fullscreen maximize"` ([`docs/hyprland.md`](../../docs/hyprland.md),
+  2026-10-25 entry). Battle.net's window lays out oddly for a few seconds,
+  then settles. `PROTON_ENABLE_WAYLAND=0 battlenet` goes back to XWayland for
+  one run.
 
 [wowup](../packages/wowup.md) points into the same prefix's WoW install. The
 WoW window rules in
