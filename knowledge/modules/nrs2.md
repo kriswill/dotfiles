@@ -34,8 +34,16 @@ and reloads listed under it. switch-to-configuration's plan lines get glyphs
 and colors ([decision](../decisions/stow-ndjson-activity.md)). On the Macs,
 Homebrew bundle's one `Using <dep>` line per Brewfile entry collapses the same
 way, into a live line and `✔ brew N Brewfile dependencies · N already
-installed`. Installs, upgrades and errors still print in full. The
-`sops-install-secrets: Imported …` lines are dimmed.
+installed`. Installs, upgrades and errors still print in full.
+sops-install-secrets runs twice per activation (user secrets before `/etc`,
+the rest after), and each run printed one long `Imported … key with
+fingerprint …` line per key: four near-identical lines per switch. They now
+collapse into one, `⚿ sops  keys  rsa → GPG 646fb041…c17120 · ed25519 → age
+age1vn8h…chjzrz`. A key already shown is not shown again, so the second run
+prints nothing unless its keys differ. The un-prefixed secret-change lines
+are marked: `+` for adding and would add, `~` for modifying, `−` for
+removing. Its errors, which start with the binary's full store path, are shown
+in red.
 
 **NixOS** (`modules/nixos/nrs2.nix`):
 - **Activation runs as a unit.** `switch-to-configuration test` runs as
@@ -70,6 +78,26 @@ installed`. Installs, upgrades and errors still print in full. The
   when the kernel binary changes.
 - **Exit codes:** exit 100 still sets the profile and boot entry. Exit 4 keeps
   nh's rule that a failed activation never becomes the boot default.
+- **`--plan`** (report P10): build and diff, then preview the switch without
+  changing anything. `sudo switch-to-configuration dry-activate` covers the
+  system units. dry-activate skips stc-ng's per-user pass, so nrs2 runs that
+  pass itself, dry and as you. Any unit the switch would restart or start
+  while it is `activating` is flagged, since the switch would block on it
+  ([decision](../decisions/nrs2-plan-user-pass.md)).
+- **`--status`** (report P17): no build, no root. It prints:
+  - the generation trio;
+  - the generation count and the oldest generation's age (the rollback
+    window);
+  - a detached nrs2 unit that is still running;
+  - pending system and user jobs;
+  - leftover plan lists and failed units;
+  - kernel and PAM drift since boot.
+
+  It exits 1 when any of these needs attention, so scripts can use it. A
+  capture mid-debounce shows up as a pending job, and that is real.
+- **Previews compare the new build:** `--dry` and `--plan` run the kernel and
+  PAM checks against the new build (what a switch and then a reboot would
+  change). The other modes check the running system.
 
 **darwin** (`modules/darwin/nrs2.nix`):
 - **Same order as nh:** set the profile, then run the new generation's own
@@ -84,8 +112,13 @@ installed`. Installs, upgrades and errors still print in full. The
   `darwin-rebuild check` without sudo, which current nix-darwin refuses for
   non-root users.
 
-`nrs2 --dry` builds and diffs without root on both OSes. Arguments after the
-mode go to `nix build`.
+`nrs2 --dry` builds and diffs without root on both OSes. `nrs2 --status` works
+on both; on darwin it covers the running system, the boot default and the
+generations, since the unit, job and kernel checks are Linux-only. On darwin, `--plan` warns
+and acts as `--dry`, because nix-darwin has no dry-activate. The modes
+(`--dry`, `--test`, `--plan`, `--status`) are mutually exclusive. Arguments
+after the mode go to `nix build`, except with `--status`, which refuses
+them.
 
 Mounted ungated on every host of both classes
 (see the [host-mounted modules pattern](../patterns/host-mounted-modules.md));

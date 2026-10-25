@@ -31,7 +31,14 @@ order:
   `darwin-rebuild activate` runs.
 
 The host comes from `uname -n` on NixOS and `scutil --get LocalHostName` on
-darwin, matching nh and darwin-rebuild. The design and the findings it
+darwin, matching nh and darwin-rebuild. Besides switching it has four modes:
+- `--dry`: build and diff;
+- `--test`;
+- `--plan`: a dry-activate preview that includes the user units it skips;
+- `--status`: a no-root, no-build consistency check that exits 1 when
+  something needs attention.
+
+The module card has the details. The design and the findings it
 addresses are in the pipeline report.[^nrs-pipeline]
 
 ## Source

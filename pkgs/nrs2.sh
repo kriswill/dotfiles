@@ -27,13 +27,25 @@
 #     no systemd-run equivalent wired here, so on darwin Ctrl-C interrupts
 #     activation exactly as it does under nh.
 #
-#   nrs2 [--dry | --test] [--boot] [nix build args…]
-#     --dry   build, diff and validate only; no root (like nrb)
-#     --test  NixOS: activate without touching the profile or GRUB (like nrt)
-#             darwin: darwin-rebuild check — run system.checks, no activation
-#     --boot  NixOS switch: rewrite the boot menu even when it is current
-#     --dry and --test are mutually exclusive; --boot warns where it does
-#     nothing (with either of them, and on darwin, which has no boot menu).
+#   nrs2 [--dry | --test | --plan] [--boot] [nix build args…]
+#   nrs2 --status
+#     --dry     build, diff and validate only; no root (like nrb)
+#     --test    NixOS: activate without touching the profile or GRUB (like nrt)
+#               darwin: darwin-rebuild check — run system.checks, no activation
+#     --plan    NixOS: build, then preview the switch and change nothing:
+#               switch-to-configuration dry-activate for the system units
+#               (root), plus its user pass run dry as you, which dry-activate
+#               itself skips; units the switch would restart while they are
+#               mid-run are flagged (P10). darwin has no dry-activate: as --dry
+#     --status  no build, no root: is this machine consistent? Generations and
+#               the rollback window, leftover plans, pending jobs, failed
+#               units, kernel and PAM drift; exits 1 if anything needs
+#               attention (P17)
+#     --boot    NixOS switch: rewrite the boot menu even when it is current
+#     The modes are mutually exclusive; --boot warns where it does nothing
+#     (with any mode, and on darwin, which has no boot menu). --dry and --plan
+#     compare the kernel and PAM against the new build, the others against
+#     the running system.
 set -euo pipefail
 
 RED=$'\e[1;31m' GREEN=$'\e[1;32m' YELLOW=$'\e[1;33m' BLUE=$'\e[1;34m' NC=$'\e[0m'
@@ -51,19 +63,23 @@ STALL_EVERY=30 # … and how often it repeats
 
 GRUB_CFG=/boot/grub/grub.cfg # root-only on nebula (the ESP is mounted 0700)
 
+issues=0 # warnings printed; --status turns a non-zero count into exit 1
 step() { printf '%s>%s %s\n' "$BLUE" "$NC" "$*" >&2; }
-warn() { printf '%swarning:%s %s\n' "$YELLOW" "$NC" "$*" >&2; }
+warn() {
+  issues=$((issues + 1))
+  printf '%swarning:%s %s\n' "$YELLOW" "$NC" "$*" >&2
+}
 fail() { printf '%serror:%s %s\n' "$RED" "$NC" "$*" >&2; }
 
 mode='switch'
 force_boot=0
 while [ $# -gt 0 ]; do
   case "$1" in
-    --dry | --test)
+    --dry | --test | --plan | --status)
       # A dry run must never activate, so a second, different mode is an error
       # rather than last-one-wins.
       if [ "$mode" != switch ] && [ "$mode" != "${1#--}" ]; then
-        fail "--dry and --test are mutually exclusive"
+        fail "--$mode and $1 are mutually exclusive"
         exit 2
       fi
       mode="${1#--}"
@@ -73,6 +89,10 @@ while [ $# -gt 0 ]; do
     *) break ;;
   esac
 done
+if [ "$mode" = status ] && [ $# -gt 0 ]; then
+  fail "--status builds nothing, so it takes no build arguments: $*"
+  exit 2
+fi
 
 # nix's --flake <path> does not follow a path that is itself a symlink, and
 # ~/src/dotfiles is one on nebula.
@@ -102,6 +122,14 @@ if [ "$force_boot" -eq 1 ]; then
     warn "--boot does nothing with --$mode (no boot entry is written); ignoring it"
   fi
 fi
+if [ "$os" = Darwin ] && [ "$mode" = plan ]; then
+  warn "--plan: nix-darwin has no dry-activate, so this only builds and diffs (as --dry)"
+  mode=dry
+fi
+# The system the kernel and PAM checks compare against /run/booted-system:
+# the running one, or, for --dry and --plan, the new build (set once built),
+# so a preview says what switching and then rebooting would change.
+target=/run/current-system
 # Resolved before sudo, whose secure path may not carry it.
 nix_bin="$(command -v nix)"
 
@@ -193,21 +221,21 @@ module_packages() { # module_packages <system>: packages aggregated into its ker
   nix-store -q --references "$(readlink -f "$1/kernel-modules")" | sed -E 's#^/nix/store/[a-z0-9]{32}-##' | sort
 }
 
-kernel_report() { # what a reboot would change about the kernel, if anything
+kernel_report() { # what a reboot (into $target) would change about the kernel, if anything
   local was now old_params new_params changes running_tc new_tc removed added
   local -a lines=()
   local same_kernel=1
-  if [ "$(readlink -f /run/booted-system/kernel)" != "$(readlink -f /run/current-system/kernel)" ]; then same_kernel=0; fi
-  old_params="$(cat /run/booted-system/kernel-params)" new_params="$(cat /run/current-system/kernel-params)"
-  removed="$(comm -23 <(module_packages /run/booted-system) <(module_packages /run/current-system) | paste -sd' ')"
-  added="$(comm -13 <(module_packages /run/booted-system) <(module_packages /run/current-system) | paste -sd' ')"
+  if [ "$(readlink -f /run/booted-system/kernel)" != "$(readlink -f "$target/kernel")" ]; then same_kernel=0; fi
+  old_params="$(cat /run/booted-system/kernel-params)" new_params="$(cat "$target/kernel-params")"
+  removed="$(comm -23 <(module_packages /run/booted-system) <(module_packages "$target") | paste -sd' ')"
+  added="$(comm -13 <(module_packages /run/booted-system) <(module_packages "$target") | paste -sd' ')"
   if [ "$same_kernel" -eq 1 ] && [ "$old_params" = "$new_params" ] && [ -z "$removed$added" ]; then return; fi
 
-  was="$(kernel_version /run/booted-system)" now="$(kernel_version /run/current-system)"
+  was="$(kernel_version /run/booted-system)" now="$(kernel_version "$target")"
   if [ "$same_kernel" -eq 0 ]; then
     # The running kernel describes itself in /proc; the new one only inside its
     # compressed image, so unpack that for its banner and its embedded config.
-    unpack_kernel "$(readlink -f /run/current-system/kernel)" "$tmp/vmlinux"
+    unpack_kernel "$(readlink -f "$target/kernel")" "$tmp/vmlinux"
     running_tc="$(toolchain_of </proc/version)"
     new_tc="$(LC_ALL=C grep -aoE -m1 'Linux version [[:print:]]+' "$tmp/vmlinux" | head -1 | toolchain_of || true)"
     if [ "$was" != "$now" ]; then lines+=("kernel     $was → $now"); fi
@@ -237,7 +265,11 @@ kernel_report() { # what a reboot would change about the kernel, if anything
   if [ -n "$removed" ]; then lines+=("modules    − $removed"); fi
   if [ -n "$added" ]; then lines+=("modules    + $added"); fi
 
-  warn "a reboot changes the kernel setup:"
+  if [ "$target" = /run/current-system ]; then
+    warn "a reboot changes the kernel setup:"
+  else
+    warn "after switching to this build, a reboot changes the kernel setup:"
+  fi
   printf '  %s\n' "${lines[@]}" >&2
 }
 
@@ -249,8 +281,18 @@ leftover_lists() { # NixOS only: switch-to-configuration's resume lists
 }
 
 report_linux() {
-  local failed booted_glibc current_glibc
+  local failed jobs booted_glibc target_glibc
   local -a lists
+  if [ "$mode" = status ]; then
+    if systemctl is-active --quiet "$UNIT.service"; then
+      warn "an nrs2 activation is still running, detached, as $UNIT.service"
+      printf '  follow: journalctl -fu %s\n' "$UNIT" >&2
+    fi
+    jobs="$(systemctl list-jobs --no-legend --no-pager 2>/dev/null || true)"
+    if [ -n "$jobs" ]; then warn "pending system jobs:"; printf '%s\n' "$jobs" >&2; fi
+    jobs="$(systemctl --user list-jobs --no-legend --no-pager 2>/dev/null || true)"
+    if [ -n "$jobs" ]; then warn "pending user jobs:"; printf '%s\n' "$jobs" >&2; fi
+  fi
   mapfile -t lists < <(leftover_lists)
   if [ "${#lists[@]}" -gt 0 ]; then
     warn "plan lists remain, so a switch did not finish; the next run replays them:"
@@ -264,9 +306,36 @@ report_linux() {
   # Processes started at boot (ly, the lock screen) keep the boot-time glibc
   # while /etc/pam.d switches now; see docs/noctalia.md.
   booted_glibc="$(pam_glibc /run/booted-system)"
-  current_glibc="$(pam_glibc /run/current-system)"
-  if [ "$booted_glibc" != "$current_glibc" ]; then
-    warn "PAM glibc changed since boot (${booted_glibc#*-glibc-} -> ${current_glibc#*-glibc-}): reboot before logging out"
+  target_glibc="$(pam_glibc "$target")"
+  if [ "$booted_glibc" != "$target_glibc" ]; then
+    if [ "$target" = /run/current-system ]; then
+      warn "PAM glibc changed since boot (${booted_glibc#*-glibc-} -> ${target_glibc#*-glibc-}): reboot before logging out"
+    else
+      warn "this build changes PAM's glibc since boot (${booted_glibc#*-glibc-} -> ${target_glibc#*-glibc-}): after switching, reboot before logging out"
+    fi
+  fi
+}
+
+generations() { # the system profile's generations: how many, and how far back a rollback reaches
+  local link n min='' max='' count=0 ts age
+  for link in "$SYSTEM_PROFILE"-*-link; do
+    [ -L "$link" ] || continue
+    n="${link##*/system-}"
+    n="${n%-link}"
+    count=$((count + 1))
+    if [ -z "$min" ] || [ "$n" -lt "$min" ]; then min=$n; fi
+    if [ -z "$max" ] || [ "$n" -gt "$max" ]; then max=$n; fi
+  done
+  if [ "$count" -eq 0 ]; then return; fi
+  # A generation link is made when its generation is, and never touched again.
+  ts="$(stat -c %Y "$SYSTEM_PROFILE-$min-link")"
+  age=$((EPOCHSECONDS - ts))
+  if [ "$age" -ge 86400 ]; then age="$((age / 86400))d"; else age="$((age / 3600))h"; fi
+  if [ "$count" -eq 1 ]; then
+    printf '  generations   1 (gen %s): nothing to roll back to\n' "$min" >&2
+  else
+    printf '  generations   %d (gen %s … gen %s); oldest from %s, %s ago\n' \
+      "$count" "$min" "$max" "$(date -d "@$ts" +%F)" "$age" >&2
   fi
 }
 
@@ -284,6 +353,7 @@ report() {
   if [ "$current" != "$profile" ]; then
     warn "the running system is not the boot default; a reboot would come back on $(generation_of "$profile")"
   fi
+  if [ "$mode" = status ]; then generations; fi
   if [ "$os" = Linux ]; then report_linux; fi
 
   if [ "${#timings[@]}" -gt 0 ]; then
@@ -425,18 +495,69 @@ plan_line() { # plan_line <line>: style one line of activation output
   esac
   rest="${l#*: }"
   case "$l" in
+    # dry-activate (--plan): the same plan, in the conditional
+    'would NOT '*'the following '*) emit "  ${DIM}· would not restart${NC}${who} ${DIM}${rest}${NC}" ;;
+    'would stop the following '*) emit "  ${RED}■${NC} would stop${who}    ${rest}" ;;
+    'would reload the following '*) emit "  ${BLUE}⟳${NC} would reload${who}  ${rest}" ;;
+    'would restart the following '*) emit "  ${YELLOW}↻${NC} would restart${who} ${rest}" ;;
+    'would start the following '*) emit "  ${GREEN}▶${NC} would start${who}   ${rest}" ;;
+    'would restart systemd') emit "  ${YELLOW}↻${NC} would restart systemd" ;;
+    # sops-install-secrets' secret changes (no prefix of their own) and errors
+    # (prefixed with its full store path); its key imports go to sops_import.
+    'adding secret'* | 'adding template'* | 'would add secret'* | 'would add template'*)
+      emit "  ${SOPS} ${GREEN}+${NC} ${l}" ;;
+    'modifying secret'* | 'modifying template'* | 'would modify secret'* | 'would modify template'*)
+      emit "  ${SOPS} ${YELLOW}~${NC} ${l}" ;;
+    'removing secret'* | 'removing template'* | 'would remove secret'* | 'would remove template'*)
+      emit "  ${SOPS} ${RED}−${NC} ${l}" ;;
+    *'sops-install-secrets: '* | 'Cannot read ssh key '* | 'Cannot convert ssh key '* | 'Cannot write secring'* | 'Cannot write pubring'* | 'Cannot write key to age file'*)
+      emit "  ${SOPS} ${RED}${l#*sops-install-secrets: }${NC}" ;;
     'NOT restarting'*'the following '*) emit "  ${DIM}· not restarting${NC}${who} ${DIM}${rest}${NC}" ;;
     'stopping'*'the following '*) emit "  ${RED}■${NC} stopping${who}   ${rest}" ;;
     'reloading'*'the following '*) emit "  ${BLUE}⟳${NC} reloading${who}  ${rest}" ;;
     'restarting'*'the following '*) emit "  ${YELLOW}↻${NC} restarting${who} ${rest}" ;;
     'starting'*'the following '*) emit "  ${GREEN}▶${NC} starting${who}   ${rest}" ;;
     'the following new units were started: '*) emit "  ${GREEN}+${NC} new units  ${rest}" ;;
-    'sops-install-secrets: '*) emit "  ${DIM}● sops: ${l#sops-install-secrets: }${NC}" ;;
     *[Ee]rror* | *[Ff]ailed*) emit "  ${RED}${l}${NC}" ;;
     *[Ww]arning* | *WARN*) emit "  ${YELLOW}${l}${NC}" ;;
-    *... | 'Checking '* | 'restarting '* | 'reloading '*) emit "  ${DIM}● ${l%...}${NC}" ;;
+    *... | 'Checking '* | 'Not checking '* | 'restarting '* | 'reloading '*) emit "  ${DIM}● ${l%...}${NC}" ;;
     *) emit "  $l" ;;
   esac
+}
+
+# sops-install-secrets runs twice per activation (setupSecretsForUsers before
+# /etc, setupSecrets after; dry-activate too), and every run announces each
+# key it imports: "sops-install-secrets: Imported /etc/ssh/ssh_host_rsa_key as
+# GPG key with fingerprint <40 hex>", then the same for age. A run of those
+# lines collapses into one, "⚿ sops  keys  rsa → GPG 646fb041…c17120 · …", and
+# a key already shown in this activation is not shown again, so the second run
+# prints nothing unless its keys differ. Secret changes and errors still print
+# (plan_line).
+SOPS="${MAGENTA}⚿${NC} ${BOLD}sops${NC} "
+declare -A r_sops_seen=()
+r_sops_new=()
+
+sops_import() { # sops_import <"…: Imported <path> as <kind> key with fingerprint <fp>" line>
+  local rest path kind fp name
+  rest="${1#*: Imported }"
+  path="${rest%% as *}"
+  kind="${rest#* as }"
+  kind="${kind%% key with fingerprint *}"
+  fp="${rest##* fingerprint }"
+  if [ -n "${r_sops_seen["$path $kind $fp"]:-}" ]; then return; fi
+  r_sops_seen["$path $kind $fp"]=1
+  name="${path##*/}"
+  case "$name" in ssh_host_*_key) name="${name#ssh_host_}" name="${name%_key}" ;; esac
+  if [ "${#fp}" -gt 16 ]; then fp="${fp:0:8}…${fp: -6}"; fi
+  r_sops_new+=("${name} ${DIM}→${NC} ${kind} ${CYAN}${fp}${NC}")
+}
+
+sops_flush() { # print the imports collected since the last non-import line
+  local k line=''
+  if [ "${#r_sops_new[@]}" -eq 0 ]; then return; fi
+  for k in "${r_sops_new[@]}"; do line+="${line:+ ${DIM}·${NC} }$k"; done
+  emit "  ${SOPS} ${DIM}keys${NC}  $line"
+  r_sops_new=()
 }
 
 # Homebrew bundle (nix-darwin's activation) prints one "Using <dep>" line per
@@ -471,6 +592,13 @@ brew_done() { # brew_done [<"`brew bundle` complete!" line>]
 render_activity() { # render_activity: style the activation stream on stdin, to stderr
   local line
   while IFS= read -r line || [ -n "$line" ]; do
+    case "$line" in
+      *'sops-install-secrets: Imported '*' key with fingerprint '*)
+        sops_import "$line"
+        continue
+        ;;
+      *) sops_flush ;;
+    esac
     if [ "$r_brew" -eq 1 ]; then
       case "$line" in
         'Using '*)
@@ -494,6 +622,7 @@ render_activity() { # render_activity: style the activation stream on stdin, to 
       *) plan_line "$line" ;;
     esac
   done
+  sops_flush
   if [ "$r_brew" -eq 1 ]; then brew_done ''; fi
   clear_status
 }
@@ -531,15 +660,19 @@ set_profile() {
 }
 
 # ---- activation, NixOS ------------------------------------------------------
-activate_nixos() {
-  local rc interrupted systemd_run
-  local -a env_args=()
-  systemd_run="$(command -v systemd-run)"
+refuse_if_detached() { # an earlier run's activation still holds switch-to-configuration's lock
   if systemctl is-active --quiet "$UNIT.service"; then
     fail "$UNIT.service from an earlier run is still active"
     printf '  follow: journalctl -fu %s\n  stop:   sudo systemctl stop %s\n' "$UNIT" "$UNIT" >&2
     exit 1
   fi
+}
+
+activate_nixos() {
+  local rc interrupted systemd_run
+  local -a env_args=()
+  systemd_run="$(command -v systemd-run)"
+  refuse_if_detached
   if [ -n "${LOCALE_ARCHIVE:-}" ]; then env_args+=(-E "LOCALE_ARCHIVE=$LOCALE_ARCHIVE"); fi
   if [ -n "${NIXOS_NO_CHECK:-}" ]; then env_args+=(-E "NIXOS_NO_CHECK=$NIXOS_NO_CHECK"); fi
 
@@ -607,6 +740,92 @@ activate_nixos() {
   fi
 }
 
+# ---- plan, NixOS (--plan) ----------------------------------------------------
+# dry-activate prints the system plan and runs the dry-activate snippets, but
+# it exits before switch-to-configuration-ng's per-user pass (do_user_switch),
+# so on its own it never shows a user unit, the kind that hung nrs on
+# 2026-10-24. nrs2 runs that pass itself, dry, the way stc-ng spawns it: its
+# own binary, a cleared environment, NIXOS_ACTION=dry-activate. With that
+# action the pass only reads unit files and the user manager's state, and
+# record_unit writes no lists. It is stc-ng's internal interface, not a public
+# one: if it moves, the preview says so and carries on without it.
+plan_user_units() {
+  local stc rc
+  stc="$(readlink -f "$out/bin/.switch-to-configuration-wrapped" 2>/dev/null || true)"
+  if [ ! -x "$stc" ]; then
+    warn "no user-unit preview: $out has no bin/.switch-to-configuration-wrapped (stc-ng's layout changed?)"
+    return
+  fi
+  set +e
+  env -i XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/$UID}" \
+    __NIXOS_SWITCH_TO_CONFIGURATION_PARENT_EXE="$stc" NIXOS_ACTION=dry-activate \
+    TOPLEVEL="$out" OLD_TOPLEVEL="$(readlink -f /run/current-system)" \
+    "$stc" 2>&1 | tee "$tmp/plan.user" | render_activity
+  rc=${PIPESTATUS[0]}
+  set -e
+  if [ "$rc" -ne 0 ]; then
+    warn "the user-unit preview failed (exit $rc); stc-ng's internal user-pass interface may have changed"
+  elif [ ! -s "$tmp/plan.user" ]; then
+    emit "  ${DIM}· no user unit would change${NC}"
+  fi
+}
+
+plan_hazards() { # units the plan restarts or starts that are mid-run right now
+  local scope line u state
+  local -a units hazards=()
+  for scope in system user; do
+    [ -f "$tmp/plan.$scope" ] || continue
+    while IFS= read -r line; do
+      # Stop-only units are left out: a stop job on a running oneshot
+      # signals it and completes. A changed unit that is stopped is also
+      # started again, so it is caught by its start line.
+      case "$line" in
+        'would restart the following '* | 'would start the following '*) ;;
+        *) continue ;;
+      esac
+      IFS=', ' read -ra units <<<"${line#*: }"
+      for u in "${units[@]}"; do
+        if [ "$scope" = user ]; then
+          state="$(systemctl --user show -P ActiveState -- "$u" 2>/dev/null || true)"
+        else
+          state="$(systemctl show -P ActiveState -- "$u" 2>/dev/null || true)"
+        fi
+        if [ "$state" = activating ] && [[ " ${hazards[*]} " != *" $u ($scope) "* ]]; then
+          hazards+=("$u ($scope)")
+        fi
+      done
+    done <"$tmp/plan.$scope"
+  done
+  if [ "${#hazards[@]}" -gt 0 ]; then
+    # A start job for a oneshot completes only when the run exits, and the
+    # switch blocks on those jobs, the user ones before it restarts the system
+    # services it stopped (docs/nrs-pipeline.html, F2).
+    warn "the switch would restart units that are mid-run (activating) now, and wait for each new run to finish:"
+    printf '  %s\n' "${hazards[@]}" >&2
+    printf '  let them finish (or stop them) before switching\n' >&2
+  fi
+}
+
+plan_nixos() {
+  local rc
+  refuse_if_detached
+  step "plan: switch-to-configuration dry-activate (system units; nothing changes)"
+  set +e
+  sudo "$out/bin/switch-to-configuration" dry-activate 2>&1 | tee "$tmp/plan.system" | render_activity
+  rc=${PIPESTATUS[0]}
+  set -e
+  lap plan
+  if [ "$rc" -ne 0 ]; then
+    fail "dry-activate failed (exit $rc)"
+    report
+    exit "$rc"
+  fi
+  step "plan: user units for $(id -un) (stc-ng's user pass, dry; dry-activate skips it)"
+  plan_user_units
+  lap plan-user
+  plan_hazards
+}
+
 # ---- activation, darwin -----------------------------------------------------
 # Mirrors nh darwin switch: profile first, then the NEW generation's own
 # darwin-rebuild (it sets HOME, PATH and NIX_REMOTE for root and handles any
@@ -638,11 +857,27 @@ activate_darwin() {
   fi
 }
 
+# ---- status (--status): nothing built, nothing changed, no root -------------
+if [ "$mode" = status ]; then
+  issues=0 # count only what the report finds
+  report
+  if [ "$issues" -eq 0 ]; then
+    printf '%s✔ consistent:%s the running system is the boot default; nothing failed, pending or left over\n' "$GREEN" "$NC" >&2
+    exit 0
+  fi
+  printf '%s⚠ %d thing(s) above need attention%s\n' "$YELLOW" "$issues" "$NC" >&2
+  exit 1
+fi
+
 # ---- pre-flight -------------------------------------------------------------
 if [ "$os" = Linux ] && [ "$mode" != dry ]; then
   mapfile -t lists < <(leftover_lists)
   if [ "${#lists[@]}" -gt 0 ]; then
-    warn "a previous switch was interrupted; this run replays its plan:"
+    if [ "$mode" = plan ]; then
+      warn "a previous switch was interrupted; the next switch replays its plan, which the preview includes:"
+    else
+      warn "a previous switch was interrupted; this run replays its plan:"
+    fi
     for f in "${lists[@]}"; do printf '  %s: %s\n' "$f" "$(paste -sd' ' "$f")" >&2; done
   fi
 fi
@@ -665,7 +900,19 @@ for f in "${essentials[@]}"; do
 done
 
 if [ "$mode" = dry ]; then
+  target=$out
   report
+  exit 0
+fi
+
+if [ "$mode" = plan ]; then
+  step "authenticating for the plan (dry-activate needs root; it changes nothing)"
+  sudo -v
+  lap auth
+  plan_nixos
+  target=$out
+  report
+  printf '%splan only: nothing was changed; nrs2 applies it%s\n' "$GREEN" "$NC" >&2
   exit 0
 fi
 
