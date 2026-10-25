@@ -2,6 +2,11 @@
 
 ## 2026-10-25
 
+- **Update**: [nebula-nixploit](nebula-nixploit.md) sets
+  `rescanOnSwitch = true`, so the report follows each `nrs` that changes the
+  packages ([decision](../decisions/nixploit-rescan-on-switch.md)).
+  [nixploit](nixploit.md) notes when a switch restarts the timer.
+
 - **Update**: [nixploit](nixploit.md) and
   [nebula-nixploit](nebula-nixploit.md). The scanner and the report step moved
   into the [nixploit sub-flake](../packages/nixploit.md), whose module adds

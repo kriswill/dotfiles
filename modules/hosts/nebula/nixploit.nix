@@ -21,6 +21,8 @@
         enable = true;
         readers = [ "k" ];
       };
+      # So the report follows each nrs that adds or drops a package.
+      rescanOnSwitch = true;
     };
 
     # The module turns node_exporter on for its textfile metrics, listening on
