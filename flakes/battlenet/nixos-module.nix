@@ -45,9 +45,10 @@ in
       description = ''
         CPUs the whole session runs on, as a `taskset -c` list. That covers
         Battle.net, WoW and everything else Battle.net starts, Proton and the
-        wineserver: they all inherit the affinity. Wine still reports every
-        host CPU to the programs. To make them see only these, also set
-        `WINE_CPU_TOPOLOGY` (`count:cpu,cpu,…`) in `environment`; it reports
+        wineserver: they all inherit the affinity. The launcher also sets
+        `WINE_CPU_TOPOLOGY` from the list (unless it's already set), so Wine
+        reports only these CPUs. Otherwise a program that sets its affinity to
+        "all processors" spreads back over every CPU, as WoW did. Wine reports
         each listed CPU as a separate core. On an AMD X3D CPU, give the 3D
         V-Cache CCD's CPUs (those sharing the large L3; see
         `/sys/devices/system/cpu/cpu*/cache/index3/shared_cpu_list`).

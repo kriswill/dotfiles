@@ -199,22 +199,33 @@ turns pinning off.
 ## CPU pinning
 
 `programs.battlenet.cpus` takes a `taskset -c` list, for example
-`"0-5,12-17"`. The launcher then starts the sandbox under `taskset`. The
+`"0-5,12-17"`. The launcher starts the sandbox under `taskset`, so the
 sandbox, Proton, the wineserver and every Windows program Battle.net starts
-inherit the affinity, so WoW stays on those CPUs too. Programs added with
-`battlenet run` while a session runs are pinned the same way.
+inherit the affinity. Programs added with `battlenet run` while a session
+runs are pinned the same way. It also derives `WINE_CPU_TOPOLOGY`
+(`count:cpu,cpu,…`) from the kernel's normalised form of the list, so Wine
+reports only those CPUs to Windows programs. Set `WINE_CPU_TOPOLOGY` yourself
+to override it, or to an empty value to turn it off.
+
+Both are needed. Affinity is only a starting point, since a process may widen
+its own. Before the topology was set, WoW set its process affinity to "all
+processors", which Wine had reported as all 24 CPUs. 76 of its 99 threads
+then ran on all 24: its job pools (`ThreadPool High/Mid/Low`), 22 QUIC
+`cxplat_worker` threads, vkd3d's queue threads, and Wine's audio and input
+threads. So did the `WowVoiceProxy.exe` it started. Only threads created
+before that call stayed pinned. With the topology set, "all processors" means
+the pinned CPUs. Wine reports them as separate cores without SMT pairing (WMI:
+12 cores, 12 logical processors), and games size their thread pools to the
+CPUs they actually get.
+
+A cgroup cpuset would be a hard boundary the kernel enforces. It needs the
+`cpuset` controller delegated to the user's systemd, which NixOS doesn't do
+by default (`user@.service` gets `cpu io memory pids`).
 
 On AMD X3D CPUs, pin the session to the 3D V-Cache CCD: the CPUs whose
 `/sys/devices/system/cpu/cpuN/cache/index3/shared_cpu_list` share the large
 L3. Leaving the kernel's `amd_x3d_vcache` mode at `frequency` then steers
 other work to the other CCD.
-
-Wine still reports every host CPU to Windows programs. Pinned to 12 of 24
-CPUs, WMI showed 12 cores and 24 logical processors, so a game can size its
-thread pools for 24. Setting `WINE_CPU_TOPOLOGY=12:0,1,2,3,4,5,12,13,14,15,16,17`
-in `environment` makes Wine report only those 12 CPUs, but as 12 separate
-cores with no SMT pairing. Whether that helps is a question for a frame-time
-measurement.
 
 ## The NixOS module
 

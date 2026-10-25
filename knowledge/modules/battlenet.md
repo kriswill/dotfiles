@@ -30,8 +30,9 @@ Options under `programs.battlenet`:
   output, or a package holding `proton`.
 - `cpus` (default `null`): a `taskset -c` list the whole session runs on
   (Battle.net, WoW, Proton, the wineserver inherit it); `BATTLENET_CPUS`
-  overrides it per run. Wine still reports every host CPU to Windows
-  programs unless `WINE_CPU_TOPOLOGY` is set too.
+  overrides it per run. The launcher also derives `WINE_CPU_TOPOLOGY` from
+  it, so Wine reports only those CPUs. Without that, WoW's "all processors"
+  affinity spread 76 of its 99 threads back over every CPU.
 - `locale` (installer `--lang`, default `enUS`), `icon`, and `environment`
   (extra Proton variables, as defaults that a variable set for one run
   overrides).
