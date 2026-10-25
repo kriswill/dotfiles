@@ -16,7 +16,7 @@ canonicalizes the stow dir, self-heals links that reach repo files through a
 non-canonical convenience symlink, then runs `stow --no-folding --restow` per
 package with per-package conflict tolerance (report + skip, never abort). It
 reports as an NDJSON event stream on stderr (`begin`/`skip`/`heal`/`ok`/
-`conflict`/`end`), which [nrs2](nrs2.md) renders as a live progress line
+`conflict`/`end`), which [nrs](nrs.md) renders as a live progress line
 and a one-line summary. See the
 [NDJSON activity decision](../decisions/stow-ndjson-activity.md). Stow
 runs with `--ignore='\.cache'` and `--ignore='\.DS_Store'`: sudo'd tools

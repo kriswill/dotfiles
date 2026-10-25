@@ -16,7 +16,7 @@ sources:
 
 **Where:** [generations](../modules/generations.md). Proposal P15 in the
 pipeline report.[^nrs-pipeline] It follows
-[Skip the Boot Step Only When grub.cfg Says So](nrs2-boot-menu-check.md),
+[Skip the Boot Step Only When grub.cfg Says So](nrs-boot-menu-check.md),
 whose open gap it closes.
 
 ## Context

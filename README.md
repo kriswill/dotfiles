@@ -94,4 +94,4 @@ sudo nixos-rebuild switch --flake .#nebula
 
 Secrets are sops-nix encrypted per host (see `.sops.yaml`); nebula's age key
 derives from its SSH host key. Day-to-day rebuilds: `nrs` / `nrb` / `nrt` on
-both OSes (`nh darwin` / `nh os`).
+both OSes (pkgs/nrs.sh: nom, dix and each OS's own activation).

@@ -2,15 +2,21 @@
 
 ## 2026-10-24
 
+- **Update**: nh removed and nrs2 renamed [nrs](nrs.md). The nh twins
+  (`modules/{darwin,nixos}/nh.nix`) and their card are deleted. `nrb` is now
+  `nrs --dry`, `nrt` is `nrs --test`, and both are installed by the nrs
+  twins. The transient unit is `nrs-switch-to-configuration`. Earlier entries
+  below keep the name nrs2, which was the tool's name when they were
+  written.
 - **Creation**: [store-optimise](store-optimise.md) (report P13).
   `auto-optimise-store` is off, replaced by a weekly persistent
   `nix-store --optimise` at Sun 04:00.
-- **Update**: `nrt` is `nrs2 --test` on both OSes, moved from [nh](nh.md) to
-  [nrs2](nrs2.md). nrs2's darwin `--test` runs activate's check mode
+- **Update**: `nrt` is `nrs2 --test` on both OSes, moved from nh to
+  [nrs2](nrs.md). nrs2's darwin `--test` runs activate's check mode
   directly, because `darwin-rebuild check` performs a full activation on
-  macOS ([decision](../decisions/nrs2-darwin-check-mode.md)). Confirmed on
+  macOS ([decision](../decisions/nrs-darwin-check-mode.md)). Confirmed on
   `k`: the old `sudo nrt` activated the new build, while the new one printed
-  `ok` and changed nothing. [nrs2](nrs2.md) now refuses to run under sudo.
+  `ok` and changed nothing. [nrs2](nrs.md) now refuses to run under sudo.
 - **Creation**: [generations](generations.md) (report P15). `nix-gc` becomes
   collect-only behind a prune step. The system profile keeps:
   - the current boot and the two before it (from the journal);
@@ -25,11 +31,11 @@
   generation before the default" became "the previous good switch", the
   newest other system stc logged `finished switching` for, with
   numbered-before-default only as the no-record fallback.
-- **Update**: [nrs2](nrs2.md) gains `--plan` (report P10) and `--status`
+- **Update**: [nrs2](nrs.md) gains `--plan` (report P10) and `--status`
   (P17). `--plan` is dry-activate plus stc-ng's user pass run dry as the
   user, because dry-activate exits before that pass. It flags units the
   switch would restart while they are mid-run
-  ([decision](../decisions/nrs2-plan-user-pass.md)). `--status` is a no-root,
+  ([decision](../decisions/nrs-plan-user-pass.md)). `--status` is a no-root,
   no-build consistency check that exits 1 when something needs attention.
   `--dry` and `--plan` now compare the kernel and PAM against the new build.
   The sops output collapses the two runs' four key-import lines into one
@@ -42,7 +48,7 @@
   [users-k-helium](users-k-helium.md), [users-k-noctalia](users-k-noctalia.md)
   and [git](git.md) set `TimeoutStartSec = "2min"` (P8).
   [determinate](determinate.md) sets `narinfo-cache-negative-ttl = 300` (P11).
-  [nh](nh.md)'s `NH_NO_CHECKS` rationale is corrected (P5). The report is
+  nh's `NH_NO_CHECKS` rationale is corrected (P5). The report is
   `docs/nrs-pipeline.html`.
 - **Update**: [dotfiles-stow](dotfiles-stow.md) restow speed, corrected. The
   previous entry blamed a per-package `sudo`; measured, that is 0.03 s. The
@@ -54,34 +60,34 @@
   It gains a `fold` list; darwin folds `karabiner`, so `~/.config/karabiner`
   is a directory link as Karabiner requires. [macos-defaults](macos-defaults.md)
   stops nix-darwin's unconditional `killall Dock`, and its stub card is
-  written up. [nrs2](nrs2.md) collapses Homebrew's `Using` lines and dims the
+  written up. [nrs2](nrs.md) collapses Homebrew's `Using` lines and dims the
   sops lines.
-- **Update**: [nrs2](nrs2.md) changes after a code review. Its boot-step skip
+- **Update**: [nrs2](nrs.md) changes after a code review. Its boot-step skip
   now reads `grub.cfg` under its existing sudo instead of trusting a
   user-local record, so it also repairs the menu after a manual GC or a
   rollback. The [configuration](configuration.md) `nix-gc` `ExecStartPost`
   hook is removed. `--dry --test` is an error instead of activating;
   `--boot` warns where it does nothing; generation numbers prefer the
   profile's selection and compare as numbers
-  ([decision](../decisions/nrs2-boot-menu-check.md)).
-- **Update**: [nrs2](nrs2.md) skips the profile and boot steps when the boot
+  ([decision](../decisions/nrs-boot-menu-check.md)).
+- **Update**: [nrs2](nrs.md) skips the profile and boot steps when the boot
   default already is the new build and its own record says it wrote that
   boot entry (`--boot` forces them). To compensate,
   [configuration](configuration.md) adds a GRUB-refresh `ExecStartPost` to
   `nix-gc.service`, so the menu never lists collected generations.
 - **Update**: [dotfiles-stow](dotfiles-stow.md) reports as an NDJSON event
-  stream, and [nrs2](nrs2.md) renders it, plus switch-to-configuration's plan
+  stream, and [nrs2](nrs.md) renders it, plus switch-to-configuration's plan
   lines, as a live progress line and a colored summary
   ([decision](../decisions/stow-ndjson-activity.md)). The card's stale
   `runuser` claim is corrected to `setpriv`.
 - **Update**: [configuration](configuration.md). `useOSProber` is off and
   Windows is a static GRUB chainload entry (`extraEntries`, `mkBefore`, ESP
   UUID `B658-8653`). This removes os-prober's per-rebuild rescan of the
-  Windows disk and its `lsblk: /dev/mapper/no*[0-9]` noise. [nrs2](nrs2.md)'s
+  Windows disk and its `lsblk: /dev/mapper/no*[0-9]` noise. [nrs2](nrs.md)'s
   `boot` step now passes `NIXOS_NO_CHECK=1`: its `test` step already ran the
   pre-switch checks, and for `boot` they only print "Not checking switch
   inhibitors".
-- **Creation**: [nrs2](nrs2.md) is a pair of twin modules (NixOS and
+- **Creation**: [nrs2](nrs.md) is a pair of twin modules (NixOS and
   darwin) installing a prototype nh-free `nrs` beside the real one for
   comparison. It uses `nom build` and `dix`, then each OS's own activation,
   streams the output, and ends every exit with a state report. On NixOS,
@@ -148,7 +154,7 @@
   `programs.swaync.enable = false`. Noctalia owns the notification bus name, so
   snowglobe's swaync crash-looped (5k+ restarts).
 
-- **Update** — [users-k-noctalia](users-k-noctalia.md), [nh](nh.md): bare
+- **Update** — [users-k-noctalia](users-k-noctalia.md), nh: bare
   linux-pam module names in `/etc/pam.d/login`, so the lock screen survives
   glibc bumps; `nrs`/`nrt` warn when PAM's glibc differs from the booted
   system's.
@@ -560,7 +566,7 @@
   [Replace Lix With Determinate Nix](../decisions/lix-to-determinate.md).
 
 - **Update** — nrs/nrt became real executables and gained a sibling: the
-  [nh](nh.md) module now ships `writeShellScriptBin` helpers `nrs`
+  nh module now ships `writeShellScriptBin` helpers `nrs`
   (nh darwin switch), `nrb` (nh darwin build — no root, safe for agent
   harnesses), and `nrt` (darwin-rebuild check; both `nh darwin test` and
   `darwin-rebuild test` have been removed upstream, so the old nrt alias was

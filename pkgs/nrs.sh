@@ -1,19 +1,20 @@
 # shellcheck shell=bash
-# Body of `nrs2`, a prototype replacement for nrs (nh os switch / nh darwin
-# switch), run side by side with it for comparison on NixOS and nix-darwin.
-# Loaded verbatim by pkgs/nrs2.nix via builtins.readFile into
+# Body of `nrs`, the rebuild helper on NixOS and nix-darwin (with `nrb` =
+# `nrs --dry` and `nrt` = `nrs --test`). It replaced nh (`nh os switch` /
+# `nh darwin switch`) on 2026-10-24, after running beside it as `nrs2`.
+# Loaded verbatim by pkgs/nrs.nix via builtins.readFile into
 # writeShellApplication (which prepends the shebang and the runtimeInputs PATH,
 # and runs shellcheck at build time). No Nix interpolation lives here — keep it
 # plain bash.
 #
-# Same stages and order as nh, per OS:
+# The stages and order nh used, per OS:
 #   NixOS   build (nom) → diff (dix) → validate → switch-to-configuration test
 #           → system profile → switch-to-configuration boot (the last two
 #           skipped when GRUB's menu already boots this build and lists no
 #           collected generation; see bootloader_current)
 #   darwin  build (nom) → diff (dix) → validate → system profile
 #           → <new generation>/sw/bin/darwin-rebuild activate
-# What changes, each a finding in docs/nrs-pipeline.html:
+# What it does differently from nh, each a finding in docs/nrs-pipeline.html:
 #   - activation output is streamed live, not captured (F1), and rendered:
 #     the dotfiles restow's NDJSON events become a live spinner + progress
 #     line and a one-line summary, and switch-to-configuration's plan lines
@@ -27,12 +28,12 @@
 #     no systemd-run equivalent wired here, so on darwin Ctrl-C interrupts
 #     activation exactly as it does under nh.
 #
-#   nrs2 [--dry | --test | --plan] [--boot] [nix build args…]
-#   nrs2 --status
-#     --dry     build, diff and validate only; no root (like nrb)
+#   nrs [--dry | --test | --plan] [--boot] [nix build args…]
+#   nrs --status
+#     --dry     build, diff and validate only; no root. `nrb` is `nrs --dry`.
 #     --test    NixOS: activate without touching the profile or GRUB
 #               darwin: run the new generation's system.checks (its activate
-#               in check mode), no activation. `nrt` is `nrs2 --test`.
+#               in check mode), no activation. `nrt` is `nrs --test`.
 #     --plan    NixOS: build, then preview the switch and change nothing:
 #               switch-to-configuration dry-activate for the system units
 #               (root), plus its user pass run dry as you, which dry-activate
@@ -58,7 +59,7 @@ if [ ! -t 2 ]; then
 fi
 
 SYSTEM_PROFILE=/nix/var/nix/profiles/system
-UNIT=nrs2-switch-to-configuration
+UNIT=nrs-switch-to-configuration
 STALL_AFTER=45 # seconds of activation before the watchdog first speaks
 STALL_EVERY=30 # … and how often it repeats
 
@@ -72,11 +73,11 @@ warn() {
 }
 fail() { printf '%serror:%s %s\n' "$RED" "$NC" "$*" >&2; }
 
-# nrs2 builds as you and asks sudo for the root steps itself. Under sudo it
+# nrs builds as you and asks sudo for the root steps itself. Under sudo it
 # would build as root (macOS keeps $HOME, so nix warns that it isn't root's)
 # and resolve the flake from whatever $HOME sudo left.
 if [ "$(id -u)" -eq 0 ]; then
-  fail "run nrs2 (and nrt) without sudo: it builds as you and asks for sudo itself for the root steps"
+  fail "run nrs (and nrb, nrt) without sudo: it builds as you and asks for sudo itself for the root steps"
   exit 2
 fi
 
@@ -143,7 +144,7 @@ target=/run/current-system
 nix_bin="$(command -v nix)"
 
 # The out-link is the only GC root for the new closure until the profile is set.
-tmp="$(mktemp -d -t nrs2.XXXXXX)"
+tmp="$(mktemp -d -t nrs.XXXXXX)"
 watchdog=''
 cleanup() {
   if [ -n "$watchdog" ]; then kill "$watchdog" 2>/dev/null || true; fi
@@ -294,7 +295,7 @@ report_linux() {
   local -a lists
   if [ "$mode" = status ]; then
     if systemctl is-active --quiet "$UNIT.service"; then
-      warn "an nrs2 activation is still running, detached, as $UNIT.service"
+      warn "an nrs activation is still running, detached, as $UNIT.service"
       printf '  follow: journalctl -fu %s\n' "$UNIT" >&2
     fi
     jobs="$(systemctl list-jobs --no-legend --no-pager 2>/dev/null || true)"
@@ -377,7 +378,7 @@ start_watchdog() {
     while sleep 5; do
       waited=$((waited + 5))
       if [ "$waited" -ge "$STALL_AFTER" ] && [ $(((waited - STALL_AFTER) % STALL_EVERY)) -eq 0 ]; then
-        printf '%snrs2:%s activation has run %ss; pending jobs:\n' "$YELLOW" "$NC" "$waited" >&2
+        printf '%snrs:%s activation has run %ss; pending jobs:\n' "$YELLOW" "$NC" "$waited" >&2
         systemctl list-jobs --no-legend --no-pager >&2 || true
         systemctl --user list-jobs --no-legend --no-pager >&2 || true
       fi
@@ -637,7 +638,7 @@ render_activity() { # render_activity: style the activation stream on stdin, to 
 }
 
 # True when the profile + boot steps have nothing to do, judged from GRUB's
-# own menu rather than any record of nrs2's: the boot default already IS this
+# own menu rather than any record of nrs's: the boot default already IS this
 # build, GRUB's default entry boots it, and every generation the menu lists
 # still exists. The last check catches any GC since the menu was written
 # (nightly timer, manual nix-collect-garbage, nh clean), whose dead entries
@@ -704,7 +705,7 @@ activate_nixos() {
     if [ "$LIVE" -eq 1 ]; then printf '\r\e[K' >&2; fi # the renderer died mid-line
     warn "detached; activation carries on as $UNIT.service under PID 1"
     printf '  follow: journalctl -fu %s\n  stop:   sudo systemctl stop %s\n' "$UNIT" "$UNIT" >&2
-    printf '  then re-run nrs2 to set the profile and the boot entry\n' >&2
+    printf '  then re-run nrs to set the profile and the boot entry\n' >&2
     report
     exit 130
   fi
@@ -753,7 +754,7 @@ activate_nixos() {
 # dry-activate prints the system plan and runs the dry-activate snippets, but
 # it exits before switch-to-configuration-ng's per-user pass (do_user_switch),
 # so on its own it never shows a user unit, the kind that hung nrs on
-# 2026-10-24. nrs2 runs that pass itself, dry, the way stc-ng spawns it: its
+# 2026-10-24. nrs runs that pass itself, dry, the way stc-ng spawns it: its
 # own binary, a cleared environment, NIXOS_ACTION=dry-activate. With that
 # action the pass only reads unit files and the user manager's state, and
 # record_unit writes no lists. It is stc-ng's internal interface, not a public
@@ -876,7 +877,7 @@ activate_darwin() {
   set -e
   lap activate
   if [ "$rc" -ne 0 ]; then
-    fail "activation failed (exit $rc); the profile already points at the new generation, so re-run nrs2 once fixed"
+    fail "activation failed (exit $rc); the profile already points at the new generation, so re-run nrs once fixed"
     report
     exit "$rc"
   fi
@@ -937,7 +938,7 @@ if [ "$mode" = plan ]; then
   plan_nixos
   target=$out
   report
-  printf '%splan only: nothing was changed; nrs2 applies it%s\n' "$GREEN" "$NC" >&2
+  printf '%splan only: nothing was changed; nrs applies it%s\n' "$GREEN" "$NC" >&2
   exit 0
 fi
 

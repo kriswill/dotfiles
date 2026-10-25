@@ -14,7 +14,7 @@ enables, `nix.enable = false` (Determinate owns nix), and
 `allowUnfree = false` with a per-package `allowUnfreePredicate` list
 ([unfree-default-deny](../decisions/unfree-default-deny.md); first entry `p4v`,
 see [p4v-nix-apps-dont-strip](../decisions/p4v-nix-apps-dont-strip.md)).
-The rebuild helpers live in [nh](nh.md).
+The rebuild helpers live in [nrs](nrs.md).
 
 Mounted ungated on every darwin host (see the [host-mounted modules pattern](../patterns/host-mounted-modules.md)), auto-discovered
 via the [Dendritic module layout](../patterns/dendritic-modules.md).

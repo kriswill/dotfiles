@@ -1401,7 +1401,7 @@ exit "$status"</code></pre>
   <li><code data-wrap>sudo $out/bin/switch-to-configuration dry-activate</code> for the system units;</li>
   <li>stc-ng's user pass, dry and as you, started the way stc-ng starts it. This uses an internal interface, so nrs2 says so if the interface moves, and carries on.</li>
 </ul>
-<p>Any unit the plan would restart or start while it is <code>activating</code> right now is named in a warning, because the switch would wait for its new run. Tested against a variant build: the user preview showed <code>codebase-memory-mcp</code>'s stop and start, and a mid-run test oneshot was flagged. <code>--plan</code> also compares the kernel and PAM against the new build. The decision record is <code>knowledge/decisions/nrs2-plan-user-pass.md</code>.</p></div>
+<p>Any unit the plan would restart or start while it is <code>activating</code> right now is named in a warning, because the switch would wait for its new run. Tested against a variant build: the user preview showed <code>codebase-memory-mcp</code>'s stop and start, and a mid-run test oneshot was flagged. <code>--plan</code> also compares the kernel and PAM against the new build. The decision record is <code>knowledge/decisions/nrs-plan-user-pass.md</code>.</p></div>
 
 <div class="proposal" id="p6"><h4>P6 · Run activation under PID 1 <span class="kind res">resilience</span></h4>
 <p>nh 4.4.2 has no option for this. Two routes:</p>
@@ -1491,13 +1491,14 @@ systemd.services.nh-clean.serviceConfig.ExecStartPost =
 </div>
 
 <div class="callout">
+<p><strong>Update 2026-10-24: nh is gone and <code>nrs2</code> is now <code>nrs</code></strong>. The nh modules were removed, the package and modules were renamed (<code>pkgs/nrs.{nix,sh}</code>, <code>modules/{nixos,darwin}/nrs.nix</code>), and <code>nrb</code> and <code>nrt</code> are now <code>nrs --dry</code> and <code>nrs --test</code>. The transient unit is <code>nrs-switch-to-configuration.service</code>. Everywhere above, "nrs" means the nh-based wrapper this report analysed, and "nrs2" means the tool that replaced it.</p>
 <p><strong>Prototyped as <code>nrs2</code></strong> (2026-10-24, <code>pkgs/nrs2.{nix,sh}</code>, installed by <code>modules/{nixos,darwin}/nrs2.nix</code>) beside <code>nrs</code>, on every host. It covers P1–P4 and P6 without nh: <code>nom build</code>, <code>dix</code>, then <code>switch-to-configuration test</code> as <code>nrs2-switch-to-configuration.service</code> via <code>systemd-run --wait --verbose --output=cat</code>, then the profile and <code>boot</code>. Those last two are skipped when GRUB's menu already boots this build and lists no collected generation. nrs2 reads <code>grub.cfg</code> under its sudo to decide; <code>--boot</code> forces them.</p>
 <p>The P6 open question is settled, by testing on nebula: Ctrl-C makes <code>systemd-run</code> exit 130 while the unit runs on to completion. An interrupt therefore detaches instead of killing the switch.</p>
 <p>On the Macs it does what <code>nh darwin switch</code> does: set the profile, then run the new generation's own <code>darwin-rebuild activate</code>, with output streamed and the same state report. There is no detach on the Macs, because launchd has no <code>systemd-run</code> here.</p>
 <p>Modes:</p>
 <ul>
   <li><code>nrs2 --dry</code> builds and diffs without root.</li>
-  <li><code>nrs2 --test</code>, which is now also <code>nrt</code> on both OSes, skips the profile and boot entry on NixOS. On darwin it runs the new build's <code>system.checks</code> by calling its <code>activate</code> in check mode directly. It does not use <code>darwin-rebuild check</code>: on macOS that one performs a full activation, because activate's <code>#!/usr/bin/env -i</code> shebang wipes <code>checkActivation</code> (<code>knowledge/decisions/nrs2-darwin-check-mode.md</code>).</li>
+  <li><code>nrs2 --test</code>, which is now also <code>nrt</code> on both OSes, skips the profile and boot entry on NixOS. On darwin it runs the new build's <code>system.checks</code> by calling its <code>activate</code> in check mode directly. It does not use <code>darwin-rebuild check</code>: on macOS that one performs a full activation, because activate's <code>#!/usr/bin/env -i</code> shebang wipes <code>checkActivation</code> (<code>knowledge/decisions/nrs-darwin-check-mode.md</code>).</li>
   <li><code>nrs2 --plan</code> previews the switch (<a href="#p10">P10</a>). On darwin it acts as <code>--dry</code>.</li>
   <li><code>nrs2 --status</code> is the no-root consistency check (<a href="#p17">P17</a>).</li>
 </ul>

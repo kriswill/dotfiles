@@ -25,7 +25,7 @@ feature name — [tmux](../modules/tmux.md), [git](../modules/git.md),
 [ghostty](../modules/ghostty.md), [direnv](../modules/direnv.md),
 [direnv-nom](../modules/direnv-nom.md),
 [dotfiles-stow](../modules/dotfiles-stow.md), [gpg](../modules/gpg.md),
-[pass](../modules/pass.md), [nh](../modules/nh.md). Why twins instead of one
+[pass](../modules/pass.md), [nrs](../modules/nrs.md). Why twins instead of one
 OS-branching module: nix-darwin and NixOS have disjoint option trees, and each
 class is imported wholesale per host, so a single shared module would need
 pervasive conditionals and couple the two evaluations to each other.

@@ -11,9 +11,11 @@ generated: { by: okflight/0.4.0, at: 2026-07-03T12:00:00-07:00 }
 The `nr*` helpers exist on every host of both OSes:
 
 ```sh
-nrs             # apply: nh darwin switch (Macs) / nh os switch (nebula); sudo at activation
-nrb             # build only, no root — safe anywhere
-nrt             # nrs2 --test. darwin: build + run system.checks, no activation; nixos: activate without a bootloader entry
+nrs             # build + diff + switch; asks for sudo itself at activation (never `sudo nrs`)
+nrb             # nrs --dry: build + diff only, no root — safe anywhere
+nrt             # nrs --test. darwin: build + run system.checks, no activation; nixos: activate without a bootloader entry
+nrs --plan      # nebula: preview the switch (dry-activate + user units), change nothing
+nrs --status    # no build, no root: is the machine consistent? exits 1 if not
 ```
 
 Raw invocations and evaluation checks:
@@ -30,12 +32,12 @@ nix eval .#nixosConfigurations.nebula.config.system.build.toplevel.drvPath
                                              # full cross-eval of nebula from a Mac (the pre-hardware gate)
 ```
 
-The `nr*` helpers are real executables from [nh](../modules/nh.md) (not shell
-aliases) — `nh darwin *` on Macs, `nh os *` on nebula
-(`modules/darwin/nh.nix` ↔ `modules/nixos/nh.nix`) — so they also work in
-non-interactive shells (agent harnesses, scripts); extra args pass through
-(`nrs -v`, `nrb --dry`). On nebula they resolve the flake dir with
-`readlink -f`, dodging the symlinked-checkout gotcha above.
+The `nr*` helpers are real executables from [nrs](../modules/nrs.md) (not shell
+aliases): one script, `pkgs/nrs.sh`, on both OSes
+(`modules/darwin/nrs.nix` ↔ `modules/nixos/nrs.nix`), so they also work in
+non-interactive shells (agent harnesses, scripts). Extra args after the mode
+pass through to `nix build` (`nrs -L`, `nrb --show-trace`). They resolve the
+flake dir with `readlink -f`, dodging the symlinked-checkout gotcha above.
 
 Inspect what a switch changed (commit bodies here conventionally include this):
 
@@ -56,7 +58,8 @@ Notes:
 
 - New files must be `git add`ed first — flakes only see tracked files (see
   [Dendritic module layout](../patterns/dendritic-modules.md)).
-- [nh](../modules/nh.md) provides the friendlier `nh darwin switch` /
-  `nh os switch` UX.
+- [nrs](../modules/nrs.md) adds nom's build tree, a dix diff, streamed
+  activation output and a state report on every exit (nh did the first
+  two until it was removed on 2026-10-24).
 - Stow-tree configs apply without any rebuild at all — see the
   [stow tree pattern](../patterns/stow-tree.md).

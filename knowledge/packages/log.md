@@ -2,6 +2,8 @@
 
 ## 2026-10-24
 
+- **Update**: [nrs](nrs.md) is the renamed nrs2 (`pkgs/nrs.{nix,sh}`,
+  `overlays/nrs.nix`, `pkgs.nrs`); it replaced nh.
 - **Update**: [apple-container](apple-container.md). The runtime drift check
   stays quiet unless launchd still has the old apiserver loaded (it checks the
   `user` and `gui` domains). It had fired on every activation because the
@@ -12,9 +14,9 @@
   the gaming profile, so nothing builds xpad-noone any more, and nebula has no
   Xbox controller to need it. nebula's toplevel `.drv` is identical with and
   without the overlay.
-- **Creation**: [nrs2](nrs2.md), `pkgs/nrs2.{nix,sh}`, surfaced as
+- **Creation**: [nrs2](nrs.md), `pkgs/nrs2.{nix,sh}`, surfaced as
   `pkgs.nrs2` by `overlays/nrs2.nix`. It is one `writeShellApplication`
-  script for NixOS and nix-darwin, behind the [nrs2 modules](../modules/nrs2.md).
+  script for NixOS and nix-darwin, behind the [nrs2 modules](../modules/nrs.md).
 - **Deprecation** — nix-output-monitor: removed
   `overlays/nix-output-monitor.nix`, its `flake.overlays` registration, the
   dev-shell re-import in `modules/dev.nix` (back to plain `pkgs`), and the

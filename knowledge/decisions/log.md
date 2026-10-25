@@ -2,7 +2,11 @@
 
 ## 2026-10-24
 
-- **Creation**: [nrs2-darwin-check-mode](nrs2-darwin-check-mode.md). On
+- **Update**: the three nrs2 decisions are renamed with the tool:
+  [nrs-boot-menu-check](nrs-boot-menu-check.md),
+  [nrs-plan-user-pass](nrs-plan-user-pass.md) and
+  [nrs-darwin-check-mode](nrs-darwin-check-mode.md). Their text now says nrs.
+- **Creation**: [nrs-darwin-check-mode](nrs-darwin-check-mode.md). On
   macOS `darwin-rebuild check` performs a full activation, because the
   activate shebang's `env -i` wipes `checkActivation`. `nrs2 --test`, and
   `nrt` with it, runs activate's check mode directly and refuses a script
@@ -12,16 +16,16 @@
   keep 7 days. GRUB's menu is GC-rooted at each bootloader install, which
   replaces the rejected GC-hook refresh. nh clean was not used, because it can
   delete a rolled-back profile's current generation.
-- **Update**: [nrs2-boot-menu-check](nrs2-boot-menu-check.md): its open gap
+- **Update**: [nrs-boot-menu-check](nrs-boot-menu-check.md): its open gap
   (stale menu between a GC and the next switch) is closed by the menu roots.
-- **Creation**: [nrs2-plan-user-pass](nrs2-plan-user-pass.md). dry-activate
+- **Creation**: [nrs-plan-user-pass](nrs-plan-user-pass.md). dry-activate
   exits before switch-to-configuration-ng's per-user pass, so `nrs2 --plan`
   runs that pass itself, dry and as the user, through stc-ng's internal
   spawn interface, and flags units the switch would restart while mid-run.
 - **Update**: [user-oneshots-skip-switch-restart](user-oneshots-skip-switch-restart.md)
   records the capture units' 2 min `TimeoutStartSec` and the
   user-oneshot-check warning that now enforces the rule.
-- **Creation**: [nrs2-boot-menu-check](nrs2-boot-menu-check.md). nrs2 skips
+- **Creation**: [nrs-boot-menu-check](nrs-boot-menu-check.md). nrs2 skips
   the boot step only when `grub.cfg`, read under sudo, already boots the
   build and lists no collected generation. A user-local record plus a GC hook
   was tried first and rejected after review.

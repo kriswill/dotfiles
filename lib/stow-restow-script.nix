@@ -42,7 +42,7 @@ let
   # Output is an NDJSON event stream on stderr, one object per line. This runs
   # without a terminal (inside switch-to-configuration, under a systemd unit or
   # darwin-rebuild, and at every NixOS boot), so it can't draw progress itself;
-  # a front-end that owns the terminal (nrs2) renders the events, and the raw
+  # a front-end that owns the terminal (nrs) renders the events, and the raw
   # lines stay readable in a captured log or the boot journal:
   #   {"stow":"begin","packages":N,"skipped":M}
   #   {"stow":"skip","pkg":P,"reason":R}

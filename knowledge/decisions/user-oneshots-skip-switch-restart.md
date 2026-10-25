@@ -17,7 +17,7 @@ sources:
 **Where:** [herdr-update-check](../modules/herdr-update-check.md),
 [users-k-helium](../modules/users-k-helium.md),
 [users-k-noctalia](../modules/users-k-noctalia.md),
-[git](../modules/git.md); felt through [nh](../modules/nh.md)'s `nrs`;
+[git](../modules/git.md); felt through the nh-based `nrs` of the time (now [nrs](../modules/nrs.md));
 enforced by [user-oneshot-check](../modules/user-oneshot-check.md).
 
 ## Context

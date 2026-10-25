@@ -1,8 +1,8 @@
 ---
 type: Nix Package
-title: Nrs2
-description: 'A rebuild helper that replaces nh''s switch path on NixOS and nix-darwin with one bash script: nom for the build tree, dix for the diff, the platform''s own activation, and a state report on every exit. Prototype, installed beside nrs.'
-resource: pkgs/nrs2.nix
+title: Nrs
+description: 'The rebuild helper for NixOS and nix-darwin, one bash script: nom for the build tree, dix for the diff, the platform''s own activation, and a state report on every exit. It replaced nh on 2026-10-24 (it was nrs2 until then).'
+resource: pkgs/nrs.nix
 tags: [package]
 generated: { by: claude-code/opus-5.5, at: 2026-10-24T17:20:00-07:00 }
 sources:
@@ -11,8 +11,8 @@ sources:
     title: 'docs/nrs-pipeline.html: the nrs pipeline, design interrogation and proposals'
 ---
 
-The tool behind the [nrs2](../modules/nrs2.md) module twins. `pkgs/nrs2.nix`
-wraps `pkgs/nrs2.sh` with `writeShellApplication`, so shellcheck runs at build
+The tool behind the [nrs](../modules/nrs.md) module twins. `pkgs/nrs.nix`
+wraps `pkgs/nrs.sh` with `writeShellApplication`, so shellcheck runs at build
 time. It pins coreutils, dix, gawk, gnugrep and nix-output-monitor, and
 deliberately leaves the rest to the ambient PATH:
 - `nix` and `nix-store` (the system's own);
@@ -43,7 +43,7 @@ addresses are in the pipeline report.[^nrs-pipeline]
 
 ## Source
 
-- Package: [`pkgs/nrs2.nix`](../../pkgs/nrs2.nix), script [`pkgs/nrs2.sh`](../../pkgs/nrs2.sh)
-- Overlay: [`overlays/nrs2.nix`](../../overlays/nrs2.nix) — exposes `pkgs.nrs2`
+- Package: [`pkgs/nrs.nix`](../../pkgs/nrs.nix), script [`pkgs/nrs.sh`](../../pkgs/nrs.sh)
+- Overlay: [`overlays/nrs.nix`](../../overlays/nrs.nix) — exposes `pkgs.nrs`
 
 [^nrs-pipeline]: docs/nrs-pipeline.html: the nrs pipeline, design interrogation and proposals

@@ -1,8 +1,8 @@
 ---
 type: Decision
-title: nrs2 --test Runs nix-darwin's Check Mode Directly
-description: 'On macOS, `darwin-rebuild check` performs a full activation: activate''s `#!/usr/bin/env -i` shebang wipes the `checkActivation=1` it exports. nrs2 --test (and nrt, which is now nrs2 --test) runs the new build''s activate through its own bash under env -i with only checkActivation=1, and refuses if the script has no check-mode exit.'
-tags: [nrs2, nix-darwin, macos, activation]
+title: nrs --test Runs nix-darwin's Check Mode Directly
+description: 'On macOS, `darwin-rebuild check` performs a full activation: activate''s `#!/usr/bin/env -i` shebang wipes the `checkActivation=1` it exports. nrs --test (and nrt, which is now nrs --test) runs the new build''s activate through its own bash under env -i with only checkActivation=1, and refuses if the script has no check-mode exit.'
+tags: [nrs, nix-darwin, macos, activation]
 status: stable
 generated: { by: claude-code/opus-5.5, at: 2026-10-24T22:55:00-07:00 }
 sources:
@@ -17,15 +17,15 @@ sources:
     title: nix-darwin darwin-rebuild.sh (check)
 ---
 
-**Where:** [nrs2](../modules/nrs2.md) (`activate_darwin` in `pkgs/nrs2.sh`),
-and `nrt` in `modules/{darwin,nixos}/nrs2.nix`. It replaces the old `nrt`
-in [nh](../modules/nh.md).
+**Where:** [nrs](../modules/nrs.md) (`activate_darwin` in `pkgs/nrs.sh`),
+and `nrt` in `modules/{darwin,nixos}/nrs.nix`. It replaces the old `nrt`
+from the nh module, which was removed on 2026-10-24.
 
 ## Context
 
 darwin's `nrt` was `darwin-rebuild check --flake ~/src/dotfiles`, without
 sudo. Current nix-darwin refuses that: "system activation must now be run
-as root". `nrs2 --test` ran it under sudo. Reading nix-darwin `bb0b90d`
+as root". `nrs --test`, then named `nrs2 --test`, ran it under sudo. Reading nix-darwin `bb0b90d`
 (the pinned version) showed what `check` does:
 1. It rebuilds the system from the flake, as root.
 2. It runs `export checkActivation=1; "$systemConfig/activate"`.[^nix-darwin-rebuild]
@@ -45,7 +45,7 @@ it.
 
 ## Decision
 
-- **`nrs2 --test` on darwin calls check mode directly**, on the build it
+- **`nrs --test` on darwin calls check mode directly**, on the build it
   already made as the user, with no second evaluation as root:
   `sudo -H /usr/bin/env -i checkActivation=1 <bash> $out/activate`. The
   bash is the last word of activate's shebang; it must be the store bash,
@@ -56,11 +56,11 @@ it.
   `preActivation` snippets and `system.checks`, then exits `ok`, which is
   what nix-darwin meant `check` to do.
 - **Guard:** if activate lacks the `checkActivation:-0}" -eq 1` exit, or its
-  shebang's bash isn't executable, nrs2 refuses. A future nix-darwin can't
+  shebang's bash isn't executable, nrs refuses. A future nix-darwin can't
   turn `--test` into a silent activation.
-- **`nrt` is `nrs2 --test` on both OSes.** It lives in the nrs2 modules as
-  `exec nrs2 --test "$@"`. On NixOS that is still "activate without the
-  profile or a boot entry", now with nrs2's unit, rendering and report.
+- **`nrt` is `nrs --test` on both OSes.** It lives in the nrs modules as
+  `exec nrs --test "$@"`. On NixOS that is still "activate without the
+  profile or a boot entry", now with nrs's unit, rendering and report.
 
 ## Consequences
 
