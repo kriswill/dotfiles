@@ -122,7 +122,6 @@
         pkgs.opensnitch-ui # prompt/tray UI for the opensnitch daemon (services.opensnitch)
         pkgs.rose-pine-cursor # Xcursor twin of the hyprcursor theme, for XWayland client cursors (Steam); selected via XCURSOR_THEME in environment.lua
         pkgs.rose-pine-hyprcursor # native hyprcursor theme (BreezeX shape, Rose Pine palette); selected via HYPRCURSOR_THEME in hyprland.lua
-        pkgs.umu-launcher # standalone Proton runner; launches the stowed Battle.net.desktop ("Battle.net (umu)") in Valve's Proton 11.0 without opening the Steam client
         pkgs.wowup # WowUp-CF (WoW addon manager); WoW path defaults in pkgs/wowup.nix
       ]
       # snowglobe-factory dropped its hardware-tools profile; keep its payload.
