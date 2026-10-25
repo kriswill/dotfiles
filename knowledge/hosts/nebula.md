@@ -66,6 +66,7 @@ Non-declarative BIOS facts, invisible to the flake:
 
 ## Host-selective features
 
+- [nebula-battlenet](../modules/nebula-battlenet.md) (enable-gate for the GE-Proton Battle.net launcher)
 - [nebula-codebase-memory-mcp](../modules/nebula-codebase-memory-mcp.md) (enable-gate for the code-graph daemon)
 - [nebula-nixploit](../modules/nebula-nixploit.md) (enable-gate for the daily vulnerability scan)
 - [astro-mixamp](../modules/astro-mixamp.md) (host-specific file)

@@ -99,6 +99,15 @@
       inputs.flake-parts.follows = "flake-parts";
     };
 
+    # Battle.net in GE-Proton without Steam or umu (./flakes/battlenet); its
+    # NixOS module (programs.battlenet) is re-exported by
+    # modules/nixos/battlenet.nix.
+    battlenet = {
+      url = "./flakes/battlenet";
+      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.flake-parts.follows = "flake-parts";
+    };
+
     # Weekly prebuilt nix-index database (command-not-found + `, <prog>` via
     # comma-with-db). snowglobe-factory used to carry this input and enable it
     # by default; its 2026-10 debloat dropped both, so nebula wires it itself

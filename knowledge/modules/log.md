@@ -2,6 +2,13 @@
 
 ## 2026-10-25
 
+- **Creation**: [battlenet](battlenet.md) re-exports the
+  [battlenet sub-flake](../packages/battlenet.md)'s `programs.battlenet`
+  module. [nebula-battlenet](nebula-battlenet.md) enables it on the umu
+  entry's prefix, so a second "Battle.net" entry runs GE-Proton directly
+  ([decision](../decisions/battlenet-runtime-install.md)). The stowed umu
+  entry is now named "Battle.net (umu)".
+
 - **Update**: [nebula-nixploit](nebula-nixploit.md) sets
   `rescanOnSwitch = true`, so the report follows each `nrs` that changes the
   packages ([decision](../decisions/nixploit-rescan-on-switch.md)).
