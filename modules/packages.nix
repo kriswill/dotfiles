@@ -32,9 +32,9 @@
         # system-update-report — HTML page of nvd diff (booted/previous vs current
         # generation) + the latest "nix flake update" commit. Cross-platform.
         system-update-report = pkgs.callPackage ../pkgs/system-update-report/package.nix { };
-        # nrs2 — prototype nh-free rebuild helper (NixOS + nix-darwin), installed
-        # beside nrs for comparison. See docs/nrs-pipeline.html.
-        nrs2 = pkgs.callPackage ../pkgs/nrs2.nix { };
+        # nrs — the rebuild helper (NixOS + nix-darwin; nrb and nrt ride on it).
+        # See docs/nrs-pipeline.html.
+        nrs = pkgs.callPackage ../pkgs/nrs.nix { };
         # herdr-nav — vim-aware ctrl+h/j/k/l pane navigation for herdr; the
         # herdr-side half of nvim's config/multiplexer.lua integration.
         herdr-nav = pkgs.callPackage ../pkgs/herdr-nav.nix { };

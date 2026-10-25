@@ -1,8 +1,8 @@
 ---
 type: Decision
-title: nrs2 --plan Runs stc-ng's User Pass Itself
-description: 'switch-to-configuration dry-activate exits before switch-to-configuration-ng''s per-user pass, so it never previews user units, the kind that hung nrs on 2026-10-24. nrs2 --plan therefore runs that pass itself, dry and as the user, through stc-ng''s internal spawn interface, and flags any unit the switch would restart while it is mid-run.'
-tags: [nrs2, nixos, systemd, switch-to-configuration]
+title: nrs --plan Runs stc-ng's User Pass Itself
+description: 'switch-to-configuration dry-activate exits before switch-to-configuration-ng''s per-user pass, so it never previews user units, the kind that hung nrs on 2026-10-24. nrs --plan therefore runs that pass itself, dry and as the user, through stc-ng''s internal spawn interface, and flags any unit the switch would restart while it is mid-run.'
+tags: [nrs, nixos, systemd, switch-to-configuration]
 status: stable
 generated: { by: claude-code/opus-5.5, at: 2026-10-24T21:20:00-07:00 }
 sources:
@@ -14,8 +14,8 @@ sources:
     title: 'docs/nrs-pipeline.html: the nrs pipeline, design interrogation and proposals'
 ---
 
-**Where:** [nrs2](../modules/nrs2.md) (`plan_nixos`, `plan_user_units` and
-`plan_hazards` in `pkgs/nrs2.sh`). Proposal P10 in the pipeline
+**Where:** [nrs](../modules/nrs.md) (`plan_nixos`, `plan_user_units` and
+`plan_hazards` in `pkgs/nrs.sh`). Proposal P10 in the pipeline
 report.[^nrs-pipeline] Background:
 [Keep Long-Running User Oneshots Out of the Switch's Restart Set](user-oneshots-skip-switch-restart.md).
 
@@ -35,10 +35,10 @@ blind to exactly the unit class that hung `nrs`.
 
 ## Decision
 
-`nrs2 --plan` runs both halves:
+`nrs --plan` runs both halves:
 1. **System:** `sudo $out/bin/switch-to-configuration dry-activate`, rendered
    like a real switch. It takes switch-to-configuration's lock and runs the
-   pre-switch checks, so a running nrs2 unit is refused first.
+   pre-switch checks, so a running nrs unit is refused first.
 2. **User:** the pass itself, the way stc-ng spawns it. That means the new
    build's real binary (`$out/bin/.switch-to-configuration-wrapped`,
    resolved), a cleared environment with `XDG_RUNTIME_DIR`,
@@ -61,7 +61,7 @@ blind to exactly the unit class that hung `nrs`.
 - The user half rides on stc-ng's **internal** interface: the env-var
   protocol and the wrapper's file name are not public and can change with
   any nixpkgs bump. If the binary is missing, or the pass exits non-zero,
-  nrs2 warns and carries on with the system half.
+  nrs warns and carries on with the system half.
 - Only the invoking user's units are previewed. A real switch runs the pass
   for every logged-in user, and only root could preview the others.
 - The preview runs against the current `/etc`. A real switch's user pass

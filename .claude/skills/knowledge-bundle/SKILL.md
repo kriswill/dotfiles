@@ -116,7 +116,7 @@ Landed in commits `<hash>`.
 - Frontmatter requires `type`; `title`, `description`, `generated` are
   recommended. Every footnote `[^x]` must match a `sources[].id`. A leftover
   v0.1 `timestamp` or `## Citations` list is a warning that says `okf migrate`.
-- Links are **file-relative** (`../modules/nh.md`) — never `/`-rooted; links
+- Links are **file-relative** (`../modules/nrs.md`) — never `/`-rooted; links
   may escape into the repo (`../../modules/...`) but must resolve.
 - Body section headings are **H2** (`## Context`, `## Decision`); no H1 in
   concept bodies (frontmatter `title` is the H1).

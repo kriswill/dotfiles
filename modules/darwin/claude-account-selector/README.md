@@ -157,7 +157,7 @@ Set `fallbackProfile` to close that hole: activation replaces `~/.claude` with a
 ### Activation & verification
 
 ```sh
-nrs                                                  # nh darwin switch ~/src/dotfiles
+nrs                                                  # rebuild + switch from ~/src/dotfiles
 launchctl setenv CLAUDE_CONFIG_DIR ~/.claude-me      # apply now (or just log out/in)
 launchctl getenv  CLAUDE_CONFIG_DIR                  # → /Users/<you>/.claude-me
 readlink ~/.claude                                   # → /Users/<you>/.claude-me (fallbackProfile set)

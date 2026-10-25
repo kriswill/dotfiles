@@ -66,7 +66,7 @@ This file rewrites `/etc/pam.d/login` to give linux-pam's own modules bare
 names. libpam resolves those against its own compiled-in module dir, so
 every process gets modules matching its glibc. Modules from other packages
 keep their absolute paths. That leaves ly's re-login exposed, which is
-covered by the [nh](nh.md) `nrs` warning.
+covered by [nrs](nrs.md)'s PAM glibc warning.
 
 Host-specific file for [nebula](../hosts/nebula.md) — merged straight into
 that host's configuration per the

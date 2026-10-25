@@ -21,7 +21,7 @@ restarts changed user units, `activating` ones included, and waits on
 those jobs with no timeout. It does that before it restarts the system
 services it stopped, so one capture mid-sleep holds the network down until
 it exits. The warning prints while the system evaluates (as `evaluation
-warning:` in `nrs2`'s and nom's output), before anything changes. The rule
+warning:` in `nrs`'s and nom's output), before anything changes. The rule
 it enforces and the incident are in
 [Keep Long-Running User Oneshots Out of the Switch's Restart Set](../decisions/user-oneshots-skip-switch-restart.md).
 

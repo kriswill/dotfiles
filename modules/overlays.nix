@@ -22,7 +22,7 @@
     herdr-nav = import ../overlays/herdr-nav.nix;
     helium-config = import ../overlays/helium-config.nix;
     noctalia-config = import ../overlays/noctalia-config.nix;
-    nrs2 = import ../overlays/nrs2.nix;
+    nrs = import ../overlays/nrs.nix;
     pass-xdg = import ../overlays/pass-xdg.nix;
     slack-leave-devopsinc = import ../overlays/slack-leave-devopsinc.nix;
     iv = import ../overlays/iv.nix;

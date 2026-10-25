@@ -21,7 +21,7 @@ flake consumes via relative-path inputs.
 * [Kitten](kitten.md) - Kitten - A collection of small, useful programs for the kitty terminal.
 * [Ld64 Lld](ld64-lld.md) - TEMPORARY overlay linking kitty/vfkit/starship with LLVM lld on darwin — works around the pinned nixpkgs' cctools ld64 1010.6 SIGTRAP until the staging fix reaches nixos-unstable.
 * [Noctalia Config](noctalia-config.md) - Custom Nix package 'noctalia-config'.
-* [Nrs2](nrs2.md) - A rebuild helper that replaces nh's switch path on NixOS and nix-darwin with one bash script: nom for the build tree, dix for the diff, the platform's own activation, and a state report on every exit. Prototype, installed beside nrs.
+* [Nrs](nrs.md) - The rebuild helper for NixOS and nix-darwin, one bash script: nom for the build tree, dix for the diff, the platform's own activation, and a state report on every exit. It replaced nh on 2026-10-24 (it was nrs2 until then).
 * [okf](okf.md) - okf — CLI for maintaining OKF knowledge bundles (scaffold/index/validate/viz), consumed from its own repo via FlakeHub (kriswill/okflight).
 * [Pass Xdg](pass-xdg.md) - pass-xdg — a drop-in `pass` (standard unix password manager) that defaults its store to an XDG-compliant location instead of the upstream default `~/.password-store`.
 * [Podman](podman.md) - Podman — the daemonless, Docker-compatible container engine; on macOS packaged from the official prebuilt darwin_arm64 remote client (nixpkgs' podman refuses to evaluate on darwin) with vfkit + gvproxy bundled in, primarily serving minikube's podman driver for work Kubernetes.

@@ -30,7 +30,7 @@ built-in defaults reproduce exactly the rules below — this repo's
   are recommended — warnings, promoted to errors by `okf validate --strict`
   (this matches the reference tooling's stricter validator). `resource` and
   `tags` are encouraged but unchecked.
-- **Links are file-relative** (`../modules/nh.md`), never `/`-rooted — the
+- **Links are file-relative** (`../modules/nrs.md`), never `/`-rooted — the
   spec recommends bundle-absolute links, but they break GitHub rendering, and
   Google's own tooling forbids them. The validator errors on `/`-rooted links
   (`rooted-links = "error"`).
@@ -38,7 +38,7 @@ built-in defaults reproduce exactly the rules below — this repo's
   point at source files. The validator checks these resolve
   (`repo-links = "check"`); links outside the repository must be full URLs.
 - **`resource:`** is a repo-root-relative path to the concept's primary source
-  file or directory (e.g. `modules/darwin/nh.nix`) — not a URL, so it survives
+  file or directory (e.g. `modules/darwin/nrs.nix`) — not a URL, so it survives
   remote renames. Abstract concepts (decisions, playbooks) may omit it.
   `Dual Module` docs (cross-OS twins) point `resource:` at the darwin
   implementation; the body's Source section lists both class files, and the
