@@ -1111,6 +1111,26 @@
         "type": "github"
       }
     },
+    "nixploit": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1792865523,
+        "narHash": "sha256-8acB69PC8bxHiMQ/pGUhy9FcIrk64AcbjjuBKg8bdts=",
+        "owner": "manic-systems",
+        "repo": "nixploit",
+        "rev": "845724aabc502c1b9d37aacaa0b9adc98ea8d686",
+        "type": "github"
+      },
+      "original": {
+        "owner": "manic-systems",
+        "repo": "nixploit",
+        "type": "github"
+      }
+    },
     "noctalia": {
       "inputs": {
         "nixpkgs": [
@@ -1192,6 +1212,7 @@
         "nix-index-database": "nix-index-database",
         "nixos-hardware": "nixos-hardware",
         "nixpkgs": "nixpkgs_4",
+        "nixploit": "nixploit",
         "noctalia": "noctalia",
         "okf": "okf",
         "snowglobe-factory": "snowglobe-factory",

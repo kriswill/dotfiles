@@ -10,11 +10,12 @@ generated: { by: okflight/0.4.0, at: 2026-07-03T22:30:00-07:00 }
 nebula — AMD CPU, NVIDIA GPU, UEFI desktop. Registers into the `configurations.nixos` registry (realised by `modules/nixos.nix` through snowglobe-factory's `mkNixosHost`). This file carries the host metadata and the shared baseline of its `module`; the host-specific pieces live as their own first-class dendritic files under `nebula/`, each a flake-parts module that merges into `configurations.nixos.nebula.module` (the realizer's `deferredModule` option), so there is no import-tree exclusion and no hand-maintained imports list. Non-`.nix` files (secrets.yaml, *.pub) sit in `nebula/` too — import-tree only picks up `.nix`, so they are ignored by the scan and referenced by path.
 
 Imports every [nixos module](../modules/index.md) (`builtins.attrValues
-config.flake.modules.nixos` — the nixos class is almost all-universal; the one
-enable-gated feature is
-[codebase-memory-mcp](../modules/codebase-memory-mcp.md), flipped on by the
-host-specific file
-[nebula-codebase-memory-mcp](../modules/nebula-codebase-memory-mcp.md). The
+config.flake.modules.nixos` — the nixos class is almost all-universal; the
+enable-gated features are
+[codebase-memory-mcp](../modules/codebase-memory-mcp.md) and
+[nixploit](../modules/nixploit.md), flipped on by the host-specific files
+[nebula-codebase-memory-mcp](../modules/nebula-codebase-memory-mcp.md) and
+[nebula-nixploit](../modules/nebula-nixploit.md). The
 other entries below are host-specific *files* merged in per the
 [host-mounted modules pattern](../patterns/host-mounted-modules.md), not
 opt-in feature flags). Beyond the imports, the registry entry does two
@@ -66,6 +67,7 @@ Non-declarative BIOS facts, invisible to the flake:
 ## Host-selective features
 
 - [nebula-codebase-memory-mcp](../modules/nebula-codebase-memory-mcp.md) (enable-gate for the code-graph daemon)
+- [nebula-nixploit](../modules/nebula-nixploit.md) (enable-gate for the daily vulnerability scan)
 - [astro-mixamp](../modules/astro-mixamp.md) (host-specific file)
 - [configuration](../modules/configuration.md) (host-specific file)
 - [console-quiet](../modules/console-quiet.md) (host-specific file)

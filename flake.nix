@@ -88,6 +88,14 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    # Nix closure vulnerability scanner (NVD + CNA ranges, optional OSV/VulnCheck);
+    # ships the NixOS module re-exported by modules/nixos/nixploit.nix. No
+    # binary cache, builds from source — the nixpkgs follow shares our set.
+    nixploit = {
+      url = "github:manic-systems/nixploit";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     # Weekly prebuilt nix-index database (command-not-found + `, <prog>` via
     # comma-with-db). snowglobe-factory used to carry this input and enable it
     # by default; its 2026-10 debloat dropped both, so nebula wires it itself
