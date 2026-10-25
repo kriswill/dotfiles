@@ -2,6 +2,11 @@
 
 ## 2026-10-24
 
+- **Update**: P11 and P13 measured ([determinate](determinate.md),
+  [store-optimise](store-optimise.md)). A cached miss expired at t=303 s with
+  300, while 3600 still hid the path at t=343 s. Deduplicating a
+  texliveMedium download took 2.8 s on top of its 8.2 s, now moved to the
+  weekly job.
 - **Update**: nh removed and nrs2 renamed [nrs](nrs.md). The nh twins
   (`modules/{darwin,nixos}/nh.nix`) and their card are deleted. `nrb` is now
   `nrs --dry`, `nrt` is `nrs --test`, and both are installed by the nrs

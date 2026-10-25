@@ -20,6 +20,10 @@ FlakeHub Cache leaves the misses cached, and later runs keep building
 locally for up to an hour after the paths arrive. The daemon does the
 lookups and `k` is not trusted, so it can't be overridden per command. This
 is nebula only; the Macs' Determinate Nix is not managed by nix-darwin.
+Measured 2026-10-24 against a throwaway HTTP cache on localhost. A path
+published 2 s after a recorded miss was found at t=303 s with 300. With the
+old 3600 it was still missing at t=343 s. No HTTP request was made while the
+miss was cached.
 Auto-discovered via the
 [Dendritic module layout](../patterns/dendritic-modules.md). Rationale:
 [Replace Lix With Determinate Nix](../decisions/lix-to-determinate.md).
