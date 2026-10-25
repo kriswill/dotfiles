@@ -11,7 +11,7 @@ sources:
     title: switch-to-configuration-ng source (`do_system_switch`, `do_user_switch`, `record_unit`)
   - id: nrs-pipeline
     resource: ../../docs/nrs-pipeline.html
-    title: 'docs/nrs-pipeline.html: the nrs pipeline, design interrogation and proposals'
+    title: 'docs/nrs-pipeline.html: the nrs manual (its §10 maps F1–F12 and P1–P17)'
 ---
 
 **Where:** [nrs](../modules/nrs.md) (`plan_nixos`, `plan_user_units` and
@@ -72,4 +72,4 @@ blind to exactly the unit class that hung `nrs`.
 - On darwin there is no dry-activate. `--plan` warns and acts as `--dry`.
 
 [^stc-ng-source]: switch-to-configuration-ng source (`do_system_switch`, `do_user_switch`, `record_unit`)
-[^nrs-pipeline]: docs/nrs-pipeline.html: the nrs pipeline, design interrogation and proposals
+[^nrs-pipeline]: docs/nrs-pipeline.html: the nrs manual (its §10 maps F1–F12 and P1–P17)

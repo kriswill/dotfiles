@@ -56,6 +56,19 @@ versions live in the manuals themselves, which lead with verified state.
 
 ## Cross-platform tools
 
+- [`docs/nrs-pipeline.md`](../docs/nrs-pipeline.md) (for GitHub) and
+  [`docs/nrs-pipeline.html`](../docs/nrs-pipeline.html) (styled, for local
+  reading): the manual for [nrs](modules/nrs.md), `nrb` and `nrt`. The HTML
+  is the source of the diagrams; `bun docs/nrs-pipeline/export-svgs.ts`
+  exports them as light and dark SVGs, which the Markdown shows through
+  `<picture>`. It covers:
+  - each command and mode, and the stage order on NixOS and darwin;
+  - what the rendered output means;
+  - the guards around switching (GRUB menu roots, boot-history retention,
+    the user-oneshot warning);
+  - troubleshooting, and a dated learnings log.
+
+  Its §10 maps the F1–F12 and P1–P17 numbers that code comments cite.
 - [`docs/tmux.md`](../docs/tmux.md) — tmux reference covering the
   stow/Nix split (static `tmux.conf` stowed, `plugins.conf` generated per OS)
   and the load-bearing `default-terminal "tmux-256color"` +

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>nrs pipeline</title>
+<title>nrs rebuild helper</title>
 <style>
   :root {
     color-scheme: light;
@@ -189,22 +189,6 @@
   .callout.danger { border-color: var(--danger-border); background: var(--danger-bg); }
   .callout.ok { border-color: var(--ok-border); background: var(--ok-bg); }
 
-  .verdict, .kind {
-    display: inline-block; font-size: .72rem; font-weight: 700; padding: .06rem .55rem;
-    border-radius: 999px; border: 1px solid; white-space: nowrap; letter-spacing: .03em;
-    text-transform: uppercase; vertical-align: .15em;
-  }
-  .verdict.sound { color: var(--ok-border); border-color: var(--ok-border); background: var(--ok-bg); }
-  .verdict.questionable { color: var(--warn-border); border-color: var(--warn-border); background: var(--warn-bg); }
-  .verdict.flawed { color: var(--danger-border); border-color: var(--danger-border); background: var(--danger-bg); }
-  .kind.perf { color: var(--config-fg); border-color: var(--config-fg); background: var(--config-bg); }
-  .kind.use { color: var(--manual-fg); border-color: var(--manual-fg); background: var(--manual-bg); }
-  .kind.res { color: var(--ok-border); border-color: var(--ok-border); background: var(--ok-bg); }
-
-  .finding { border: 1px solid var(--rule); border-radius: 10px; padding: .2rem 1.1rem .6rem; margin: 1rem 0; }
-  .finding h4 { margin-top: .9rem; }
-  .proposal { border: 1px solid var(--rule); border-radius: 10px; padding: .2rem 1.1rem .7rem; margin: 1rem 0; }
-  .proposal h4 { margin-top: .9rem; }
   .muted { color: var(--muted); }
   dl.facts { display: grid; grid-template-columns: max-content 1fr; gap: .25rem 1.2rem; font-size: .92rem; margin: 1rem 0; }
   dl.facts dt { color: var(--muted); font-weight: 600; }
@@ -251,6 +235,21 @@
   svg.dg circle.dotd { fill: var(--danger-border); }
   svg.dg circle.doto { fill: var(--ok-border); }
   svg.dg circle.pin { fill: var(--danger-bg); stroke: var(--danger-border); stroke-width: 1.5; }
+
+  /* ---- nrs manual additions ------------------------------------------ */
+  svg.dg circle.dotr { fill: var(--config-fg); }
+  svg.dg .track { stroke: var(--muted); stroke-width: 2.5; fill: none; }
+  svg.dg .skip { stroke: var(--rule); stroke-width: 2.5; stroke-dasharray: 3 6; fill: none; }
+  /* Output glyphs in the legend table, coloured as the terminal shows them.
+     Namespaced (g-*) so no layout class collides with them. */
+  .g { font-weight: 700; }
+  .g-red { color: var(--danger-border); }
+  .g-green { color: var(--ok-border); }
+  .g-yellow { color: var(--warn-border); }
+  .g-blue { color: var(--accent); }
+  .g-magenta { color: var(--config-fg); }
+  .g-cyan { color: var(--manual-fg); }
+  .g-dim { color: var(--muted); }
 </style>
 <script>
   // In <head>, before any content renders: resolving the theme after first
@@ -343,1192 +342,604 @@
 
 <main>
 
-<h1>nrs: from a keystroke to a running generation</h1>
-<p class="lede">What happens on nebula between typing <code>nrs</code> and getting the prompt back: every stage, what it runs as, what it costs, what it prints, how it fails and what state a failure leaves. It ends with a critique of the design and proposals for each stage.</p>
+<h1>nrs: the rebuild helper</h1>
+<p class="lede">The manual for <code>nrs</code>, <code>nrb</code> and <code>nrt</code>, the one script that builds and switches nebula (NixOS) and the Macs (nix-darwin). It covers what each command and mode does, the order of every stage, what the output means, the machinery around it that keeps switching safe, and what to do when something looks wrong.</p>
 
 <div class="state">
-  <strong>Verified 2026-10-24 on nebula</strong> against the source of every component, not against documentation:
-  nh <strong>4.4.2</strong> (<code data-wrap>crates/nh-nixos/src/nixos.rs</code>, <code>nh-core</code>),
-  Determinate Nix <strong>3.24.0</strong> (Nix 2.35.3),
-  nixpkgs <strong>3ec6363</strong>, whose <code>switch-to-configuration-ng</code> has the new user-unit pass,
-  systemd <strong>262</strong>, and GRUB with os-prober.
-  The timings come from the journal of the <strong>15:52:05 run</strong>: 11.38 s end to end, no package changes.
+  <strong>Verified 2026-10-24</strong> against <code>pkgs/nrs.sh</code> as of commit <code>b95c62b</code>, and by running it:
+  on <strong>nebula</strong> (NixOS, nixpkgs <code>3ec6363</code>, Determinate Nix <strong>3.24.0</strong> / Nix 2.35.3, systemd <strong>262</strong>, GRUB)
+  and on <strong>k</strong> (nix-darwin <code>bb0b90d</code>).
+  nrs replaced nh that day. Until then it ran beside nh as <code>nrs2</code>.
+  The analysis that led to it, the earlier version of this document, is in git:
+  <code>git show b95c62b:docs/nrs-pipeline.html</code>. Its finding and proposal numbers (F1–F12, P1–P17) still appear in code comments; <a href="#origins">§10</a> maps them.
+  The same manual for browsing on GitHub, with theme-aware diagrams: <a href="nrs-pipeline.md"><code>nrs-pipeline.md</code></a>. After changing a diagram here, re-export them with <code>bun docs/nrs-pipeline/export-svgs.ts</code>.
 </div>
 
 <nav class="toc" aria-label="Contents">
   <strong>Contents</strong>
   <ol>
-    <li><a href="#glance">At a glance</a></li>
-    <li><a href="#s0">Stage 0 · the wrapper</a></li>
-    <li><a href="#s1">Stage 1 · pre-flight and target</a></li>
-    <li><a href="#s2">Stage 2 · evaluation</a></li>
-    <li><a href="#s3">Stage 3 · realisation</a></li>
-    <li><a href="#s4">Stage 4 · diff and validation</a></li>
-    <li><a href="#s5">Stage 5 · elevation</a></li>
-    <li><a href="#s6">Stage 6 · switch-to-configuration test</a></li>
-    <li><a href="#s7">Stage 7 · the system profile</a></li>
-    <li><a href="#s8">Stage 8 · the bootloader</a></li>
-    <li><a href="#s9">Stage 9 · post-flight</a></li>
-    <li><a href="#states">State, interruption and failure modes</a></li>
-    <li><a href="#incident">Case study: the 2026-10-24 hang</a></li>
-    <li><a href="#critique">Design interrogation</a></li>
-    <li><a href="#proposals">Proposals</a></li>
-    <li><a href="#sources">Sources</a></li>
+    <li><a href="#commands">Commands at a glance</a></li>
+    <li><a href="#pipeline">The pipeline and its modes</a></li>
+    <li><a href="#stages">Stage by stage</a></li>
+    <li><a href="#output">Reading the output</a></li>
+    <li><a href="#modes">Modes in depth</a></li>
+    <li><a href="#around">What keeps switching safe</a></li>
+    <li><a href="#trouble">Troubleshooting</a></li>
+    <li><a href="#learned">Learned behaviours &amp; workarounds</a></li>
+    <li><a href="#files">Files and decisions</a></li>
+    <li><a href="#origins">Origins: F1–F12 and P1–P17</a></li>
   </ol>
 </nav>
 
 <!-- ================================================================== -->
-<h2 id="glance">1. At a glance</h2>
+<h2 id="commands">1. Commands at a glance</h2>
 
-<p><code>nrs</code> is a five-line shell script around <code>nh os switch</code>. nh evaluates and builds the flake as <code>k</code> and prints a package diff. Then it makes three elevated calls:</p>
-<ol>
-  <li><code data-wrap>switch-to-configuration test</code> makes the new generation live.</li>
-  <li><code>nix build --profile</code> records it as a numbered generation.</li>
-  <li><code data-wrap>switch-to-configuration boot</code> makes it the GRUB default.</li>
-</ol>
-<p>The wrapper ends with a PAM/glibc drift check.</p>
+<p>Run all of these as yourself, never under <code>sudo</code>. nrs builds as you and asks sudo only for the root steps, which the 1Password agent approves. Under sudo it refuses with exit 2.</p>
 
-<figure>
-<svg id="d-overview" class="dg" viewBox="0 0 960 300" role="img" aria-label="The ten stages of nrs in two rows: stages 0 to 4 run as k, stages 5 to 8 run as root through sudo, stage 9 runs as k again.">
-  <defs>
-    <marker id="ah1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="ah"/></marker>
-  </defs>
-  <text x="940" y="36" class="lane" text-anchor="end">AS k</text>
-  <rect class="u" x="20" y="46" width="172" height="70" rx="8"/>
-  <text x="32" y="74" class="t">0 · nrs wrapper</text>
-  <text x="32" y="96" class="s">readlink · env · exec nh</text>
-  <rect class="u" x="207" y="46" width="172" height="70" rx="8"/>
-  <text x="219" y="74" class="t">1 · pre-flight</text>
-  <text x="219" y="96" class="s">checks off · pick host</text>
-  <rect class="u" x="394" y="46" width="172" height="70" rx="8"/>
-  <text x="406" y="74" class="t">2 · evaluate</text>
-  <text x="406" y="96" class="s">flake → toplevel .drv</text>
-  <rect class="u" x="581" y="46" width="172" height="70" rx="8"/>
-  <text x="593" y="74" class="t">3 · realise</text>
-  <text x="593" y="96" class="s">substitute or build · nom</text>
-  <rect class="u" x="768" y="46" width="172" height="70" rx="8"/>
-  <text x="780" y="74" class="t">4 · diff + validate</text>
-  <text x="780" y="96" class="s">dix · essential files</text>
-  <path class="e" d="M192 81 H205" marker-end="url(#ah1)"/>
-  <path class="e" d="M379 81 H392" marker-end="url(#ah1)"/>
-  <path class="e" d="M566 81 H579" marker-end="url(#ah1)"/>
-  <path class="e" d="M753 81 H766" marker-end="url(#ah1)"/>
-  <path class="e" d="M854 116 V146 H106 V174" marker-end="url(#ah1)"/>
-
-  <text x="940" y="168" class="lane" text-anchor="end">AS ROOT (sudo) · EXCEPT 9</text>
-  <rect class="r" x="20" y="176" width="172" height="70" rx="8"/>
-  <text x="32" y="204" class="t">5 · elevate</text>
-  <text x="32" y="226" class="s">sudo · 1Password agent</text>
-  <rect class="r" x="207" y="176" width="172" height="70" rx="8"/>
-  <text x="219" y="204" class="t">6 · stc test</text>
-  <text x="219" y="226" class="s">stop · activate · start</text>
-  <rect class="hl" x="202" y="171" width="182" height="80" rx="11"/>
-  <rect class="r" x="394" y="176" width="172" height="70" rx="8"/>
-  <text x="406" y="204" class="t">7 · profile</text>
-  <text x="406" y="226" class="s">system-N-link (GC root)</text>
-  <rect class="r" x="581" y="176" width="172" height="70" rx="8"/>
-  <text x="593" y="204" class="t">8 · stc boot</text>
-  <text x="593" y="226" class="s">grub.cfg · os-prober</text>
-  <rect class="u" x="768" y="176" width="172" height="70" rx="8"/>
-  <text x="780" y="204" class="t">9 · post-flight</text>
-  <text x="780" y="226" class="s">PAM glibc check</text>
-  <path class="e" d="M192 211 H205" marker-end="url(#ah1)"/>
-  <path class="e" d="M379 211 H392" marker-end="url(#ah1)"/>
-  <path class="e" d="M566 211 H579" marker-end="url(#ah1)"/>
-  <path class="e" d="M753 211 H766" marker-end="url(#ah1)"/>
-
-  <rect class="u" x="300" y="276" width="14" height="14" rx="3"/>
-  <text x="320" y="288" class="lbl">runs as k</text>
-  <rect class="r" x="410" y="276" width="14" height="14" rx="3"/>
-  <text x="430" y="288" class="lbl">runs as root</text>
-  <rect class="hl" x="530" y="276" width="14" height="14" rx="3"/>
-  <text x="550" y="288" class="lbl">where the 2026-10-24 hang parked</text>
-</svg>
-<figcaption><strong>The pipeline.</strong> "stc" is <code>switch-to-configuration</code> throughout. Stages 1–4 happen inside one nh process. Stages 5–8 are three separate <code>sudo</code> invocations that nh makes in order and aborts on the first failure.</figcaption>
-</figure>
-
-<figure>
-<svg id="d-timeline" class="dg" viewBox="0 0 960 290" role="img" aria-label="Gantt chart of the 15:52:05 run: eval, build and diff take about 5.2 seconds, switch-to-configuration test 3.5 seconds, the profile 22 milliseconds, the bootloader 2.37 seconds, and the post-flight check 0.25 seconds.">
-  <g>
-    <line class="grid" x1="215" y1="24" x2="215" y2="250"/>
-    <line class="grid" x1="277" y1="24" x2="277" y2="250"/>
-    <line class="grid" x1="339" y1="24" x2="339" y2="250"/>
-    <line class="grid" x1="401" y1="24" x2="401" y2="250"/>
-    <line class="grid" x1="463" y1="24" x2="463" y2="250"/>
-    <line class="grid" x1="525" y1="24" x2="525" y2="250"/>
-    <line class="grid" x1="587" y1="24" x2="587" y2="250"/>
-    <line class="grid" x1="649" y1="24" x2="649" y2="250"/>
-    <line class="grid" x1="711" y1="24" x2="711" y2="250"/>
-    <line class="grid" x1="773" y1="24" x2="773" y2="250"/>
-    <line class="grid" x1="835" y1="24" x2="835" y2="250"/>
-    <line class="grid" x1="897" y1="24" x2="897" y2="250"/>
-  </g>
-  <text x="205" y="44" class="t" text-anchor="end">1–4 · eval · build · diff</text>
-  <rect class="bar-u" x="215" y="30" width="324" height="20" rx="3"/>
-  <rect class="u" x="219" y="33" width="316" height="14" rx="2"/>
-  <text x="226" y="44" class="ink-s">≈5.2 s · eval-cache miss (first run of a new commit)</text>
-
-  <text x="205" y="74" class="t" text-anchor="end">6 · stc test</text>
-  <rect class="bar-r" x="539" y="60" width="217" height="20" rx="3"/>
-  <text x="763" y="74" class="ink-s">3.50 s</text>
-  <text x="205" y="98" class="s" text-anchor="end">plan · stop · activate</text>
-  <rect class="bar-r2" x="540" y="86" width="48" height="16" rx="2"/>
-  <text x="595" y="98" class="s">0.78 s</text>
-  <text x="205" y="122" class="s" text-anchor="end">user pass (k)</text>
-  <rect class="bar-r2" x="596" y="110" width="17" height="16" rx="2"/>
-  <text x="620" y="122" class="s">0.27 s</text>
-  <text x="205" y="146" class="s" text-anchor="end">reload · restart · start</text>
-  <rect class="bar-r2" x="614" y="134" width="142" height="16" rx="2"/>
-  <text x="763" y="146" class="s">2.29 s</text>
-
-  <text x="205" y="176" class="t" text-anchor="end">7 · profile</text>
-  <rect class="bar-r" x="756" y="162" width="3" height="20" rx="1"/>
-  <text x="766" y="176" class="ink-s">22 ms</text>
-  <text x="205" y="206" class="t" text-anchor="end">8 · stc boot</text>
-  <rect class="bar-r" x="758" y="192" width="148" height="20" rx="3"/>
-  <rect class="r" x="761" y="195" width="142" height="14" rx="2"/>
-  <text x="768" y="206" class="ink-s">2.37 s</text>
-  <text x="205" y="236" class="t" text-anchor="end">9 · post-flight</text>
-  <rect class="bar-u" x="906" y="222" width="15" height="20" rx="3"/>
-  <text x="899" y="236" class="ink-s" text-anchor="end">0.25 s</text>
-
-  <line class="e" x1="215" y1="255" x2="928" y2="255"/>
-  <text x="215" y="274" class="lbl" text-anchor="middle">0 s</text>
-  <text x="277" y="274" class="lbl" text-anchor="middle">1</text>
-  <text x="339" y="274" class="lbl" text-anchor="middle">2</text>
-  <text x="401" y="274" class="lbl" text-anchor="middle">3</text>
-  <text x="463" y="274" class="lbl" text-anchor="middle">4</text>
-  <text x="525" y="274" class="lbl" text-anchor="middle">5</text>
-  <text x="587" y="274" class="lbl" text-anchor="middle">6</text>
-  <text x="649" y="274" class="lbl" text-anchor="middle">7</text>
-  <text x="711" y="274" class="lbl" text-anchor="middle">8</text>
-  <text x="773" y="274" class="lbl" text-anchor="middle">9</text>
-  <text x="835" y="274" class="lbl" text-anchor="middle">10</text>
-  <text x="897" y="274" class="lbl" text-anchor="middle">11 s</text>
-</svg>
-<figcaption><strong>Where the 11.38 s went</strong> (15:52:05 run, offsets from the start).
-The <code>sudo</code> and <code>nixos[…]</code> journal lines give exact boundaries for stages 5–8. The start comes from Atuin, to the second.
-Stage 6 ran longer than a no-change switch normally would, because it replayed the restart list that an interrupted run had left: sshd, journald, udevd, nix-daemon and wpa_supplicant.</figcaption>
-</figure>
-
-<div class="table-scroll"><table>
-  <colgroup><col style="width:5%"><col style="width:20%"><col style="width:10%"><col style="width:30%"><col style="width:11%"><col></colgroup>
-  <thead><tr><th>#</th><th>Stage</th><th>Runs as</th><th>What actually runs</th><th>15:52 cost</th><th>What you see</th></tr></thead>
+<div class="table-scroll">
+<table>
+  <colgroup><col style="width:19%"><col style="width:47%"><col style="width:12%"><col></colgroup>
+  <thead><tr><th>Command</th><th>What it does</th><th>Root step</th><th>OS</th></tr></thead>
   <tbody>
-    <tr><td>0</td><td>wrapper</td><td>k</td><td><code>nrs</code> from <code>modules/nixos/nh.nix</code></td><td class="num">~0</td><td>nothing</td></tr>
-    <tr><td>1</td><td>pre-flight, target</td><td>k</td><td>nh: env checks (skipped), host inference, temp out-link</td><td class="num" rowspan="4">≈5.2 s total</td><td>nh log lines</td></tr>
-    <tr><td>2</td><td>evaluation</td><td>k</td><td><code data-wrap>nix build …#nixosConfigurations.nebula.config.system.build.toplevel</code></td><td>evaluation warnings only</td></tr>
-    <tr><td>3</td><td>realisation</td><td>daemon</td><td>same <code>nix build</code>, through nix-output-monitor</td><td>nom's build tree</td></tr>
-    <tr><td>4</td><td>diff, validation</td><td>k</td><td>dix diff; essential-file check</td><td>package diff</td></tr>
-    <tr><td>5</td><td>elevation</td><td>root</td><td><code>sudo</code> + <code>pam_ssh_agent_auth</code></td><td class="num">~40 ms</td><td>maybe a 1Password approval</td></tr>
-    <tr><td>6</td><td>activation</td><td>root</td><td><code data-wrap>switch-to-configuration test</code></td><td class="num">3.50 s</td><td><strong>"Activating configuration", then nothing</strong></td></tr>
-    <tr><td>7</td><td>profile</td><td>root</td><td><code data-wrap>nix build --no-link --profile /nix/var/nix/profiles/system</code></td><td class="num">22 ms</td><td>nothing</td></tr>
-    <tr><td>8</td><td>bootloader</td><td>root</td><td><code data-wrap>switch-to-configuration boot</code></td><td class="num">2.37 s</td><td>"Adding configuration to bootloader"</td></tr>
-    <tr><td>9</td><td>post-flight</td><td>k</td><td>PAM glibc comparison, booted vs current</td><td class="num">~0.25 s</td><td>a warning, only on drift</td></tr>
+    <tr><td><code>nrs</code></td><td>Build, diff, validate, activate, make it the boot default, report.</td><td>yes</td><td>both</td></tr>
+    <tr><td><code>nrb</code><br><span class="muted">= <code>nrs --dry</code></span></td><td>Build, diff and validate only. The report compares the kernel and PAM against the new build.</td><td>no</td><td>both</td></tr>
+    <tr><td><code>nrt</code><br><span class="muted">= <code>nrs --test</code></span></td><td><strong>NixOS:</strong> activate without touching the profile or GRUB. <strong>darwin:</strong> run the new build's <code>system.checks</code>; nothing is activated.</td><td>yes</td><td>both</td></tr>
+    <tr><td><code>nrs --plan</code></td><td>Preview the switch and change nothing: <code>dry-activate</code> for system units, plus the user units it skips. Flags units the switch would restart while they're mid-run.</td><td>yes</td><td>NixOS <span class="muted">(darwin: acts as <code>--dry</code>)</span></td></tr>
+    <tr><td><code>nrs --status</code></td><td>No build, no root: is the machine consistent? Exits 1 if anything needs attention.</td><td>no</td><td>both</td></tr>
+    <tr><td><code>nrs --boot</code></td><td>Switch, and rewrite the boot menu even when it's already current.</td><td>yes</td><td>NixOS</td></tr>
   </tbody>
-</table></div>
-
-<!-- ================================================================== -->
-<h2 id="s0"><span class="stage-no as-user">0</span>The wrapper</h2>
-
-<p>The <code>mkNhHelper</code> generator in <code>modules/nixos/nh.nix</code> writes three executables (not aliases, so they work in non-interactive shells): <code>nrs</code> (<code>nh os switch</code>), <code>nrb</code> (<code>nh os build</code>, no root) and <code>nrt</code> (<code>nh os test</code>: activate without touching the profile or GRUB). The built <code>nrs</code>:</p>
-
-<pre><code>flake="$(readlink -f "$HOME/src/dotfiles")"
-env NH_NO_CHECKS=1 /nix/store/…-nh-4.4.2/bin/nh os switch "$flake" "$@" || exit
-pamglibc() { nix-store -q --references "$(nix-store -qR "$1" | grep -m1 -- '-linux-pam-[0-9.]*$')" | grep -E -- '-glibc-[0-9.]+-[0-9]+$'; }
-booted="$(pamglibc /run/booted-system)" current="$(pamglibc /run/current-system)"
-if [ "$booted" != "$current" ]; then
-  echo "warning: PAM glibc changed since boot (${booted#*-glibc-} -> ${current#*-glibc-}): reboot before logging out" &gt;&amp;2
-fi</code></pre>
+</table>
+</div>
 
 <ul>
-  <li><strong><code>readlink -f</code></strong>: <code>~/src/dotfiles</code> is a convenience symlink, and nix's <code>--flake &lt;path&gt;</code> does not follow a path that is itself a symlink. The flake therefore resolves to <code data-wrap>git+file:///home/k/src/github/kriswill/dotfiles</code>.</li>
-  <li><strong><code>"$@"</code></strong> passes through to nh, so <code>nrs -v</code>, <code>nrs --ask</code>, <code>nrs --dry</code> and <code>nrs -- --option …</code> all work.</li>
-  <li><strong><code>|| exit</code></strong> returns nh's status unchanged. The glibc check runs only after a successful switch, so a failed switch reports nothing about the state it left behind (see <a href="#states">§12</a>).</li>
-  <li><strong><code>NH_NO_CHECKS=1</code></strong>: the comment beside it says it skips "the flake's own checks". That is not what it does in nh 4.4.2; see stage 1.</li>
+  <li><strong>Modes don't combine.</strong> <code>--dry</code>, <code>--test</code>, <code>--plan</code> and <code>--status</code> are mutually exclusive (exit 2). <code>--boot</code> warns and is ignored with any mode, and on darwin.</li>
+  <li><strong>Extra arguments go to <code>nix build</code>,</strong> for example <code>nrs -L</code> or <code>nrb --show-trace</code>. <code>--status</code> takes none (exit 2).</li>
+  <li><strong>The flake</strong> is <code>~/src/dotfiles</code>, resolved with <code>readlink -f</code>: nix's <code>--flake &lt;path&gt;</code> doesn't follow a path that is itself a symlink, as it is on nebula. <strong>The host</strong> is <code>uname -n</code> on NixOS and <code>scutil --get LocalHostName</code> on darwin, as nh and darwin-rebuild use.</li>
 </ul>
 
-<!-- ================================================================== -->
-<h2 id="s1"><span class="stage-no as-user">1</span>Pre-flight and target resolution</h2>
+<p>A real <code>nrs</code> on nebula with nothing to change (also recorded as <code>~/Videos/nrs-demo.mp4</code>):</p>
+<pre><code>&gt; building nebula from /home/k/src/github/kriswill/dotfiles
+Finished at 22:18:11 after 0s
+&gt; changes: /run/current-system → 3wxfn4p91a3i…-nixos-system-nebula-26.11.20261023.3ec6363
+PATHS: 3168 -&gt; 3168 (+0, -0)    SIZE: 28.1 GiB -&gt; 28.1 GiB    DIFF: 0 bytes
+&gt; authenticating for activation
+&gt; activating: switch-to-configuration test, as nrs-switch-to-configuration.service
+  ● Checking switch inhibitors... done
+  switching to system configuration /nix/store/3wxfn4p91a3i…
+  ● activating the configuration
+  ⚿ sops  keys  rsa → GPG 646fb041…c17120 · ed25519 → age age1vn8h…chjzrz
+  ● setting up /etc
+  ✔ stow  22 packages · 165 links · 8 skipped (darwin-only) · 0.41s
+  ↻ reloaded hyprland
+  ● reloading user units for k
+  ↻ restarting (user) nixos-activation.service
+  ● restarting sysinit-reactivation.target
+  + new units  libvirtd.service, NetworkManager-dispatcher.service
+  finished switching to system configuration /nix/store/3wxfn4p91a3i…
+&gt; boot menu is current (gen 168 is the default, no collected generations listed); bootloader untouched (--boot rewrites it)
 
-<ul>
-  <li><strong>Environment checks.</strong> nh's <code>verify_nix_environment</code> requires Nix ≥ 2.31.2, or Lix ≥ 2.93.3. A per-command <code>check_features</code> looks for the experimental features the command needs. <code>NH_NO_CHECKS</code> short-circuits exactly these two functions (<code>nh-core/src/checks.rs</code>). <code>nh os switch</code> never runs <code>nix flake check</code>, so there were never any flake checks to skip.</li>
-  <li><strong>Target.</strong> No <code>#attr</code> is given, so nh infers the hostname and builds <code data-wrap>…#nixosConfigurations.nebula.config.system.build.toplevel</code>.</li>
-  <li><strong>Out-link.</strong> The result goes to a temporary directory named <code>nh-os*</code>, which nh deletes on exit. While nh runs, that link is the only GC root holding the new closure.</li>
-  <li><strong>Elevation strategy.</strong> <code>auto</code> picks the first of doas, sudo, run0, pkexec, which here is sudo. nh decides now whether it will need it.</li>
-  <li><strong>Specialisation.</strong> nh reads <code>/etc/specialisation</code>; nebula has none.</li>
-</ul>
+── state ──
+  booted        gen 161
+  running       gen 168
+  boot default  gen 168
+── timings ──
+  build         0.06s
+  diff          0.04s
+  auth          0.05s
+  activate      2.56s
+done</code></pre>
 
 <!-- ================================================================== -->
-<h2 id="s2"><span class="stage-no as-user">2</span>Evaluation</h2>
+<h2 id="pipeline">2. The pipeline and its modes</h2>
+
+<p>Every run walks the same stages in the same order, the order nh used. The modes are early exits from that one path. Blue stages run as you; purple ones are the root steps behind <code>sudo</code>.</p>
 
 <figure>
-<svg id="d-eval" class="dg" viewBox="0 0 960 330" role="img" aria-label="Evaluation: flake.nix and flake.lock feed flake-parts and import-tree, which produce two module families; modules/nixos.nix hands them to snowglobe-factory's mkNixosHost, nixpkgs lib.nixosSystem computes the fixpoint, and system.build.toplevel is the derivation nh builds.">
+<svg id="d-modes" class="dg" viewBox="0 0 960 372" role="img" aria-label="Eight stages left to right: guards, build, diff, validate, sudo, activate, boot step, report. Below, one line per command shows which stages it runs: nrs runs all eight; nrt skips the boot step; nrs --plan replaces activation with the plan; nrb stops after validate; nrs --status runs only the guards and the report.">
   <defs>
-    <marker id="ah3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="ah"/></marker>
+    <marker id="ah-m" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="ah"/></marker>
   </defs>
-  <rect class="b" x="20" y="30" width="210" height="100" rx="8"/>
-  <text x="32" y="56" class="t">flake.nix + flake.lock</text>
-  <text x="32" y="78" class="s">inputs pinned by the lock:</text>
-  <text x="32" y="96" class="s">nixpkgs 3ec6363, snowglobe-</text>
-  <text x="32" y="114" class="s">factory, herdr fork, okf, …</text>
-  <rect class="b" x="275" y="30" width="225" height="100" rx="8"/>
-  <text x="287" y="56" class="t">flake-parts + import-tree</text>
-  <text x="287" y="78" class="s">every modules/**/*.nix is a</text>
-  <text x="287" y="96" class="s">flake-parts module; paths</text>
-  <text x="287" y="114" class="s">with a _ component skipped</text>
-  <rect class="b" x="545" y="30" width="395" height="100" rx="8"/>
-  <text x="557" y="56" class="t">two module families</text>
-  <text x="557" y="82" class="m">flake.modules.nixos.&lt;name&gt;</text>
-  <text x="757" y="82" class="s">class modules · modules/nixos/</text>
-  <text x="557" y="108" class="m">configurations.nixos.nebula.module</text>
-  <text x="815" y="108" class="s">· hosts/nebula/</text>
-  <path class="e" d="M230 80 H273" marker-end="url(#ah3)"/>
-  <path class="e" d="M500 80 H543" marker-end="url(#ah3)"/>
-  <path class="e" d="M742 130 V165 H160 V198" marker-end="url(#ah3)"/>
+  <!-- stages -->
+  <rect class="u" x="125" y="30" width="92" height="64" rx="8"/>
+  <text x="171" y="56" class="t" text-anchor="middle">guards</text>
+  <text x="171" y="76" class="s" text-anchor="middle">root? mode?</text>
+  <rect class="u" x="227" y="30" width="92" height="64" rx="8"/>
+  <text x="273" y="56" class="t" text-anchor="middle">build</text>
+  <text x="273" y="76" class="s" text-anchor="middle">nom</text>
+  <rect class="u" x="329" y="30" width="92" height="64" rx="8"/>
+  <text x="375" y="56" class="t" text-anchor="middle">diff</text>
+  <text x="375" y="76" class="s" text-anchor="middle">dix</text>
+  <rect class="u" x="431" y="30" width="92" height="64" rx="8"/>
+  <text x="477" y="56" class="t" text-anchor="middle">validate</text>
+  <text x="477" y="76" class="s" text-anchor="middle">essentials</text>
+  <rect class="r" x="533" y="30" width="92" height="64" rx="8"/>
+  <text x="579" y="56" class="t" text-anchor="middle">sudo -v</text>
+  <text x="579" y="76" class="s" text-anchor="middle">1Password</text>
+  <rect class="r" x="635" y="30" width="92" height="64" rx="8"/>
+  <text x="681" y="56" class="t" text-anchor="middle">activate</text>
+  <text x="681" y="76" class="s" text-anchor="middle">stc · darwin</text>
+  <rect class="r" x="737" y="30" width="92" height="64" rx="8"/>
+  <text x="783" y="56" class="t" text-anchor="middle">boot step</text>
+  <text x="783" y="76" class="s" text-anchor="middle">NixOS · if due</text>
+  <rect class="u" x="839" y="30" width="92" height="64" rx="8"/>
+  <text x="885" y="56" class="t" text-anchor="middle">report</text>
+  <text x="885" y="76" class="s" text-anchor="middle">state · timings</text>
+  <path class="e" d="M217 62 H225" marker-end="url(#ah-m)"/>
+  <path class="e" d="M319 62 H327" marker-end="url(#ah-m)"/>
+  <path class="e" d="M421 62 H429" marker-end="url(#ah-m)"/>
+  <path class="e" d="M523 62 H531" marker-end="url(#ah-m)"/>
+  <path class="e" d="M625 62 H633" marker-end="url(#ah-m)"/>
+  <path class="e" d="M727 62 H735" marker-end="url(#ah-m)"/>
+  <path class="e" d="M829 62 H837" marker-end="url(#ah-m)"/>
+  <!-- column guides -->
+  <path class="grid" d="M171 104 V330 M273 104 V330 M375 104 V330 M477 104 V330 M579 104 V330 M681 104 V330 M783 104 V330 M885 104 V330"/>
 
-  <rect class="b" x="20" y="200" width="280" height="80" rx="8"/>
-  <text x="32" y="226" class="m t">modules/nixos.nix</text>
-  <text x="32" y="248" class="s">→ snowglobe-factory mkNixosHost</text>
-  <text x="32" y="266" class="s">profiles + hardware registry entry</text>
-  <rect class="b" x="345" y="200" width="275" height="80" rx="8"/>
-  <text x="357" y="226" class="t">nixpkgs lib.nixosSystem</text>
-  <text x="357" y="248" class="s">module fixpoint: options × config</text>
-  <text x="357" y="266" class="s">pkgs built with the repo overlays</text>
-  <rect class="o" x="665" y="200" width="275" height="80" rx="8"/>
-  <text x="677" y="226" class="m t">system.build.toplevel</text>
-  <text x="677" y="248" class="s">instantiated → a .drv closure</text>
-  <text x="677" y="266" class="s">the attribute nh asks nix build for</text>
-  <path class="e" d="M300 240 H343" marker-end="url(#ah3)"/>
-  <path class="e" d="M620 240 H663" marker-end="url(#ah3)"/>
-  <text x="20" y="314" class="s">measured: full eval 5.1 s, 3.5 GB peak RSS · repeat build of an already-evaluated clean commit: 0.03 s (eval cache) · dirty tree: no cache</text>
+  <!-- nrs -->
+  <text x="20" y="139" class="m">nrs</text>
+  <path class="track" d="M171 135 H885"/>
+  <circle class="dot" cx="171" cy="135" r="6"/><circle class="dot" cx="273" cy="135" r="6"/><circle class="dot" cx="375" cy="135" r="6"/><circle class="dot" cx="477" cy="135" r="6"/>
+  <circle class="dotr" cx="579" cy="135" r="6"/><circle class="dotr" cx="681" cy="135" r="6"/><circle class="dotr" cx="783" cy="135" r="6"/><circle class="dot" cx="885" cy="135" r="6"/>
+
+  <!-- nrt -->
+  <text x="20" y="179" class="m">nrt</text>
+  <path class="track" d="M171 175 H681"/>
+  <path class="skip" d="M681 175 H885"/>
+  <circle class="dot" cx="171" cy="175" r="6"/><circle class="dot" cx="273" cy="175" r="6"/><circle class="dot" cx="375" cy="175" r="6"/><circle class="dot" cx="477" cy="175" r="6"/>
+  <circle class="dotr" cx="579" cy="175" r="6"/><circle class="dotr" cx="681" cy="175" r="6"/><circle class="dot" cx="885" cy="175" r="6"/>
+  <text x="783" y="167" class="lbl" text-anchor="middle">skipped</text>
+  <text x="681" y="196" class="lbl" text-anchor="middle">darwin: checks only</text>
+
+  <!-- plan -->
+  <text x="20" y="229" class="m">nrs --plan</text>
+  <path class="track" d="M171 225 H579"/>
+  <path class="skip" d="M579 225 H885"/>
+  <circle class="dot" cx="171" cy="225" r="6"/><circle class="dot" cx="273" cy="225" r="6"/><circle class="dot" cx="375" cy="225" r="6"/><circle class="dot" cx="477" cy="225" r="6"/>
+  <circle class="dotr" cx="579" cy="225" r="6"/>
+  <rect class="w" x="624" y="212" width="170" height="26" rx="6"/>
+  <text x="709" y="229" class="ink-s" text-anchor="middle">plan: dry-activate + user</text>
+  <circle class="dot" cx="885" cy="225" r="6"/>
+
+  <!-- nrb -->
+  <text x="20" y="269" class="m">nrb</text>
+  <path class="track" d="M171 265 H477"/>
+  <path class="skip" d="M477 265 H885"/>
+  <circle class="dot" cx="171" cy="265" r="6"/><circle class="dot" cx="273" cy="265" r="6"/><circle class="dot" cx="375" cy="265" r="6"/><circle class="dot" cx="477" cy="265" r="6"/><circle class="dot" cx="885" cy="265" r="6"/>
+  <text x="681" y="257" class="lbl" text-anchor="middle">no root at all</text>
+
+  <!-- status -->
+  <text x="20" y="309" class="m">nrs --status</text>
+  <path class="skip" d="M171 305 H885"/>
+  <circle class="dot" cx="171" cy="305" r="6"/><circle class="dot" cx="885" cy="305" r="6"/>
+  <text x="528" y="297" class="lbl" text-anchor="middle">nothing built; exits 1 if anything needs attention</text>
+
+  <!-- legend -->
+  <circle class="dot" cx="250" cy="355" r="6"/><text x="262" y="359" class="lbl">as you</text>
+  <circle class="dotr" cx="340" cy="355" r="6"/><text x="352" y="359" class="lbl">root, through sudo</text>
+  <path class="skip" d="M500 355 H540"/><text x="548" y="359" class="lbl">skipped</text>
+  <rect class="w" x="620" y="347" width="16" height="16" rx="3"/><text x="644" y="359" class="lbl">replaces activation</text>
 </svg>
-<figcaption><strong>How the configuration is assembled.</strong> Host-specific files merge straight into <code data-wrap>configurations.nixos.nebula.module</code>. Universal NixOS features live in <code>flake.modules.nixos.*</code>. snowglobe-factory's <code>mkNixosHost</code> wraps <code>lib.nixosSystem</code> and adds its profiles and the hardware metadata from the host registry.</figcaption>
-</figure>
-
-<dl class="facts">
-  <dt>Cost</dt><dd>5.1 s of wall time and 3.5 GB peak RSS for a full evaluation (<code data-wrap>nix eval --no-eval-cache …toplevel.drvPath</code>).</dd>
-  <dt>Eval cache</dt><dd>Keyed on the locked flake. Once a <em>clean, committed</em> tree has been evaluated, a second <code>nix build</code> of the same attribute returns in 0.03 s. A dirty tree has no lock fingerprint, so every <code>nrs</code> during an edit loop pays the full 5 s.</dd>
-  <dt>Source copy</dt><dd><code>lazy-trees = true</code> (Determinate Nix), so the 656 tracked files (4.9 MB) are not copied into the store before evaluation. Untracked files are invisible to the flake: <code>git add</code> new modules first.</dd>
-  <dt>Visible output</dt><dd>Only <code>evaluation warning:</code> lines. That makes this stage the cheapest place to catch a class of mistake before anything changes (<a href="#p7">P7</a>).</dd>
-</dl>
-
-<!-- ================================================================== -->
-<h2 id="s3"><span class="stage-no as-user">3</span>Realisation</h2>
-
-<figure>
-<svg id="d-realise" class="dg" viewBox="0 0 960 320" role="img" aria-label="Realisation: each output path of the drv closure is checked against the store; missing paths are queried from substituters; hits are downloaded and verified, misses are built locally in the sandbox; everything is registered and the out-link is written.">
-  <defs>
-    <marker id="ah4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="ah"/></marker>
-  </defs>
-  <rect class="b" x="20" y="30" width="170" height="70" rx="8"/>
-  <text x="32" y="58" class="t">.drv closure</text>
-  <text x="32" y="80" class="s">every output path</text>
-  <rect class="q" x="225" y="30" width="200" height="70" rx="8"/>
-  <text x="237" y="58" class="t">already in /nix/store?</text>
-  <text x="237" y="80" class="s">valid path in the store db</text>
-  <rect class="b" x="460" y="30" width="230" height="70" rx="8"/>
-  <text x="472" y="54" class="t">ask substituters, in order</text>
-  <text x="472" y="74" class="s">hyprland.cachix → cache.nixos.org</text>
-  <text x="472" y="90" class="s">→ FlakeHub cache (CI-pushed)</text>
-  <rect class="o" x="725" y="30" width="215" height="70" rx="8"/>
-  <text x="737" y="58" class="t">download NAR</text>
-  <text x="737" y="80" class="s">verify signature + hash</text>
-  <rect class="b" x="225" y="150" width="200" height="70" rx="8"/>
-  <text x="237" y="178" class="t">skip</text>
-  <text x="237" y="200" class="s">nothing to do</text>
-  <rect class="w" x="725" y="150" width="215" height="70" rx="8"/>
-  <text x="737" y="178" class="t">build locally</text>
-  <text x="737" y="200" class="s">sandbox · max-jobs 24</text>
-  <rect class="u" x="225" y="250" width="715" height="50" rx="8"/>
-  <text x="240" y="280" class="ink-s">register the path · nom renders the build tree · --out-link /tmp/nh-os*/result points at the new toplevel</text>
-  <path class="e" d="M190 65 H223" marker-end="url(#ah4)"/>
-  <path class="e" d="M425 65 H458" marker-end="url(#ah4)"/>
-  <text x="432" y="58" class="lbl">no</text>
-  <path class="e" d="M325 100 V148" marker-end="url(#ah4)"/>
-  <text x="332" y="128" class="lbl">yes</text>
-  <path class="e" d="M690 65 H723" marker-end="url(#ah4)"/>
-  <text x="697" y="58" class="lbl">hit</text>
-  <path class="e" d="M575 100 V185 H723" marker-end="url(#ah4)"/>
-  <text x="582" y="128" class="lbl">miss</text>
-  <path class="e" d="M940 65 H952 V275 H942" marker-end="url(#ah4)"/>
-  <path class="e" d="M832 220 V248" marker-end="url(#ah4)"/>
-  <path class="e" d="M325 220 V248" marker-end="url(#ah4)"/>
-  <text x="20" y="268" class="s">--no-nom for plain</text>
-  <text x="20" y="284" class="s">nix logs</text>
-</svg>
-<figcaption><strong>Substitute or build.</strong> nh runs <code data-wrap>nix build &lt;installable&gt; --out-link …</code> and pipes the internal-json log into nix-output-monitor. The daemon does the work: <code>determinate-nixd</code> fronts it and logs <code data-wrap>accepted connection from pid …, user k</code>.</figcaption>
-</figure>
-
-<dl class="facts">
-  <dt>Substituters</dt><dd>hyprland.cachix.org, cache.nixos.org, install.determinate.systems, cache.flakehub.com and edge.cache.flakehub.com. CI (<code>.github/workflows/ci.yml</code>) builds nebula's toplevel on build-relevant PRs and pushes it to the private FlakeHub Cache. Once CI has finished, a change you pushed usually realises entirely from cache.</dd>
-  <dt>Expensive misses</dt><dd>Source-only forks: herdr (Rust, from <code>kriswill/herdr</code>), the devenv fork and other pinned flakes. Running <code>nrs</code> before CI has pushed them means building them here.</dd>
-  <dt>Negative cache</dt><dd><code data-wrap>narinfo-cache-negative-ttl = 3600</code>, and the root daemon does the querying. A miss recorded before CI pushed is remembered for an hour, so another <code>nrs</code> inside that hour builds locally even though the cache now has the path (<a href="#p11">P11</a>). <code>k</code> is not a trusted user, so a client-side <code>--option</code> cannot override it.</dd>
-  <dt>Store</dt><dd><code>auto-optimise-store = true</code> deduplicates on every write: less disk, slower writes. <code>fallback = true</code> builds from source if a substitute fails. <code>connect-timeout = 15</code>.</dd>
-</dl>
-
-<!-- ================================================================== -->
-<h2 id="s4"><span class="stage-no as-user">4</span>Diff and closure validation</h2>
-
-<ul>
-  <li><strong>dix</strong> (nh's <code>nh-diff</code>) compares <code>/run/current-system</code> with the new result: version changes, added and removed packages, closure size. Under the default <code>--diff auto</code> it is skipped if either path is missing.</li>
-  <li><strong><code>validate_system_closure</code></strong> refuses to activate a result that lacks any of <code data-wrap>bin/switch-to-configuration</code>, <code>nixos-version</code>, <code>init</code> or <code>sw/bin</code>. <code>NH_NO_VALIDATE</code> bypasses it.</li>
-  <li><strong>No confirmation.</strong> <code>nrs</code> does not pass <code>--ask</code>, so the diff scrolls past while nh moves straight on to elevation. Ctrl-C <em>here</em> is the last moment that leaves no trace.</li>
-</ul>
-
-<!-- ================================================================== -->
-<h2 id="s5"><span class="stage-no as-root">5</span>Elevation</h2>
-
-<figure>
-<svg id="d-sudo" class="dg" viewBox="0 0 960 330" role="img" aria-label="Sequence diagram: nh calls sudo; sudo's PAM stack asks pam_ssh_agent_auth, which has the 1Password agent sign a challenge; on success sudo executes switch-to-configuration as root.">
-  <defs>
-    <marker id="ah5" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="ah"/></marker>
-  </defs>
-  <rect class="u" x="15" y="20" width="160" height="36" rx="8"/>
-  <text x="95" y="43" class="t" text-anchor="middle">nh (as k)</text>
-  <rect class="r" x="205" y="20" width="160" height="36" rx="8"/>
-  <text x="285" y="43" class="t" text-anchor="middle">sudo</text>
-  <rect class="r" x="395" y="20" width="160" height="36" rx="8"/>
-  <text x="475" y="43" class="t" text-anchor="middle">PAM ssh_agent_auth</text>
-  <rect class="u" x="585" y="20" width="160" height="36" rx="8"/>
-  <text x="665" y="43" class="t" text-anchor="middle">1Password agent</text>
-  <rect class="r" x="775" y="20" width="160" height="36" rx="8"/>
-  <text x="855" y="43" class="t" text-anchor="middle">stc (root)</text>
-  <path class="life" d="M95 56 V256"/>
-  <path class="life" d="M285 56 V256"/>
-  <path class="life" d="M475 56 V256"/>
-  <path class="life" d="M665 56 V256"/>
-  <path class="life" d="M855 56 V256"/>
-
-  <path class="e" d="M95 90 H283" marker-end="url(#ah5)"/>
-  <text x="189" y="83" class="lbl" text-anchor="middle">sudo env … stc test</text>
-  <path class="e" d="M285 120 H473" marker-end="url(#ah5)"/>
-  <text x="379" y="113" class="lbl" text-anchor="middle">auth (sudo PAM stack)</text>
-  <path class="e" d="M475 150 H663" marker-end="url(#ah5)"/>
-  <text x="569" y="143" class="lbl" text-anchor="middle">sign a challenge</text>
-  <path class="e dash" d="M665 180 H477" marker-end="url(#ah5)"/>
-  <text x="571" y="173" class="lbl" text-anchor="middle">signature (may prompt)</text>
-  <path class="e dash" d="M475 210 H287" marker-end="url(#ah5)"/>
-  <text x="381" y="203" class="lbl" text-anchor="middle">sufficient → success</text>
-  <path class="e" d="M285 240 H853" marker-end="url(#ah5)"/>
-  <text x="569" y="233" class="lbl" text-anchor="middle">exec as root, env kept: PATH, LOCALE_ARCHIVE, NIX_PATH, NH_NO_CHECKS, USER</text>
-
-  <rect class="b" x="205" y="264" width="730" height="54" rx="8"/>
-  <text x="220" y="285" class="s">No agent reachable (a TTY, 1Password closed): the module is "sufficient", so PAM falls through to a password prompt.</text>
-  <text x="220" y="304" class="s">sudo's timestamp covers stages 7 and 8, so there is one approval. Trusted key: /etc/sudo-ssh-keys/k (tmpfiles, root-owned).</text>
-</svg>
-<figcaption><strong>One approval, three root commands.</strong> The key file is materialised by tmpfiles rather than <code>environment.etc</code>. The module's StrictModes check rejects a realpath that runs through the group-writable store (<code data-wrap>modules/hosts/nebula/sudo-1password.nix</code>).</figcaption>
+<figcaption><strong>One path, five ways through it.</strong> The guards run first in every mode. They refuse root, refuse conflicting modes, and warn about a <code>--boot</code> that would do nothing. The report runs last in every mode, including after every failure. "stc" is <code>switch-to-configuration</code> throughout.</figcaption>
 </figure>
 
 <!-- ================================================================== -->
-<h2 id="s6"><span class="stage-no as-root">6</span><code data-wrap>switch-to-configuration test</code></h2>
+<h2 id="stages">3. Stage by stage</h2>
 
-<p>This is the stage that changes the running machine. <code data-wrap>bin/switch-to-configuration</code> is a bash shim that exports <code>OUT</code>, <code>TOPLEVEL</code>, <code>INSTALL_BOOTLOADER</code>, <code>PRE_SWITCH_CHECK</code> and <code>SYSTEMD</code>, then execs the Rust <code data-wrap>.switch-to-configuration-wrapped</code> (switch-to-configuration-ng). nh runs it with <code data-wrap>show_output(self.show_activation_logs)</code>, which defaults to false. Its stderr is therefore <strong>captured</strong>. nh prints it only if the program exits non-zero, and loses it entirely if you Ctrl-C. The plan lines it writes ("stopping the following units: …", "restarting the following user units: …") never reach you on a run that hangs.</p>
+<h3 id="s-build"><span class="stage-no as-user">1</span>Build</h3>
+<p><code>nom build "$flake#$attr" --out-link $tmp/result "$@"</code>, as you, with nom's live build tree. The attribute is <code>nixosConfigurations.&lt;host&gt;.config.system.build.toplevel</code>, or <code>darwinConfigurations.&lt;host&gt;…</code>. The out-link in a private temp directory is the only GC root for the new closure until the profile is set; it goes away when nrs exits.</p>
+<p>Before the build, on NixOS, any resume lists an interrupted switch left in <code>/run/nixos/</code> or <code>/run/user/$UID/nixos/</code> are announced, so the replay this run will do is no surprise.</p>
 
-<figure>
-<svg id="d-stc" class="dg" viewBox="0 0 960 700" role="img" aria-label="The twelve steps of switch-to-configuration test, with a degraded window from the stop phase to the start phase and the user pass in the middle marked as the 2026-10-24 hang site.">
-  <defs>
-    <marker id="ah6" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="ah"/></marker>
-    <marker id="ah6d" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="ahd"/></marker>
-  </defs>
-  <rect class="r" x="40" y="20" width="470" height="46" rx="8"/>
-  <text x="54" y="39" class="t">1 · bash shim → Rust binary</text>
-  <text x="54" y="56" class="s">exports TOPLEVEL, PRE_SWITCH_CHECK, INSTALL_BOOTLOADER, …</text>
-  <rect class="r" x="40" y="76" width="470" height="46" rx="8"/>
-  <text x="54" y="95" class="t">2 · is this NixOS? · flock switch-to-configuration.lock</text>
-  <text x="54" y="112" class="s">non-blocking: a second, concurrent switch exits "Could not acquire lock"</text>
-  <rect class="r" x="40" y="132" width="470" height="46" rx="8"/>
-  <text x="54" y="151" class="t">3 · pre-switch checks</text>
-  <text x="54" y="168" class="s">e.g. the no-nix-channel warning · skipped with NIXOS_NO_CHECK=1</text>
-  <rect class="r" x="40" y="188" width="470" height="46" rx="8"/>
-  <text x="54" y="207" class="t">4 · syncfs /nix/store · init-interface check</text>
-  <text x="54" y="224" class="s">a different init interface → exit 100: reboot to apply</text>
-  <rect class="r" x="40" y="244" width="470" height="46" rx="8"/>
-  <text x="54" y="263" class="t">5 · plan system units, mounts, swaps</text>
-  <text x="54" y="280" class="s">old vs new /etc/systemd/system and fstab → /run/nixos/*-list</text>
-  <rect class="d" x="40" y="300" width="470" height="46" rx="8"/>
-  <text x="54" y="319" class="t">6 · STOP phase</text>
-  <text x="54" y="336" class="s">stop the changed units that cannot simply restart · wait for every job</text>
-  <rect class="r" x="40" y="356" width="470" height="46" rx="8"/>
-  <text x="54" y="375" class="t">7 · run $out/activate</text>
-  <text x="54" y="392" class="s">snippets in one shell · last line: ln -sfn … /run/current-system</text>
-  <rect class="r" x="40" y="412" width="470" height="46" rx="8"/>
-  <text x="54" y="431" class="t">8 · reexec systemd if changed · reset-failed · reload</text>
-  <text x="54" y="448" class="s">the reload wait is bounded at 180 s</text>
-  <rect class="d" x="40" y="468" width="470" height="46" rx="8"/>
-  <text x="54" y="487" class="t">9 · USER PASS, for each logged-in user</text>
-  <text x="54" y="504" class="s">a child per uid with its own stop/restart/start · no timeout</text>
-  <rect class="r" x="40" y="524" width="470" height="46" rx="8"/>
-  <text x="54" y="543" class="t">10 · restart sysinit-reactivation.target</text>
-  <text x="54" y="560" class="s">re-runs the units ordered before sysinit.target</text>
-  <rect class="o" x="40" y="580" width="470" height="46" rx="8"/>
-  <text x="54" y="599" class="t">11 · RELOAD → RESTART → START phases</text>
-  <text x="54" y="616" class="s">start every active target plus the units stopped in step 6</text>
-  <rect class="r" x="40" y="636" width="470" height="46" rx="8"/>
-  <text x="54" y="655" class="t">12 · settle · report</text>
-  <text x="54" y="672" class="s">failed or new units → exit 0, or 4 if any unit failed</text>
-  <path class="e" d="M275 66 V74" marker-end="url(#ah6)"/>
-  <path class="e" d="M275 122 V130" marker-end="url(#ah6)"/>
-  <path class="e" d="M275 178 V186" marker-end="url(#ah6)"/>
-  <path class="e" d="M275 234 V242" marker-end="url(#ah6)"/>
-  <path class="e" d="M275 290 V298" marker-end="url(#ah6)"/>
-  <path class="e" d="M275 346 V354" marker-end="url(#ah6)"/>
-  <path class="e" d="M275 402 V410" marker-end="url(#ah6)"/>
-  <path class="e" d="M275 458 V466" marker-end="url(#ah6)"/>
-  <path class="e" d="M275 514 V522" marker-end="url(#ah6)"/>
-  <path class="e" d="M275 570 V578" marker-end="url(#ah6)"/>
-  <path class="e" d="M275 626 V634" marker-end="url(#ah6)"/>
+<h3 id="s-diff"><span class="stage-no as-user">2</span>Diff</h3>
+<p><code>dix /run/current-system $out</code>: the package-level changes, path count, size and size delta. If dix fails, nrs warns and carries on.</p>
 
-  <path class="e dn" d="M36 302 H26 V624 H36"/>
-  <text transform="translate(18 463) rotate(-90)" class="dtext" text-anchor="middle">services down</text>
+<h3 id="s-validate"><span class="stage-no as-user">3</span>Validate</h3>
+<p>The build must contain its essentials, or nrs refuses to activate it: <code>bin/switch-to-configuration</code>, <code>nixos-version</code>, <code>init</code> and <code>sw/bin</code> on NixOS; <code>activate</code> and <code>sw/bin/darwin-rebuild</code> on darwin. <code>nrb</code> stops here and reports.</p>
 
-  <text x="545" y="262" class="s">Plans are written to /run/nixos/{start,restart,reload}-list</text>
-  <text x="545" y="278" class="s">before anything is touched. An interrupted run leaves them;</text>
-  <text x="545" y="294" class="s">the next run seeds from them and replays that work.</text>
-  <text x="545" y="318" class="dtext">degraded window: steps 6 → 11</text>
-  <text x="545" y="334" class="s">units changed by this generation stay stopped from STOP</text>
-  <text x="545" y="350" class="s">until START. Everything in between runs with them down.</text>
-  <text x="545" y="378" class="s">The same script runs at every boot. A top-level exit in any</text>
-  <text x="545" y="394" class="s">snippet skips the rest, including that final ln -sfn.</text>
+<h3 id="s-auth"><span class="stage-no as-root">4</span>Authenticate</h3>
+<p><code>sudo -v</code> once, up front, so a 1Password approval prompt doesn't interrupt the activation output. Sudo authenticates through the 1Password SSH agent (<code>pam_ssh_agent_auth</code>, auth-sufficient), and its timestamp covers every root step that follows.</p>
 
-  <rect class="d" x="560" y="452" width="380" height="96" rx="8"/>
-  <text x="574" y="474" class="dtext">2026-10-24: the switch parked here</text>
-  <text x="574" y="494" class="ink-s">herdr-update-check, a oneshot waiting up to 12 h on</text>
-  <text x="574" y="510" class="ink-s">notify-send -A, was stopped and started again. Its start</text>
-  <text x="574" y="526" class="ink-s">job never finished and block_on_jobs has no timeout:</text>
-  <text x="574" y="542" class="ink-s">nrs sat silent, NetworkManager &amp; co. stayed down.</text>
-  <path class="e dn" d="M558 491 H514" marker-end="url(#ah6d)"/>
-
-  <text x="545" y="598" class="s">Start jobs block until each unit is up. For a oneshot that</text>
-  <text x="545" y="614" class="s">means until its whole run ends (TimeoutStartSec=infinity).</text>
-  <text x="545" y="656" class="s">0 ok · 4 a unit failed (nh: "Activation (test) failed")</text>
-  <text x="545" y="672" class="s">100 init changed → the new config waits for a reboot</text>
-</svg>
-<figcaption><strong>The activation, step by step</strong> (<code>do_system_switch</code> in switch-to-configuration-ng). Every wait marked "wait for every job" is <code>block_on_jobs</code>: a loop over 500 ms D-Bus slices that returns only when every submitted job has emptied out. The <code>test</code> action skips the bootloader and does not write the profile; those are stages 7 and 8.</figcaption>
-</figure>
-
-<h3 id="s6-classify">6.1 Planning: what happens to a changed unit</h3>
-
-<p>Step 5 (and the user pass's own planning) compares the old and new unit files for every unit that is <em>active or activating</em>. The decision for each changed unit:</p>
-
-<figure>
-<svg id="d-classify" class="dg" viewBox="0 0 960 510" role="img" aria-label="Decision tree for a changed active unit: path, slice and socket units get no action; mount units restart; reloadIfChanged reloads; restartIfChanged false, RefuseManualStop or OnlyManualStart are skipped; stopIfChanged false restarts; everything else is stopped before activation and started after.">
-  <defs>
-    <marker id="ah7" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="ah"/></marker>
-  </defs>
-  <rect class="b" x="40" y="20" width="460" height="50" rx="8"/>
-  <text x="54" y="41" class="t">changed unit, currently active or activating</text>
-  <text x="54" y="59" class="s">old vs new unit file differ (system pass or user pass)</text>
-
-  <rect class="q" x="40" y="100" width="460" height="44" rx="8"/>
-  <text x="54" y="127" class="t">a .path, .slice or .socket unit?</text>
-  <rect class="b" x="560" y="100" width="380" height="44" rx="8"/>
-  <text x="574" y="119" class="t">no action</text>
-  <text x="574" y="136" class="s">daemon-reload applies the change</text>
-
-  <rect class="q" x="40" y="165" width="460" height="44" rx="8"/>
-  <text x="54" y="192" class="t">a .mount unit?</text>
-  <rect class="b" x="560" y="165" width="380" height="44" rx="8"/>
-  <text x="574" y="184" class="t">restart</text>
-  <text x="574" y="201" class="s">reload instead for / and /nix</text>
-
-  <rect class="q" x="40" y="230" width="460" height="44" rx="8"/>
-  <text x="54" y="257" class="m t">X-ReloadIfChanged = true?</text>
-  <rect class="b" x="560" y="230" width="380" height="44" rx="8"/>
-  <text x="574" y="249" class="t">reload</text>
-  <text x="574" y="266" class="s">reloadIfChanged = true</text>
-
-  <rect class="q" x="40" y="295" width="460" height="44" rx="8"/>
-  <text x="54" y="314" class="m t">X-RestartIfChanged = false, RefuseManualStop</text>
-  <text x="54" y="331" class="ms">or X-OnlyManualStart?</text>
-  <rect class="o" x="560" y="295" width="380" height="44" rx="8"/>
-  <text x="574" y="314" class="t">skip: printed as "NOT restarting"</text>
-  <text x="574" y="331" class="s">restartIfChanged = false · the 2026-10-24 fix</text>
-
-  <rect class="q" x="40" y="360" width="460" height="44" rx="8"/>
-  <text x="54" y="387" class="m t">X-StopIfChanged = false?</text>
-  <rect class="b" x="560" y="360" width="380" height="44" rx="8"/>
-  <text x="574" y="379" class="t">restart: one job, after activation</text>
-  <text x="574" y="396" class="s">stopIfChanged = false</text>
-
-  <rect class="w" x="40" y="430" width="460" height="56" rx="8"/>
-  <text x="54" y="453" class="t">stop before activation, start after</text>
-  <text x="54" y="472" class="s">the default for services · socket-activated: stop and restart the socket</text>
-  <text x="560" y="450" class="s">A oneshot's start job lasts its whole run, and oneshots</text>
-  <text x="560" y="466" class="s">default to TimeoutStartSec=infinity (checked on nebula),</text>
-  <text x="560" y="482" class="s">so that wait has no ceiling at all.</text>
-
-  <path class="e" d="M270 70 V98" marker-end="url(#ah7)"/>
-  <path class="e" d="M270 144 V163" marker-end="url(#ah7)"/>
-  <text x="278" y="158" class="lbl">no</text>
-  <path class="e" d="M270 209 V228" marker-end="url(#ah7)"/>
-  <text x="278" y="223" class="lbl">no</text>
-  <path class="e" d="M270 274 V293" marker-end="url(#ah7)"/>
-  <text x="278" y="288" class="lbl">no</text>
-  <path class="e" d="M270 339 V358" marker-end="url(#ah7)"/>
-  <text x="278" y="353" class="lbl">no</text>
-  <path class="e" d="M270 404 V428" marker-end="url(#ah7)"/>
-  <text x="278" y="420" class="lbl">no</text>
-  <path class="e" d="M500 122 H558" marker-end="url(#ah7)"/>
-  <text x="514" y="116" class="lbl">yes</text>
-  <path class="e" d="M500 187 H558" marker-end="url(#ah7)"/>
-  <text x="514" y="181" class="lbl">yes</text>
-  <path class="e" d="M500 252 H558" marker-end="url(#ah7)"/>
-  <text x="514" y="246" class="lbl">yes</text>
-  <path class="e" d="M500 317 H558" marker-end="url(#ah7)"/>
-  <text x="514" y="311" class="lbl">yes</text>
-  <path class="e" d="M500 382 H558" marker-end="url(#ah7)"/>
-  <text x="514" y="376" class="lbl">yes</text>
-</svg>
-<figcaption><strong>Unit classification</strong> (<code>handle_modified_unit</code>). NixOS options map onto these <code>X-</code> keys: <code>restartIfChanged</code>, <code>reloadIfChanged</code> and <code>stopIfChanged</code>. A unit that is not active is never started by this logic unless a target that is starting wants it.</figcaption>
-</figure>
-
-<h3 id="s6-activate">6.2 The activation script</h3>
-
-<p><code>$out/activate</code> is generated from <code>system.activationScripts</code>, sorted by their <code>deps</code>. On nebula it runs these snippets in this order, all in <strong>one</strong> bash process. Each snippet records a failure in <code>_localstatus</code> and the script carries on. A bare <code>exit</code> at top level ends the whole script.</p>
-
-<figure>
-<svg id="d-snippets" class="dg" viewBox="0 0 960 300" role="img" aria-label="The twelve steps of nebula's activate script in order, from binsh to the final ln -sfn of /run/current-system.">
-  <defs>
-    <marker id="ah8" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="ah"/></marker>
-  </defs>
-  <rect class="b" x="30" y="30" width="215" height="62" rx="8"/>
-  <text x="42" y="54" class="m t">1 binsh</text>
-  <text x="42" y="76" class="s">/bin/sh → dash</text>
-  <rect class="b" x="258" y="30" width="215" height="62" rx="8"/>
-  <text x="270" y="54" class="m t">2 specialfs</text>
-  <text x="270" y="76" class="s">/dev, /proc, /run … mounts</text>
-  <rect class="r" x="486" y="30" width="215" height="62" rx="8"/>
-  <text x="498" y="54" class="m t">3 setupSecretsForUsers</text>
-  <text x="498" y="76" class="s">sops: secrets users need</text>
-  <rect class="b" x="714" y="30" width="215" height="62" rx="8"/>
-  <text x="726" y="54" class="m t">4 users</text>
-  <text x="726" y="76" class="s">update-users-groups.pl</text>
-  <path class="e" d="M245 61 H256" marker-end="url(#ah8)"/>
-  <path class="e" d="M473 61 H484" marker-end="url(#ah8)"/>
-  <path class="e" d="M701 61 H712" marker-end="url(#ah8)"/>
-  <path class="e" d="M821 92 V108 H137 V123" marker-end="url(#ah8)"/>
-
-  <rect class="b" x="30" y="125" width="215" height="62" rx="8"/>
-  <text x="42" y="149" class="m t">5 etc</text>
-  <text x="42" y="171" class="s">setup-etc.pl: /etc link farm</text>
-  <rect class="b" x="258" y="125" width="215" height="62" rx="8"/>
-  <text x="270" y="149" class="m t">6 libreofficePaths</text>
-  <text x="270" y="171" class="s">subshell-wrapped since 2026-06</text>
-  <rect class="b" x="486" y="125" width="215" height="62" rx="8"/>
-  <text x="498" y="149" class="m t">7 modprobe</text>
-  <text x="498" y="171" class="s">kernel.modprobe → kmod</text>
-  <rect class="r" x="714" y="125" width="215" height="62" rx="8"/>
-  <text x="726" y="149" class="m t">8 setupSecrets</text>
-  <text x="726" y="171" class="s">sops-nix: decrypt with host key</text>
-  <path class="e" d="M245 156 H256" marker-end="url(#ah8)"/>
-  <path class="e" d="M473 156 H484" marker-end="url(#ah8)"/>
-  <path class="e" d="M701 156 H712" marker-end="url(#ah8)"/>
-  <path class="e" d="M821 187 V203 H137 V218" marker-end="url(#ah8)"/>
-
-  <rect class="u" x="30" y="220" width="215" height="62" rx="8"/>
-  <text x="42" y="244" class="m t">9 stowDotfiles</text>
-  <text x="42" y="266" class="s">restow home/ · reload Hyprland</text>
-  <rect class="b" x="258" y="220" width="215" height="62" rx="8"/>
-  <text x="270" y="244" class="m t">10 udevd</text>
-  <text x="270" y="266" class="s">hotplug off · firmware path</text>
-  <rect class="b" x="486" y="220" width="215" height="62" rx="8"/>
-  <text x="498" y="244" class="m t">11 usrbinenv</text>
-  <text x="498" y="266" class="s">/usr/bin/env → coreutils</text>
-  <rect class="o" x="714" y="220" width="215" height="62" rx="8"/>
-  <text x="726" y="244" class="m t">12 /run/current-system</text>
-  <text x="726" y="266" class="s">ln -sfn: the last line</text>
-  <path class="e" d="M245 251 H256" marker-end="url(#ah8)"/>
-  <path class="e" d="M473 251 H484" marker-end="url(#ah8)"/>
-  <path class="e" d="M701 251 H712" marker-end="url(#ah8)"/>
-</svg>
-<figcaption><strong>The emitted order</strong> (the <code data-wrap>#### Activation script snippet</code> headers in <code>$out/activate</code>). Purple snippets touch secrets: sops-nix decrypts with <code data-wrap>/etc/ssh/ssh_host_ed25519_key</code>. Blue reaches into the user's home: <code>stowDotfiles</code> restows every <code>home/</code> package as <code>k</code> via <code>setpriv</code>, then <code>hyprctl reload</code>s any running Hyprland. Green is the moment the switch becomes "live".</figcaption>
-</figure>
-
-<div class="callout warn">
-<p><strong>The activation script runs at every boot, too.</strong> On a running system, a broken snippet only prints an error. At boot it can leave the generation unbootable: in June 2026 a top-level <code>exit 0</code> skipped everything after it, including the final <code>ln -sfn</code>. Every snippet that can exit is wrapped in a subshell for that reason. A switch exercises the snippets, but it does not test the boot path.</p>
-</div>
-
-<h3 id="s6-user">6.3 The user pass</h3>
-
-<p>New in this nixpkgs. After the system manager reloads, the system pass asks logind for every user and skips any without <code>/run/user/&lt;uid&gt;</code>. For each remaining user it spawns <em>itself</em> as that uid with a cleared environment and waits for it to finish. The child runs the system pass's unit logic against <code>/etc/systemd/user</code> and that user's manager.</p>
-
-<figure>
-<svg id="d-user" class="dg" viewBox="0 0 960 480" role="img" aria-label="The user pass: the system pass spawns a child as uid 1000; the child plans, stops, reexecutes and reloads the user manager, then reloads, restarts and starts units, restarts nixos-activation.service and runs a post-activation migration pass before returning.">
-  <defs>
-    <marker id="ah9" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="ah"/></marker>
-  </defs>
-  <rect class="r" x="20" y="30" width="300" height="80" rx="8"/>
-  <text x="32" y="56" class="t">system pass (root), after step 8</text>
-  <text x="32" y="78" class="s">logind ListUsers → each uid that has</text>
-  <text x="32" y="96" class="s">/run/user/&lt;uid&gt; (its manager is running)</text>
-  <path class="e" d="M170 110 V148" marker-end="url(#ah9)"/>
-  <rect class="u" x="20" y="150" width="300" height="96" rx="8"/>
-  <text x="32" y="176" class="t">child: stc as uid 1000</text>
-  <text x="32" y="198" class="ms">env -i XDG_RUNTIME_DIR=/run/user/1000</text>
-  <text x="32" y="216" class="ms">TOPLEVEL OLD_TOPLEVEL NIXOS_ACTION</text>
-  <text x="32" y="236" class="s">the parent .wait()s with no timeout</text>
-  <path class="e" d="M320 198 H350 V50 H378" marker-end="url(#ah9)"/>
-
-  <text x="20" y="292" class="dtext">While this runs, the system</text>
-  <text x="20" y="310" class="dtext">units stopped in step 6 are</text>
-  <text x="20" y="328" class="dtext">still down.</text>
-  <text x="20" y="356" class="s">Lists for resuming an interrupted</text>
-  <text x="20" y="372" class="s">user pass: /run/user/1000/nixos/</text>
-
-  <rect class="b" x="380" y="30" width="560" height="40" rx="8"/>
-  <text x="394" y="55" class="t">plan</text>
-  <text x="470" y="55" class="s">old vs new /etc/systemd/user · seed from /run/user/1000/nixos/*-list</text>
-  <rect class="b" x="380" y="80" width="560" height="40" rx="8"/>
-  <text x="394" y="105" class="t">stop</text>
-  <text x="470" y="105" class="s">before reexec, so ExecStop runs the old definition · wait for every job</text>
-  <rect class="b" x="380" y="130" width="560" height="40" rx="8"/>
-  <text x="394" y="155" class="t">reexec + reload</text>
-  <text x="530" y="155" class="s">of the user manager · no Reloaded signal to wait on</text>
-  <rect class="b" x="380" y="180" width="560" height="40" rx="8"/>
-  <text x="394" y="205" class="t">reload</text>
-  <text x="470" y="205" class="s">wait for every job</text>
-  <rect class="b" x="380" y="230" width="560" height="40" rx="8"/>
-  <text x="394" y="255" class="t">restart</text>
-  <text x="470" y="255" class="s">wait for every job</text>
-  <rect class="d" x="380" y="280" width="560" height="40" rx="8"/>
-  <text x="394" y="305" class="t">start</text>
-  <text x="470" y="305" class="ink-s">wait for every job · 2026-10-24: herdr-update-check never finished here</text>
-  <rect class="b" x="380" y="330" width="560" height="40" rx="8"/>
-  <text x="394" y="355" class="t">nixos-activation.service</text>
-  <text x="600" y="355" class="s">userActivationScripts (5 ms on nebula)</text>
-  <rect class="b" x="380" y="380" width="560" height="40" rx="8"/>
-  <text x="394" y="405" class="t">post-activation pass</text>
-  <text x="560" y="405" class="s">units moving into /etc from ~/.config etc.</text>
-  <path class="e" d="M660 70 V78" marker-end="url(#ah9)"/>
-  <path class="e" d="M660 120 V128" marker-end="url(#ah9)"/>
-  <path class="e" d="M660 170 V178" marker-end="url(#ah9)"/>
-  <path class="e" d="M660 220 V228" marker-end="url(#ah9)"/>
-  <path class="e" d="M660 270 V278" marker-end="url(#ah9)"/>
-  <path class="e" d="M660 320 V328" marker-end="url(#ah9)"/>
-  <path class="e" d="M660 370 V378" marker-end="url(#ah9)"/>
-  <path class="e" d="M660 420 V445 H250 V248" marker-end="url(#ah9)"/>
-  <text x="270" y="464" class="s">exit → the parent resumes at step 10 and starts the system units it stopped</text>
-</svg>
-<figcaption><strong>The user pass</strong> (<code>do_user_switch</code>). Planning uses the same <code>handle_modified_unit</code> logic as the system pass, so <code>restartIfChanged</code> and the other options behave the same way here.</figcaption>
-</figure>
-
-<h3 id="s6-finish">6.4 Start phases, settle and exit codes</h3>
-
-<p>Back in the system pass:</p>
-<ol>
-  <li><code data-wrap>sysinit-reactivation.target</code> is restarted.</li>
-  <li>Reloads, restarts and starts are submitted and waited on. The start phase covers every active target as well as the units stopped in step 6.</li>
-  <li>The program watches the bus briefly for units that fail or appear.</li>
-</ol>
-<p>It then exits with one of three codes:</p>
-<ul>
-  <li><strong>0</strong>: success.</li>
-  <li><strong>4</strong>: a unit failed, or a job could not be submitted. nh reports this as <code>Activation (test) failed</code>.</li>
-  <li><strong>100</strong>: the init interface changed. The new configuration only takes effect after a reboot.</li>
-</ul>
-
-<!-- ================================================================== -->
-<h2 id="s7"><span class="stage-no as-root">7</span>The system profile</h2>
-
-<p><code data-wrap>nix build --no-link --profile /nix/var/nix/profiles/system &lt;toplevel&gt;</code> adds <code>system-N-link</code> and repoints <code>system</code> at it. This is the GC root that keeps the generation after nh's temporary out-link disappears. It took 22 ms. nh runs it only if stage 6 succeeded. That is deliberate: a generation that failed to activate never becomes the boot default, at the cost covered in <a href="#f4">F4</a>.</p>
-
-<p><strong>Retention.</strong> <code>nix.gc</code> runs daily with <code>--delete-older-than 7d</code>, so nebula keeps about a week of generations, three today. The rollback window is measured in days, not in generations.</p>
-
-<!-- ================================================================== -->
-<h2 id="s8"><span class="stage-no as-root">8</span>The bootloader</h2>
-
-<figure>
-<svg id="d-boot" class="dg" viewBox="0 0 960 260" role="img" aria-label="Bootloader stage: nix build sets the system profile, switch-to-configuration boot runs install-grub.sh, which writes grub.cfg for every surviving generation, runs os-prober to find Windows, installs the EFI binary, syncs and exits.">
-  <defs>
-    <marker id="ah10" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="ah"/></marker>
-  </defs>
-  <rect class="r" x="20" y="30" width="270" height="80" rx="8"/>
-  <text x="32" y="56" class="m t">stage 7 · nix build --profile</text>
-  <text x="32" y="78" class="s">/nix/var/nix/profiles/system</text>
-  <text x="32" y="96" class="s">→ system-N-link (GC root) · 22 ms</text>
-  <rect class="r" x="345" y="30" width="270" height="80" rx="8"/>
-  <text x="357" y="56" class="m t">stc boot</text>
-  <text x="357" y="78" class="s">lock · pre-switch checks</text>
-  <text x="357" y="96" class="s">INSTALL_BOOTLOADER → install-grub.sh</text>
-  <rect class="r" x="670" y="30" width="270" height="80" rx="8"/>
-  <text x="682" y="56" class="m t">install-grub.sh</text>
-  <text x="682" y="78" class="s">one entry per surviving generation</text>
-  <text x="682" y="96" class="s">configurationLimit 100 · 3 exist today</text>
-  <path class="e" d="M290 70 H343" marker-end="url(#ah10)"/>
-  <path class="e" d="M615 70 H668" marker-end="url(#ah10)"/>
-  <rect class="w" x="345" y="160" width="270" height="80" rx="8"/>
-  <text x="357" y="186" class="m t">os-prober</text>
-  <text x="357" y="208" class="s">mounts the other disks under</text>
-  <text x="357" y="226" class="s">/var/lib/os-prober-mount → Windows</text>
-  <rect class="r" x="670" y="160" width="270" height="80" rx="8"/>
-  <text x="682" y="186" class="t">EFI install · syncfs · exit</text>
-  <text x="682" y="208" class="s">efiSupport · canTouchEfiVariables</text>
-  <text x="682" y="226" class="s">never touches running units</text>
-  <path class="e" d="M805 110 V158" marker-end="url(#ah10)"/>
-  <path class="e" d="M740 110 V135 H480 V158" marker-end="url(#ah10)"/>
-  <text x="20" y="182" class="s">2.37 s in total on 2026-10-24.</text>
-  <text x="20" y="200" class="s">The two os-prober mount units</text>
-  <text x="20" y="218" class="s">deactivate 0.4 s and 0.5 s in;</text>
-  <text x="20" y="236" class="s">the split is not otherwise measured.</text>
-</svg>
-<figcaption><strong>Making it the boot default.</strong> <code>stc boot</code> shares steps 1–4 of <a href="#s6">stage 6</a>, installs the bootloader, syncs and exits before touching any unit. nh prints "Adding configuration to bootloader" and hides the rest.</figcaption>
-</figure>
-
-<p>GRUB is a deliberate choice: nebula went back from systemd-boot to GRUB so that <code>useOSProber</code> could surface Windows on the other disk. The cost is that every switch, even one that changes nothing, runs os-prober as root over foreign filesystems.</p>
-
-<!-- ================================================================== -->
-<h2 id="s9"><span class="stage-no as-user">9</span>Post-flight</h2>
-
-<p>The wrapper finds the glibc that <code>linux-pam</code> links against in <code>/run/booted-system</code> and in <code>/run/current-system</code>. If they differ, it warns. Long-running processes started at boot, such as ly and the lock screen, keep the boot-time glibc. <code>/etc/pam.d</code> switches immediately, so after a glibc bump a logout can fail to log back in until you reboot. This is the only post-condition <code>nrs</code> checks. It runs only on success, and it looks only at PAM.</p>
-
-<!-- ================================================================== -->
-<h2 id="states">12. State, interruption and failure modes</h2>
-
-<p>A switch changes four things: <code>/run/current-system</code>, the system profile, the GRUB default, and the set of running services. They change at different moments. An interruption or failure leaves them out of step.</p>
-
-<figure>
-<svg id="d-states" class="dg" viewBox="0 0 960 268" role="img" aria-label="State matrix: before the switch everything is old; after the stop phase changed services are down; after activate current-system is new while services are still down; when stc test exits services are up; the profile becomes new at stage 7 and the GRUB default at stage 8. Markers A, B and C show interruption points.">
-  <text x="250" y="34" class="lbl" text-anchor="middle">before</text>
-  <text x="370" y="28" class="lbl" text-anchor="middle">after STOP</text>
-  <text x="370" y="44" class="lbl" text-anchor="middle">(step 6)</text>
-  <text x="490" y="28" class="lbl" text-anchor="middle">after activate</text>
-  <text x="490" y="44" class="lbl" text-anchor="middle">(step 7)</text>
-  <text x="610" y="28" class="lbl" text-anchor="middle">stc test</text>
-  <text x="610" y="44" class="lbl" text-anchor="middle">exits 0</text>
-  <text x="730" y="28" class="lbl" text-anchor="middle">profile set</text>
-  <text x="730" y="44" class="lbl" text-anchor="middle">(stage 7)</text>
-  <text x="850" y="28" class="lbl" text-anchor="middle">boot written</text>
-  <text x="850" y="44" class="lbl" text-anchor="middle">(stage 8)</text>
-
-  <text x="20" y="92" class="m">/run/current-system</text>
-  <text x="20" y="134" class="m">system profile</text>
-  <text x="20" y="176" class="m">GRUB default</text>
-  <text x="20" y="218" class="t">changed services</text>
-
-  <rect class="b" x="195" y="70" width="110" height="34" rx="6"/><text x="250" y="92" class="ink-s" text-anchor="middle">old</text>
-  <rect class="b" x="315" y="70" width="110" height="34" rx="6"/><text x="370" y="92" class="ink-s" text-anchor="middle">old</text>
-  <rect class="o" x="435" y="70" width="110" height="34" rx="6"/><text x="490" y="92" class="ink-s" text-anchor="middle">new</text>
-  <rect class="o" x="555" y="70" width="110" height="34" rx="6"/><text x="610" y="92" class="ink-s" text-anchor="middle">new</text>
-  <rect class="o" x="675" y="70" width="110" height="34" rx="6"/><text x="730" y="92" class="ink-s" text-anchor="middle">new</text>
-  <rect class="o" x="795" y="70" width="110" height="34" rx="6"/><text x="850" y="92" class="ink-s" text-anchor="middle">new</text>
-
-  <rect class="b" x="195" y="112" width="110" height="34" rx="6"/><text x="250" y="134" class="ink-s" text-anchor="middle">old</text>
-  <rect class="b" x="315" y="112" width="110" height="34" rx="6"/><text x="370" y="134" class="ink-s" text-anchor="middle">old</text>
-  <rect class="b" x="435" y="112" width="110" height="34" rx="6"/><text x="490" y="134" class="ink-s" text-anchor="middle">old</text>
-  <rect class="b" x="555" y="112" width="110" height="34" rx="6"/><text x="610" y="134" class="ink-s" text-anchor="middle">old</text>
-  <rect class="o" x="675" y="112" width="110" height="34" rx="6"/><text x="730" y="134" class="ink-s" text-anchor="middle">new</text>
-  <rect class="o" x="795" y="112" width="110" height="34" rx="6"/><text x="850" y="134" class="ink-s" text-anchor="middle">new</text>
-
-  <rect class="b" x="195" y="154" width="110" height="34" rx="6"/><text x="250" y="176" class="ink-s" text-anchor="middle">old</text>
-  <rect class="b" x="315" y="154" width="110" height="34" rx="6"/><text x="370" y="176" class="ink-s" text-anchor="middle">old</text>
-  <rect class="b" x="435" y="154" width="110" height="34" rx="6"/><text x="490" y="176" class="ink-s" text-anchor="middle">old</text>
-  <rect class="b" x="555" y="154" width="110" height="34" rx="6"/><text x="610" y="176" class="ink-s" text-anchor="middle">old</text>
-  <rect class="b" x="675" y="154" width="110" height="34" rx="6"/><text x="730" y="176" class="ink-s" text-anchor="middle">old</text>
-  <rect class="o" x="795" y="154" width="110" height="34" rx="6"/><text x="850" y="176" class="ink-s" text-anchor="middle">new</text>
-
-  <rect class="b" x="195" y="196" width="110" height="34" rx="6"/><text x="250" y="218" class="ink-s" text-anchor="middle">up (old)</text>
-  <rect class="d" x="315" y="196" width="110" height="34" rx="6"/><text x="370" y="218" class="ink-s" text-anchor="middle">down</text>
-  <rect class="d" x="435" y="196" width="110" height="34" rx="6"/><text x="490" y="218" class="ink-s" text-anchor="middle">down</text>
-  <rect class="o" x="555" y="196" width="110" height="34" rx="6"/><text x="610" y="218" class="ink-s" text-anchor="middle">up (new)</text>
-  <rect class="o" x="675" y="196" width="110" height="34" rx="6"/><text x="730" y="218" class="ink-s" text-anchor="middle">up (new)</text>
-  <rect class="o" x="795" y="196" width="110" height="34" rx="6"/><text x="850" y="218" class="ink-s" text-anchor="middle">up (new)</text>
-
-  <circle class="pin" cx="490" cy="250" r="11"/><text x="490" y="255" class="dtext" text-anchor="middle">A</text>
-  <circle class="pin" cx="610" cy="250" r="11"/><text x="610" y="255" class="dtext" text-anchor="middle">B</text>
-  <circle class="pin" cx="730" cy="250" r="11"/><text x="730" y="255" class="dtext" text-anchor="middle">C</text>
-</svg>
-<figcaption><strong>The four pieces of state across a switch.</strong> Circles mark where the failures in the table below leave you. Only the last column is fully consistent, and it is the state you are in after a clean <code>nrs</code>.</figcaption>
-</figure>
-
-<div class="table-scroll"><table>
-  <colgroup><col style="width:22%"><col style="width:26%"><col style="width:26%"><col></colgroup>
-  <thead><tr><th>Symptom</th><th>Where / cause</th><th>State left behind</th><th>Recovery</th></tr></thead>
-  <tbody>
-    <tr><td>Silent hang at "Activating configuration"</td><td>Stage 6, a job that never completes: user pass (2026-10-24) or start phase</td><td><strong>A</strong>: current = new, changed services <strong>down</strong>, plan lists on disk</td><td><code>systemctl list-jobs</code> and <code>systemctl --user list-jobs</code>; stop the stuck unit; re-run <code>nrs</code> (the lists replay)</td></tr>
-    <tr><td>Ctrl-C during the hang</td><td>Kills nh, sudo and stc mid-plan</td><td>Same as A; the captured output is lost</td><td>As above. The next run replays the stored plan, including the stuck start</td></tr>
-    <tr><td><code data-wrap>Activation (test) failed … 4</code></td><td>A unit failed to start: a race (machined.socket on a systemd bump) or a real bug</td><td><strong>B</strong>: running = new, profile and GRUB = old</td><td><code>systemctl --failed</code>; fix or confirm a race; re-run <code>nrs</code> to write the profile and boot entry</td></tr>
-    <tr><td>Killed between stages 7 and 8</td><td>Rare: the window is 22 ms wide</td><td><strong>C</strong>: profile = new, GRUB = old</td><td>Re-run <code>nrs</code>, or <code data-wrap>sudo /nix/var/nix/profiles/system/bin/switch-to-configuration boot</code></td></tr>
-    <tr><td><code>Could not acquire lock</code></td><td>Another switch is running; the lock is non-blocking</td><td>Nothing changed</td><td>Wait for the other one; never delete the lock file</td></tr>
-    <tr><td>Exit 100: "incompatible init"</td><td>Init interface changed</td><td>Profile and GRUB are new only if a later stage ran; the running system is old</td><td>Reboot</td></tr>
-    <tr><td>Build or eval error</td><td>Stages 2–3</td><td>Nothing changed</td><td>Fix and re-run</td></tr>
-    <tr><td>"PAM glibc changed since boot"</td><td>Stage 9</td><td>Consistent, but boot-time processes hold the old glibc</td><td>Reboot before logging out</td></tr>
-    <tr><td>An older GRUB entry drops into emergency mode</td><td>Its closure was GC'd after <code>grub.cfg</code> was written</td><td>Default entry fine; older entries broken</td><td>Boot the top entry; <code data-wrap>nixos-rebuild boot --install-bootloader</code> (see <a href="#p15">P15</a>)</td></tr>
-  </tbody>
-</table></div>
-
-<!-- ================================================================== -->
-<h2 id="incident">13. Case study: the 2026-10-24 hang</h2>
-
-<figure>
-<svg id="d-incident" class="dg" viewBox="0 0 960 250" role="img" aria-label="Timeline from 15:25 to 15:53: run 1 at 15:26 hangs in the user pass, Ctrl-C at 15:32, run 2 replays and hangs, Ctrl-C at 15:33, the stuck unit is stopped and the config fixed by 15:40, and run 3 at 15:52 succeeds in 11.4 seconds; changed system services were down for about 26 minutes.">
-  <rect class="d" x="76" y="112" width="815" height="24" rx="4"/>
-  <text x="600" y="129" class="dtext" text-anchor="middle">changed system services stopped for ~26 minutes</text>
-  <line class="e" x1="40" y1="150" x2="920" y2="150"/>
-  <line class="grid" x1="40" y1="146" x2="40" y2="156"/>
-  <line class="grid" x1="197" y1="146" x2="197" y2="156"/>
-  <line class="grid" x1="354" y1="146" x2="354" y2="156"/>
-  <line class="grid" x1="511" y1="146" x2="511" y2="156"/>
-  <line class="grid" x1="669" y1="146" x2="669" y2="156"/>
-  <line class="grid" x1="826" y1="146" x2="826" y2="156"/>
-  <text x="40" y="232" class="lbl" text-anchor="middle">15:25</text>
-  <text x="197" y="232" class="lbl" text-anchor="middle">15:30</text>
-  <text x="354" y="232" class="lbl" text-anchor="middle">15:35</text>
-  <text x="511" y="232" class="lbl" text-anchor="middle">15:40</text>
-  <text x="669" y="232" class="lbl" text-anchor="middle">15:45</text>
-  <text x="826" y="232" class="lbl" text-anchor="middle">15:50</text>
-
-  <circle class="dotd" cx="76" cy="150" r="6"/>
-  <text x="70" y="70" class="t">15:26:08 run 1</text>
-  <text x="70" y="88" class="s">the user pass stops and starts herdr-update-check;</text>
-  <text x="70" y="104" class="s">its start waits on a notification click</text>
-  <path class="e dash" d="M76 108 V144"/>
-
-  <circle class="dotd" cx="281" cy="150" r="6"/>
-  <circle class="dotd" cx="299" cy="150" r="6"/>
-  <text x="290" y="180" class="t" text-anchor="middle">15:32:41 – 15:33:14</text>
-  <text x="290" y="198" class="s" text-anchor="middle">Ctrl-C · run 2 replays the lists, waits on the same job · Ctrl-C</text>
-
-  <circle class="dot" cx="503" cy="150" r="6"/>
-  <text x="503" y="70" class="t" text-anchor="middle">15:39:43</text>
-  <text x="503" y="88" class="s" text-anchor="middle">stuck run stopped;</text>
-  <text x="503" y="104" class="s" text-anchor="middle">config fixed and built</text>
-  <path class="e dash" d="M503 108 V144"/>
-
-  <circle class="doto" cx="891" cy="150" r="6"/>
-  <text x="891" y="180" class="otext" text-anchor="end">15:52:05 run 3 · 11.4 s</text>
-  <text x="891" y="198" class="s" text-anchor="end">lists replayed, services back</text>
-</svg>
-<figcaption><strong>How one stale reminder took the network stack down for 26 minutes</strong> (reconstructed from the journal).</figcaption>
-</figure>
-
-<p>The flake update to nixpkgs 3ec6363 brought the user pass. <code>herdr-update-check.service</code> was a oneshot that ends in <code data-wrap>timeout 12h notify-send -A …</code>. Its unit changed in the update, and it happened to be activating when the switch ran, so the user pass stopped it and queued a start. That start job could finish only when someone clicked a notification. Nothing reached the terminal, because nh had captured stc's output.</p>
-
-<p>Ctrl-C killed the switch after STOP and before START. The second run seeded its plan from the lists on disk and queued the same start against the still-pending job. The fix (commit <code>69de68a</code>, decision record <code data-wrap>knowledge/decisions/user-oneshots-skip-switch-restart.md</code>):</p>
-<ul>
-  <li><code>herdr-update-check</code> became <code>Type=exec</code> with <code>restartIfChanged = false</code>.</li>
-  <li>The three path-triggered capture oneshots (helium, noctalia, gh) also got <code>restartIfChanged = false</code>.</li>
-  <li>The stuck run was stopped by hand.</li>
-</ul>
-<p>Three separate weaknesses lined up:</p>
-<ul>
-  <li>a unit design that could sit activating for hours;</li>
-  <li>an upstream wait with no ceiling, placed while services were down;</li>
-  <li>a front-end that hid the one message naming the culprit.</li>
-</ul>
-
-<!-- ================================================================== -->
-<h2 id="critique">14. Design interrogation</h2>
-
-<p>Each finding asks whether a choice holds up under failure, not just on the happy path. The verdicts: <span class="verdict sound">sound</span> means keep it, <span class="verdict questionable">questionable</span> means the trade-off deserves revisiting, <span class="verdict flawed">flawed</span> means it caused, or will cause, an incident.</p>
-
-<div class="finding" id="f1">
-<h4>F1 · Activation output is hidden by default <span class="verdict flawed">flawed</span></h4>
-<p>switch-to-configuration already prints a plan ("stopping the following units", "restarting the following user units", "NOT restarting …"). nh 4.4.2 captures it unless <code>--show-activation-logs</code> or <code>NH_SHOW_ACTIVATION_LOGS</code> is set, and it shows the capture only on failure. For a batch tool that keeps the screen tidy. For an interactive wrapper whose worst failure is a silent hang, it removes the single best diagnostic, and a Ctrl-C throws it away. On 2026-10-24 that one setting turned a 10-second diagnosis into a debugging session.</p>
-</div>
-
-<div class="finding" id="f2">
-<h4>F2 · Unbounded waits inside the degraded window <span class="verdict flawed">flawed (upstream)</span></h4>
-<p><code>block_on_jobs</code> has no deadline. The new user pass runs between the system STOP and START phases, and oneshots default to an infinite start timeout. Together these let any user unit that is slow to finish (a unit you wrote, triggered by a path or a timer) hold system services down for as long as it likes. The system scope protects its own daemon-reload with a 180 s bound but nothing else. Running the user pass <em>after</em> the system START phase would shrink the blast radius to user units, and so would a bounded wait that warns and moves on. The local fix (<code>restartIfChanged = false</code>) deals with the instances we know about, not the class.</p>
-</div>
-
-<div class="finding" id="f3">
-<h4>F3 · Activation is a child of the terminal <span class="verdict questionable">questionable</span></h4>
-<p>nh runs stc as <code>sudo</code>'s child in your terminal's process group. stc ignores SIGHUP, but Ctrl-C (SIGINT) kills it, and a crashed terminal or dropped SSH session takes nh and sudo with it. nixos-rebuild-ng solves this by running stc as a transient unit (<code data-wrap>systemd-run … --unit=nixos-rebuild-switch-to-configuration</code>, streaming with <code data-wrap>--wait --verbose --output=cat</code> on systemd ≥ 261). The switch then belongs to PID 1, has one journal identity, and can be stopped deliberately with <code>systemctl stop</code> instead of by accident.</p>
-</div>
-
-<div class="finding" id="f4">
-<h4>F4 · <code>test</code>, then profile, then <code>boot</code> <span class="verdict sound">sound trade-off</span>, poorly surfaced</h4>
-<p>nixos-rebuild switches in the order profile → bootloader → activate. nh activates first and commits to boot only if activation succeeded, so a configuration that cannot come up cleanly never becomes the default. The price is state <strong>B</strong>: any exit 4, even a harmless race such as machined.socket on a systemd bump, leaves the machine running a generation that the next reboot will discard. The order is right. What's missing is that nobody tells you which state you are in.</p>
-</div>
-
-<div class="finding" id="f5">
-<h4>F5 · Resume lists replay silently <span class="verdict questionable">questionable</span></h4>
-<p>Persisting the plan before acting is the correct way to converge after an interrupted switch: the next run restarts what the last one stopped. But the replay is invisible. Your next <code>nrs</code> may bounce sshd, journald and nix-daemon, or re-queue a start that hangs, for reasons that come from an earlier run. Nothing announces it, so it reads as flakiness.</p>
-</div>
-
-<div class="finding" id="f6">
-<h4>F6 · <code>NH_NO_CHECKS</code> is set for a reason that doesn't exist <span class="verdict questionable">questionable</span></h4>
-<p>The comment says it skips the flake's checks, which rebuild every host. In nh 4.4.2 it skips the Nix version floor and the experimental-feature probe: two fast subprocesses that guard against an nh/nix mismatch. Either fix the comment or drop the variable. An inaccurate rationale beside a setting is how settings outlive their reasons.</p>
-</div>
-
-<div class="finding" id="f7">
-<h4>F7 · Dotfiles restowed inside root activation <span class="verdict sound">sound</span>, sharp edges</h4>
-<p>Running <code>stowDotfiles</code> as an activation snippet means links self-heal at every boot and every switch without a user session. It is subshell-wrapped and runs as <code>k</code> via <code>setpriv</code>, which also keeps PAM session noise out of the output. The sharp edges: it runs in the boot path (see 6.2), and it <code>hyprctl reload</code>s Hyprland on every switch, even when no link changed.</p>
-</div>
-
-<div class="finding" id="f8">
-<h4>F8 · os-prober on every switch <span class="verdict questionable">questionable</span></h4>
-<p>Windows does not move, but every <code>nrs</code> pays for rediscovering it. Most of stage 8's 2.37 s is probably os-prober (unmeasured), plus root mounts of the other disk's filesystems on every rebuild. A static chainload entry would produce the same menu item.</p>
-</div>
-
-<div class="finding" id="f9">
-<h4>F9 · Age-only retention, and GC doesn't rewrite grub.cfg <span class="verdict questionable">questionable</span></h4>
-<p><code>--delete-older-than 7d</code> deletes generations by age alone. A regression noticed after a quiet week has nothing to roll back to. GC also does not regenerate <code>grub.cfg</code>, so GRUB keeps listing collected generations until the next switch. Booting one of them is exactly how nebula ended up in emergency mode in June.</p>
-</div>
-
-<div class="finding" id="f10">
-<h4>F10 · Evaluation cost and caching <span class="verdict sound">sound</span></h4>
-<p>5 s and 3.5 GB is reasonable for a desktop configuration of this size. The eval cache already makes repeat runs on a committed tree almost free. Not worth engineering further.</p>
-</div>
-
-<div class="finding" id="f11">
-<h4>F11 · Elevation through the 1Password agent <span class="verdict sound">sound</span></h4>
-<p>Auth is <code>sufficient</code>, so it can never lock you out. The key path is root-owned so it passes StrictModes. One approval covers the three root steps. Nothing to change.</p>
-</div>
-
-<div class="finding" id="f12">
-<h4>F12 · Post-flight checks only PAM <span class="verdict questionable">questionable</span></h4>
-<p>The glibc check is a good instinct, but it's the only post-condition, and it runs only on success. The questions that matter after a switch go unasked: did a unit fail, does the boot default match what is running, did the kernel change, was an interrupted plan replayed?</p>
-</div>
-
-<!-- ================================================================== -->
-<h2 id="proposals">15. Proposals</h2>
-
-<p>Ordered by payoff per unit of effort. The kinds: <span class="kind use">usability</span>, <span class="kind res">resilience</span>, <span class="kind perf">performance</span>. The code is the original sketch to be tested before use. <strong>Status 2026-10-24:</strong> P5, P7, P8, P11, P13, P14 and P15 are done, and each one's block says where it lives. P1–P4, P6, P10 and P17 are implemented in <code>nrs2</code> (see the note at the end of this section) but not in <code>nrs</code>. P16 was already in place. The rest are still proposals.</p>
-
-<div class="table-scroll"><table>
-  <colgroup><col style="width:6%"><col style="width:9%"><col style="width:41%"><col style="width:14%"><col style="width:10%"><col></colgroup>
-  <thead><tr><th>ID</th><th>Stage</th><th>Change</th><th>Kind</th><th>Effort</th><th>Addresses</th></tr></thead>
-  <tbody>
-    <tr><td><a href="#p1">P1</a></td><td>0 / 6</td><td>Export <code>NH_SHOW_ACTIVATION_LOGS=1</code> in the wrapper</td><td><span class="kind use">use</span></td><td>1 line</td><td>F1</td></tr>
-    <tr><td><a href="#p8">P8</a></td><td>6</td><td>Give the trigger-started capture oneshots <code>TimeoutStartSec = "2min"</code></td><td><span class="kind res">res</span></td><td>3 lines</td><td>F2</td></tr>
-    <tr><td><a href="#p7">P7</a></td><td>2</td><td>Eval-time warning for trigger-started user oneshots that can be restarted by a switch</td><td><span class="kind res">res</span></td><td>~15 lines</td><td>F2</td></tr>
-    <tr><td><a href="#p3">P3</a></td><td>0</td><td>Pre-flight: announce a plan that is about to be replayed</td><td><span class="kind use">use</span></td><td>~5 lines</td><td>F5</td></tr>
-    <tr><td><a href="#p4">P4</a></td><td>9</td><td>Post-flight state report, on success <em>and</em> failure</td><td><span class="kind use">use</span></td><td>~15 lines</td><td>F4, F12</td></tr>
-    <tr><td><a href="#p2">P2</a></td><td>6</td><td>Stall watchdog that names pending jobs</td><td><span class="kind use">use</span></td><td>~15 lines</td><td>F1, F2</td></tr>
-    <tr><td><a href="#p5">P5</a></td><td>0</td><td>Correct or drop <code>NH_NO_CHECKS</code></td><td><span class="kind res">res</span></td><td>1 line</td><td>F6</td></tr>
-    <tr><td><a href="#p15">P15</a></td><td>7 / 8</td><td>Count-plus-age retention, and refresh <code>grub.cfg</code> after GC</td><td><span class="kind res">res</span></td><td>~6 lines</td><td>F9</td></tr>
-    <tr><td><a href="#p14">P14</a></td><td>8</td><td>Static Windows chainload entry instead of os-prober</td><td><span class="kind perf">perf</span> <span class="kind res">res</span></td><td>~10 lines</td><td>F8</td></tr>
-    <tr><td><a href="#p11">P11</a></td><td>3</td><td>Shorter <code>narinfo-cache-negative-ttl</code></td><td><span class="kind perf">perf</span></td><td>1 line</td><td>stage 3</td></tr>
-    <tr><td><a href="#p10">P10</a></td><td>6</td><td><code>nrp</code>: build, then <code>dry-activate</code> to preview the plan</td><td><span class="kind use">use</span></td><td>~8 lines</td><td>F1, F5</td></tr>
-    <tr><td><a href="#p6">P6</a></td><td>6</td><td>Run activation as a transient unit (systemd-run)</td><td><span class="kind res">res</span></td><td>medium</td><td>F3</td></tr>
-    <tr><td><a href="#p9">P9</a></td><td>6</td><td>Report the user-pass ordering and unbounded wait upstream</td><td><span class="kind res">res</span></td><td>an issue</td><td>F2</td></tr>
-    <tr><td><a href="#p12">P12</a></td><td>3</td><td>Procedure: let CI warm the cache before a heavy <code>nrs</code></td><td><span class="kind perf">perf</span></td><td>habit</td><td>stage 3</td></tr>
-    <tr><td><a href="#p13">P13</a></td><td>3</td><td>Periodic <code>nix.optimise</code> instead of <code>auto-optimise-store</code></td><td><span class="kind perf">perf</span></td><td>2 lines</td><td>stage 3</td></tr>
-    <tr><td><a href="#p16">P16</a></td><td>boot</td><td><code data-wrap>boot.initrd.systemd.emergencyAccess</code> with a hashed password</td><td><span class="kind res">res</span></td><td>1 line</td><td>F9, 6.2</td></tr>
-    <tr><td><a href="#p17">P17</a></td><td>all</td><td><code>nrs-status</code>: one no-root view of the switch state</td><td><span class="kind use">use</span></td><td>reuses P3/P4</td><td>F4, F5, F12</td></tr>
-  </tbody>
-</table></div>
-
-<h3>The wrapper (P1–P5)</h3>
-
-<p>P1–P4 fit in one revision of <code>mkNhHelper</code>.</p>
-
-<pre><code>flake="$(readlink -f "$HOME/src/dotfiles")"
-
-# P3 · an interrupted switch leaves its plan on disk, and this run replays it
-for f in /run/nixos/{start,restart,reload}-list "$XDG_RUNTIME_DIR"/nixos/{start,restart,reload}-list; do
-  [ -s "$f" ] &amp;&amp; echo "nrs: replaying an interrupted plan from $f: $(paste -sd' ' "$f")" &gt;&amp;2
-done
-
-# P2 · if activation runs long, name what it is waiting on. Detect it by the
-# process, NOT by probing switch-to-configuration.lock: stc takes that lock
-# non-blocking, so even a brief probe could make the real switch abort.
-( n=0
-  while sleep 5; do
-    if pgrep -f 'bin/switch-to-configuration (test|boot)' &gt;/dev/null; then n=$((n + 5)); else n=0; fi
-    if [ "$n" -ge 45 ] &amp;&amp; [ $(( (n - 45) % 30 )) -eq 0 ]; then
-      echo "nrs: activation running ${n}s; pending jobs:" &gt;&amp;2
-      systemctl list-jobs --no-legend --no-pager &gt;&amp;2
-      systemctl --user list-jobs --no-legend --no-pager &gt;&amp;2
-    fi
-  done ) &amp; watchdog=$!
-trap 'kill "$watchdog" 2&gt;/dev/null' EXIT
-
-# P1 · let switch-to-configuration print its plan live
-env NH_NO_CHECKS=1 NH_SHOW_ACTIVATION_LOGS=1 nh os switch "$flake" "$@"; status=$?
-
-# P4 · report the state we are in, whether or not nh succeeded
-[ "$(readlink -f /run/current-system)" = "$(readlink -f /nix/var/nix/profiles/system)" ] \
-  || echo "nrs: the running system is not the boot default; fix the failure, then re-run nrs" &gt;&amp;2
-systemctl --failed --no-legend --plain --no-pager &gt;&amp;2
-systemctl --user --failed --no-legend --plain --no-pager &gt;&amp;2
-[ "$(readlink -f /run/booted-system/kernel)" = "$(readlink -f /run/current-system/kernel)" ] \
-  || echo "nrs: new kernel; reboot to run it" &gt;&amp;2
-# … existing PAM glibc check …
-exit "$status"</code></pre>
-
-<div class="proposal" id="p1"><h4>P1 · Show the activation plan <span class="kind use">usability</span></h4>
-<p>One environment variable makes stc's own lines visible as they happen. A stall then names its unit ("restarting the following user units: herdr-update-check.service" followed by silence), and nothing is lost on Ctrl-C. It covers stage 6 only; stage 8 stays quiet, which is fine. Cost: a few dozen lines of output per switch.</p></div>
-
-<div class="proposal" id="p2"><h4>P2 · Stall watchdog <span class="kind use">usability</span> <span class="kind res">resilience</span></h4>
-<p>After 45 s of activation, and every 30 s after that, print the pending system and user jobs. Neither needs root. This turns "it's stuck" into "it's waiting on <code>X.service</code>, start job". The detection method matters, and the caveat in the comment is a real hazard: probing the switch lock races stc's non-blocking acquire.</p></div>
-
-<div class="proposal" id="p3"><h4>P3 · Announce replays <span class="kind use">usability</span></h4>
-<p>If plan lists exist before nh starts, the previous switch was interrupted. Saying so up front explains the extra restarts. It also warns you that a unit that hung last time is about to be started again.</p></div>
-
-<div class="proposal" id="p4"><h4>P4 · Report state on every exit <span class="kind use">usability</span></h4>
-<p>Replacing <code>|| exit</code> with a captured status lets the wrapper always report where you stand:</p>
-<ul>
-  <li>a running-versus-boot-default mismatch (state B);</li>
-  <li>failed system and user units;</li>
-  <li>a kernel change that needs a reboot;</li>
-  <li>the existing PAM check.</li>
-</ul></div>
-
-<div class="proposal" id="p5"><h4>P5 · Fix the <code>NH_NO_CHECKS</code> rationale <span class="kind res">resilience</span></h4>
-<p>Either replace the comment with the true reason (skip nh's Nix-version and feature probes) or drop the variable and let those probes guard against an incompatible Nix. Dropping it costs two fast subprocesses per run.</p>
-<p><strong>Done 2026-10-24:</strong> kept the variable and corrected the comment in <code>modules/{nixos,darwin}/nh.nix</code>. In nh 4.4.2 (<code>crates/nh-core/src/checks.rs</code>) the version probe only warns (minimum 2.31.2), and the feature probe checks nix-command and flakes. Both pass on all four machines (Determinate Nix 2.35.3), so skipping them loses no safety net.</p></div>
-
-<h3>Activation (P6–P10)</h3>
-
-<div class="proposal" id="p7"><h4>P7 · Catch the hazard class at evaluation <span class="kind res">resilience</span></h4>
-<p>A short module turns the 2026-10-24 lesson into a build-time warning. It fires for any user oneshot that nothing starts at login (so a path, a timer or a person starts it), that does not stay active, and that a switch would still restart:</p>
-<pre><code>{ config, lib, ... }:
-{
-  warnings = lib.concatLists (lib.mapAttrsToList (name: svc:
-    lib.optional (
-      (svc.serviceConfig.Type or "simple") == "oneshot"
-      &amp;&amp; !(svc.serviceConfig.RemainAfterExit or false)
-      &amp;&amp; svc.restartIfChanged
-      &amp;&amp; svc.wantedBy == [ ]
-    ) "systemd.user.services.${name}: trigger-started oneshot that a switch will restart; set restartIfChanged = false (knowledge/decisions/user-oneshots-skip-switch-restart.md)"
-  ) config.systemd.user.services);
-}</code></pre>
-<p>Warnings print during stage 2, before anything changes. Expect to tune the predicate: upstream-defined user units may trip it.</p>
-<p><strong>Done 2026-10-24</strong> (<code>modules/nixos/user-oneshot-check.nix</code>). The predicate also skips disabled units, and accepts <code>RemainAfterExit</code> as a systemd string such as <code>"yes"</code>. No unit on nebula trips it, upstream ones included: the only other user oneshots are <code>flatpak-repo</code> and <code>nixos-activation</code>, and both start at login and stay active. It was checked by evaluating with one capture unit's <code>restartIfChanged</code> forced back on, plus a bare test oneshot. The warning named both, and passed over a test oneshot with <code>RemainAfterExit = "yes"</code>.</p></div>
-
-<div class="proposal" id="p8"><h4>P8 · Put a ceiling on the capture oneshots <span class="kind res">resilience</span></h4>
-<p>Their effective <code>TimeoutStartSec</code> is <code>infinity</code>, which was checked on nebula. <code data-wrap>serviceConfig.TimeoutStartSec = "2min"</code> on helium, noctalia and gh capture bounds any future hang, such as a git lock or an age prompt, even when something other than a switch starts them.</p>
-<p><strong>Done 2026-10-24</strong> (<code>modules/hosts/nebula/users/k/{helium,noctalia}.nix</code>, <code>modules/nixos/git.nix</code>). Normal runs in the journal take 30&nbsp;s (helium) and 5&nbsp;s (noctalia), well inside the ceiling. A timeout kills the run and marks the unit failed; the path unit keeps watching.</p></div>
-
-<div class="proposal" id="p10"><h4>P10 · Preview the plan <span class="kind use">usability</span></h4>
-<p><code data-wrap>switch-to-configuration dry-activate</code> prints "would stop / restart / start the following units" and changes nothing. A <code>nrp</code> helper builds with <code>nh os build</code>, then runs <code data-wrap>sudo $out/bin/switch-to-configuration dry-activate</code>. It is worth running before risky updates such as a systemd bump or many unit changes.</p>
-<p><strong>Correction:</strong> this proposal first said dry-activate also previews the user pass. It does not. In switch-to-configuration-ng, <code>do_system_switch</code> exits right after the system plan, before the per-user loop that spawns <code>do_user_switch</code>. That function has a complete dry-run branch, but dry-activate never reaches it, so on its own it never shows a user unit, the kind behind F2.</p>
-<p><strong>Done 2026-10-24</strong> as <code>nrs2 --plan</code> instead of a separate <code>nrp</code>. After the build and diff it runs:</p>
-<ul>
-  <li><code data-wrap>sudo $out/bin/switch-to-configuration dry-activate</code> for the system units;</li>
-  <li>stc-ng's user pass, dry and as you, started the way stc-ng starts it. This uses an internal interface, so nrs2 says so if the interface moves, and carries on.</li>
-</ul>
-<p>Any unit the plan would restart or start while it is <code>activating</code> right now is named in a warning, because the switch would wait for its new run. Tested against a variant build: the user preview showed <code>codebase-memory-mcp</code>'s stop and start, and a mid-run test oneshot was flagged. <code>--plan</code> also compares the kernel and PAM against the new build. The decision record is <code>knowledge/decisions/nrs-plan-user-pass.md</code>.</p></div>
-
-<div class="proposal" id="p6"><h4>P6 · Run activation under PID 1 <span class="kind res">resilience</span></h4>
-<p>nh 4.4.2 has no option for this. Two routes:</p>
-<ul>
-  <li><strong>Take over activation in the wrapper.</strong> Keep nh for build and diff (<code>nh os build</code>), then perform nh's three root steps yourself, wrapping the first the way nixos-rebuild-ng does:</li>
-</ul>
+<h3 id="s-activate-nixos"><span class="stage-no as-root">5</span>Activate, NixOS</h3>
+<p><code>switch-to-configuration test</code> runs as a <strong>transient systemd unit</strong>, the way nixos-rebuild-ng does it:</p>
 <pre><code>sudo systemd-run --collect --no-ask-password --quiet --service-type=exec \
-  --unit=nrs-switch-to-configuration -E LOCALE_ARCHIVE -E NIXOS_NO_CHECK \
-  --wait --verbose --output=cat \
-  "$out/bin/switch-to-configuration" test
-sudo nix build --no-link --profile /nix/var/nix/profiles/system "$out"
-sudo "$out/bin/switch-to-configuration" boot</code></pre>
+  --unit=nrs-switch-to-configuration --wait --verbose --output=cat \
+  [-E LOCALE_ARCHIVE=…] [-E NIXOS_NO_CHECK=…] \
+  $out/bin/switch-to-configuration test 2&gt;&amp;1 | render_activity</code></pre>
 <ul>
-  <li><strong>Use nixos-rebuild-ng for the activation half.</strong> It already does this, but its order differs (profile first) and you lose nh's diff UX at that step.</li>
+  <li><strong>Detach, not kill.</strong> Ctrl-C ends <code>systemd-run</code> (exit 130), and the switch runs on to completion under PID 1. A lost terminal does the same. nrs prints how to follow it (<code>journalctl -fu nrs-switch-to-configuration</code>) or stop it, reports, and exits 130. Re-run nrs afterwards to set the profile and boot entry.</li>
+  <li><strong>One at a time.</strong> stc takes its lock non-blocking, so if the unit from an earlier run is still active, nrs refuses to start another (exit 1).</li>
+  <li><strong>Watchdog.</strong> After 45 s of activation, and every 30 s after, it prints the pending system and user jobs. A stall names its unit instead of going silent. It never probes stc's lock, since that could make the real switch abort.</li>
+  <li><strong>Exit codes.</strong> 0: carry on. <strong>100</strong>: the init interface changed and nothing was activated; nrs warns and still makes it the boot default, so a reboot brings it up. <strong>4</strong>: activation finished but a unit failed; the profile and boot entry stay on the old generation, the same rule nh had. Anything else: the same, with that code.</li>
 </ul>
-<p>A dropped terminal or SSH session then no longer kills a half-applied switch. Check how <code>--wait</code> treats Ctrl-C before relying on it. The aim is that interrupting the switch becomes a deliberate <code data-wrap>systemctl stop nrs-switch-to-configuration</code>.</p></div>
 
-<div class="proposal" id="p9"><h4>P9 · Take F2 upstream <span class="kind res">resilience</span></h4>
-<p>File it against nixpkgs <code>switch-to-configuration-ng</code> with the reproduction: a user oneshot that sleeps, an <code>activating</code> state during the switch, system services held down. Propose one of two changes:</p>
-<ol>
-  <li>Run the user pass after the system START phase.</li>
-  <li>Bound <code>block_on_jobs</code> in the user scope, warn, and continue.</li>
-</ol>
-<p>Either protects every NixOS user, not only nebula.</p></div>
+<p>Inside the unit, stc-ng works in this order. Your output shows each step as it happens.</p>
 
-<h3>Build (P11–P13)</h3>
+<figure>
+<svg id="d-stc" class="dg" viewBox="0 0 960 470" role="img" aria-label="Inside switch-to-configuration test: pre-switch checks; stop changed system units; the root activation script with sops, /etc and the dotfiles restow; the user step that updates user units and then restarts nixos-activation.service; sysinit-reactivation.target; reload, restart and start of system units; finish. A bracket marks the window in which changed system services are stopped, and the user step is marked as where an activating user oneshot can hold the switch.">
+  <defs>
+    <marker id="ah-s" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="ah"/></marker>
+  </defs>
+  <rect class="b" x="20" y="20" width="560" height="38" rx="7"/>
+  <text x="34" y="44" class="t">pre-switch checks</text>
+  <text x="566" y="44" class="ms" text-anchor="end">● Checking switch inhibitors... done</text>
 
-<div class="proposal" id="p11"><h4>P11 · Forget cache misses sooner <span class="kind perf">performance</span></h4>
-<p><code data-wrap>nix.settings.narinfo-cache-negative-ttl = 300;</code> (instead of 3600) means an <code>nrs</code> tried before CI finished stops causing local Rust builds after five minutes, not an hour. The cost is more 404 lookups for paths that will never be cached. Measure on the next CI-then-<code>nrs</code> cycle.</p>
-<p><strong>Done 2026-10-24</strong> (<code>modules/nixos/determinate.nix</code>). It lands in <code>/etc/nix/nix.custom.conf</code>, which Determinate's <code>nix.conf</code> includes and does not override afterwards. It is nebula only: the Macs' Determinate Nix is outside nix-darwin's control (<code>nix.enable = false</code>), and their <code>nix.custom.conf</code> is empty. Measured 2026-10-24 against a throwaway HTTP binary cache on localhost. A miss was recorded, and the path was published 2&nbsp;s later. With 300, lookups stayed cached (no HTTP request) until <strong>t=303&nbsp;s</strong>, then found it. With the old 3600 it was still missing at t=343&nbsp;s, and would have stayed missing for an hour. So an <code>nrs</code> that raced CI now picks up the cache within 5 minutes.</p></div>
+  <rect class="r" x="20" y="68" width="560" height="38" rx="7"/>
+  <text x="34" y="92" class="t">stop changed system units</text>
+  <text x="566" y="92" class="ms" text-anchor="end">■ stopping …</text>
 
-<div class="proposal" id="p12"><h4>P12 · Let CI warm the cache for heavy updates <span class="kind perf">performance</span></h4>
-<p>For flake updates and fork bumps (herdr, devenv), push first and wait for <code>ci.yml</code> to push nebula's toplevel to FlakeHub Cache. Then <code>nrs</code> pulls instead of compiling. <code>nrb -- --dry-run</code> shows what would be built locally before you commit to waiting.</p></div>
+  <rect class="r" x="20" y="116" width="560" height="62" rx="7"/>
+  <text x="34" y="140" class="t">activation script, as root</text>
+  <text x="34" y="162" class="s">sops (twice) · users · /etc · dotfiles restow + Hyprland reload · …</text>
+  <text x="566" y="140" class="ms" text-anchor="end">⚿ sops … ✔ stow … ↻ reloaded hyprland</text>
 
-<div class="proposal" id="p13"><h4>P13 · Optimise the store periodically <span class="kind perf">performance</span></h4>
-<p>Replace <code>auto-optimise-store = true</code> with <code data-wrap>nix.optimise.automatic = true</code> (weekly) to take hashing and hard-linking off the write path of every build and substitution. It saves the same disk later. The gain is modest; measure a large update before and after.</p>
-<p><strong>Done 2026-10-24</strong> (<code>modules/nixos/store-optimise.nix</code>). <code>auto-optimise-store = false</code> overrides snowglobe's <code>setDefault</code>. The timer runs <code>nix-store --optimise</code> at <code>Sun 04:00</code>, persistent, after that night's <code>nix-gc</code>. A run only hashes files new since the last one, because <code>loadInodeHash</code> skips every inode already in <code>.links</code>. Measured 2026-10-24 with texliveMedium (1,437 new paths, 39,323 files, 1,551&nbsp;MiB). It substituted in 8.2&nbsp;s with deduplication off. The first <code>nix-store --optimise</code> took 3.5&nbsp;s and freed 128&nbsp;MiB by hard-linking 7,928 files. A second run, which only scans the whole 28&nbsp;GiB store, took 0.7&nbsp;s. So <code>auto-optimise-store</code> would have added about 2.8&nbsp;s, roughly a third, to that download; that cost now moves to the weekly job. Hard links save 17.2&nbsp;GiB on nebula overall.</p></div>
+  <rect class="r" x="20" y="188" width="560" height="62" rx="7"/>
+  <rect class="hl" x="15" y="183" width="570" height="72" rx="10"/>
+  <text x="34" y="212" class="t">user step, per logged-in user</text>
+  <text x="34" y="234" class="s">reload / restart / start changed user units, then wait for the jobs</text>
+  <text x="566" y="212" class="ms" text-anchor="end">● reloading user units for k</text>
 
-<h3>Boot (P14–P16)</h3>
+  <rect class="r" x="20" y="265" width="560" height="38" rx="7"/>
+  <text x="34" y="289" class="t">restart nixos-activation.service, wait</text>
+  <text x="566" y="289" class="ms" text-anchor="end">↻ restarting (user) …</text>
 
-<div class="proposal" id="p14"><h4>P14 · Static Windows entry <span class="kind perf">performance</span> <span class="kind res">resilience</span></h4>
-<pre><code>boot.loader.grub.useOSProber = false;
-boot.loader.grub.extraEntries = ''
-  menuentry "Windows" {
-    insmod part_gpt
-    insmod fat
-    search --no-floppy --fs-uuid --set=root &lt;UUID of the Windows ESP&gt;
-    chainloader /EFI/Microsoft/Boot/bootmgfw.efi
-  }
-'';</code></pre>
-<p><strong>Done 2026-10-24</strong> (<code>modules/hosts/nebula/configuration.nix</code>), with the UUID <code>B658-8653</code> of the Windows disk's ESP. The same change made nrs2's <code>boot</code> step pass <code>NIXOS_NO_CHECK=1</code>. The pre-switch checks already ran in its <code>test</code> step, and for <code>boot</code> they only print "Not checking switch inhibitors".</p>
-<p>This produces the same menu without mounting the other disk on every switch. It probably recovers most of stage 8's 2.37 s; confirm with <code>sudo time os-prober</code> first. The memory note about why GRUB came back still holds: GRUB stays, only the probing goes.</p></div>
+  <rect class="r" x="20" y="313" width="560" height="38" rx="7"/>
+  <text x="34" y="337" class="t">restart sysinit-reactivation.target</text>
 
-<div class="proposal" id="p15"><h4>P15 · Keep N generations, and refresh GRUB after GC <span class="kind res">resilience</span></h4>
-<p><strong>Done 2026-10-24, differently from the sketch below</strong> (<code>modules/nixos/generations.nix</code>; decision record <code>knowledge/decisions/generation-retention.md</code>):</p>
-<ul>
-  <li><strong>The menu is rooted instead of refreshed.</strong> Every bootloader install GC-roots each system the GRUB menu lists, from <code>extraInstallCommands</code>, right after <code>install-grub.pl</code>. So no GC can collect a listed closure, whoever runs it. There is no GC hook, no new lock user, and no swallowed failures, which were the review's objections to the hook.</li>
-  <li><strong>Retention follows boot history, not count.</strong> The system profile keeps the current boot, the previous two successful boots (from the journal: <code>init=</code> on the kernel command line, plus systemd's "Startup finished"), the newest boot on a different kernel semver (<code>MAJOR.MINOR.PATCH</code>, so rebuilds don't count), the boot default, the running system, and the previous good switch: the newest other system whose activation switch-to-configuration logged as finished, which it does only for exit 0 with every unit started. Other profiles keep the 7-day rule. <code>nix-gc</code> only collects; a <code>preStart</code> does the pruning through nix-env.</li>
-  <li><strong>nh clean was not used.</strong> In 4.4.2 it can delete a rolled-back profile's current generation; nix-env refuses to.</li>
-</ul>
-<pre><code>nix.gc.automatic = false;
-programs.nh.clean = { enable = true; extraArgs = "--keep 5 --keep-since 7d"; };
-systemd.services.nh-clean.serviceConfig.ExecStartPost =
-  "/nix/var/nix/profiles/system/bin/switch-to-configuration boot";</code></pre>
-<p><code>--keep</code> is "at least this many", combined with <code>--keep-since</code> (nh-clean). The <code>ExecStartPost</code> rewrites <code>grub.cfg</code> from the generations that survived, so GRUB can never list a collected generation, which is the June failure. The <code>nh-clean</code> unit name comes from nixpkgs' <code>programs.nh</code> module.</p></div>
+  <rect class="r" x="20" y="361" width="560" height="38" rx="7"/>
+  <text x="34" y="385" class="t">reload / restart / start system units, wait</text>
+  <text x="566" y="385" class="ms" text-anchor="end">⟳ ↻ ▶ + new units</text>
 
-<div class="proposal" id="p16"><h4>P16 · Make initrd failures debuggable <span class="kind res">resilience</span></h4>
-<p><strong>Already in place; this proposal was a mistake in the report.</strong> The <code>harden</code> profile locks root, which on 2026-06-16 left the initrd emergency shell unusable and forced a boot from external media plus <code>nixos-enter</code>. Since then, <code>modules/hosts/nebula/configuration.nix</code> has set <code data-wrap>boot.initrd.systemd.emergencyAccess = true</code>, which gives passwordless root in the initrd rescue and emergency shell only. A boot failure is already a console session, not a USB stick. A hashed password instead of passwordless is the only open choice. The root fs is unencrypted, so physical access already means full access.</p></div>
+  <rect class="o" x="20" y="409" width="560" height="38" rx="7"/>
+  <text x="34" y="433" class="t">finished switching (journal, -t nixos) · exit 0 / 4 / 100</text>
 
-<h3>Procedure (P17)</h3>
+  <path class="e" d="M300 58 V66" marker-end="url(#ah-s)"/>
+  <path class="e" d="M300 106 V114" marker-end="url(#ah-s)"/>
+  <path class="e" d="M300 178 V181" marker-end="url(#ah-s)"/>
+  <path class="e" d="M300 255 V263" marker-end="url(#ah-s)"/>
+  <path class="e" d="M300 303 V311" marker-end="url(#ah-s)"/>
+  <path class="e" d="M300 351 V359" marker-end="url(#ah-s)"/>
+  <path class="e" d="M300 399 V407" marker-end="url(#ah-s)"/>
 
-<div class="proposal" id="p17"><h4>P17 · <code>nrs-status</code> <span class="kind use">usability</span></h4>
-<p>A no-root command that prints:</p>
-<ul>
-  <li>the generation trio (booted, running, boot default) and whether they agree;</li>
-  <li>any leftover plan lists;</li>
-  <li>pending system and user jobs;</li>
-  <li>failed units;</li>
-  <li>kernel and PAM glibc drift since boot;</li>
-  <li>the age of the oldest surviving generation, which is your rollback window.</li>
-</ul>
-<p>It reuses the P3/P4 snippets and answers "is this machine in a consistent state?" in one look. That was the first question on 2026-10-24.</p>
-<p><strong>Done 2026-10-24</strong> as <code>nrs2 --status</code>. It builds nothing and needs no root. It prints everything above, and also warns when a detached <code>nrs2-switch-to-configuration.service</code> is still running. It ends with <code>✔ consistent</code>, or a count of what needs attention and exit 1. On darwin it covers the running system, the boot default and the generations. Its first run on nebula caught a real pending job: <code>helium-config-capture</code> was in its 30&nbsp;s debounce.</p></div>
+  <!-- degraded window bracket -->
+  <path class="e dn" d="M600 87 H616 V380 H600"/>
+  <text x="628" y="200" class="dtext">changed system services</text>
+  <text x="628" y="218" class="dtext">are stopped in here</text>
+  <text x="628" y="244" class="s">the user step waits on its jobs</text>
+  <text x="628" y="262" class="s">with no timeout; an activating user</text>
+  <text x="628" y="280" class="s">oneshot held nrs here on 2026-10-24</text>
+  <text x="628" y="306" class="s">guarded by: user-oneshot-check,</text>
+  <text x="628" y="324" class="s">the watchdog, nrs --plan (§6)</text>
+  <text x="628" y="60" class="s">Ctrl-C at any point: systemd-run exits 130,</text>
+  <text x="628" y="78" class="s">this unit runs on under PID 1</text>
+</svg>
+<figcaption><strong>Why the restow and Hyprland reload come early, and <code>nixos-activation</code> late.</strong> The restow is a snippet of the root activation script, which runs before stc touches any unit. <code>nixos-activation.service</code> is NixOS's per-user activation, run as you. It runs <code>system.userActivationScripts</code>, which on nebula is only <code>systemd-tmpfiles --user</code>. stc restarts it explicitly on every switch, after the user units are up to date: system, then user units, then per-user activation.</figcaption>
+</figure>
 
-<div class="callout ok">
-<p><strong>Suggested order.</strong> P1 and P8 today (four lines, the biggest drop in risk), then P7 and P3/P4. P15 and P14 at the next maintenance window. P6 when the wrapper is being reworked anyway. File P9 regardless; it costs nothing and helps everyone.</p>
+<h3 id="s-activate-darwin"><span class="stage-no as-root">5</span>Activate, darwin</h3>
+<p>The order nh used: set the profile first, then run the <strong>new</strong> generation's own <code>darwin-rebuild activate</code> under <code>sudo -H</code>. That script sets HOME, PATH and NIX_REMOTE for root, and handles any legacy <code>activate-user</code>. There's no detach: launchd has nothing like systemd-run wired in, so Ctrl-C interrupts activation as it did under nh. Because the profile is already set, a failed activation means "fix it and re-run nrs".</p>
+
+<figure>
+<svg id="d-darwin" class="dg" viewBox="0 0 960 250" role="img" aria-label="Three darwin paths. nrs: set the profile, then the new generation's darwin-rebuild activate, which runs the full activation. nrt: env -i checkActivation=1 with the store bash running activate directly, which runs preActivation and system.checks and exits ok. darwin-rebuild check, shown struck out: it exports checkActivation=1 but the activate shebang's env -i wipes it, so it performs a full activation.">
+  <defs>
+    <marker id="ah-d" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="ah"/></marker>
+    <marker id="ah-dd" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="ahd"/></marker>
+  </defs>
+  <text x="20" y="46" class="m">nrs</text>
+  <rect class="r" x="150" y="22" width="190" height="44" rx="8"/>
+  <text x="245" y="49" class="t" text-anchor="middle">set system profile</text>
+  <rect class="r" x="362" y="22" width="270" height="44" rx="8"/>
+  <text x="497" y="49" class="m" text-anchor="middle">$out/sw/bin/darwin-rebuild activate</text>
+  <rect class="r" x="650" y="22" width="290" height="44" rx="8"/>
+  <text x="795" y="42" class="t" text-anchor="middle">full activation</text>
+  <text x="795" y="58" class="s" text-anchor="middle">/etc · launchd · defaults · brew · restow · sops</text>
+  <path class="e" d="M340 44 H360" marker-end="url(#ah-d)"/>
+  <path class="e" d="M632 44 H648" marker-end="url(#ah-d)"/>
+
+  <text x="20" y="126" class="m">nrt</text>
+  <rect class="r" x="150" y="102" width="470" height="44" rx="8"/>
+  <text x="385" y="129" class="m" text-anchor="middle">sudo -H env -i checkActivation=1 &lt;store bash&gt; $out/activate</text>
+  <rect class="o" x="650" y="102" width="290" height="44" rx="8"/>
+  <text x="795" y="122" class="t" text-anchor="middle">preActivation + system.checks</text>
+  <text x="795" y="138" class="s" text-anchor="middle">then “ok”, exit 0: nothing activated</text>
+  <path class="e" d="M620 124 H648" marker-end="url(#ah-d)"/>
+
+  <text x="20" y="200" class="m" style="text-decoration: line-through">darwin-rebuild check</text>
+  <rect class="d" x="190" y="178" width="200" height="44" rx="8"/>
+  <text x="290" y="198" class="ink-s" text-anchor="middle">rebuild as root, then</text>
+  <text x="290" y="214" class="ink-s" text-anchor="middle">export checkActivation=1</text>
+  <rect class="d" x="420" y="178" width="200" height="44" rx="8"/>
+  <text x="520" y="198" class="ink-s" text-anchor="middle">#!/usr/bin/env -i &lt;bash&gt;</text>
+  <text x="520" y="214" class="ink-s" text-anchor="middle">wipes the variable</text>
+  <rect class="d" x="650" y="178" width="290" height="44" rx="8"/>
+  <text x="795" y="205" class="dtext" text-anchor="middle">full activation, profile unchanged</text>
+  <path class="e dn" d="M390 200 H418" marker-end="url(#ah-dd)"/>
+  <path class="e dn" d="M620 200 H648" marker-end="url(#ah-dd)"/>
+</svg>
+<figcaption><strong>Why <code>nrt</code> doesn't use <code>darwin-rebuild check</code>.</strong> macOS splits shebang arguments, so the activate script's <code>env -i</code> really runs and clears <code>checkActivation</code>. The check-mode exit never fires. This was proven on <code>k</code>: the old <code>sudo nrt</code> did a full activation. nrs runs the script through its own bash, the last word of the shebang. The store bash is needed because the script uses bash&nbsp;4 and <code>/bin/bash</code> is 3.2. nrs refuses outright if the script has no check-mode exit. Decision: <code>knowledge/decisions/nrs-darwin-check-mode.md</code>.</figcaption>
+</figure>
+
+<h3 id="s-boot"><span class="stage-no as-root">6</span>Boot step, NixOS</h3>
+<p>After a successful <code>test</code>, nrs makes the build the boot default: it sets the system profile (<code>nix build --profile /nix/var/nix/profiles/system</code>), then runs <code>switch-to-configuration boot</code> with <code>NIXOS_NO_CHECK=1</code>, because the pre-switch checks already ran in <code>test</code>. It skips both when GRUB's own menu says there's nothing to do. <code>nrt</code> never gets here.</p>
+
+<figure>
+<svg id="d-boot" class="dg" viewBox="0 0 960 236" role="img" aria-label="The boot-step decision: unless --boot is given, nrs checks that the profile is this build, that grub.cfg can be read under sudo, that its first init= is this build, and that every listed init= still exists. If all hold, the bootloader is untouched; any no leads to setting the profile, switch-to-configuration boot, install-grub.pl writing grub.cfg, and grub-menu-roots rooting every listed system.">
+  <defs>
+    <marker id="ah-b" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="ah"/></marker>
+  </defs>
+  <rect class="q" x="20" y="24" width="140" height="56" rx="8"/>
+  <text x="90" y="48" class="t" text-anchor="middle">--boot absent?</text>
+  <text x="90" y="68" class="s" text-anchor="middle">the usual case</text>
+  <rect class="q" x="176" y="24" width="140" height="56" rx="8"/>
+  <text x="246" y="48" class="t" text-anchor="middle">profile = build?</text>
+  <rect class="q" x="332" y="24" width="140" height="56" rx="8"/>
+  <text x="402" y="48" class="t" text-anchor="middle">grub.cfg read?</text>
+  <text x="402" y="68" class="s" text-anchor="middle">under sudo; /boot 0700</text>
+  <rect class="q" x="488" y="24" width="140" height="56" rx="8"/>
+  <text x="558" y="48" class="t" text-anchor="middle">1st init = build?</text>
+  <text x="558" y="68" class="s" text-anchor="middle">default entry first</text>
+  <rect class="q" x="644" y="24" width="140" height="56" rx="8"/>
+  <text x="714" y="48" class="t" text-anchor="middle">all init= exist?</text>
+  <text x="714" y="68" class="s" text-anchor="middle">nothing collected</text>
+  <rect class="o" x="800" y="24" width="140" height="56" rx="8"/>
+  <text x="870" y="48" class="t" text-anchor="middle">menu current</text>
+  <text x="870" y="68" class="s" text-anchor="middle">bootloader untouched</text>
+  <path class="e" d="M160 52 H174" marker-end="url(#ah-b)"/>
+  <path class="e" d="M316 52 H330" marker-end="url(#ah-b)"/>
+  <path class="e" d="M472 52 H486" marker-end="url(#ah-b)"/>
+  <path class="e" d="M628 52 H642" marker-end="url(#ah-b)"/>
+  <path class="e" d="M784 52 H798" marker-end="url(#ah-b)"/>
+  <text x="20" y="15" class="lbl">→ yes · ↓ no</text>
+  <!-- the "rewrite" bus -->
+  <path class="e" d="M90 80 V124 M246 80 V124 M402 80 V124 M558 80 V124 M714 80 V124"/>
+  <path class="e" d="M90 124 H714"/>
+  <path class="e" d="M90 124 V150" marker-end="url(#ah-b)"/>
+  <text x="104" y="118" class="lbl">no: forced</text>
+  <text x="260" y="118" class="lbl">no</text>
+  <text x="416" y="118" class="lbl">no</text>
+  <text x="572" y="118" class="lbl">no</text>
+  <text x="728" y="118" class="lbl">no</text>
+  <rect class="r" x="20" y="152" width="200" height="56" rx="8"/>
+  <text x="120" y="176" class="t" text-anchor="middle">set system profile</text>
+  <text x="120" y="196" class="s" text-anchor="middle">same path adds no generation</text>
+  <rect class="r" x="246" y="152" width="200" height="56" rx="8"/>
+  <text x="346" y="176" class="t" text-anchor="middle">stc boot</text>
+  <text x="346" y="196" class="s" text-anchor="middle">NIXOS_NO_CHECK=1</text>
+  <rect class="r" x="472" y="152" width="200" height="56" rx="8"/>
+  <text x="572" y="176" class="t" text-anchor="middle">install-grub.pl</text>
+  <text x="572" y="196" class="s" text-anchor="middle">writes grub.cfg</text>
+  <rect class="o" x="698" y="152" width="242" height="56" rx="8"/>
+  <text x="819" y="176" class="t" text-anchor="middle">grub-menu-roots</text>
+  <text x="819" y="196" class="s" text-anchor="middle">GC-root every listed system (§6)</text>
+  <path class="e" d="M220 180 H244" marker-end="url(#ah-b)"/>
+  <path class="e" d="M446 180 H470" marker-end="url(#ah-b)"/>
+  <path class="e" d="M672 180 H696" marker-end="url(#ah-b)"/>
+</svg>
+<figcaption><strong>Judged from GRUB's menu, not from a record of nrs's own.</strong> A run cut off between profile and bootloader, a menu another tool rewrote, or any GC since the menu was written all lead to a rewrite. An unreadable or unfamiliar file does too, which is the safe direction. If install-grub's entry format ever changes, the check simply rewrites every time, no worse than nh. Decision: <code>knowledge/decisions/nrs-boot-menu-check.md</code>.</figcaption>
+</figure>
+
+<h3 id="s-report"><span class="stage-no as-user">7</span>Report</h3>
+<p>Every exit ends with the state report, including failures, detaches and every mode:</p>
+<dl class="facts">
+  <dt>booted · running · boot default</dt><dd>As generations (<code>gen N</code>), or a bare store name when no generation points at the build. If running ≠ boot default, it warns that a reboot would come back on the default. darwin keeps no <code>/run/booted-system</code>, so it shows two lines.</dd>
+  <dt>generations</dt><dd><code>--status</code> only: how many there are, their range, and the oldest one's age, which is your rollback window.</dd>
+  <dt>detached unit · pending jobs</dt><dd><code>--status</code> only, NixOS: a still-running <code>nrs-switch-to-configuration</code>, and queued system and user jobs.</dd>
+  <dt>plan lists</dt><dd>NixOS: resume lists left by an interrupted switch; the next run replays them.</dd>
+  <dt>failed units</dt><dd>NixOS: system and user.</dd>
+  <dt>kernel</dt><dd>NixOS: what a reboot would change. That means version, toolchain and <code>.config</code> (the new kernel's are read from its bzImage), kernel parameters, and the extra module packages. The running kernel describes itself through <code>/proc</code>; the new one is unpacked the way <code>extract-ikconfig</code> does it.</dd>
+  <dt>PAM glibc</dt><dd>NixOS: if the glibc that linux-pam links differs from the booted system's, reboot before logging out, because ly, started at boot, can't load the new PAM modules.</dd>
+  <dt>timings</dt><dd>Per stage: build, diff, auth, plan, activate, check, profile, boot.</dd>
+</dl>
+<p><code>--dry</code> and <code>--plan</code> compare the kernel and PAM against the <strong>new build</strong>: what switching and then rebooting would change. Every other mode compares against the running system.</p>
+
+<!-- ================================================================== -->
+<h2 id="output">4. Reading the output</h2>
+
+<p>Activation output streams live through a renderer. On a terminal it gets glyphs, colour and an in-place progress line. Without one (piped, logged), the same lines print without colour or animation. Lines the renderer doesn't recognise pass through unchanged.</p>
+
+<div class="table-scroll">
+<table>
+  <colgroup><col style="width:30%"><col style="width:22%"><col></colgroup>
+  <thead><tr><th>You see</th><th>Source</th><th>Meaning</th></tr></thead>
+  <tbody>
+    <tr><td><span class="g g-red">■</span> stopping · <span class="g g-blue">⟳</span> reloading · <span class="g g-yellow">↻</span> restarting · <span class="g g-green">▶</span> starting · <span class="g g-green">+</span> new units</td><td>stc's plan</td><td>Units in each phase. <span class="g-dim">(user)</span> marks the user step. In <code>--plan</code> the same lines read "would stop", "would restart" and so on.</td></tr>
+    <tr><td><span class="g-dim">· not restarting</span></td><td>stc</td><td>Changed units with <code>restartIfChanged = false</code>, deliberately left alone.</td></tr>
+    <tr><td><span class="g-dim">● Checking …, setting up /etc, …</span></td><td>stc, activate</td><td>Progress lines, dimmed.</td></tr>
+    <tr><td><span class="g g-cyan">⠋</span> stow <span class="g-green">████</span><span class="g-dim">░░░░</span> 12/22 nvim</td><td>restow events</td><td>Live while the dotfiles restow runs; it reports NDJSON on stderr.</td></tr>
+    <tr><td><span class="g g-green">✔</span> stow 22 packages · 165 links · 8 skipped · 0.41s</td><td>restow end</td><td>The summary. <span class="g g-yellow">⚠</span> instead of ✔ means some package conflicted. Listed under it: <span class="g g-yellow">↺</span> healed links, <span class="g g-red">✗</span> conflicts with stow's own message, <span class="g g-yellow">!</span> other stow output.</td></tr>
+    <tr><td><span class="g g-magenta">↻</span> reloaded hyprland</td><td>NixOS restow</td><td>Hyprland was told to reload its config.</td></tr>
+    <tr><td><span class="g g-magenta">⚿</span> sops keys rsa → GPG … · ed25519 → age …</td><td>sops-install-secrets</td><td>It runs twice (user secrets before <code>/etc</code>, the rest after), and both runs announce the same host keys. They collapse to one line, and repeats are dropped. Secret changes show as <span class="g g-green">+</span> adding, <span class="g g-yellow">~</span> modifying and <span class="g g-red">−</span> removing; errors show in red.</td></tr>
+    <tr><td><span class="g g-cyan">⠋</span> brew 7 checked … → <span class="g g-green">✔</span> brew 10 Brewfile dependencies · 10 already installed</td><td>darwin Homebrew</td><td><code>brew bundle</code>'s one "Using" line per dependency collapses. Installs, upgrades and errors still print in full.</td></tr>
+    <tr><td><span class="g-red">red lines</span> · <span class="g-yellow">yellow lines</span></td><td>anything</td><td>Lines containing error/failed, or warning.</td></tr>
+  </tbody>
+</table>
 </div>
 
-<div class="callout">
-<p><strong>Update 2026-10-24: nh is gone and <code>nrs2</code> is now <code>nrs</code></strong>. The nh modules were removed, the package and modules were renamed (<code>pkgs/nrs.{nix,sh}</code>, <code>modules/{nixos,darwin}/nrs.nix</code>), and <code>nrb</code> and <code>nrt</code> are now <code>nrs --dry</code> and <code>nrs --test</code>. The transient unit is <code>nrs-switch-to-configuration.service</code>. Everywhere above, "nrs" means the nh-based wrapper this report analysed, and "nrs2" means the tool that replaced it.</p>
-<p><strong>Prototyped as <code>nrs2</code></strong> (2026-10-24, <code>pkgs/nrs2.{nix,sh}</code>, installed by <code>modules/{nixos,darwin}/nrs2.nix</code>) beside <code>nrs</code>, on every host. It covers P1–P4 and P6 without nh: <code>nom build</code>, <code>dix</code>, then <code>switch-to-configuration test</code> as <code>nrs2-switch-to-configuration.service</code> via <code>systemd-run --wait --verbose --output=cat</code>, then the profile and <code>boot</code>. Those last two are skipped when GRUB's menu already boots this build and lists no collected generation. nrs2 reads <code>grub.cfg</code> under its sudo to decide; <code>--boot</code> forces them.</p>
-<p>The P6 open question is settled, by testing on nebula: Ctrl-C makes <code>systemd-run</code> exit 130 while the unit runs on to completion. An interrupt therefore detaches instead of killing the switch.</p>
-<p>On the Macs it does what <code>nh darwin switch</code> does: set the profile, then run the new generation's own <code>darwin-rebuild activate</code>, with output streamed and the same state report. There is no detach on the Macs, because launchd has no <code>systemd-run</code> here.</p>
-<p>Modes:</p>
-<ul>
-  <li><code>nrs2 --dry</code> builds and diffs without root.</li>
-  <li><code>nrs2 --test</code>, which is now also <code>nrt</code> on both OSes, skips the profile and boot entry on NixOS. On darwin it runs the new build's <code>system.checks</code> by calling its <code>activate</code> in check mode directly. It does not use <code>darwin-rebuild check</code>: on macOS that one performs a full activation, because activate's <code>#!/usr/bin/env -i</code> shebang wipes <code>checkActivation</code> (<code>knowledge/decisions/nrs-darwin-check-mode.md</code>).</li>
-  <li><code>nrs2 --plan</code> previews the switch (<a href="#p10">P10</a>). On darwin it acts as <code>--dry</code>.</li>
-  <li><code>nrs2 --status</code> is the no-root consistency check (<a href="#p17">P17</a>).</li>
-</ul>
-<p>The modes are mutually exclusive. <code>--boot</code> warns wherever it does nothing.</p>
+<p>Without nrs, the restow's raw events show as JSON lines: in the boot journal, under a bare <code>nixos-rebuild</code>, or under <code>darwin-rebuild</code>. They stay greppable, for example <code>journalctl -b | grep '"stow":"conflict"'</code>. The event schema is in the header of <code>lib/stow-restow-script.nix</code>.</p>
+
+<!-- ================================================================== -->
+<h2 id="modes">5. Modes in depth</h2>
+
+<h3 id="m-test"><code>nrt</code> (<code>--test</code>)</h3>
+<p><strong>NixOS:</strong> the full activation of <a href="#s-activate-nixos">stage 5</a>, unit and detach included, but no profile and no boot entry, so a reboot returns to the boot default. Use it to try a change you aren't sure should survive a reboot. <strong>darwin:</strong> checks only, as in the figure above. nix-darwin has no "activate without making it the default".</p>
+
+<h3 id="m-plan"><code>nrs --plan</code></h3>
+<p>A dry run of the switch, after the build and diff, which changes nothing. Use it before risky updates: a systemd bump, or many unit changes.</p>
+<ol>
+  <li><code>sudo $out/bin/switch-to-configuration dry-activate</code> prints the system plan, as "would …" lines. It runs the pre-switch checks and the activation snippets that support dry activation, sops among them.</li>
+  <li><strong>The user step, which dry-activate skips.</strong> stc-ng's <code>do_system_switch</code> exits right after the system plan, before the loop that spawns the per-user pass. So nrs runs that pass itself, dry and as you: the new build's real binary, a cleared environment, <code>__NIXOS_SWITCH_TO_CONFIGURATION_PARENT_EXE</code>, <code>TOPLEVEL</code>, <code>OLD_TOPLEVEL</code> and <code>NIXOS_ACTION=dry-activate</code>. In that mode it only reads, and it writes no lists. This is stc-ng's internal interface: if it moves, nrs warns and keeps the system half.</li>
+  <li><strong>Hazards.</strong> Any unit on a "would restart" or "would start" line that is <code>activating</code> right now is named. A start job for a oneshot completes only when the run exits, and the switch waits on it. That was the 2026-10-24 hang.</li>
+</ol>
+<p>Then the report, comparing kernel and PAM against the new build, and "plan only: nothing was changed". On darwin there's no dry-activate, so <code>--plan</code> warns and acts as <code>--dry</code>. Decision: <code>knowledge/decisions/nrs-plan-user-pass.md</code>.</p>
+
+<h3 id="m-status"><code>nrs --status</code></h3>
+<p>No build and no root, so it's safe to run any time, by you or by an agent. It's the report of <a href="#s-report">stage 7</a> with the status-only checks, ending in <span class="g-green">✔ consistent</span> (exit 0) or <span class="g-yellow">⚠ N thing(s) above need attention</span> (exit 1). Real pending jobs show up, such as a Helium capture in its 30 s debounce, and count. On darwin it covers the running system, the boot default and the generations.</p>
+
+<h3 id="m-boot"><code>--boot</code></h3>
+<p>Forces the boot step even when the menu is current, for example after editing GRUB settings by hand. It has no effect with any mode, or on darwin, and says so.</p>
+
+<!-- ================================================================== -->
+<h2 id="around">6. What keeps switching safe</h2>
+
+<p>nrs is the front end. These modules carry the rest, and each closes a failure that actually happened.</p>
+
+<div class="table-scroll">
+<table>
+  <colgroup><col style="width:24%"><col style="width:46%"><col></colgroup>
+  <thead><tr><th>Guard</th><th>What it does</th><th>Where</th></tr></thead>
+  <tbody>
+    <tr><td>User-oneshot warning</td><td>An evaluation warning for any enabled user oneshot with no <code>RemainAfterExit</code>, an empty <code>wantedBy</code>, and <code>restartIfChanged</code> still true. That's the shape that held the switch on 2026-10-24.</td><td><code data-wrap>modules/nixos/user-oneshot-check.nix</code></td></tr>
+    <tr><td>Capture oneshots</td><td>Helium, Noctalia and gh capture units set <code>restartIfChanged = false</code> and <code>TimeoutStartSec = "2min"</code>. herdr-update-check is <code>Type=exec</code>.</td><td><code data-wrap>modules/hosts/nebula/users/k/</code>, <code>modules/nixos/git.nix</code></td></tr>
+    <tr><td>GRUB menu roots</td><td>Every bootloader install GC-roots each system the menu lists, in <code data-wrap>/nix/var/nix/gcroots/grub-menu</code> (root:root 0755, through <code>nix-store --add-root</code>). No GC can strand a menu entry.</td><td><code data-wrap>modules/nixos/grub-menu-roots.sh</code></td></tr>
+    <tr><td>Boot-history retention</td><td>The nightly <code>nix-gc</code> only collects. Its pre-step prunes the system profile by boot history (figure below); other profiles keep 7 days.</td><td><code data-wrap>modules/nixos/prune-generations.sh</code></td></tr>
+    <tr><td>Short negative cache</td><td><code data-wrap>narinfo-cache-negative-ttl = 300</code>. Measured: a path published 2&nbsp;s after a recorded miss was found at t=303&nbsp;s, while the old 3600 still hid it at t=343&nbsp;s.</td><td><code data-wrap>modules/nixos/determinate.nix</code></td></tr>
+    <tr><td>Weekly store optimise</td><td><code>auto-optimise-store</code> off; <code>nix-store --optimise</code> Sundays at 04:00. Measured: inline deduplication would have added 2.8&nbsp;s to an 8.2&nbsp;s download of texliveMedium.</td><td><code data-wrap>modules/nixos/store-optimise.nix</code></td></tr>
+    <tr><td>Static Windows entry</td><td>os-prober off: a fixed chainload entry, so a switch doesn't mount the other disk.</td><td><code data-wrap>modules/hosts/nebula/configuration.nix</code></td></tr>
+    <tr><td>initrd emergency access</td><td>An initrd failure drops to a usable console, not to a USB stick.</td><td><code data-wrap>modules/hosts/nebula/configuration.nix</code></td></tr>
+  </tbody>
+</table>
+</div>
+
+<figure>
+<svg id="d-retention" class="dg" viewBox="0 0 960 250" role="img" aria-label="nebula's fourteen system generations, 155 to 168, as of 2026-10-24. Kept: 155, the previous successful boot; 161, the current boot; 167, the previous good switch; 168, the boot default and running system. The ten switched-only generations are deleted by the nightly prune but stay bootable from the GRUB menu, through its GC roots, until the next switch rewrites the menu.">
+  <g>
+    <rect class="o" x="21" y="30" width="60" height="44" rx="6"/><text x="51" y="57" class="t" text-anchor="middle">155</text>
+    <rect class="d" x="87" y="30" width="60" height="44" rx="6"/><text x="117" y="57" class="ink-s" text-anchor="middle">156</text>
+    <rect class="d" x="153" y="30" width="60" height="44" rx="6"/><text x="183" y="57" class="ink-s" text-anchor="middle">157</text>
+    <rect class="d" x="219" y="30" width="60" height="44" rx="6"/><text x="249" y="57" class="ink-s" text-anchor="middle">158</text>
+    <rect class="d" x="285" y="30" width="60" height="44" rx="6"/><text x="315" y="57" class="ink-s" text-anchor="middle">159</text>
+    <rect class="d" x="351" y="30" width="60" height="44" rx="6"/><text x="381" y="57" class="ink-s" text-anchor="middle">160</text>
+    <rect class="o" x="417" y="30" width="60" height="44" rx="6"/><text x="447" y="57" class="t" text-anchor="middle">161</text>
+    <rect class="d" x="483" y="30" width="60" height="44" rx="6"/><text x="513" y="57" class="ink-s" text-anchor="middle">162</text>
+    <rect class="d" x="549" y="30" width="60" height="44" rx="6"/><text x="579" y="57" class="ink-s" text-anchor="middle">163</text>
+    <rect class="d" x="615" y="30" width="60" height="44" rx="6"/><text x="645" y="57" class="ink-s" text-anchor="middle">164</text>
+    <rect class="d" x="681" y="30" width="60" height="44" rx="6"/><text x="711" y="57" class="ink-s" text-anchor="middle">165</text>
+    <rect class="d" x="747" y="30" width="60" height="44" rx="6"/><text x="777" y="57" class="ink-s" text-anchor="middle">166</text>
+    <rect class="o" x="813" y="30" width="60" height="44" rx="6"/><text x="843" y="57" class="t" text-anchor="middle">167</text>
+    <rect class="o" x="879" y="30" width="60" height="44" rx="6"/><text x="909" y="57" class="t" text-anchor="middle">168</text>
+  </g>
+  <text x="51" y="94" class="otext" text-anchor="middle">boot −1</text>
+  <text x="447" y="94" class="otext" text-anchor="middle">current boot</text>
+  <text x="843" y="94" class="otext" text-anchor="middle">prev. good</text>
+  <text x="843" y="110" class="otext" text-anchor="middle">switch</text>
+  <text x="909" y="94" class="otext" text-anchor="middle">default</text>
+  <text x="909" y="110" class="otext" text-anchor="middle">running</text>
+  <text x="282" y="94" class="dtext" text-anchor="middle">switched only: deleted</text>
+  <text x="645" y="94" class="dtext" text-anchor="middle">switched only: deleted</text>
+
+  <rect class="b" x="21" y="132" width="918" height="40" rx="8"/>
+  <text x="36" y="157" class="ink-s">Kept: current boot · 2 previous successful boots · newest boot on another kernel semver · boot default · running · previous good switch</text>
+  <rect class="u" x="21" y="184" width="918" height="40" rx="8"/>
+  <text x="36" y="209" class="ink-s">Deleted ones stay bootable from GRUB, via their menu roots, until the next switch rewrites the menu; the GC after that frees them.</text>
+</svg>
+<figcaption><strong>The retention rule, on nebula's real generations at the time of writing.</strong> "Successful boot" means systemd logged "Startup finished" for that boot, which an emergency-mode boot never reaches. "Good switch" means stc logged <code>finished switching to system configuration</code>, which it does only for exit 0 with every unit started. Both are read from the persistent journal. If the journal can't be read, the system profile isn't pruned at all. Deletion goes through <code>nix-env</code>, which refuses to delete a current generation. Preview it with <code>prune-generations --dry 2 7 /nix/var/nix/profiles</code>. Decision: <code>knowledge/decisions/generation-retention.md</code>.</figcaption>
+</figure>
+
+<!-- ================================================================== -->
+<h2 id="trouble">7. Troubleshooting</h2>
+
+<div class="table-scroll">
+<table>
+  <colgroup><col style="width:30%"><col style="width:30%"><col></colgroup>
+  <thead><tr><th>You see</th><th>It means</th><th>Do</th></tr></thead>
+  <tbody>
+    <tr><td>Activation goes quiet; after 45 s the watchdog lists pending jobs</td><td>The switch is waiting on a job, often a user oneshot mid-run</td><td>Stop the named unit (<code>systemctl --user stop …</code>, no sudo for user units). Ctrl-C detaches safely; follow with <code data-wrap>journalctl -fu nrs-switch-to-configuration</code>.</td></tr>
+    <tr><td><code data-wrap>nrs-switch-to-configuration.service from an earlier run is still active</code></td><td>A detached activation hasn't finished</td><td>Follow it, or <code data-wrap>sudo systemctl stop nrs-switch-to-configuration</code>, then re-run.</td></tr>
+    <tr><td>exit 4, "a unit failed"</td><td>Live, but the profile and boot entry are still old</td><td><code>systemctl --failed</code>. Often a one-off race during big unit churn (systemd-machined.socket on a systemd bump); re-run nrs.</td></tr>
+    <tr><td>"running system is not the boot default"</td><td>A test, a detach, a failure, or a darwin "check" that activated</td><td>Re-run <code>nrs</code>; a reboot would come back on the default.</td></tr>
+    <tr><td>"plan lists remain" / "this run replays its plan"</td><td>A previous switch was interrupted</td><td>Expected: the next run finishes it. <code>nrs --plan</code> shows the replay first.</td></tr>
+    <tr><td>"PAM glibc changed since boot"</td><td>ly runs the boot-time glibc</td><td>Reboot before logging out, or the login will fail.</td></tr>
+    <tr><td>"a reboot changes the kernel setup"</td><td>Information: what the next boot changes</td><td>Reboot when convenient.</td></tr>
+    <tr><td>"run nrs (and nrb, nrt) without sudo"</td><td>It was run as root</td><td>Drop the <code>sudo</code>.</td></tr>
+    <tr><td><code data-wrap>evaluation warning: systemd.user.services.X: a trigger-started oneshot …</code></td><td>A unit that could hold a switch</td><td>Give it <code>restartIfChanged = false</code>, or make it <code>Type=exec</code>.</td></tr>
+    <tr><td><code>nrt</code> on a Mac fails at "Allow full disk access for remote users"</td><td>A nix-darwin check that fails over SSH</td><td>Run it in a local terminal.</td></tr>
+    <tr><td><code>--plan</code>: "the user-unit preview failed"</td><td>stc-ng's internal user-pass interface moved</td><td>The system half is still valid; update <code>plan_user_units</code> in <code>pkgs/nrs.sh</code>.</td></tr>
+  </tbody>
+</table>
 </div>
 
 <!-- ================================================================== -->
-<h2 id="sources">16. Sources</h2>
+<h2 id="learned">8. Learned behaviours &amp; workarounds</h2>
+
+<p class="muted">Dated and verified; newest first. Correct an entry in place rather than adding a contradiction.</p>
 <ul>
-  <li><strong>nh 4.4.2 source</strong> (nixpkgs <code>nh-unwrapped.src</code>):
-    <ul>
-      <li><code data-wrap>crates/nh-nixos/src/nixos.rs</code>: <code>rebuild_and_activate</code>, <code>activate_rebuilt_config</code>, <code>ESSENTIAL_FILES</code>;</li>
-      <li><code data-wrap>crates/nh-nixos/src/args.rs</code>: <code>show_activation_logs</code> / <code>NH_SHOW_ACTIVATION_LOGS</code>;</li>
-      <li><code data-wrap>crates/nh-core/src/command.rs</code>: output capture;</li>
-      <li><code data-wrap>crates/nh-core/src/checks.rs</code>: <code>NH_NO_CHECKS</code>;</li>
-      <li><code data-wrap>crates/nh-clean/src/args.rs</code>: <code>--keep</code> / <code>--keep-since</code>.</li>
-    </ul></li>
-  <li><strong>switch-to-configuration-ng</strong>, nixpkgs 3ec6363, <code data-wrap>pkgs/by-name/sw/switch-to-configuration-ng/src/main.rs</code>: <code>do_system_switch</code>, <code>do_user_switch</code>, <code>handle_modified_unit</code>, <code>block_on_jobs</code>, and the constants <code>DAEMON_RELOAD_TIMEOUT</code> and <code>DBUS_PROCESS_TIME</code>. Upstream: <a href="https://github.com/NixOS/nixpkgs/blob/master/pkgs/by-name/sw/switch-to-configuration-ng/src/main.rs">github.com/NixOS/nixpkgs/…/main.rs</a>.</li>
-  <li><strong>nixos-rebuild-ng</strong>, same nixpkgs, <code>src/nixos_rebuild/nix.py</code>: <code data-wrap>SWITCH_TO_CONFIGURATION_CMD_PREFIX</code> and <code>switch_to_configuration</code>.</li>
-  <li><strong>nebula's built system</strong>, <code data-wrap>/nix/store/w6kqz2…-nixos-system-nebula-26.11.20261023.3ec6363</code>: <code data-wrap>bin/switch-to-configuration</code>, <code>activate</code> and the pre-switch-checks script.</li>
-  <li><strong>The journal</strong> for 2026-10-24 15:26–15:53: the <code>sudo</code> COMMAND lines, <code>nixos[…]</code> markers and the user-manager unit transitions. Run duration from Atuin.</li>
-  <li><strong>Repo:</strong>
-    <ul>
-      <li><code>modules/nixos/nh.nix</code>, <code data-wrap>modules/nixos/dotfiles-stow.nix</code>;</li>
-      <li><code data-wrap>modules/hosts/nebula/{sudo-1password,configuration,herdr-update-check}.nix</code>;</li>
-      <li><code>.github/workflows/ci.yml</code>;</li>
-      <li><code data-wrap>knowledge/decisions/user-oneshots-skip-switch-restart.md</code>, <code data-wrap>knowledge/decisions/ci-github-actions.md</code>.</li>
-    </ul></li>
-  <li><strong>Measured on nebula:</strong> <code>nix eval --no-eval-cache</code> timing and RSS, a no-op <code>nix build</code> timing, <code>nix config show</code>, and <code data-wrap>systemctl show -p TimeoutStartUSec</code> for the user oneshots.</li>
+  <li><strong>2026-10-24 · <code>darwin-rebuild check</code> activates on macOS.</strong> The activate script's <code>#!/usr/bin/env -i</code> shebang wipes <code>checkActivation</code> (nix-darwin <code>bb0b90d</code>). Never use it as a dry check; <code>nrt</code> runs the check mode directly.</li>
+  <li><strong>2026-10-24 · dry-activate never shows user units.</strong> stc-ng exits before its per-user pass. <code>nrs --plan</code> runs that pass itself.</li>
+  <li><strong>2026-10-24 · The user step can hold system services down.</strong> stc-ng updates user units and waits on their jobs, with no timeout, before restarting the system units it stopped. An activating user oneshot (herdr-update-check waiting on a notification click) hung <code>nrs</code> with NetworkManager down. The guards are in §6.</li>
+  <li><strong>2026-10-24 · <code>nixos-activation.service</code> is last in the user step by design.</strong> stc restarts it explicitly on every switch, after the user units (§3).</li>
+  <li><strong>2026-10-24 · sops-install-secrets runs twice per activation,</strong> once for user secrets before <code>/etc</code> and once after. Each run announces every key, hence the collapsing in the renderer.</li>
+  <li><strong>2026-10-24 · A GC root directory must be readable by the collector.</strong> Nix treats an unreadable directory under <code>gcroots</code> as having no roots ("cannot read potential root"). Any directory under <code>gcroots</code> counts as roots, so temp sets must not linger.</li>
+  <li><strong>2026-10-24 · nh clean can delete a rolled-back profile's current generation.</strong> It removes generation links itself; nix-env refuses to. Pruning uses nix-env.</li>
+  <li><strong>2026-10-24 · Ctrl-C under <code>systemd-run --wait</code></strong> ends only systemd-run (exit 130); the unit runs on. That's what makes the NixOS detach work.</li>
 </ul>
+
+<!-- ================================================================== -->
+<h2 id="files">9. Files and decisions</h2>
+
+<div class="table-scroll">
+<table>
+  <colgroup><col style="width:38%"><col></colgroup>
+  <thead><tr><th>File</th><th>Role</th></tr></thead>
+  <tbody>
+    <tr><td><code>pkgs/nrs.sh</code></td><td>The script: guards, stages, renderer, modes, report. Plain bash, shellchecked at build time.</td></tr>
+    <tr><td><code>pkgs/nrs.nix</code>, <code>overlays/nrs.nix</code></td><td><code>writeShellApplication</code> and <code>pkgs.nrs</code>. Pinned: coreutils, dix, gawk, gnugrep, gnused, gzip, jq, nom, xz, zstd. From the system: nix, sudo, systemctl, systemd-run, scutil.</td></tr>
+    <tr><td><code>modules/nixos/nrs.nix</code>, <code>modules/darwin/nrs.nix</code></td><td>Install <code>nrs</code>, plus <code>nrb</code> and <code>nrt</code> as one-line wrappers.</td></tr>
+    <tr><td><code data-wrap>lib/stow-restow-script.nix</code></td><td>The restow and its NDJSON events (schema in the header).</td></tr>
+    <tr><td><code data-wrap>modules/nixos/generations.nix</code></td><td>Retention pre-step and GRUB menu roots.</td></tr>
+    <tr><td><code>knowledge/modules/nrs.md</code>, <code data-wrap>knowledge/packages/nrs.md</code></td><td>Catalog cards.</td></tr>
+    <tr><td><code>knowledge/decisions/</code></td><td><code>nrs-boot-menu-check</code>, <code>nrs-plan-user-pass</code>, <code>nrs-darwin-check-mode</code>, <code>generation-retention</code>, <code>stow-ndjson-activity</code>, <code data-wrap>user-oneshots-skip-switch-restart</code>.</td></tr>
+  </tbody>
+</table>
+</div>
+
+<!-- ================================================================== -->
+<h2 id="origins">10. Origins: F1–F12 and P1–P17</h2>
+
+<p>nrs grew out of an analysis of the nh-based <code>nrs</code>, in this file's previous version (<code>git show b95c62b:docs/nrs-pipeline.html</code>). Code comments and decision records still cite its numbers.</p>
+
+<div class="table-scroll">
+<table>
+  <colgroup><col style="width:7%"><col style="width:37%"><col></colgroup>
+  <thead><tr><th>#</th><th>Finding</th><th>Now</th></tr></thead>
+  <tbody>
+    <tr><td>F1</td><td>Activation output hidden by default</td><td>Streamed and rendered (§4)</td></tr>
+    <tr><td>F2</td><td>Unbounded waits inside the degraded window</td><td>Guarded, not removed: user-oneshot warning, capture timeouts, watchdog, <code>--plan</code> hazards (§3, §6)</td></tr>
+    <tr><td>F3</td><td>Activation is a child of the terminal</td><td>NixOS: transient unit, Ctrl-C detaches. darwin: unchanged.</td></tr>
+    <tr><td>F4</td><td>test, then profile, then boot</td><td>Kept; boot step skipped when the menu is current (§3)</td></tr>
+    <tr><td>F5</td><td>Resume lists replay silently</td><td>Announced before the build; shown by <code>--status</code></td></tr>
+    <tr><td>F6</td><td><code>NH_NO_CHECKS</code> set for a reason that didn't exist</td><td>Moot: nh is gone</td></tr>
+    <tr><td>F7</td><td>Dotfiles restowed inside root activation</td><td>Kept (run as you, inside it); reports as NDJSON events</td></tr>
+    <tr><td>F8</td><td>os-prober on every switch</td><td>Static Windows entry</td></tr>
+    <tr><td>F9</td><td>Age-only retention; GC doesn't rewrite grub.cfg</td><td>Boot-history retention and GRUB menu roots (§6)</td></tr>
+    <tr><td>F10</td><td>Evaluation cost and caching</td><td>Sound; unchanged</td></tr>
+    <tr><td>F11</td><td>Elevation through the 1Password agent</td><td>Sound; one <code>sudo -v</code> up front</td></tr>
+    <tr><td>F12</td><td>Post-flight checks only PAM</td><td>The state report (§3) and <code>--status</code></td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="table-scroll">
+<table>
+  <colgroup><col style="width:7%"><col style="width:37%"><col></colgroup>
+  <thead><tr><th>#</th><th>Proposal</th><th>Now</th></tr></thead>
+  <tbody>
+    <tr><td>P1</td><td>Show the activation plan</td><td>Done: streamed output</td></tr>
+    <tr><td>P2</td><td>Stall watchdog</td><td>Done: 45 s, then every 30 s</td></tr>
+    <tr><td>P3</td><td>Announce replays</td><td>Done</td></tr>
+    <tr><td>P4</td><td>Report state on every exit</td><td>Done: the state report</td></tr>
+    <tr><td>P5</td><td>Fix the <code>NH_NO_CHECKS</code> rationale</td><td>Done, then moot</td></tr>
+    <tr><td>P6</td><td>Run activation under PID 1</td><td>Done on NixOS</td></tr>
+    <tr><td>P7</td><td>Catch the hazard class at evaluation</td><td>Done: <code>user-oneshot-check</code></td></tr>
+    <tr><td>P8</td><td>Ceiling on the capture oneshots</td><td>Done: 2 min</td></tr>
+    <tr><td>P9</td><td>Take F2 upstream</td><td>Not pursued</td></tr>
+    <tr><td>P10</td><td>Preview the plan</td><td>Done: <code>nrs --plan</code>, with the user step dry-activate skips</td></tr>
+    <tr><td>P11</td><td>Forget cache misses sooner</td><td>Done and measured: 300 s</td></tr>
+    <tr><td>P12</td><td>Let CI warm the cache for heavy updates</td><td>A habit</td></tr>
+    <tr><td>P13</td><td>Optimise the store periodically</td><td>Done and measured: weekly</td></tr>
+    <tr><td>P14</td><td>Static Windows entry</td><td>Done</td></tr>
+    <tr><td>P15</td><td>Keep N generations; refresh GRUB after GC</td><td>Done differently: boot-history retention, menu roots</td></tr>
+    <tr><td>P16</td><td>Make initrd failures debuggable</td><td>Already in place</td></tr>
+    <tr><td>P17</td><td>One no-root status view</td><td>Done: <code>nrs --status</code></td></tr>
+  </tbody>
+</table>
+</div>
 
 </main>
 </body>

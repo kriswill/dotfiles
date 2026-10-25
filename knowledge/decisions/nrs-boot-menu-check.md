@@ -8,7 +8,7 @@ generated: { by: claude-code/opus-5.5, at: 2026-10-24T19:30:00-07:00 }
 sources:
   - id: nrs-pipeline
     resource: ../../docs/nrs-pipeline.html
-    title: 'docs/nrs-pipeline.html: the nrs pipeline, design interrogation and proposals'
+    title: 'docs/nrs-pipeline.html: the nrs manual (its §10 maps F1–F12 and P1–P17)'
 ---
 
 **Where:** [nrs](../modules/nrs.md) (`bootloader_current` in
@@ -71,4 +71,4 @@ a rewrite.
   (`init=` paths, default first). If that format changes, the check stops
   matching and nrs just rewrites every time: no worse than nh.
 
-[^nrs-pipeline]: docs/nrs-pipeline.html: the nrs pipeline, design interrogation and proposals
+[^nrs-pipeline]: docs/nrs-pipeline.html: the nrs manual (its §10 maps F1–F12 and P1–P17)
