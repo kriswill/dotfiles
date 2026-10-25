@@ -1285,7 +1285,7 @@ fi</code></pre>
 <!-- ================================================================== -->
 <h2 id="proposals">15. Proposals</h2>
 
-<p>Ordered by payoff per unit of effort. The kinds: <span class="kind use">usability</span>, <span class="kind res">resilience</span>, <span class="kind perf">performance</span>. All of these are proposals; none is implemented. The code is a sketch to be tested before use.</p>
+<p>Ordered by payoff per unit of effort. The kinds: <span class="kind use">usability</span>, <span class="kind res">resilience</span>, <span class="kind perf">performance</span>. The code is the original sketch to be tested before use. <strong>Status 2026-10-24:</strong> P5, P7, P8, P11 and P14 are done, and each one's block says where it lives. P1–P4 and P6 are implemented in <code>nrs2</code> (see the note at the end of this section) but not in <code>nrs</code>. P16 was already in place. The rest are still proposals.</p>
 
 <div class="table-scroll"><table>
   <colgroup><col style="width:6%"><col style="width:9%"><col style="width:41%"><col style="width:14%"><col style="width:10%"><col></colgroup>
@@ -1368,7 +1368,8 @@ exit "$status"</code></pre>
 </ul></div>
 
 <div class="proposal" id="p5"><h4>P5 · Fix the <code>NH_NO_CHECKS</code> rationale <span class="kind res">resilience</span></h4>
-<p>Either replace the comment with the true reason (skip nh's Nix-version and feature probes) or drop the variable and let those probes guard against an incompatible Nix. Dropping it costs two fast subprocesses per run.</p></div>
+<p>Either replace the comment with the true reason (skip nh's Nix-version and feature probes) or drop the variable and let those probes guard against an incompatible Nix. Dropping it costs two fast subprocesses per run.</p>
+<p><strong>Done 2026-10-24:</strong> kept the variable and corrected the comment in <code>modules/{nixos,darwin}/nh.nix</code>. In nh 4.4.2 (<code>crates/nh-core/src/checks.rs</code>) the version probe only warns (minimum 2.31.2), and the feature probe checks nix-command and flakes. Both pass on all four machines (Determinate Nix 2.35.3), so skipping them loses no safety net.</p></div>
 
 <h3>Activation (P6–P10)</h3>
 
@@ -1385,10 +1386,12 @@ exit "$status"</code></pre>
     ) "systemd.user.services.${name}: trigger-started oneshot that a switch will restart; set restartIfChanged = false (knowledge/decisions/user-oneshots-skip-switch-restart.md)"
   ) config.systemd.user.services);
 }</code></pre>
-<p>Warnings print during stage 2, before anything changes. Expect to tune the predicate: upstream-defined user units may trip it.</p></div>
+<p>Warnings print during stage 2, before anything changes. Expect to tune the predicate: upstream-defined user units may trip it.</p>
+<p><strong>Done 2026-10-24</strong> (<code>modules/nixos/user-oneshot-check.nix</code>). The predicate also skips disabled units, and accepts <code>RemainAfterExit</code> as a systemd string such as <code>"yes"</code>. No unit on nebula trips it, upstream ones included: the only other user oneshots are <code>flatpak-repo</code> and <code>nixos-activation</code>, and both start at login and stay active. It was checked by evaluating with one capture unit's <code>restartIfChanged</code> forced back on, plus a bare test oneshot. The warning named both, and passed over a test oneshot with <code>RemainAfterExit = "yes"</code>.</p></div>
 
 <div class="proposal" id="p8"><h4>P8 · Put a ceiling on the capture oneshots <span class="kind res">resilience</span></h4>
-<p>Their effective <code>TimeoutStartSec</code> is <code>infinity</code>, which was checked on nebula. <code data-wrap>serviceConfig.TimeoutStartSec = "2min"</code> on helium, noctalia and gh capture bounds any future hang, such as a git lock or an age prompt, even when something other than a switch starts them.</p></div>
+<p>Their effective <code>TimeoutStartSec</code> is <code>infinity</code>, which was checked on nebula. <code data-wrap>serviceConfig.TimeoutStartSec = "2min"</code> on helium, noctalia and gh capture bounds any future hang, such as a git lock or an age prompt, even when something other than a switch starts them.</p>
+<p><strong>Done 2026-10-24</strong> (<code>modules/hosts/nebula/users/k/{helium,noctalia}.nix</code>, <code>modules/nixos/git.nix</code>). Normal runs in the journal take 30&nbsp;s (helium) and 5&nbsp;s (noctalia), well inside the ceiling. A timeout kills the run and marks the unit failed; the path unit keeps watching.</p></div>
 
 <div class="proposal" id="p10"><h4>P10 · Preview the plan <span class="kind use">usability</span></h4>
 <p><code data-wrap>switch-to-configuration dry-activate</code> prints "would stop / restart / start the following units", including the user pass's "would restart the following user units", and changes nothing. A <code>nrp</code> helper builds with <code>nh os build</code>, then runs <code data-wrap>sudo $out/bin/switch-to-configuration dry-activate</code>. It is worth running before risky updates such as a systemd bump or many unit changes.</p></div>
@@ -1420,7 +1423,8 @@ sudo "$out/bin/switch-to-configuration" boot</code></pre>
 <h3>Build (P11–P13)</h3>
 
 <div class="proposal" id="p11"><h4>P11 · Forget cache misses sooner <span class="kind perf">performance</span></h4>
-<p><code data-wrap>nix.settings.narinfo-cache-negative-ttl = 300;</code> (instead of 3600) means an <code>nrs</code> tried before CI finished stops causing local Rust builds after five minutes, not an hour. The cost is more 404 lookups for paths that will never be cached. Measure on the next CI-then-<code>nrs</code> cycle.</p></div>
+<p><code data-wrap>nix.settings.narinfo-cache-negative-ttl = 300;</code> (instead of 3600) means an <code>nrs</code> tried before CI finished stops causing local Rust builds after five minutes, not an hour. The cost is more 404 lookups for paths that will never be cached. Measure on the next CI-then-<code>nrs</code> cycle.</p>
+<p><strong>Done 2026-10-24</strong> (<code>modules/nixos/determinate.nix</code>). It lands in <code>/etc/nix/nix.custom.conf</code>, which Determinate's <code>nix.conf</code> includes and does not override afterwards. It is nebula only: the Macs' Determinate Nix is outside nix-darwin's control (<code>nix.enable = false</code>), and their <code>nix.custom.conf</code> is empty. Not measured yet.</p></div>
 
 <div class="proposal" id="p12"><h4>P12 · Let CI warm the cache for heavy updates <span class="kind perf">performance</span></h4>
 <p>For flake updates and fork bumps (herdr, devenv), push first and wait for <code>ci.yml</code> to push nebula's toplevel to FlakeHub Cache. Then <code>nrs</code> pulls instead of compiling. <code>nrb -- --dry-run</code> shows what would be built locally before you commit to waiting.</p></div>

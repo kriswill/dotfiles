@@ -27,7 +27,9 @@
       # suppressed while the service runs); no TriggerLimit* — exceeding it
       # would fail the path unit and stop the watching. restartIfChanged =
       # false: a switch landing mid-debounce would otherwise restart the
-      # unit and block activation on the 30s sleep.
+      # unit and block activation on the 30s sleep. TimeoutStartSec: a
+      # oneshot's default is infinity; 2min leaves the 30s sleep plenty of
+      # room and still bounds a hung capture.
       systemd.user.paths.helium-config-capture = {
         wantedBy = [ "paths.target" ];
         pathConfig.PathChanged = [
@@ -42,6 +44,7 @@
         restartIfChanged = false;
         path = [ pkgs.procps ];
         serviceConfig.Type = "oneshot";
+        serviceConfig.TimeoutStartSec = "2min";
         serviceConfig.ExecStart = pkgs.writeShellScript "helium-config-capture" ''
           sleep 30
           if pgrep -x helium >/dev/null 2>&1; then

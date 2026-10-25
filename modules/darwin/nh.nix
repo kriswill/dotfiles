@@ -9,8 +9,11 @@
 #         the old `nh darwin test` / `darwin-rebuild test` subcommands no
 #         longer exist upstream)
 #
-# NH_NO_CHECKS=1 skips nh's pre-flight checks (the flake's own checks rebuild
-# all three hosts — too slow for an inner loop). Extra args pass through, e.g.
+# NH_NO_CHECKS=1 skips nh's two startup probes of the system Nix: a version
+# check that only warns (minimum 2.31.2) and the nix-command/flakes feature
+# check. Both always pass on these Macs (Determinate Nix), so this saves two
+# `nix` subprocesses and skips no real safety net (nh never runs the flake's
+# own checks). Extra args pass through, e.g.
 # `nrs -v`, `nrb --dry`. darwin-rebuild is invoked by bare name: it ships in
 # the system profile, not nixpkgs.
 {

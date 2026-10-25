@@ -10,9 +10,14 @@ generated: { by: okflight/0.4.0, at: 2026-07-03T12:00:00-07:00 }
 nh (Nix Helper) — installs the package plus the rebuild helpers as real
 executables (not shell aliases, which only exist in interactive shells). The
 nh-backed helpers (`nrs`/`nrb` on darwin; all three on nixos) export
-`NH_NO_CHECKS=1` (flake checks rebuild every host — too slow for an inner
-loop) and pass extra arguments through to nh; darwin's `nrt` bypasses nh
-entirely, passing its arguments to `darwin-rebuild check`.
+`NH_NO_CHECKS=1` and pass extra arguments through to nh; darwin's `nrt`
+bypasses nh entirely, passing its arguments to `darwin-rebuild check`.
+`NH_NO_CHECKS` only skips nh's two startup probes of the system Nix (nh
+4.4.2, `crates/nh-core/src/checks.rs`): a version check that only warns
+(minimum 2.31.2), and the nix-command/flakes feature check. Both always
+pass here (Determinate Nix 2.35.3), so skipping them saves two `nix`
+subprocesses. nh never runs the flake's checks; the old comment that said
+it did was wrong (corrected 2026-10-24).
 
 - **darwin** (nix-darwin has no programs.nh module): `nrs` (nh darwin
   switch), `nrb` (nh darwin build, no root), and `nrt` (darwin-rebuild

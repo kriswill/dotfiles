@@ -37,7 +37,7 @@ Mounted ungated on every host (see the
 auto-discovered via the
 [Dendritic module layout](../patterns/dendritic-modules.md).
 
-On nixos, `gh-config-capture` sets `restartIfChanged = false` so a switch never waits out its debounce — see [user oneshots skip switch restart](../decisions/user-oneshots-skip-switch-restart.md).
+On nixos, `gh-config-capture` sets `restartIfChanged = false` so a switch never waits out its debounce, and `TimeoutStartSec = "2min"` so a hung capture can't stay activating forever — see [user oneshots skip switch restart](../decisions/user-oneshots-skip-switch-restart.md).
 
 ## Source
 
