@@ -2,6 +2,11 @@
 
 ## 2026-10-24
 
+- **Update**: [dotfiles-stow](dotfiles-stow.md) restow speed, corrected. The
+  previous entry blamed a per-package `sudo`; measured, that is 0.03 s. The
+  cost was the self-heal's per-file subshells (~10 ms per file on macOS).
+  Batched link resolution takes the Mac from 2.55 s to 0.80 s for 21
+  packages.
 - **Update**: [dotfiles-stow](dotfiles-stow.md) runs the whole restow once as
   the user, not one `sudo -u k` per package (Mac: 2.76 s for 20 packages).
   It gains a `fold` list; darwin folds `karabiner`, so `~/.config/karabiner`

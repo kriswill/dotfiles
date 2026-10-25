@@ -31,9 +31,13 @@
 }:
 let
   skipPattern = builtins.concatStringsSep "|" skip;
-  # The restow itself runs as the user in ONE process: nothing in it needs
-  # root, and a run-as-user call per package (sudo on darwin) cost ~0.1 s
-  # each — 2.76 s for 20 packages on a Mac.
+  # The restow runs as the user in ONE process (nothing in it needs root), and
+  # it avoids a process per stowed FILE. On a Mac, where fork+exec is slow,
+  # per-link readlink/dirname/realpath subshells cost ~10 ms per file: 2.56 s
+  # for 21 packages, 875 ms of it nvim's 77 files. (Not sudo: one `sudo -u` is
+  # 0.03 s, and stow itself ~25 ms per package.) Links are now resolved with
+  # one batched readlink + realpath per package, the clock is bash's
+  # EPOCHREALTIME, and names come from parameter expansion.
   #
   # Output is an NDJSON event stream on stderr, one object per line. This runs
   # without a terminal (inside switch-to-configuration, under a systemd unit or
@@ -62,12 +66,14 @@ let
       s="''${s//$'\r'/\\r}"
       printf '"%s"' "$s"
     }
-    now_ms() { echo $(( $(${pkgs.coreutils}/bin/date +%s%N) / 1000000 )); }
+    # Milliseconds from bash's own clock into $ms: no `date` process.
+    ms_now() { ms=$(( ''${EPOCHREALTIME/[.,]/} / 1000 )); }
     if [ ! -d "${stowDir}" ]; then
       printf '{"stow":"absent","dir":%s}\n' "$(json_str "${stowDir}")" >&2
       exit 0
     fi
-    started="$(now_ms)"
+    ms_now
+    started=$ms
     fold_pkgs=" ${builtins.concatStringsSep " " fold} "
     # Canonical (symlink-resolved) stow dir. stow resolves --dir before
     # computing link targets, so the links it OWNS go through this path. A
@@ -84,7 +90,8 @@ let
     skipped=()
     for pkgdir in "${stowDir}"/*/; do
       [ -d "$pkgdir" ] || continue
-      pkg="$(${pkgs.coreutils}/bin/basename "$pkgdir")"
+      pkg="''${pkgdir%/}"
+      pkg="''${pkg##*/}"
       case "$pkg" in
         ${skipPattern}) skipped+=("$pkg") ;;
         *) todo+=("$pkg") ;;
@@ -99,8 +106,8 @@ let
     healed=0
     for pkg in "''${todo[@]}"; do
       pkgdir="${stowDir}/$pkg"
-      t0="$(now_ms)"
-      files=0
+      ms_now
+      t0=$ms
       # Self-heal: drop any target symlink that IS one of this package's files
       # but reaches it through a symlinked (non-canonical) path, so the restow
       # below recreates it canonically instead of conflict-skipping the whole
@@ -108,27 +115,45 @@ let
       # repo yet its textual target (NO symlink-follow) does not — i.e. it only
       # lands in-repo via the convenience symlink. Already-canonical links fail
       # the first test and are left untouched, so healthy packages see no churn.
-      while IFS= read -r rel; do
+      links=()
+      files=0
+      while IFS= read -r -d "" rel; do
         files=$((files + 1))
-        link="${home}/$rel"
-        [ -L "$link" ] || continue
-        raw="$(${pkgs.coreutils}/bin/readlink "$link")"
-        # Resolve the target's TEXT (no symlink-follow). An absolute target is
-        # used as-is; a relative one is joined to the link's own directory.
-        case "$raw" in
-          /*) textual="$(${pkgs.coreutils}/bin/realpath -m --no-symlinks "$raw")" ;;
-          *)  textual="$(${pkgs.coreutils}/bin/realpath -m --no-symlinks \
-                           "$(${pkgs.coreutils}/bin/dirname "$link")/$raw")" ;;
-        esac
-        case "$textual" in "$canon"/*) continue ;; esac   # already canonical
-        real="$(${pkgs.coreutils}/bin/readlink -f "$link" 2>/dev/null || true)"
-        case "$real" in
-          "$canon"/*)                                      # our file, wrong path
-            rm -f "$link"
-            healed=$((healed + 1))
-            printf '{"stow":"heal","pkg":%s,"link":%s}\n' "$(json_str "$pkg")" "$(json_str "$link")" >&2 ;;
-        esac
-      done < <(cd "$pkgdir" && ${pkgs.findutils}/bin/find . \( -type f -o -type l \) -printf '%P\n')
+        if [ -L "${home}/$rel" ]; then links+=("${home}/$rel"); fi
+      done < <(cd "$pkgdir" && ${pkgs.findutils}/bin/find . \( -type f -o -type l \) -printf '%P\0')
+      if [ "''${#links[@]}" -gt 0 ]; then
+        # Every link's raw target in one readlink. A link that vanished since
+        # the -L test would shift the pairing, so fall back to one call each.
+        mapfile -t -d "" raws < <(${pkgs.coreutils}/bin/readlink -z -- "''${links[@]}" 2>/dev/null)
+        if [ "''${#raws[@]}" -ne "''${#links[@]}" ]; then
+          raws=()
+          for link in "''${links[@]}"; do
+            raws+=("$(${pkgs.coreutils}/bin/readlink "$link" 2>/dev/null || true)")
+          done
+        fi
+        # Resolve each target's TEXT (no symlink-follow), all in one realpath.
+        # An absolute target is used as-is; a relative one is joined to the
+        # link's own directory.
+        cands=()
+        for i in "''${!links[@]}"; do
+          case "''${raws[i]}" in
+            /*) cands+=("''${raws[i]}") ;;
+            *) cands+=("''${links[i]%/*}/''${raws[i]}") ;;
+          esac
+        done
+        mapfile -t -d "" textuals < <(${pkgs.coreutils}/bin/realpath -z -m --no-symlinks -- "''${cands[@]}")
+        for i in "''${!links[@]}"; do
+          case "''${textuals[i]:-}" in "$canon"/*) continue ;; esac # already canonical
+          real="$(${pkgs.coreutils}/bin/readlink -f "''${links[i]}" 2>/dev/null || true)"
+          case "$real" in
+            "$canon"/*) # our file, wrong path
+              rm -f "''${links[i]}"
+              healed=$((healed + 1))
+              printf '{"stow":"heal","pkg":%s,"link":%s}\n' "$(json_str "$pkg")" "$(json_str "''${links[i]}")" >&2
+              ;;
+          esac
+        done
+      fi
       # --no-folding keeps ~/.config/<app> a real dir (only files symlinked),
       # so app-generated siblings don't leak into the repo — except for the
       # `fold` packages, whose apps need the directory itself linked.
@@ -149,16 +174,19 @@ let
         ok=$((ok + 1))
         note=""
         if [ -n "$out" ]; then note=",\"msg\":$(json_str "$out")"; fi
+        ms_now
         printf '{"stow":"ok","pkg":%s,"files":%d,"ms":%d%s}\n' \
-          "$(json_str "$pkg")" "$files" "$(( $(now_ms) - t0 ))" "$note" >&2
+          "$(json_str "$pkg")" "$files" "$((ms - t0))" "$note" >&2
       else
         conflicts=$((conflicts + 1))
+        ms_now
         printf '{"stow":"conflict","pkg":%s,"ms":%d,"msg":%s}\n' \
-          "$(json_str "$pkg")" "$(( $(now_ms) - t0 ))" "$(json_str "$out")" >&2
+          "$(json_str "$pkg")" "$((ms - t0))" "$(json_str "$out")" >&2
       fi
     done
+    ms_now
     printf '{"stow":"end","ok":%d,"conflicts":%d,"healed":%d,"skipped":%d,"ms":%d}\n' \
-      "$ok" "$conflicts" "$healed" "''${#skipped[@]}" "$(( $(now_ms) - started ))" >&2
+      "$ok" "$conflicts" "$healed" "''${#skipped[@]}" "$((ms - started))" >&2
   '';
 in
 ''

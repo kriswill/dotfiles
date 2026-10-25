@@ -33,9 +33,14 @@ hard-won lesson from the June-06 bootloader incident (manual below).
 ## Twin differences
 
 Both classes consume the same builder with different arguments. The builder
-puts the whole restow in one `writeShellScript` that `runAsUser` runs once.
-Nothing in it needs root, and the old per-package `sudo` on the Macs cost
-~0.1 s each: 2.76 s for 20 packages. A restow that dies is reported as a
+puts the whole restow in one `writeShellScript` that `runAsUser` runs once
+(nothing in it needs root). The Mac's slow restow (2.55 s for 21 packages)
+was not the per-package `sudo`, which costs 0.03 s, but the self-heal's
+per-file `readlink`/`dirname`/`realpath` subshells, about 10 ms per stowed
+file on macOS (nvim's 77 files: 875 ms). Links are now resolved with one
+batched `readlink -z` and `realpath -z` per package, and the clock is bash's
+`EPOCHREALTIME`. Measured on the Mac against the same home: 2.55 s → 0.80 s
+(nvim 54 ms). A restow that dies is reported as a
 `failed` event, never fatal to activation. Darwin: `home=/Users/k`,
 `runAsUser = sudo -u k --set-home`, `fold = [ "karabiner" ]` (stowed without
 `--no-folding`, so `~/.config/karabiner` is one directory link, as
