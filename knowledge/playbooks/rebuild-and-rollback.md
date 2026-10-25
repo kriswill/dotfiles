@@ -13,7 +13,7 @@ The `nr*` helpers exist on every host of both OSes:
 ```sh
 nrs             # apply: nh darwin switch (Macs) / nh os switch (nebula); sudo at activation
 nrb             # build only, no root — safe anywhere
-nrt             # darwin: build + run system.checks, no activation; nixos: activate without a bootloader entry
+nrt             # nrs2 --test. darwin: build + run system.checks, no activation; nixos: activate without a bootloader entry
 ```
 
 Raw invocations and evaluation checks:

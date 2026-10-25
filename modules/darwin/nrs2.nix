@@ -8,10 +8,16 @@
 # here: that rides on systemd-run, which the NixOS twin
 # (modules/nixos/nrs2.nix) has and launchd does not. The tool is
 # pkgs/nrs2.{nix,sh}. Why: docs/nrs-pipeline.html (§14–15).
+#
+# nrt is `nrs2 --test`: build, then the new generation's system.checks with
+# nothing activated.
 {
   flake.modules.darwin.nrs2 =
-    { pkgs, ... }:
+    { lib, pkgs, ... }:
     {
-      environment.systemPackages = [ pkgs.nrs2 ];
+      environment.systemPackages = [
+        pkgs.nrs2
+        (pkgs.writeShellScriptBin "nrt" ''exec ${lib.getExe pkgs.nrs2} --test "$@"'')
+      ];
     };
 }

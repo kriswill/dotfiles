@@ -5,17 +5,17 @@
 #
 #   nrs — build + activate            (nh darwin switch; sudo at activation)
 #   nrb — build only, no root needed  (nh darwin build)
-#   nrt — build + run system.checks without activating (darwin-rebuild check;
-#         the old `nh darwin test` / `darwin-rebuild test` subcommands no
-#         longer exist upstream)
+#
+# nrt (build + system.checks, no activation) moved to modules/darwin/nrs2.nix
+# as `nrs2 --test`. Its old form, a bare `darwin-rebuild check`, was refused
+# without root, and under sudo it performs a full activation.
 #
 # NH_NO_CHECKS=1 skips nh's two startup probes of the system Nix: a version
 # check that only warns (minimum 2.31.2) and the nix-command/flakes feature
 # check. Both always pass on these Macs (Determinate Nix), so this saves two
 # `nix` subprocesses and skips no real safety net (nh never runs the flake's
 # own checks). Extra args pass through, e.g.
-# `nrs -v`, `nrb --dry`. darwin-rebuild is invoked by bare name: it ships in
-# the system profile, not nixpkgs.
+# `nrs -v`, `nrb --dry`.
 {
   flake.modules.darwin.nh =
     { lib, pkgs, ... }:
@@ -27,16 +27,12 @@
         pkgs.writeShellScriptBin name ''
           exec env NH_NO_CHECKS=1 ${nh} darwin ${subcommand} "${flakeDir}" "$@"
         '';
-      nrt = pkgs.writeShellScriptBin "nrt" ''
-        exec darwin-rebuild check --flake "${flakeDir}" "$@"
-      '';
     in
     {
       environment.systemPackages = [
         pkgs.nh
         (mkNhHelper "nrs" "switch")
         (mkNhHelper "nrb" "build")
-        nrt
       ];
     };
 }

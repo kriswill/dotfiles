@@ -8,10 +8,16 @@
 # machine's switch state with no build and no root. The tool is
 # pkgs/nrs2.{nix,sh}, shared with the darwin
 # twin (modules/darwin/nrs2.nix). Why: docs/nrs-pipeline.html (§14–15).
+#
+# nrt is `nrs2 --test`: build, then activate without the profile or a boot
+# entry.
 {
   flake.modules.nixos.nrs2 =
-    { pkgs, ... }:
+    { lib, pkgs, ... }:
     {
-      environment.systemPackages = [ pkgs.nrs2 ];
+      environment.systemPackages = [
+        pkgs.nrs2
+        (pkgs.writeShellScriptBin "nrt" ''exec ${lib.getExe pkgs.nrs2} --test "$@"'')
+      ];
     };
 }

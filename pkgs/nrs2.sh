@@ -30,8 +30,9 @@
 #   nrs2 [--dry | --test | --plan] [--boot] [nix build args…]
 #   nrs2 --status
 #     --dry     build, diff and validate only; no root (like nrb)
-#     --test    NixOS: activate without touching the profile or GRUB (like nrt)
-#               darwin: darwin-rebuild check — run system.checks, no activation
+#     --test    NixOS: activate without touching the profile or GRUB
+#               darwin: run the new generation's system.checks (its activate
+#               in check mode), no activation. `nrt` is `nrs2 --test`.
 #     --plan    NixOS: build, then preview the switch and change nothing:
 #               switch-to-configuration dry-activate for the system units
 #               (root), plus its user pass run dry as you, which dry-activate
@@ -831,15 +832,31 @@ plan_nixos() {
 # darwin-rebuild (it sets HOME, PATH and NIX_REMOTE for root and handles any
 # legacy activate-user). Activation is root-only in current nix-darwin.
 activate_darwin() {
-  local rc
+  local rc shell
   if [ "$mode" = test ]; then
-    step "checking: darwin-rebuild check (system.checks, no activation)"
+    # Not `darwin-rebuild check`: it rebuilds from the flake as root, then runs
+    # `checkActivation=1 activate`. activate's shebang is
+    # `#!/usr/bin/env -i <bash>`, and macOS splits shebang arguments, so env -i
+    # wipes checkActivation and the "check" runs a full activation (checked
+    # against nix-darwin bb0b90d). Instead, run the new build's activate in
+    # check mode directly: through its own bash, so the shebang is never
+    # involved, and under env -i as the shebang intends, with only
+    # checkActivation=1 set. It runs the preActivation snippets and
+    # system.checks, then exits "ok". Refuse if the script has no check-mode
+    # exit, rather than risk a real activation.
+    shell="$(head -1 "$out/activate")"
+    shell="${shell##* }"
+    if [ ! -x "$shell" ] || ! grep -q 'checkActivation:-0}" -eq 1' "$out/activate"; then
+      fail "$out/activate has no check mode this script recognizes; refusing to run it"
+      exit 1
+    fi
+    step "checking: the new generation's system.checks (activate in check mode; nothing is activated)"
     set +e
-    sudo -H "$out/sw/bin/darwin-rebuild" check --flake "$flake#$host" 2>&1 | render_activity
+    sudo -H /usr/bin/env -i checkActivation=1 "$shell" "$out/activate" 2>&1 | render_activity
     rc=${PIPESTATUS[0]}
     set -e
     lap check
-    if [ "$rc" -ne 0 ]; then fail "darwin-rebuild check failed (exit $rc)"; report; exit "$rc"; fi
+    if [ "$rc" -ne 0 ]; then fail "system.checks failed (exit $rc)"; report; exit "$rc"; fi
     return
   fi
 

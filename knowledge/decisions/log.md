@@ -2,6 +2,11 @@
 
 ## 2026-10-24
 
+- **Creation**: [nrs2-darwin-check-mode](nrs2-darwin-check-mode.md). On
+  macOS `darwin-rebuild check` performs a full activation, because the
+  activate shebang's `env -i` wipes `checkActivation`. `nrs2 --test`, and
+  `nrt` with it, runs activate's check mode directly and refuses a script
+  without one.
 - **Creation**: [generation-retention](generation-retention.md). The system
   profile is retained by boot history read from the journal; other profiles
   keep 7 days. GRUB's menu is GC-rooted at each bootloader install, which

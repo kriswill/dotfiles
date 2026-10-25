@@ -4,7 +4,9 @@
 #
 #   nrs — build + activate                      (nh os switch)
 #   nrb — build only, no root needed            (nh os build)
-#   nrt — activate without a bootloader entry   (nh os test)
+#
+# nrt (activate without a bootloader entry) moved to modules/nixos/nrs2.nix
+# as `nrs2 --test`, the same on both OSes.
 #
 # NH_NO_CHECKS=1 skips nh's two startup probes of the system Nix: a version
 # check that only warns (minimum 2.31.2) and the nix-command/flakes feature
@@ -43,7 +45,6 @@
         pkgs.nh
         (mkNhHelper "nrs" "switch")
         (mkNhHelper "nrb" "build")
-        (mkNhHelper "nrt" "test")
       ];
     };
 }
