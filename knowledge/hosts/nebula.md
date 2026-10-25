@@ -35,7 +35,8 @@ load-bearing fix is the MSI BIOS setting `Wake Up Event By = OS` (a
 non-declarative host fact invisible to the flake and lost on a CMOS reset);
 [docs/bootloader-issues-jun-06.md](../../docs/bootloader-issues-jun-06.md) —
 the June-2026 unbootable-generations incident and the deliberate return to
-GRUB+os-prober for the Windows dual-boot; and
+GRUB for the Windows dual-boot (os-prober, replaced by a static chainload
+entry on 2026-10-24); and
 [docs/hdr-hyprland-june-2026.md](../../docs/hdr-hyprland-june-2026.md) — the
 verified HDR state on the OLED under Hyprland/NVIDIA, superseding the
 historical niri-era

@@ -18,8 +18,8 @@ on first access.
 Read-only is deliberate: it avoids any corruption risk and still mounts a
 volume left "dirty" by Windows Fast Startup / hibernation — good enough for
 copying files off Windows. Go read-write only after disabling Fast Startup in
-Windows. (This is the same Windows install that drives the GRUB os-prober
-dual-boot decision in [configuration](configuration.md).)
+Windows. (This is the same Windows install that the static GRUB chainload
+entry in [configuration](configuration.md) boots.)
 
 Host-specific file for [nebula](../hosts/nebula.md) — merged straight into
 that host's configuration per the

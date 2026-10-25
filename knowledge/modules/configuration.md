@@ -1,7 +1,7 @@
 ---
 type: NixOS Module
 title: Configuration
-description: 'Nebula''s baseline system config — locale/timezone, snowglobe-factory profile toggles, NVIDIA production driver, GRUB dual-boot via os-prober, initrd emergency access, sops-decrypted SSH host keys, and the host''s package/program selections.'
+description: 'Nebula''s baseline system config — locale/timezone, snowglobe-factory profile toggles, NVIDIA production driver, GRUB dual-boot with a static Windows chainload entry, initrd emergency access, sops-decrypted SSH host keys, and the host''s package/program selections.'
 resource: modules/hosts/nebula/configuration.nix
 tags: [nixos-module, host-specific]
 generated: { by: okflight/0.4.0, at: 2026-07-03T12:00:00-07:00 }
@@ -27,10 +27,13 @@ warrant its own file:
   both landed during the HDR campaign (see the manual below).
 - **Session:** `services.displayManager.defaultSession = "hyprland-uwsm"`,
   the session provided by [hyprland](hyprland.md)'s `withUWSM`.
-- **Boot:** GRUB dual-boot via `boot.loader.grub.useOSProber = true` —
-  Windows lives on a separate disk/ESP, which is why nebula stays on
-  snowglobe's GRUB rather than systemd-boot (which only lists entries on its
-  own ESP). `gfxmodeEfi = "3440x1440x32"` + `gfxpayloadEfi = "keep"` run the
+- **Boot:** GRUB dual-boot. Windows lives on a separate disk/ESP, which is
+  why nebula stays on snowglobe's GRUB rather than systemd-boot (which only
+  lists entries on its own ESP). Since 2026-10-24 Windows comes from a static
+  `extraEntries` chainload (ESP UUID `B658-8653`, `mkBefore` so it precedes
+  snowglobe's extra entries) instead of `useOSProber`. That stops os-prober
+  from rescanning and root-mounting the other disk on every rebuild, and
+  removes its `lsblk` noise. `gfxmodeEfi = "3440x1440x32"` + `gfxpayloadEfi = "keep"` run the
   menu and early boot at the panel's native mode.
   `boot.initrd.systemd.emergencyAccess = true`: the harden profile locks the
   root account, so when a GC'd generation selected in GRUB dropped stage-1 to

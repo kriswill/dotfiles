@@ -1440,6 +1440,7 @@ boot.loader.grub.extraEntries = ''
     chainloader /EFI/Microsoft/Boot/bootmgfw.efi
   }
 '';</code></pre>
+<p><strong>Done 2026-10-24</strong> (<code>modules/hosts/nebula/configuration.nix</code>), with the UUID <code>B658-8653</code> of the Windows disk's ESP. The same change made nrs2's <code>boot</code> step pass <code>NIXOS_NO_CHECK=1</code>. The pre-switch checks already ran in its <code>test</code> step, and for <code>boot</code> they only print "Not checking switch inhibitors".</p>
 <p>This produces the same menu without mounting the other disk on every switch. It probably recovers most of stage 8's 2.37 s; confirm with <code>sudo time os-prober</code> first. The memory note about why GRUB came back still holds: GRUB stays, only the probing goes.</p></div>
 
 <div class="proposal" id="p15"><h4>P15 · Keep N generations, and refresh GRUB after GC <span class="kind res">resilience</span></h4>
