@@ -2,6 +2,10 @@
 
 ## 2026-10-24
 
+- **Creation**: [nrs2-boot-menu-check](nrs2-boot-menu-check.md). nrs2 skips
+  the boot step only when `grub.cfg`, read under sudo, already boots the
+  build and lists no collected generation. A user-local record plus a GC hook
+  was tried first and rejected after review.
 - **Creation**: [stow-ndjson-activity](stow-ndjson-activity.md). The
   restow emits NDJSON events instead of prose because it never has a
   terminal (a systemd unit, darwin-rebuild, boot; not launchd on macOS), and
