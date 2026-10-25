@@ -72,6 +72,14 @@ warn() {
 }
 fail() { printf '%serror:%s %s\n' "$RED" "$NC" "$*" >&2; }
 
+# nrs2 builds as you and asks sudo for the root steps itself. Under sudo it
+# would build as root (macOS keeps $HOME, so nix warns that it isn't root's)
+# and resolve the flake from whatever $HOME sudo left.
+if [ "$(id -u)" -eq 0 ]; then
+  fail "run nrs2 (and nrt) without sudo: it builds as you and asks for sudo itself for the root steps"
+  exit 2
+fi
+
 mode='switch'
 force_boot=0
 while [ $# -gt 0 ]; do

@@ -114,6 +114,11 @@ in red.
   activate's `#!/usr/bin/env -i` shebang wipes `checkActivation` on macOS,
   performs a full activation. nrs2 refuses if the script has no check-mode
   exit ([decision](../decisions/nrs2-darwin-check-mode.md)).
+- **Never under sudo:** nrs2 refuses to run as root (exit 2). It builds as
+  you and asks sudo for the root steps itself. Under sudo it would build as
+  root, with nix warning about the kept `$HOME` on macOS, and resolve the
+  flake from whatever `$HOME` sudo left. This was found when `sudo nrt`, a
+  habit from the old root-requiring nrt, ran the new one on `k`.
 - **`nrt` is `nrs2 --test`** on both OSes, installed by these modules. It
   used to be nh's (`nh os test`) and, on darwin, a bare
   `darwin-rebuild check` that nix-darwin refused without root.

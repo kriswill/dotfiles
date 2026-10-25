@@ -8,7 +8,9 @@
 - **Update**: `nrt` is `nrs2 --test` on both OSes, moved from [nh](nh.md) to
   [nrs2](nrs2.md). nrs2's darwin `--test` runs activate's check mode
   directly, because `darwin-rebuild check` performs a full activation on
-  macOS ([decision](../decisions/nrs2-darwin-check-mode.md)).
+  macOS ([decision](../decisions/nrs2-darwin-check-mode.md)). Confirmed on
+  `k`: the old `sudo nrt` activated the new build, while the new one printed
+  `ok` and changed nothing. [nrs2](nrs2.md) now refuses to run under sudo.
 - **Creation**: [generations](generations.md) (report P15). `nix-gc` becomes
   collect-only behind a prune step. The system profile keeps:
   - the current boot and the two before it (from the journal);
