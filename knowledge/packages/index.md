@@ -29,4 +29,3 @@ flake consumes via relative-path inputs.
 * [System Update Report](system-update-report.md) - HTML "what changed" page after a rebuild: nvd diff of the booted (NixOS) or previous (darwin) generation vs current, plus the latest flake.lock commit parsed into a flake-input from/to table.
 * [Tomato](tomato.md) - CLI to get/set TOML values preserving comments and formatting.
 * [Wowup](wowup.md) - WowUp-CF (the CurseForge fork of WowUp), packaged from the upstream AppImage (github.com/WowUp/WowUp.CF releases).
-* [Xpad Noone](xpad-noone.md) - TEMPORARY — nixpkgs now signs every out-of-tree kernel module with kmodigest during `make modules_install`, and the module aggregator (kmod/aggregator.nix) cats a `<module>.ko.cer` for each external module into modules.cer.
