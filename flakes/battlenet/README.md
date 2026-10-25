@@ -202,7 +202,7 @@ WoW's periodic exceptions.
 
   programs.battlenet = {
     enable = true;
-    # prefix = "Games/battlenet";          # default; relative = under $HOME
+    # prefix = "Games/battlenet";          # default null: ~/.local/share/battlenet; relative = under $HOME
     # proton = pkgs.proton-ge-bin;          # default
     # locale = "enUS";                      # installer language
     # icon = "/path/to/icon.png";           # default: applications-games
@@ -212,12 +212,40 @@ WoW's periodic exceptions.
 ```
 
 `prefix` is the compat data directory (`STEAM_COMPAT_DATA_PATH`); the Wine
-prefix is its `pfx/`. To reuse an umu prefix, point at its `pfx` directory:
+prefix is its `pfx/`. By default it's `$XDG_DATA_HOME/battlenet`
+(`~/.local/share/battlenet`), resolved per user at run time, and outside
+anything Steam manages. To reuse an umu prefix, point at its `pfx` directory:
 umu uses the prefix as its own compat data directory and leaves a `pfx -> .`
 link in it, so `$prefix/pfx` still resolves. Don't run the umu launcher and
 this one on the prefix at the same time: `battlenet` refuses while umu's
 wineserver is up. `programs.battlenet.package` is the launcher built from
 these options (read-only).
+
+## Moving a prefix out of Steam
+
+A prefix Steam or umu created can move to the default location, so Steam
+can't remove or reset it. Battle.net's and WoW's settings use `C:\` paths, so
+nothing inside needs rewriting. Two things do need fixing:
+
+- **Layout.** umu uses the Wine prefix as its own compat data directory and
+  leaves a `pfx -> .` link in it. Move that directory to
+  `~/.local/share/battlenet/pfx` and delete the `pfx` link. Move Proton's
+  `version`, `config_info`, `tracked_files`, `shadercache` and
+  `gstreamer-1.0` up next to `pfx/`, and delete `pfx.lock`.
+- **Links into Steam's Proton.** A prefix Valve's Proton set up can still
+  contain links into `steamapps/common/Proton …` that GE-Proton's relink
+  never replaces. Proton relinks only what's in its `default_pfx`, and these
+  aren't: the .NET placeholders wine-mono added under `Microsoft.NET/`, and
+  `winegstreamer.dll`, which GE-Proton doesn't ship. Replace each placeholder
+  with a copy of GE-Proton's same-named file. Wine loads its own built-in
+  for such placeholders, so a copy survives GE-Proton updates. Delete the
+  `winegstreamer.dll` links.
+
+  `find ~/.local/share/battlenet -type l -lname '*steamapps*'` should then
+  find nothing.
+
+Stop everything in the prefix first. Within one filesystem the move is a
+rename, however large the WoW install.
 
 ## Files
 

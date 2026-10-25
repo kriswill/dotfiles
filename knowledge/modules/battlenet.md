@@ -20,9 +20,11 @@ Options under `programs.battlenet`:
 
 - `enable` adds the launcher (`bin/battlenet`, `battlenet.desktop`) to
   `environment.systemPackages`.
-- `prefix` (default `Games/battlenet`) is the compat data directory
-  (`STEAM_COMPAT_DATA_PATH`); the Wine prefix is its `pfx/`. A relative path
-  is under each user's home. An umu prefix works if you point at its `pfx`
+- `prefix` is the compat data directory (`STEAM_COMPAT_DATA_PATH`); the Wine
+  prefix is its `pfx/`. The default is `null`, meaning
+  `$XDG_DATA_HOME/battlenet` (`~/.local/share/battlenet`), resolved per user
+  at run time and outside anything Steam manages. It was `Games/battlenet`
+  until 2026-10-25. A relative path is under each user's home. An umu prefix works if you point at its `pfx`
   directory, because umu leaves a `pfx -> .` link in it.
 - `proton` (default `pkgs.proton-ge-bin`): a package with a `steamcompattool`
   output, or a package holding `proton`.

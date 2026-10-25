@@ -20,11 +20,12 @@
   runtimeShell,
   # Absolute path to your WoW install dir (the folder that contains `_retail_`).
   # Set null to wire nothing up and add the WoW folder by hand in the GUI.
-  # Default: WoW lives inside the Steam/Proton prefix shared with Battle.net
-  # (compatdata 3082075026); change here if the install moves. The default lives
-  # in this file (not the call sites) so the overlay and the packages output
-  # stay in sync.
-  wowPath ? "/home/k/.local/share/Steam/steamapps/compatdata/3082075026/pfx/drive_c/Program Files (x86)/World of Warcraft",
+  # Default: WoW lives in the battlenet launcher's prefix
+  # (~/.local/share/battlenet, moved out of Steam's compatdata 3082075026 on
+  # 2026-10-25); change here if the install moves. The default lives in this
+  # file (not the call sites) so the overlay and the packages output stay in
+  # sync.
+  wowPath ? "/home/k/.local/share/battlenet/pfx/drive_c/Program Files (x86)/World of Warcraft",
 }:
 let
   pname = "wowup-cf";

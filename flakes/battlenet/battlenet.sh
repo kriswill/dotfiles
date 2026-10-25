@@ -40,6 +40,7 @@ EOF
 }
 
 prefix=${BATTLENET_PREFIX:-$BATTLENET_DEFAULT_PREFIX}
+[[ -n $prefix ]] || prefix=${XDG_DATA_HOME:-$HOME/.local/share}/battlenet
 [[ $prefix == /* ]] || prefix=$HOME/$prefix
 export BATTLENET_PREFIX=$prefix
 exe="$prefix/pfx/drive_c/Program Files (x86)/Battle.net/Battle.net.exe"

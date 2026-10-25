@@ -24,15 +24,17 @@ in
     };
 
     prefix = lib.mkOption {
-      type = lib.types.str;
-      default = "Games/battlenet";
-      example = ".local/share/Steam/steamapps/compatdata/3082075026/pfx";
+      type = lib.types.nullOr lib.types.str;
+      default = null;
+      example = "Games/battlenet";
       description = ''
         Compat data directory (Proton's `STEAM_COMPAT_DATA_PATH`); the Wine
-        prefix is its `pfx/`. A relative path is under each user's home.
-        Proton creates the directory on first run, and `BATTLENET_PREFIX`
-        overrides it for one run. An umu prefix works too: point at its `pfx`
-        directory, since umu leaves a `pfx -> .` link inside it.
+        prefix is its `pfx/`. `null` means `$XDG_DATA_HOME/battlenet`
+        (`~/.local/share/battlenet`), resolved per user at run time; a
+        relative path is under each user's home. Proton creates the directory
+        on first run, and `BATTLENET_PREFIX` overrides it for one run. An umu
+        prefix works too: point at its `pfx` directory, since umu leaves a
+        `pfx -> .` link inside it.
       '';
     };
 
