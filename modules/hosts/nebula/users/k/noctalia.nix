@@ -102,6 +102,7 @@
       # triggers are suppressed while the service runs); no TriggerLimit* —
       # exceeding it would fail the path unit and stop the watching.
       # restartIfChanged = false: don't make a switch wait out the sleep.
+      # TimeoutStartSec: a oneshot's default is infinity; bound a hung capture.
       systemd.user.paths.noctalia-config-capture = {
         wantedBy = [ "paths.target" ];
         pathConfig.PathChanged = "%h/.local/state/noctalia/settings.toml";
@@ -109,6 +110,7 @@
       systemd.user.services.noctalia-config-capture = {
         restartIfChanged = false;
         serviceConfig.Type = "oneshot";
+        serviceConfig.TimeoutStartSec = "2min";
         serviceConfig.ExecStart = pkgs.writeShellScript "noctalia-config-capture" ''
           sleep 5
           exec ${lib.getExe pkgs.noctalia-config} capture

@@ -17,7 +17,8 @@ sources:
 **Where:** [herdr-update-check](../modules/herdr-update-check.md),
 [users-k-helium](../modules/users-k-helium.md),
 [users-k-noctalia](../modules/users-k-noctalia.md),
-[git](../modules/git.md); felt through [nh](../modules/nh.md)'s `nrs`.
+[git](../modules/git.md); felt through [nh](../modules/nh.md)'s `nrs`;
+enforced by [user-oneshot-check](../modules/user-oneshot-check.md).
 
 ## Context
 
@@ -56,13 +57,24 @@ shape on a smaller scale. A switch that lands mid-debounce waits out the sleep.
   switch then lists them under "NOT restarting".[^restart-if-changed-option]
   An in-flight capture finishes on the old script; the next path trigger
   uses the new one.
+- The same three also set `TimeoutStartSec = "2min"` (added 2026-10-24
+  evening). A oneshot's default is `infinity`, so a capture hung on a git
+  lock or an age prompt would stay `activating` forever, whoever started it.
+  Normal runs in the journal take 30 s (helium) and 5 s (noctalia); gh's
+  sleeps 5 s like noctalia's. When the timeout
+  fires, the run is killed and the unit is marked failed, but the path unit
+  keeps watching; this was verified with a transient path and service pair.
 
 ## Consequences
 
 - Rule for new user units: a oneshot that can stay `activating` for more
   than a moment (sleeps, network waits, waiting on the user) either sets
   `restartIfChanged = false` or is not a oneshot. Otherwise every switch that
-  changes it can stall with system services down.
+  changes it can stall with system services down. Since 2026-10-24
+  [user-oneshot-check](../modules/user-oneshot-check.md) enforces this at
+  evaluation. It warns for any enabled user oneshot that has no
+  `RemainAfterExit`, no `wantedBy`, and a `restartIfChanged` that is still
+  true.
 - Recovery after an interrupted switch: `systemctl --user list-jobs` shows
   the blocking job. Stop that unit, then re-run `nrs`, which replays the
   leftover lists and brings the stopped system units back.

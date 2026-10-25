@@ -14,7 +14,13 @@ Universal within the nixos class (always-on: the imported determinate module's
 `nixosModules.default` and adds the install.determinate.systems substituter +
 FlakeHub cache key declaratively, plus a `nix.registry.nixpkgs.flake` pin to
 this flake's own nixpkgs (otherwise determinate pins the registry to FlakeHub's
-nixpkgs-weekly). Auto-discovered via the
+nixpkgs-weekly). It also sets `narinfo-cache-negative-ttl = 300` (default
+3600). Without it, an `nrs` run before CI has pushed nebula's toplevel to
+FlakeHub Cache leaves the misses cached, and later runs keep building
+locally for up to an hour after the paths arrive. The daemon does the
+lookups and `k` is not trusted, so it can't be overridden per command. This
+is nebula only; the Macs' Determinate Nix is not managed by nix-darwin.
+Auto-discovered via the
 [Dendritic module layout](../patterns/dendritic-modules.md). Rationale:
 [Replace Lix With Determinate Nix](../decisions/lix-to-determinate.md).
 

@@ -17,6 +17,13 @@
         extra-trusted-public-keys = [
           "cache.flakehub.com-3:hJuILl5sVK4iKm86JzgdXW12Y2Hwd5G07qKtHTOcDCM="
         ];
+        # Forget a cache miss after 5 minutes instead of the default hour. An
+        # nrs tried before CI pushed nebula's toplevel to FlakeHub Cache would
+        # otherwise keep building locally (the Rust forks) for an hour after
+        # the cache has the paths. The root daemon does the lookups and k is
+        # not a trusted user, so this can't be overridden per command. Cost:
+        # more 404 lookups for paths that will never be cached.
+        narinfo-cache-negative-ttl = 300;
       };
 
       # Keep `nix run nixpkgs#…` on this flake's nixpkgs; without this,

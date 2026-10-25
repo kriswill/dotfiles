@@ -6,8 +6,11 @@
 #   nrb — build only, no root needed            (nh os build)
 #   nrt — activate without a bootloader entry   (nh os test)
 #
-# NH_NO_CHECKS=1 skips nh's pre-flight checks (the flake's own checks rebuild
-# every host — too slow for an inner loop). Extra args pass through, e.g.
+# NH_NO_CHECKS=1 skips nh's two startup probes of the system Nix: a version
+# check that only warns (minimum 2.31.2) and the nix-command/flakes feature
+# check. Both always pass, because this config installs the Nix they probe,
+# so this saves two `nix` subprocesses and skips no real safety net (nh never
+# runs the flake's own checks). Extra args pass through, e.g.
 # `nrs -v`, `nrb --dry`. The flake dir is resolved with readlink -f: nix's
 # `--flake <path>` does not follow a path that is itself a symlink, and
 # ~/src/dotfiles is a convenience symlink on nebula (/etc/nixos -> ~/src/dotfiles

@@ -2,6 +2,15 @@
 
 ## 2026-10-24
 
+- **Creation**: [user-oneshot-check](user-oneshot-check.md), an evaluation
+  warning for user oneshots that a switch could block on (report P7). It
+  is silent on nebula today, and it flagged an injected hazard.
+- **Update**: the capture oneshots in
+  [users-k-helium](users-k-helium.md), [users-k-noctalia](users-k-noctalia.md)
+  and [git](git.md) set `TimeoutStartSec = "2min"` (P8).
+  [determinate](determinate.md) sets `narinfo-cache-negative-ttl = 300` (P11).
+  [nh](nh.md)'s `NH_NO_CHECKS` rationale is corrected (P5). The report is
+  `docs/nrs-pipeline.html`.
 - **Update**: [dotfiles-stow](dotfiles-stow.md) restow speed, corrected. The
   previous entry blamed a per-package `sudo`; measured, that is 0.03 s. The
   cost was the self-heal's per-file subshells (~10 ms per file on macOS).
