@@ -2,6 +2,9 @@
 
 ## 2026-10-24
 
+- **Update**: [nebula-nixploit](nebula-nixploit.md) adds k to the `nixploit`
+  group and appends a post-run `chmod g+r` on the report, since upstream
+  creates it with mode 0600.
 - **Creation**: [nixploit](nixploit.md) and
   [nebula-nixploit](nebula-nixploit.md). The new `nixploit` input
   (manic-systems/nixploit, follows nixpkgs) provides a NixOS module that runs
