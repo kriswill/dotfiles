@@ -31,7 +31,11 @@ Activation output is streamed rather than captured, and rendered. The
 [dotfiles-stow](dotfiles-stow.md) restow's NDJSON events become a live
 spinner and progress line, then a one-line summary, with heals, conflicts
 and reloads listed under it. switch-to-configuration's plan lines get glyphs
-and colors ([decision](../decisions/stow-ndjson-activity.md)).
+and colors ([decision](../decisions/stow-ndjson-activity.md)). On the Macs,
+Homebrew bundle's one `Using <dep>` line per Brewfile entry collapses the same
+way, into a live line and `✔ brew N Brewfile dependencies · N already
+installed`. Installs, upgrades and errors still print in full. The
+`sops-install-secrets: Imported …` lines are dimmed.
 
 **NixOS** (`modules/nixos/nrs2.nix`):
 - **Activation runs as a unit.** `switch-to-configuration test` runs as

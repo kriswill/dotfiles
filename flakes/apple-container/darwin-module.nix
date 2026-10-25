@@ -69,8 +69,8 @@ in
       # ${user}'s launchd domain (the CLI registers its services in user/<uid>). We
       # deliberately do NOT auto-start: `container system start` needs the user's live
       # launchd session and interactively prompts to download a kernel on first run.
-      # Abnormal paths warn instead of silently skipping; only "runtime never started"
-      # and "already on the new build" stay quiet.
+      # Abnormal paths warn instead of silently skipping; only "runtime never started",
+      # "runtime no longer loaded" and "already on the new build" stay quiet.
       activationScripts.postActivation.text = lib.mkAfter ''
         acHome="$(/usr/bin/dscl . -read /Users/${user} NFSHomeDirectory 2>/dev/null | /usr/bin/sed -n 's/^NFSHomeDirectory: //p' || true)"
         acPlist="$acHome/Library/Application Support/com.apple.container/apiserver/apiserver.plist"
@@ -85,17 +85,33 @@ in
             echo >&2 "  $acPlist (upstream layout change?) — cannot verify the running runtime"
             echo >&2 "  matches the installed build"
           elif [ "$acCur" != "$acNew" ]; then
-            echo "apple-container: runtime is on an old build:"
-            echo "  old: $acCur"
-            echo "  new: $acNew"
             acUid="$(/usr/bin/id -u ${user} 2>/dev/null || true)"
-            if [ -n "$acUid" ] \
-              && /bin/launchctl asuser "$acUid" /usr/bin/sudo -u ${user} ${container} system stop; then
-              echo "apple-container: old runtime stopped — run 'container system start' to bring up the new build"
+            acLabel="$(/usr/bin/plutil -extract Label raw "$acPlist" 2>/dev/null || true)"
+            # The plist outlives the runtime: only the next `container system
+            # start` rewrites it, and that installs from the new build anyway.
+            # So when launchd no longer has the old apiserver loaded there is
+            # nothing to stop: stay quiet. (This used to fire on every
+            # activation, "stopping" a runtime whose own health check said it
+            # wasn't running.) Unknown uid or label: act as before. Both
+            # launchd domains are checked: on 2026-10-24 the stale label
+            # (com.apple.container.apiserver) was in neither, so which one a
+            # running apiserver lives in wasn't observable.
+            if [ -n "$acUid" ] && [ -n "$acLabel" ] \
+              && ! /bin/launchctl print "user/$acUid/$acLabel" >/dev/null 2>&1 \
+              && ! /bin/launchctl print "gui/$acUid/$acLabel" >/dev/null 2>&1; then
+              :
             else
-              echo >&2 "warning: apple-container: could not stop the old runtime (no active login"
-              echo >&2 "  session for ${user}?) — run 'container system stop && container system start'"
-              echo >&2 "  as ${user} to move the runtime onto the new build"
+              echo "apple-container: runtime is on an old build:"
+              echo "  old: $acCur"
+              echo "  new: $acNew"
+              if [ -n "$acUid" ] \
+                && /bin/launchctl asuser "$acUid" /usr/bin/sudo -u ${user} ${container} system stop; then
+                echo "apple-container: old runtime stopped — run 'container system start' to bring up the new build"
+              else
+                echo >&2 "warning: apple-container: could not stop the old runtime (no active login"
+                echo >&2 "  session for ${user}?) — run 'container system stop && container system start'"
+                echo >&2 "  as ${user} to move the runtime onto the new build"
+              fi
             fi
           fi
         fi

@@ -2,6 +2,10 @@
 
 ## 2026-10-24
 
+- **Update**: [apple-container](apple-container.md). The runtime drift check
+  stays quiet unless launchd still has the old apiserver loaded (it checks the
+  `user` and `gui` domains). It had fired on every activation because the
+  apiserver plist outlives the runtime.
 - **Deprecation**: xpad-noone. The TEMPORARY overlay `overlays/xpad-noone.nix`,
   its `flake.overlays` registration and its catalog doc are removed.
   snowglobe-factory a618d543 (2026-10-23) dropped `hardware.xone.enable` from

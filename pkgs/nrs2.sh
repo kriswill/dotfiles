@@ -365,9 +365,9 @@ stow_status() {
 }
 
 stow_event() { # stow_event <ndjson line>
-  local ev pkg files ms reason link what packages skipped ok conflicts healed dir msg m glyph summary
-  IFS=$'\x1f' read -r ev pkg files ms reason link what packages skipped ok conflicts healed dir < <(
-    jq -r '[.stow, .pkg, .files, .ms, .reason, .link, .what, .packages, .skipped, .ok, .conflicts, .healed, .dir]
+  local ev pkg files ms reason link what packages skipped ok conflicts healed dir status msg m glyph summary
+  IFS=$'\x1f' read -r ev pkg files ms reason link what packages skipped ok conflicts healed dir status < <(
+    jq -r '[.stow, .pkg, .files, .ms, .reason, .link, .what, .packages, .skipped, .ok, .conflicts, .healed, .dir, .status]
       | map(if . == null then "" else tostring end) | join("\u001f")' <<<"$1" 2>/dev/null || true
   )
   case "$ev" in
@@ -409,6 +409,10 @@ stow_event() { # stow_event <ndjson line>
       ;;
     reload) emit "  ${MAGENTA}↻${NC} reloaded ${BOLD}${what}${NC}" ;;
     absent) emit "  ${YELLOW}⚠${NC} stow: ${dir} not present, skipped" ;;
+    failed)
+      clear_status
+      emit "  ${RED}✗${NC} ${BOLD}stow${NC} failed (exit ${status:-?}); dotfiles may be partly linked"
+      ;;
     *) emit "  $1" ;; # not a stow event after all
   esac
 }
@@ -427,6 +431,7 @@ plan_line() { # plan_line <line>: style one line of activation output
     'restarting'*'the following '*) emit "  ${YELLOW}↻${NC} restarting${who} ${rest}" ;;
     'starting'*'the following '*) emit "  ${GREEN}▶${NC} starting${who}   ${rest}" ;;
     'the following new units were started: '*) emit "  ${GREEN}+${NC} new units  ${rest}" ;;
+    'sops-install-secrets: '*) emit "  ${DIM}● sops: ${l#sops-install-secrets: }${NC}" ;;
     *[Ee]rror* | *[Ff]ailed*) emit "  ${RED}${l}${NC}" ;;
     *[Ww]arning* | *WARN*) emit "  ${YELLOW}${l}${NC}" ;;
     *... | 'Checking '* | 'restarting '* | 'reloading '*) emit "  ${DIM}● ${l%...}${NC}" ;;
@@ -434,14 +439,62 @@ plan_line() { # plan_line <line>: style one line of activation output
   esac
 }
 
+# Homebrew bundle (nix-darwin's activation) prints one "Using <dep>" line per
+# Brewfile entry. Those collapse into the live line and a one-line summary;
+# anything else brew says (installs, upgrades, errors) still prints in full.
+r_brew=0 r_brew_using=0
+
+brew_status() { # brew_status <dependency>
+  local frame="${SPINNER[r_spin % ${#SPINNER[@]}]}"
+  r_spin=$((r_spin + 1))
+  printf '  %s%s%s %sbrew%s %s%d%s checked %s%s%s' "$CYAN" "$frame" "$NC" "$BOLD" "$NC" \
+    "$BOLD" "$r_brew_using" "$NC" "$DIM" "$1" "$NC"
+}
+
+brew_done() { # brew_done [<"`brew bundle` complete!" line>]
+  local n summary
+  clear_status
+  r_brew=0
+  n="${1#*complete! }"
+  n="${n%% *}"
+  if [[ "$n" =~ ^[0-9]+$ ]]; then
+    summary="  ${GREEN}✔${NC} ${BOLD}brew${NC}  ${BOLD}${n}${NC} Brewfile dependencies ${DIM}· ${r_brew_using} already installed${NC}"
+    if [ "$n" -gt "$r_brew_using" ]; then
+      summary+=" ${DIM}·${NC} ${GREEN}$((n - r_brew_using)) installed or upgraded${NC}"
+    fi
+  else
+    summary="  ${YELLOW}⚠${NC} ${BOLD}brew${NC}  bundle ended without its completion line ${DIM}(${r_brew_using} checked)${NC}"
+  fi
+  emit "$summary"
+}
+
 render_activity() { # render_activity: style the activation stream on stdin, to stderr
   local line
   while IFS= read -r line || [ -n "$line" ]; do
+    if [ "$r_brew" -eq 1 ]; then
+      case "$line" in
+        'Using '*)
+          r_brew_using=$((r_brew_using + 1))
+          draw_status "$(brew_status "${line#Using }")"
+          continue
+          ;;
+        *'brew bundle'*'complete!'*)
+          brew_done "$line"
+          continue
+          ;;
+        *...) brew_done '' ;; # the next activation step began without it
+      esac
+    fi
     case "$line" in
+      'Homebrew bundle...')
+        r_brew=1 r_brew_using=0
+        draw_status "$(brew_status '')"
+        ;;
       '{"stow":'*) stow_event "$line" ;;
       *) plan_line "$line" ;;
     esac
   done
+  if [ "$r_brew" -eq 1 ]; then brew_done ''; fi
   clear_status
 }
 

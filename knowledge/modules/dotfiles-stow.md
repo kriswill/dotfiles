@@ -32,8 +32,15 @@ hard-won lesson from the June-06 bootloader incident (manual below).
 
 ## Twin differences
 
-Both classes consume the same builder with different arguments — darwin:
-`home=/Users/k`, `runAsUser = sudo -u k --set-home`, hook = `postActivation`
+Both classes consume the same builder with different arguments. The builder
+puts the whole restow in one `writeShellScript` that `runAsUser` runs once.
+Nothing in it needs root, and the old per-package `sudo` on the Macs cost
+~0.1 s each: 2.76 s for 20 packages. A restow that dies is reported as a
+`failed` event, never fatal to activation. Darwin: `home=/Users/k`,
+`runAsUser = sudo -u k --set-home`, `fold = [ "karabiner" ]` (stowed without
+`--no-folding`, so `~/.config/karabiner` is one directory link, as
+Karabiner-Elements' docs require for it to notice changes; its
+`automatic_backups/` is gitignored), hook = `postActivation`
 at `mkOrder 1500` (the anchor that generated
 [store-path configs](../patterns/store-path-configs.md) link after); nixos:
 `home=/home/k`, `runAsUser = setpriv --reuid=k … -- env

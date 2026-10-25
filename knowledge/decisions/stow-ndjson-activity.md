@@ -40,6 +40,9 @@ The restow emits NDJSON on stderr, with one event per line:
 - `conflict`, carrying stow's own message;
 - `end`, with the totals;
 - `absent`, when there is no stow tree;
+- `failed`, with the exit status, when the restow script itself dies (the
+  activation snippet reports it; added when the restow became a single user
+  process);
 - `reload`, added by the NixOS module for Hyprland.
 
 Strings are escaped in bash, not with jq, so activation and boot pay for no
