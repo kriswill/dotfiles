@@ -1,7 +1,7 @@
 ---
 type: NixOS Module
 title: Generations
-description: 'Generation retention by boot history, and GC roots for every system the GRUB menu lists: the nightly nix-gc only collects garbage, its preStart keeps the systems that booted successfully plus the boot default and its predecessor, and each bootloader install roots the menu so no GC can strand a menu entry.'
+description: 'Generation retention by boot history, and GC roots for every system the GRUB menu lists: the nightly nix-gc only collects garbage, its preStart keeps the systems that booted successfully plus the boot default and the previous good switch, and each bootloader install roots the menu so no GC can strand a menu entry.'
 resource: modules/nixos/generations.nix
 tags: [nixos-module]
 generated: { by: claude-code/opus-5.5, at: 2026-10-24T22:10:00-07:00 }
@@ -23,23 +23,33 @@ The module has two parts.
   - the current boot;
   - one of the previous `prevBoots` (2) distinct systems that booted
     successfully;
-  - the newest successfully booted system on a different kernel version;
-  - the boot default, the running system, or the generation just before the
-    boot default.
+  - the newest successfully booted system on a different kernel semver.
+    Only `MAJOR.MINOR.PATCH` counts, so a rebuild of the same version or a
+    `-zen1`/`-rc1` suffix does not;
+  - the boot default or the running system;
+  - the **previous good switch**: the newest other system that
+    switch-to-configuration logged `finished switching to system
+    configuration …` for. It logs that only when activation exits 0 with
+    every unit started. Without such a record, the newest earlier generation
+    with a different system is kept instead.
 
-  Boot history comes from the persistent journal. Each boot's system is the
-  `init=` on its kernel command line. A boot counts as successful when
-  systemd logged "Startup finished" (`MESSAGE_ID=b07a249c…`). An unreadable
-  journal leaves the profile untouched.
+  Boot and switch history come from the persistent journal. Each boot's
+  system is the `init=` on its kernel command line. A boot counts as
+  successful when systemd logged "Startup finished"
+  (`MESSAGE_ID=b07a249c…`). Switches are stc's syslog lines (`-t nixos`). An
+  unreadable journal leaves the profile untouched.
 - **Every other profile** under `/nix/var/nix/profiles` and root's
   `~/.local/state/nix/profiles` keeps the old rule:
   `nix-env --delete-generations 7d`.
 - All deletion goes through nix-env, which refuses to delete a current
   generation. A failure fails the unit before anything is collected.
 - **Preview:** `prune-generations --dry 2 7 /nix/var/nix/profiles` (installed,
-  no root needed for the system profile). On 2026-10-24 it would have kept
-  gens 155 (previous boot), 161 (current boot), 164 (before the default) and
-  165 (default, running), and deleted seven switched-only ones.
+  no root needed for the system profile). On 2026-10-24, after gen 166, it
+  would have kept four generations and deleted the eight switched-only ones:
+  - 155, the previous boot;
+  - 161, the current boot;
+  - 165, the previous good switch;
+  - 166, the default and running system.
 
 **Menu roots** (`grub-menu-roots.sh`, from
 `boot.loader.grub.extraInstallCommands`). Right after `install-grub.pl`

@@ -1,7 +1,7 @@
 ---
 type: Decision
 title: Retain Generations by Boot History; Root What GRUB Lists
-description: 'The system profile keeps the systems that actually booted successfully (current boot, two before it, the last other kernel) plus the boot default and its predecessor, read from the journal; other profiles keep the old 7-day rule; and every bootloader install GC-roots what the GRUB menu lists. This replaces age-only GC, and the GC-triggered GRUB refresh rejected in review.'
+description: 'The system profile keeps the systems that actually booted successfully (current boot, two before it, the last other kernel) plus the boot default and the previous good switch, read from the journal; other profiles keep the old 7-day rule; and every bootloader install GC-roots what the GRUB menu lists. This replaces age-only GC, and the GC-triggered GRUB refresh rejected in review.'
 tags: [nixos, gc, grub, generations, nebula]
 status: stable
 generated: { by: claude-code/opus-5.5, at: 2026-10-24T22:10:00-07:00 }
@@ -52,13 +52,27 @@ Two problems, one cause each:
   version's boot. Added to it:
   - the boot default and the running system (nix-env would refuse to delete
     them anyway);
-  - **the generation before the boot default**, so `--rollback`'s one-step
-    undo of a switch that broke something at runtime still works. Most
-    generations are switched to and never booted.
+  - **the previous good switch**, the runtime counterpart of a successful
+    boot, so a switch that broke something at runtime can still be undone.
+    Most generations are switched to and never booted. This is the newest
+    system, other than the running system and the boot default, that
+    switch-to-configuration logged `finished switching to system
+    configuration …` for (`-t nixos`). stc logs that only when activation
+    exits 0 with every unit started; a failure logs `… failed (status N)`.
+    The journal held 66 such records back to 2026-08-13. A generation that
+    was only set with `boot`, or whose activation failed, never qualifies.
+    Without any record, the newest earlier generation with a system
+    different from the default's is kept instead. This was first "the
+    generation numbered just before the default", and was refined the same
+    day to require evidence, like the boot rule.
 
   The previous boots are distinct systems that still have a generation,
   newest first, other than the current boot's. The kernel fallback is the
-  newest such system on a different kernel version.
+  newest such system with a different kernel **semver**. Only
+  `MAJOR.MINOR.PATCH` of the modules directory counts, so a rebuild of the
+  same version (gen 155's 7.3.0 against the booted 7.3.0) or a
+  `-zen1`/`-rc1` suffix is not a different kernel. This is the user's call:
+  version, not build.
 - **Boot history from the journal.** The journal is persistent on nebula,
   with 12 boots back to 2026-08-10. A boot's system is the `init=` on its
   `Command line:` kernel message. "Successful" means systemd logged
