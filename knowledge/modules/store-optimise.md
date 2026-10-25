@@ -21,7 +21,17 @@ doesn't hash files the GC is about to delete. A run only hashes what's new:
 `loadInodeHash` reads every inode already in `.links`, and those files are
 skipped. The disk saving is the same, just later.
 
-The gain hasn't been measured. Time a large update before and after.
+Measured 2026-10-24 with texliveMedium (1,437 new paths, 39,323 files,
+1,551 MiB):
+- **Download with deduplication off:** 8.2 s.
+- **First `nix-store --optimise`:** 3.5 s, freeing 128 MiB by hard-linking
+  7,928 files.
+- **Second run, a scan of the whole 28 GiB store:** 0.7 s.
+
+So `auto-optimise-store` would have added about 2.8 s, roughly a third, to
+that download. That cost now falls on the weekly job, and duplicates take
+extra disk until Sunday. Hard links save 17.2 GiB on nebula overall.
+
 Nebula only: the Macs' Determinate Nix already has `auto-optimise-store =
 false`, and nix-darwin doesn't manage Nix there.
 
