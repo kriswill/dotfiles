@@ -1,10 +1,10 @@
 ---
 type: NixOS Module
 title: Battle.net on nebula
-description: 'nebula''s programs.battlenet settings: enables the GE-Proton Battle.net launcher on the umu entry''s existing prefix (compatdata/3082075026/pfx), so both entries share one WoW install.'
+description: 'nebula''s programs.battlenet settings: enables the GE-Proton Battle.net launcher on the prefix umu-launcher used before it was dropped (compatdata/3082075026/pfx), which holds the WoW install.'
 resource: modules/hosts/nebula/battlenet.nix
 tags: [nixos-module, host-specific, gaming, proton]
-generated: { by: claude-code/opus-5.5, at: 2026-10-25T14:00:00-07:00 }
+generated: { by: claude-code/opus-5.5, at: 2026-10-25T16:00:00-07:00 }
 sources:
   - id: subflake-readme
     resource: ../../flakes/battlenet/README.md
@@ -12,27 +12,39 @@ sources:
 ---
 
 Turns on the [battlenet module](battlenet.md) with
-`prefix = ".local/share/Steam/steamapps/compatdata/3082075026/pfx"`, which is
-the prefix the stowed umu entry already uses, and the WoW icon from
-`~/Downloads`. That prefix has umu's layout: umu passes the Wine prefix itself
-as `STEAM_COMPAT_DATA_PATH` and leaves a `pfx -> .` link inside, so
-`$prefix/pfx` resolves to the same directory and the version stamp is
-`pfx/version`.[^subflake-readme]
+`prefix = ".local/share/Steam/steamapps/compatdata/3082075026/pfx"` and the
+WoW icon from `~/Downloads`. "Battle.net" is the only Battle.net entry.
 
-Two launcher entries coexist:
+The prefix came from Steam and then served a stowed umu-launcher entry
+("Battle.net (umu)", `umu-run` with Valve's Proton 11.0). That entry and
+`umu-launcher` were removed on 2026-10-25, once this launcher kept one
+wineserver per prefix and stopped on Ctrl-C
+([decision](../decisions/battlenet-one-wineserver.md)). The prefix keeps umu's
+layout: umu passed the Wine prefix itself as `STEAM_COMPAT_DATA_PATH` and left
+a `pfx -> .` link inside it, so `$prefix/pfx` resolves to the same directory
+and the version stamp is `pfx/version`.[^subflake-readme] Its first GE-Proton
+start moved the stamp from Valve's `11.0-100` to `GE-Proton11-11`. Neither
+parses as the other's format, so Proton took its "invalid version" path, which
+upgrades in place and never reaches "Removing newer prefix".
 
-- **"Battle.net"** is this module. It runs GE-Proton directly.
-- **"Battle.net (umu)"** is the stowed
-  [`Battle.net.desktop`](../../home/desktop-entries/.local/share/applications/Battle.net.desktop).
-  It runs `umu-run` with Valve's Proton 11.0.
+WoW on nebula, from a logged session on 2026-10-25 (the stack and the log
+lines that are normal are in the README's "What WoW runs on"):[^subflake-readme]
 
-Alternating them flips `pfx/version` between `11.0-100` and `GE-Proton11-11`.
-Neither parses as the other's format, so Proton takes its "invalid version"
-path. That path upgrades the prefix in place and never reaches "Removing newer
-prefix". [wowup](../packages/wowup.md) points into the same prefix's WoW
-install. The WoW window rules in
+- **Graphics:** Direct3D 12 through vkd3d-proton on NVIDIA's 595.104.02
+  Vulkan driver (`libGLX_nvidia`, `libnvidia-glcore`, `libnvidia-rtcore`,
+  `libcuda`). DXVK-NVAPI answers WoW's NVIDIA queries.
+- **Audio:** PipeWire's PulseAudio server. Wine ignores the output device's
+  `aux2`–`aux5` channels.
+- **Sync:** fsync. ntsync is unavailable because the `ntsync` module isn't
+  loaded and there's no `/dev/ntsync`.
+- **Shaders:** the first session rebuilt vkd3d-proton's pipeline cache
+  (`_retail_/vkd3d-proton.cache`), which the umu and Valve Proton runs had
+  written for a different build.
+
+[wowup](../packages/wowup.md) points into the same prefix's WoW install. The
+WoW window rules in
 [`window-rules.lua`](../../home/hyprland/.config/hypr/window-rules.lua) match
-on title, so they cover both entries.
+on title, not class.
 
 Host-specific file for [nebula](../hosts/nebula.md), merged straight into
 that host's configuration per the

@@ -44,7 +44,7 @@ warrant its own file:
   private halves decrypted by sops (`sops.secrets.ssh_host_*_key`).
 - **Substituters:** disables the untrusted `nix-store.earthgman.dev` cache.
 - **Packages/programs:** desktop additions (cliphist, fd, gimp, breeze-icons,
-  rose-pine-hyprcursor, umu-launcher, wowup); firefox/chromium/alacritty/
+  rose-pine-hyprcursor, wowup); firefox/chromium/alacritty/
   batsignal disabled; 1Password CLI + GUI; nix-ld (cc + zlib); discord plus
   vesktop (its own `programs.vesktop` key since 2026-09; the pnpm whitelist
   is gone — see the

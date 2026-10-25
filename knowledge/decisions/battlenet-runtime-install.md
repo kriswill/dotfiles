@@ -65,7 +65,9 @@ prefix as in-place upgrades. The cost is that the first run needs the network,
 and the install isn't reproducible: what gets installed is whatever Blizzard
 serves that day. GE-Proton supports only umu for non-Steam games outside
 Steam,[^ge-proton-readme] so problems on this route can't be reported
-upstream; the stowed umu entry stays as a fallback on nebula.
+upstream. Nebula kept the stowed umu entry as a fallback at first, then dropped
+umu-launcher and that entry on 2026-10-25, once the launcher had its
+wineserver guard and Ctrl-C handling ([one wineserver](battlenet-one-wineserver.md)).
 
 [^subflake-readme]: `flakes/battlenet/README.md`: how it runs, and first run from nothing
 [^faugus-launcher]: Faugus Launcher `launcher.py`, `download_launcher()` (the "battle" branch)

@@ -2,6 +2,13 @@
 
 ## 2026-10-25
 
+- **Update**: [configuration](configuration.md) drops `umu-launcher`, and the
+  stowed "Battle.net (umu)" entry is removed.
+  [nebula-battlenet](nebula-battlenet.md)'s GE-Proton launcher is now the only
+  Battle.net entry, on the same prefix. The doc also records WoW's stack on
+  nebula from a logged session: vkd3d-proton on NVIDIA 595.104.02, PipeWire
+  audio, and fsync because ntsync isn't loaded.
+
 - **Creation**: [battlenet](battlenet.md) re-exports the
   [battlenet sub-flake](../packages/battlenet.md)'s `programs.battlenet`
   module. [nebula-battlenet](nebula-battlenet.md) enables it on the umu
