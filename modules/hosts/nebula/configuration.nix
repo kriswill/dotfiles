@@ -81,6 +81,18 @@
       # threat model, it just makes recovery debuggable without a USB stick.
       boot.initrd.systemd.emergencyAccess = true;
 
+      # …and keep GRUB from listing collected generations in the first place.
+      # snowglobe's nix.gc deletes generations older than 7 days, but nothing
+      # rewrites grub.cfg until a switch writes the bootloader, and nrs2 skips
+      # that step when the boot default is unchanged. So rewrite the menu from
+      # the surviving generations right after every GC run. The pre-switch
+      # checks are pointless for re-writing the current boot default
+      # (NIXOS_NO_CHECK). "-": if a switch holds switch-to-configuration.lock
+      # at that moment, don't mark the GC run failed; the next one catches up.
+      systemd.services.nix-gc.serviceConfig.ExecStartPost = lib.mkIf config.nix.gc.automatic [
+        "-${pkgs.coreutils}/bin/env NIXOS_NO_CHECK=1 /nix/var/nix/profiles/system/bin/switch-to-configuration boot"
+      ];
+
       environment.etc = {
         "ssh/ssh_host_ed25519_key.pub".source = ./ssh_host_ed25519_key.pub;
         "ssh/ssh_host_rsa_key.pub".source = ./ssh_host_rsa_key.pub;

@@ -1444,6 +1444,7 @@ boot.loader.grub.extraEntries = ''
 <p>This produces the same menu without mounting the other disk on every switch. It probably recovers most of stage 8's 2.37 s; confirm with <code>sudo time os-prober</code> first. The memory note about why GRUB came back still holds: GRUB stays, only the probing goes.</p></div>
 
 <div class="proposal" id="p15"><h4>P15 · Keep N generations, and refresh GRUB after GC <span class="kind res">resilience</span></h4>
+<p><strong>Half done 2026-10-24:</strong> snowglobe's <code>nix-gc.service</code> now has the GRUB-refresh <code>ExecStartPost</code>. It was needed once nrs2 began skipping the boot step for unchanged builds. Retention is still age-only (<code>nix.gc</code>, 7 days).</p>
 <pre><code>nix.gc.automatic = false;
 programs.nh.clean = { enable = true; extraArgs = "--keep 5 --keep-since 7d"; };
 systemd.services.nh-clean.serviceConfig.ExecStartPost =
@@ -1451,6 +1452,7 @@ systemd.services.nh-clean.serviceConfig.ExecStartPost =
 <p><code>--keep</code> is "at least this many", combined with <code>--keep-since</code> (nh-clean). The <code>ExecStartPost</code> rewrites <code>grub.cfg</code> from the generations that survived, so GRUB can never list a collected generation, which is the June failure. The <code>nh-clean</code> unit name comes from nixpkgs' <code>programs.nh</code> module.</p></div>
 
 <div class="proposal" id="p16"><h4>P16 · Make initrd failures debuggable <span class="kind res">resilience</span></h4>
+<p><strong>Correction:</strong> this was already in place when the report was written. <code>modules/hosts/nebula/configuration.nix</code> has set <code data-wrap>boot.initrd.systemd.emergencyAccess = true</code> (passwordless, initrd only) since the June-16 incident. The report missed it.</p>
 <p>The <code>harden</code> profile locks root, so systemd's emergency shell in the initrd is unusable. In June that meant booting external media and running <code>nixos-enter</code>. Setting <code data-wrap>boot.initrd.systemd.emergencyAccess</code> to a hashed password, kept in 1Password, makes the next boot failure a console session instead of a USB stick.</p></div>
 
 <h3>Procedure (P17)</h3>

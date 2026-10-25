@@ -33,7 +33,11 @@ warrant its own file:
   `extraEntries` chainload (ESP UUID `B658-8653`, `mkBefore` so it precedes
   snowglobe's extra entries) instead of `useOSProber`. That stops os-prober
   from rescanning and root-mounting the other disk on every rebuild, and
-  removes its `lsblk` noise. `gfxmodeEfi = "3440x1440x32"` + `gfxpayloadEfi = "keep"` run the
+  removes its `lsblk` noise. `nix-gc.service` gets an `ExecStartPost` that
+  re-runs `switch-to-configuration boot` for the current boot default, so
+  GRUB never lists a generation the daily GC just deleted (the 2026-06-16
+  emergency-mode incident). Before, only a later switch rewrote the menu, and
+  [nrs2](nrs2.md) now skips that step when nothing changed. `gfxmodeEfi = "3440x1440x32"` + `gfxpayloadEfi = "keep"` run the
   menu and early boot at the panel's native mode.
   `boot.initrd.systemd.emergencyAccess = true`: the harden profile locks the
   root account, so when a GC'd generation selected in GRUB dropped stage-1 to

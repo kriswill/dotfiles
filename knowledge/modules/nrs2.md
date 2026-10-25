@@ -42,7 +42,14 @@ and colors ([decision](../decisions/stow-ndjson-activity.md)).
   between STOP and START. That is the 2026-10-24 failure mode
   ([decision](../decisions/user-oneshots-skip-switch-restart.md)).
 - **Then the default:** after activation it sets the profile and runs
-  `switch-to-configuration boot`.
+  `switch-to-configuration boot`. It skips both when the boot default
+  already is this build *and* nrs2's own record
+  (`~/.local/state/nrs2/bootloader`, the store path it last wrote to the
+  bootloader) agrees. `/boot` is root-only, so the record is how it knows
+  the menu is current. The second condition catches a run cut off between
+  profile and bootloader, and a boot entry written by something else.
+  `--boot` forces the rewrite. Re-setting a profile to the same path adds no
+  generation; this only saves a redundant `grub.cfg` regeneration.
 - **Watchdog:** after 45 s it prints pending system and user jobs. It never
   probes `switch-to-configuration.lock`: switch-to-configuration takes that
   lock non-blocking, so a probe could make a real switch abort.[^stc-ng-source]
