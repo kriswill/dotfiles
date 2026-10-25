@@ -2,6 +2,9 @@
 
 ## 2026-10-24
 
+- **Creation**: [nrs2](nrs2.md), `pkgs/nrs2.{nix,sh}`, surfaced as
+  `pkgs.nrs2` by `overlays/nrs2.nix`. It is one `writeShellApplication`
+  script for NixOS and nix-darwin, behind the [nrs2 modules](../modules/nrs2.md).
 - **Deprecation** — nix-output-monitor: removed
   `overlays/nix-output-monitor.nix`, its `flake.overlays` registration, the
   dev-shell re-import in `modules/dev.nix` (back to plain `pkgs`), and the

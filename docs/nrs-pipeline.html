@@ -1470,6 +1470,13 @@ systemd.services.nh-clean.serviceConfig.ExecStartPost =
 <p><strong>Suggested order.</strong> P1 and P8 today (four lines, the biggest drop in risk), then P7 and P3/P4. P15 and P14 at the next maintenance window. P6 when the wrapper is being reworked anyway. File P9 regardless; it costs nothing and helps everyone.</p>
 </div>
 
+<div class="callout">
+<p><strong>Prototyped as <code>nrs2</code></strong> (2026-10-24, <code>pkgs/nrs2.{nix,sh}</code>, installed by <code>modules/{nixos,darwin}/nrs2.nix</code>) beside <code>nrs</code>, on every host. It covers P1–P4 and P6 without nh: <code>nom build</code>, <code>dix</code>, then <code>switch-to-configuration test</code> as <code>nrs2-switch-to-configuration.service</code> via <code>systemd-run --wait --verbose --output=cat</code>, then the profile and <code>boot</code>.</p>
+<p>The P6 open question is settled, by testing on nebula: Ctrl-C makes <code>systemd-run</code> exit 130 while the unit runs on to completion. An interrupt therefore detaches instead of killing the switch.</p>
+<p>On the Macs it does what <code>nh darwin switch</code> does: set the profile, then run the new generation's own <code>darwin-rebuild activate</code>, with output streamed and the same state report. There is no detach on the Macs, because launchd has no <code>systemd-run</code> here.</p>
+<p>Modes: <code>nrs2 --dry</code> builds and diffs without root. <code>nrs2 --test</code> skips the profile and boot entry on NixOS; on darwin it runs <code>darwin-rebuild check</code>.</p>
+</div>
+
 <!-- ================================================================== -->
 <h2 id="sources">16. Sources</h2>
 <ul>

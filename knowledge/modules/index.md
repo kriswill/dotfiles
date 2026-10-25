@@ -56,6 +56,7 @@ interesting ones by hand — scaffolding never overwrites an existing doc.
 * [Nh](nh.md) - nh (Nix Helper) plus the nrs/nrb/nrt rebuild helper executables (writeShellScriptBin, so they work in non-interactive shells and every shell alike).
 * [Nixos](nixos.md) - Declares `configurations.nixos.<name>` and realises each into a `nixosConfigurations.<name>` flake output (plus a toplevel build check), building through snowglobe-factory's `mkNixosHost` so all the `snowglobe-factory.profiles.*` / `snowglobe-factory.desktop.*` machinery and the hardware wiring are still applied.
 * [Node Runtime](node-runtime.md) - System-wide Node.js + Bun — infrastructure, not dev convenience: npx-launched MCP servers (Claude Code plugins) silently fail on NixOS without a node on PATH.
+* [Nrs2](nrs2.md) - Prototype rebuild helper that does what nh's os switch and darwin switch do without nh: nom for the build tree, dix for the diff, and each OS's own activation, with output streamed and a state report on every exit. Installed beside nrs on all hosts for comparison.
 * [Oksh](oksh.md) - Kris' oksh.
 * [OLED Resume Bump](oled-resume-bump.md) - DPMS off/on bounce of the DP-3 OLED after every resume from S3, via powerManagement.resumeCommands — works around the PG34WCDM panel staying black while Hyprland reports the output live.
 * [Overlays](overlays.md) - Nixpkgs overlays, exposed as flake outputs and consumed by the host modules via `nixpkgs.overlays = builtins.attrValues config.flake.overlays`.

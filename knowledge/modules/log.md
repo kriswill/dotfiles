@@ -2,6 +2,13 @@
 
 ## 2026-10-24
 
+- **Creation**: [nrs2](nrs2.md) is a pair of twin modules (NixOS and
+  darwin) installing a prototype nh-free `nrs` beside the real one for
+  comparison. It uses `nom build` and `dix`, then each OS's own activation,
+  streams the output, and ends every exit with a state report. On NixOS,
+  `switch-to-configuration test` runs as a transient systemd unit (Ctrl-C
+  detaches), with a stall watchdog and a notice when an earlier plan replays.
+  On darwin it does what nh does: profile, then `darwin-rebuild activate`.
 - **Update** — [herdr-update-check](herdr-update-check.md): retargeted from
   "nixos-unstable ≥ 0.8.2, drop the pin" (stale since the fork; it nagged
   daily) to "upstream herdrdev/herdr `releases/latest` newer than our
