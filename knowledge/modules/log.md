@@ -2,6 +2,12 @@
 
 ## 2026-10-25
 
+- **Update**: [nebula-battlenet](nebula-battlenet.md) moved the Battle.net/WoW
+  prefix out of Steam's `compatdata/3082075026` to the module's new default,
+  `~/.local/share/battlenet`. It is now in Proton's layout, and its 30 links into
+  Steam's Proton 11.0 are replaced or removed. [battlenet](battlenet.md)'s
+  `prefix` defaults to `$XDG_DATA_HOME/battlenet`.
+
 - **Creation**: [ntsync](ntsync.md) loads the kernel's ntsync driver on nebula
   (`boot.kernelModules`). GE-Proton uses `/dev/ntsync` instead of fsync
   whenever it exists, and a logged WoW session showed it missing. Verified

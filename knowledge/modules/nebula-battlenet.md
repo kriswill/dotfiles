@@ -1,7 +1,7 @@
 ---
 type: NixOS Module
 title: Battle.net on nebula
-description: 'nebula''s programs.battlenet settings: enables the GE-Proton Battle.net launcher on the prefix umu-launcher used before it was dropped (compatdata/3082075026/pfx), which holds the WoW install.'
+description: 'nebula''s programs.battlenet settings: enables the GE-Proton Battle.net launcher on the default prefix, ~/.local/share/battlenet, which holds the WoW install moved out of Steam''s compatdata/3082075026.'
 resource: modules/hosts/nebula/battlenet.nix
 tags: [nixos-module, host-specific, gaming, proton]
 generated: { by: claude-code/opus-5.5, at: 2026-10-25T16:00:00-07:00 }
@@ -11,21 +11,37 @@ sources:
     title: 'flakes/battlenet/README.md (prefix layout, reusing an umu prefix)'
 ---
 
-Turns on the [battlenet module](battlenet.md) with
-`prefix = ".local/share/Steam/steamapps/compatdata/3082075026/pfx"` and the
-WoW icon from `~/Downloads`. "Battle.net" is the only Battle.net entry.
+Turns on the [battlenet module](battlenet.md) with its default prefix,
+`~/.local/share/battlenet`, and the WoW icon from `~/Downloads`. "Battle.net"
+is the only Battle.net entry.
 
-The prefix came from Steam and then served a stowed umu-launcher entry
-("Battle.net (umu)", `umu-run` with Valve's Proton 11.0). That entry and
-`umu-launcher` were removed on 2026-10-25, once this launcher kept one
-wineserver per prefix and stopped on Ctrl-C
-([decision](../decisions/battlenet-one-wineserver.md)). The prefix keeps umu's
-layout: umu passed the Wine prefix itself as `STEAM_COMPAT_DATA_PATH` and left
-a `pfx -> .` link inside it, so `$prefix/pfx` resolves to the same directory
-and the version stamp is `pfx/version`.[^subflake-readme] Its first GE-Proton
-start moved the stamp from Valve's `11.0-100` to `GE-Proton11-11`. Neither
-parses as the other's format, so Proton took its "invalid version" path, which
-upgrades in place and never reaches "Removing newer prefix".
+The prefix's history:
+
+- **Steam, then umu.** It started as Steam's
+  `compatdata/3082075026` for a non-Steam shortcut, then served a stowed
+  umu-launcher entry ("Battle.net (umu)", `umu-run` with Valve's Proton
+  11.0). That entry and `umu-launcher` were removed on 2026-10-25, once this
+  launcher kept one wineserver per prefix and stopped on Ctrl-C
+  ([decision](../decisions/battlenet-one-wineserver.md)).
+- **First GE-Proton start.** It moved the version stamp from Valve's
+  `11.0-100` to `GE-Proton11-11`. Neither parses as the other's format, so
+  Proton took its "invalid version" path, which upgrades in place and never
+  reaches "Removing newer prefix".
+- **Moved out of Steam's tree, the same day.** With nothing running, it was
+  renamed to `~/.local/share/battlenet/pfx` (one filesystem, so instant
+  despite the WoW install).[^subflake-readme] Two fixes came with it:
+  - **Layout.** It was converted from umu's layout (`pfx -> .` link, Proton
+    metadata inside the prefix) to Proton's, with `version`, `config_info`,
+    `tracked_files`, `shadercache` and `gstreamer-1.0` next to `pfx/`.
+  - **Steam links.** 30 links still pointed into Steam's
+    `steamapps/common/Proton 11.0`, which GE-Proton's relink never touches.
+    28 were .NET placeholders (wine-mono's `Microsoft.NET/Framework*`), now
+    copies of GE-Proton's builtin files. The other 2 were `winegstreamer.dll`,
+    which GE-Proton doesn't ship, and were deleted.
+- **Checked afterwards.** Battle.net started from the new prefix on
+  generation 185 with ntsync, and nothing in it points into
+  `~/.local/share/Steam`. The Steam-era metadata is still in
+  `~/.local/share/Steam/steamapps/compatdata/3082075026` (no `pfx/`).
 
 WoW on nebula, from a logged session on 2026-10-25 (the stack and the log
 lines that are normal are in the README's "What WoW runs on"):[^subflake-readme]

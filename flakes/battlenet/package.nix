@@ -30,8 +30,9 @@
   # or a package/store path holding a `proton` script.
   proton ? proton-ge-bin,
   # Compat data directory (STEAM_COMPAT_DATA_PATH); the Wine prefix is its
-  # pfx/. A relative path is under the user's home.
-  prefix ? "Games/battlenet",
+  # pfx/. A relative path is under the user's home; null means
+  # $XDG_DATA_HOME/battlenet (~/.local/share/battlenet), resolved at run time.
+  prefix ? null,
   # Language for Blizzard's installer (--lang).
   locale ? "enUS",
   icon ? "applications-games",
@@ -144,7 +145,7 @@ let
     ];
     runtimeEnv = {
       BATTLENET_FHS = lib.getExe fhs;
-      BATTLENET_DEFAULT_PREFIX = prefix;
+      BATTLENET_DEFAULT_PREFIX = if prefix == null then "" else prefix;
     };
     text = builtins.readFile ./battlenet.sh;
   };

@@ -2,6 +2,11 @@
 
 ## 2026-10-25
 
+- **Update**: [battlenet](battlenet.md) defaults its prefix to
+  `$XDG_DATA_HOME/battlenet` (it was `~/Games/battlenet`). The README explains
+  how to move a Steam or umu prefix out of Steam. [wowup](wowup.md) points at
+  WoW in that prefix.
+
 - **Update**: [battlenet](battlenet.md)'s README documents what WoW runs on.
   Each layer comes from a logged WoW session (vkd3d-proton, DXVK 3.1.1,
   DXVK-NVAPI 0.9.2, winepulse, winebus with SDL3, fsync), along with the

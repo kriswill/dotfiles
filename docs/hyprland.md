@@ -776,7 +776,7 @@ Real findings on nebula — append as you discover more; correct/remove stale on
   Gotchas worth keeping: `%command%` must be exact in Steam Launch Options (a
   missing trailing `%` makes Steam append the options as literal args instead of
   wrapping — and **non-Steam shortcuts only expand `%command%`, nothing else**);
-  WoW's `Config.wtf` (`…/compatdata/3082075026/pfx/…/_retail_/WTF/Config.wtf`)
+  WoW's `Config.wtf` (`~/.local/share/battlenet/pfx/…/_retail_/WTF/Config.wtf`)
   rewrites on exit, so edit it only while WoW is fully closed; WoW `gxApi` is
   `D3D12` (vkd3d) — switch to `D3D11` if you hit shader-compilation hitching.
 
