@@ -1,5 +1,14 @@
 # Log
 
+## 2026-10-25
+
+- **Update**: [nebula](nebula.md) turns off Lutris
+  (`programs.lutris.enable = false`, overriding snowglobe's gaming profile).
+  Its FHS runtime was the only thing pulling in ffmpeg 6.1.6 (39 nixploit
+  findings, see
+  [nebula-nixploit](../modules/nebula-nixploit.md)). The closure drops by
+  about 900 MiB.
+
 ## 2026-10-14
 
 - **Update** — [k](k.md): installs P4V, P4Admin and P4Merge 2026.3 through

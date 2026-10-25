@@ -19,6 +19,9 @@
 
       # custom profiles
       snowglobe-factory.profiles.gaming.enable = true;
+      # Off since 2026-10-25: its FHS runtime was the only thing pulling in
+      # ffmpeg 6.1.6 (39 nixploit findings).
+      programs.lutris.enable = false;
       snowglobe-factory.profiles.office.enable = true;
       # snowglobe's default (libreoffice-fresh) is a deprecated nixpkgs alias
       # since the upstream fresh/still split ended — it warns on every eval.
