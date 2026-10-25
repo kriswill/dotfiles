@@ -2,6 +2,13 @@
 
 ## 2026-10-24
 
+- **Update**: [configuration](configuration.md). `useOSProber` is off and
+  Windows is a static GRUB chainload entry (`extraEntries`, `mkBefore`, ESP
+  UUID `B658-8653`). This removes os-prober's per-rebuild rescan of the
+  Windows disk and its `lsblk: /dev/mapper/no*[0-9]` noise. [nrs2](nrs2.md)'s
+  `boot` step now passes `NIXOS_NO_CHECK=1`: its `test` step already ran the
+  pre-switch checks, and for `boot` they only print "Not checking switch
+  inhibitors".
 - **Creation**: [nrs2](nrs2.md) is a pair of twin modules (NixOS and
   darwin) installing a prototype nh-free `nrs` beside the real one for
   comparison. It uses `nom build` and `dix`, then each OS's own activation,

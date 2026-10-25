@@ -335,7 +335,10 @@ activate_nixos() {
 
   set_profile
   step "adding the configuration to the bootloader"
-  sudo "$out/bin/switch-to-configuration" boot
+  # The pre-switch checks already ran in the `test` step above, against this
+  # same generation; for `boot` they would only print "Not checking switch
+  # inhibitors (action = boot)".
+  sudo env NIXOS_NO_CHECK=1 "$out/bin/switch-to-configuration" boot
   lap boot
 }
 

@@ -78,8 +78,8 @@ versions live in the manuals themselves, which lead with verified state.
 - [`docs/bootloader-issues-jun-06.md`](../docs/bootloader-issues-jun-06.md) —
   diagnosis of nebula's June-2026 unbootable-generations incident (an
   activation-script `exit 0` aborting boot-time activation + intermittent
-  GRUB initrd reads), ending with the deliberate return to GRUB+os-prober for
-  Windows dual-boot.
+  GRUB initrd reads), ending with the deliberate return to GRUB for the Windows
+  dual-boot (os-prober then; a static chainload entry since 2026-10-24).
 - [`docs/security-audit-cve-jun-2026.md`](../docs/security-audit-cve-jun-2026.md)
   — June-2026 CVE audit of GnuPG and Linux-PAM on nebula,
   concluding nothing is exploitable and no remediation is needed.

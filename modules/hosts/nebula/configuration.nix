@@ -2,7 +2,7 @@
   configurations.nixos.nebula.module =
     {
       pkgs,
-      # lib,
+      lib,
       config,
       ...
     }:
@@ -43,11 +43,23 @@
       # Don't trust cache server
       substituters."nix-store.earthgman.dev".enable = false;
 
-      # Dual-boot: let GRUB probe other disks for Windows/other OSes and add them to
-      # the menu. Required because Windows lives on a separate disk/ESP that the
-      # bootloader won't surface otherwise. (This is why nebula stays on snowglobe's
-      # GRUB rather than systemd-boot, which only lists entries on its own ESP.)
-      boot.loader.grub.useOSProber = true;
+      # Dual-boot: Windows lives on a separate disk with its own ESP. systemd-boot
+      # only lists entries on its own ESP, which is why nebula stays on
+      # snowglobe's GRUB. A static chainload entry replaces os-prober and gives
+      # the same menu item without rescanning (and root-mounting) the other
+      # disk on every rebuild, and without os-prober's
+      # `lsblk: /dev/mapper/no*[0-9]` noise. The UUID is the Windows disk's ESP
+      # (nvme1n1p1, vfat); the path is what os-prober found there. mkBefore puts
+      # it ahead of snowglobe's Reboot/Poweroff/firmware/Memtest entries.
+      boot.loader.grub.useOSProber = false;
+      boot.loader.grub.extraEntries = lib.mkBefore ''
+        menuentry "Windows Boot Manager" --class windows --class os {
+          insmod part_gpt
+          insmod fat
+          search --no-floppy --fs-uuid --set=root B658-8653
+          chainloader /efi/Microsoft/Boot/bootmgfw.efi
+        }
+      '';
 
       # Run the GRUB menu at the panel's native mode and hand that framebuffer
       # straight to the kernel (gfxpayloadEfi defaults to "text" on UEFI, which

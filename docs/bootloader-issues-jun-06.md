@@ -204,6 +204,28 @@ Windows install; GRUB with **os-prober** scans all disks and adds it. Enabled vi
 boot.loader.grub.useOSProber = true;
 ```
 
+**Update 2026-10-24: os-prober replaced by a static entry.** GRUB stays, but
+os-prober is off. It rescanned and root-mounted the Windows disk on every
+rebuild, and printed `lsblk: /dev/mapper/no*[0-9]: No such file or directory`
+noise from parsing dmraid's output. The menu item it produced is now written
+out once, from what os-prober had found: the Windows disk's ESP, `nvme1n1p1`,
+vfat UUID `B658-8653`, holding `/efi/Microsoft/Boot/bootmgfw.efi`.
+
+```nix
+boot.loader.grub.useOSProber = false;
+boot.loader.grub.extraEntries = lib.mkBefore ''
+  menuentry "Windows Boot Manager" --class windows --class os {
+    insmod part_gpt
+    insmod fat
+    search --no-floppy --fs-uuid --set=root B658-8653
+    chainloader /efi/Microsoft/Boot/bootmgfw.efi
+  }
+'';
+```
+
+If Windows is reinstalled, or its ESP is reformatted, the UUID changes. Read
+it again with `lsblk -o NAME,FSTYPE,UUID /dev/nvme1n1`.
+
 Migration steps that were needed (one-time):
 
 ```sh
