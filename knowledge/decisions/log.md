@@ -2,6 +2,12 @@
 
 ## 2026-10-25
 
+- **Creation**: [battlenet-one-wineserver](battlenet-one-wineserver.md). The
+  battlenet sandbox shares the host's `/tmp`, and the launcher checks for the
+  prefix's wineserver from the host before starting Wine. It joins the
+  server with `runinprefix`, or refuses one in another sandbox. Separate
+  invocations had started two wineservers on one prefix.
+
 - **Creation**: [battlenet-runtime-install](battlenet-runtime-install.md).
   Nix owns only the runtime: Battle.net installs into a user-owned prefix on
   first run, from Blizzard's unpinned installer URL, and Proton runs directly

@@ -2,6 +2,35 @@
 
 ## 2026-10-25
 
+- **Update**: [battlenet](battlenet.md)'s README documents what WoW runs on.
+  Each layer comes from a logged WoW session (vkd3d-proton, DXVK 3.1.1,
+  DXVK-NVAPI 0.9.2, winepulse, winebus with SDL3, fsync), along with the
+  log lines that are normal for it and how to collect the logs.
+
+- **Update**: [battlenet](battlenet.md) adds `libvdpau`. Proton's bundled
+  ffmpeg links it, and without it `winedmo` (Wine's Media Foundation decoder)
+  couldn't load ffmpeg. A loader trace of a full Battle.net session found it;
+  Proton's log didn't. Every bundled library's dependencies now resolve.
+
+- **Update**: [battlenet](battlenet.md) runs a copy of the Proton tree
+  without GE-Proton's bundled libxkbcommon/libxkbregistry. That copy shadowed
+  nixpkgs' newer one and made nixpkgs' SDL3 fail to load ("Failed loading
+  SDL3 library."), so Wine's controller driver had no SDL backend.
+
+- **Update**: [battlenet](battlenet.md) keeps one wineserver per prefix
+  ([decision](../decisions/battlenet-one-wineserver.md)). The sandbox shares
+  the host's `/tmp`. A host-side `battlenet` now finds the prefix's
+  wineserver in any sandbox: it joins with `runinprefix`, refuses a server it
+  can't reach, and `kill` stops Wine across sandboxes. `battlenet-proton` runs
+  Proton inside the FHS. The invocation that starts a session owns it, so
+  Ctrl-C now stops Battle.net instead of only Proton's wrapper.
+
+- **Update**: [battlenet](battlenet.md) adds the libraries that Steam's
+  container would otherwise supply (FreeType, Fontconfig, the X11
+  extensions, audio, SDL2, libgcrypt) in 32 and 64 bits. The first real
+  `battlenet install` showed the 32-bit installer couldn't find FreeType.
+  Xalia is now off by default.
+
 - **Creation**: [battlenet](battlenet.md), the `flakes/battlenet/` sub-flake.
   It runs Battle.net in nixpkgs' GE-Proton inside `steam.buildRuntimeEnv`,
   without Steam or umu, and installs it into a configurable prefix on first
