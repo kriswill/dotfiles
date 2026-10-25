@@ -39,6 +39,13 @@ One deviation: the module enables node_exporter, which listens on
 from another host. The firewall already keeps the port closed, so the file
 sets `listenAddress = "127.0.0.1"` as an extra guard.[^node-exporter-listen]
 
+The file also adds k to the module's `nixploit` group so the report can be
+read without sudo. Membership alone isn't enough, because upstream's
+`report.nu` creates each report with `install --mode=0600`. So the file
+appends `-chmod g+r /var/lib/nixploit/report.json` to the unit's
+`ExecStopPost`. That list merges with the module's own `report.nu finish`
+string, and both run.
+
 This file is merged straight into the host's configuration per the
 [host-mounted modules pattern](../patterns/host-mounted-modules.md). It is a
 host-side enable gate like
