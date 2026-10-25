@@ -108,9 +108,15 @@ in red.
   interrupts activation, as it does under nh.
 - **Linux-only parts are skipped:** the watchdog, plan lists, unit checks and
   kernel/glibc checks.
-- **`--test`** runs `sudo darwin-rebuild check`. The existing darwin `nrt` runs
-  `darwin-rebuild check` without sudo, which current nix-darwin refuses for
-  non-root users.
+- **`--test`** runs the new build's `system.checks` with nothing activated:
+  `sudo -H /usr/bin/env -i checkActivation=1 <its bash> $out/activate`. It is
+  not `darwin-rebuild check`, which rebuilds as root and then, because
+  activate's `#!/usr/bin/env -i` shebang wipes `checkActivation` on macOS,
+  performs a full activation. nrs2 refuses if the script has no check-mode
+  exit ([decision](../decisions/nrs2-darwin-check-mode.md)).
+- **`nrt` is `nrs2 --test`** on both OSes, installed by these modules. It
+  used to be nh's (`nh os test`) and, on darwin, a bare
+  `darwin-rebuild check` that nix-darwin refused without root.
 
 `nrs2 --dry` builds and diffs without root on both OSes. `nrs2 --status` works
 on both; on darwin it covers the running system, the boot default and the

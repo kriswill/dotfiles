@@ -1285,7 +1285,7 @@ fi</code></pre>
 <!-- ================================================================== -->
 <h2 id="proposals">15. Proposals</h2>
 
-<p>Ordered by payoff per unit of effort. The kinds: <span class="kind use">usability</span>, <span class="kind res">resilience</span>, <span class="kind perf">performance</span>. The code is the original sketch to be tested before use. <strong>Status 2026-10-24:</strong> P5, P7, P8, P11, P14 and P15 are done, and each one's block says where it lives. P1–P4, P6, P10 and P17 are implemented in <code>nrs2</code> (see the note at the end of this section) but not in <code>nrs</code>. P16 was already in place. The rest are still proposals.</p>
+<p>Ordered by payoff per unit of effort. The kinds: <span class="kind use">usability</span>, <span class="kind res">resilience</span>, <span class="kind perf">performance</span>. The code is the original sketch to be tested before use. <strong>Status 2026-10-24:</strong> P5, P7, P8, P11, P13, P14 and P15 are done, and each one's block says where it lives. P1–P4, P6, P10 and P17 are implemented in <code>nrs2</code> (see the note at the end of this section) but not in <code>nrs</code>. P16 was already in place. The rest are still proposals.</p>
 
 <div class="table-scroll"><table>
   <colgroup><col style="width:6%"><col style="width:9%"><col style="width:41%"><col style="width:14%"><col style="width:10%"><col></colgroup>
@@ -1437,7 +1437,8 @@ sudo "$out/bin/switch-to-configuration" boot</code></pre>
 <p>For flake updates and fork bumps (herdr, devenv), push first and wait for <code>ci.yml</code> to push nebula's toplevel to FlakeHub Cache. Then <code>nrs</code> pulls instead of compiling. <code>nrb -- --dry-run</code> shows what would be built locally before you commit to waiting.</p></div>
 
 <div class="proposal" id="p13"><h4>P13 · Optimise the store periodically <span class="kind perf">performance</span></h4>
-<p>Replace <code>auto-optimise-store = true</code> with <code data-wrap>nix.optimise.automatic = true</code> (weekly) to take hashing and hard-linking off the write path of every build and substitution. It saves the same disk later. The gain is modest; measure a large update before and after.</p></div>
+<p>Replace <code>auto-optimise-store = true</code> with <code data-wrap>nix.optimise.automatic = true</code> (weekly) to take hashing and hard-linking off the write path of every build and substitution. It saves the same disk later. The gain is modest; measure a large update before and after.</p>
+<p><strong>Done 2026-10-24</strong> (<code>modules/nixos/store-optimise.nix</code>). <code>auto-optimise-store = false</code> overrides snowglobe's <code>setDefault</code>. The timer runs <code>nix-store --optimise</code> at <code>Sun 04:00</code>, persistent, after that night's <code>nix-gc</code>. A run only hashes files new since the last one, because <code>loadInodeHash</code> skips every inode already in <code>.links</code>. Not measured yet.</p></div>
 
 <h3>Boot (P14–P16)</h3>
 
@@ -1496,7 +1497,7 @@ systemd.services.nh-clean.serviceConfig.ExecStartPost =
 <p>Modes:</p>
 <ul>
   <li><code>nrs2 --dry</code> builds and diffs without root.</li>
-  <li><code>nrs2 --test</code> skips the profile and boot entry on NixOS; on darwin it runs <code>darwin-rebuild check</code>.</li>
+  <li><code>nrs2 --test</code>, which is now also <code>nrt</code> on both OSes, skips the profile and boot entry on NixOS. On darwin it runs the new build's <code>system.checks</code> by calling its <code>activate</code> in check mode directly. It does not use <code>darwin-rebuild check</code>: on macOS that one performs a full activation, because activate's <code>#!/usr/bin/env -i</code> shebang wipes <code>checkActivation</code> (<code>knowledge/decisions/nrs2-darwin-check-mode.md</code>).</li>
   <li><code>nrs2 --plan</code> previews the switch (<a href="#p10">P10</a>). On darwin it acts as <code>--dry</code>.</li>
   <li><code>nrs2 --status</code> is the no-root consistency check (<a href="#p17">P17</a>).</li>
 </ul>

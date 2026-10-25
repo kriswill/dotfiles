@@ -2,6 +2,13 @@
 
 ## 2026-10-24
 
+- **Creation**: [store-optimise](store-optimise.md) (report P13).
+  `auto-optimise-store` is off, replaced by a weekly persistent
+  `nix-store --optimise` at Sun 04:00.
+- **Update**: `nrt` is `nrs2 --test` on both OSes, moved from [nh](nh.md) to
+  [nrs2](nrs2.md). nrs2's darwin `--test` runs activate's check mode
+  directly, because `darwin-rebuild check` performs a full activation on
+  macOS ([decision](../decisions/nrs2-darwin-check-mode.md)).
 - **Creation**: [generations](generations.md) (report P15). `nix-gc` becomes
   collect-only behind a prune step. The system profile keeps:
   - the current boot and the two before it (from the journal);
