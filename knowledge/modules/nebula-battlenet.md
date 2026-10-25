@@ -35,8 +35,9 @@ lines that are normal are in the README's "What WoW runs on"):[^subflake-readme]
   `libcuda`). DXVK-NVAPI answers WoW's NVIDIA queries.
 - **Audio:** PipeWire's PulseAudio server. Wine ignores the output device's
   `aux2`–`aux5` channels.
-- **Sync:** fsync. ntsync is unavailable because the `ntsync` module isn't
-  loaded and there's no `/dev/ntsync`.
+- **Sync:** fsync at first: the `ntsync` module wasn't loaded. Since
+  generation 184, [ntsync](ntsync.md) loads it, and the wineserver reports
+  `ntsync: up and running.`; WoW holds 101 ntsync objects.
 - **Shaders:** the first session rebuilt vkd3d-proton's pipeline cache
   (`_retail_/vkd3d-proton.cache`), which the umu and Valve Proton runs had
   written for a different build.
