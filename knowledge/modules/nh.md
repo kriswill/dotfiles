@@ -36,6 +36,8 @@ Mounted ungated on every host (see the
 auto-discovered via the
 [Dendritic module layout](../patterns/dendritic-modules.md).
 
+[nrs2](nrs2.md) prototypes an nh-free replacement for `nrs` on both OSes. It streams the activation output, which nh 4.4.2 captures, and on NixOS it also runs activation as a transient systemd unit.
+
 ## Source
 
 - darwin module: [`modules/darwin/nh.nix`](../../modules/darwin/nh.nix)
