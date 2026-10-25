@@ -8,14 +8,18 @@
 #   - the current boot (/run/booted-system);
 #   - one of the previous PREV_BOOTS systems that booted successfully, newest
 #     first and distinct, other than the current boot's;
-#   - the newest successfully booted system whose kernel version differs from
-#     the current boot's (the kernel fallback);
-#   - the boot default, the running system, or the generation just before the
-#     boot default (the one-step `--rollback`).
+#   - the newest successfully booted system whose kernel semver
+#     (MAJOR.MINOR.PATCH; a -zen1 or -rc1 suffix and the build do not count)
+#     differs from the current boot's (the kernel fallback);
+#   - the boot default, or the running system;
+#   - the previous good switch: the newest other system that
+#     switch-to-configuration finished switching to (it logs that only when
+#     activation exited 0 with every unit started). Without such a record:
+#     the newest earlier generation with a different system.
 # A boot counts as successful when systemd logged "Startup finished"
-# (MESSAGE_ID b07a249c…), which a boot stuck in emergency mode never reaches. Which
-# system a boot ran comes from the kernel command line's init=, both read from
-# the persistent journal. If the boot history cannot be read, the system
+# (MESSAGE_ID b07a249c…), which a boot stuck in emergency mode never reaches.
+# Which system a boot ran comes from the kernel command line's init=. All of
+# it is read from the persistent journal; if that cannot be read, the system
 # profile is left alone.
 #
 # Every other profile keeps the old nix-gc rule, generations older than
@@ -50,6 +54,21 @@ kernel_of() { # kernel_of <system>: its kernel's version (the modules directory 
   done
 }
 
+semver_of() { # semver_of <system>: its kernel's MAJOR.MINOR.PATCH
+  local v
+  v="$(kernel_of "$1")"
+  if [[ "$v" =~ ^([0-9]+)\.([0-9]+)(\.([0-9]+))? ]]; then
+    echo "${BASH_REMATCH[1]}.${BASH_REMATCH[2]}.${BASH_REMATCH[4]:-0}"
+  else
+    echo "$v"
+  fi
+}
+
+good_switches() { # systems switch-to-configuration finished switching to, newest first
+  journalctl -t nixos -r -q --no-pager -o cat -g '^finished switching to system configuration /nix/store/' \
+    | sed -n 's#^finished switching to system configuration \(/nix/store/[^/ ]*\).*#\1#p' || true
+}
+
 successful_boots() { # the system each earlier successful boot ran, newest first
   local id sys
   journalctl --list-boots --no-pager -o json | jq -r 'map(select(.index < 0)) | sort_by(-.index) | .[].boot_id' \
@@ -67,9 +86,9 @@ keep_path() { # keep_path <system> <reason>: add to prune_system's `why` (dynami
 }
 
 prune_system() {
-  local profile=$SYSTEM_PROFILE link n cur prev sys booted booted_kernel found=0 kernel_found=0
+  local profile=$SYSTEM_PROFILE link n cur prev sys booted booted_kernel running default found=0 kernel_found=0
   local -A gen_path=() why=() has_gen=() seen=()
-  local -a gens=() del=() kept=() history=()
+  local -a gens=() del=() kept=() history=() switches=()
   cur="$(readlink "$profile")" # system-<N>-link, relative or absolute
   cur="${cur##*/}"
   cur="${cur#system-}"
@@ -93,15 +112,32 @@ prune_system() {
     return
   fi
   mapfile -t history < <(successful_boots)
+  mapfile -t switches < <(good_switches)
 
   booted="$(readlink -f /run/booted-system)"
-  booted_kernel="$(kernel_of "$booted")"
+  booted_kernel="$(semver_of "$booted")"
+  running="$(readlink -f /run/current-system)"
+  default="${gen_path[$cur]:-}"
   keep_path "$booted" "current boot"
-  keep_path "$(readlink -f /run/current-system)" "running"
-  keep_path "${gen_path[$cur]:-}" "boot default"
+  keep_path "$running" "running"
+  keep_path "$default" "boot default"
+  # The previous good switch, or failing a record of one, the newest earlier
+  # generation with a different system.
   prev=''
-  for n in "${gens[@]}"; do if [[ "$cur" =~ ^[0-9]+$ ]] && [ "$n" -lt "$cur" ]; then prev=$n; fi; done
-  if [ -n "$prev" ]; then keep_path "${gen_path[$prev]}" "before the boot default"; fi
+  for sys in "${switches[@]}"; do
+    if [ "$sys" != "$running" ] && [ "$sys" != "$default" ] && [ -n "${has_gen[$sys]:-}" ]; then
+      prev=$sys
+      break
+    fi
+  done
+  if [ -n "$prev" ]; then
+    keep_path "$prev" "previous good switch"
+  elif [[ "$cur" =~ ^[0-9]+$ ]]; then
+    for n in "${gens[@]}"; do
+      if [ "$n" -lt "$cur" ] && [ "${gen_path[$n]}" != "$default" ]; then prev=${gen_path[$n]}; fi
+    done
+    keep_path "$prev" "before the boot default; no switch on record"
+  fi
 
   # Only systems that still have a generation can be kept, so only those count.
   for sys in "${history[@]}"; do
@@ -111,9 +147,9 @@ prune_system() {
       found=$((found + 1))
       keep_path "$sys" "boot -$found"
     fi
-    if [ "$kernel_found" -eq 0 ] && [ "$(kernel_of "$sys")" != "$booted_kernel" ]; then
+    if [ "$kernel_found" -eq 0 ] && [ "$(semver_of "$sys")" != "$booted_kernel" ]; then
       kernel_found=1
-      keep_path "$sys" "previous kernel $(kernel_of "$sys")"
+      keep_path "$sys" "previous kernel $(semver_of "$sys")"
     fi
     if [ "$found" -ge "$prev_boots" ] && [ "$kernel_found" -eq 1 ]; then break; fi
   done

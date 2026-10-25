@@ -9,10 +9,12 @@
 # preStart prunes first (./prune-generations.sh). The system profile keeps:
 #   - the current boot;
 #   - the previous `prevBoots` systems that booted successfully;
-#   - the newest one on a different kernel version;
-#   - the boot default, the running system, and the generation before the
-#     boot default.
-# Successful boots are read from the persistent journal. Every other profile
+#   - the newest one on a different kernel semver (MAJOR.MINOR.PATCH, so
+#     rebuilds and -zen1/-rc1 suffixes do not count);
+#   - the boot default and the running system;
+#   - the previous good switch: the newest other system whose activation
+#     switch-to-configuration logged as finished (exit 0, all units started).
+# Boots and switches are read from the persistent journal. Every other profile
 # keeps the old rule of `keepDays` days. Deletion goes through nix-env, which
 # never deletes a current generation. nh clean was passed over because it
 # removes generation links itself and can delete the one a rolled-back profile
@@ -42,6 +44,7 @@
           pkgs.coreutils
           pkgs.findutils
           pkgs.gnugrep
+          pkgs.gnused
           pkgs.jq
           config.nix.package # nix-env, the system's own
           config.systemd.package # journalctl, matching the running journal
