@@ -2,6 +2,13 @@
 
 ## 2026-10-24
 
+- **Creation**: [nrs2-plan-user-pass](nrs2-plan-user-pass.md). dry-activate
+  exits before switch-to-configuration-ng's per-user pass, so `nrs2 --plan`
+  runs that pass itself, dry and as the user, through stc-ng's internal
+  spawn interface, and flags units the switch would restart while mid-run.
+- **Update**: [user-oneshots-skip-switch-restart](user-oneshots-skip-switch-restart.md)
+  records the capture units' 2 min `TimeoutStartSec` and the
+  user-oneshot-check warning that now enforces the rule.
 - **Creation**: [nrs2-boot-menu-check](nrs2-boot-menu-check.md). nrs2 skips
   the boot step only when `grub.cfg`, read under sudo, already boots the
   build and lists no collected generation. A user-local record plus a GC hook

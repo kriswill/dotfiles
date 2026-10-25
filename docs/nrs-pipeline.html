@@ -1285,7 +1285,7 @@ fi</code></pre>
 <!-- ================================================================== -->
 <h2 id="proposals">15. Proposals</h2>
 
-<p>Ordered by payoff per unit of effort. The kinds: <span class="kind use">usability</span>, <span class="kind res">resilience</span>, <span class="kind perf">performance</span>. The code is the original sketch to be tested before use. <strong>Status 2026-10-24:</strong> P5, P7, P8, P11 and P14 are done, and each one's block says where it lives. P1–P4 and P6 are implemented in <code>nrs2</code> (see the note at the end of this section) but not in <code>nrs</code>. P16 was already in place. The rest are still proposals.</p>
+<p>Ordered by payoff per unit of effort. The kinds: <span class="kind use">usability</span>, <span class="kind res">resilience</span>, <span class="kind perf">performance</span>. The code is the original sketch to be tested before use. <strong>Status 2026-10-24:</strong> P5, P7, P8, P11 and P14 are done, and each one's block says where it lives. P1–P4, P6, P10 and P17 are implemented in <code>nrs2</code> (see the note at the end of this section) but not in <code>nrs</code>. P16 was already in place. The rest are still proposals.</p>
 
 <div class="table-scroll"><table>
   <colgroup><col style="width:6%"><col style="width:9%"><col style="width:41%"><col style="width:14%"><col style="width:10%"><col></colgroup>
@@ -1394,7 +1394,14 @@ exit "$status"</code></pre>
 <p><strong>Done 2026-10-24</strong> (<code>modules/hosts/nebula/users/k/{helium,noctalia}.nix</code>, <code>modules/nixos/git.nix</code>). Normal runs in the journal take 30&nbsp;s (helium) and 5&nbsp;s (noctalia), well inside the ceiling. A timeout kills the run and marks the unit failed; the path unit keeps watching.</p></div>
 
 <div class="proposal" id="p10"><h4>P10 · Preview the plan <span class="kind use">usability</span></h4>
-<p><code data-wrap>switch-to-configuration dry-activate</code> prints "would stop / restart / start the following units", including the user pass's "would restart the following user units", and changes nothing. A <code>nrp</code> helper builds with <code>nh os build</code>, then runs <code data-wrap>sudo $out/bin/switch-to-configuration dry-activate</code>. It is worth running before risky updates such as a systemd bump or many unit changes.</p></div>
+<p><code data-wrap>switch-to-configuration dry-activate</code> prints "would stop / restart / start the following units" and changes nothing. A <code>nrp</code> helper builds with <code>nh os build</code>, then runs <code data-wrap>sudo $out/bin/switch-to-configuration dry-activate</code>. It is worth running before risky updates such as a systemd bump or many unit changes.</p>
+<p><strong>Correction:</strong> this proposal first said dry-activate also previews the user pass. It does not. In switch-to-configuration-ng, <code>do_system_switch</code> exits right after the system plan, before the per-user loop that spawns <code>do_user_switch</code>. That function has a complete dry-run branch, but dry-activate never reaches it, so on its own it never shows a user unit, the kind behind F2.</p>
+<p><strong>Done 2026-10-24</strong> as <code>nrs2 --plan</code> instead of a separate <code>nrp</code>. After the build and diff it runs:</p>
+<ul>
+  <li><code data-wrap>sudo $out/bin/switch-to-configuration dry-activate</code> for the system units;</li>
+  <li>stc-ng's user pass, dry and as you, started the way stc-ng starts it. This uses an internal interface, so nrs2 says so if the interface moves, and carries on.</li>
+</ul>
+<p>Any unit the plan would restart or start while it is <code>activating</code> right now is named in a warning, because the switch would wait for its new run. Tested against a variant build: the user preview showed <code>codebase-memory-mcp</code>'s stop and start, and a mid-run test oneshot was flagged. <code>--plan</code> also compares the kernel and PAM against the new build. The decision record is <code>knowledge/decisions/nrs2-plan-user-pass.md</code>.</p></div>
 
 <div class="proposal" id="p6"><h4>P6 · Run activation under PID 1 <span class="kind res">resilience</span></h4>
 <p>nh 4.4.2 has no option for this. Two routes:</p>
@@ -1470,7 +1477,8 @@ systemd.services.nh-clean.serviceConfig.ExecStartPost =
   <li>kernel and PAM glibc drift since boot;</li>
   <li>the age of the oldest surviving generation, which is your rollback window.</li>
 </ul>
-<p>It reuses the P3/P4 snippets and answers "is this machine in a consistent state?" in one look. That was the first question on 2026-10-24.</p></div>
+<p>It reuses the P3/P4 snippets and answers "is this machine in a consistent state?" in one look. That was the first question on 2026-10-24.</p>
+<p><strong>Done 2026-10-24</strong> as <code>nrs2 --status</code>. It builds nothing and needs no root. It prints everything above, and also warns when a detached <code>nrs2-switch-to-configuration.service</code> is still running. It ends with <code>✔ consistent</code>, or a count of what needs attention and exit 1. On darwin it covers the running system, the boot default and the generations. Its first run on nebula caught a real pending job: <code>helium-config-capture</code> was in its 30&nbsp;s debounce.</p></div>
 
 <div class="callout ok">
 <p><strong>Suggested order.</strong> P1 and P8 today (four lines, the biggest drop in risk), then P7 and P3/P4. P15 and P14 at the next maintenance window. P6 when the wrapper is being reworked anyway. File P9 regardless; it costs nothing and helps everyone.</p>
@@ -1480,7 +1488,14 @@ systemd.services.nh-clean.serviceConfig.ExecStartPost =
 <p><strong>Prototyped as <code>nrs2</code></strong> (2026-10-24, <code>pkgs/nrs2.{nix,sh}</code>, installed by <code>modules/{nixos,darwin}/nrs2.nix</code>) beside <code>nrs</code>, on every host. It covers P1–P4 and P6 without nh: <code>nom build</code>, <code>dix</code>, then <code>switch-to-configuration test</code> as <code>nrs2-switch-to-configuration.service</code> via <code>systemd-run --wait --verbose --output=cat</code>, then the profile and <code>boot</code>. Those last two are skipped when GRUB's menu already boots this build and lists no collected generation. nrs2 reads <code>grub.cfg</code> under its sudo to decide; <code>--boot</code> forces them.</p>
 <p>The P6 open question is settled, by testing on nebula: Ctrl-C makes <code>systemd-run</code> exit 130 while the unit runs on to completion. An interrupt therefore detaches instead of killing the switch.</p>
 <p>On the Macs it does what <code>nh darwin switch</code> does: set the profile, then run the new generation's own <code>darwin-rebuild activate</code>, with output streamed and the same state report. There is no detach on the Macs, because launchd has no <code>systemd-run</code> here.</p>
-<p>Modes: <code>nrs2 --dry</code> builds and diffs without root. <code>nrs2 --test</code> skips the profile and boot entry on NixOS; on darwin it runs <code>darwin-rebuild check</code>. The two are mutually exclusive. <code>--boot</code> warns wherever it does nothing.</p>
+<p>Modes:</p>
+<ul>
+  <li><code>nrs2 --dry</code> builds and diffs without root.</li>
+  <li><code>nrs2 --test</code> skips the profile and boot entry on NixOS; on darwin it runs <code>darwin-rebuild check</code>.</li>
+  <li><code>nrs2 --plan</code> previews the switch (<a href="#p10">P10</a>). On darwin it acts as <code>--dry</code>.</li>
+  <li><code>nrs2 --status</code> is the no-root consistency check (<a href="#p17">P17</a>).</li>
+</ul>
+<p>The modes are mutually exclusive. <code>--boot</code> warns wherever it does nothing.</p>
 </div>
 
 <!-- ================================================================== -->

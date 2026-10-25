@@ -2,6 +2,16 @@
 
 ## 2026-10-24
 
+- **Update**: [nrs2](nrs2.md) gains `--plan` (report P10) and `--status`
+  (P17). `--plan` is dry-activate plus stc-ng's user pass run dry as the
+  user, because dry-activate exits before that pass. It flags units the
+  switch would restart while they are mid-run
+  ([decision](../decisions/nrs2-plan-user-pass.md)). `--status` is a no-root,
+  no-build consistency check that exits 1 when something needs attention.
+  `--dry` and `--plan` now compare the kernel and PAM against the new build.
+  The sops output collapses the two runs' four key-import lines into one
+  colored line, marks secret changes with `+`, `~` and `−`, and shows errors
+  in red. Tested live in a herdr pane with `nix run .#nrs2 -- --plan`.
 - **Creation**: [user-oneshot-check](user-oneshot-check.md), an evaluation
   warning for user oneshots that a switch could block on (report P7). It
   is silent on nebula today, and it flagged an injected hazard.
