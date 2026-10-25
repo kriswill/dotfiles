@@ -6,35 +6,105 @@ a "Battle.net" desktop entry, and a NixOS module (`programs.battlenet`).
 
 Battle.net itself is not packaged. It is closed-source and updates itself, so
 Nix supplies only what runs it: Proton, a filesystem layout Proton's binaries
-can run in, and the launcher script. Battle.net and its games live in a
-prefix in the user's home.
+can run in, and the launcher. Battle.net and its games live in a prefix in the
+user's home.
 
 ## How it runs
 
 ```
-battlenet ─ bwrap FHS env (steam.buildRuntimeEnv)
-             └ battlenet-launcher (./battlenet.sh)
-                └ <proton>/proton waitforexitandrun Battle.net.exe
-                   └ Wine prefix: $prefix/pfx
+battlenet (host: finds the prefix's wineserver, joins or refuses, kills)
+ └ bwrap FHS env (steam.buildRuntimeEnv)
+    └ battlenet-proton (Proton's environment, installer)
+       └ <proton>/proton waitforexitandrun | runinprefix Battle.net.exe
+          └ Wine prefix: $prefix/pfx
 ```
 
 - **The FHS environment.** GE-Proton ships prebuilt binaries linked against
   `/lib64/ld-linux-x86-64.so.2`, and its `proton` script starts with
-  `#!/usr/bin/env python3`. NixOS has neither, so the launcher runs inside
-  `steam.buildRuntimeEnv`, the bubblewrap environment nixpkgs builds for Steam
-  (the same builder as `steam-run` and nixpkgs' `umu-launcher`). It is free
-  software: it brings Steam's libraries, not Steam.
+  `#!/usr/bin/env python3`. NixOS has neither, so `battlenet-proton` runs
+  inside `steam.buildRuntimeEnv`, the bubblewrap environment nixpkgs builds for
+  Steam (the same builder as `steam-run` and nixpkgs' `umu-launcher`). It is
+  free software: it brings Steam's libraries, not Steam.
 - **No Steam Runtime container.** umu would also start Valve's pressure-vessel
   container inside that. This launcher calls Proton directly, so host
-  libraries come from nixpkgs.
+  libraries come from nixpkgs. Steam's FHS library set expects that container
+  to supply most of them, so the package adds what Wine's unix modules load,
+  in 32 and 64 bits: FreeType, Fontconfig, the X11 extensions, ALSA,
+  PulseAudio, SDL2 and libgcrypt. GE-Proton 11 still runs 32-bit programs on
+  32-bit unix modules, and Blizzard's installer is one of them, so without
+  32-bit FreeType it can't draw text. It also adds `libvdpau`, which
+  Proton's bundled ffmpeg (`libavutil`) links. Without it the whole ffmpeg
+  stack failed to load, and with it `winedmo`, Wine's ffmpeg-based Media
+  Foundation demuxer and decoder. That failure was silent in Proton's log and
+  only showed in a loader trace. Every dependency of Proton's bundled
+  libraries now resolves. Of the libraries Wine's unix modules load, only
+  `libodbc` and `libpcsclite` (databases, smart cards) remain absent.
+- **Proton's bundled libxkbcommon is left out.** GE-Proton bundles an old
+  libxkbcommon (newest version tag `V_1.9.0`) and puts its own lib
+  directories first on `LD_LIBRARY_PATH`. Inside Valve's runtime that copy
+  matches everything else. Here it shadowed nixpkgs' copy, and nixpkgs' SDL3
+  needs `V_1.10.0`, so SDL3 failed to load. sdl2-compat printed "Failed
+  loading SDL3 library.", and Wine's controller driver (`winebus.sys`) ran
+  without SDL, its main game-controller backend. The package now runs a copy
+  of the Proton tree without the bundled libxkbcommon and libxkbregistry, so
+  nixpkgs' copies load. They keep every older version tag. Only the
+  directories down to `files/lib/*-linux-gnu` are real; everything else
+  links to the original. That matters because Proton copies the symlinks in
+  `files/share/default_pfx` into new prefixes as they are. Proton records its
+  library paths in the prefix's `config_info` and relinks the prefix's
+  built-in DLLs when they change, so a new Proton path is picked up on the
+  next start.
 - **The environment** is what umu-run hands Proton.
   `STEAM_COMPAT_CLIENT_INSTALL_PATH` is set but empty, since there is no Steam
   client. GE-Proton reads `UMU_ID` as running without Steam (it turns
   `lsteamclient` off) and `STORE=battlenet` as a request for write-copy
-  emulation (`WINE_SIMULATE_WRITECOPY`), which Battle.net needs.
+  emulation (`WINE_SIMULATE_WRITECOPY`), which Battle.net needs. Xalia,
+  Proton's gamepad navigation for launcher windows, is off unless
+  `PROTON_USE_XALIA=1`: Battle.net is driven by mouse, and Xalia floods
+  stderr with `TaskCanceledException` traces.
 
 GE-Proton's README says running non-Steam games outside Steam is only
 supported through umu. This route works, but upstream won't help with it.
+
+## One prefix, one wineserver
+
+Wine runs one wineserver per prefix and finds it through a socket in
+`/tmp/.wine-$UID/server-<dev>-<inode>`, named after the prefix directory. Two
+wineservers on one prefix overwrite each other's registry, and each starts its
+own Battle.net. So:
+
+- **The sandbox shares the host's `/tmp`** (`privateTmp = false`, as nixpkgs'
+  Heroic does). With a private `/tmp` per invocation, every `battlenet` started
+  its own wineserver on the prefix, and `battlenet kill` couldn't see the
+  running one.
+- **`battlenet` looks for the prefix's wineserver before starting anything.**
+  A wineserver's working directory is its socket directory, so `/proc` finds
+  it whatever sandbox it runs in. If its `/tmp` is ours, the new invocation
+  joins it with Proton's `runinprefix` verb, which skips prefix setup; a
+  second Battle.net.exe in the same wineserver hands over to the running one.
+  If it isn't (another sandbox, such as an umu launcher on the same prefix),
+  `battlenet` refuses instead of starting a second server.
+- **This half runs on the host.** Inside bwrap's user namespace the kernel
+  hides other processes' `cwd` and `environ`, so the check can't run in the
+  sandbox.
+- **Installs take a lock**, because a second click can arrive while the first
+  install is still building the prefix, before its wineserver exists.
+- **The invocation that starts the session owns it.** It waits in the
+  foreground, and Ctrl-C, SIGTERM or the terminal closing stops everything in
+  the prefix. Wine puts its programs in sessions of their own, so the
+  terminal's interrupt alone reached only Proton's Python wrapper, which died
+  with a traceback while Battle.net kept running. The launcher now runs
+  Proton as a background job, which ignores SIGINT, and traps the signal. It
+  kills its own child tree first, so Proton can't start more Wine when the
+  signal lands mid-setup, then stops the prefix. Invocations that join a
+  running session don't own it, so interrupting `battlenet run winecfg`
+  leaves Battle.net alone.
+- **`battlenet kill` works from any launcher.** It sends the prefix's
+  wineservers SIGTERM, which makes them save the registry and exit, then
+  kills every process whose `WINEPREFIX` is the prefix. Programs don't exit
+  with their wineserver, and Battle.net's Chromium processes can leave a
+  zombie main thread with live threads that keep its windows open, so the
+  scan reads each thread's environment and signals the whole process.
 
 ## First run, from nothing
 
@@ -59,14 +129,67 @@ The installer is downloaded at run time instead of being fetched by Nix. The
 URL always serves the newest build, so a pinned hash would go stale, and the
 installer only bootstraps a program that replaces itself anyway.
 
+## What WoW runs on
+
+From a logged session on 2026-10-25 (GE-Proton11-11, `PROTON_LOG=1` and
+`LD_DEBUG=libs`, WoW started from Battle.net):
+
+| Layer | Windows side | Linux side |
+| --- | --- | --- |
+| Game | `Wow.exe` (64-bit), via Blizzard's `Wow_loader.dll` | |
+| Direct3D 12 | `d3d12.dll` + `d3d12core.dll` (vkd3d-proton) | `winevulkan` → `libvulkan.so.1` → the GPU's Vulkan driver; uses `VK_EXT_descriptor_buffer` |
+| DXGI / Direct3D 11 | `dxgi.dll` + `d3d11.dll` (DXVK 3.1.1); Battle.net's Chromium windows draw through it too | same Vulkan path |
+| NVIDIA API | `nvapi64.dll` (DXVK-NVAPI 0.9.2) answers WoW's GPU, architecture and driver queries | Proton's `nvml` bridge → `libnvidia-ml.so.1` |
+| Audio | `mmdevapi.dll` + `winepulse.drv` | `libpulse.so.0` (PipeWire's PulseAudio server) |
+| Controllers | `xinput1_4.dll` + `hid.dll` → `winebus.sys` in `winedevice.exe` | sdl2-compat → SDL3 |
+| Network, login | `bcrypt.dll`, `winhttp.dll` | gnutls, Kerberos |
+| Synchronisation | | fsync; ntsync when `/dev/ntsync` exists (`PROTON_NO_NTSYNC=1` opts out) |
+
+The loader trace had no version errors and no missing libraries in WoW. These
+are normal in its logs:
+
+- **An exception every 10 seconds:** a breakpoint (`0x80000003`) and then an
+  assertion failure (`0xc0000420`) raised in `Wow_loader.dll`, logged as
+  `err:seh:dispatch_exception assertion failure exception`. WoW handles each
+  one and keeps running. The precise period suggests a deliberate check in
+  the game's code, not a fault.
+- **`Cannot load existing on-disk cache due to driver version mismatch`**
+  from vkd3d-proton. Its pipeline cache is `_retail_/vkd3d-proton.cache`, and
+  a cache from another driver or vkd3d build is rebuilt once. Expect some
+  stutter in the first session after a driver or Proton change.
+- **vkd3d-proton warnings:** no OpenXR/OpenVR runtime, missing WMMA
+  (cooperative matrix), `shader_float_controls2` disabled on NVIDIA as a
+  deliberate workaround, and no separate queue for out-of-band work.
+- **`fixme:pulse … Unhandled channel auxN`:** the output device advertises
+  auxiliary channels that Wine ignores.
+- **Every Mesa Vulkan driver loads in WoW too** (Intel, Radeon, Nouveau and so
+  on), because the Vulkan loader enumerates all installed drivers.
+- **Loader "symbol lookup errors"** are optional probes: NVIDIA's app-profile
+  detection, libudev's syscall wrappers, Wine's own.
+- **`libd3d12.so` not found:** Mesa's WSL-only Dozen driver.
+
+Collect the same logs with
+
+```sh
+PROTON_LOG=1 PROTON_LOG_DIR=$HOME/.cache/battlenet-logs \
+  LD_DEBUG=libs LD_DEBUG_OUTPUT=$HOME/.cache/battlenet-logs/ld/ld battlenet
+```
+
+Create `ld/` first. Programs Battle.net starts, WoW included, inherit both
+settings. `steam-battlenet.log` is Proton's log, and the loader writes one
+`ld.PID` file per process. A missing library is a `find library=` block where
+every try ends "(no such file)". A version mismatch is a `version lookup
+error` line. Turn both off for normal play: Proton then traces every one of
+WoW's periodic exceptions.
+
 ## Commands
 
 | Command | Does |
 | --- | --- |
-| `battlenet` | Starts Battle.net; installs it first if `Battle.net.exe` is missing. |
-| `battlenet install` | Downloads the installer again and runs it (repair or reinstall). |
-| `battlenet run CMD [ARG...]` | Runs a program in the prefix: `winecfg`, `regedit`, any `.exe`. |
-| `battlenet kill` | Stops everything in the prefix (`wineserver -k`). Also a desktop action. |
+| `battlenet` | Starts Battle.net; installs it first if `Battle.net.exe` is missing. If it's already running, brings it forward. Ctrl-C stops it. |
+| `battlenet install` | Downloads the installer again and runs it (repair or reinstall). Refused while anything runs in the prefix. |
+| `battlenet run CMD [ARG...]` | Runs a program in the prefix: `winecfg`, `regedit`, any `.exe`. Joins a running session. |
+| `battlenet kill` | Stops everything in the prefix, whichever launcher started it. Also a desktop action. |
 
 `BATTLENET_PREFIX=/path battlenet ...` uses another prefix for one run.
 
@@ -91,16 +214,19 @@ installer only bootstraps a program that replaces itself anyway.
 `prefix` is the compat data directory (`STEAM_COMPAT_DATA_PATH`); the Wine
 prefix is its `pfx/`. To reuse an umu prefix, point at its `pfx` directory:
 umu uses the prefix as its own compat data directory and leaves a `pfx -> .`
-link in it, so `$prefix/pfx` still resolves. `programs.battlenet.package` is
-the launcher built from these options (read-only).
+link in it, so `$prefix/pfx` still resolves. Don't run the umu launcher and
+this one on the prefix at the same time: `battlenet` refuses while umu's
+wineserver is up. `programs.battlenet.package` is the launcher built from
+these options (read-only).
 
 ## Files
 
 | File | Purpose |
 | --- | --- |
 | [`flake.nix`](flake.nix) | flake-parts flake: `packages.x86_64-linux.battlenet` (+ `default`) and `nixosModules.battlenet` (+ `default`). |
-| [`package.nix`](package.nix) | The FHS environment, the launcher and the desktop entry. Overridable: `proton`, `prefix`, `locale`, `icon`, `environment`. |
-| [`battlenet.sh`](battlenet.sh) | The launcher: prefix, installer download, Proton environment, commands. |
+| [`package.nix`](package.nix) | The FHS environment, both halves of the launcher, and the desktop entry. Overridable: `proton`, `prefix`, `locale`, `icon`, `environment`. |
+| [`battlenet.sh`](battlenet.sh) | The host half: prefix, wineserver detection, join or refuse, `kill`. |
+| [`battlenet-proton.sh`](battlenet-proton.sh) | The sandbox half: Proton's environment, installer download and lock, the Proton verb. |
 | [`nixos-module.nix`](nixos-module.nix) | `programs.battlenet.*`. |
 
 ## Consuming it
