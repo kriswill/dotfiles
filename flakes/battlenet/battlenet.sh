@@ -53,17 +53,42 @@ say() {
 
 # The sandbox, run under `taskset -c` when a CPU list is set. Affinity is
 # inherited by the sandbox, Proton, the wineserver and every Windows program
-# Battle.net starts, so the whole session (WoW included) stays on those CPUs.
-# Wine still reports every host CPU to Windows programs (WMI showed 24 logical
-# processors while pinned to 12); WINE_CPU_TOPOLOGY changes what they see.
+# Battle.net starts. It is only a starting point, though: a process may widen
+# its own affinity. Wine reports every host CPU to Windows programs unless
+# told otherwise, so when WoW set its process affinity to "all processors",
+# 76 of its 99 threads (job pools, QUIC workers, vkd3d queues) and the
+# WowVoiceProxy it started moved to all 24 CPUs. WINE_CPU_TOPOLOGY
+# (count:cpu,cpu,...) makes Wine report only the pinned CPUs, so "all
+# processors" means those. Wine reports them as separate cores, without SMT
+# pairing. It's derived from the list unless already set (an empty value
+# turns it off).
 cpus=${BATTLENET_CPUS-$BATTLENET_DEFAULT_CPUS}
 fhs=("$BATTLENET_FHS")
 if [[ -n $cpus ]]; then
-  if ! taskset -c "$cpus" true 2>/dev/null; then
+  if ! status=$(taskset -c "$cpus" cat /proc/self/status 2>/dev/null); then
     say "Invalid CPU list '$cpus' (BATTLENET_CPUS or programs.battlenet.cpus)"
     exit 2
   fi
+  # The kernel's own normalised list (no strides), e.g. "0-5,12-17".
+  allowed=""
+  while IFS=$'\t' read -r key value; do
+    [[ $key == Cpus_allowed_list: ]] && allowed=$value
+  done <<<"$status"
   fhs=(taskset -c "$cpus" "$BATTLENET_FHS")
+  if [[ -z ${WINE_CPU_TOPOLOGY+set} ]]; then
+    list=()
+    IFS=, read -ra ranges <<<"$allowed"
+    for range in "${ranges[@]}"; do
+      for ((cpu = ${range%-*}; cpu <= ${range#*-}; cpu++)); do
+        list+=("$cpu")
+      done
+    done
+    WINE_CPU_TOPOLOGY="${#list[@]}:$(
+      IFS=,
+      echo "${list[*]}"
+    )"
+    export WINE_CPU_TOPOLOGY
+  fi
 fi
 
 # The prefix's wineservers, whatever sandbox they run in. A wineserver's

@@ -2,6 +2,10 @@
 
 ## 2026-10-25
 
+- **Update**: [battlenet](battlenet.md) derives `WINE_CPU_TOPOLOGY` from
+  `cpus`. Affinity alone didn't hold: WoW set "all processors" (24 CPUs as
+  Wine reported them), and 76 of its 99 threads left the pinned CPUs.
+
 - **Update**: [battlenet](battlenet.md) can pin the session to a CPU list
   (`cpus` / `BATTLENET_CPUS`, via `taskset`). The README has a "CPU pinning"
   section: Wine still reports all host CPUs unless `WINE_CPU_TOPOLOGY` is set.

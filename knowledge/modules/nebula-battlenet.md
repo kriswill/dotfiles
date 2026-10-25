@@ -59,9 +59,12 @@ lines that are normal are in the README's "What WoW runs on"):[^subflake-readme]
   written for a different build.
 - **CPUs:** `cpus = "0-5,12-17"` pins the session to the 9900X3D's 3D V-Cache
   CCD (96 MB L3; `6-11,18-23` share 32 MB). `amd_x3d_mode` stays `frequency`, so
-  other work prefers the other CCD. A throwaway-prefix test showed all 54
-  threads and the wineserver on `0-5,12-17`. WMI still reported 24 logical
-  processors (12 with `WINE_CPU_TOPOLOGY`, not set).
+  other work prefers the other CCD. On the first live run (affinity only),
+  WoW set "all processors", which Wine reported as 24 CPUs. 76 of its 99
+  threads (job pools, 22 QUIC workers, vkd3d queues) and `WowVoiceProxy.exe`
+  moved to `0-23`. The launcher now also sets
+  `WINE_CPU_TOPOLOGY=12:0,1,2,3,4,5,12,13,14,15,16,17`, so Wine reports those
+  12 (WMI: 12 cores, 12 logical).
 - **Display:** native Wayland since 2026-10-25. `environment` sets
   `PROTON_ENABLE_WAYLAND = "1"` (WoW ran a little faster than under XWayland)
   and `PROTON_WAYLAND_MONITOR = "DP-3"`. Proton finds the primary monitor
