@@ -33,6 +33,9 @@
   # pfx/. A relative path is under the user's home; null means
   # $XDG_DATA_HOME/battlenet (~/.local/share/battlenet), resolved at run time.
   prefix ? null,
+  # CPUs the whole session (Battle.net, WoW, Proton, the wineserver) runs on,
+  # as a `taskset -c` list such as "0-5,12-17"; null leaves affinity alone.
+  cpus ? null,
   # Language for Blizzard's installer (--lang).
   locale ? "enUS",
   icon ? "applications-games",
@@ -151,10 +154,12 @@ let
       coreutils
       libnotify
       procps
+      util-linux
     ];
     runtimeEnv = {
       BATTLENET_FHS = lib.getExe fhs;
       BATTLENET_DEFAULT_PREFIX = if prefix == null then "" else prefix;
+      BATTLENET_DEFAULT_CPUS = if cpus == null then "" else cpus;
     };
     text = builtins.readFile ./battlenet.sh;
   };

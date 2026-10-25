@@ -2,6 +2,10 @@
 
 ## 2026-10-25
 
+- **Update**: [battlenet](battlenet.md) can pin the session to a CPU list
+  (`cpus` / `BATTLENET_CPUS`, via `taskset`). The README has a "CPU pinning"
+  section: Wine still reports all host CPUs unless `WINE_CPU_TOPOLOGY` is set.
+
 - **Update**: [battlenet](battlenet.md)'s `environment` values are defaults, so
   a variable set for one run wins. The README has a "Native Wayland" section.
 

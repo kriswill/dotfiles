@@ -57,6 +57,11 @@ lines that are normal are in the README's "What WoW runs on"):[^subflake-readme]
 - **Shaders:** the first session rebuilt vkd3d-proton's pipeline cache
   (`_retail_/vkd3d-proton.cache`), which the umu and Valve Proton runs had
   written for a different build.
+- **CPUs:** `cpus = "0-5,12-17"` pins the session to the 9900X3D's 3D V-Cache
+  CCD (96 MB L3; `6-11,18-23` share 32 MB). `amd_x3d_mode` stays `frequency`, so
+  other work prefers the other CCD. A throwaway-prefix test showed all 54
+  threads and the wineserver on `0-5,12-17`. WMI still reported 24 logical
+  processors (12 with `WINE_CPU_TOPOLOGY`, not set).
 - **Display:** native Wayland since 2026-10-25. `environment` sets
   `PROTON_ENABLE_WAYLAND = "1"` (WoW ran a little faster than under XWayland)
   and `PROTON_WAYLAND_MONITOR = "DP-3"`. Proton finds the primary monitor

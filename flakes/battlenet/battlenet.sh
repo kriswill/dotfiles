@@ -2,8 +2,8 @@
 # Body of battlenet, the half of the launcher that runs on the host. Loaded
 # verbatim by ./package.nix via builtins.readFile into writeShellApplication,
 # which sets $BATTLENET_FHS (battlenet-proton inside the FHS runtime, see
-# ./battlenet-proton.sh) and $BATTLENET_DEFAULT_PREFIX, and puts notify-send
-# on PATH.
+# ./battlenet-proton.sh), $BATTLENET_DEFAULT_PREFIX and
+# $BATTLENET_DEFAULT_CPUS, and puts notify-send and taskset on PATH.
 #
 # State lives outside the store:
 #   $prefix               compat data (STEAM_COMPAT_DATA_PATH): pfx/ is the
@@ -35,7 +35,8 @@ usage: battlenet [COMMAND]
   run CMD [ARG...]  run a program in the prefix (winecfg, regedit, an .exe)
   kill              stop everything running in the prefix
 
-BATTLENET_PREFIX overrides the configured prefix for one run.
+BATTLENET_PREFIX overrides the configured prefix for one run, and
+BATTLENET_CPUS the configured CPU list (empty: no pinning).
 EOF
 }
 
@@ -49,6 +50,21 @@ say() {
   echo "battlenet: $1" >&2
   notify-send --app-name=Battle.net Battle.net "$1" 2>/dev/null || true
 }
+
+# The sandbox, run under `taskset -c` when a CPU list is set. Affinity is
+# inherited by the sandbox, Proton, the wineserver and every Windows program
+# Battle.net starts, so the whole session (WoW included) stays on those CPUs.
+# Wine still reports every host CPU to Windows programs (WMI showed 24 logical
+# processors while pinned to 12); WINE_CPU_TOPOLOGY changes what they see.
+cpus=${BATTLENET_CPUS-$BATTLENET_DEFAULT_CPUS}
+fhs=("$BATTLENET_FHS")
+if [[ -n $cpus ]]; then
+  if ! taskset -c "$cpus" true 2>/dev/null; then
+    say "Invalid CPU list '$cpus' (BATTLENET_CPUS or programs.battlenet.cpus)"
+    exit 2
+  fi
+  fhs=(taskset -c "$cpus" "$BATTLENET_FHS")
+fi
 
 # The prefix's wineservers, whatever sandbox they run in. A wineserver's
 # working directory is its socket directory, so /proc finds it from any mount
@@ -140,7 +156,7 @@ kill_prefix() {
 # session down.
 session=""
 own_session() {
-  "$BATTLENET_FHS" "$@" &
+  "${fhs[@]}" "$@" &
   session=$!
   trap stop_session INT TERM HUP
   wait "$session"
@@ -179,7 +195,7 @@ case ${1:-} in
       fi
       # Joining the running session: in the same wineserver, a second
       # Battle.net.exe hands over to the running one, which comes forward.
-      exec "$BATTLENET_FHS" runinprefix "$exe"
+      exec "${fhs[@]}" runinprefix "$exe"
     fi
     if [[ ! -f $exe ]]; then
       # The installer starts Battle.net when it finishes.
@@ -207,7 +223,7 @@ case ${1:-} in
     find_servers
     refuse_foreign
     if ((${#joinable[@]})); then
-      exec "$BATTLENET_FHS" runinprefix "$@"
+      exec "${fhs[@]}" runinprefix "$@"
     fi
     own_session waitforexitandrun "$@"
     ;;

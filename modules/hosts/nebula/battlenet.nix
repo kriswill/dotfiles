@@ -8,6 +8,11 @@
     programs.battlenet = {
       enable = true;
       icon = "/home/k/Downloads/wow-icon.png";
+      # The Ryzen 9 9900X3D's 3D V-Cache CCD: cores 0-5 and their SMT
+      # siblings share the 96 MB L3 (6-11,18-23 share 32 MB). WoW is
+      # cache-hungry. amd_x3d_mode stays "frequency", so other work prefers
+      # the other CCD and leaves these cores to the game.
+      cpus = "0-5,12-17";
       environment = {
         # Wine's Wayland driver instead of XWayland: WoW ran a little faster
         # (2026-10-25). Battle.net's window lays out oddly for a few seconds

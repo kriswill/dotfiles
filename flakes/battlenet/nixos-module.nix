@@ -38,6 +38,24 @@ in
       '';
     };
 
+    cpus = lib.mkOption {
+      type = lib.types.nullOr lib.types.str;
+      default = null;
+      example = "0-5,12-17";
+      description = ''
+        CPUs the whole session runs on, as a `taskset -c` list. That covers
+        Battle.net, WoW and everything else Battle.net starts, Proton and the
+        wineserver: they all inherit the affinity. Wine still reports every
+        host CPU to the programs. To make them see only these, also set
+        `WINE_CPU_TOPOLOGY` (`count:cpu,cpu,…`) in `environment`; it reports
+        each listed CPU as a separate core. On an AMD X3D CPU, give the 3D
+        V-Cache CCD's CPUs (those sharing the large L3; see
+        `/sys/devices/system/cpu/cpu*/cache/index3/shared_cpu_list`).
+        `null` leaves affinity alone. `BATTLENET_CPUS` overrides it for one
+        run, and an empty value turns pinning off.
+      '';
+    };
+
     locale = lib.mkOption {
       type = lib.types.str;
       default = "enUS";
@@ -79,6 +97,7 @@ in
         inherit (cfg)
           proton
           prefix
+          cpus
           locale
           icon
           environment
