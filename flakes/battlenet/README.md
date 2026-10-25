@@ -193,6 +193,28 @@ WoW's periodic exceptions.
 | `battlenet kill` | Stops everything in the prefix, whichever launcher started it. Also a desktop action. |
 
 `BATTLENET_PREFIX=/path battlenet ...` uses another prefix for one run.
+`BATTLENET_CPUS=LIST` overrides the CPU list for one run, and an empty value
+turns pinning off.
+
+## CPU pinning
+
+`programs.battlenet.cpus` takes a `taskset -c` list, for example
+`"0-5,12-17"`. The launcher then starts the sandbox under `taskset`. The
+sandbox, Proton, the wineserver and every Windows program Battle.net starts
+inherit the affinity, so WoW stays on those CPUs too. Programs added with
+`battlenet run` while a session runs are pinned the same way.
+
+On AMD X3D CPUs, pin the session to the 3D V-Cache CCD: the CPUs whose
+`/sys/devices/system/cpu/cpuN/cache/index3/shared_cpu_list` share the large
+L3. Leaving the kernel's `amd_x3d_vcache` mode at `frequency` then steers
+other work to the other CCD.
+
+Wine still reports every host CPU to Windows programs. Pinned to 12 of 24
+CPUs, WMI showed 12 cores and 24 logical processors, so a game can size its
+thread pools for 24. Setting `WINE_CPU_TOPOLOGY=12:0,1,2,3,4,5,12,13,14,15,16,17`
+in `environment` makes Wine report only those 12 CPUs, but as 12 separate
+cores with no SMT pairing. Whether that helps is a question for a frame-time
+measurement.
 
 ## The NixOS module
 
@@ -205,6 +227,7 @@ WoW's periodic exceptions.
     enable = true;
     # prefix = "Games/battlenet";          # default null: ~/.local/share/battlenet; relative = under $HOME
     # proton = pkgs.proton-ge-bin;          # default
+    # cpus = "0-5,12-17";                   # pin the session (taskset -c list)
     # locale = "enUS";                      # installer language
     # icon = "/path/to/icon.png";           # default: applications-games
     # environment.PROTON_ENABLE_WAYLAND = "1";

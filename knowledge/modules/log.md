@@ -2,6 +2,11 @@
 
 ## 2026-10-25
 
+- **Update**: [battlenet](battlenet.md) gains `programs.battlenet.cpus`, a
+  `taskset -c` list the whole session inherits (`BATTLENET_CPUS` per run).
+  [nebula-battlenet](nebula-battlenet.md) pins it to the 9900X3D's V-Cache CCD,
+  `0-5,12-17`.
+
 - **Update**: [nebula-battlenet](nebula-battlenet.md) runs Battle.net and WoW on
   Wine's Wayland driver (`PROTON_ENABLE_WAYLAND`, `PROTON_WAYLAND_MONITOR=DP-3`).
   The Hyprland `wow-fullscreen` rule ignores WoW's own fullscreen requests.

@@ -28,6 +28,10 @@ Options under `programs.battlenet`:
   directory, because umu leaves a `pfx -> .` link in it.
 - `proton` (default `pkgs.proton-ge-bin`): a package with a `steamcompattool`
   output, or a package holding `proton`.
+- `cpus` (default `null`): a `taskset -c` list the whole session runs on
+  (Battle.net, WoW, Proton, the wineserver inherit it); `BATTLENET_CPUS`
+  overrides it per run. Wine still reports every host CPU to Windows
+  programs unless `WINE_CPU_TOPOLOGY` is set too.
 - `locale` (installer `--lang`, default `enUS`), `icon`, and `environment`
   (extra Proton variables, as defaults that a variable set for one run
   overrides).
