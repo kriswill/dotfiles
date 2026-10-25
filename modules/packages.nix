@@ -68,6 +68,10 @@
         # wowPath (the Steam/Proton prefix) defaults inside pkgs/wowup.nix so
         # the overlay and this output stay in sync.
         wowup = pkgs.callPackage ../pkgs/wowup.nix { };
+        # nixploit (the scanner) and its report renderer come from their own
+        # flake (./flakes/nixploit), which is NixOS-only.
+        nixploit = inputs.nixploit.packages.${system}.nixploit;
+        nixploit-report = inputs.nixploit.packages.${system}.nixploit-report;
       };
     };
 
@@ -78,5 +82,7 @@
     ccglass = inputs.ccglass.packages.aarch64-linux.ccglass;
     codebase-memory-mcp = inputs.codebase-memory-mcp.packages.aarch64-linux.codebase-memory-mcp;
     okf = inputs.okf.packages.aarch64-linux.okf;
+    nixploit = inputs.nixploit.packages.aarch64-linux.nixploit;
+    nixploit-report = inputs.nixploit.packages.aarch64-linux.nixploit-report;
   };
 }

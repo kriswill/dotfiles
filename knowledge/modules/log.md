@@ -2,6 +2,13 @@
 
 ## 2026-10-25
 
+- **Update**: [nixploit](nixploit.md) and
+  [nebula-nixploit](nebula-nixploit.md). The scanner and the report step moved
+  into the [nixploit sub-flake](../packages/nixploit.md), whose module adds
+  `services.nixploit.report.{enable,readers}`. The nebula host file is now
+  settings only. The renderer binary is `nixploit-report` (it was
+  `nixploit-report-html`). Upstream is still pinned at 845724a, so nebula's
+  scanner build and job config are byte-identical.
 - **Update**: [nebula-nixploit](nebula-nixploit.md): the report viewer
   explains each finding. `nixploit-report-graph` embeds the system's
   reference graph and generation membership, and the page shows:

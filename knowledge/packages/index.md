@@ -20,6 +20,7 @@ flake consumes via relative-path inputs.
 * [Iv](iv.md) - A command-line image viewer using terminal graphics.
 * [Kitten](kitten.md) - Kitten - A collection of small, useful programs for the kitty terminal.
 * [Ld64 Lld](ld64-lld.md) - TEMPORARY overlay linking kitty/vfkit/starship with LLVM lld on darwin — works around the pinned nixpkgs' cctools ld64 1010.6 SIGTRAP until the staging fix reaches nixos-unstable.
+* [nixploit](nixploit.md) - Sub-flake wrapping the manic-systems/nixploit vulnerability scanner for NixOS: re-exports its package and module and adds services.nixploit.report (an HTML viewer rendered after every scan, which explains why each vulnerable package is installed and what to do about it, plus the users who can read it); enabled on nebula.
 * [Noctalia Config](noctalia-config.md) - Custom Nix package 'noctalia-config'.
 * [Nrs](nrs.md) - The rebuild helper for NixOS and nix-darwin, one bash script: nom for the build tree, dix for the diff, the platform's own activation, and a state report on every exit. It replaced nh on 2026-10-24 (it was nrs2 until then).
 * [okf](okf.md) - okf — CLI for maintaining OKF knowledge bundles (scaffold/index/validate/viz), consumed from its own repo via FlakeHub (kriswill/okflight).

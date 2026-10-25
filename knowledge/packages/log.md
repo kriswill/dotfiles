@@ -1,5 +1,15 @@
 # Log
 
+## 2026-10-25
+
+- **Creation**: [nixploit](nixploit.md), the `flakes/nixploit/` sub-flake. It
+  wraps manic-systems/nixploit (pinned as its `upstream` input), and carries
+  the HTML report viewer and its renderer and graph collector, which moved in
+  from `modules/hosts/nebula/`. It exposes `packages.<linux>.{nixploit,
+  nixploit-report, nixploit-report-graph}` and `nixosModules.{nixploit,
+  default}`, which add `services.nixploit.report.{enable,readers}` to
+  upstream's module. The root re-exports the packages and module.
+
 ## 2026-10-24
 
 - **Update**: [nrs](nrs.md) is the renamed nrs2 (`pkgs/nrs.{nix,sh}`,

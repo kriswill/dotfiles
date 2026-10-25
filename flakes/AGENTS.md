@@ -13,7 +13,8 @@ Local conventions:
 - Each `flakes/<name>/` uses flake-parts, exposes `packages.<system>.<name>`
   (+ `default`), owns its `flake.lock`, and carries a `README.md` explaining
   what it repackages and how (see `ccglass/`, `apple-container/`). Auxiliary
-  files live beside it (fork patches, apple-container's `darwin-module.nix`).
+  files live beside it (fork patches, apple-container's `darwin-module.nix`,
+  nixploit's `nixos-module.nix` and report scripts).
 - **`git add` everything** — untracked sub-flake files are invisible to nix.
 - **Wiring happens in modules/**: re-export the package in
   `modules/packages.nix`; if hosts need it on `pkgs`, add an INLINE overlay

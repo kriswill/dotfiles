@@ -1,13 +1,13 @@
 # shellcheck shell=bash
-# Body of nixploit-report-graph. Loaded verbatim by nixploit.nix via
+# Body of nixploit-report-graph. Loaded verbatim by ./report-graph.nix via
 # builtins.readFile into writeShellApplication (which prepends the shebang and
 # the runtimeInputs PATH, and runs shellcheck at build time). No Nix
 # interpolation lives here, so it runs standalone too:
 #
-#   bash modules/hosts/nebula/nixploit-report-graph.sh > graph.json
+#   bash report-graph.sh > graph.json
 #
 # Prints the running system's reference graph as JSON for the report viewer
-# (modules/hosts/nebula/nixploit-report.html): every store path in
+# (./report.html): every store path in
 # /run/current-system's closure, the indices of the paths each one references,
 # and, per system generation, which of those paths it also holds:
 #
