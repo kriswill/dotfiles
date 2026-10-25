@@ -2,6 +2,13 @@
 
 ## 2026-10-24
 
+- **Update**: [dotfiles-stow](dotfiles-stow.md) runs the whole restow once as
+  the user, not one `sudo -u k` per package (Mac: 2.76 s for 20 packages).
+  It gains a `fold` list; darwin folds `karabiner`, so `~/.config/karabiner`
+  is a directory link as Karabiner requires. [macos-defaults](macos-defaults.md)
+  stops nix-darwin's unconditional `killall Dock`, and its stub card is
+  written up. [nrs2](nrs2.md) collapses Homebrew's `Using` lines and dims the
+  sops lines.
 - **Update**: [nrs2](nrs2.md) changes after a code review. Its boot-step skip
   now reads `grub.cfg` under its existing sudo instead of trusting a
   user-local record, so it also repairs the menu after a manual GC or a

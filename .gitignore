@@ -35,3 +35,7 @@ home/nvim/.config/nvim/spell/*.spl
 
 # Generated OKF bundle graph (okf viz — okf lives in github:kriswill/okflight)
 knowledge/viz.html
+
+# Karabiner-Elements writes timestamped backups next to its config, which is
+# a whole-directory stow link into the repo (modules/darwin/dotfiles-stow.nix)
+home/karabiner/.config/karabiner/automatic_backups/

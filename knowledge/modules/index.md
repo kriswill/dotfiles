@@ -50,7 +50,7 @@ interesting ones by hand — scaffolding never overwrites an existing doc.
 * [Libreoffice Paths](libreoffice-paths.md) - Moves LibreOffice's user-writable paths out of ~/.config/libreoffice into XDG data/state dirs by seeding both the modern and legacy path nodes into registrymodifications.xcu — idempotent, skip-if-running, subshell-confined.
 * [Localsearch](localsearch.md) - Enables services.gnome.localsearch (the tracker-miners package's new name), registering its D-Bus service file so GTK file managers can activate the Tracker3 filesystem indexer on demand instead of failing to find it.
 * [Ly](ly.md) - Disables ly's F5/F6 brightness actions (and their hint-bar entries) by setting brightness_down_key/brightness_up_key to the literal "null" — ly itself is enabled by snowglobe's shared desktop layer.
-* [Macos Defaults](macos-defaults.md) - Kris' macOS defaults.
+* [Macos Defaults](macos-defaults.md) - nix-darwin user and system defaults for the Macs: traditional scroll direction, drag windows with ctrl+cmd+click, fn key does nothing, and a Dock that auto-hides without being restarted on every switch.
 * [Codebase Memory Mcp](nebula-codebase-memory-mcp.md) - Flips services.codebase-memory-mcp.enable on nebula — the supervised code-graph daemon (systemd user service) + cbm-ctl from the fork's NixOS module.
 * [Neovim](neovim.md) - Installs Neovim plus every LSP/linter/formatter binary on the global PATH; the Lua config itself is stow-deployed and documented in the nvim knowledge area.
 * [Nh](nh.md) - nh (Nix Helper) plus the nrs/nrb/nrt rebuild helper executables (writeShellScriptBin, so they work in non-interactive shells and every shell alike).

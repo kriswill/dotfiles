@@ -35,6 +35,13 @@
         ];
         skipReason = "linux-only";
         runAsUser = "/usr/bin/sudo -u ${user} --set-home";
+        # Linked as whole directories. Karabiner-Elements writes karabiner.json
+        # by atomic rename and only notices changes when ~/.config/karabiner
+        # ITSELF is the symlink (its docs: link the directory, not the file).
+        # A per-file link was being replaced with a real file, after which
+        # every restow conflict-skipped the package. Its automatic_backups/
+        # now lands in the repo, so it is gitignored.
+        fold = [ "karabiner" ];
       };
     in
     {

@@ -50,9 +50,11 @@ The flake also exports `darwinModules.apple-container` (alias: `default`), defin
   or Homebrew install of `container`; a stale pkgutil receipt (binaries already removed)
   only warns. Exercised by `darwin-rebuild check` too.
 - **Runtime drift check** (`postActivation`): when the apiserver's launchd plist points
-  at an older store path, stops the old runtime (best-effort, in the primary user's
-  launchd domain) and reminds you to run `container system start`. Abnormal states warn
-  rather than silently skipping.
+  at an older store path *and* launchd still has that apiserver loaded, stops the old
+  runtime (best-effort, in the primary user's launchd domain) and reminds you to run
+  `container system start`. A runtime that is no longer loaded stays quiet: the plist
+  outlives it, and the next `container system start` installs from the new build
+  anyway. Abnormal states warn rather than silently skipping.
 
 ```nix
 {

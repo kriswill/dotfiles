@@ -33,9 +33,10 @@
           "yazi" # yazi module (plugins/flavor links) not ported to nixos yet
         ];
         skipReason = "darwin-only";
-        # setpriv, not runuser: runuser opens a PAM session per package, and
-        # nixos-rebuild-ng streams the activation unit's journal, so every
-        # pam_unix "session opened/closed" pair landed in the rebuild output.
+        # setpriv, not runuser: runuser opens a PAM session per call (it was
+        # once per package), and nixos-rebuild-ng streams the activation
+        # unit's journal, so every pam_unix "session opened/closed" pair
+        # landed in the rebuild output.
         runAsUser = "${pkgs.util-linux}/bin/setpriv --reuid=${user} --regid=${
           config.users.users.${user}.group
         } --init-groups -- env HOME=${home} USER=${user} LOGNAME=${user}";
