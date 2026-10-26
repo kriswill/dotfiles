@@ -184,10 +184,27 @@
 
       programs.discord = {
         enable = true;
-        # package = pkgs.discord;
+        # Chromium's VA-API decode through nvidia-vaapi-driver shows stream
+        # frames out of order (video jumps back/forth, audio fine); the CPU
+        # decodes Discord streams with ease.
+        package = pkgs.discord.override {
+          commandLineArgs = "--disable-accelerated-video-decode";
+        };
       };
 
-      programs.vesktop.enable = true;
+      programs.vesktop = {
+        enable = true;
+        # Same NVIDIA VA-API stream glitch as discord above; nixpkgs' vesktop
+        # has no commandLineArgs, so wrap it (its .desktop Exec is by name).
+        package = pkgs.symlinkJoin {
+          name = "vesktop-sw-decode";
+          paths = [ pkgs.vesktop ];
+          nativeBuildInputs = [ pkgs.makeWrapper ];
+          postBuild = ''
+            wrapProgram $out/bin/vesktop --add-flags --disable-accelerated-video-decode
+          '';
+        };
+      };
       programs.gajim.enable = true;
       programs.stoat-desktop.enable = true; # snowglobe: Stoat (Revolt) chat client
       programs.gthumb.enable = true;
