@@ -2,6 +2,15 @@
 
 ## 2026-10-25
 
+- **Update**: [nebula](nebula.md) launches Discord with
+  `--disable-accelerated-video-decode` (`programs.discord.package =
+  pkgs.discord.override { commandLineArgs = …; }`). Discord's Chromium GPU
+  process was picking up nvidia-vaapi-driver 0.0.18 on its own, without
+  `LIBVA_DRIVER_NAME` set, and decoding streams on NVDEC. On the RTX 5080
+  that made every stream's video jump back and forth while the audio stayed
+  fine. Decoding on the CPU fixes it, confirmed in an A/B test. Vesktop,
+  also Chromium-based, gets the same flag through a `symlinkJoin` +
+  `wrapProgram` wrapper, because nixpkgs' vesktop has no `commandLineArgs`.
 - **Update**: [nebula](nebula.md) turns off VLC (snowglobe's desktop layer)
   and Tor Browser (its hacker-mode profile; the tor daemon stays). They were
   the only things pulling in ffmpeg 7.1.5 (41 nixploit findings, see
