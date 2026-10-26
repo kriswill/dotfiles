@@ -7,6 +7,7 @@ flake consumes via relative-path inputs.
 
 * [apple-container](apple-container.md) - apple-container — Apple's native macOS container CLI, repackaged from the signed .pkg release.
 * [battlenet](battlenet.md) - Sub-flake that runs Blizzard's Battle.net in nixpkgs' GE-Proton without Steam or umu: a host-side `battlenet` launcher that keeps one wineserver per prefix and hands Proton to a steam.buildRuntimeEnv sandbox, installs Battle.net into a configurable prefix on first run, plus the programs.battlenet NixOS module; enabled on nebula.
+* [btop](btop.md) - Patch overlay on btop, the terminal resource monitor: on Linux, the CPU box colours the core labels of the CPUs sharing the largest L3 (nebula's 3D V-Cache CCD) in the Cached meter's colour; darwin keeps the cached build.
 * [Cbissue](cbissue.md) - cbissue — open Codeberg (Forgejo) issues from the CLI.
 * [Cbissues](cbissues.md) - cbissues — browse/filter a Codeberg (Forgejo) repo's issues (fzf TUI + --plain).
 * [ccglass](ccglass.md) - ccglass — local logging reverse-proxy + web dashboard for coding agents, built as a standalone binary.

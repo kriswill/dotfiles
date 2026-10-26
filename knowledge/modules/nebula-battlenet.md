@@ -64,7 +64,8 @@ lines that are normal are in the README's "What WoW runs on"):[^subflake-readme]
   threads (job pools, 22 QUIC workers, vkd3d queues) and `WowVoiceProxy.exe`
   moved to `0-23`. The launcher now also sets
   `WINE_CPU_TOPOLOGY=12:0,1,2,3,4,5,12,13,14,15,16,17`, so Wine reports those
-  12 (WMI: 12 cores, 12 logical).
+  12 (WMI: 12 cores, 12 logical). The [btop overlay](../packages/btop.md)
+  colours those CPUs' core labels, to watch the pinning live.
 - **Display:** native Wayland since 2026-10-25. `environment` sets
   `PROTON_ENABLE_WAYLAND = "1"` (WoW ran a little faster than under XWayland)
   and `PROTON_WAYLAND_MONITOR = "DP-3"`. Proton finds the primary monitor
