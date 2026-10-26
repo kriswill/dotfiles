@@ -1,0 +1,56 @@
+diff --git a/src/btop_draw.cpp b/src/btop_draw.cpp
+index fbc99c0..54d4073 100644
+--- a/src/btop_draw.cpp
++++ b/src/btop_draw.cpp
+@@ -537,6 +537,33 @@ namespace Cpu {
+ 	vector<Draw::Graph> gpu_temp_graphs;
+ 	vector<Draw::Graph> gpu_mem_graphs;
+ 
++	//? CPUs sharing the largest L3, such as the 3D V-Cache CCD of an AMD X3D part. Empty when
++	//? every CPU's L3 is the same size, or sysfs has no cache information (not Linux).
++	vector<bool> largest_l3() {
++		namespace fs = std::filesystem;
++		vector<uint64_t> sizes(Shared::coreCount, 0);
++		for (const auto& n : iota(0, Shared::coreCount)) {
++			const fs::path cache = fmt::format("/sys/devices/system/cpu/cpu{}/cache", n);
++			for (int i = 0; fs::exists(cache / fmt::format("index{}", i)); i++) {
++				const auto index = cache / fmt::format("index{}", i);
++				if (readfile(index / "level") != "3") continue;
++				try { sizes[n] = std::stoull(readfile(index / "size", "0")); } catch (...) {}
++				break;
++			}
++		}
++		//? Offline CPUs have no cache directory; leave them out of the comparison.
++		uint64_t lo = 0, hi = 0;
++		for (const auto size : sizes) {
++			if (size == 0) continue;
++			lo = (lo == 0 ? size : min(lo, size));
++			hi = max(hi, size);
++		}
++		if (lo == hi) return {};
++		vector<bool> largest;
++		for (const auto size : sizes) largest.push_back(size == hi);
++		return largest;
++	}
++
+     string draw(
+ 		const cpu_info& cpu,
+ #if defined(GPU_SUPPORT)
+@@ -877,12 +904,15 @@ namespace Cpu {
+ 			return !cpu.active_cpus.has_value() || std::ranges::find(cpu.active_cpus.value(), num) != cpu.active_cpus.value().end();
+ 		};
+ 
+-		//? Core text and graphs
++		//? Core text and graphs; labels of the CPUs sharing the largest L3 take the colour of the Cached meter
++		static const auto big_l3 = largest_l3();
+ 		int cx = 0, cy = 1, cc = 0, core_width = (b_column_size == 0 ? 2 : 3);
+ 		if (Shared::coreCount >= 100) core_width++;
+ 		for (const auto& n : iota(0, Shared::coreCount)) {
+ 			auto enabled = is_cpu_enabled(n);
+-			out += Mv::to(b_y + cy + 1, b_x + cx + 1) + Theme::c(enabled ? "main_fg" : "inactive_fg") + (Shared::coreCount < 100 ? Fx::b + 'C' + Fx::ub : "")
++			const string label_color = not enabled ? Theme::c("inactive_fg")
++				: (cmp_less(n, big_l3.size()) and big_l3[n]) ? Theme::g("cached").at(100) : Theme::c("main_fg");
++			out += Mv::to(b_y + cy + 1, b_x + cx + 1) + label_color + (Shared::coreCount < 100 ? Fx::b + 'C' + Fx::ub : "")
+ 				+ ljust(to_string(n), core_width);
+ 			if ((b_column_size > 0 or extra_width > 0) and cmp_less(n, core_graphs.size()))
+ 				out += Theme::c("inactive_fg") + graph_bg * (5 * b_column_size + extra_width) + Mv::l(5 * b_column_size + extra_width)

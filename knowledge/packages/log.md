@@ -2,6 +2,11 @@
 
 ## 2026-10-25
 
+- **Creation**: [btop](btop.md), a Linux-only patch overlay. The CPU box
+  colours the core labels of the CPUs sharing the largest L3 (nebula's
+  V-Cache CCD, `0-5,12-17`) in the Cached meter's colour; upstream btop has
+  no cache-topology display.
+
 - **Update**: [battlenet](battlenet.md) derives `WINE_CPU_TOPOLOGY` from
   `cpus`. Affinity alone didn't hold: WoW set "all processors" (24 CPUs as
   Wine reported them), and 76 of its 99 threads left the pinned CPUs.

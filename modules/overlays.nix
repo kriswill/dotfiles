@@ -11,6 +11,7 @@
     kitten = import ../overlays/kitten.nix;
     ld64-lld = import ../overlays/ld64-lld.nix; # TEMPORARY, see file header
 
+    btop = import ../overlays/btop.nix;
     direnv = import ../overlays/direnv.nix;
     dots-adopt = import ../overlays/dots-adopt.nix;
     podman = import ../overlays/podman.nix;
