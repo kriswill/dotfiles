@@ -184,9 +184,11 @@
 
       programs.discord = {
         enable = true;
-        # Chromium's VA-API decode through nvidia-vaapi-driver shows stream
-        # frames out of order (video jumps back/forth, audio fine); the CPU
-        # decodes Discord streams with ease.
+        # Chromium never vaSyncSurface()s the surfaces it exported from
+        # nvidia-vaapi-driver 0.0.18, so streams show stale frames (video
+        # jumps back, audio fine); decode on the CPU instead. Drop once stable
+        # Discord ships the Canary 1.0.2149 Electron fix, or a driver release
+        # with elFarto/nvidia-vaapi-driver#476 lands. docs/chromium-nvidia.md
         package = pkgs.discord.override {
           commandLineArgs = "--disable-accelerated-video-decode";
         };
@@ -194,8 +196,10 @@
 
       programs.vesktop = {
         enable = true;
-        # Same NVIDIA VA-API stream glitch as discord above; nixpkgs' vesktop
-        # has no commandLineArgs, so wrap it (its .desktop Exec is by name).
+        # Same stale-frame bug as discord above, but stock Electron: Discord's
+        # fix never reaches it; only the driver fix (#476) or a Chromium fix can.
+        # nixpkgs' vesktop has no commandLineArgs, so wrap it (its .desktop
+        # Exec is by name).
         package = pkgs.symlinkJoin {
           name = "vesktop-sw-decode";
           paths = [ pkgs.vesktop ];

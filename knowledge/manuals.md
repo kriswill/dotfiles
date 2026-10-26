@@ -50,6 +50,11 @@ versions live in the manuals themselves, which lead with verified state.
   ghostty+Hyprland+tmux: why only `logo.type: "kitty-icat"` renders the PNG,
   the `TERM == "screen"` image guard, and a grim/ghostty screenshot test
   harness.
+- [`docs/chromium-nvidia.md`](../docs/chromium-nvidia.md) — why
+  Chromium/Electron apps on Wayland decode video on NVDEC despite Chromium's
+  NVIDIA VA-API default (`--render-node-override` bypass), the
+  nvidia-vaapi-driver 0.0.18 stale-frame race behind Discord and Vesktop's
+  `--disable-accelerated-video-decode`, upstream status, and when to drop it.
 - [`docs/suspend.md`](../docs/suspend.md) — S3/`deep` suspend reference whose
   single load-bearing fact is the MSI BIOS setting `Wake Up Event By = OS`
   (non-declarative, lost on CMOS reset), plus wake-diagnosis commands.

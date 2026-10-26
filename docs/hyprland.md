@@ -428,7 +428,7 @@ Wayland/NVIDIA env vars (set in Hyprland with `hl.env(...)` only if snowglobe
 doesn't already export them — check `env | grep -iE 'GBM|GLX|LIBVA|OZONE'` first):
 
 ```lua
-hl.env("LIBVA_DRIVER_NAME", "nvidia")          -- VA-API
+hl.env("LIBVA_DRIVER_NAME", "nvidia")          -- VA-API (unneeded: libva maps nvidia-drm itself)
 hl.env("GBM_BACKEND", "nvidia-drm")            -- force GBM backend
 hl.env("__GLX_VENDOR_LIBRARY_NAME", "nvidia")
 hl.env("XCURSOR_SIZE", "24")
@@ -440,6 +440,9 @@ Notes:
   **not** need it.
 - `NIXOS_OZONE_WL=1` (already set) makes Electron/Chromium run native Wayland —
   the standard fix for Electron flicker; don't also set `ELECTRON_OZONE_PLATFORM_HINT`.
+  Side effect: on Wayland, Chromium skips its own "no VA-API on NVIDIA" default
+  and decodes through nvidia-vaapi-driver, which shows stale frames in Discord
+  and Vesktop streams. See [chromium-nvidia.md](chromium-nvidia.md).
 - `cursor:no_hardware_cursors` is **no longer** the documented NVIDIA flicker
   fix in current Hyprland. nebula toggles it dynamically (look-and-feel.lua):
   hardware cursors sit on their own display plane, so screencopy/portal
