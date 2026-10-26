@@ -5,6 +5,19 @@ types or directories, root-level concept docs, `docs/` manuals, bundle-wide
 sweeps, and workspace tooling conventions. Changes scoped to one bundle log
 in that bundle's own `log.md` (e.g. [modules/log.md](modules/log.md)).
 
+## 2026-10-25
+
+- **Creation** — `docs/chromium-nvidia.md`, listed in
+  [manuals](manuals.md). It covers Chromium/Electron hardware video decode on
+  nebula's NVIDIA card. The source-verified chain (snowglobe's
+  nvidia-vaapi-driver, libva's `nvidia-drm` auto-mapping, Wayland's
+  `--render-node-override` skipping `kVaapiOnNvidiaGPUs`) explains why
+  Discord used NVDEC. nvidia-vaapi-driver 0.0.18's missing-`vaSyncSurface`
+  stale-frame race is why Discord and Vesktop now decode on the CPU. Also
+  records the upstream status and when to drop the flags. `docs/hyprland.md`
+  now notes that `LIBVA_DRIVER_NAME` is unneeded and that
+  `NIXOS_OZONE_WL` has this side effect.
+
 ## 2026-10-24
 
 - **Update** — `docs/nrs-pipeline.html` is now the manual for nrs, `nrb` and
