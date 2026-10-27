@@ -2,6 +2,12 @@
 
 ## 2026-10-26
 
+- **Creation**: [gajim-pillow-13](gajim-pillow-13.md). nebula builds only
+  Gajim against Pillow 13.0.0 (39 advisories in 12.3.0, fixed only in 13.0.0,
+  which nixpkgs has on staging). Dropping CUPS (hplip) and Thunderbird left
+  Gajim as the only runtime user, so 3 rebuilt derivations replace a global
+  overlay's 52. Evaluation throws once nixpkgs catches up.
+
 - **Creation**: [libmad-cve-2018-7263-ignore](libmad-cve-2018-7263-ignore.md).
   nebula's nixploit ignores libmad's critical CVE-2018-7263 with a
   fingerprinted rule. The double free was traced to mpg321 (not installed),

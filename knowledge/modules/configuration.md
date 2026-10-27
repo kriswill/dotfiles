@@ -19,7 +19,11 @@ warrant its own file:
   and `nix-tools` (dropped 2026-10 in snowglobe-factory b0a0d97b; nurl,
   nix-prefetch-git, deadnix, nixpkgs-hammering, statix, nix-init,
   nix-update, nixpkgs-review, nixfmt — its direnv half is already
-  [direnv](direnv.md)). `programs.corefreq.enable = false` — the out-of-tree
+  [direnv](direnv.md)). `snowglobe-factory.cups.enable = false` (2026-10-26)
+  turns off the office profile's CUPS, its six printer drivers and the Avahi
+  daemon it brings. No printers were set up, and hplip kept a vulnerable
+  Pillow installed ([decision](../decisions/gajim-pillow-13.md)).
+  `programs.corefreq.enable = false` — the out-of-tree
   kernel module doesn't build on kernel 7.1 (CPPC struct field
   `reference_perf` → `reference`); re-enable when upstream catches up.
 - **NVIDIA/gaming:** `hardware.nvidia.package` pinned to
@@ -45,7 +49,9 @@ warrant its own file:
 - **Substituters:** disables the untrusted `nix-store.earthgman.dev` cache.
 - **Packages/programs:** desktop additions (cliphist, fd, gimp, breeze-icons,
   rose-pine-hyprcursor, wowup); firefox/chromium/alacritty/
-  batsignal disabled; 1Password CLI + GUI; nix-ld (cc + zlib); discord plus
+  batsignal/thunderbird disabled; Gajim built against Pillow 13.0.0 until
+  nixpkgs ships it, after which evaluation throws so the override gets
+  removed ([decision](../decisions/gajim-pillow-13.md)); 1Password CLI + GUI; nix-ld (cc + zlib); discord plus
   vesktop (its own `programs.vesktop` key since 2026-09; the pnpm whitelist
   is gone — see the
   [vesktop pnpm whitelist decision](../decisions/vesktop-pnpm-whitelist.md));
