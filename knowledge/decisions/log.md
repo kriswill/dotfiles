@@ -2,6 +2,18 @@
 
 ## 2026-10-26
 
+- **Creation**: [brotli-graft](brotli-graft.md). nebula swaps brotli 1.2.1
+  into its built system with `system.replaceDependencies` instead of
+  recompiling the 633 store paths above brotli. A patched rewriter (nixpkgs
+  PR #579409) also catches store paths whose names the compiler garbled
+  (gimptool), and rewrites directories on the filesystem so renamed entries
+  can't unsort a NAR. It switches off with a warning once nixpkgs ships
+  1.2.1.
+
+- **Update**: [gajim-pillow-13](gajim-pillow-13.md). The override moved to its
+  own file and now warns instead of failing evaluation once nixpkgs catches
+  up, so the weekly flake.lock PR isn't blocked over a cleanup.
+
 - **Creation**: [gajim-pillow-13](gajim-pillow-13.md). nebula builds only
   Gajim against Pillow 13.0.0 (39 advisories in 12.3.0, fixed only in 13.0.0,
   which nixpkgs has on staging). Dropping CUPS (hplip) and Thunderbird left

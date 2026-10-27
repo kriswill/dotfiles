@@ -1,0 +1,107 @@
+---
+type: Decision
+title: Graft Brotli 1.2.1 Instead of Rebuilding Its Dependents
+description: 'nebula swaps brotli 1.2.1 (CVE-2026-111497, a decoder out-of-bounds write reachable from curl, libsoup, Qt, Node and others) into its built system with system.replaceDependencies, because brotli sits under 633 of ~3000 store paths that an override would recompile; a patched rewriter (nixpkgs PR #579409, plus a filesystem rewrite so renamed entries cannot unsort a NAR) catches compiler-garbled store paths, and it all switches off with a warning once nixpkgs ships 1.2.1.'
+tags: [nixploit, cve, brotli, replace-dependencies]
+status: stable
+generated: { by: claude-code/opus-5.5, at: 2026-10-26T19:10:00-07:00 }
+sources:
+  - id: ghsa-111497
+    resource: https://github.com/advisories/GHSA-9v8h-qqgm-4m35
+    title: 'GHSA-9v8h-qqgm-4m35 / CVE-2026-111497: Brotli decoder out-of-bounds write ("Node2Shell")'
+  - id: brotli-121
+    resource: https://github.com/google/brotli/releases/tag/v1.2.1
+    title: 'brotli v1.2.1 release (2026-10-21)'
+  - id: nixpkgs-577208
+    resource: https://github.com/NixOS/nixpkgs/pull/577208
+    title: 'nixpkgs #577208: brotli 1.2.0 -> 1.2.1 (merged into staging 2026-10-22)'
+  - id: replace-dependencies
+    resource: https://github.com/NixOS/nixpkgs/blob/master/pkgs/build-support/replace-dependencies.nix
+    title: 'nixpkgs replaceDependencies (same-length names, cutoffPackages, import-from-derivation)'
+  - id: nixpkgs-579409
+    resource: https://github.com/NixOS/nixpkgs/pull/579409
+    title: 'nixpkgs #579409: replaceDirectDependencies: try rewriting with more effort (open)'
+---
+
+**Where:** [brotli-graft](../modules/brotli-graft.md) on
+[nebula](../hosts/nebula.md); found by
+[nebula-nixploit](../modules/nebula-nixploit.md).
+
+## Context
+
+nixploit flagged brotli 1.2.0 for CVE-2026-111497 (9.2): a crafted stream
+makes the decoder write out of bounds, which can lead to code
+execution.[^ghsa-111497] 1.2.1 fixes it (2026-10-21).[^brotli-121] On nebula
+the library sits under curl/libcurl (and git over HTTPS), libsoup, Qt
+networking, Node, aiohttp, Wireshark and freetype. Several of those decode
+brotli straight off the network.
+
+nixpkgs merged 1.2.1 into `staging` on 2026-10-22, and into the 26.05
+staging branches.[^nixpkgs-577208] `staging-next`, `master` and
+`nixos-unstable` were still on 1.2.0 on 2026-10-26, a one-to-three-week wait.
+An override is out: 633 of the system's 3008 store paths (12.6 of 28.1 GiB)
+depend on brotli, including Chromium, two Electrons and GIMP, and every one
+would recompile.
+
+## Decision
+
+Use `system.replaceDependencies`. It builds only the replacements, then
+copies every dependent path and rewrites its references.[^replace-dependencies]
+Five pairs: `brotli.{lib,out,dev}`, the 32-bit `pkgsi686Linux.brotli.lib`, and
+the Python module rebuilt against 1.2.1 to drop the 1.2.0 name. The names keep
+their length, which the rewrite requires. Determinate Nix already bundles its
+own 1.2.1.
+
+The stock rewriter left 153 paths on 1.2.0, all through GIMP. gimptool holds
+GIMP's store path with the name half garbled by the compiler
+(`…-gimp...;|...`), so the `hash-name` rewrite missed it. Nix still sees the
+intact hash as a reference, so the old GIMP stayed with its old graphviz,
+freetype, curl and libsoup. nixpkgs PR #579409, opened the same day for the
+same brotli path, also rewrites the bare hash when old and new names
+match.[^nixpkgs-579409]
+
+With that patch, Battle.net's Proton FHS root then failed to build: "NAR
+directory is not sorted". The rewriter edits a NAR stream with `sed` and
+never re-sorts it, and the root holds two sibling gdb auto-load dirs named
+after store paths (`usr/share/gdb/auto-load/nix/store/<hash>-gstreamer-1.28.7`,
+64- and 32-bit). Rewritten, `2s02…` and `vcz8…` became `x0qm…` and `i7d3…`,
+which sort the other way. The first, stock build passed only because its new
+hashes kept their order. `system-path` and the Steam, WoWUp and ProtonUp roots
+have the same kind of dirs, so any nixpkgs update could break `nrs` and CI by
+chance. Our copy of the rewriter therefore also copies directories and
+rewrites contents, symlink targets and entry names on the filesystem. Nix
+sorts entries itself when it registers the output. Single files and symlinks
+keep the stream path. A fixture reproduced the failure with the stock
+rewriter and built correctly with ours.
+
+The copy lives in `_replace-direct-dependencies.nix` (the PR's version plus
+our change), swapped into `pkgs` with an overlay.
+That overlay's check picks the attribute's value, never its name:
+`nixpkgs.overlays` can't depend on `pkgs`, and an overlay's names can't
+depend on `prev`.
+
+Both pieces turn off when nixpkgs' own brotli reaches 1.2.1: the replacement
+list goes empty, which also skips the import-from-derivation, and a NixOS
+warning names the files to delete.
+
+Rejected:
+
+- **Overriding brotli.** That recompiles all 633 paths.
+- **Waiting for nixpkgs.** It would leave a network-reachable decoder open
+  for one to three weeks.
+
+## Consequences
+
+The swap compiles only brotli (twice) and the Python module. The rest is
+copying: about 12.6 GiB more store. Each evaluation builds the base system
+first (import-from-derivation), so `nrs` evaluates more slowly.
+
+CI builds nebula's system on a GitHub runner that already frees disk to fit
+it, and now also holds the rewritten copies. If that job runs out of space,
+the options are a bigger runner or leaving the swap to nebula alone.
+
+[^ghsa-111497]: GHSA-9v8h-qqgm-4m35 / CVE-2026-111497: Brotli decoder out-of-bounds write ("Node2Shell")
+[^brotli-121]: brotli v1.2.1 release (2026-10-21)
+[^nixpkgs-577208]: nixpkgs #577208: brotli 1.2.0 -> 1.2.1 (merged into staging 2026-10-22)
+[^replace-dependencies]: nixpkgs replaceDependencies (same-length names, cutoffPackages, import-from-derivation)
+[^nixpkgs-579409]: nixpkgs #579409: replaceDirectDependencies: try rewriting with more effort (open)

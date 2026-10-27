@@ -2,6 +2,17 @@
 
 ## 2026-10-26
 
+- **Creation**: [brotli-graft](brotli-graft.md) swaps brotli 1.2.1
+  (CVE-2026-111497) into nebula's built system with
+  `system.replaceDependencies`, through a patched rewriter from nixpkgs PR
+  #579409, until nixpkgs ships 1.2.1
+  ([decision](../decisions/brotli-graft.md)).
+
+- **Creation**: [gajim-pillow](gajim-pillow.md) takes over the Gajim Pillow 13
+  override from [configuration](configuration.md). Like brotli-graft, it now
+  switches itself off with a warning once nixpkgs catches up, instead of
+  failing evaluation.
+
 - **Update**: [configuration](configuration.md) turns off snowglobe's CUPS
   bundle (and with it hplip and Avahi) and Thunderbird, and builds Gajim
   against Pillow 13.0.0 ([decision](../decisions/gajim-pillow-13.md)).
