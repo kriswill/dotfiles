@@ -16,6 +16,10 @@
       # (renamed from libvirtd-qemu in snowglobe-factory f0135ce; same
       # libvirtd + qemu_kvm + virt-manager payload)
       snowglobe-factory.qemu.enable = true;
+      # No printing: the office profile's CUPS bundle (hplip, gutenprint, …)
+      # and the Avahi/mDNS it switches on are unused here, and hplip kept a
+      # vulnerable Pillow in the closure.
+      snowglobe-factory.cups.enable = false;
 
       # custom profiles
       snowglobe-factory.profiles.gaming.enable = true;
@@ -209,7 +213,36 @@
           '';
         };
       };
-      programs.gajim.enable = true;
+      programs.gajim = {
+        enable = true;
+        # Gajim decodes images from the network with Pillow (received files,
+        # avatars, link previews), and nixpkgs' 12.3.0 has 39 advisories fixed
+        # in 13.0.0, so far only on nixpkgs staging (084270a). Build Gajim
+        # against 13.0.0 until nixpkgs ships it; then evaluation fails on
+        # purpose, so the override gets removed rather than left behind.
+        # knowledge/decisions/gajim-pillow-13.md
+        package =
+          let
+            pillowVersion = "13.0.0";
+            python3 = pkgs.python3.override {
+              self = python3;
+              packageOverrides = _pyFinal: pyPrev: {
+                pillow = pyPrev.pillow.overridePythonAttrs (old: {
+                  version = pillowVersion;
+                  src = old.src.override {
+                    tag = pillowVersion;
+                    hash = "sha256-7FHwvgfT40qiHmvcJFZN/FlOECE0YiqOLBEYCMugk+4=";
+                  };
+                });
+              };
+            };
+          in
+          if lib.versionOlder pkgs.python3Packages.pillow.version pillowVersion then
+            pkgs.gajim.override { inherit python3; }
+          else
+            throw "nebula: nixpkgs now ships pillow ${pkgs.python3Packages.pillow.version}, so the Gajim Pillow ${pillowVersion} override no longer applies. Remove programs.gajim.package from modules/hosts/nebula/configuration.nix (see knowledge/decisions/gajim-pillow-13.md).";
+      };
+      programs.thunderbird.enable = false; # snowglobe's office profile turns it on; unused
       programs.stoat-desktop.enable = true; # snowglobe: Stoat (Revolt) chat client
       programs.gthumb.enable = true;
     }

@@ -2,6 +2,10 @@
 
 ## 2026-10-26
 
+- **Update**: [configuration](configuration.md) turns off snowglobe's CUPS
+  bundle (and with it hplip and Avahi) and Thunderbird, and builds Gajim
+  against Pillow 13.0.0 ([decision](../decisions/gajim-pillow-13.md)).
+
 - **Update**: [nebula-nixploit](nebula-nixploit.md) gains
   `settings.ignore`, starting with libmad's CVE-2018-7263
   ([decision](../decisions/libmad-cve-2018-7263-ignore.md)).
