@@ -100,6 +100,8 @@ CI builds nebula's system on a GitHub runner that already frees disk to fit
 it, and now also holds the rewritten copies. If that job runs out of space,
 the options are a bigger runner or leaving the swap to nebula alone.
 
+Switched on 2026-10-26 (generation 192). Landed in commit `9517d2b`.
+
 [^ghsa-111497]: GHSA-9v8h-qqgm-4m35 / CVE-2026-111497: Brotli decoder out-of-bounds write ("Node2Shell")
 [^brotli-121]: brotli v1.2.1 release (2026-10-21)
 [^nixpkgs-577208]: nixpkgs #577208: brotli 1.2.0 -> 1.2.1 (merged into staging 2026-10-22)
