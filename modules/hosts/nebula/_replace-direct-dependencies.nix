@@ -7,6 +7,9 @@
 #    entries named after store paths could reorder them, and --restore then
 #    failed with "NAR directory is not sorted" (battlenet-proton's FHS root,
 #    usr/share/gdb/auto-load/nix/store/<hash>-gstreamer-1.28.7 twice).
+#  - Ours: each rewrite derivation declares the pname, version and (for
+#    Python) ecosystem marker that its name implies under nixpkgs' naming, so
+#    nixploit can still match advisories on rewritten paths.
 # Used only by ./brotli-graft.nix (the `_` keeps import-tree from loading it);
 # delete together with it.
 {
@@ -60,8 +63,73 @@ else
         )
       else
         throw "cannot reconstruct the derivation name from ${drv}";
+    # nixploit takes a store path's package, version and ecosystem from its
+    # deriver, which for a rewritten path is this derivation, so declare what
+    # its name implies, following nixpkgs' naming:
+    #  - outputs other than `out`, and the -env/-wrapped wrappers, put a
+    #    suffix after the version; their originals declare the plain version;
+    #  - language packages put an interpreter prefix before the pname
+    #    (python3.14-aiohttp); Python ones also get dontWrapPythonPrograms,
+    #    the marker nixploit reads as PyPI;
+    #  - webkitgtk appends +abi=<abi> to its version.
+    # Left undeclared, as their originals were: FHS, firmware and plugin
+    # wrappers (-bwrap, -rootfs, -init, -profile, -extracted, -zstd,
+    # qtbase's -only-plugins) and config or system paths (dbus-1,
+    # graphics-drivers, etc-*, nixos-system-*, security-wrapper-*). Not
+    # recoverable from a name: the crates.io/Go/npm markers of Rust, Go and
+    # npm builds, Python applications' PyPI marker, and renames like zfs's
+    # zfs-user output.
+    # drvName carries the old path's string context, which these may not.
+    plainName = builtins.unsafeDiscardStringContext drvName;
+    parsed = builtins.parseDrvName plainName;
+    suffix = lib.findFirst (word: lib.hasSuffix "-${word}" parsed.version) null [
+      "bin"
+      "corepack"
+      "dev"
+      "doc"
+      "env"
+      "info"
+      "lib"
+      "man"
+      "npm"
+      "qml"
+      "wrapped"
+    ];
+    version = lib.head (
+      lib.splitString "+abi=" (
+        if suffix == null then parsed.version else lib.removeSuffix "-${suffix}" parsed.version
+      )
+    );
+    language = builtins.match "((python|perl|ruby)[0-9.]+)-(.+)" parsed.name;
+    lastWord = builtins.match ".*-([a-zA-Z]+)" version;
+    declared =
+      builtins.match "[0-9].*" version != null
+      && !(
+        lastWord != null
+        && builtins.elem (lib.toLower (builtins.head lastWord)) [
+          "bwrap"
+          "extracted"
+          "init"
+          "plugins"
+          "profile"
+          "rootfs"
+          "zstd"
+        ]
+      )
+      &&
+        builtins.match "dbus-1|graphics-drivers.*|etc-.*|nixos-system-.*|security-wrapper-.*" plainName
+        == null;
+    identity = lib.optionalAttrs declared (
+      {
+        pname = if language == null then parsed.name else builtins.elemAt language 2;
+        inherit version;
+      }
+      // lib.optionalAttrs (language != null && builtins.elemAt language 1 == "python") {
+        dontWrapPythonPrograms = true;
+      }
+    );
   in
-  runCommandLocal drvName { nativeBuildInputs = [ nix.out ]; } ''
+  runCommandLocal drvName ({ nativeBuildInputs = [ nix.out ]; } // identity) ''
     createRewriteScript() {
         while [ $# -ne 0 ]; do
             oldBasename="$(basename "$1")"

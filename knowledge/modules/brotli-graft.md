@@ -31,8 +31,12 @@ An overlay swaps in a patched rewriter, `_replace-direct-dependencies.nix`. It
 adds nixpkgs PR #579409's bare-hash rewrite, which catches store paths whose
 name half the compiler garbled (gimptool). It also rewrites directories on the
 filesystem rather than as a NAR stream, because renaming sibling entries named
-after store paths could unsort the NAR and fail the build. Details are in the
-decision.
+after store paths could unsort the NAR and fail the build. And each rewrite
+step declares the `pname`, `version` and PyPI marker its name implies under
+nixpkgs' naming, because [nixploit](nebula-nixploit.md) reads them from a
+path's deriver. Without them, rewritten packages went unversioned and their
+advisories landed in "unknown". The rules, and what a name can't recover, are
+in the decision.
 
 Retirement is automatic. `needed` compares nixpkgs' own `brotli.version` with
 1.2.1. Once nixpkgs ships it, the list is empty, which also skips the
