@@ -23,6 +23,17 @@
       };
       # So the report follows each nrs that adds or drops a package.
       rescanOnSwitch = true;
+      # Reviewed findings. The fingerprint pins each rule to the evidence it
+      # was reviewed against; if that changes, the finding comes back.
+      settings.ignore = [
+        {
+          package = "libmad";
+          id = "CVE-2018-7263";
+          bucket = "affected";
+          fingerprint = "dc83a783dcf76d806dd88528d31515680108b17a35d51568f3d3cb6b7f934758";
+          reason = "Misattributed: the double free is in the caller (mpg321; Debian traced the duplicate CVE-2017-11552 there, #870406). mpg321 is not installed; sox and VLC use libmad's low-level stream/frame/synth API and never call mad_decoder_run. Tenacity libmad 0.16.5 leaves decoder.c unchanged, so no upgrade fixes it.";
+        }
+      ];
     };
 
     # The module turns node_exporter on for its textfile metrics, listening on

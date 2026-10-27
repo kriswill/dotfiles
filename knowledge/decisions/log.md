@@ -1,5 +1,13 @@
 # Log
 
+## 2026-10-26
+
+- **Creation**: [libmad-cve-2018-7263-ignore](libmad-cve-2018-7263-ignore.md).
+  nebula's nixploit ignores libmad's critical CVE-2018-7263 with a
+  fingerprinted rule. The double free was traced to mpg321 (not installed),
+  sox and VLC never call `mad_decoder_run`, and Tenacity's libmad 0.16.5
+  leaves `decoder.c` unchanged, so upgrading would only hide the version match.
+
 ## 2026-10-25
 
 - **Creation**: [battlenet-one-wineserver](battlenet-one-wineserver.md). The

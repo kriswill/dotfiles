@@ -52,6 +52,12 @@ critical findings came from Determinate Nix's own bundled closure (curl,
 openssl and wasmtime, which our nixpkgs already ships fixed) and from the
 Steam/Lutris/WowUp FHS sandboxes.
 
+`settings.ignore` holds reviewed findings. Each rule pins the finding's
+fingerprint, so changed evidence brings it back.[^nixploit-readme] The first
+is libmad's CVE-2018-7263: the double free was traced to mpg321, which isn't
+installed, and no maintained libmad changes the flagged code
+([decision](../decisions/libmad-cve-2018-7263-ignore.md)).
+
 One deviation: the module enables node_exporter, which listens on
 `0.0.0.0:9100` by default. Nebula has no Prometheus and nothing scrapes it from
 another host. The firewall already keeps the port closed, so the file sets
