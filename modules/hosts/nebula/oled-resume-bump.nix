@@ -29,9 +29,11 @@
                 ${config.programs.hyprland.package}/bin/hyprctl -i "$sig" dispatch "$1"
             }
             ${pkgs.coreutils}/bin/sleep 2
-            hyprBump 'hl.dsp.dpms("off", "DP-3")' || true
+            # 0.56 takes one table; the old positional ("off", "DP-3") form is
+            # rejected ("dpms: expected at most 1 argument, got 2").
+            hyprBump 'hl.dsp.dpms({ action = "off", monitor = "DP-3" })' || true
             ${pkgs.coreutils}/bin/sleep 1
-            hyprBump 'hl.dsp.dpms("on", "DP-3")' || true
+            hyprBump 'hl.dsp.dpms({ action = "on", monitor = "DP-3" })' || true
           fi
         fi
       '';

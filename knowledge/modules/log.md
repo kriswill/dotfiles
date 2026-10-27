@@ -1,5 +1,12 @@
 # Log
 
+## 2026-10-26
+
+- **Update**: [oled-resume-bump](oled-resume-bump.md) calls `hl.dsp.dpms` with
+  the table form (`{ action = …, monitor = "DP-3" }`). The 2026-10-24
+  Hyprland 0.56 build rejected the old positional arguments, so DP-3 stayed
+  black after resume. The doc's stale `env`-export description is also fixed.
+
 ## 2026-10-25
 
 - **Update**: [battlenet](battlenet.md) gains `programs.battlenet.cpus`, a

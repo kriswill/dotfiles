@@ -10,11 +10,12 @@ anything that stops being true, and record real gotchas in **Learned behaviours
 
 ```
 $ hyprctl version
-Hyprland 0.55.0  (built from branch unknown @ f719bd6, dirty; Tag v0.55.0; 2026-06-13)
+Hyprland 0.56.0  (built from branch unknown @ 390f8f8, dirty; Tag v0.56.0; 2026-10-24)
 ```
 
-(The flake build self-reports `0.55.0` even though it's a recent dirty build —
-don't read the version string as "older than 0.55.2"; it's whatever the pinned
+(Re-checked 2026-10-26. The flake build self-reports the last tag even though
+it's a recent dirty build, so don't read the version string as an exact
+release; the Lua API can change between builds that report the same tag. It's whatever the pinned
 `inputs.hyprland` resolves to. Re-check with `hyprctl version` after a
 `nix flake update`.)
 
@@ -660,9 +661,10 @@ Real findings on nebula — append as you discover more; correct/remove stale on
   black while Hyprland reported it fully live (`disabled:false, dpmsStatus:1`,
   correct mode). Fix was just:
   ```sh
-  hyprctl dispatch 'hl.dsp.dpms("off", "DP-3")'
-  hyprctl dispatch 'hl.dsp.dpms("on", "DP-3")'
+  hyprctl dispatch 'hl.dsp.dpms({ action = "off", monitor = "DP-3" })'
+  hyprctl dispatch 'hl.dsp.dpms({ action = "on", monitor = "DP-3" })'
   ```
+  (Table form since the 2026-10-24 0.56 build; see the 2026-10-26 note below.)
   — milder than the two-step *mode* bounce below (which remains the escalation
   when DPMS cycling isn't enough, i.e. a true link-training failure). Note the
   `hyprctl dispatch '<lua expr>'` shorthand works and is simpler than
@@ -680,6 +682,17 @@ Real findings on nebula — append as you discover more; correct/remove stale on
   fallback needs no env vars. Also: `hl.dsp.dpms` with an **unmatched**
   monitor name (incl. `desc:…` — not accepted there) returns `ok` and applies
   to **all** outputs.
+  **(2026-10-26) `hl.dsp.dpms` now takes one table.** The 0.56 build dated
+  2026-10-24 rejects the positional form with `dpms: expected at most 1
+  argument, got 2`. The resume bump logged that to the journal
+  (`sleep-actions-pre-stop`), and `|| true` hid it, so DP-3 stayed black after
+  a resume. The new form is `hl.dsp.dpms({ action = "off"|"on"|"toggle",
+  monitor = "DP-3" })` (source: `hlDpms` in
+  `src/config/lua/bindings/LuaBindingsDispatchers.cpp`). Leaving out `monitor`,
+  or passing no table at all, toggles **every** output, and an unmatched name
+  still falls through to all outputs. If the bounce stops working after a
+  Hyprland bump, check `journalctl -b | grep sleep-actions-pre-stop` for a new
+  argument error before suspecting the panel.
 - **OLED (DP-3, PG34WCDM) blanks at login at 240Hz — DSC won't negotiate; capped
   to 143.97Hz (2026-06-16).** Symptom: on Hyprland login the OLED showed nothing;
   its own OSD read **"no DisplayPort signal"** while `hyprctl monitors` still
