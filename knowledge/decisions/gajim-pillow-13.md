@@ -1,7 +1,7 @@
 ---
 type: Decision
 title: Build Gajim Against Pillow 13 Until nixpkgs Ships It
-description: 'nebula builds only Gajim against Pillow 13.0.0, because nixpkgs'' 12.3.0 has 39 advisories (five critical) fixed only in 13.0.0 and Gajim decodes images from the network; dropping CUPS and Thunderbird left Gajim as the only runtime user, so a 3-derivation override replaces a 52-derivation global overlay, and it throws once nixpkgs catches up.'
+description: 'nebula builds only Gajim against Pillow 13.0.0, because nixpkgs'' 12.3.0 has 39 advisories (five critical) fixed only in 13.0.0 and Gajim decodes images from the network; dropping CUPS and Thunderbird left Gajim as the only runtime user, so a 3-derivation override replaces a 52-derivation global overlay, and it switches itself off with a warning once nixpkgs catches up.'
 tags: [nixploit, cve, pillow, gajim]
 status: stable
 generated: { by: claude-code/opus-5.5, at: 2026-10-26T18:05:00-07:00 }
@@ -17,8 +17,9 @@ sources:
     title: 'nixpkgs 084270a: python3Packages.pillow 12.3.0 -> 13.0.0 (staging)'
 ---
 
-**Where:** [configuration](../modules/configuration.md)
-(`programs.gajim.package`) on [nebula](../hosts/nebula.md); found by
+**Where:** [gajim-pillow](../modules/gajim-pillow.md)
+(`programs.gajim.package`) and [configuration](../modules/configuration.md)
+on [nebula](../hosts/nebula.md); found by
 [nebula-nixploit](../modules/nebula-nixploit.md).
 
 ## Context
@@ -48,8 +49,11 @@ installed, through reportlab.
    `pillow` is 13.0.0, with the same source and hash as the nixpkgs bump.
    That rebuilds three derivations: pillow, qrcode and gajim.
 3. Guard it with `lib.versionOlder` on nixpkgs' Pillow. Once nixpkgs ships
-   13.0.0 or later, evaluation throws and says to remove the override, so it
-   can't linger as dead code.
+   13.0.0 or later, Gajim falls back to stock and a NixOS warning says to
+   delete the file. It first threw instead, but that would have blocked the
+   weekly flake.lock PR and `nrs` over a cleanup. Since 2026-10-26 the
+   override lives in its own file, so retiring it means deleting one file, as
+   with [brotli-graft](../modules/brotli-graft.md).
 
 None of the four consumers (Gajim, lutris, reportlab, hplip) use an API that
 13.0.0 removed.[^pillow-13] The override passed Pillow's test suite (5627)
