@@ -2,6 +2,14 @@
 
 ## 2026-10-26
 
+- **Update**: [brotli-graft](brotli-graft.md). Rewrite steps now declare the
+  `pname`, `version` and Python's PyPI marker that their names imply under
+  nixpkgs' naming. nixploit reads these from a path's deriver, and without
+  them 479 rewritten packages went unversioned and 22,724 advisories landed
+  in "unknown". Diffed against the swap turned off, both systems now have 66
+  unversioned packages. Patch lists, source URLs and 22 apps' crates.io, Go,
+  npm or PyPI-application markers stay lost until the swap retires.
+
 - **Creation**: [brotli-graft](brotli-graft.md). nebula swaps brotli 1.2.1
   into its built system with `system.replaceDependencies` instead of
   recompiling the 633 store paths above brotli. A patched rewriter (nixpkgs

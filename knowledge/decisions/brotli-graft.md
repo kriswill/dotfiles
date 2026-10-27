@@ -74,8 +74,45 @@ sorts entries itself when it registers the output. Single files and symlinks
 keep the stream path. A fixture reproduced the failure with the stock
 rewriter and built correctly with ours.
 
+The first switch (generation 192) then showed a scanner side effect.
+nixploit takes each store path's `pname`, `version`, `patches` and `src` from
+its deriver, and a rewritten path's deriver is the rewrite step, a
+`runCommandLocal` with only a name. 479 packages went unversioned, and every
+advisory for them moved to "unknown", 22,724 in all, 7,366 for Chromium
+alone. A new advisory against a rewritten package would have been buried
+there. So each rewrite step now also declares what its name implies under
+nixpkgs' naming:
+- **Suffixes stripped:** output suffixes (`-dev`, `-lib`, `-bin`, …) and the
+  `-env`/`-wrapped` wrappers, whose originals declare the plain version.
+- **Prefixes stripped:** interpreter prefixes (`python3.14-`, `perl5.42.3-`,
+  `ruby3.4-`). Python packages also get `dontWrapPythonPrograms`, the marker
+  nixploit reads as PyPI.
+- **webkitgtk:** its `+abi=…` suffix is dropped.
+- **Left undeclared:** FHS, firmware and plugin wrappers (`-bwrap`,
+  `-rootfs`, `-init`, `-profile`, `-extracted`, `-zstd`, `-only-plugins`),
+  and config or system paths (`dbus-1`, `graphics-drivers`, `etc-*`,
+  `nixos-system-*`, `security-wrapper-*`).
+
+Each rule came from diffing `nixploit inventory` of the swapped system against
+the same configuration with the swap forced off. At the end, both had 66
+unversioned packages. The remaining identity differences were `zfs` named
+`zfs-user` and `nixd nightly` dropped, plus the harmless `battlenet 0.1.0`
+declared and `graphics-drivers 32bit` unversioned. A name can't carry the
+rest:
+- **Patch lists and source URLs:** advisories that nixpkgs patches, or that
+  nixploit's upstream-history check would clear, can show as "affected" for
+  rewritten packages.
+- **Ecosystem markers:** 22 rewritten apps lose their crates.io, Go, npm or
+  PyPI-application marker (both Electrons, atuin-desktop, lact, librsvg,
+  Gajim, opensnitch-ui, zenmap, …). They still match NVD, just not OSV's
+  per-ecosystem advisories.
+
+Both gaps last until the swap retires. Copying the originals' attributes from
+their `.drv` files would close them, but means parsing hundreds of
+derivations, some with escaped-JSON attributes, during evaluation.
+
 The copy lives in `_replace-direct-dependencies.nix` (the PR's version plus
-our change), swapped into `pkgs` with an overlay.
+our changes), swapped into `pkgs` with an overlay.
 That overlay's check picks the attribute's value, never its name:
 `nixpkgs.overlays` can't depend on `pkgs`, and an overlay's names can't
 depend on `prev`.
