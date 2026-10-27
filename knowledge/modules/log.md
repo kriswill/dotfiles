@@ -2,6 +2,10 @@
 
 ## 2026-10-26
 
+- **Update**: [nebula-nixploit](nebula-nixploit.md) gains
+  `settings.ignore`, starting with libmad's CVE-2018-7263
+  ([decision](../decisions/libmad-cve-2018-7263-ignore.md)).
+
 - **Update**: [oled-resume-bump](oled-resume-bump.md) calls `hl.dsp.dpms` with
   the table form (`{ action = …, monitor = "DP-3" }`). The 2026-10-24
   Hyprland 0.56 build rejected the old positional arguments, so DP-3 stayed
