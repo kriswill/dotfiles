@@ -1,3 +1,4 @@
+{ inputs, ... }:
 {
   # Swap brotli 1.2.1 into nebula's system in place of 1.2.0, without
   # rebuilding what depends on it. CVE-2026-111497 ("Node2Shell") is an
@@ -44,17 +45,17 @@
       # 1.2.0: gimptool holds a store path whose name half the compiler
       # garbled, so the hash-name rewrite missed it. And it rewrites a NAR
       # stream, so renaming sibling dirs named after store paths can unsort
-      # it and fail the build, by chance of the new hashes. Use the patched
-      # rewriter (./_replace-direct-dependencies.nix, both fixes) while the
-      # graft is on. The check
-      # picks the value, never the attribute name: nixpkgs.overlays can't
-      # depend on pkgs, and an overlay's names can't depend on prev, or
-      # evaluation recurses.
+      # it and fail the build, by chance of the new hashes. While the graft is
+      # on, use the patched rewriter from the replace-dependencies sub-flake
+      # (flakes/replace-dependencies), which fixes both and keeps package
+      # identity for nixploit. The check picks the value, never the attribute
+      # name: nixpkgs.overlays can't depend on pkgs, and an overlay's names
+      # can't depend on prev, or evaluation recurses.
       nixpkgs.overlays = [
         (final: prev: {
           replaceDirectDependencies =
             if lib.versionOlder prev.brotli.version fixedVersion then
-              final.callPackage ./_replace-direct-dependencies.nix { }
+              (inputs.replace-dependencies.overlays.default final prev).replaceDirectDependencies
             else
               prev.replaceDirectDependencies;
         })

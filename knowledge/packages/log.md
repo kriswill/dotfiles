@@ -1,5 +1,15 @@
 # Log
 
+## 2026-10-26
+
+- **Creation**: [replace-dependencies](replace-dependencies.md), a sub-flake
+  with a patched copy of nixpkgs' `replaceDirectDependencies` (bare-hash
+  rewrite from PR #579409, filesystem rewrite so renamed entries can't unsort
+  a NAR, package identity for scanners). It exposes an overlay, a NixOS
+  module and one regression check per fix. It moved out of
+  `modules/hosts/nebula/` so it can be shared; nebula's system output path
+  is unchanged.
+
 ## 2026-10-25
 
 - **Creation**: [btop](btop.md), a Linux-only patch overlay. The CPU box
