@@ -108,6 +108,14 @@
       inputs.flake-parts.follows = "flake-parts";
     };
 
+    # nixpkgs' replaceDirectDependencies, patched (./flakes/replace-dependencies):
+    # used by nebula's brotli graft while it's on.
+    replace-dependencies = {
+      url = "./flakes/replace-dependencies";
+      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.flake-parts.follows = "flake-parts";
+    };
+
     # Weekly prebuilt nix-index database (command-not-found + `, <prog>` via
     # comma-with-db). snowglobe-factory used to carry this input and enable it
     # by default; its 2026-10 debloat dropped both, so nebula wires it itself

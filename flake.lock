@@ -1215,6 +1215,25 @@
         "type": "github"
       }
     },
+    "replace-dependencies": {
+      "inputs": {
+        "flake-parts": [
+          "flake-parts"
+        ],
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "path": "./flakes/replace-dependencies",
+        "type": "path"
+      },
+      "original": {
+        "path": "./flakes/replace-dependencies",
+        "type": "path"
+      },
+      "parent": []
+    },
     "root": {
       "inputs": {
         "apple-container": "apple-container",
@@ -1235,6 +1254,7 @@
         "nixploit": "nixploit",
         "noctalia": "noctalia",
         "okf": "okf",
+        "replace-dependencies": "replace-dependencies",
         "snowglobe-factory": "snowglobe-factory",
         "sops-nix": "sops-nix",
         "tomato": "tomato",

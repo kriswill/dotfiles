@@ -12,7 +12,10 @@ Local conventions:
 
 - Each `flakes/<name>/` uses flake-parts, exposes `packages.<system>.<name>`
   (+ `default`), owns its `flake.lock`, and carries a `README.md` explaining
-  what it repackages and how (see `ccglass/`, `apple-container/`). Auxiliary
+  what it repackages and how (see `ccglass/`, `apple-container/`). A build
+  helper rather than a package exposes what its consumers apply instead, plus
+  `checks`: `replace-dependencies/` has `overlays.default` and
+  `nixosModules.default`, consumed directly by its host module. Auxiliary
   files live beside it (fork patches, apple-container's `darwin-module.nix`,
   nixploit's `nixos-module.nix` and report scripts).
 - **`git add` everything** — untracked sub-flake files are invisible to nix.

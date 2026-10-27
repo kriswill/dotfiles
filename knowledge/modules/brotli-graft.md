@@ -27,7 +27,8 @@ it's rebuilt only to drop the 1.2.0 name from the closure and from
 → 1.2.1), which the rewrite requires.[^replace-dependencies] The initrd is
 exempt by default (`cutoffPackages`).
 
-An overlay swaps in a patched rewriter, `_replace-direct-dependencies.nix`. It
+An overlay swaps in a patched rewriter from the
+[replace-dependencies](../packages/replace-dependencies.md) sub-flake. It
 adds nixpkgs PR #579409's bare-hash rewrite, which catches store paths whose
 name half the compiler garbled (gimptool). It also rewrites directories on the
 filesystem rather than as a NAR stream, because renaming sibling entries named

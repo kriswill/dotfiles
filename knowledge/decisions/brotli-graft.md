@@ -111,8 +111,11 @@ Both gaps last until the swap retires. Copying the originals' attributes from
 their `.drv` files would close them, but means parsing hundreds of
 derivations, some with escaped-JSON attributes, during evaluation.
 
-The copy lives in `_replace-direct-dependencies.nix` (the PR's version plus
-our changes), swapped into `pkgs` with an overlay.
+The copy (the PR's version plus our changes) first lived in
+`modules/hosts/nebula/_replace-direct-dependencies.nix`. Since 2026-10-26 it is
+the [replace-dependencies](../packages/replace-dependencies.md) sub-flake, so
+others can use it, with a regression check for each fix. brotli-graft applies
+its `overlays.default`.
 That overlay's check picks the attribute's value, never its name:
 `nixpkgs.overlays` can't depend on `pkgs`, and an overlay's names can't
 depend on `prev`.

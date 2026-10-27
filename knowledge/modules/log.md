@@ -2,6 +2,12 @@
 
 ## 2026-10-26
 
+- **Update**: [brotli-graft](brotli-graft.md) takes its patched rewriter from
+  the new [replace-dependencies](../packages/replace-dependencies.md)
+  sub-flake (`overlays.default`, still version-guarded) instead of
+  `_replace-direct-dependencies.nix`. nebula's system output path is
+  unchanged.
+
 - **Creation**: [brotli-graft](brotli-graft.md) swaps brotli 1.2.1
   (CVE-2026-111497) into nebula's built system with
   `system.replaceDependencies`, through a patched rewriter from nixpkgs PR
