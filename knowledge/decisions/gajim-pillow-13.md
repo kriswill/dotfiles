@@ -79,7 +79,7 @@ another targeted override and the global overlay comes back.
 
 Losing Avahi loses mDNS: the NAS is still `unas-pro.home.lan` or
 `nas.home.lan` through the router, but file-manager network browsing no
-longer discovers it on its own.
+longer discovers it on its own. Landed in commit `0e94360`.
 
 [^ghsa-96639]: GHSA-v9pv-5gc8-w2m6 / CVE-2026-96639: Pillow multi-frame loaders reuse stale native image storage (critical, patched in 13.0.0)
 [^pillow-13]: Pillow 13.0.0 release notes (security fixes, backwards-incompatible changes)
