@@ -1,5 +1,14 @@
 # Log
 
+## 2026-10-27
+
+- **Update**: [battlenet](battlenet.md)'s confinement moves into systemd:
+  the package ships `battlenet-confine@.service` (user, `StopWhenUnneeded=`,
+  wanted by each session scope) and `battlenet-confine-nix@.service`
+  (system). The launcher probes and starts scopes only for commands that
+  start Wine, keeps going when the terminal closes mid-stop, and tells a
+  confined shell apart from an invalid CPU list.
+
 ## 2026-10-26
 
 - **Update**: [battlenet](battlenet.md)'s launcher can confine user slices

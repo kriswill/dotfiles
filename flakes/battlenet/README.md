@@ -194,8 +194,9 @@ WoW's periodic exceptions.
 
 `BATTLENET_PREFIX=/path battlenet ...` uses another prefix for one run.
 `BATTLENET_CPUS=LIST` overrides the CPU list for one run, and an empty value
-turns pinning off. `BATTLENET_CONFINE="SLICE ..."` overrides the slices held
-off those CPUs (space-separated), and an empty value turns confinement off.
+turns pinning off. `BATTLENET_CONFINE="SLICE ..."` overrides what is held
+off those CPUs (space-separated user slices, plus `nix-daemon.service`), and
+an empty value turns confinement off.
 
 ## CPU pinning
 
@@ -229,21 +230,13 @@ other work to the other CCD.
 Pinning keeps the game on its CPUs, not other work off them, and the X3D
 mode is only a preference. Affinity can't help either: it can't reach
 programs started outside the launcher, such as a compiler cache's server,
-which spawns the compilers of every build. `programs.battlenet.confineSlices`
-holds user slices to the CPUs outside `cpus` while a session runs, with a
-cgroup cpuset, which the kernel enforces on every process in the slice:
+which spawns the compilers of every build. A cgroup cpuset can, because the
+kernel enforces it on every process in the cgroup. While a session runs,
+`programs.battlenet.confineSlices` holds user slices to the CPUs outside
+`cpus`, and `confineNixDaemon` does the same for `nix-daemon.service`, where
+Nix builds run. With `cpus = "0-5,12-17"` on a 24-CPU machine, each gets
+`6-11,18-23`.
 
-- **The owning launcher sets it and clears it.** Just before it starts the
-  sandbox, it sets each slice's `AllowedCPUs` to the online CPUs outside the
-  session's (`systemctl --user set-property --runtime`). With
-  `cpus = "0-5,12-17"` on a 24-CPU machine, `app.slice` gets `6-11,18-23`.
-  An EXIT trap clears it (`AllowedCPUs=`) when the launcher exits: after the
-  session ends, after Ctrl-C, SIGTERM or the terminal closing, and after a
-  failure.
-  The launcher owns that property on those slices, so it clears it rather
-  than restoring an earlier value. `battlenet kill` clears it too, for when
-  the owning launcher was killed outright. If the session has every online
-  CPU, nothing is confined.
 - **The game runs in its own scope.** Every invocation that starts Wine runs
   the sandbox with `systemd-run --user --scope --slice=battlenet.slice`, so
   the game is never in a confined slice, even when started from a terminal
@@ -252,24 +245,51 @@ cgroup cpuset, which the kernel enforces on every process in the slice:
   registers its own PID as the scope and then execs the command, so the PID
   the launcher waits on and kills is the sandbox's, as before. It runs with
   `--expand-environment=no`, since `systemd-run` otherwise expands `$` in
-  `battlenet run` arguments. The CPU list is checked in such a scope too:
-  from a confined terminal, the cpuset would narrow it or refuse it.
-- **It needs the `cpuset` controller delegated to the user's systemd.**
-  systemd's `user@.service` delegates only `pids memory cpu`, so a user
+  `battlenet run` arguments. The CPU list is checked in such a scope too.
+- **systemd tracks how long it lasts.** The scope wants
+  `battlenet-confine@TARGET:CPUS.service` for each target, for example
+  `battlenet-confine@app.slice:0-5_12-17.service` (commas become
+  underscores, since unit names can't hold them). That unit is
+  `StopWhenUnneeded=`, so systemd starts it with the first scope that wants
+  it and stops it once the last such scope has ended. The confinement
+  therefore ends with Wine, not with the launcher: a launcher killed with
+  SIGKILL leaves it in place until the game exits, and `battlenet kill` has
+  nothing to clear. Sessions with the same CPUs share one unit. Its start
+  and its stop both run `battlenet _confine`, which, under a lock, sets the
+  target to the online CPUs outside every session still running on it, and
+  clears `AllowedCPUs` after the last. The launcher owns that property on
+  its targets, so it clears it rather than restoring an earlier value. If
+  the sessions have every online CPU, nothing is confined.
+- **A user slice needs the `cpuset` controller delegated to the user's
+  systemd.** `user@.service` delegates only `pids memory cpu`, so a user
   slice's `AllowedCPUs` did nothing. A non-empty `confineSlices` sets
-  `Delegate=pids memory cpu cpuset`. A rebuild doesn't restart
-  `user@.service`, so the delegation can take until the next login. Until
-  then the slice has no cpuset files, and the launcher says confinement
-  isn't active yet and runs without it. It also says so when a slice's
-  `cpuset.cpus.effective` isn't the list it set.
-- **Without the user's systemd** (`systemctl --user` fails), or when
-  `systemd-run` can't start a scope, the launcher says so and runs as it did
-  before: no scope, no confinement.
+  `Delegate=pids memory cpu cpuset`. A switch doesn't restart
+  `user@.service`, but it re-executes running user managers, which hands
+  them the controller. Without it, the slice has no cpuset files, and the
+  confinement says so in a notification and the journal. It also says so when
+  a target's `cpuset.cpus.effective` isn't the list it set.
+- **`nix-daemon.service` belongs to the system manager**, which a user's
+  launcher can't change. `confineNixDaemon` installs a polkit rule that
+  lets members of `users` start `battlenet-confine-nix@CPUS.service`, a
+  root oneshot that sets `nix-daemon.service`'s `AllowedCPUs` to `CPUS`
+  (`none` clears it). The instance comes from a user, so its script accepts
+  only a CPU list. Builds that are already running move too.
+- **When `systemd-run` can't start a scope**, the launcher says so and runs
+  as it did before: no scope, no confinement. From a confined terminal
+  (with no scope to escape to), it says the shell is held to other CPUs
+  instead of calling the list invalid.
 
 Leave the compositor's slice (`session.slice`) out unless you mean to: it
 holds the compositor and what it starts directly, which is light work, and
-the game waits on the compositor's frames. `battlenet.slice` can't be
-confined; the module refuses it, and the launcher skips it.
+the game waits on the compositor's frames. `battlenet.slice` and the root
+slice (`-.slice`), which hold the session, can't be confined; the module
+refuses them, and the launcher skips them.
+
+Runtime properties outlive their unit. If the user manager dies while a
+session runs, a slice can stay confined. The next session's end clears it,
+or clear it by hand with `systemctl --user set-property --runtime app.slice
+AllowedCPUs=` (and `systemctl start battlenet-confine-nix@none.service` for
+`nix-daemon.service`).
 
 ## The NixOS module
 
@@ -284,6 +304,7 @@ confined; the module refuses it, and the launcher skips it.
     # proton = pkgs.proton-ge-bin;          # default
     # cpus = "0-5,12-17";                   # pin the session (taskset -c list)
     # confineSlices = [ "app.slice" ];      # hold these user slices off `cpus` while it runs
+    # confineNixDaemon = true;              # and Nix builds (adds a polkit rule)
     # locale = "enUS";                      # installer language
     # icon = "/path/to/icon.png";           # default: applications-games
     # environment.PROTON_ENABLE_WAYLAND = "1";
@@ -360,10 +381,10 @@ rename, however large the WoW install.
 | File | Purpose |
 | --- | --- |
 | [`flake.nix`](flake.nix) | flake-parts flake: `packages.x86_64-linux.battlenet` (+ `default`) and `nixosModules.battlenet` (+ `default`). |
-| [`package.nix`](package.nix) | The FHS environment, both halves of the launcher, and the desktop entry. Overridable: `proton`, `prefix`, `cpus`, `confineSlices`, `locale`, `icon`, `environment`. |
-| [`battlenet.sh`](battlenet.sh) | The host half: prefix, wineserver detection, join or refuse, `kill`, CPU pinning and slice confinement. |
+| [`package.nix`](package.nix) | The FHS environment, both halves of the launcher, the desktop entry, and the confinement units (`battlenet-confine@.service` for the user, `battlenet-confine-nix@.service` for the system). Overridable: `proton`, `prefix`, `cpus`, `confineSlices`, `confineNixDaemon`, `locale`, `icon`, `environment`. |
+| [`battlenet.sh`](battlenet.sh) | The host half: prefix, wineserver detection, join or refuse, `kill`, CPU pinning, and `_confine`, which the confinement unit runs. |
 | [`battlenet-proton.sh`](battlenet-proton.sh) | The sandbox half: Proton's environment, installer download and lock, the Proton verb. |
-| [`nixos-module.nix`](nixos-module.nix) | `programs.battlenet.*`. |
+| [`nixos-module.nix`](nixos-module.nix) | `programs.battlenet.*`, the units (`systemd.packages`), the `cpuset` delegation and the polkit rule. |
 
 ## Consuming it
 

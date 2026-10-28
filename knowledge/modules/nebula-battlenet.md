@@ -4,7 +4,7 @@ title: Battle.net on nebula
 description: 'nebula''s programs.battlenet settings: enables the GE-Proton Battle.net launcher on the default prefix, ~/.local/share/battlenet, which holds the WoW install moved out of Steam''s compatdata/3082075026.'
 resource: modules/hosts/nebula/battlenet.nix
 tags: [nixos-module, host-specific, gaming, proton]
-generated: { by: claude-code/opus-5.5, at: 2026-10-26T22:45:00-07:00 }
+generated: { by: claude-code/opus-5.5, at: 2026-10-27T23:30:00-07:00 }
 sources:
   - id: subflake-readme
     resource: ../../flakes/battlenet/README.md
@@ -70,10 +70,14 @@ lines that are normal are in the README's "What WoW runs on"):[^subflake-readme]
   CPUs while a session runs: `app.slice` (the terminals, Claude sessions, the
   sccache server that spawns the compilers, `wowdps-dev`) is held to
   `6-11,18-23`, and the game runs in `battlenet.slice`. `session.slice`
-  (Hyprland and what it starts directly) is left alone
-  ([decision](../decisions/battlenet-cpu-confinement.md)). Not yet seen live:
-  that needs the rebuild, possibly a new login for the cpuset delegation,
-  and a game launch.
+  (Hyprland and what it starts directly) is left alone. Since 2026-10-27,
+  `confineNixDaemon = true` holds `nix-daemon.service` (`nrs` and every
+  other Nix build) there too
+  ([decision](../decisions/battlenet-cpu-confinement.md)). After the first
+  1 h 23 min session (2026-10-27), `app.slice` was released and the game had
+  run in a `battlenet.slice` scope. The switch's re-execution of the user
+  manager had already handed it the cpuset controller, so no new login was
+  needed.
 - **Display:** native Wayland since 2026-10-25. `environment` sets
   `PROTON_ENABLE_WAYLAND = "1"` (WoW ran a little faster than under XWayland)
   and `PROTON_WAYLAND_MONITOR = "DP-3"`. Proton finds the primary monitor

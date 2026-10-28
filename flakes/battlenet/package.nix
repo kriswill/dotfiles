@@ -11,6 +11,9 @@
 #     prebuilt files expect. It sets Proton's environment, installs, and runs
 #     the Proton verb battlenet picked.
 #
+# Two systemd units hold other work off the session's CPUs (confineSlices,
+# confineNixDaemon); the NixOS module installs them.
+#
 # Battle.net itself never enters the store: the launcher downloads Blizzard's
 # installer on first run, and Battle.net updates itself from then on.
 {
@@ -19,6 +22,7 @@
   runCommand,
   symlinkJoin,
   writeShellApplication,
+  writeTextDir,
   makeDesktopItem,
   coreutils,
   curl,
@@ -41,6 +45,9 @@
   # [ "app.slice" ]. Needs `cpus`, and the cpuset controller delegated to the
   # user's systemd (the NixOS module does that).
   confineSlices ? [ ],
+  # Hold nix-daemon.service there too. Needs the polkit rule the NixOS module
+  # adds.
+  confineNixDaemon ? false,
   # Language for Blizzard's installer (--lang).
   locale ? "enUS",
   icon ? "applications-games",
@@ -159,7 +166,7 @@ let
       coreutils
       libnotify
       procps
-      # systemctl and systemd-run, for confineSlices.
+      # systemctl and systemd-run, for confinement.
       systemd
       util-linux
     ];
@@ -167,10 +174,59 @@ let
       BATTLENET_FHS = lib.getExe fhs;
       BATTLENET_DEFAULT_PREFIX = if prefix == null then "" else prefix;
       BATTLENET_DEFAULT_CPUS = if cpus == null then "" else cpus;
-      BATTLENET_DEFAULT_CONFINE = lib.concatStringsSep " " confineSlices;
+      BATTLENET_DEFAULT_CONFINE = lib.concatStringsSep " " (
+        confineSlices ++ lib.optional confineNixDaemon "nix-daemon.service"
+      );
     };
     text = builtins.readFile ./battlenet.sh;
   };
+
+  # A user unit per confinement target and session CPU list, wanted by the
+  # scope of every invocation that starts Wine (see ./battlenet.sh).
+  # StopWhenUnneeded= ties it to those scopes: systemd starts it with the first
+  # and stops it after the last. ExecStopPost= rather than ExecStop= also
+  # releases after a failed start.
+  confineUnit = writeTextDir "lib/systemd/user/battlenet-confine@.service" ''
+    [Unit]
+    Description=Battle.net CPU confinement (%i)
+    StopWhenUnneeded=yes
+
+    [Service]
+    Type=oneshot
+    RemainAfterExit=yes
+    TimeoutSec=30s
+    ExecStart=${lib.getExe launcher} _confine %i
+    ExecStopPost=${lib.getExe launcher} _confine %i
+  '';
+
+  # Sets nix-daemon.service's AllowedCPUs as root, for the launcher's
+  # confinement, which starts it with the CPU list as its instance
+  # ("6-11_18-23", commas as underscores; "none" clears it). A user picks the
+  # instance, so only a CPU list gets through.
+  confineNix = writeShellApplication {
+    name = "battlenet-confine-nix";
+    runtimeInputs = [ systemd ];
+    text = ''
+      if [[ $1 == none ]]; then
+        cpus=""
+      elif [[ $1 =~ ^[0-9]+(-[0-9]+)?(_[0-9]+(-[0-9]+)?)*$ ]]; then
+        cpus=''${1//_/,}
+      else
+        echo "battlenet-confine-nix: not a CPU list: $1" >&2
+        exit 2
+      fi
+      systemctl set-property --runtime nix-daemon.service AllowedCPUs="$cpus"
+    '';
+  };
+  confineNixUnit = writeTextDir "lib/systemd/system/battlenet-confine-nix@.service" ''
+    [Unit]
+    Description=Battle.net CPU confinement of nix-daemon.service (%i)
+
+    [Service]
+    Type=oneshot
+    TimeoutSec=30s
+    ExecStart=${lib.getExe confineNix} %i
+  '';
 
   desktopItem = makeDesktopItem {
     name = "battlenet";
@@ -191,6 +247,8 @@ symlinkJoin {
   paths = [
     launcher
     desktopItem
+    confineUnit
+    confineNixUnit
   ];
   passthru = { inherit fhs inner launcher; };
   meta = {
