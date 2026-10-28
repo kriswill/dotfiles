@@ -114,7 +114,7 @@ required, `battlenet.slice` refused), the `user@.service` drop-in text, the
 CPU-list complement (`0-23` minus `0-5,12-17` is `6-11,18-23`; minus
 everything is empty), and the trap paths in a stubbed harness (release once
 after a normal end, after a `set -e` failure, and after INT, TERM and HUP,
-with exit statuses 0, 1 and 130).
+with exit statuses 0, 1 and 130). Landed in commit `16a6712`.
 
 Still to see live, after the rebuild, possibly a new login, and a game
 launch: `app.slice`'s `cpuset.cpus.effective` reading `6-11,18-23` during a
