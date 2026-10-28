@@ -18,6 +18,8 @@
       # spawns the compilers, and wowdps-dev. The game runs in battlenet.slice.
       # session.slice (Hyprland and what it starts directly) is left alone.
       confineSlices = [ "app.slice" ];
+      # And nix-daemon.service, where `nrs` and every other Nix build run.
+      confineNixDaemon = true;
       environment = {
         # Wine's Wayland driver instead of XWayland: WoW ran a little faster
         # (2026-10-25). Battle.net's window lays out oddly for a few seconds

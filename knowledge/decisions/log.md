@@ -1,5 +1,16 @@
 # Log
 
+## 2026-10-27
+
+- **Update**: [battlenet-cpu-confinement](battlenet-cpu-confinement.md).
+  systemd, not a bash EXIT trap, now decides when the confinement ends:
+  session scopes want a `StopWhenUnneeded=` unit per target, whose start
+  and stop combine every running session's CPUs, so a killed launcher, two
+  concurrent sessions and `battlenet kill` no longer leave it wrong.
+  `nix-daemon.service` joins it through a polkit-gated root oneshot. The
+  switch's user-manager re-exec was seen to hand over the cpuset delegation,
+  so the "log in again" claim is gone.
+
 ## 2026-10-26
 
 - **Creation**: [battlenet-cpu-confinement](battlenet-cpu-confinement.md).

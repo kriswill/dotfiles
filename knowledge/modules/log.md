@@ -1,5 +1,14 @@
 # Log
 
+## 2026-10-27
+
+- **Update**: [battlenet](battlenet.md) gains `confineNixDaemon` (a polkit
+  rule for `battlenet-confine-nix@.service`), installs the confinement units
+  through `systemd.packages`, builds the launcher with
+  `config.systemd.package`, and tightens `cpus` (non-empty) and
+  `confineSlices` (`*.slice`, neither `battlenet.slice` nor `-.slice`). [nebula-battlenet](nebula-battlenet.md) turns
+  `confineNixDaemon` on ([decision](../decisions/battlenet-cpu-confinement.md)).
+
 ## 2026-10-26
 
 - **Update**: [battlenet](battlenet.md) gains
