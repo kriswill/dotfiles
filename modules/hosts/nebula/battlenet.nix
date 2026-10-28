@@ -13,6 +13,11 @@
       # cache-hungry. amd_x3d_mode stays "frequency", so other work prefers
       # the other CCD and leaves these cores to the game.
       cpus = "0-5,12-17";
+      # While a session runs, app.slice is held to the other CCD, 6-11,18-23.
+      # It holds the terminals, Claude sessions, the sccache server that
+      # spawns the compilers, and wowdps-dev. The game runs in battlenet.slice.
+      # session.slice (Hyprland and what it starts directly) is left alone.
+      confineSlices = [ "app.slice" ];
       environment = {
         # Wine's Wayland driver instead of XWayland: WoW ran a little faster
         # (2026-10-25). Battle.net's window lays out oddly for a few seconds

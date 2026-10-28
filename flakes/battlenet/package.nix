@@ -24,6 +24,7 @@
   curl,
   libnotify,
   procps,
+  systemd,
   util-linux,
   proton-ge-bin,
   # A Proton build: a package with a `steamcompattool` output (proton-ge-bin)
@@ -36,6 +37,10 @@
   # CPUs the whole session (Battle.net, WoW, Proton, the wineserver) runs on,
   # as a `taskset -c` list such as "0-5,12-17"; null leaves affinity alone.
   cpus ? null,
+  # User slices held to the CPUs outside `cpus` while a session runs, such as
+  # [ "app.slice" ]. Needs `cpus`, and the cpuset controller delegated to the
+  # user's systemd (the NixOS module does that).
+  confineSlices ? [ ],
   # Language for Blizzard's installer (--lang).
   locale ? "enUS",
   icon ? "applications-games",
@@ -154,12 +159,15 @@ let
       coreutils
       libnotify
       procps
+      # systemctl and systemd-run, for confineSlices.
+      systemd
       util-linux
     ];
     runtimeEnv = {
       BATTLENET_FHS = lib.getExe fhs;
       BATTLENET_DEFAULT_PREFIX = if prefix == null then "" else prefix;
       BATTLENET_DEFAULT_CPUS = if cpus == null then "" else cpus;
+      BATTLENET_DEFAULT_CONFINE = lib.concatStringsSep " " confineSlices;
     };
     text = builtins.readFile ./battlenet.sh;
   };

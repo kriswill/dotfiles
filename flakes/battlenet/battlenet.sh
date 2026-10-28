@@ -2,8 +2,9 @@
 # Body of battlenet, the half of the launcher that runs on the host. Loaded
 # verbatim by ./package.nix via builtins.readFile into writeShellApplication,
 # which sets $BATTLENET_FHS (battlenet-proton inside the FHS runtime, see
-# ./battlenet-proton.sh), $BATTLENET_DEFAULT_PREFIX and
-# $BATTLENET_DEFAULT_CPUS, and puts notify-send and taskset on PATH.
+# ./battlenet-proton.sh), $BATTLENET_DEFAULT_PREFIX, $BATTLENET_DEFAULT_CPUS
+# and $BATTLENET_DEFAULT_CONFINE, and puts notify-send, taskset, systemctl
+# and systemd-run on PATH.
 #
 # State lives outside the store:
 #   $prefix               compat data (STEAM_COMPAT_DATA_PATH): pfx/ is the
@@ -35,8 +36,10 @@ usage: battlenet [COMMAND]
   run CMD [ARG...]  run a program in the prefix (winecfg, regedit, an .exe)
   kill              stop everything running in the prefix
 
-BATTLENET_PREFIX overrides the configured prefix for one run, and
-BATTLENET_CPUS the configured CPU list (empty: no pinning).
+BATTLENET_PREFIX overrides the configured prefix for one run,
+BATTLENET_CPUS the configured CPU list (empty: no pinning), and
+BATTLENET_CONFINE the user slices held off those CPUs while the session
+runs (space-separated; empty: no confinement).
 EOF
 }
 
@@ -51,6 +54,78 @@ say() {
   notify-send --app-name=Battle.net Battle.net "$1" 2>/dev/null || true
 }
 
+# The CPUs in a kernel CPU list such as "0-5,12-17" (no strides), one per
+# line.
+expand_cpus() {
+  local ranges range cpu
+  IFS=, read -ra ranges <<<"$1"
+  for range in "${ranges[@]}"; do
+    for ((cpu = ${range%-*}; cpu <= ${range#*-}; cpu++)); do
+      echo "$cpu"
+    done
+  done
+}
+
+# The CPUs of list $1 that aren't in list $2, as a kernel CPU list such as
+# "6-11,18-23"; empty when $2 covers all of $1.
+cpus_minus() {
+  local -A drop=()
+  local cpu first=-1 last=-1 ranges=()
+  for cpu in $(expand_cpus "$2"); do
+    drop[$cpu]=1
+  done
+  # The trailing -1 closes the last range.
+  for cpu in $(expand_cpus "$1") -1; do
+    [[ -z ${drop[$cpu]-} ]] || continue
+    if ((last >= 0 && cpu == last + 1)); then
+      last=$cpu
+      continue
+    fi
+    if ((last > first)); then
+      ranges+=("$first-$last")
+    elif ((last >= 0)); then
+      ranges+=("$first")
+    fi
+    first=$cpu
+    last=$cpu
+  done
+  local IFS=,
+  echo "${ranges[*]}"
+}
+
+# Confinement keeps other work off the session's CPUs while it runs. Affinity
+# can't: whatever started outside this launcher, such as the sccache server
+# that spawns the compilers, keeps every CPU. A cgroup cpuset can, because the
+# kernel holds every process in a slice to the slice's CPUs. The invocation
+# that owns the session holds each slice in $confine (BATTLENET_CONFINE, or
+# programs.battlenet.confineSlices) to the CPUs outside the session's
+# (confine_slices).
+#
+# So that the session itself is never confined, every invocation that starts
+# Wine runs the sandbox in a transient scope in battlenet.slice. Started from
+# a terminal in a confined slice, it would otherwise inherit that slice's
+# cpuset, and taskset to the session's CPUs would fail with EINVAL. In --scope
+# mode systemd-run registers its own PID as the scope and then execs the
+# command, so the PID own_session waits on and kills is still the sandbox's.
+# --expand-environment=no passes `run` arguments that contain `$` on
+# unchanged. Without a CPU list or a reachable user manager, nothing is
+# confined and nothing runs in a scope.
+cpus=${BATTLENET_CPUS-$BATTLENET_DEFAULT_CPUS}
+confine=()
+scope=()
+if [[ -n $cpus ]]; then
+  read -ra confine <<<"${BATTLENET_CONFINE-$BATTLENET_DEFAULT_CONFINE}"
+fi
+if ((${#confine[@]})); then
+  if systemctl --user show --property=Version >/dev/null 2>&1; then
+    scope=(systemd-run --user --scope --quiet --collect --expand-environment=no
+      --slice=battlenet.slice --)
+  else
+    say "Not confining ${confine[*]}: the user's systemd isn't reachable"
+    confine=()
+  fi
+fi
+
 # The sandbox, run under `taskset -c` when a CPU list is set. Affinity is
 # inherited by the sandbox, Proton, the wineserver and every Windows program
 # Battle.net starts. It is only a starting point, though: a process may widen
@@ -62,27 +137,29 @@ say() {
 # processors" means those. Wine reports them as separate cores, without SMT
 # pairing. It's derived from the list unless already set (an empty value
 # turns it off).
-cpus=${BATTLENET_CPUS-$BATTLENET_DEFAULT_CPUS}
 fhs=("$BATTLENET_FHS")
 if [[ -n $cpus ]]; then
-  if ! status=$(taskset -c "$cpus" cat /proc/self/status 2>/dev/null); then
-    say "Invalid CPU list '$cpus' (BATTLENET_CPUS or programs.battlenet.cpus)"
-    exit 2
+  # Checked in the scope the session will run in: from a slice that a running
+  # session confines (a terminal's), the cpuset would narrow the list or
+  # refuse it. If only the scope fails, the launch goes on without it.
+  if ! status=$("${scope[@]}" taskset -c "$cpus" cat /proc/self/status 2>/dev/null); then
+    if ((${#scope[@]})) && status=$(taskset -c "$cpus" cat /proc/self/status 2>/dev/null); then
+      say "Not confining ${confine[*]}: systemd-run couldn't start a scope"
+      confine=()
+      scope=()
+    else
+      say "Invalid CPU list '$cpus' (BATTLENET_CPUS or programs.battlenet.cpus)"
+      exit 2
+    fi
   fi
   # The kernel's own normalised list (no strides), e.g. "0-5,12-17".
   allowed=""
   while IFS=$'\t' read -r key value; do
     [[ $key == Cpus_allowed_list: ]] && allowed=$value
   done <<<"$status"
-  fhs=(taskset -c "$cpus" "$BATTLENET_FHS")
+  fhs=("${scope[@]}" taskset -c "$cpus" "$BATTLENET_FHS")
   if [[ -z ${WINE_CPU_TOPOLOGY+set} ]]; then
-    list=()
-    IFS=, read -ra ranges <<<"$allowed"
-    for range in "${ranges[@]}"; do
-      for ((cpu = ${range%-*}; cpu <= ${range#*-}; cpu++)); do
-        list+=("$cpu")
-      done
-    done
+    mapfile -t list < <(expand_cpus "$allowed")
     WINE_CPU_TOPOLOGY="${#list[@]}:$(
       IFS=,
       echo "${list[*]}"
@@ -170,6 +247,60 @@ kill_prefix() {
   fi
 }
 
+# The owning invocation holds each slice in $confine to the online CPUs
+# outside the session's, from just before it starts the sandbox until it
+# exits. The EXIT trap releases them after a normal end, stop_session's exit
+# and a set -e failure alike. Releasing clears AllowedCPUs rather than
+# restoring an earlier value, because the launcher owns that property on
+# those slices. `battlenet kill` clears it too, for an owner that was killed
+# before its trap could run. systemd applies a slice's AllowedCPUs before it
+# replies, so the cpuset is checked right after. Its files are missing until
+# the user manager has the cpuset controller, which is delegated to it when
+# it starts (programs.battlenet.confineSlices adds it to user@.service).
+confined=()
+confine_slices() {
+  local online others slice cg effective held=()
+  read -r online </sys/devices/system/cpu/online || return 0
+  others=$(cpus_minus "$online" "$allowed")
+  if [[ -z $others ]]; then
+    say "Not confining ${confine[*]}: the session has every online CPU"
+    return 0
+  fi
+  trap 'release_slices "${confined[@]}"' EXIT
+  for slice in "${confine[@]}"; do
+    if [[ $slice == battlenet.slice ]]; then
+      say "Not confining battlenet.slice: the session runs in it"
+      continue
+    fi
+    confined+=("$slice")
+    if systemctl --user set-property --runtime "$slice" AllowedCPUs="$others"; then
+      held+=("$slice")
+    else
+      say "Couldn't hold $slice to CPUs $others"
+    fi
+  done
+  for slice in "${held[@]}"; do
+    cg=$(systemctl --user show --property=ControlGroup --value "$slice" 2>/dev/null) || continue
+    [[ -n $cg ]] || continue
+    if [[ ! -e /sys/fs/cgroup$cg/cpuset.cpus.effective ]]; then
+      say "CPU confinement isn't active yet: the user manager has no cpuset controller; log in again after the rebuild"
+      return 0
+    fi
+    effective=$(<"/sys/fs/cgroup$cg/cpuset.cpus.effective") || effective=""
+    [[ $effective == "$others" ]] ||
+      say "$slice runs on CPUs ${effective:-(none)}, not $others"
+  done
+}
+
+# Errors are ignored: this runs from the EXIT trap, where a failure under
+# set -e would end the trap early and replace the exit status.
+release_slices() {
+  local slice
+  for slice in "$@"; do
+    systemctl --user set-property --runtime "$slice" AllowedCPUs= >/dev/null 2>&1 || true
+  done
+}
+
 # The invocation that starts the prefix's wineserver owns the session: it
 # waits in the foreground, and Ctrl-C, SIGTERM or the terminal closing stops
 # everything in the prefix, as quitting Battle.net would. Wine puts its
@@ -181,6 +312,9 @@ kill_prefix() {
 # session down.
 session=""
 own_session() {
+  if ((${#confine[@]})); then
+    confine_slices
+  fi
   "${fhs[@]}" "$@" &
   session=$!
   trap stop_session INT TERM HUP
@@ -254,6 +388,7 @@ case ${1:-} in
     ;;
   kill)
     kill_prefix
+    release_slices "${confine[@]}"
     ;;
   -h | --help | help)
     usage

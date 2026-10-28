@@ -2,6 +2,14 @@
 
 ## 2026-10-26
 
+- **Creation**: [battlenet-cpu-confinement](battlenet-cpu-confinement.md).
+  While a Battle.net session runs, the launcher holds the listed user slices
+  (nebula: `app.slice`) to the CPUs outside the game's with a cgroup cpuset,
+  and runs the game in its own `battlenet.slice` scope. Affinity couldn't
+  reach the sccache server's compilers. Records why only `app.slice`, why
+  the game gets a scope, why restoring clears `AllowedCPUs`, and why the
+  `cpuset` delegation can wait for the next login.
+
 - **Update**: [brotli-graft](brotli-graft.md). Rewrite steps now declare the
   `pname`, `version` and Python's PyPI marker that their names imply under
   nixpkgs' naming. nixploit reads these from a path's deriver, and without

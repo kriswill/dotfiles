@@ -2,6 +2,12 @@
 
 ## 2026-10-26
 
+- **Update**: [battlenet](battlenet.md)'s launcher can confine user slices
+  to the CPUs outside the session's (`confineSlices`, `BATTLENET_CONFINE`)
+  and runs every Wine-starting invocation in a `systemd-run --scope` in
+  `battlenet.slice`. The README's "CPU pinning" section gains "Keeping other
+  work off those CPUs".
+
 - **Creation**: [replace-dependencies](replace-dependencies.md), a sub-flake
   with a patched copy of nixpkgs' `replaceDirectDependencies` (bare-hash
   rewrite from PR #579409, filesystem rewrite so renamed entries can't unsort

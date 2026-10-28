@@ -2,6 +2,13 @@
 
 ## 2026-10-26
 
+- **Update**: [battlenet](battlenet.md) gains
+  `programs.battlenet.confineSlices` (`BATTLENET_CONFINE` per run): user
+  slices held off `cpus` while a session runs. A non-empty list adds
+  `cpuset` to `user@.service`'s `Delegate=` and asserts `cpus`.
+  [nebula-battlenet](nebula-battlenet.md) confines `app.slice` to
+  `6-11,18-23` ([decision](../decisions/battlenet-cpu-confinement.md)).
+
 - **Update**: [brotli-graft](brotli-graft.md) takes its patched rewriter from
   the new [replace-dependencies](../packages/replace-dependencies.md)
   sub-flake (`overlays.default`, still version-guarded) instead of

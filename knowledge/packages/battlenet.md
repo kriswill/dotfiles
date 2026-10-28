@@ -4,7 +4,7 @@ title: battlenet
 description: 'Sub-flake that runs Blizzard''s Battle.net in nixpkgs'' GE-Proton without Steam or umu: a host-side `battlenet` launcher that keeps one wineserver per prefix and hands Proton to a steam.buildRuntimeEnv sandbox, installs Battle.net into a configurable prefix on first run, plus the programs.battlenet NixOS module; enabled on nebula.'
 resource: flakes/battlenet/
 tags: [sub-flake, package, gaming, proton, wine]
-generated: { by: claude-code/opus-5.5, at: 2026-10-25T15:30:00-07:00 }
+generated: { by: claude-code/opus-5.5, at: 2026-10-26T22:45:00-07:00 }
 sources:
   - id: subflake-readme
     resource: ../../flakes/battlenet/README.md
@@ -51,7 +51,7 @@ Outputs (x86_64-linux only):
 - `packages.battlenet` (and `default`) is a `symlinkJoin` of the host
   launcher and the desktop entry. The root re-exports it in
   `modules/packages.nix`. `package.nix` is overridable: `proton`, `prefix`,
-  `locale`, `icon`, `environment`.
+  `cpus`, `confineSlices`, `locale`, `icon`, `environment`.
 - `nixosModules.battlenet` (and `default`) is re-exported as the
   [battlenet module](../modules/battlenet.md): `programs.battlenet.*`.
 
@@ -71,6 +71,14 @@ Outputs (x86_64-linux only):
   ran on. Joiners don't own the session.
 - `kill` stops every wineserver and every Wine process of the prefix,
   whichever launcher started them.
+
+**CPU confinement**
+([decision](../decisions/battlenet-cpu-confinement.md)): with `cpus` and
+`confineSlices` set, the owning invocation holds the listed user slices to
+the other CPUs with a cgroup cpuset (`AllowedCPUs`) and clears it from an
+EXIT trap, and every invocation that starts Wine runs the sandbox in a
+`systemd-run --scope` in `battlenet.slice`. The launcher therefore has
+`systemd` among its runtime inputs.
 
 Gotchas:
 
