@@ -4,7 +4,7 @@ title: Battle.net on nebula
 description: 'nebula''s programs.battlenet settings: enables the GE-Proton Battle.net launcher on the default prefix, ~/.local/share/battlenet, which holds the WoW install moved out of Steam''s compatdata/3082075026.'
 resource: modules/hosts/nebula/battlenet.nix
 tags: [nixos-module, host-specific, gaming, proton]
-generated: { by: claude-code/opus-5.5, at: 2026-10-25T16:00:00-07:00 }
+generated: { by: claude-code/opus-5.5, at: 2026-10-26T22:45:00-07:00 }
 sources:
   - id: subflake-readme
     resource: ../../flakes/battlenet/README.md
@@ -65,7 +65,15 @@ lines that are normal are in the README's "What WoW runs on"):[^subflake-readme]
   moved to `0-23`. The launcher now also sets
   `WINE_CPU_TOPOLOGY=12:0,1,2,3,4,5,12,13,14,15,16,17`, so Wine reports those
   12 (WMI: 12 cores, 12 logical). The [btop overlay](../packages/btop.md)
-  colours those CPUs' core labels, to watch the pinning live.
+  colours those CPUs' core labels, to watch the pinning live. Since
+  2026-10-26, `confineSlices = [ "app.slice" ]` keeps other work off those
+  CPUs while a session runs: `app.slice` (the terminals, Claude sessions, the
+  sccache server that spawns the compilers, `wowdps-dev`) is held to
+  `6-11,18-23`, and the game runs in `battlenet.slice`. `session.slice`
+  (Hyprland and what it starts directly) is left alone
+  ([decision](../decisions/battlenet-cpu-confinement.md)). Not yet seen live:
+  that needs the rebuild, possibly a new login for the cpuset delegation,
+  and a game launch.
 - **Display:** native Wayland since 2026-10-25. `environment` sets
   `PROTON_ENABLE_WAYLAND = "1"` (WoW ran a little faster than under XWayland)
   and `PROTON_WAYLAND_MONITOR = "DP-3"`. Proton finds the primary monitor

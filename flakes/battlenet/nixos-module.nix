@@ -57,6 +57,31 @@ in
       '';
     };
 
+    confineSlices = lib.mkOption {
+      type = lib.types.listOf lib.types.str;
+      default = [ ];
+      example = [ "app.slice" ];
+      description = ''
+        User slices held to the CPUs outside `cpus` while a Battle.net
+        session runs, so builds and other work leave the game's CPUs alone.
+        Affinity can't do that for programs started elsewhere, such as a
+        compiler cache's server; a cgroup cpuset can. The launcher that
+        starts the session sets each slice's `AllowedCPUs` to the online CPUs
+        outside `cpus` and clears it when the session ends (`battlenet kill`
+        clears it too). Every launcher invocation that starts Wine runs it in
+        a transient scope in `battlenet.slice`, so the game is never in a
+        confined slice, even when started from a terminal. Needs `cpus`.
+
+        The user's systemd needs the `cpuset` controller for this, so a
+        non-empty list adds `cpuset` to `user@.service`'s `Delegate=`. A
+        rebuild doesn't restart `user@.service`, so the delegation can take
+        until the next login. Until then the launcher says confinement isn't
+        active yet and runs without it. `BATTLENET_CONFINE` (space-separated
+        slices) overrides the list for one run, and an empty value turns
+        confinement off.
+      '';
+    };
+
     locale = lib.mkOption {
       type = lib.types.str;
       default = "enUS";
@@ -99,6 +124,7 @@ in
           proton
           prefix
           cpus
+          confineSlices
           locale
           icon
           environment
@@ -107,6 +133,27 @@ in
     }
     (lib.mkIf cfg.enable {
       environment.systemPackages = [ cfg.package ];
+    })
+    (lib.mkIf (cfg.enable && cfg.confineSlices != [ ]) {
+      assertions = [
+        {
+          assertion = cfg.cpus != null;
+          message = "programs.battlenet.confineSlices needs programs.battlenet.cpus: the slices are held to the CPUs outside it.";
+        }
+        {
+          assertion = !lib.elem "battlenet.slice" cfg.confineSlices;
+          message = "programs.battlenet.confineSlices can't include battlenet.slice: the session runs in it.";
+        }
+      ];
+      # The user's systemd can only set AllowedCPUs on its slices with the
+      # cpuset controller delegated to it. Upstream's user@.service delegates
+      # `pids memory cpu`; this is that list plus cpuset, written in full so
+      # it holds whether a drop-in's list adds to the unit's or replaces it.
+      # A switch doesn't restart user@.service, so this can take until the
+      # next login to reach the user manager. (A switch does re-execute
+      # running user managers, which re-read their controllers then, so it
+      # may arrive sooner.)
+      systemd.services."user@".serviceConfig.Delegate = "pids memory cpu cpuset";
     })
   ];
 }

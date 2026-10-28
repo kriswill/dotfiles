@@ -4,7 +4,7 @@ title: Battle.net
 description: 'Re-export of the battlenet sub-flake''s NixOS module: programs.battlenet installs a `battlenet` launcher and desktop entry that run Blizzard''s Battle.net in GE-Proton (no Steam, no umu), with a configurable prefix; enabled on nebula.'
 resource: modules/nixos/battlenet.nix
 tags: [nixos-module, gaming, proton]
-generated: { by: claude-code/opus-5.5, at: 2026-10-25T14:00:00-07:00 }
+generated: { by: claude-code/opus-5.5, at: 2026-10-26T22:45:00-07:00 }
 sources:
   - id: subflake-readme
     resource: ../../flakes/battlenet/README.md
@@ -33,6 +33,16 @@ Options under `programs.battlenet`:
   overrides it per run. The launcher also derives `WINE_CPU_TOPOLOGY` from
   it, so Wine reports only those CPUs. Without that, WoW's "all processors"
   affinity spread 76 of its 99 threads back over every CPU.
+- `confineSlices` (default `[]`): user slices held to the CPUs outside `cpus`
+  while a session runs, so builds and other work stay off the game's CPUs.
+  The launcher that owns the session sets each slice's `AllowedCPUs` (a
+  cgroup cpuset) and clears it when it exits; `battlenet kill` clears it
+  too. Every invocation that starts Wine runs in a transient scope in
+  `battlenet.slice`, so the game is never confined. `BATTLENET_CONFINE`
+  overrides the list per run. A non-empty list asserts `cpus` is set and
+  `battlenet.slice` isn't listed, and adds `cpuset` to `user@.service`'s
+  `Delegate=`, which can take until the next login to reach the user
+  manager ([decision](../decisions/battlenet-cpu-confinement.md)).
 - `locale` (installer `--lang`, default `enUS`), `icon`, and `environment`
   (extra Proton variables, as defaults that a variable set for one run
   overrides).
