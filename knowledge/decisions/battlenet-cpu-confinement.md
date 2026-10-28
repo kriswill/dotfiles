@@ -154,7 +154,7 @@ in a real session (2026-10-27): both units active,
 `app.slice` and `nix-daemon.service` each with `cpuset.cpus.effective`
 `6-11,18-23` (the polkit rule let the user unit start
 `battlenet-confine-nix@6-11_18-23.service`), and the game's processes in a
-`battlenet.slice` scope on `0-5,12-17`.
+`battlenet.slice` scope on `0-5,12-17`. Landed in commit `0e2090e`.
 
 Known edges:
 
