@@ -175,7 +175,7 @@ held to `6-11,18-23` with no scope to escape to, `30-40` and `x` are now
 called invalid instead of being blamed on the shell. With `systemctl`
 stubbed, the root helper took `6-11_18-23` and `18-23_6-11` and refused
 `8-11_18-23`, `0-23`, `0` and non-lists. A session on `0-7` left
-`nix-daemon.service` alone.
+`nix-daemon.service` alone. Landed in commit `43dc3d4`.
 
 Known edges:
 
