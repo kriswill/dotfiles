@@ -39,7 +39,8 @@
   # $XDG_DATA_HOME/battlenet (~/.local/share/battlenet), resolved at run time.
   prefix ? null,
   # CPUs the whole session (Battle.net, WoW, Proton, the wineserver) runs on,
-  # as a `taskset -c` list such as "0-5,12-17"; null leaves affinity alone.
+  # as a `taskset -c` list such as "0-5,12-17" (no strides); null leaves
+  # affinity alone.
   cpus ? null,
   # User slices held to the CPUs outside `cpus` while a session runs, such as
   # [ "app.slice" ]. Needs `cpus`, and the cpuset controller delegated to the
@@ -181,7 +182,7 @@ let
     text = builtins.readFile ./battlenet.sh;
   };
 
-  # A user unit per confinement target and session CPU list, wanted by the
+  # A user unit per confinement target and session CPU list, upheld by the
   # scope of every invocation that starts Wine (see ./battlenet.sh).
   # StopWhenUnneeded= ties it to those scopes: systemd starts it with the first
   # and stops it after the last. ExecStopPost= rather than ExecStop= also
@@ -202,21 +203,13 @@ let
   # Sets nix-daemon.service's AllowedCPUs as root, for the launcher's
   # confinement, which starts it with the CPU list as its instance
   # ("6-11_18-23", commas as underscores; "none" clears it). A user picks the
-  # instance, so only a CPU list gets through.
+  # instance, so it takes no list but the CPUs outside `cpus`
+  # (./battlenet-confine-nix.sh).
   confineNix = writeShellApplication {
     name = "battlenet-confine-nix";
     runtimeInputs = [ systemd ];
-    text = ''
-      if [[ $1 == none ]]; then
-        cpus=""
-      elif [[ $1 =~ ^[0-9]+(-[0-9]+)?(_[0-9]+(-[0-9]+)?)*$ ]]; then
-        cpus=''${1//_/,}
-      else
-        echo "battlenet-confine-nix: not a CPU list: $1" >&2
-        exit 2
-      fi
-      systemctl set-property --runtime nix-daemon.service AllowedCPUs="$cpus"
-    '';
+    runtimeEnv.BATTLENET_DEFAULT_CPUS = if cpus == null then "" else cpus;
+    text = builtins.readFile ./battlenet-confine-nix.sh;
   };
   confineNixUnit = writeTextDir "lib/systemd/system/battlenet-confine-nix@.service" ''
     [Unit]

@@ -4,7 +4,7 @@ title: Battle.net
 description: 'Re-export of the battlenet sub-flake''s NixOS module: programs.battlenet installs a `battlenet` launcher and desktop entry that run Blizzard''s Battle.net in GE-Proton (no Steam, no umu), with a configurable prefix; enabled on nebula.'
 resource: modules/nixos/battlenet.nix
 tags: [nixos-module, gaming, proton]
-generated: { by: claude-code/opus-5.5, at: 2026-10-27T23:30:00-07:00 }
+generated: { by: claude-code/opus-5.5, at: 2026-10-28T21:30:00-07:00 }
 sources:
   - id: subflake-readme
     resource: ../../flakes/battlenet/README.md
@@ -30,23 +30,28 @@ Options under `programs.battlenet`:
   directory, because umu leaves a `pfx -> .` link in it.
 - `proton` (default `pkgs.proton-ge-bin`): a package with a `steamcompattool`
   output, or a package holding `proton`.
-- `cpus` (default `null`, otherwise non-empty): a `taskset -c` list the whole session runs on
-  (Battle.net, WoW, Proton, the wineserver inherit it); `BATTLENET_CPUS`
-  overrides it per run. The launcher also derives `WINE_CPU_TOPOLOGY` from
+- `cpus` (default `null`): a `taskset -c` list of CPUs and ranges, without
+  strides, that the whole session runs on (Battle.net, WoW, Proton, the
+  wineserver inherit it); `BATTLENET_CPUS` overrides it per run. The
+  launcher also derives `WINE_CPU_TOPOLOGY` from
   it, so Wine reports only those CPUs. Without that, WoW's "all processors"
   affinity spread 76 of its 99 threads back over every CPU.
 - `confineSlices` (default `[]`, names matching `*.slice`): user slices held
   to the CPUs outside `cpus` (a cgroup cpuset, `AllowedCPUs`) while a session
   runs, so the work in them stays off the game's CPUs. A non-empty list
-  asserts `cpus` is set and that `battlenet.slice` and `-.slice` (which hold
-  the session) aren't listed, and adds `cpuset` to `user@.service`'s
+  asserts `cpus` is set, that `battlenet.slice` and `-.slice` (which hold
+  the session) aren't listed, and that no listed slice sets `AllowedCPUs`
+  itself (the release would clear it), and adds `cpuset` to `user@.service`'s
   `Delegate=`. The switch's re-execution of running user managers hands it
   over ([decision](../decisions/battlenet-cpu-confinement.md)).
   `BATTLENET_CONFINE` overrides the list per run.
 - `confineNixDaemon` (default `false`): hold `nix-daemon.service`, where Nix
   builds run, there too. Adds a polkit rule that lets members of `users`
-  start the root oneshot `battlenet-confine-nix@CPUS.service`, and asserts
-  `cpus` and `security.polkit.enable`.
+  start the root oneshot `battlenet-confine-nix@CPUS.service`, which takes
+  only `none` or the online CPUs outside `cpus`. Asserts `cpus`,
+  `security.polkit.enable`, and that `nix-daemon.service` doesn't set
+  `AllowedCPUs` itself. Each user's launcher counts only that user's
+  sessions, so it suits a machine with one player.
 - `locale` (installer `--lang`, default `enUS`), `icon`, and `environment`
   (extra Proton variables, as defaults that a variable set for one run
   overrides).
