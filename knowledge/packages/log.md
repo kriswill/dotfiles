@@ -1,5 +1,14 @@
 # Log
 
+## 2026-10-28
+
+- **Update**: [battlenet](battlenet.md): the session scope upholds its
+  confinement units (`Upholds=`, not `Wants=`), and the root oneshot's
+  script moves to `battlenet-confine-nix.sh`, which accepts only `none` or
+  the online CPUs outside `cpus`. The launcher also survives SIGPIPE while
+  stopping a session, leaves a target alone when systemd can't list the
+  sessions, and checks for refusals before probing the CPU list.
+
 ## 2026-10-27
 
 - **Update**: [battlenet](battlenet.md)'s confinement moves into systemd:

@@ -4,7 +4,7 @@ title: battlenet
 description: 'Sub-flake that runs Blizzard''s Battle.net in nixpkgs'' GE-Proton without Steam or umu: a host-side `battlenet` launcher that keeps one wineserver per prefix and hands Proton to a steam.buildRuntimeEnv sandbox, installs Battle.net into a configurable prefix on first run, plus the programs.battlenet NixOS module; enabled on nebula.'
 resource: flakes/battlenet/
 tags: [sub-flake, package, gaming, proton, wine]
-generated: { by: claude-code/opus-5.5, at: 2026-10-27T23:30:00-07:00 }
+generated: { by: claude-code/opus-5.5, at: 2026-10-28T21:30:00-07:00 }
 sources:
   - id: subflake-readme
     resource: ../../flakes/battlenet/README.md
@@ -77,11 +77,12 @@ Outputs (x86_64-linux only):
 ([decision](../decisions/battlenet-cpu-confinement.md)): with `cpus` set,
 every invocation that starts Wine runs the sandbox in a `systemd-run --scope`
 in `battlenet.slice`. With `confineSlices` or `confineNixDaemon` set, that
-scope also wants a `StopWhenUnneeded=` unit per target,
+scope also upholds a `StopWhenUnneeded=` unit per target,
 `battlenet-confine@TARGET:CPUS.service`, which holds the target to the other
 CPUs with a cgroup cpuset (`AllowedCPUs`) for as long as any session's
 scope runs. The package ships that user unit and
-`battlenet-confine-nix@.service`, a root oneshot for `nix-daemon.service`,
+`battlenet-confine-nix@.service`, a root oneshot for `nix-daemon.service`
+that takes only the CPUs outside `cpus` (`battlenet-confine-nix.sh`),
 under `lib/systemd/`.
 
 Gotchas:

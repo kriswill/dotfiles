@@ -1,9 +1,9 @@
 ---
 type: Decision
 title: Confine app.slice While Battle.net Runs
-description: 'While a Battle.net session runs, app.slice and nix-daemon.service are held to the CPUs outside the game''s with a cgroup cpuset, and the game runs in its own battlenet.slice scope, because affinity can''t reach work started elsewhere (the sccache server''s compilers, Nix builds); a StopWhenUnneeded unit that the session scopes want makes systemd, not the launcher, decide when it ends, cpuset is delegated to user@.service, and a polkit-gated root oneshot sets nix-daemon.service.'
+description: 'While a Battle.net session runs, app.slice and nix-daemon.service are held to the CPUs outside the game''s with a cgroup cpuset, and the game runs in its own battlenet.slice scope, because affinity can''t reach work started elsewhere (the sccache server''s compilers, Nix builds); a StopWhenUnneeded unit that the session scopes uphold makes systemd, not the launcher, decide when it ends, cpuset is delegated to user@.service, and a polkit-gated root oneshot sets nix-daemon.service.'
 tags: [battlenet, systemd, cgroups, cpu, polkit]
-generated: { by: claude-code/opus-5.5, at: 2026-10-27T23:30:00-07:00 }
+generated: { by: claude-code/opus-5.5, at: 2026-10-28T21:30:00-07:00 }
 sources:
   - id: subflake-readme
     resource: ../../flakes/battlenet/README.md
@@ -13,7 +13,7 @@ sources:
     title: 'systemd.resource-control(5): AllowedCPUs=, Delegate='
   - id: systemd-unit
     resource: https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html
-    title: 'systemd.unit(5): StopWhenUnneeded=, Wants=, Before='
+    title: 'systemd.unit(5): StopWhenUnneeded=, Upholds=, Before='
   - id: systemd-run
     resource: https://www.freedesktop.org/software/systemd/man/latest/systemd-run.html
     title: 'systemd-run(1): --scope, --slice=, --expand-environment='
@@ -93,16 +93,20 @@ The README has the user-facing account.[^subflake-readme]
   and left `app.slice` confined, the first of two concurrent owners to exit
   cleared it for both, and `battlenet kill` cleared it whether or not a
   session still ran. Now each session scope has
-  `Wants=`/`Before=battlenet-confine@TARGET:CPUS.service`, a
+  `Upholds=`/`Before=battlenet-confine@TARGET:CPUS.service`, a
   `StopWhenUnneeded=` oneshot.[^systemd-unit] systemd starts it with the
-  first scope that wants it and stops it after the last one ends, so the
+  first scope that upholds it and stops it after the last one ends, so the
   confinement lasts exactly as long as some session's Wine does, and nothing
-  in the launcher has to survive for it to end. Its `ExecStart=` and
-  `ExecStopPost=` (which also runs after a failed start) both run
-  `battlenet _confine`. Under a lock, that sets the target to the online CPUs
-  outside the CPUs of every one of the target's units that is active or
-  starting. A starting unit counts itself and a stopping one doesn't, so
-  sessions with different CPU lists combine and the last stop clears. It
+  in the launcher has to survive for it to end. `Upholds=` rather than
+  `Wants=`: under `Wants=`, a session started while the unit was still
+  stopping after the previous one lost its start job to that stop and ran
+  unconfined. `Upholds=` starts the unit again once the stop is done. Its
+  `ExecStart=` and `ExecStopPost=` (which also runs after a failed start)
+  both run `battlenet _confine`. Under a lock, that sets the target to the
+  online CPUs outside the CPUs of every one of the target's units that is
+  active or starting. A starting unit counts itself and a stopping one
+  doesn't, so sessions with different CPU lists combine and the last stop
+  clears. If systemd can't list the units, the target stays as it is. It
   clears rather than restoring an earlier value, because the launcher owns
   that property on its targets.
 - **A user slice's delegation goes through `user@.service`.** A non-empty
@@ -120,10 +124,14 @@ The README has the user-facing account.[^subflake-readme]
   runs as root and sets `nix-daemon.service`'s `AllowedCPUs` to `CPUS`
   (`none` clears it). A polkit rule lets members of `users` start only units
   matching `battlenet-confine-nix@([0-9_-]+|none).service`, by systemd's
-  `unit` and `verb` details,[^polkit-manual] and the script accepts nothing
-  but a CPU list, so the most a user can do with it is choose which CPUs
-  builds use. This is narrower than letting users `set-property` the
-  daemon, which would also let them set its memory and device limits.
+  `unit` and `verb` details.[^polkit-manual] The script accepts only `none`
+  or the online CPUs outside `cpus`, so the most a user can do with it is
+  hold builds off the game's CPUs or let them back. A session on other CPUs
+  (`BATTLENET_CPUS`) leaves the daemon as it is. This is narrower than
+  letting users `set-property` the daemon, which would also let them set
+  its memory and device limits. The daemon serves the whole machine, but
+  each user's launcher counts only that user's sessions, which suits
+  nebula's one player.
 - **Confinement never fails a launch.** When `systemd-run` can't start a
   scope, or a target can't be set, the launcher or the unit says so in a
   notification and the journal, and the session runs without it.
@@ -156,6 +164,19 @@ in a real session (2026-10-27): both units active,
 `battlenet-confine-nix@6-11_18-23.service`), and the game's processes in a
 `battlenet.slice` scope on `0-5,12-17`. Landed in commit `0e2090e`.
 
+A second review's fixes were tested on 2026-10-28, while a real session ran,
+with the unit and lock renamed (`bnettest-confine@`) and a 2 s pause in the
+unit's stop. A session started during that stop got the unit back once the
+stop was done, and its own end released it. A SIGTERM with stderr on a pipe
+nobody read killed the old launcher with SIGPIPE (exit 141) and left the fake
+sandbox running. The new one exits 130 and stops it. When `list-units`
+fails, the target now stays as it is instead of being cleared. In a shell
+held to `6-11,18-23` with no scope to escape to, `30-40` and `x` are now
+called invalid instead of being blamed on the shell. With `systemctl`
+stubbed, the root helper took `6-11_18-23` and `18-23_6-11` and refused
+`8-11_18-23`, `0-23`, `0` and non-lists. A session on `0-7` left
+`nix-daemon.service` alone.
+
 Known edges:
 
 - A game started from the desktop entry no longer lives in Hyprland's
@@ -165,11 +186,16 @@ Known edges:
 - Runtime properties (`set-property --runtime`) outlive their unit. If the
   user manager dies while a session runs, a target can stay confined until
   the next session ends or someone clears it by hand.
+- Clearing writes an empty runtime `AllowedCPUs=`, which overrides a value
+  the unit sets itself until reboot. The module refuses targets that NixOS
+  configures with `AllowedCPUs`, but can't see `~/.config/systemd/user`.
+- With two players on one machine, the first to stop releases
+  `nix-daemon.service` for both.
 
 [^kernel-cgroup-v2]: Linux kernel Control Group v2: the cpuset controller
 [^subflake-readme]: `flakes/battlenet/README.md`: keeping other work off those CPUs
 [^systemd-resource-control]: systemd.resource-control(5): `AllowedCPUs=`, `Delegate=`
-[^systemd-unit]: systemd.unit(5): `StopWhenUnneeded=`, `Wants=`, `Before=`
+[^systemd-unit]: systemd.unit(5): `StopWhenUnneeded=`, `Upholds=`, `Before=`
 [^systemd-run]: systemd-run(1): `--scope`, `--slice=`, `--expand-environment=`
 [^systemd-run-source]: systemd v262 `src/run/run.c`: `start_transient_scope()` (`pidref_set_self`, `execvpe`)
 [^switch-to-configuration]: nixpkgs `switch-to-configuration-ng`: user activation calls `systemd.reexecute()`

@@ -1,5 +1,13 @@
 # Log
 
+## 2026-10-28
+
+- **Update**: [battlenet](battlenet.md): `cpus` takes CPUs and ranges
+  only (no strides). The module refuses a `confineSlices` slice or a
+  `nix-daemon.service` that sets `AllowedCPUs` itself, because the
+  confinement's release would clear it until reboot.
+  `battlenet-confine-nix@.service` takes only the CPUs outside `cpus`.
+
 ## 2026-10-27
 
 - **Update**: [battlenet](battlenet.md) gains `confineNixDaemon` (a polkit

@@ -116,11 +116,15 @@ cpus_allowed() {
 #
 # systemd keeps track of that, not this script. Every invocation that starts
 # Wine runs the sandbox in a transient scope in battlenet.slice, and the scope
-# wants battlenet-confine@TARGET:CPUS.service for each target. CPUS is the
+# upholds battlenet-confine@TARGET:CPUS.service for each target. CPUS is the
 # session's list with commas as underscores, since a unit name can't hold a
 # comma. The unit is StopWhenUnneeded=, so systemd starts it with the first
-# scope that wants it and stops it after the last one ends, however the
+# scope that upholds it and stops it after the last one ends, however the
 # launcher itself ended. Its start and its stop both run confine_target.
+# Upholds= rather than Wants=: a session started while the unit was still
+# stopping after the previous one (`battlenet kill && battlenet`) lost its
+# start job to that stop and ran unconfined. Upholds= starts the unit again
+# once the stop is done.
 #
 # The scope also keeps the session out of confined slices. Started from a
 # terminal in one, it would otherwise inherit that slice's cpuset, and taskset
@@ -163,9 +167,12 @@ prepare_wine() {
       confine=()
     fi
   else
+    # Both fail for a list without an online CPU in it, and in a shell held to
+    # other CPUs, for a list outside those.
     own=$(cpus_allowed </proc/$$/status)
     read -r online </sys/devices/system/cpu/online
-    if [[ $own != "$online" ]]; then
+    if [[ $own != "$online" && $cpus =~ ^[0-9]+(-[0-9]+)?(,[0-9]+(-[0-9]+)?)*$ &&
+      $(cpus_minus "$online" "$cpus") != "$online" ]]; then
       say "Can't pin to CPUs '$cpus' here: this shell is held to CPUs $own (a running session confines its slice), and systemd-run couldn't start a scope outside it"
     else
       say "Invalid CPU list '$cpus' (BATTLENET_CPUS or programs.battlenet.cpus)"
@@ -188,7 +195,13 @@ prepare_wine() {
       continue
     fi
     unit=battlenet-confine@$target:${allowed//,/_}.service
-    scope+=(--property="Wants=$unit" --property="Before=$unit")
+    # systemd's limit. The probe doesn't name these units, so past it the
+    # launch itself would fail.
+    if ((${#unit} > 255)); then
+      say "Not confining $target: with CPUs $allowed, its unit's name would be too long for systemd"
+      continue
+    fi
+    scope+=(--property="Upholds=$unit" --property="Before=$unit")
   done
   if ((${#scope[@]})); then
     scope+=(--)
@@ -294,23 +307,32 @@ kill_prefix() {
 # (programs.battlenet.confineSlices adds it to user@.service).
 # nix-daemon.service belongs to the system, so battlenet-confine-nix@.service
 # sets it as root, which polkit lets the user start
-# (programs.battlenet.confineNixDaemon). systemd applies AllowedCPUs before it
-# replies, so the cpuset is checked right after. Problems are reported, not
-# returned: the session runs either way.
+# (programs.battlenet.confineNixDaemon). That only holds it off
+# programs.battlenet.cpus, so sessions on other CPUs (BATTLENET_CPUS) leave it
+# as it is. It counts this user's sessions only, which suits a desktop with one
+# player. systemd applies AllowedCPUs before it replies, so the cpuset is
+# checked right after. Problems are reported, not returned: the session runs
+# either way.
 confine_target() {
-  local target=${1%:*} unit instance sessions=() others="" online cg effective
+  local target=${1%:*} units unit instance sessions=() others="" online want cg
+  local effective
   exec 9>"$XDG_RUNTIME_DIR/battlenet-confine.lock"
   flock 9
+  # Without the sessions, any value would be a guess.
+  if ! units=$(systemctl --user list-units --plain --no-legend \
+    --state=active,activating 'battlenet-confine@*.service'); then
+    say "Couldn't list the sessions confining $target, so its CPUs stay as they are"
+    return 0
+  fi
   while read -r unit _; do
     instance=${unit#battlenet-confine@}
     instance=${instance%.service}
     if [[ ${instance%:*} == "$target" ]]; then
       sessions+=("${instance##*:}")
     fi
-  done < <(systemctl --user list-units --plain --no-legend \
-    --state=active,activating 'battlenet-confine@*.service')
+  done <<<"$units"
+  read -r online </sys/devices/system/cpu/online
   if ((${#sessions[@]})); then
-    read -r online </sys/devices/system/cpu/online
     sessions=("${sessions[@]//_/,}")
     others=$(cpus_minus "$online" "$(
       IFS=,
@@ -321,12 +343,19 @@ confine_target() {
     fi
   fi
   if [[ $target == nix-daemon.service ]]; then
+    want=$(cpus_minus "$online" "$BATTLENET_DEFAULT_CPUS")
+    if [[ -n $others && $others != "$want" ]]; then
+      say "Leaving nix-daemon.service as it is: it can be held to CPUs $want (outside programs.battlenet.cpus), not $others"
+      return 0
+    fi
     unit=battlenet-confine-nix@${others:-none}.service
     if ! systemctl start --no-ask-password "${unit//,/_}"; then
       say "Couldn't set nix-daemon.service's CPUs (programs.battlenet.confineNixDaemon allows it)"
       return 0
     fi
-    cg=/system.slice/nix-daemon.service
+    # Empty while the socket-activated daemon isn't running. It gets the
+    # CPUs when it starts.
+    cg=$(systemctl show --property=ControlGroup --value nix-daemon.service) || cg=""
   else
     if ! systemctl --user set-property --runtime "$target" AllowedCPUs="$others"; then
       say "Couldn't set $target's CPUs to '$others'"
@@ -371,9 +400,12 @@ own_session() {
 # the prefix: Battle.net and the wineserver live outside that tree. A failure
 # mustn't end the handler early: once the terminal has closed, even the
 # newline below fails (EIO), and under set -e that exited before anything was
-# stopped, leaving Battle.net running.
+# stopped, leaving Battle.net running. Nor may SIGPIPE, which kills the shell
+# whatever set -e says: with `battlenet 2>&1 | tee log`, Ctrl-C ends tee too,
+# and the newline goes to a pipe nobody reads.
 stop_session() {
   set +e
+  trap '' PIPE
   trap - INT TERM HUP
   # Out of the job table, so bash doesn't report the kill below as
   # "line N: PID Killed ...".
@@ -394,14 +426,14 @@ kill_tree() {
 
 case ${1:-} in
   "")
-    prepare_wine
     find_servers
     refuse_foreign
+    if ((${#joinable[@]})) && [[ ! -f $exe ]]; then
+      say "Battle.net isn't installed in $prefix yet. Close what's running there, then start it again."
+      exit 1
+    fi
+    prepare_wine
     if ((${#joinable[@]})); then
-      if [[ ! -f $exe ]]; then
-        say "Battle.net isn't installed in $prefix yet. Close what's running there, then start it again."
-        exit 1
-      fi
       # Joining the running session: in the same wineserver, a second
       # Battle.net.exe hands over to the running one, which comes forward.
       exec "${fhs[@]}" runinprefix "$exe"
@@ -415,13 +447,13 @@ case ${1:-} in
     fi
     ;;
   install)
-    prepare_wine
     find_servers
     refuse_foreign
     if ((${#joinable[@]})); then
       say "Battle.net is running in $prefix. Close it, or run 'battlenet kill', then install again."
       exit 1
     fi
+    prepare_wine
     own_session install
     ;;
   run)
@@ -430,9 +462,9 @@ case ${1:-} in
       usage >&2
       exit 2
     fi
-    prepare_wine
     find_servers
     refuse_foreign
+    prepare_wine
     if ((${#joinable[@]})); then
       exec "${fhs[@]}" runinprefix "$@"
     fi

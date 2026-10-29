@@ -1,5 +1,15 @@
 # Log
 
+## 2026-10-28
+
+- **Update**: [battlenet-cpu-confinement](battlenet-cpu-confinement.md).
+  Session scopes now uphold the confinement unit rather than want it, so a
+  session started while the previous one's unit is still stopping gets
+  confined once the stop is done. The root helper for `nix-daemon.service`
+  takes only `none` or the online CPUs outside `cpus`. Also records that
+  the per-user counting is meant for one player, the 2026-10-28 tests, and
+  that a release's empty runtime `AllowedCPUs=` overrides a configured one.
+
 ## 2026-10-27
 
 - **Update**: [battlenet-cpu-confinement](battlenet-cpu-confinement.md).

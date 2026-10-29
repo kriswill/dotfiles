@@ -39,18 +39,19 @@ in
     };
 
     cpus = lib.mkOption {
-      type = lib.types.nullOr lib.types.nonEmptyStr;
+      type = lib.types.nullOr (lib.types.strMatching "[0-9]+(-[0-9]+)?(,[0-9]+(-[0-9]+)?)*");
       default = null;
       example = "0-5,12-17";
       description = ''
-        CPUs the whole session runs on, as a `taskset -c` list. That covers
-        Battle.net, WoW and everything else Battle.net starts, Proton and the
-        wineserver: they all inherit the affinity. The launcher also sets
-        `WINE_CPU_TOPOLOGY` from the list (unless it's already set), so Wine
-        reports only these CPUs. Otherwise a program that sets its affinity to
-        "all processors" spreads back over every CPU, as WoW did. Wine reports
-        each listed CPU as a separate core. On an AMD X3D CPU, give the 3D
-        V-Cache CCD's CPUs (those sharing the large L3; see
+        CPUs the whole session runs on, as a `taskset -c` list of CPUs and
+        ranges (no strides: confinement works out the CPUs outside it). That
+        covers Battle.net, WoW and everything else Battle.net starts, Proton
+        and the wineserver: they all inherit the affinity. The launcher also
+        sets `WINE_CPU_TOPOLOGY` from the list (unless it's already set), so
+        Wine reports only these CPUs. Otherwise a program that sets its
+        affinity to "all processors" spreads back over every CPU, as WoW did.
+        Wine reports each listed CPU as a separate core. On an AMD X3D CPU,
+        give the 3D V-Cache CCD's CPUs (those sharing the large L3; see
         `/sys/devices/system/cpu/cpu*/cache/index3/shared_cpu_list`).
         `null` leaves affinity alone. `BATTLENET_CPUS` overrides it for one
         run, and an empty value turns pinning off.
@@ -86,7 +87,9 @@ in
         outside `cpus` while a session runs. A user can't set a system unit's
         `AllowedCPUs`, so this adds a polkit rule that lets members of the
         `users` group start `battlenet-confine-nix@.service`, which sets it
-        as root and accepts nothing but a CPU list. Needs `cpus` and polkit.
+        as root and accepts only the online CPUs outside `cpus`, or none.
+        Each user's launcher counts only that user's sessions, so this suits
+        a machine with one player. Needs `cpus` and polkit.
       '';
     };
 
@@ -161,7 +164,14 @@ in
           assertion = !lib.elem "battlenet.slice" cfg.confineSlices && !lib.elem "-.slice" cfg.confineSlices;
           message = "programs.battlenet.confineSlices can't include battlenet.slice or the root slice (-.slice): the session runs inside them.";
         }
-      ];
+      ]
+      # Releasing a target writes an empty runtime AllowedCPUs=, which
+      # overrides a configured value until reboot.
+      ++ map (slice: {
+        assertion =
+          !(config.systemd.user.slices.${lib.removeSuffix ".slice" slice}.sliceConfig or { }) ? AllowedCPUs;
+        message = "programs.battlenet.confineSlices can't include ${slice}: it sets AllowedCPUs itself, which the confinement's release would clear until reboot.";
+      }) cfg.confineSlices;
       # The user's systemd can only set AllowedCPUs on its slices with the
       # cpuset controller delegated to it. Upstream's user@.service delegates
       # `pids memory cpu`; this is that list plus cpuset, written in full so
@@ -177,10 +187,14 @@ in
           assertion = config.security.polkit.enable;
           message = "programs.battlenet.confineNixDaemon needs security.polkit.enable: a polkit rule lets users start battlenet-confine-nix@.service.";
         }
+        {
+          assertion = !(config.systemd.services.nix-daemon.serviceConfig or { }) ? AllowedCPUs;
+          message = "programs.battlenet.confineNixDaemon can't be used while nix-daemon.service sets AllowedCPUs itself: the confinement's release would clear it until reboot.";
+        }
       ];
       # Starting battlenet-confine-nix@CPUS.service only sets
-      # nix-daemon.service's AllowedCPUs to CPUS, which its script checks is a
-      # CPU list.
+      # nix-daemon.service's AllowedCPUs to CPUS, which its script accepts
+      # only as the online CPUs outside `cpus`, or "none".
       security.polkit.extraConfig = ''
         polkit.addRule(function (action, subject) {
           if (action.id == "org.freedesktop.systemd1.manage-units" &&
