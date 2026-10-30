@@ -1,5 +1,12 @@
 # Log
 
+## 2026-10-29
+
+- **Creation**: [hermes-agent](hermes-agent.md), the sub-flake that builds
+  Hermes Agent from a trimmed copy of upstream's `nix/` (package + single-owner
+  NixOS module) against the pinned v0.22.5 source
+  ([decision](../decisions/hermes-agent-vendored-nix.md)).
+
 ## 2026-10-28
 
 - **Update**: [battlenet](battlenet.md): the session scope upholds its

@@ -12,9 +12,11 @@ nebula — AMD CPU, NVIDIA GPU, UEFI desktop. Registers into the `configurations
 Imports every [nixos module](../modules/index.md) (`builtins.attrValues
 config.flake.modules.nixos` — the nixos class is almost all-universal; the
 enable-gated features are
-[codebase-memory-mcp](../modules/codebase-memory-mcp.md) and
+[codebase-memory-mcp](../modules/codebase-memory-mcp.md),
+[hermes-agent](../modules/hermes-agent.md) and
 [nixploit](../modules/nixploit.md), flipped on by the host-specific files
-[nebula-codebase-memory-mcp](../modules/nebula-codebase-memory-mcp.md) and
+[nebula-codebase-memory-mcp](../modules/nebula-codebase-memory-mcp.md),
+[nebula-hermes-agent](../modules/nebula-hermes-agent.md) and
 [nebula-nixploit](../modules/nebula-nixploit.md). The
 other entries below are host-specific *files* merged in per the
 [host-mounted modules pattern](../patterns/host-mounted-modules.md), not
@@ -69,6 +71,7 @@ Non-declarative BIOS facts, invisible to the flake:
 - [nebula-battlenet](../modules/nebula-battlenet.md) (enable-gate for the GE-Proton Battle.net launcher)
 - [ntsync](../modules/ntsync.md) (host-specific file)
 - [nebula-codebase-memory-mcp](../modules/nebula-codebase-memory-mcp.md) (enable-gate for the code-graph daemon)
+- [nebula-hermes-agent](../modules/nebula-hermes-agent.md) (enable-gate for the Hermes Agent gateway, run as k, + shared CLI state)
 - [nebula-nixploit](../modules/nebula-nixploit.md) (enable-gate for the daily vulnerability scan)
 - [astro-mixamp](../modules/astro-mixamp.md) (host-specific file)
 - [configuration](../modules/configuration.md) (host-specific file)

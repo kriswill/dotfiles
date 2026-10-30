@@ -108,6 +108,20 @@
       inputs.flake-parts.follows = "flake-parts";
     };
 
+    # Hermes Agent (NousResearch): agent CLI + messaging/cron gateway, built
+    # from a trimmed copy of upstream's nix/ (./flakes/hermes-agent); its
+    # single-owner NixOS module (services.hermes-agent) is re-exported by
+    # modules/nixos/hermes-agent.nix and enabled on nebula. Deliberately NO
+    # nixpkgs follows: the sub-flake pins the nixpkgs upstream's release tag
+    # was tested with, because our nixpkgs' patchelf 0.19.2 corrupts the
+    # prebuilt node from pm/lock.json (NixOS/patchelf#674) and node segfaults
+    # during the TUI build. No cache is lost: hermes-agent.cachix.org held
+    # neither v0.22.5's nor main's package (checked 2026-10-29).
+    hermes-agent = {
+      url = "./flakes/hermes-agent";
+      inputs.flake-parts.follows = "flake-parts";
+    };
+
     # nixpkgs' replaceDirectDependencies, patched (./flakes/replace-dependencies):
     # used by nebula's brotli graft while it's on.
     replace-dependencies = {
