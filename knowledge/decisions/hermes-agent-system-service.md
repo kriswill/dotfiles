@@ -125,5 +125,7 @@ Use the upstream NixOS module in **native mode, running as k**:
 - The first rebuild needs the `hermes-env` key in `secrets.yaml`: sops-nix
   fails the build on a declared key it can't find.
 
+Landed in commit `f043b88`.
+
 [^hermes-nix-setup]: Hermes Agent docs: Nix & NixOS Setup
 [^hermes-v0-22-5]: Hermes Agent v0.22.5 release

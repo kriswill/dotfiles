@@ -89,5 +89,7 @@ toplevel builds.
   and the sub-flake can follow the root's nixpkgs, which drops the second
   nixpkgs from nebula's closure.
 
+Landed in commit `f043b88`.
+
 [^subflake-readme]: flakes/hermes-agent/README.md
 [^upstream-nix-v0-22-5]: Upstream nix/ at v0.22.5
