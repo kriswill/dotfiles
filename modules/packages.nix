@@ -75,6 +75,9 @@
         # battlenet (./flakes/battlenet) is x86_64-linux only, the root's one
         # Linux system.
         battlenet = inputs.battlenet.packages.${system}.battlenet;
+        # hermes-agent (./flakes/hermes-agent): the package its NixOS module
+        # runs on nebula.
+        hermes-agent = inputs.hermes-agent.packages.${system}.hermes-agent;
       };
     };
 

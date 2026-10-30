@@ -1,5 +1,34 @@
 # Log
 
+## 2026-10-29
+
+- **Creation**: [hermes-agent-vendored-nix](hermes-agent-vendored-nix.md).
+  Hermes Agent's package and module are built from a trimmed copy of
+  upstream's `nix/` in `flakes/hermes-agent`, against the v0.22.5 source as
+  a `flake = false` input. The package is drv-identical to upstream's at
+  `version = "0.0.0"`, and bumps become manual ports.
+  [hermes-agent-system-service](hermes-agent-system-service.md) now points
+  there for the mechanisms it describes.
+
+- **Update**: [hermes-agent-system-service](hermes-agent-system-service.md).
+  The CLI is wrapped with `--set-default HERMES_HOME` instead of relying on
+  `environment.variables`, and `HERMES_HOME` loses group-write after each
+  activation. Also corrects the record: the `storage_unavailable` k saw came
+  from a stray unmanaged `~/.hermes`, not from the two-uid problem.
+
+- **Update**: [hermes-agent-system-service](hermes-agent-system-service.md).
+  The service runs as k, not a `hermes` system user. A rootless two-uid bench
+  showed hermes forcing `0700`/`0600` and same-uid checks on its home, so a
+  group can't share it; patching was rejected as rewriting its security
+  model.
+
+- **Creation**: [hermes-agent-system-service](hermes-agent-system-service.md).
+  Hermes Agent runs on nebula as the upstream NixOS system service in native
+  mode, not a CLI-only install; home-manager stays out, even as a transitive
+  lock entry. The input is pinned to the `v0.22.5` tag and does not follow our
+  nixpkgs, whose patchelf 0.19.2 corrupts the prebuilt node the package
+  autopatchelfs (NixOS/patchelf#674).
+
 ## 2026-10-28
 
 - **Update**: [battlenet-cpu-confinement](battlenet-cpu-confinement.md).
