@@ -83,88 +83,34 @@ history_filter = ["^\\s", "^cd\\b", "^j\\b"]
    the leading-space trick): `atuin search <term>` to find it, then
    `atuin history delete --exact -- '<the exact command>'`.
 
-## Desktop app (nebula only)
+## Desktop app (removed 2026-10-31)
 
-`pkgs.atuin-desktop` (0.2.20, Apache-2.0, Tauri GUI) — "local-first,
-executable runbook editor," a separate app from the CLI above, built by the
-same project. Installed nebula-only via
-[atuin-desktop](../knowledge/modules/atuin-desktop.md)
-(`modules/nixos/atuin-desktop.nix`, universal within the nixos class —
-retrofit a `programs.atuin-desktop.enable` gate if a second, non-desktop
-NixOS host ever appears). Ships its own `.desktop` entry and icons in the
-derivation itself, so `environment.systemPackages` is the whole module —
-Fuzzel/app launchers pick it up with no `desktop-entries` stow work needed.
-Launch: `atuin-desktop`, or "Atuin Desktop" from the app launcher. Keeps its
-own state, separate from the CLI: `~/.config/sh.atuin.app/*.db` (runbooks,
-kv, ai session, exec log — all SQLite) and `~/.local/share/sh.atuin.app/`
-(webview storage/logs); doesn't touch `~/.local/share/atuin/history.db`.
+nebula ran `pkgs.atuin-desktop`, the Tauri runbook editor that ships
+separately from the CLI, from 2026-07-18 (`0c58c96`) until nixpkgs dropped it.
+Upstream [atuinsh/desktop](https://github.com/atuinsh/desktop) was archived
+on 2026-09-30, and nixpkgs' `pkgs/top-level/aliases.nix` now throws
+*"'atuin-desktop' has been removed because it has been archived upstream on
+2026-09-30"* (alias added 2026-10-24). That throw broke `nrs` after a
+nixpkgs bump, so `modules/nixos/atuin-desktop.nix` was deleted. The CLI
+above is unaffected.
 
-**Known bug, first launch, always reproduces on a Nix install**: the
-"Welcome to Atuin Desktop" setup screen fails with *"Failed to create
-welcome workspace — Permission denied (os error 13)"*. Root cause (read
-straight from `backend/src/commands/workspaces.rs` in the
-[atuinsh/desktop](https://github.com/atuinsh/desktop) source, tag v0.2.20):
-`copy_welcome_workspace` copies the app's bundled example workspace
-(`resources/welcome`, inside the Nix store) into
-`~/Documents/Atuin Runbooks/Welcome to Atuin`, then immediately rewrites
-that copy's `atuin.toml` to stamp a fresh workspace ID. The copy step uses
-Rust's `fs::copy`, which **preserves the source file's permission bits** —
-and every file in `/nix/store` is mode `444` (no write bit, by design, on
-every Nix install everywhere). So the freshly-copied `atuin.toml` lands in
-`~/Documents` still read-only, and the very next write to it fails with
-EACCES. Verified live on nebula 2026-07-18: the copied
-`Welcome to Atuin/atuin.toml` really is `444`, matching the source file's
-mode in the store exactly. This isn't a NixOS/nix-darwin packaging bug (no
-`postFixup`/`wrapProgram` could fix it — Nix makes *all* store paths
-read-only unconditionally) — it's upstream application logic that doesn't
-expect its own bundled resources to be non-writable, which is only true
-on Nix. Not yet reported upstream.
+The removal left the app's state alone. Delete it by hand once you no
+longer need anything in it:
 
-**Workaround**: skip the auto-copied welcome workspace; use "Create new
-workspace" in the app instead (an ordinary empty directory the app creates
-itself, not a copy of a read-only source, so it doesn't hit this path). If
-you do want the welcome examples, `chmod -R u+w` the copied folder
-immediately after the dialog appears, dismiss it, and retry — the retry
-copies over the now-writable target and no longer collides (untested; the
-next `copy_welcome_workspace` call still generates a fresh suffixed folder
-rather than reusing the fixed one, so this may need a couple of attempts).
+- `~/.config/sh.atuin.app/`: runbooks, kv, AI session, exec log (SQLite)
+- `~/.local/share/sh.atuin.app/`: webview storage
+- `~/Documents/Atuin Runbooks/`: workspace folders, including the
+  `Welcome to Atuin N` copies left by the app's first-launch bug (it copied
+  its bundled workspace out of the read-only store with `fs::copy`, then
+  failed to rewrite the `444` copy)
+- the `k-atuin@sh.atuin.runbooks.api` item in the gnome-keyring login
+  collection, which holds the app's Hub API token. Revoke the token in Hub
+  account settings as well.
 
-**Second known bug, also fixed nebula-side**: the "Atuin Hub Connection"
-dialog's **Accept button did nothing — clicking it repeatedly never
-dismissed the dialog.** Root cause (read straight from
-`src/components/DesktopConnect/DesktopConnect.tsx` and `src/api/auth.ts`
-upstream): `confirm()` does `await setHubApiToken(...)` with **no
-try/catch** — that call invokes the Tauri `save_password` command, which
-writes to the OS's Secret Service (`org.freedesktop.secrets` over D-Bus).
-This repo runs no desktop keyring by design (1Password/pass/gpg-agent
-instead), so that D-Bus call had no service to talk to, threw, and the
-unhandled rejection aborted `confirm()`
-before it ever reached the line that closes the dialog. Confirmed via
-`busctl --user status org.freedesktop.secrets` → no owner, and no
-gnome-keyring/kwallet process running.
-
-**Fix**: added [gnome-keyring](../knowledge/modules/gnome-keyring.md)
-(`modules/nixos/gnome-keyring.nix`, `services.gnome.gnome-keyring.enable =
-true;`) — `ly`'s own module auto-wires PAM unlock off that option, so login
-unlocks the keyring with no extra config. This module had **zero effect at
-first**: `modules/hosts/nebula/sudo-1password.nix` already had
-`services.gnome.gnome-keyring.enable = lib.mkForce false;` (from the earlier
-1Password sudo-ssh-agent setup, to keep `gcr-ssh-agent` from stealing
-`SSH_AUTH_SOCK` from the 1Password agent) — `mkForce` always wins over a
-plain `= true`. That line went further than its own adjacent comment's
-stated intent ("keyring secrets/pkcs11 stay enabled") — the actual conflict
-is already fully isolated one line above by
-`services.gnome.gcr-ssh-agent.enable = false;` alone, so the `mkForce` was
-simply removed rather than out-forced. Verified: `gnome-keyring.enable` →
-`true`, `gcr-ssh-agent.enable` stays `false`, full nebula closure builds.
-Needs a rebuild + fresh login (or a manual `gnome-keyring-daemon --unlock`)
-to take effect — untested end-to-end through an actual Accept click as of
-this writing.
-
-The frontend bug (missing try/catch, no user-visible error) is still worth
-reporting upstream regardless of the environment fix — on any install
-without a Secret Service (this one, minimal Wayland compositors generally,
-some containers), the dialog would hang identically with zero feedback.
+[gnome-keyring](../knowledge/modules/gnome-keyring.md) was added for this
+app, because its Hub-connect Accept button hung when no Secret Service was
+running. It stays: gh, Helium (`Chromium Safe Storage`) and Noctalia keep
+their keys in it now.
 
 ## Atuin AI & Claude Code integration (set up 2026-07-18)
 
@@ -241,14 +187,6 @@ the session lives and which commands are relevant:
 To bring `k`/`mini` into the same sync group: `atuin login -u k-atuin` there
 too (same account, real terminal, not `register`) — no `account link` step
 needed on Nix hosts.
-
-**Security note**: the desktop app's Hub registration passes a token via a
-custom URI scheme (`atuin://register-token/atapi_...`) printed straight to
-stdout by `atuin-desktop` when launched from a terminal — happened live on
-2026-07-18 and landed in a chat transcript. If that ever happens again,
-treat the token as compromised and rotate/revoke it from Hub account
-settings; don't launch `atuin-desktop` from a terminal you're screen-sharing
-or pasting output from during the Hub-connect flow.
 
 ## Learned behaviours & workarounds
 
