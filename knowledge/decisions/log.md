@@ -1,5 +1,13 @@
 # Log
 
+## 2026-10-31
+
+- **Update**: [devenv-fork-deterministic-openssl](devenv-fork-deterministic-openssl.md)
+  gains an aws-lc follow-up. The nixpkgs bump to `1c89083` switched
+  aws-lc-sys >= 0.42 to the shared system aws-lc, whose `libcrypto.so`
+  shadowed openssl's on devenv's link line. Fork commit `b2b4a31` keeps
+  aws-lc vendored, and the `devenv` input is bumped to it.
+
 ## 2026-10-29
 
 - **Creation**: [hermes-agent-vendored-nix](hermes-agent-vendored-nix.md).
