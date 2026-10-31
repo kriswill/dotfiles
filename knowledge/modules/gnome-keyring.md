@@ -1,10 +1,10 @@
 ---
 type: NixOS Module
 title: Gnome Keyring
-description: Enables services.gnome.gnome-keyring — the Secret Service (org.freedesktop.secrets) provider atuin-desktop needs to save its Hub token.
+description: Enables services.gnome.gnome-keyring, the Secret Service (org.freedesktop.secrets) provider where gh, Helium and Noctalia keep their keys on nebula.
 resource: modules/nixos/gnome-keyring.nix
 tags: [nixos-module]
-generated: { by: okflight/0.4.0, at: 2026-07-19T05:49:26+00:00 }
+generated: { by: claude-code/opus-5.5, at: 2026-10-31T00:00:00+00:00 }
 ---
 
 One line: `services.gnome.gnome-keyring.enable = true;`. `ly`'s own NixOS
@@ -27,10 +27,16 @@ its own stated intent) — so removing the `gnome-keyring` force was safe:
 `gcr-ssh-agent.enable` stays `false` (verified), `gnome-keyring.enable`
 now reads `true` (verified).
 
-Why this exists at all: atuin-desktop's "Accept" button on its Hub-connect
-dialog has no error handling around its keyring-save Tauri command — with
-no Secret Service running, that call fails and the dialog can never
-dismiss (see `docs/atuin.md`).
+It was added for atuin-desktop, whose Hub-connect "Accept" button had no
+error handling around its keyring save and hung with no Secret Service
+running. That app is gone (archived upstream, removed from nixpkgs; see
+`docs/atuin.md`). The keyring stays because other apps moved in: as of
+2026-10-31 its login collection holds the gh tokens, Helium's
+`Chromium Safe Storage` and `Application key for org.chromium.Chromium`,
+Noctalia's encrypted-storage key and a CodeRabbit CLI token. Disabling it
+would strand those, and Helium would lose access to its encrypted cookies
+and saved passwords. Gajim does not use it: its python-keyring goes to
+1Password instead ([decision](../decisions/python-keyring-op-backend.md)).
 
 Mounted ungated on every NixOS host (single host today; see the
 [host-mounted modules pattern](../patterns/host-mounted-modules.md));

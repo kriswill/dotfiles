@@ -1,5 +1,16 @@
 # Log
 
+## 2026-10-31
+
+- **Deprecation**: atuin-desktop. Removed `modules/nixos/atuin-desktop.nix`
+  and its catalog doc. Upstream archived the app on 2026-09-30 and nixpkgs
+  replaced `pkgs.atuin-desktop` with a throwing alias (added 2026-10-24), so
+  nebula's toplevel failed to evaluate after the nixpkgs bump. The app's
+  state under `~/.config/sh.atuin.app/` and `~/Documents/Atuin Runbooks/`
+  is left in place (`docs/atuin.md`). [gnome-keyring](gnome-keyring.md)
+  stays: gh, Helium and Noctalia keep their keys in it now, and its doc and
+  module comment say so.
+
 ## 2026-10-29
 
 - **Update**: [hermes-agent](hermes-agent.md) re-exports the
@@ -565,7 +576,7 @@
   Confirmed sync works by running `atuin sync` directly (uploaded records,
   "Sync complete!"), not by trusting `atuin status`'s `Last sync` field,
   which didn't visibly update in testing.
-- **Creation** — [atuin-desktop](atuin-desktop.md): `pkgs.atuin-desktop` (Tauri
+- **Creation** — atuin-desktop: `pkgs.atuin-desktop` (Tauri
   GUI runbook editor, same upstream project as the [atuin](zsh.md) CLI)
   installed nebula-only. Single-file module — the derivation ships its own
   `.desktop` entry/icons, so `environment.systemPackages` is the whole thing,
