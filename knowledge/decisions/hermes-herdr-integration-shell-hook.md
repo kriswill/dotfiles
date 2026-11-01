@@ -85,6 +85,7 @@ Two scripts, TypeScript on bun, with shared helpers in `common.ts`:
 - Verified after the switch on 2026-11-01: the gateway logged all seven
   hooks registered, the allowlist holds exactly them, and
   `plugins/herdr-agent-state` is gone.[^subflake-readme]
+  Landed in commit `1d1109d`.
 
 [^hermes-hooks]: Hermes Agent docs: Event Hooks, the shell-hook section and its consent model
 [^shell-hooks-py]: hermes-agent `agent/shell_hooks.py`: the stdin payload, `shell-hooks-allowlist.json`, and `sync_from_config` (about every 30 s)
