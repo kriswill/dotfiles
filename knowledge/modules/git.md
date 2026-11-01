@@ -16,7 +16,7 @@ gh's `config.yml` is NOT stowed: gh rewrites it via atomic rename, so it's a
 (shipped by this module on both OSes).
 git-lfs and difftastic back the corresponding config sections; ripgrep and jq
 (used by aliases/hooks) come from
-[user-packages](user-packages.md)/hacker-mode, not here.
+[user-packages](user-packages.md), not here.
 
 ## Twin differences
 

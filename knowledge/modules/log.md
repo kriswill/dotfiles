@@ -2,6 +2,18 @@
 
 ## 2026-10-31
 
+- **Update**: [configuration](configuration.md) turns off snowglobe's
+  `hacker-mode` profile. It was running a Tor client daemon (SOCKS on
+  `127.0.0.1:9050`) that nothing used and that never bootstrapped. It also
+  installed metasploit, ghidra, wireshark, john, zenmap, lynx, arp-scan,
+  fping, hping and binutils. traceroute, tcpdump, nmap and dnsutils are now
+  set directly in the host config. The `programs.tor-browser.enable = false`
+  override went with the profile, since nothing else enables Tor Browser.
+  The closure drops from 31.42 to 28.79 GiB (openjdk 572 MiB, ghidra 858 MiB,
+  metasploit and its 204 ruby gems, wireshark-qt 188 MiB). The
+  [git](git.md) doc and module comment had said ripgrep and jq came partly
+  from hacker-mode; they come only from [user-packages](user-packages.md).
+
 - **Update**: [nrs](nrs.md)'s state report (and `--status`, `nrb`, `--plan`)
   now warns when the NVIDIA userspace in the system (`nvidia-x11` in its
   closure) differs from the loaded kernel module

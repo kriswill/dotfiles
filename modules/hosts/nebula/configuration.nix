@@ -31,11 +31,17 @@
       # since the upstream fresh/still split ended — it warns on every eval.
       # Drop this override if snowglobe-factory moves to libreoffice-stable.
       programs.libreoffice.package = pkgs.libreoffice-stable;
-      snowglobe-factory.profiles.hacker-mode.enable = true;
-      # Off since 2026-10-25, with VLC from snowglobe's desktop layer: the two
-      # were the only things pulling in ffmpeg 7.1.5 (41 nixploit findings).
-      # The tor daemon hacker-mode also enables stays.
-      programs.tor-browser.enable = false;
+      # No hacker-mode profile since 2026-10-31: it ran an unused tor daemon and
+      # installed metasploit, ghidra, wireshark, john, … Only the network tools
+      # below were kept. traceroute and tcpdump get nixpkgs' cap_net_raw
+      # wrappers; tcpdump's runs only for the pcap group. dnsutils is in
+      # environment.systemPackages.
+      programs.traceroute.enable = true;
+      programs.tcpdump.enable = true;
+      programs.nmap.enable = true;
+      # Off since 2026-10-25, with Tor Browser (then from hacker-mode): VLC from
+      # snowglobe's desktop layer and it were the only things pulling in ffmpeg
+      # 7.1.5 (41 nixploit findings).
       programs.vlc.enable = false;
       # nix-tools profile: dropped upstream (snowglobe-factory b0a0d97b, 2026-10);
       # its package payload is inlined into environment.systemPackages below.
@@ -119,6 +125,7 @@
         # git + gh/delta/diffnav/difftastic/git-lfs come from modules/nixos/git.nix
         pkgs.nvtopPackages.nvidia # GPU monitor; `, nvtop` picks a non-NVIDIA build that sees no GPU
         pkgs.cliphist # clipboard history (used with fuzzel --dmenu)
+        pkgs.dnsutils # dig/nslookup/host (kept from the dropped hacker-mode profile)
         pkgs.fd # fast file finder
         pkgs.gimp # raster image editor
         pkgs.kdePackages.breeze-icons
