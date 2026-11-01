@@ -2,6 +2,15 @@
 
 ## 2026-10-31
 
+- **Update**: [nrs](nrs.md)'s state report (and `--status`, `nrb`, `--plan`)
+  now warns when the NVIDIA userspace in the system (`nvidia-x11` in its
+  closure) differs from the loaded kernel module
+  (`/sys/module/nvidia/version`): reboot before starting GPU programs. After
+  the 595.104.02 → 595.112.07 bump, every GPU program started between the
+  switch and the reboot hit `NVRM: API mismatch` and rendered on llvmpipe;
+  the existing kernel-setup warning listed the module change but not that
+  consequence (`docs/nrs-pipeline.md` §8).
+
 - **Deprecation**: atuin-desktop. Removed `modules/nixos/atuin-desktop.nix`
   and its catalog doc. Upstream archived the app on 2026-09-30 and nixpkgs
   replaced `pkgs.atuin-desktop` with a throwing alias (added 2026-10-24), so

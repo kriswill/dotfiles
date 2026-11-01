@@ -44,7 +44,7 @@ refuses with exit 2.
 | Command | What it does | Root step | OS |
 | --- | --- | --- | --- |
 | `nrs` | Build, diff, validate, activate, make it the boot default, report. | yes | both |
-| `nrb` = `nrs --dry` | Build, diff and validate only. The report compares the kernel and PAM against the new build. | no | both |
+| `nrb` = `nrs --dry` | Build, diff and validate only. The report compares the kernel, the NVIDIA driver and PAM against the new build. | no | both |
 | `nrt` = `nrs --test` | **NixOS:** activate without touching the profile or GRUB. **darwin:** run the new build's `system.checks`; nothing is activated. | yes | both |
 | `nrs --plan` | Preview the switch and change nothing: `dry-activate` for system units, plus the user units it skips. Flags units the switch would restart while they're mid-run. | yes | NixOS (darwin: acts as `--dry`) |
 | `nrs --status` | No build, no root: is the machine consistent? Exits 1 if anything needs attention. | no | both |
@@ -248,11 +248,12 @@ mode:
 | failed units | NixOS: system and user. |
 | kernel | NixOS: what a reboot would change. That means version, toolchain and `.config` (the new kernel's are read from its bzImage), kernel parameters, and the extra module packages. The running kernel describes itself through `/proc`; the new one is unpacked the way `extract-ikconfig` does it. |
 | PAM glibc | NixOS: if the glibc that linux-pam links differs from the booted system's, reboot before logging out, because ly, started at boot, can't load the new PAM modules. |
+| NVIDIA driver | NixOS: if the build's NVIDIA userspace (`nvidia-x11` in its closure) differs from the loaded kernel module (`/sys/module/nvidia/version`), reboot before starting GPU programs. A switch replaces `/run/opengl-driver` at once but the module stays loaded, so the kernel refuses each new GPU client (`NVRM: API mismatch`) and it falls back to CPU rendering. Programs already running keep working. |
 | timings | Per stage: build, diff, auth, plan, activate, check, profile, boot. |
 
-`--dry` and `--plan` compare the kernel and PAM against the **new build**: what
-switching and then rebooting would change. Every other mode compares against
-the running system.
+`--dry` and `--plan` compare the kernel, the NVIDIA driver and PAM against the
+**new build**: what switching and then rebooting would change. Every other mode
+compares against the running system.
 
 ## 4. Reading the output
 
@@ -310,8 +311,8 @@ it before risky updates: a systemd bump, or many unit changes.
    when the run exits, and the switch waits on it. That was the 2026-10-24
    hang.
 
-Then the report, comparing kernel and PAM against the new build, and "plan
-only: nothing was changed". On darwin there's no dry-activate, so `--plan` warns
+Then the report, comparing the kernel, the NVIDIA driver and PAM against the
+new build, and "plan only: nothing was changed". On darwin there's no dry-activate, so `--plan` warns
 and acts as `--dry`. Decision:
 [`nrs-plan-user-pass`](../knowledge/decisions/nrs-plan-user-pass.md).
 
@@ -372,6 +373,7 @@ refuses to delete a current generation. Preview it with
 | "running system is not the boot default" | A test, a detach, a failure, or a darwin "check" that activated | Re-run `nrs`; a reboot would come back on the default. |
 | "plan lists remain" / "this run replays its plan" | A previous switch was interrupted | Expected: the next run finishes it. `nrs --plan` shows the replay first. |
 | "PAM glibc changed since boot" | ly runs the boot-time glibc | Reboot before logging out, or the login will fail. |
+| "NVIDIA driver X is installed but kernel module Y is loaded" (after a switch) / "this build changes the NVIDIA driver" (`nrb`, `--plan`) | The switch replaces the driver's userspace; the old kernel module stays loaded until reboot | Reboot before starting GPU programs, or they render on the CPU. Running ones are fine. To defer the whole switch to the next boot: `sudo nixos-rebuild boot --flake .#nebula` from the real checkout. |
 | "a reboot changes the kernel setup" | Information: what the next boot changes | Reboot when convenient. |
 | "run nrs (and nrb, nrt) without sudo" | It was run as root | Drop the `sudo`. |
 | `evaluation warning: systemd.user.services.X: a trigger-started oneshot …` | A unit that could hold a switch | Give it `restartIfChanged = false`, or make it `Type=exec`. |
@@ -383,6 +385,15 @@ refuses to delete a current generation. Preview it with
 Dated and verified; newest first. Correct an entry in place rather than adding a
 contradiction.
 
+- **2026-10-31 · An NVIDIA driver bump breaks new GPU programs until reboot.**
+  The switch to nixpkgs `1c89083` (595.104.02 → 595.112.07) replaced the
+  userspace in `/run/opengl-driver` while the old kernel module stayed
+  loaded. Until the reboot, the kernel refused every new GPU client
+  (`NVRM: API mismatch: the client 'wowdps-replay' … has the version
+  595.112.07, but this kernel module has the version 595.104.02`) and they
+  fell back to llvmpipe; programs started earlier kept working. The state
+  report now says so (§3). nrs has no boot-only mode, and `--boot` does not
+  defer activation; `sudo nixos-rebuild boot --flake .#nebula` does.
 - **2026-10-24 · `darwin-rebuild check` activates on macOS.** The activate
   script's `#!/usr/bin/env -i` shebang wipes `checkActivation` (nix-darwin
   `bb0b90d`). Never use it as a dry check; `nrt` runs the check mode directly.

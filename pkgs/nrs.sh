@@ -20,7 +20,8 @@
 #     line and a one-line summary, and switch-to-configuration's plan lines
 #     get glyphs and colours — both OSes;
 #   - every exit ends with a state report and per-stage timings (F4, F12) —
-#     both OSes; failed units, kernel and PAM glibc drift are NixOS-only;
+#     both OSes; failed units, kernel, NVIDIA driver and PAM glibc drift are
+#     NixOS-only;
 #   - NixOS only: activation runs as a transient unit under PID 1
 #     (systemd-run), so Ctrl-C or a lost terminal detaches instead of killing
 #     it mid-plan (F3); a watchdog names pending jobs when it stalls (F2); an
@@ -41,13 +42,13 @@
 #               mid-run are flagged (P10). darwin has no dry-activate: as --dry
 #     --status  no build, no root: is this machine consistent? Generations and
 #               the rollback window, leftover plans, pending jobs, failed
-#               units, kernel and PAM drift; exits 1 if anything needs
-#               attention (P17)
+#               units, kernel, NVIDIA driver and PAM drift; exits 1 if
+#               anything needs attention (P17)
 #     --boot    NixOS switch: rewrite the boot menu even when it is current
 #     The modes are mutually exclusive; --boot warns where it does nothing
 #     (with any mode, and on darwin, which has no boot menu). --dry and --plan
-#     compare the kernel and PAM against the new build, the others against
-#     the running system.
+#     compare the kernel, NVIDIA driver and PAM against the new build, the
+#     others against the running system.
 set -euo pipefail
 
 RED=$'\e[1;31m' GREEN=$'\e[1;32m' YELLOW=$'\e[1;33m' BLUE=$'\e[1;34m' NC=$'\e[0m'
@@ -189,6 +190,10 @@ pam_glibc() { # pam_glibc <system>: the glibc that system's linux-pam links
   fi
 }
 
+nvidia_version() { # nvidia_version <system>: the NVIDIA userspace driver version in its closure, if any
+  nix-store -qR "$1" | sed -nE 's#^/nix/store/[a-z0-9]{32}-nvidia-x11-([0-9.]+)$#\1#p' | head -1
+}
+
 kernel_version() { # kernel_version <system>: its kernel's modules directory name
   local d
   for d in "$1"/kernel-modules/lib/modules/*; do
@@ -291,7 +296,7 @@ leftover_lists() { # NixOS only: switch-to-configuration's resume lists
 }
 
 report_linux() {
-  local failed jobs booted_glibc target_glibc
+  local failed jobs booted_glibc target_glibc loaded_nvidia target_nvidia
   local -a lists
   if [ "$mode" = status ]; then
     if systemctl is-active --quiet "$UNIT.service"; then
@@ -322,6 +327,22 @@ report_linux() {
       warn "PAM glibc changed since boot (${booted_glibc#*-glibc-} -> ${target_glibc#*-glibc-}): reboot before logging out"
     else
       warn "this build changes PAM's glibc since boot (${booted_glibc#*-glibc-} -> ${target_glibc#*-glibc-}): after switching, reboot before logging out"
+    fi
+  fi
+  # A switch replaces the NVIDIA userspace in /run/opengl-driver at once, but
+  # the loaded kernel module stays until reboot. Until then the kernel refuses
+  # every new GPU client ("NVRM: API mismatch") and it falls back to CPU
+  # rendering; programs already running keep the old libraries and work.
+  if [ -r /sys/module/nvidia/version ]; then
+    loaded_nvidia="$(cat /sys/module/nvidia/version)"
+    target_nvidia="$(nvidia_version "$target")"
+    if [ -n "$target_nvidia" ] && [ "$loaded_nvidia" != "$target_nvidia" ]; then
+      if [ "$target" = /run/current-system ]; then
+        warn "NVIDIA driver $target_nvidia is installed but kernel module $loaded_nvidia is loaded: reboot before starting GPU programs"
+      else
+        warn "this build changes the NVIDIA driver ($loaded_nvidia -> $target_nvidia): after switching, reboot before starting GPU programs"
+      fi
+      printf '  until then, GPU programs you start fail (NVRM: API mismatch) and fall back to CPU rendering\n' >&2
     fi
   fi
 }

@@ -4,7 +4,7 @@ title: Nrs
 description: 'The rebuild helpers nrs, nrb (nrs --dry) and nrt (nrs --test): nom for the build tree, dix for the diff, and each OS''s own activation, with output streamed and a state report on every exit. They replaced nh on 2026-10-24.'
 resource: modules/darwin/nrs.nix
 tags: [darwin-module, nixos-module]
-generated: { by: claude-code/opus-5.5, at: 2026-10-24T17:20:00-07:00 }
+generated: { by: claude-code/opus-5.5, at: 2026-10-31T00:00:00+00:00 }
 sources:
   - id: nrs-pipeline
     resource: ../../docs/nrs-pipeline.html
@@ -71,7 +71,9 @@ in red.
   lock non-blocking, so a probe could make a real switch abort.[^stc-ng-source]
 - **Replays:** leftover plan lists are announced before they replay.
 - **Report:** it flags a running system that differs from the boot default,
-  failed system and user units, and PAM glibc drift. It also says what a
+  failed system and user units, PAM glibc drift, and an NVIDIA userspace that
+  differs from the loaded kernel module (reboot before starting GPU programs,
+  or they fall back to CPU rendering). It also says what a
   reboot would change about the kernel: version, toolchain and config, read
   from `/proc` for the running kernel and unpacked from the new bzImage the
   way `extract-ikconfig` does, plus kernel parameters and the extra module
@@ -92,12 +94,12 @@ in red.
   - a detached nrs unit that is still running;
   - pending system and user jobs;
   - leftover plan lists and failed units;
-  - kernel and PAM drift since boot.
+  - kernel, NVIDIA driver and PAM drift since boot.
 
   It exits 1 when any of these needs attention, so scripts can use it. A
   capture mid-debounce shows up as a pending job, and that is real.
-- **Previews compare the new build:** `--dry` and `--plan` run the kernel and
-  PAM checks against the new build (what a switch and then a reboot would
+- **Previews compare the new build:** `--dry` and `--plan` run the kernel,
+  NVIDIA driver and PAM checks against the new build (what a switch and then a reboot would
   change). The other modes check the running system.
 
 **darwin** (`modules/darwin/nrs.nix`):
@@ -108,7 +110,7 @@ in red.
 - **No detach.** launchd has no systemd-run equivalent wired in here, so Ctrl-C
   interrupts activation, as it does under nh.
 - **Linux-only parts are skipped:** the watchdog, plan lists, unit checks and
-  kernel/glibc checks.
+  kernel, NVIDIA driver and glibc checks.
 - **`--test`** runs the new build's `system.checks` with nothing activated:
   `sudo -H /usr/bin/env -i checkActivation=1 <its bash> $out/activate`. It is
   not `darwin-rebuild check`, which rebuilds as root and then, because
