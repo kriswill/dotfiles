@@ -116,8 +116,7 @@
     # flags releases past ours. Its NixOS and nix-darwin modules
     # (programs.herdr-cli / programs.herdr-core / programs.herdr-app,
     # services.herdr-update-check) are re-exported by
-    # modules/{nixos,darwin}/herdr.nix, and pkgs.herdr comes from its
-    # herdr-cli package (modules/overlays.nix).
+    # modules/{nixos,darwin}/herdr.nix; no overlay puts herdr on pkgs.
     herdr = {
       url = "./flakes/herdr";
       inputs.nixpkgs.follows = "nixpkgs";

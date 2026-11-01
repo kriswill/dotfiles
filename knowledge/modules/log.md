@@ -2,6 +2,9 @@
 
 ## 2026-11-01
 
+- **Update**: [herdr](herdr.md): the `pkgs.herdr` overlay is gone. Its last
+  consumer, hermes-agent's `herdr.package`, went with the TypeScript
+  integration. No host's system drv changed.
 - **Update**: [nebula-hermes-agent](nebula-hermes-agent.md): Hermes' update
   check is off. Without a git origin, a Nix build compares its tag with
   `main`'s tip and always reports an update.

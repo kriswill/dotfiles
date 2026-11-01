@@ -33,14 +33,6 @@
     ccglass = _final: prev: {
       ccglass = inputs.ccglass.packages.${prev.stdenv.hostPlatform.system}.ccglass;
     };
-    # pkgs.herdr: the herdr TUI from our kriswill/herdr fork, as built (with
-    # its build identity) by ./flakes/herdr's herdr-cli package — the same
-    # package programs.herdr-cli installs. Kept on pkgs for modules that take
-    # `mkPackageOption pkgs "herdr"` (hermes-agent's herdr integration); close
-    # over `inputs` like ccglass above.
-    herdr = _final: prev: {
-      herdr = inputs.herdr.packages.${prev.stdenv.hostPlatform.system}.herdr-cli;
-    };
     # devenv from the kriswill/devenv fork's `custom` branch (upstream tag +
     # our patch commits, see flake.nix); close over `inputs` like ccglass
     # above. Replaces pkgs.devenv wholesale so modules/{darwin,nixos}/devenv.nix
