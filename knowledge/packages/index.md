@@ -19,6 +19,7 @@ flake consumes via relative-path inputs.
 * [gh-op](gh-op.md) - Linux-only gh wrapper sourcing GH_TOKEN from 1Password at runtime — via a vault-scoped service-account token when deployed, desktop-app auth otherwise — so ~/.config/gh/hosts.yml holds no plain-text token on nebula's unencrypted disk.
 * [Helium Config](helium-config.md) - Custom Nix package 'helium-config'.
 * [Herdr Nav](herdr-nav.md) - herdr-nav — a keybinding shim that gives herdr the vim-aware pane switching tmux gets from is_vim + if-shell — forwarding ctrl+h/j/k/l to a pane running vim instead of moving pane focus.
+* [herdr](herdr.md) - Umbrella sub-flake for everything herdr: our kriswill/herdr TUI fork (herdr-cli) and herdr-nav, upstream's prebuilt Herdr desktop app and herdr-core (`hc`) repackaged, a herdr-update-check package for Linux and macOS, and the NixOS + nix-darwin modules (programs.herdr-cli/-core/-app, services.herdr-update-check); consumed as inputs.herdr.
 * [hermes-agent](hermes-agent.md) - Sub-flake that builds Nous Research's Hermes Agent (the hermes CLI and its messaging/cron gateway) from a trimmed, path-rewritten copy of upstream's nix/ against the v0.22.5 source, plus a single-owner services.hermes-agent NixOS module (wrapped CLI, 2750 state, herdr plugin option); enabled on nebula.
 * [Iv](iv.md) - A command-line image viewer using terminal graphics.
 * [Kitten](kitten.md) - Kitten - A collection of small, useful programs for the kitty terminal.

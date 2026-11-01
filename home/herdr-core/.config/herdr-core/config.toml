@@ -1,0 +1,30 @@
+# herdr-core (hc) — read by the core, never written by it, so this stow link
+# is safe. Every key is optional; the commented values are the defaults.
+# Changes apply to the next new shell (or `keep` recovery); no restart.
+# Reference: hc's README "Default shell" and src/config.rs, or `hc --help`.
+
+# Argv for new shells (`hc run --bg` with no program, and kept-terminal
+# recovery). Default: $SHELL.
+# shell = ["zsh"]
+
+# The chord that detaches `hc attach`: ctrl+<key>.
+# detach_key = "ctrl+\\"
+
+# Seconds a `wait` runs before it checks in.
+# wait_timeout = 180
+
+# Notes to parent agents and <hc> tags on messages between agents. Off: hc
+# types nothing on its own.
+# notes = true
+
+# Seconds without a person typing before a note goes in.
+# notes_quiet = 3
+
+# Size of a terminal nobody is typing in, COLSxROWS.
+# headless = "200x120"
+
+# Scrollback kept per live terminal, in MB.
+# history_mb = 5
+
+# Seconds another machine gets to answer a call before its line is redialed.
+# machine_timeout = 30

@@ -58,7 +58,7 @@ toggle_sidebar = "prefix+space"
 # moment herdr restarts, while herdr-nav only lands after a system rebuild.
 # Without the fallback that window leaves all four keys dead. The chain is safe
 # because herdr-nav exits 0 on every path except a usage error, so `||` fires
-# only for command-not-found (see pkgs/herdr-nav.sh). herdr runs these through
+# only for command-not-found (see flakes/herdr/pkgs/herdr-nav.sh). herdr runs these through
 # `/bin/sh -lc`, and exports HERDR_BIN_PATH pointing at its own binary.
 
 [[keys.command]]

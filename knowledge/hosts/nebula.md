@@ -71,6 +71,7 @@ Non-declarative BIOS facts, invisible to the flake:
 - [nebula-battlenet](../modules/nebula-battlenet.md) (enable-gate for the GE-Proton Battle.net launcher)
 - [ntsync](../modules/ntsync.md) (host-specific file)
 - [nebula-codebase-memory-mcp](../modules/nebula-codebase-memory-mcp.md) (enable-gate for the code-graph daemon)
+- [nebula-herdr](../modules/nebula-herdr.md) (enable-gate for the Herdr desktop app + hc, linger and the daily herdr-update-check; config via stow)
 - [nebula-hermes-agent](../modules/nebula-hermes-agent.md) (enable-gate for the Hermes Agent gateway, run as k, + shared CLI state)
 - [nebula-nixploit](../modules/nebula-nixploit.md) (enable-gate for the daily vulnerability scan)
 - [astro-mixamp](../modules/astro-mixamp.md) (host-specific file)

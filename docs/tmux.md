@@ -71,7 +71,7 @@ module, no plugin): it walks nvim's own windows and only calls `tmux
 select-pane` once the motion runs off the edge. The same module drives the
 identical keys under **herdr**, whose config.toml binds `ctrl+h/j/k/l` to
 `herdr-nav` — the herdr equivalent of `is_vim` + `if-shell`, since herdr has no
-conditional bindings of its own. See `pkgs/herdr-nav.sh`.
+conditional bindings of its own. See `flakes/herdr/pkgs/herdr-nav.sh`.
 
 **Plugin:** tmux-which-key (XDG-enabled) — discoverable keybind menu, loaded via
 the Nix-generated `plugins.conf`.

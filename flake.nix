@@ -108,6 +108,22 @@
       inputs.flake-parts.follows = "flake-parts";
     };
 
+    # Everything herdr (./flakes/herdr): the herdr TUI from our fork (its
+    # `herdr-cli` input, rebased per upstream release; builds from source),
+    # herdr-nav, and Herdr's desktop app + herdr-core (`hc`) repackaged from
+    # upstream's release builds (nothing compiles, so no binary cache is
+    # needed; `bun flakes/herdr/update.ts` bumps them). herdr-update-check
+    # flags releases past ours. Its NixOS and nix-darwin modules
+    # (programs.herdr-cli / programs.herdr-core / programs.herdr-app,
+    # services.herdr-update-check) are re-exported by
+    # modules/{nixos,darwin}/herdr.nix, and pkgs.herdr comes from its
+    # herdr-cli package (modules/overlays.nix).
+    herdr = {
+      url = "./flakes/herdr";
+      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.flake-parts.follows = "flake-parts";
+    };
+
     # Hermes Agent (NousResearch): agent CLI + messaging/cron gateway, built
     # from a trimmed copy of upstream's nix/ (./flakes/hermes-agent); its
     # single-owner NixOS module (services.hermes-agent) is re-exported by
@@ -155,33 +171,6 @@
       # that commit.
       url = "github:noctalia-dev/noctalia-shell/e7acd065406bdac81b631e1a336611bfcfaca711";
       inputs.nixpkgs.follows = "nixpkgs";
-    };
-    # herdr from OUR staging fork's `v0.9.5-custom` tag (the `custom` branch
-    # rebased onto upstream's v0.9.5 stable tag; the repo ships its own flake; no binary cache, builds from source)
-    # plus our patch commits — currently ANSI tab-bar command entries
-    # (ui.tab_bar_right `argv`/`ansi` fields: run e.g. dotbar without a shell
-    # and render its SGR-colored output inline; HERDR_TOKEN_* env from
-    # workspace metadata with reactive re-runs) and opt-in nested-shell agent
-    # detection (`experimental.follow_nested_shells`: agents under
-    # `devenv shell`/`script` are detected, clear on return to the nested
-    # prompt, and survive ctrl-z/fg), plus a test-only fix forcing
-    # ENV=/dev/null in .cargo/config.toml so our ~/.kshrc (inherited via
-    # ENV, sourced by the tests' interactive /bin/sh) can't time out the
-    # suite. Rebase `custom` onto
-    # each new upstream tag, tag it `vX.Y.Z-custom`, and repoint the url
-    # (herdr-update-check is the reminder); drop commits as they land
-    # upstream. ≥ v0.8.2 is needed for the CSI
-    # 14t/16t pixel-size fix (herdrdev/herdr#835) that nixpkgs' 0.7.5 lacks —
-    # required for image rendering (fastfetch/yazi) inside herdr panes,
-    # together with `experimental.kitty_graphics = true` in the stow
-    # config.toml; see docs/fastfetch.md. rust-overlay is bumped past the
-    # tag's pin because that pin predates upstream's stdenv.isLinux →
-    # hostPlatform fix and spams deprecation warnings on every eval; drop the
-    # override with the input.
-    herdr = {
-      url = "github:kriswill/herdr/v0.9.5-custom";
-      inputs.nixpkgs.follows = "nixpkgs";
-      inputs.rust-overlay.url = "github:oxalica/rust-overlay";
     };
     # devenv from OUR fork's `custom` branch: upstream's v2.4.0 tag plus our
     # patch commits — the kitty graphics patch and the terminal-query reply ordering fix for the
