@@ -2,6 +2,12 @@
 
 ## 2026-11-01
 
+- **Update**: [hermes-agent](hermes-agent.md) and
+  [nebula-hermes-agent](nebula-hermes-agent.md): `herdr.enable` is now the
+  TypeScript CLI wrapper and gateway shell hook, which report to both the
+  herdr TUI and the Herdr app; `herdr.package` is gone
+  ([decision](../decisions/hermes-herdr-integration-shell-hook.md)).
+  [herdr](herdr.md) notes that `pkgs.herdr` has no consumer left.
 - **Update**: [nebula-herdr](nebula-herdr.md): Herdr's font is now the
   non-Mono MesloLGS Nerd Font, at size 17 and zoom 1.1, with a dark
   appearance. Both Meslo variants carry braille.

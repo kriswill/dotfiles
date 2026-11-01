@@ -1,7 +1,7 @@
 ---
 type: NixOS Module
 title: Hermes Agent (nebula)
-description: 'Enables services.hermes-agent on nebula, running the gateway as k from /var/lib/hermes, with the module''s HERMES_HOME-defaulting CLI (addToSystemPackages) so the CLI and the service share one single-owner HERMES_HOME, plus herdr''s integration plugin; the Anthropic key arrives through the hermes-env sops secret.'
+description: 'Enables services.hermes-agent on nebula, running the gateway as k from /var/lib/hermes, with the module''s HERMES_HOME-defaulting CLI (addToSystemPackages) so the CLI and the service share one single-owner HERMES_HOME, plus the module''s Herdr integration; the Anthropic key arrives through the hermes-env sops secret.'
 resource: modules/hosts/nebula/hermes-agent.nix
 tags: [nixos-module, host-specific, ai-agent, secrets]
 generated: { by: claude-code/opus-5-5, at: 2026-10-30T03:00:00+00:00 }
@@ -78,21 +78,17 @@ this file only sets options.
   sops set modules/hosts/nebula/secrets.yaml '["hermes-env"]' "\"ANTHROPIC_API_KEY=$key\""
   ```
 
-- **herdr integration** (`herdr.enable = true`). The module runs
-  `herdr.package`'s (the pinned herdr's) `herdr integration install hermes`
-  against a build-time `HERMES_HOME` and keeps the generated
-  `herdr-agent-state` plugin, so it tracks herdr bumps. The
-  `hermes-agent-herdr-plugin` activation snippet links it at herdr's own
-  path, `plugins/herdr-agent-state`, replacing whatever is there (such as a
-  copy herdr installed by hand), and adds it to `settings.plugins.enabled`. It deliberately skips `extraPlugins`,
-  which would name it `nix-managed-*`: at herdr's path, `herdr integration
-  status` reports it `current`, and an install from herdr's settings tab
-  fails with `Read-only file system` instead of writing a second copy (it
-  still installs normally if the link is absent). In a herdr pane, the
-  plugin reports the session id with `herdr pane report-agent-session`, so
-  herdr can resume Hermes sessions. herdr's server only resolves
-  `HERMES_HOME` if it started after the variable reached the session;
-  otherwise it looks in `~/.hermes`.
+- **Herdr integration** (`herdr.enable = true`). An interactive `hermes` in
+  a herdr TUI pane reports its session id, so herdr can resume it. In a Herdr
+  app pane it shows as idle, working or blocked from launch to exit. It
+  replaced herdr's generated Python plugin, which read the pane from the
+  gateway's environment and never fired
+  ([decision](../decisions/hermes-herdr-integration-shell-hook.md)). Keep
+  `session.terminal_continue` on, since the hook finds the pane through the
+  CLI's terminal breadcrumbs. Activation approves the hook in
+  `shell-hooks-allowlist.json`. To check it, look for
+  `shell hook registered` lines in
+  `/var/lib/hermes/.hermes/logs/gateway.log`.
 - **No linger.** `users.users.k.linger` stays unset. The gateway starts at
   boot, before k's user manager exists, so cron runs unscoped workers rather
   than restart-safe `systemd-run --user` scopes until the gateway restarts

@@ -20,7 +20,7 @@ flake consumes via relative-path inputs.
 * [Helium Config](helium-config.md) - Custom Nix package 'helium-config'.
 * [Herdr Nav](herdr-nav.md) - herdr-nav — a keybinding shim that gives herdr the vim-aware pane switching tmux gets from is_vim + if-shell — forwarding ctrl+h/j/k/l to a pane running vim instead of moving pane focus.
 * [herdr](herdr.md) - Umbrella sub-flake for everything herdr: our kriswill/herdr TUI fork (herdr-cli) and herdr-nav, upstream's prebuilt Herdr desktop app and herdr-core (`hc`) repackaged, a herdr-update-check package for Linux and macOS, and the NixOS + nix-darwin modules (programs.herdr-cli/-core/-app, services.herdr-update-check); consumed as inputs.herdr.
-* [hermes-agent](hermes-agent.md) - Sub-flake that builds Nous Research's Hermes Agent (the hermes CLI and its messaging/cron gateway) from a trimmed, path-rewritten copy of upstream's nix/ against the v0.22.5 source, plus a single-owner services.hermes-agent NixOS module (wrapped CLI, 2750 state, herdr plugin option); enabled on nebula.
+* [hermes-agent](hermes-agent.md) - Sub-flake that builds Nous Research's Hermes Agent (the hermes CLI and its messaging/cron gateway) from a trimmed, path-rewritten copy of upstream's nix/ against the v0.22.5 source, plus a single-owner services.hermes-agent NixOS module (wrapped CLI, 2750 state, Herdr integration option); enabled on nebula.
 * [Iv](iv.md) - A command-line image viewer using terminal graphics.
 * [Kitten](kitten.md) - Kitten - A collection of small, useful programs for the kitty terminal.
 * [Ld64 Lld](ld64-lld.md) - TEMPORARY overlay linking kitty/vfkit/starship with LLVM lld on darwin — works around the pinned nixpkgs' cctools ld64 1010.6 SIGTRAP until the staging fix reaches nixos-unstable.
