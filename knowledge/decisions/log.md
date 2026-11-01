@@ -2,6 +2,13 @@
 
 ## 2026-11-01
 
+- **Creation**: [herdr-app-keys-via-hosted-mods](herdr-app-keys-via-hosted-mods.md):
+  the herdr TUI's keys and theme moved to Herdr. Vim-aware ctrl+h/j/k/l and
+  prefix+r rotate became the vim-nav and pane-rotate mods, hosted as empty
+  floats in a `personal` clone of `main`, because keys.json can't run
+  programs and key commands only reach a mod copy that's on screen.
+- **Update**: [vim-aware-pane-navigation](vim-aware-pane-navigation.md)
+  points to Herdr's equivalent (herdr-app backend + vim-nav mod).
 - **Creation**: [herdr-umbrella-subflake](herdr-umbrella-subflake.md):
   `flakes/herdr` gathers the TUI fork, herdr-nav, herdr-core, Herdr and one
   update check. It exposes programs.herdr-cli/-core/-app and

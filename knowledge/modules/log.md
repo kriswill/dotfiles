@@ -2,6 +2,13 @@
 
 ## 2026-11-01
 
+- **Update**: [nebula-herdr](nebula-herdr.md): the home/herdr-app stow
+  package now carries keys.json, the kanagawa theme, the `personal` layout
+  and the vim-nav and pane-rotate mods, ported from the herdr TUI's config.
+  It also notes that Herdr's live reload ignores edits to the repo copy.
+- **Update**: [nebula-herdr](nebula-herdr.md): the terminal font is now
+  MesloLGS Nerd Font Mono. JetBrains Mono has no braille glyphs, and Herdr
+  0.1.11, unlike Ghostty, doesn't draw braille itself.
 - **Update**: [herdr](herdr.md) re-exports the herdr sub-flake's NixOS and
   nix-darwin modules (programs.herdr-cli/-core/-app,
   services.herdr-update-check), enabling programs.herdr-cli everywhere. The

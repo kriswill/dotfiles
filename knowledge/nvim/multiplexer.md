@@ -1,7 +1,7 @@
 ---
 type: Neovim Config
 title: Multiplexer Navigation
-description: 'One set of keys (<C-h/j/k/l>) walking nvim splits and then the surrounding terminal multiplexer''s panes — a local module with tmux and herdr backends, chosen from the environment at startup.'
+description: 'One set of keys (<C-h/j/k/l>) walking nvim splits and then the surrounding terminal multiplexer''s panes — a local module with tmux, herdr and herdr-app backends, chosen from the environment at startup.'
 resource: home/nvim/.config/nvim/lua/config/multiplexer.lua
 tags: [nvim, keymaps, tmux, herdr]
 generated: { by: okflight/0.4.0, at: 2026-07-28T12:30:00-07:00 }
@@ -41,9 +41,11 @@ layout explicitly instead.
 
 The backend is picked once at startup from the environment — `$TMUX` →
 [tmux](../modules/tmux.md), else `$HERDR_PANE_ID` → [herdr](../modules/herdr.md),
-else neither and the keys are plain window motions. tmux is checked first
-because nvim inside tmux inside a herdr pane inherits `$HERDR_PANE_ID` too, and
-the *innermost* multiplexer is the one that owns the splits around us.
+else `$HC_TERMINAL_ID` → `herdr-app` ([Herdr on nebula](../modules/nebula-herdr.md)),
+else none and the keys are plain window motions. The order is innermost first:
+nvim inside tmux inside a herdr pane inherits `$HERDR_PANE_ID` too, the herdr
+TUI inside a Herdr terminal inherits `$HC_TERMINAL_ID`, and the innermost
+multiplexer is the one that owns the splits around us.
 `vim.g.multiplexer` overrides the guess; an unrecognised value warns once and
 falls back to detection, so `:MultiplexerStatus` can never name a backend that
 isn't wired.
@@ -75,10 +77,21 @@ workspace-scoped, so moving the pane re-ids it while nvim keeps the id it
 inherited at startup. (`pane focus`, `pane layout` and `pane process-info`
 resolve `--current` server-side; `pane current` does not.)
 
+The herdr-app backend runs `herdr-app do pane.go`. That answers `ok` at an
+edge too, so whether focus left is a before/after comparison of `herdr-app
+status`'s `focused_pane`. Every herdr-core terminal has `$HC_TERMINAL_ID`,
+including `hc run` in a plain terminal, so a hand-off first checks
+(`hc get`) that the terminal carries the app's `herdr.space` label. Only a
+yes is cached. `status` has no pane-zoom field, so the zoom gate reads the
+tab's `zoomed` from the app's `view.json`. There's no last/next-pane
+command, so `<C-\>` and `<C-Space>` stay inside nvim, as under herdr.
+
 nvim is only half the handshake — the multiplexer has to forward the chord to
 a vim-running pane rather than acting on it. See the [vim-aware pane
 navigation decision](../decisions/vim-aware-pane-navigation.md) for how each
-side does that, and why this replaced the `nvim-tmux-navigation` plugin.
+side does that, and why this replaced the `nvim-tmux-navigation` plugin;
+Herdr's side is the `vim-nav` mod
+([decision](../decisions/herdr-app-keys-via-hosted-mods.md)).
 
 Because the multiplexer forwards the chord whatever mode nvim is in, the keys
 are mapped in three modes:

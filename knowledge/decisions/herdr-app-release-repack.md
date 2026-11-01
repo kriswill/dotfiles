@@ -68,7 +68,7 @@ source build, so switching to nixpkgs or numtide is one line.
   substitution, aren't possible here, so `xdg-open` comes from the system
   PATH.[^subflake-readme]
 
-Not yet committed (2026-11-01).
+Landed in commit `4de98e9`.
 
 [^subflake-readme]: `flakes/herdr/README.md`: why repackaged release builds; packaging notes
 [^nixpkgs-pr-581031]: NixOS/nixpkgs#581031: the PR and its notes for review

@@ -6,12 +6,13 @@
 -- Replaces alexghergh/nvim-tmux-navigation (tmux-only) — same behaviour, plus
 -- a herdr backend and no plugin dependency.
 --
--- Backends are detected from the environment at startup: tmux ($TMUX) or herdr
--- ($HERDR_PANE_ID). With neither, the keys are plain window motions. Set
--- vim.g.multiplexer = "tmux" | "herdr" | "none" before this module loads to
--- override detection (useful when they're nested); an unrecognised value warns
--- once and falls back to detection, so :MultiplexerStatus never names a backend
--- that isn't wired.
+-- Backends are detected from the environment at startup: tmux ($TMUX), the
+-- herdr TUI ($HERDR_PANE_ID) or Herdr's desktop app ($HC_TERMINAL_ID). With
+-- none, the keys are plain window motions. Set vim.g.multiplexer = "tmux" |
+-- "herdr" | "herdr-app" | "none" before this module loads to override detection
+-- (useful when they're nested); an unrecognised value warns once and falls
+-- back to detection, so :MultiplexerStatus never names a backend that isn't
+-- wired.
 --
 -- The chord is mapped in normal, insert and terminal mode, because the
 -- multiplexer forwards it to us whatever mode we're in and it has to keep
@@ -21,8 +22,9 @@
 --
 -- The other half of the handshake lives outside nvim: the multiplexer has to
 -- forward the chord to a pane that is running vim rather than acting on it —
---   tmux:  home/tmux/.config/tmux/tmux.conf      (is_vim + if-shell send-keys)
---   herdr: home/herdr/.config/herdr/config.toml  ([[keys.command]] → herdr-nav)
+--   tmux:      home/tmux/.config/tmux/tmux.conf      (is_vim + if-shell send-keys)
+--   herdr:     home/herdr/.config/herdr/config.toml  ([[keys.command]] → herdr-nav)
+--   herdr-app: home/herdr-app/.config/herdr-app/     (keys.json → the vim-nav mod)
 
 local M = {}
 
@@ -116,9 +118,68 @@ function herdr.focus(dir)
   return run_ok({ "herdr", "pane", "focus", "--direction", d, "--current" })
 end
 
+-- herdr-app -----------------------------------------------------------------
+
+-- Herdr's desktop app. Each terminal it shows is a herdr-core terminal
+-- ($HC_TERMINAL_ID) labelled with its space. Every hc terminal has the
+-- variable, including `hc run` in a plain terminal, where pane.go would move
+-- focus in a window we aren't in. So the label is checked before a hand-off.
+-- Only a yes is cached: a terminal can be adopted into the window later.
+local herdr_app = {}
+
+local app_shown = false
+
+local function in_app()
+  if not app_shown then
+    local out = run({ "hc", "get", vim.env.HC_TERMINAL_ID, "--json" })
+    local ok, t = pcall(vim.json.decode, out or "")
+    app_shown = ok and type(t) == "table" and type(t.labels) == "table" and t.labels["herdr.space"] ~= nil
+  end
+  return app_shown
+end
+
+local function app_status()
+  local ok, s = pcall(vim.json.decode, run({ "herdr-app", "status" }) or "")
+  return ok and type(s) == "table" and s or nil
+end
+
+-- `status` has no pane-zoom field; Herdr records each tab's zoomed pane in
+-- view.json (written by the app, under $HERDR_APP_HOME or ~/.config/herdr-app).
+function herdr_app.zoomed()
+  local s = app_status()
+  if not (s and s.tab and in_app()) then
+    return false
+  end
+  local home = vim.env.HERDR_APP_HOME or vim.fs.joinpath(vim.env.HOME, ".config", "herdr-app")
+  local fd = io.open(vim.fs.joinpath(home, "view.json"), "r")
+  if not fd then
+    return false
+  end
+  local ok, view = pcall(vim.json.decode, fd:read("*a"))
+  fd:close()
+  local zoomed = ok and vim.tbl_get(view or {}, "tabs", s.tab, "zoomed")
+  return zoomed ~= nil and zoomed ~= vim.NIL and zoomed ~= false
+end
+
+function herdr_app.focus(dir)
+  -- No command for last/next pane, so <C-\> and <C-Space> stay inside nvim.
+  local d = herdr_dirs[dir]
+  if not d or not in_app() then
+    return false
+  end
+  -- pane.go answers ok at an edge too, so "did focus leave?" is a before/after
+  -- comparison. The key reached us through the focused pane, so that's ours.
+  local before = app_status()
+  if not (before and run_ok({ "herdr-app", "do", "pane.go", "--direction", d })) then
+    return false
+  end
+  local after = app_status()
+  return after ~= nil and after.focused_pane ~= before.focused_pane
+end
+
 -- Detection -----------------------------------------------------------------
 
-local backends = { tmux = tmux, herdr = herdr }
+local backends = { tmux = tmux, herdr = herdr, ["herdr-app"] = herdr_app }
 
 local function detect()
   local forced = vim.g.multiplexer
@@ -130,19 +191,23 @@ local function detect()
       return forced
     end
     vim.notify(
-      ('multiplexer: ignoring unknown vim.g.multiplexer = %s (want "tmux", "herdr" or "none")'):format(
+      ('multiplexer: ignoring unknown vim.g.multiplexer = %s (want "tmux", "herdr", "herdr-app" or "none")'):format(
         vim.inspect(forced)
       ),
       vim.log.levels.WARN
     )
   end
-  -- tmux first: nvim in tmux in a herdr pane inherits $HERDR_PANE_ID too, and
-  -- the innermost multiplexer is the one that owns the splits around us.
+  -- Innermost first: nvim in tmux in a herdr pane inherits $HERDR_PANE_ID too,
+  -- and the herdr TUI inside a Herdr app terminal inherits $HC_TERMINAL_ID.
+  -- The innermost multiplexer is the one that owns the splits around us.
   if (vim.env.TMUX or "") ~= "" then
     return "tmux"
   end
   if (vim.env.HERDR_PANE_ID or "") ~= "" then
     return "herdr"
+  end
+  if (vim.env.HC_TERMINAL_ID or "") ~= "" then
+    return "herdr-app"
   end
   return nil
 end
@@ -312,9 +377,9 @@ local directional = {
 
 local keys = vim.list_extend(vim.deepcopy(directional), {
   { "<C-\\>", "p", "to last active" },
-  -- Reachability: both multiplexers are configured with ctrl+space as their
-  -- prefix (tmux.conf, herdr's config.toml), so <C-Space> only reaches nvim in
-  -- a bare terminal or after rebinding that prefix. Kept correct regardless.
+  -- Reachability: every multiplexer here uses ctrl+space as its prefix
+  -- (tmux.conf, herdr's config.toml, herdr-app's keys.json chords), so
+  -- <C-Space> only reaches nvim in a bare terminal. Kept correct regardless.
   { "<C-Space>", "n", "to next" },
 })
 

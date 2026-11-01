@@ -1,5 +1,15 @@
 # Log
 
+## 2026-11-01
+
+- **Update** — [multiplexer navigation](multiplexer.md): a `herdr-app`
+  backend for Herdr, the desktop app, detected from `$HC_TERMINAL_ID`. At
+  nvim's edge it runs `herdr-app do pane.go` after checking the terminal
+  carries the app's `herdr.space` label. Focus changes are read from
+  `herdr-app status` before and after, and the zoom gate reads `view.json`.
+  The vim-nav mod is its other half
+  ([decision](../decisions/herdr-app-keys-via-hosted-mods.md)).
+
 ## 2026-07-28
 
 - **Update** — [multiplexer navigation](multiplexer.md): recorded that
