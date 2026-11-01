@@ -85,6 +85,10 @@ skips it.
   usage error.
 - If herdr ever grows native vim-awareness, the shim collapses back into four
   `focus_pane_*` lines.
+- Herdr, the desktop app, got the same arrangement on 2026-11-01: a
+  `herdr-app` backend in `multiplexer.lua` and a `vim-nav` mod in place of
+  herdr-nav, because its `keys.json` can't run shell commands
+  ([decision](herdr-app-keys-via-hosted-mods.md)).
 
 ## Citations
 

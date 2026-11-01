@@ -68,6 +68,6 @@ Stow wiring stays outside the flake.
 - **Option surface.** `programs.herdr-core.linger` and the update check's
   schedule (`calendar` / `startCalendarInterval`) are the only per-OS
   options.
-- Not yet committed (2026-11-01).
+- Landed in commit `4de98e9`.
 
 [^subflake-readme]: `flakes/herdr/README.md`: modules; darwin

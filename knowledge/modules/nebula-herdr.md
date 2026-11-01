@@ -24,7 +24,18 @@ Choices:
     `{"telemetry": false}`, so the link exists before the first launch and
     every Settings-screen save or zoom change lands in the repo.
   - `keys.json`, layouts and themes are captured when first customized, with
-    `dots-adopt herdr-app .config/herdr-app/<file>`.
+    `dots-adopt herdr-app .config/herdr-app/<file>`. The stow package now
+    also holds `keys.json`, `themes/kanagawa.json`, the `personal` layout and
+    the `vim-nav` and `pane-rotate` mods: the herdr TUI's keys and theme,
+    ported ([decision](../decisions/herdr-app-keys-via-hosted-mods.md)).
+  - Herdr's live reload doesn't see edits to the repo copy. Write through
+    the `~/.config/herdr-app/` link, then check `herdr-app status`.
+- **Terminal font: MesloLGS Nerd Font Mono** (`settings.json` `font`), for
+  its braille. JetBrains Mono 2.304, the default in both Herdr and Ghostty,
+  has no braille glyphs (U+2800–28FF). Ghostty draws braille as sprites, but
+  Herdr 0.1.11's sprites cover only box drawing, blocks and powerline, so it
+  fell back to a proportional system font. If Herdr adds braille sprites,
+  drop `font` to get JetBrains Mono back.
   - Both packages are darwin-skipped until the macs enable them
     ([decision](../decisions/herdr-app-config-via-stow.md)).
 - **Linger on.** It was confirmed while choosing the design: hc wants it and

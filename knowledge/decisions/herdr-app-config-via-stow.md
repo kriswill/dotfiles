@@ -53,7 +53,7 @@ edits versioned through stow, with the stow wiring kept out of the flake.
   otherwise a later stow of the same path hits a real file and skips the
   package.
 - Both packages are darwin-skipped until the macs enable `programs.herdr-core` (`programs.herdr-app` is Linux-only for now).
-- Not yet committed (2026-11-01).[^subflake-readme]
+- Landed in commit `4de98e9`.[^subflake-readme]
 
 [^app-persist-rs]: herdr-app `src/persist.rs`: `resolve_target` and the `atomic_write_preserves_symlink_chains_and_dangling_targets` test
 [^subflake-readme]: `flakes/herdr/README.md`: config files and stow
