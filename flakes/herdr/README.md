@@ -60,9 +60,14 @@ Packaging notes:
 - **Environment leaks into every terminal.** The app passes its environment to
   herdr-core, which passes it to every terminal it starts. So nothing sets
   `LD_LIBRARY_PATH`: the dlopened Vulkan, Wayland and EGL go on the RUNPATH via
-  `runtimeDependencies`. The modules add no PATH either, since the app looks
-  for hc in `/run/current-system/sw/bin` itself. The wrapper sets only
-  `HERDR_TELEMETRY=0`, which only herdr-app reads.
+  `runtimeDependencies`. The wrapper adds no PATH and sets only
+  `HERDR_TELEMETRY=0` and `HERDR_CORE_DIRS`, which only herdr-app reads.
+- **The core is pinned.** The app puts the folder it found hc in first on its
+  PATH (upstream `src/core_bin.rs` `use_core`), and every terminal inherits
+  it. Left to search, it found `/run/current-system/sw/bin`, which then
+  shadowed `/run/wrappers/bin` and broke `sudo` in every pane. The modules
+  set `HERDR_CORE_DIRS` to `programs.herdr-core.package`'s bin, so the app
+  finds hc there, and that folder holds only `hc` and `herdr-core`.
 - **Self-update is off.** A release build updates itself only when it finds
   `herdr-app.svg` beside its binary (upstream `src/update.rs` `find_root`). The
   icon lives in `share/icons`, and installCheck fails the build otherwise.

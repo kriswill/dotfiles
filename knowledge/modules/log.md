@@ -2,6 +2,9 @@
 
 ## 2026-11-01
 
+- **Update**: [herdr](herdr.md): `programs.herdr-app` pins Herdr's hc
+  lookup to `programs.herdr-core.package`'s bin, which fixed `sudo` in Herdr
+  panes ([decision](../decisions/herdr-app-pin-core-dir.md)).
 - **Update**: [nebula-herdr](nebula-herdr.md): the home/herdr-app stow
   package now carries keys.json, the kanagawa theme, the `personal` layout
   and the vim-nav and pane-rotate mods, ported from the herdr TUI's config.

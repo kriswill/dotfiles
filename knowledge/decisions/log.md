@@ -2,6 +2,11 @@
 
 ## 2026-11-01
 
+- **Creation**: [herdr-app-pin-core-dir](herdr-app-pin-core-dir.md): the
+  herdr-app wrapper sets `HERDR_CORE_DIRS` to herdr-core's own bin. Herdr
+  leads every pane's PATH with the folder it found hc in, and finding it in
+  the system profile put the plain `sudo` ahead of `/run/wrappers/bin`'s
+  setuid one.
 - **Creation**: [herdr-app-keys-via-hosted-mods](herdr-app-keys-via-hosted-mods.md):
   the herdr TUI's keys and theme moved to Herdr. Vim-aware ctrl+h/j/k/l and
   prefix+r rotate became the vim-nav and pane-rotate mods, hosted as empty

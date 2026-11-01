@@ -2,6 +2,9 @@
 
 ## 2026-11-01
 
+- **Update**: [herdr](herdr.md): `herdr-app-wrap.nix` gains `pinCore`
+  (`HERDR_CORE_DIRS`); the environment-leak gotcha now covers the PATH Herdr
+  prepends ([decision](../decisions/herdr-app-pin-core-dir.md)).
 - **Creation**: [herdr](herdr.md), the umbrella sub-flake for everything
   herdr:
   - the TUI from our fork (`herdr-cli`, formerly the root `herdr` input),

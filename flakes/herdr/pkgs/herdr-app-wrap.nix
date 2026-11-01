@@ -8,9 +8,16 @@
 # - settings, when non-empty, are merged into settings.json before each
 #   launch by ./merge-settings.sh.
 # - core, when given, goes at the END of PATH, so a herdr-core already on PATH
-#   wins; for the standalone `nix run` package. The NixOS module passes none:
-#   it installs the core system-wide, and the app looks in
-#   /run/current-system/sw/bin itself, so no PATH leaks into terminals.
+#   wins; for the standalone `nix run` package.
+# - pinCore, when given, sets HERDR_CORE_DIRS to its bin, the only place the
+#   app then looks for hc; the modules pass programs.herdr-core.package. The
+#   app puts the folder it found hc in FIRST on its PATH (upstream
+#   src/core_bin.rs `use_core`), and herdr-core hands that PATH to every
+#   terminal. Found in /run/current-system/sw/bin, that put the plain sudo
+#   ahead of /run/wrappers/bin's setuid one in every pane ("sudo must be
+#   owned by uid 0"). The core's own bin holds only hc and herdr-core, so
+#   leading with it shadows nothing. HERDR_CORE_DIRS itself reaches the
+#   terminals too, harmlessly: only herdr-app reads it.
 {
   lib,
   symlinkJoin,
@@ -21,6 +28,7 @@
   jq,
   package,
   core ? null,
+  pinCore ? null,
   telemetry ? false,
   settings ? { },
 }:
@@ -39,6 +47,11 @@ let
       "--set"
       "HERDR_TELEMETRY"
       "0"
+    ]
+    ++ lib.optionals (pinCore != null) [
+      "--set"
+      "HERDR_CORE_DIRS"
+      "${lib.getBin pinCore}/bin"
     ]
     ++ lib.optionals (core != null) [
       "--suffix"
