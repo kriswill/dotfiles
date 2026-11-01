@@ -81,7 +81,8 @@ Two scripts, TypeScript on bun, with shared helpers in `common.ts`:
   `session.terminal_continue` (default on) must stay on, or there are no
   breadcrumbs.
 - `pkgs.herdr`'s overlay was kept only for the removed `herdr.package`
-  ([umbrella decision](herdr-umbrella-subflake.md)); it now has no consumer.
+  ([umbrella decision](herdr-umbrella-subflake.md)), so it was removed in a
+  follow-up.
 - Verified after the switch on 2026-11-01: the gateway logged all seven
   hooks registered, the allowlist holds exactly them, and
   `plugins/herdr-agent-state` is gone.[^subflake-readme]

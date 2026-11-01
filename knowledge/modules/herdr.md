@@ -65,9 +65,10 @@ and repoint `herdr-cli.url` in `flakes/herdr/flake.nix`. The sub-flake's
 The move into the sub-flake on 2026-11-01 left `herdr --version` and the drv
 unchanged on nebula and the macs. The build identity, `pkgs.herdr` and
 herdr-nav all came along ([decision](../decisions/herdr-umbrella-subflake.md)).
-`pkgs.herdr` stayed overlaid for hermes-agent's `herdr.package`, which its
+`pkgs.herdr` stayed overlaid for hermes-agent's `herdr.package` until its
 [TypeScript Herdr integration](../decisions/hermes-herdr-integration-shell-hook.md)
-dropped, so nothing uses it now.
+dropped that option. The overlay went too, so herdr is no longer on `pkgs`
+(nixpkgs' own herdr aside); modules take it from the sub-flake's options.
 
 Options, all defined in the sub-flake's `modules/common.nix` plus per-OS
 layers:[^subflake-readme]

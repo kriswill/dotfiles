@@ -43,8 +43,8 @@ Stow wiring stays outside the flake.
 - **Root wiring.** `pkgs.herdr` stays as an inline overlay of `herdr-cli`,
   because hermes-agent takes `mkPackageOption pkgs "herdr"`. (That option
   went away with the
-  [TypeScript integration](hermes-herdr-integration-shell-hook.md), so the
-  overlay no longer has a consumer.) The `herdr-nav`
+  [TypeScript integration](hermes-herdr-integration-shell-hook.md), and the
+  overlay was removed on 2026-11-01; no host's system drv changed.) The `herdr-nav`
   overlay is gone; the module installs herdr-nav with the configured herdr
   pinned in. `modules/{nixos,darwin}/herdr.nix` each import their OS's module
   and set `programs.herdr-cli.enable = true`, which keeps the TUI on every

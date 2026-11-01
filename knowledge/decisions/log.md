@@ -2,6 +2,9 @@
 
 ## 2026-11-01
 
+- **Update**: [herdr-umbrella-subflake](herdr-umbrella-subflake.md) and
+  [hermes-herdr-integration-shell-hook](hermes-herdr-integration-shell-hook.md)
+  record the `pkgs.herdr` overlay's removal.
 - **Creation**: [hermes-herdr-integration-shell-hook](hermes-herdr-integration-shell-hook.md):
   `herdr.enable` is a `hermes` CLI wrapper plus a consented gateway shell
   hook, both TypeScript on bun, instead of herdr's generated Python plugin.

@@ -5,7 +5,7 @@
 # programs.herdr-app (Herdr's desktop app + hc; off unless a host turns them
 # on, as nebula does in modules/hosts/nebula/herdr.nix) and
 # services.herdr-update-check. The packages come from the umbrella, so no
-# overlay is needed (pkgs.herdr is kept for hermes-agent; modules/overlays.nix).
+# overlay is needed.
 # Darwin twin: modules/darwin/herdr.nix.
 { inputs, ... }:
 {
