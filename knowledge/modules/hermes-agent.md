@@ -34,7 +34,11 @@ these:[^subflake-readme]
 - `addToSystemPackages` installs a CLI wrapped with
   `--set-default HERMES_HOME`, so it works in shells that never read
   `environment.variables`.
-- `herdr.enable` (new) adds herdr's integration plugin.
+- `herdr.enable` (new) adds a Herdr integration for the herdr TUI and the
+  Herdr app. A `hermes` CLI wrapper marks the pane, and a consented gateway
+  shell hook reports the session and its idle/working/blocked status. Both
+  are TypeScript on bun, and the option needs `addToSystemPackages`
+  ([decision](../decisions/hermes-herdr-integration-shell-hook.md)).
 - `settings` lists concatenate across definitions.
 - Container mode is gone. `backend.mode` (`hermes serve`/`dashboard`) stays.
 

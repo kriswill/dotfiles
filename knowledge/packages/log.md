@@ -2,6 +2,9 @@
 
 ## 2026-11-01
 
+- **Update**: [hermes-agent](hermes-agent.md): the module's herdr option is
+  a Herdr integration in TypeScript (`nix/herdr/`), not herdr's plugin
+  ([decision](../decisions/hermes-herdr-integration-shell-hook.md)).
 - **Update**: [herdr](herdr.md): `herdr-app-wrap.nix` gains `pinCore`
   (`HERDR_CORE_DIRS`); the environment-leak gotcha now covers the PATH Herdr
   prepends ([decision](../decisions/herdr-app-pin-core-dir.md)).

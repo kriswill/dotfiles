@@ -2,6 +2,14 @@
 
 ## 2026-11-01
 
+- **Creation**: [hermes-herdr-integration-shell-hook](hermes-herdr-integration-shell-hook.md):
+  `herdr.enable` is a `hermes` CLI wrapper plus a consented gateway shell
+  hook, both TypeScript on bun, instead of herdr's generated Python plugin.
+  That plugin read the pane from the gateway's environment and never fired.
+  It now reports to the herdr TUI and to the Herdr app (OSC 7501).
+- **Update**: [hermes-agent-vendored-nix](hermes-agent-vendored-nix.md) and
+  [herdr-umbrella-subflake](herdr-umbrella-subflake.md) point to it; the
+  latter notes that the `pkgs.herdr` overlay lost its last consumer.
 - **Creation**: [herdr-app-pin-core-dir](herdr-app-pin-core-dir.md): the
   herdr-app wrapper sets `HERDR_CORE_DIRS` to herdr-core's own bin. Herdr
   leads every pane's PATH with the folder it found hc in, and finding it in

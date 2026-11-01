@@ -93,10 +93,27 @@ Upstream's options keep their meaning, except for these:
   silently creates an unmanaged `~/.hermes`, whose own gateway refuses
   sessions with `storage_unavailable`. `config.yaml` stays `0640`; upstream
   made it `0660` for group members.
-- **`herdr.enable`** (new) generates herdr's Hermes integration with
-  `herdr.package`'s own `herdr integration install hermes`. It links the
-  plugin at `plugins/herdr-agent-state`, where `herdr integration status`
-  finds it, and adds it to `settings.plugins.enabled`.
+- **`herdr.enable`** (new) is a Herdr integration in TypeScript on bun
+  ([`nix/herdr`](nix/herdr)), replacing the Python plugin
+  `herdr integration install hermes` writes. That plugin reads the pane from
+  its own process environment, but the `hermes` CLI is a gateway client and
+  every hook runs in the gateway, so it never fired. Two parts:
+  - `cli.ts` is the `hermes` CLI (needs `addToSystemPackages`). For an
+    interactive chat in a Herdr pane it writes a marker naming the pane's pty
+    (`$HERMES_HOME/herdr-panes/`), and in a Herdr app pane reports `idle` at
+    launch, so the Agents list shows Hermes before the first prompt, and
+    `state=clear` at exit (herdr-core otherwise keeps a status until the
+    pane's shell exits).
+  - `hook.ts` is a gateway shell hook (`settings.hooks`) on the turn events.
+    It maps the session to a pty through the CLI's terminal breadcrumbs
+    (`$HERMES_HOME/terminal-sessions/`, so `session.terminal_continue` must
+    stay on) and the live marker, then writes OSC 7501
+    working/idle/blocked to the pty (Herdr app) or runs
+    `herdr pane report-agent-session` (Herdr TUI).
+  Activation approves exactly this build's hook in
+  `shell-hooks-allowlist.json` (shell hooks need consent) and drops earlier
+  builds' approvals; the gateway rereads it within ~30 s. It also removes the
+  old plugin's `plugins/herdr-agent-state` link.
 - **`settings` lists concatenate** across definitions. Upstream's
   `recursiveUpdate` kept only the last module's list, so `herdr.enable`
   would have dropped a host's own `plugins.enabled` entries.

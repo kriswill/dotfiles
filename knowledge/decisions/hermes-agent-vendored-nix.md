@@ -60,7 +60,9 @@ it follow our nixpkgs.
 - The module is upstream's native mode, single-owner. `user` is required and
   never created; `group` is created with no members; state directories are
   `2750`; `addToSystemPackages` installs the `HERMES_HOME` wrapper; the new
-  `herdr.enable` adds herdr's integration plugin. Container mode is gone.
+  `herdr.enable` adds herdr's integration plugin (since 2026-11-01 a
+  TypeScript CLI wrapper and gateway shell hook:
+  [decision](hermes-herdr-integration-shell-hook.md)). Container mode is gone.
   `settings` lists concatenate, so the plugin doesn't clobber a host's
   `plugins.enabled`.
 - `version` is set to the tag. Upstream's `0.0.0` was what

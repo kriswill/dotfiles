@@ -41,7 +41,10 @@ Stow wiring stays outside the flake.
   override now spells out its nixpkgs follow, which a CLI `--override-input`
   had dropped. `pkgs/herdr-cli.nix` keeps the build identity.
 - **Root wiring.** `pkgs.herdr` stays as an inline overlay of `herdr-cli`,
-  because hermes-agent takes `mkPackageOption pkgs "herdr"`. The `herdr-nav`
+  because hermes-agent takes `mkPackageOption pkgs "herdr"`. (That option
+  went away with the
+  [TypeScript integration](hermes-herdr-integration-shell-hook.md), so the
+  overlay no longer has a consumer.) The `herdr-nav`
   overlay is gone; the module installs herdr-nav with the configured herdr
   pinned in. `modules/{nixos,darwin}/herdr.nix` each import their OS's module
   and set `programs.herdr-cli.enable = true`, which keeps the TUI on every

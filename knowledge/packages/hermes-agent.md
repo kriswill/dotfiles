@@ -1,7 +1,7 @@
 ---
 type: Sub-flake
 title: hermes-agent
-description: 'Sub-flake that builds Nous Research''s Hermes Agent (the hermes CLI and its messaging/cron gateway) from a trimmed, path-rewritten copy of upstream''s nix/ against the v0.22.5 source, plus a single-owner services.hermes-agent NixOS module (wrapped CLI, 2750 state, herdr plugin option); enabled on nebula.'
+description: 'Sub-flake that builds Nous Research''s Hermes Agent (the hermes CLI and its messaging/cron gateway) from a trimmed, path-rewritten copy of upstream''s nix/ against the v0.22.5 source, plus a single-owner services.hermes-agent NixOS module (wrapped CLI, 2750 state, Herdr integration option); enabled on nebula.'
 resource: flakes/hermes-agent/
 tags: [sub-flake, package, ai-agent]
 generated: { by: claude-code/opus-5-5, at: 2026-10-30T03:00:00+00:00 }
