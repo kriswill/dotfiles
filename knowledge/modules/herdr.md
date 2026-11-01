@@ -95,6 +95,11 @@ layers:[^subflake-readme]
     `keys` (`keys.json`, as a link).
   - It also sets herdr-core and `hardware.graphics` on (`mkDefault`), and
     warns if the core is older than the app's `coreMin`.
+  - With the core enabled, the wrapper pins Herdr's hc lookup to
+    `programs.herdr-core.package`'s bin (`HERDR_CORE_DIRS`). Herdr leads every
+    pane's PATH with the folder it found hc in, and the system profile there
+    shadowed `/run/wrappers/bin`'s setuid `sudo`
+    ([decision](../decisions/herdr-app-pin-core-dir.md)).
 - `services.herdr-update-check`:
   - `enable`, `package`.
   - The schedule is a NixOS `calendar` (systemd user timer, `Type=exec`,

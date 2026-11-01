@@ -212,6 +212,9 @@ in
     {
       programs.herdr-app.finalPackage = pkgs.callPackage ../pkgs/herdr-app-wrap.nix {
         inherit (app) package telemetry settings;
+        # The app leads its PATH, and so every terminal's, with the folder it
+        # found hc in; pin it to the core's own bin, not the system profile.
+        pinCore = if core.enable then core.package else null;
       };
       services.herdr-update-check.environment = {
         HERDR_CLI_VERSION = if cli.enable then cli.package.version else "";

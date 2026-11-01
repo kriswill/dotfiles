@@ -69,9 +69,12 @@ Gotchas:
 
 - **Environment leaks into every terminal.** The app hands its environment to
   the core, which hands it to every terminal. So nothing sets
-  `LD_LIBRARY_PATH`, and the modules add no PATH: the app finds hc in
-  `/run/current-system/sw/bin` on its own (nixpkgs#581031 hit the same
-  issue).[^nixpkgs-pr-581031]
+  `LD_LIBRARY_PATH`, and the modules add no PATH (nixpkgs#581031 hit the
+  same issue).[^nixpkgs-pr-581031] Herdr still leads that PATH with the
+  folder it found hc in, so the modules pin the lookup to the core's own bin
+  (`HERDR_CORE_DIRS`). Left to search, the system profile went first and
+  broke `sudo` in every pane
+  ([decision](../decisions/herdr-app-pin-core-dir.md)).
 - **The self-updater is off by layout.** A release build updates itself only
   when `herdr-app.svg` sits beside its binary.[^app-update-rs] The icon goes
   in `share/icons`, and installCheck fails the build if it's beside the
