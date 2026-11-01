@@ -2,6 +2,9 @@
 
 ## 2026-11-01
 
+- **Update**: [nebula-herdr](nebula-herdr.md): Herdr's font is now the
+  non-Mono MesloLGS Nerd Font, at size 17 and zoom 1.1, with a dark
+  appearance. Both Meslo variants carry braille.
 - **Update**: [herdr](herdr.md): `programs.herdr-app` pins Herdr's hc
   lookup to `programs.herdr-core.package`'s bin, which fixed `sudo` in Herdr
   panes ([decision](../decisions/herdr-app-pin-core-dir.md)).

@@ -30,12 +30,14 @@ Choices:
     ported ([decision](../decisions/herdr-app-keys-via-hosted-mods.md)).
   - Herdr's live reload doesn't see edits to the repo copy. Write through
     the `~/.config/herdr-app/` link, then check `herdr-app status`.
-- **Terminal font: MesloLGS Nerd Font Mono** (`settings.json` `font`), for
-  its braille. JetBrains Mono 2.304, the default in both Herdr and Ghostty,
-  has no braille glyphs (U+2800–28FF). Ghostty draws braille as sprites, but
-  Herdr 0.1.11's sprites cover only box drawing, blocks and powerline, so it
-  fell back to a proportional system font. If Herdr adds braille sprites,
-  drop `font` to get JetBrains Mono back.
+- **Terminal font: MesloLGS Nerd Font** at `font_size` 17, `zoom` 1.1, dark
+  `appearance` (`settings.json`), for its braille. It's the non-Mono variant
+  since 2026-11-01. Both variants carry braille; the first pick was Mono.
+  JetBrains Mono 2.304, the default in both Herdr and Ghostty, has no
+  braille glyphs (U+2800–28FF). Ghostty draws braille as sprites, but Herdr
+  0.1.11's sprites cover only box drawing, blocks and powerline, so it fell
+  back to a proportional system font. If Herdr adds braille sprites, drop
+  `font` to get JetBrains Mono back.
   - Both packages are darwin-skipped until the macs enable them
     ([decision](../decisions/herdr-app-config-via-stow.md)).
 - **Linger on.** It was confirmed while choosing the design: hc wants it and
