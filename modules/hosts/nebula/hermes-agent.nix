@@ -39,6 +39,11 @@
           provider = "anthropic";
           default = "claude-opus-5-5";
         };
+        # The passive startup check reports a bogus "Update available" on every
+        # Nix build: a store path has no git origin, so default_channel() falls
+        # back to `main` (not `stable`) and compares the pinned tag against
+        # main's moving tip. Updates come from bumping ./flakes/hermes-agent.
+        settings.updates.check = false;
       };
     };
 }
