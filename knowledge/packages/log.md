@@ -1,5 +1,13 @@
 # Log
 
+## 2026-10-31
+
+- **Update**: [nrs](nrs.md) calls `dix diff /run/current-system "$out"`.
+  The nixpkgs bump to `1c89083` brought dix 3.0.0, which needs the `diff`
+  subcommand and rejected the old bare form (`unknown subcommand
+  '/run/current-system'`). Because a dix failure is only a warning, every
+  nrs run since switching to that system went on without a package diff.
+
 ## 2026-10-29
 
 - **Creation**: [hermes-agent](hermes-agent.md), the sub-flake that builds

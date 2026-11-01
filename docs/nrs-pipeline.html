@@ -529,7 +529,7 @@ done</code></pre>
 <p>Before the build, on NixOS, any resume lists an interrupted switch left in <code>/run/nixos/</code> or <code>/run/user/$UID/nixos/</code> are announced, so the replay this run will do is no surprise.</p>
 
 <h3 id="s-diff"><span class="stage-no as-user">2</span>Diff</h3>
-<p><code>dix /run/current-system $out</code>: the package-level changes, path count, size and size delta. If dix fails, nrs warns and carries on.</p>
+<p><code>dix diff /run/current-system $out</code>: the package-level changes, path count, size and size delta. If dix fails, nrs warns and carries on.</p>
 
 <h3 id="s-validate"><span class="stage-no as-user">3</span>Validate</h3>
 <p>The build must contain its essentials, or nrs refuses to activate it: <code>bin/switch-to-configuration</code>, <code>nixos-version</code>, <code>init</code> and <code>sw/bin</code> on NixOS; <code>activate</code> and <code>sw/bin/darwin-rebuild</code> on darwin. <code>nrb</code> stops here and reports.</p>
@@ -862,6 +862,7 @@ done</code></pre>
 
 <p class="muted">Dated and verified; newest first. Correct an entry in place rather than adding a contradiction.</p>
 <ul>
+  <li><strong>2026-10-31 · dix 3.0 needs the <code>diff</code> subcommand.</strong> The same nixpkgs bump brought dix 3.0.0, which takes <code>dix diff OLD NEW</code> and rejects the old bare <code>dix OLD NEW</code> (<code>error: unknown subcommand '/run/current-system'</code>). The build kept going without a diff because a dix failure is only a warning. nrs now calls <code>dix diff</code>.</li>
   <li><strong>2026-10-31 · An NVIDIA driver bump breaks new GPU programs until reboot.</strong> The switch to nixpkgs <code>1c89083</code> (595.104.02 → 595.112.07) replaced the userspace in <code>/run/opengl-driver</code> while the old kernel module stayed loaded. Until the reboot, the kernel refused every new GPU client (<code>NVRM: API mismatch: the client 'wowdps-replay' … has the version 595.112.07, but this kernel module has the version 595.104.02</code>) and they fell back to llvmpipe; programs started earlier kept working. The state report now says so (§3). nrs has no boot-only mode, and <code>--boot</code> does not defer activation; <code>sudo nixos-rebuild boot --flake .#nebula</code> does.</li>
   <li><strong>2026-10-24 · <code>darwin-rebuild check</code> activates on macOS.</strong> The activate script's <code>#!/usr/bin/env -i</code> shebang wipes <code>checkActivation</code> (nix-darwin <code>bb0b90d</code>). Never use it as a dry check; <code>nrt</code> runs the check mode directly.</li>
   <li><strong>2026-10-24 · dry-activate never shows user units.</strong> stc-ng exits before its per-user pass. <code>nrs --plan</code> runs that pass itself.</li>

@@ -128,7 +128,7 @@ will do is no surprise.
 
 ### 2 · Diff
 
-`dix /run/current-system $out`: the package-level changes, path count, size and
+`dix diff /run/current-system $out`: the package-level changes, path count, size and
 size delta. If dix fails, nrs warns and carries on.
 
 ### 3 · Validate
@@ -385,6 +385,11 @@ refuses to delete a current generation. Preview it with
 Dated and verified; newest first. Correct an entry in place rather than adding a
 contradiction.
 
+- **2026-10-31 · dix 3.0 needs the `diff` subcommand.** The same nixpkgs
+  bump brought dix 3.0.0, which takes `dix diff OLD NEW` and rejects the old
+  bare `dix OLD NEW` (`error: unknown subcommand '/run/current-system'`). The
+  build kept going without a diff because a dix failure is only a warning.
+  nrs now calls `dix diff`.
 - **2026-10-31 · An NVIDIA driver bump breaks new GPU programs until reboot.**
   The switch to nixpkgs `1c89083` (595.104.02 → 595.112.07) replaced the
   userspace in `/run/opengl-driver` while the old kernel module stayed

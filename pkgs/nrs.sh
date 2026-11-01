@@ -936,7 +936,7 @@ out="$(readlink -f "$tmp/result")"
 lap build
 
 step "changes: /run/current-system → ${out##*/}"
-dix /run/current-system "$out" || warn "dix failed; continuing without a diff"
+dix diff /run/current-system "$out" || warn "dix failed; continuing without a diff"
 lap diff
 
 for f in "${essentials[@]}"; do
