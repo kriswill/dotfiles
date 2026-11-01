@@ -28,6 +28,12 @@
         # would break stow links). See config/README.md.
         noctalia-config = pkgs.callPackage ../pkgs/noctalia-config.nix { };
         helium-config = pkgs.callPackage ../pkgs/helium-config.nix { };
+        # ./flakes/herdr, on both OSes: the herdr TUI from our fork, herdr-core
+        # (`hc`, upstream's release build), and herdr-update-check (any of our
+        # herdrs behind upstream, or running a stale build).
+        herdr = inputs.herdr.packages.${system}.herdr-cli;
+        herdr-core = inputs.herdr.packages.${system}.herdr-core;
+        herdr-update-check = inputs.herdr.packages.${system}.herdr-update-check;
         gh-config = pkgs.callPackage ../pkgs/gh-config.nix { };
         # system-update-report — HTML page of nvd diff (booted/previous vs current
         # generation) + the latest "nix flake update" commit. Cross-platform.
@@ -35,9 +41,10 @@
         # nrs — the rebuild helper (NixOS + nix-darwin; nrb and nrt ride on it).
         # See docs/nrs-pipeline.html.
         nrs = pkgs.callPackage ../pkgs/nrs.nix { };
-        # herdr-nav — vim-aware ctrl+h/j/k/l pane navigation for herdr; the
-        # herdr-side half of nvim's config/multiplexer.lua integration.
-        herdr-nav = pkgs.callPackage ../pkgs/herdr-nav.nix { };
+        # herdr-nav (./flakes/herdr) — vim-aware ctrl+h/j/k/l pane navigation
+        # for herdr; the herdr-side half of nvim's config/multiplexer.lua
+        # integration.
+        herdr-nav = inputs.herdr.packages.${system}.herdr-nav;
         # kitten — prebuilt standalone binary (darwin-arm64 + linux-amd64);
         # fastfetch's kitty-icat logo shells out to it on both OSes.
         kitten = pkgs.callPackage ../pkgs/kitten.nix { };
@@ -75,6 +82,9 @@
         # battlenet (./flakes/battlenet) is x86_64-linux only, the root's one
         # Linux system.
         battlenet = inputs.battlenet.packages.${system}.battlenet;
+        # The Herdr app (./flakes/herdr), from upstream's Linux release build:
+        # the standalone wrap (telemetry off, herdr-core on PATH).
+        herdr-app = inputs.herdr.packages.${system}.herdr-app;
         # hermes-agent (./flakes/hermes-agent): the package its NixOS module
         # runs on nebula.
         hermes-agent = inputs.hermes-agent.packages.${system}.hermes-agent;
@@ -90,5 +100,10 @@
     okf = inputs.okf.packages.aarch64-linux.okf;
     nixploit = inputs.nixploit.packages.aarch64-linux.nixploit;
     nixploit-report = inputs.nixploit.packages.aarch64-linux.nixploit-report;
+    herdr = inputs.herdr.packages.aarch64-linux.herdr-cli;
+    herdr-nav = inputs.herdr.packages.aarch64-linux.herdr-nav;
+    herdr-core = inputs.herdr.packages.aarch64-linux.herdr-core;
+    herdr-app = inputs.herdr.packages.aarch64-linux.herdr-app;
+    herdr-update-check = inputs.herdr.packages.aarch64-linux.herdr-update-check;
   };
 }

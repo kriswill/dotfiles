@@ -6,8 +6,8 @@ tags: [nvim, tmux, herdr, keymaps]
 generated: { by: okflight/0.4.0, at: 2026-07-28T12:30:00-07:00 }
 sources:
   - id: pkgs-herdr-nav-sh
-    resource: ../../pkgs/herdr-nav.sh
-    title: '`pkgs/herdr-nav.sh`'
+    resource: ../../flakes/herdr/pkgs/herdr-nav.sh
+    title: '`flakes/herdr/pkgs/herdr-nav.sh` (was `pkgs/herdr-nav.sh` until 2026-11-01)'
   - id: vim-tmux-navigator
     resource: https://github.com/christoomey/vim-tmux-navigator
     title: vim-tmux-navigator

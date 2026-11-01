@@ -1,24 +1,16 @@
-_: {
-  flake.modules.nixos.herdr =
-    # herdr — agent multiplexer that lives in your terminal. Pinned to the
-    # upstream flake's tag (see the herdr input in flake.nix) instead of
-    # nixpkgs' 0.7.5, for in-pane image rendering (docs/fastfetch.md).
-    # pkgs.herdr is the flake input's package — our fork's `v0.9.5-custom` tag,
-    # which carries the ANSI tab-bar command entries and nested-shell agent
-    # detection (modules/overlays.nix).
-    # Darwin twin: modules/darwin/herdr.nix.
-    { pkgs, ... }:
-    {
-      environment.systemPackages = [
-        pkgs.herdr
-        # vim-aware ctrl+hjkl pane navigation, bound in herdr's config.toml
-        # (stow package `herdr`) — see pkgs/herdr-nav.sh.
-        pkgs.herdr-nav
-        # herdr's Claude integration hook (~/.claude/hooks/herdr-agent-state.sh)
-        # reports the session id over the herdr socket with python3, and exits
-        # silently without it. Without that report, herdr can't resume Claude
-        # sessions after a server restart.
-        pkgs.python3
-      ];
-    };
+# herdr on NixOS: the ./flakes/herdr umbrella's module
+# (flakes/herdr/modules/nixos.nix), re-exported into the Dendritic module set,
+# plus the herdr TUI everywhere. It brings programs.herdr-cli (our fork's
+# herdr, herdr-nav, python3 for the agent hooks), programs.herdr-core and
+# programs.herdr-app (Herdr's desktop app + hc; off unless a host turns them
+# on, as nebula does in modules/hosts/nebula/herdr.nix) and
+# services.herdr-update-check. The packages come from the umbrella, so no
+# overlay is needed (pkgs.herdr is kept for hermes-agent; modules/overlays.nix).
+# Darwin twin: modules/darwin/herdr.nix.
+{ inputs, ... }:
+{
+  flake.modules.nixos.herdr = {
+    imports = [ inputs.herdr.nixosModules.herdr ];
+    programs.herdr-cli.enable = true;
+  };
 }

@@ -543,7 +543,28 @@
     },
     "herdr": {
       "inputs": {
+        "flake-parts": [
+          "flake-parts"
+        ],
+        "herdr-cli": "herdr-cli",
         "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "path": "./flakes/herdr",
+        "type": "path"
+      },
+      "original": {
+        "path": "./flakes/herdr",
+        "type": "path"
+      },
+      "parent": []
+    },
+    "herdr-cli": {
+      "inputs": {
+        "nixpkgs": [
+          "herdr",
           "nixpkgs"
         ],
         "rust-overlay": "rust-overlay_2"

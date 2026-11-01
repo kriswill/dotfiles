@@ -1,5 +1,20 @@
 # Log
 
+## 2026-11-01
+
+- **Update**: [herdr](herdr.md) re-exports the herdr sub-flake's NixOS and
+  nix-darwin modules (programs.herdr-cli/-core/-app,
+  services.herdr-update-check), enabling programs.herdr-cli everywhere. The
+  TUI's drv is unchanged on both OSes.
+- **Creation**: [nebula-herdr](nebula-herdr.md) enables the Herdr app and hc
+  for k, with linger declared, telemetry off, and the daily
+  herdr-update-check. Config files are left to the new `home/herdr-core` and
+  `home/herdr-app` stow packages, which are darwin-skipped
+  ([decision](../decisions/herdr-app-config-via-stow.md)).
+- **Deprecation**: [herdr-update-check](herdr-update-check.md), nebula's
+  fork-only unit, is folded into the sub-flake's check under the same unit
+  name.
+
 ## 2026-10-31
 
 - **Update**: [configuration](configuration.md) turns off snowglobe's

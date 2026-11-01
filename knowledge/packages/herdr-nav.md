@@ -2,7 +2,7 @@
 type: Nix Package
 title: Herdr Nav
 description: herdr-nav — a keybinding shim that gives herdr the vim-aware pane switching tmux gets from is_vim + if-shell — forwarding ctrl+h/j/k/l to a pane running vim instead of moving pane focus.
-resource: pkgs/herdr-nav.nix
+resource: flakes/herdr/pkgs/herdr-nav.nix
 tags: [package, herdr, nvim]
 generated: { by: okflight/0.4.0, at: 2026-07-28T12:30:00-07:00 }
 sources:
@@ -78,7 +78,6 @@ Added per the [add-package playbook](../playbooks/add-package.md).
 
 ## Source
 
-- Package: [`pkgs/herdr-nav.nix`](../../pkgs/herdr-nav.nix)
-- Script: [`pkgs/herdr-nav.sh`](../../pkgs/herdr-nav.sh)
-- Overlay: [`overlays/herdr-nav.nix`](../../overlays/herdr-nav.nix) — exposes/replaces `pkgs.herdr-nav`
-- Installed alongside herdr on both OSes by the [herdr module twins](../modules/herdr.md): [`modules/nixos/herdr.nix`](../../modules/nixos/herdr.nix), [`modules/darwin/herdr.nix`](../../modules/darwin/herdr.nix)
+- Package: [`flakes/herdr/pkgs/herdr-nav.nix`](../../flakes/herdr/pkgs/herdr-nav.nix), the [herdr sub-flake](herdr.md)'s `herdr-nav` output (moved from `pkgs/` on 2026-11-01; the `pkgs.herdr-nav` overlay went with it)
+- Script: [`flakes/herdr/pkgs/herdr-nav.sh`](../../flakes/herdr/pkgs/herdr-nav.sh)
+- Installed on both OSes by `programs.herdr-cli.nav.enable` (default on), with the configured herdr pinned in; mounted by the [herdr module twins](../modules/herdr.md): [`modules/nixos/herdr.nix`](../../modules/nixos/herdr.nix), [`modules/darwin/herdr.nix`](../../modules/darwin/herdr.nix)

@@ -1,5 +1,22 @@
 # Log
 
+## 2026-11-01
+
+- **Creation**: [herdr-umbrella-subflake](herdr-umbrella-subflake.md):
+  `flakes/herdr` gathers the TUI fork, herdr-nav, herdr-core, Herdr and one
+  update check. It exposes programs.herdr-cli/-core/-app and
+  services.herdr-update-check through NixOS and nix-darwin modules, with drv
+  parity for the TUI.
+- **Creation**: [herdr-app-release-repack](herdr-app-release-repack.md):
+  repackage Herdr's release tarballs rather than build from source or use
+  nixpkgs#581031 or numtide's cache. A repack compiles nothing, so there is
+  nothing to cache, and it tracks daily releases and keeps hc's copyable
+  static binary.
+- **Creation**: [herdr-app-config-via-stow](herdr-app-config-via-stow.md):
+  stow owns Herdr's config files and the module's file options default to
+  null. Herdr's saves write through symlinks, so stow links capture in-app
+  edits.
+
 ## 2026-10-31
 
 - **Update**: [devenv-fork-deterministic-openssl](devenv-fork-deterministic-openssl.md)

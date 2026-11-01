@@ -27,6 +27,8 @@
           "desktop-entries" # ~/.local/share/applications launchers
           "fuzzel" # Wayland launcher
           "gtk" # GTK settings
+          "herdr-app" # Herdr desktop app settings (programs.herdr-app is Linux-only for now)
+          "herdr-core" # hc's config.toml (the macs don't enable programs.herdr-core yet; drop once they do)
           "hyprland" # Wayland compositor config
           "local-bin" # ~/.local/bin helpers (gajim-op-launch: op-integration wait, Linux desktop)
           "mimeapps" # freedesktop default-apps registry

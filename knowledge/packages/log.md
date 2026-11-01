@@ -1,5 +1,21 @@
 # Log
 
+## 2026-11-01
+
+- **Creation**: [herdr](herdr.md), the umbrella sub-flake for everything
+  herdr:
+  - the TUI from our fork (`herdr-cli`, formerly the root `herdr` input),
+    and [herdr-nav](herdr-nav.md);
+  - upstream's prebuilt herdr-core (`hc`, Linux + macOS) and Herdr desktop
+    app (Linux), pinned in `sources.json` and bumped by `update.ts`;
+  - `herdr-update-check` (Linux + macOS);
+  - NixOS and nix-darwin modules.
+
+  [Decisions](../decisions/herdr-umbrella-subflake.md):
+  [release builds over source builds or caches](../decisions/herdr-app-release-repack.md).
+- **Update**: [herdr-nav](herdr-nav.md) moved from `pkgs/` into the herdr
+  sub-flake, and its `pkgs.herdr-nav` overlay is gone.
+
 ## 2026-10-31
 
 - **Update**: [nrs](nrs.md) calls `dix diff /run/current-system "$out"`.

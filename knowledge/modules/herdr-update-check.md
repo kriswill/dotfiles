@@ -1,15 +1,23 @@
 ---
 type: NixOS Module
 title: Herdr Update Check
-description: 'Daily nebula user timer that notifies when upstream herdr (herdrdev/herdr) publishes a stable release newer than the base of our vX.Y.Z-custom fork tag, the cue to rebase the fork.'
-resource: modules/hosts/nebula/herdr-update-check.nix
+description: 'Deprecated 2026-11-01: the daily nebula user timer that notified when upstream herdr (herdrdev/herdr) published a stable release newer than the base of our vX.Y.Z-custom fork tag; folded into the herdr sub-flake''s herdr-update-check (services.herdr-update-check).'
+resource: flakes/herdr/pkgs/herdr-update-check.sh
 tags: [nixos-module, host-specific]
+status: deprecated
 generated: { by: claude-code/opus-5.5, at: 2026-10-24T16:30:00-07:00 }
 sources:
   - id: gh-latest-release
     resource: https://docs.github.com/en/rest/releases/releases#get-the-latest-release
     title: GitHub REST API — Get the latest release
 ---
+
+**Deprecated (2026-11-01).** The host files are gone. The same check, plus
+herdr-core and Herdr, is the [herdr sub-flake](../packages/herdr.md)'s
+`herdr-update-check` package. Its modules schedule it
+(`services.herdr-update-check`, enabled by [nebula-herdr](nebula-herdr.md)),
+under the same user unit name, and it waits for a notification daemon, since
+nebula's user manager now lingers. What follows describes the old unit.
 
 A daily systemd user timer on [nebula](../hosts/nebula.md). It compares
 `pkgs.herdr.version`, the X.Y.Z that our [herdr](herdr.md) fork package
@@ -42,7 +50,7 @@ that host's configuration per the
 
 ## Source
 
-- Module: [`modules/hosts/nebula/herdr-update-check.nix`](../../modules/hosts/nebula/herdr-update-check.nix)
-- Script: [`modules/hosts/nebula/herdr-update-check.sh`](../../modules/hosts/nebula/herdr-update-check.sh)
+- Was: `modules/hosts/nebula/herdr-update-check.{nix,sh}` (removed 2026-11-01)
+- Now: [`flakes/herdr/pkgs/herdr-update-check.sh`](../../flakes/herdr/pkgs/herdr-update-check.sh)
 
 [^gh-latest-release]: GitHub REST API — Get the latest release
