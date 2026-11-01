@@ -89,6 +89,11 @@ this file only sets options.
   `shell-hooks-allowlist.json`. To check it, look for
   `shell hook registered` lines in
   `/var/lib/hermes/.hermes/logs/gateway.log`.
+- **No update check** (`settings.updates.check = false`). On every Nix build
+  the passive startup check reported a bogus "Update available". A store
+  path has no git origin, so `default_channel()` falls back to `main`, not
+  `stable`, and compares the pinned tag with main's moving tip. Updates come
+  from bumping the [sub-flake](../packages/hermes-agent.md)'s tag.
 - **No linger.** `users.users.k.linger` stays unset. The gateway starts at
   boot, before k's user manager exists, so cron runs unscoped workers rather
   than restart-safe `systemd-run --user` scopes until the gateway restarts

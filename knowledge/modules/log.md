@@ -2,6 +2,9 @@
 
 ## 2026-11-01
 
+- **Update**: [nebula-hermes-agent](nebula-hermes-agent.md): Hermes' update
+  check is off. Without a git origin, a Nix build compares its tag with
+  `main`'s tip and always reports an update.
 - **Update**: [hermes-agent](hermes-agent.md) and
   [nebula-hermes-agent](nebula-hermes-agent.md): `herdr.enable` is now the
   TypeScript CLI wrapper and gateway shell hook, which report to both the
