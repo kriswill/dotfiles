@@ -12,8 +12,11 @@ warrant its own file:
 
 - **Locale/keymap/timezone:** `en_US.UTF-8`, `us`, `America/Los_Angeles`.
 - **snowglobe-factory toggles:** `qemu` (libvirtd + qemu_kvm + virt-manager) plus
-  the `gaming`, `office`, `hacker-mode`, and
-  `harden` profiles. Two profiles snowglobe has since deleted live on as
+  the `gaming`, `office`, and `harden` profiles. `hacker-mode` has been off
+  since 2026-10-31. It ran a Tor client daemon nothing used and installed
+  metasploit, ghidra, wireshark, john and similar tools. Only four of its
+  network tools were kept (see Packages/programs). Two profiles snowglobe
+  has since deleted live on as
   inlined `environment.systemPackages` lists: `hardware-tools` (dropped
   2026-09; usbutils, smartmontools, nvme-cli, lshw, inxi, vulkan-tools, …)
   and `nix-tools` (dropped 2026-10 in snowglobe-factory b0a0d97b; nurl,
@@ -48,7 +51,10 @@ warrant its own file:
   private halves decrypted by sops (`sops.secrets.ssh_host_*_key`).
 - **Substituters:** disables the untrusted `nix-store.earthgman.dev` cache.
 - **Packages/programs:** desktop additions (cliphist, fd, gimp, breeze-icons,
-  rose-pine-hyprcursor, wowup); firefox/chromium/alacritty/
+  rose-pine-hyprcursor, wowup); the network tools kept from hacker-mode
+  (`programs.traceroute` and `programs.tcpdump`, which install nixpkgs'
+  `cap_net_raw` wrappers, tcpdump's runnable only by the `pcap` group;
+  `programs.nmap`; `pkgs.dnsutils`); firefox/chromium/alacritty/
   batsignal/thunderbird disabled; Gajim enabled here and built against
   Pillow 13.0.0 by [gajim-pillow](gajim-pillow.md); 1Password CLI + GUI; nix-ld (cc + zlib); discord plus
   vesktop (its own `programs.vesktop` key since 2026-09; the pnpm whitelist

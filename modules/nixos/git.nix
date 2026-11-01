@@ -4,7 +4,7 @@
 # ~/.config/git/{config,ignore,allowed_signers} — lives in the stow tree
 # (home/git); gh's config.yml is a config/ snapshot (gh rewrites it via atomic
 # rename, breaking stow links) synced with gh-config. ripgrep + jq (the `loc`
-# alias and the podman filter) come from the hacker-mode profile / user packages.
+# alias and the podman filter) come from modules/nixos/user-packages.nix.
 {
   flake.modules.nixos.git =
     { lib, pkgs, ... }:
