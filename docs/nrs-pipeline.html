@@ -382,7 +382,7 @@
   <thead><tr><th>Command</th><th>What it does</th><th>Root step</th><th>OS</th></tr></thead>
   <tbody>
     <tr><td><code>nrs</code></td><td>Build, diff, validate, activate, make it the boot default, report.</td><td>yes</td><td>both</td></tr>
-    <tr><td><code>nrb</code><br><span class="muted">= <code>nrs --dry</code></span></td><td>Build, diff and validate only. The report compares the kernel and PAM against the new build.</td><td>no</td><td>both</td></tr>
+    <tr><td><code>nrb</code><br><span class="muted">= <code>nrs --dry</code></span></td><td>Build, diff and validate only. The report compares the kernel, the NVIDIA driver and PAM against the new build.</td><td>no</td><td>both</td></tr>
     <tr><td><code>nrt</code><br><span class="muted">= <code>nrs --test</code></span></td><td><strong>NixOS:</strong> activate without touching the profile or GRUB. <strong>darwin:</strong> run the new build's <code>system.checks</code>; nothing is activated.</td><td>yes</td><td>both</td></tr>
     <tr><td><code>nrs --plan</code></td><td>Preview the switch and change nothing: <code>dry-activate</code> for system units, plus the user units it skips. Flags units the switch would restart while they're mid-run.</td><td>yes</td><td>NixOS <span class="muted">(darwin: acts as <code>--dry</code>)</span></td></tr>
     <tr><td><code>nrs --status</code></td><td>No build, no root: is the machine consistent? Exits 1 if anything needs attention.</td><td>no</td><td>both</td></tr>
@@ -725,9 +725,10 @@ done</code></pre>
   <dt>failed units</dt><dd>NixOS: system and user.</dd>
   <dt>kernel</dt><dd>NixOS: what a reboot would change. That means version, toolchain and <code>.config</code> (the new kernel's are read from its bzImage), kernel parameters, and the extra module packages. The running kernel describes itself through <code>/proc</code>; the new one is unpacked the way <code>extract-ikconfig</code> does it.</dd>
   <dt>PAM glibc</dt><dd>NixOS: if the glibc that linux-pam links differs from the booted system's, reboot before logging out, because ly, started at boot, can't load the new PAM modules.</dd>
+  <dt>NVIDIA driver</dt><dd>NixOS: if the build's NVIDIA userspace (<code>nvidia-x11</code> in its closure) differs from the loaded kernel module (<code>/sys/module/nvidia/version</code>), reboot before starting GPU programs. A switch replaces <code>/run/opengl-driver</code> at once but the module stays loaded, so the kernel refuses each new GPU client (<code>NVRM: API mismatch</code>) and it falls back to CPU rendering. Programs already running keep working.</dd>
   <dt>timings</dt><dd>Per stage: build, diff, auth, plan, activate, check, profile, boot.</dd>
 </dl>
-<p><code>--dry</code> and <code>--plan</code> compare the kernel and PAM against the <strong>new build</strong>: what switching and then rebooting would change. Every other mode compares against the running system.</p>
+<p><code>--dry</code> and <code>--plan</code> compare the kernel, the NVIDIA driver and PAM against the <strong>new build</strong>: what switching and then rebooting would change. Every other mode compares against the running system.</p>
 
 <!-- ================================================================== -->
 <h2 id="output">4. Reading the output</h2>
@@ -767,7 +768,7 @@ done</code></pre>
   <li><strong>The user step, which dry-activate skips.</strong> stc-ng's <code>do_system_switch</code> exits right after the system plan, before the loop that spawns the per-user pass. So nrs runs that pass itself, dry and as you: the new build's real binary, a cleared environment, <code>__NIXOS_SWITCH_TO_CONFIGURATION_PARENT_EXE</code>, <code>TOPLEVEL</code>, <code>OLD_TOPLEVEL</code> and <code>NIXOS_ACTION=dry-activate</code>. In that mode it only reads, and it writes no lists. This is stc-ng's internal interface: if it moves, nrs warns and keeps the system half.</li>
   <li><strong>Hazards.</strong> Any unit on a "would restart" or "would start" line that is <code>activating</code> right now is named. A start job for a oneshot completes only when the run exits, and the switch waits on it. That was the 2026-10-24 hang.</li>
 </ol>
-<p>Then the report, comparing kernel and PAM against the new build, and "plan only: nothing was changed". On darwin there's no dry-activate, so <code>--plan</code> warns and acts as <code>--dry</code>. Decision: <code>knowledge/decisions/nrs-plan-user-pass.md</code>.</p>
+<p>Then the report, comparing the kernel, the NVIDIA driver and PAM against the new build, and "plan only: nothing was changed". On darwin there's no dry-activate, so <code>--plan</code> warns and acts as <code>--dry</code>. Decision: <code>knowledge/decisions/nrs-plan-user-pass.md</code>.</p>
 
 <h3 id="m-status"><code>nrs --status</code></h3>
 <p>No build and no root, so it's safe to run any time, by you or by an agent. It's the report of <a href="#s-report">stage 7</a> with the status-only checks, ending in <span class="g-green">✔ consistent</span> (exit 0) or <span class="g-yellow">⚠ N thing(s) above need attention</span> (exit 1). Real pending jobs show up, such as a Helium capture in its 30 s debounce, and count. On darwin it covers the running system, the boot default and the generations.</p>
@@ -846,6 +847,7 @@ done</code></pre>
     <tr><td>"running system is not the boot default"</td><td>A test, a detach, a failure, or a darwin "check" that activated</td><td>Re-run <code>nrs</code>; a reboot would come back on the default.</td></tr>
     <tr><td>"plan lists remain" / "this run replays its plan"</td><td>A previous switch was interrupted</td><td>Expected: the next run finishes it. <code>nrs --plan</code> shows the replay first.</td></tr>
     <tr><td>"PAM glibc changed since boot"</td><td>ly runs the boot-time glibc</td><td>Reboot before logging out, or the login will fail.</td></tr>
+    <tr><td>"NVIDIA driver X is installed but kernel module Y is loaded" (after a switch) / "this build changes the NVIDIA driver" (<code>nrb</code>, <code>--plan</code>)</td><td>The switch replaces the driver's userspace; the old kernel module stays loaded until reboot</td><td>Reboot before starting GPU programs, or they render on the CPU. Running ones are fine. To defer the whole switch to the next boot: <code>sudo nixos-rebuild boot --flake .#nebula</code> from the real checkout.</td></tr>
     <tr><td>"a reboot changes the kernel setup"</td><td>Information: what the next boot changes</td><td>Reboot when convenient.</td></tr>
     <tr><td>"run nrs (and nrb, nrt) without sudo"</td><td>It was run as root</td><td>Drop the <code>sudo</code>.</td></tr>
     <tr><td><code data-wrap>evaluation warning: systemd.user.services.X: a trigger-started oneshot …</code></td><td>A unit that could hold a switch</td><td>Give it <code>restartIfChanged = false</code>, or make it <code>Type=exec</code>.</td></tr>
@@ -860,6 +862,7 @@ done</code></pre>
 
 <p class="muted">Dated and verified; newest first. Correct an entry in place rather than adding a contradiction.</p>
 <ul>
+  <li><strong>2026-10-31 · An NVIDIA driver bump breaks new GPU programs until reboot.</strong> The switch to nixpkgs <code>1c89083</code> (595.104.02 → 595.112.07) replaced the userspace in <code>/run/opengl-driver</code> while the old kernel module stayed loaded. Until the reboot, the kernel refused every new GPU client (<code>NVRM: API mismatch: the client 'wowdps-replay' … has the version 595.112.07, but this kernel module has the version 595.104.02</code>) and they fell back to llvmpipe; programs started earlier kept working. The state report now says so (§3). nrs has no boot-only mode, and <code>--boot</code> does not defer activation; <code>sudo nixos-rebuild boot --flake .#nebula</code> does.</li>
   <li><strong>2026-10-24 · <code>darwin-rebuild check</code> activates on macOS.</strong> The activate script's <code>#!/usr/bin/env -i</code> shebang wipes <code>checkActivation</code> (nix-darwin <code>bb0b90d</code>). Never use it as a dry check; <code>nrt</code> runs the check mode directly.</li>
   <li><strong>2026-10-24 · dry-activate never shows user units.</strong> stc-ng exits before its per-user pass. <code>nrs --plan</code> runs that pass itself.</li>
   <li><strong>2026-10-24 · The user step can hold system services down.</strong> stc-ng updates user units and waits on their jobs, with no timeout, before restarting the system units it stopped. An activating user oneshot (herdr-update-check waiting on a notification click) hung <code>nrs</code> with NetworkManager down. The guards are in §6.</li>
