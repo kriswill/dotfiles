@@ -1,10 +1,12 @@
 {
-  "zoom": 1.3,
+  "zoom": 1.1,
   "sounds": {
     "enabled": true
   },
-  "font": "MesloLGS Nerd Font Mono",
+  "font": "MesloLGS Nerd Font",
+  "font_size": 17.0,
   "telemetry": false,
   "minimum_contrast": 1.0,
+  "appearance": "dark",
   "theme": "kanagawa"
 }
