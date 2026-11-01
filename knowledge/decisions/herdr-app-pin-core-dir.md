@@ -62,6 +62,7 @@ keeps the setuid `sudo`. The profile's `sudo` is the plain store copy.
 - The standalone `nix run` package still searches, with its core suffixed to
   PATH. On a NixOS host whose system profile holds hc, its panes get the old
   order.
+- Landed in commit `f6a6790`.
 
 [^app-core-bin-rs]: herdr-app `src/core_bin.rs`: `find` (the lookup order and `HERDR_CORE_DIRS`), `use_core` (folder first on PATH) and `usual_dirs`
 [^subflake-readme]: `flakes/herdr/README.md`: packaging notes, "Environment leaks into every terminal" and "The core is pinned"
