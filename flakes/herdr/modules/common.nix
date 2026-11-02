@@ -6,7 +6,7 @@
 #
 #   programs.herdr-cli       the herdr TUI (our fork) + herdr-nav
 #   programs.herdr-core      hc, the terminal daemon
-#   programs.herdr-app       the Herdr window (Linux only for now)
+#   programs.herdr-app       the Herdr window
 #   services.herdr-update-check   releases past ours, stale running builds
 #
 # Config files are opt-in. Each file option defaults to null, which leaves the
@@ -136,8 +136,12 @@ in
           description = ''
             Let the app send its daily usage report (on by default upstream:
             versions, OS, bucketed usage counts, known agent names; no terminal
-            text or paths). `false` runs it with `HERDR_TELEMETRY=0`, whatever
-            settings.json or the Settings screen say.
+            text or paths). On Linux `false` runs it with `HERDR_TELEMETRY=0`,
+            whatever settings.json or the Settings screen say. On macOS, where
+            Finder launches the bundle and not a wrapper, `false` writes
+            `telemetry: false` into each core user's settings.json at
+            activation; the Settings screen can turn it back on until the next
+            rebuild.
           '';
         };
 
@@ -150,11 +154,13 @@ in
             sounds.enabled = false;
           };
           description = ''
-            Settings merged into `settings.json` in the app's home before each
-            launch (`$HERDR_APP_HOME`, else `~/.config/herdr-app`), declared keys
-            winning. Anything not declared stays as the app saved it, and an edit
-            to a declared key lasts until the next launch. A symlinked
-            settings.json is written through. Keys include `font`, `font_size`,
+            Settings merged into `settings.json`, declared keys winning: on
+            Linux into the app's home (`$HERDR_APP_HOME`, else
+            `~/.config/herdr-app`) before each launch, on macOS into each of
+            programs.herdr-core's `users`' `~/.config/herdr-app` at activation.
+            Anything not declared stays as the app saved it, and an edit to a
+            declared key lasts until the next launch (Linux) or rebuild (macOS).
+            A symlinked settings.json is written through. Keys include `font`, `font_size`,
             `ui_font`, `theme`, `appearance`, `colors`, `sounds`, `zoom`,
             `clipboard_write`, `minimum_contrast` and `core` (the hc path).
 
@@ -210,12 +216,18 @@ in
 
   config = lib.mkMerge [
     {
-      programs.herdr-app.finalPackage = pkgs.callPackage ../pkgs/herdr-app-wrap.nix {
-        inherit (app) package telemetry settings;
-        # The app leads its PATH, and so every terminal's, with the folder it
-        # found hc in; pin it to the core's own bin, not the system profile.
-        pinCore = if core.enable then core.package else null;
-      };
+      programs.herdr-app.finalPackage =
+        if pkgs.stdenv.hostPlatform.isDarwin then
+          # Finder launches the bundle, not a wrapper: ./darwin.nix writes the
+          # telemetry choice, the settings and the core pin into settings.json.
+          app.package
+        else
+          pkgs.callPackage ../pkgs/herdr-app-wrap.nix {
+            inherit (app) package telemetry settings;
+            # The app leads its PATH, and so every terminal's, with the folder it
+            # found hc in; pin it to the core's own bin, not the system profile.
+            pinCore = if core.enable then core.package else null;
+          };
       services.herdr-update-check.environment = {
         HERDR_CLI_VERSION = if cli.enable then cli.package.version else "";
         HERDR_CORE_VERSION = if core.enable then core.package.version else "";

@@ -15,15 +15,16 @@ import { readFileSync, writeFileSync } from "node:fs";
 
 const RELEASES = process.env.HERDR_RELEASES_URL ?? "https://releases.herdr.dev";
 const FILE = `${import.meta.dir}/sources.json`;
-// Upstream target name → Nix system, per product. herdr-app is Linux-only
-// for now (README: darwin).
-const LINUX: Record<string, string> = {
+// Upstream target name → Nix system, the same for both products (upstream
+// also ships macos-x86_64 cores and windows builds, which no host here runs).
+const TARGETS: Record<string, string> = {
   "linux-x86_64": "x86_64-linux",
   "linux-aarch64": "aarch64-linux",
+  "macos-aarch64": "aarch64-darwin",
 };
 const SYSTEMS: Record<"herdr-core" | "herdr-app", Record<string, string>> = {
-  "herdr-core": { ...LINUX, "macos-aarch64": "aarch64-darwin" },
-  "herdr-app": LINUX,
+  "herdr-core": TARGETS,
+  "herdr-app": TARGETS,
 };
 
 type Target = { url: string; sha256: string };

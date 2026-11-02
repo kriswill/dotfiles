@@ -2,6 +2,11 @@
 
 ## 2026-11-01
 
+- **Update** — [herdr](herdr.md): the darwin twin now enables
+  `programs.herdr-app`, `programs.herdr-core.users = [ "k" ]` and
+  `services.herdr-update-check` on every mac; the app's telemetry, core pin
+  and settings are merged into settings.json at activation there.
+
 - **Update**: [herdr](herdr.md): the `pkgs.herdr` overlay is gone. Its last
   consumer, hermes-agent's `herdr.package`, went with the TypeScript
   integration. No host's system drv changed.

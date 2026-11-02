@@ -91,18 +91,24 @@ layers:[^subflake-readme]
     runs `loginctl enable-linger` itself on first use,[^core-systemd-rs] so
     `false` means only "undeclared". Declaring linger off would have NixOS's
     `linger-users` service fight hc.[^nixos-users-groups]
-- `programs.herdr-app` (Linux; the darwin module asserts it off):
-  - `enable` installs `finalPackage`, which is `package` wrapped for
-    `telemetry` (default off) and `settings`.
-  - `settings` (merged into `settings.json` at launch, declared keys win) and
-    `keys` (`keys.json`, as a link).
+- `programs.herdr-app`:
+  - `enable` installs `finalPackage`: on Linux `package` wrapped for
+    `telemetry` (default off) and `settings`; on darwin the bare signed
+    bundle, which nix-darwin copies into `/Applications/Nix Apps`, with
+    `telemetry`, the core pin and `settings` merged into each core user's
+    `settings.json` at activation instead
+    ([decision](../decisions/herdr-app-darwin-bundle.md)).
+  - `settings` (merged into `settings.json` at launch on Linux, at activation
+    on darwin; declared keys win) and `keys` (`keys.json`, as a link).
   - It also sets herdr-core and `hardware.graphics` on (`mkDefault`), and
     warns if the core is older than the app's `coreMin`.
   - With the core enabled, the wrapper pins Herdr's hc lookup to
     `programs.herdr-core.package`'s bin (`HERDR_CORE_DIRS`). Herdr leads every
     pane's PATH with the folder it found hc in, and the system profile there
     shadowed `/run/wrappers/bin`'s setuid `sudo`
-    ([decision](../decisions/herdr-app-pin-core-dir.md)).
+    ([decision](../decisions/herdr-app-pin-core-dir.md)). On darwin the pin
+    is settings.json's `core = /etc/herdr-core/hc`, an `environment.etc` link
+    to the same package.
 - `services.herdr-update-check`:
   - `enable`, `package`.
   - The schedule is a NixOS `calendar` (systemd user timer, `Type=exec`,
@@ -138,6 +144,10 @@ Darwin began as a plain nixpkgs entry in [user-packages](user-packages.md).
 It became a twin when the flake pin extended to darwin, and the twins now
 share one option set from the sub-flake, per the
 [cross-OS module twins pattern](../patterns/cross-os-module-twins.md).
+Since 2026-11-01 the darwin twin also carries the macs' enables
+(`programs.herdr-app`, `programs.herdr-core.users = [ "k" ]`,
+`services.herdr-update-check`): one user and one setup on every mac, where
+nebula keeps its own in [nebula-herdr](nebula-herdr.md).
 On [nebula](../hosts/nebula.md), [nebula-herdr](nebula-herdr.md) turns on the
 app, the core and the update check.
 

@@ -49,16 +49,21 @@ Outputs (`x86_64-linux`, `aarch64-linux`, `aarch64-darwin`):
 - `herdr-nav`: [herdr-nav](herdr-nav.md), with `herdr-cli` pinned in.
 - `herdr-core`: the static-pie binary on Linux, or upstream's signed Mach-O
   on macOS. Both are installed with no fixup at all, plus an `hc` link.
-- `herdr-app-unwrapped` (Linux only): autoPatchelf'd, with the dlopened
-  Vulkan, Wayland and EGL on its RUNPATH.
-- `herdr-app` (Linux only): `pkgs/herdr-app-wrap.nix`, which sets
-  `HERDR_TELEMETRY=0` and puts this core at the end of PATH for `nix run`.
+- `herdr-app-unwrapped`: on Linux autoPatchelf'd, with the dlopened Vulkan,
+  Wayland and EGL on its RUNPATH; on macOS upstream's signed `Herdr.app`
+  copied whole into `Applications/`, no fixup, `bin/herdr-app` into the
+  bundle for the CLI ([decision](../decisions/herdr-app-darwin-bundle.md)).
+- `herdr-app`: `pkgs/herdr-app-wrap.nix`, which sets `HERDR_TELEMETRY=0` and
+  puts this core at the end of PATH for `nix run` (a shell launch; on macOS
+  Finder launches the bundle and bypasses it).
 - `herdr-update-check`, which reports two kinds of staleness:
   - **Upstream releases** past ours: the fork against GitHub
     `releases/latest`, the core and app against the manifests.
-  - **Stale running builds**, read off their store paths: a herdr server
-    (`herdr server stop`), a core (`hc server restart`), a window (reopen
-    it).
+  - **Stale running builds**, read off their executables' store paths (argv
+    on Linux; `lsof` on macOS, where a symlink-started process names the
+    link): a herdr server (`herdr server stop`), a core (`hc server
+    restart`), a window (reopen it; a Finder-launched one on macOS runs
+    nix-darwin's unversioned copy and can't be judged).
 
   By default it prints and exits 10. With `--notify` it sends notify-send
   with a button per release, or osascript on macOS.
@@ -75,17 +80,22 @@ Gotchas:
   (`HERDR_CORE_DIRS`). Left to search, the system profile went first and
   broke `sudo` in every pane
   ([decision](../decisions/herdr-app-pin-core-dir.md)).
-- **The self-updater is off by layout.** A release build updates itself only
-  when `herdr-app.svg` sits beside its binary.[^app-update-rs] The icon goes
-  in `share/icons`, and installCheck fails the build if it's beside the
-  binary. A `/nix/store` hc refuses `hc update`, and the app never offers to
-  update it.
+- **The self-updater is off by layout** on Linux: a release build updates
+  itself only when `herdr-app.svg` sits beside its binary.[^app-update-rs]
+  The icon goes in `share/icons`, and installCheck fails the build if it's
+  beside the binary. On macOS a bundle is always a root, so it's off by
+  ownership instead: the staging folder would go beside the bundle under
+  root-owned `/Applications/Nix Apps` (EACCES, a warning every 30 minutes
+  once upstream is ahead). A `/nix/store` hc refuses `hc update`, and the
+  app never offers to update it.
 - **hc enables linger by itself** the first time it starts a core, and the
   NixOS module declares it. The prototype's test core turned it on for k on
   2026-11-01; that was reverted.
-- **Herdr on darwin** is asserted off. Upstream's signed `Herdr.app` can't take
-  the telemetry wrapper, and its updater would fail against the store every
-  30 minutes.[^subflake-readme]
+- **Herdr on darwin** was asserted off until 2026-11-01, when the wrapper's
+  two jobs turned out to be settings.json keys (`telemetry`, `core`) that
+  the darwin module can write at activation, and the updater's failure
+  turned out to be harmless.[^subflake-readme]
+  ([decision](../decisions/herdr-app-darwin-bundle.md))
 - **Lock parity.** The move kept the fork's lock node and its rust-overlay rev
   (`577bb1e`, which follows our nixpkgs). Re-lock with `--override-input
   herdr/herdr-cli/rust-overlay` if a fresh lock jumps it.
@@ -98,9 +108,10 @@ Gotchas:
 Consumed by the root flake as a relative-path input; see the
 [sub-flake extraction pattern](../patterns/subflake-extraction.md). Mounted on
 every host by [herdr](../modules/herdr.md). The app and core are enabled on
-[nebula](../hosts/nebula.md) by [nebula-herdr](../modules/nebula-herdr.md),
-whose config files belong to the `home/herdr-core` and `home/herdr-app` stow
-packages ([decision](../decisions/herdr-app-config-via-stow.md)).
+[nebula](../hosts/nebula.md) by [nebula-herdr](../modules/nebula-herdr.md)
+and on every mac by the darwin twin itself; both OSes' config files belong
+to the `home/herdr-core` and `home/herdr-app` stow packages
+([decision](../decisions/herdr-app-config-via-stow.md)).
 
 [^subflake-readme]: `flakes/herdr/README.md`: outputs, packaging notes, darwin
 [^herdr-app-repo]: herdrdev/herdr-app README

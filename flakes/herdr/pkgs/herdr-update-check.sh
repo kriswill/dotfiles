@@ -92,33 +92,51 @@ if [ -n "$app" ]; then
   fi
 fi
 
-# --- running: versions read off the processes' store paths:
-#   `<store>/herdr-X.Y.Z/bin/herdr server`               the TUI's server
-#   `<store>/herdr-core-X.Y.Z/bin/herdr-core serve`      the core (holders,
-#                                                        which drain on their
-#                                                        own, are skipped)
-#   `<store>/herdr-app[-unwrapped]-X.Y.Z/.../herdr-app`  a window (no args)
+# --- running: versions read off the store path of each process's executable:
+#   <store>/herdr-X.Y.Z/bin/herdr                        `herdr server`, the TUI's server
+#   <store>/herdr-core-X.Y.Z/bin/herdr-core              `herdr-core serve`, the core
+#                                                        (holders drain on their own)
+#   <store>/herdr-app[-unwrapped]-X.Y.Z/…/herdr-app      a window (no arguments)
+# On Linux argv[0] is that path. On macOS a process started through a symlink
+# (`hc` on PATH, /etc/herdr-core/hc, the module's core pin) names the link in
+# its argv, so lsof names the executable instead. A window opened from Finder
+# runs nix-darwin's copy under "/Applications/Nix Apps", which carries no
+# version: only a window opened as bin/herdr-app from a shell can be judged.
 # Builds from anywhere else carry no version and are left alone.
-procs=$(ps -ww -u "$(id -u)" -o args= 2>/dev/null || true)
-stale() { # stale <installed> <sed -E script printing a running version per match> <line, with %s for it>
-  local v
-  while read -r v; do
+darwin=0
+[ "$(uname -s)" = Darwin ] && darwin=1
+exe_of() { # exe_of <pid> <argv0>: the executable's path
+  if [ "$darwin" = 1 ]; then
+    /usr/sbin/lsof -a -p "$1" -d txt -Fn 2>/dev/null | sed -n 's/^n//p' | head -1
+  else
+    printf '%s\n' "$2"
+  fi
+}
+# pid, then argv, one process per line
+procs=$(ps -ww -u "$(id -u)" -o pid=,args= 2>/dev/null || true)
+stale() { # stale <installed> <ERE on the argv> <ERE on the executable, capturing the version> <line, with %s for it>
+  local pid args exe v
+  while read -r pid args; do
+    [ -n "$pid" ] || continue
+    exe=$(exe_of "$pid" "${args%% *}")
+    v=$(sed -nE "s#$3#\1#p" <<<"$exe")
     if [ -n "$v" ] && newer "$v" "$1"; then
       # shellcheck disable=SC2059 # the format is ours
-      add "" "" "$(printf "$3" "$v")"
+      add "" "" "$(printf "$4" "$v")"
     fi
-  done < <(sed -nE "$2" <<<"$procs" | sort -uV)
+  done < <(grep -E "^ *[0-9]+ $2\$" <<<"$procs" | sort -u)
 }
+store='^/nix/store/[a-z0-9]{32}-'
 if [ -n "$cli" ]; then
-  stale "$cli" 's#^/nix/store/[a-z0-9]{32}-herdr-([0-9]+\.[0-9]+\.[0-9]+)/bin/herdr server$#\1#p' \
+  stale "$cli" '[^ ]*/herdr server' "${store}herdr-([0-9]+\.[0-9]+\.[0-9]+)/bin/herdr\$" \
     "the running herdr server is %s, installed $cli: 'herdr server stop', then start herdr again"
 fi
 if [ -n "$core" ]; then
-  stale "$core" 's#^/nix/store/[a-z0-9]{32}-herdr-core-([0-9]+\.[0-9]+\.[0-9]+)/bin/herdr-core serve( .*)?$#\1#p' \
+  stale "$core" '[^ ]*/(herdr-core|hc) serve( .*)?' "${store}herdr-core-([0-9]+\.[0-9]+\.[0-9]+)/bin/(herdr-core|hc)\$" \
     "the running herdr-core is %s, installed $core: run 'hc server restart' (terminals keep running)"
 fi
 if [ -n "$app" ]; then
-  stale "$app" 's#^/nix/store/[a-z0-9]{32}-herdr-app(-unwrapped)?-([0-9]+\.[0-9]+\.[0-9]+)/[^ ]*/herdr-app$#\2#p' \
+  stale "$app" '[^ ]*/(herdr-app|Herdr)' "${store}herdr-app(-unwrapped)?-([0-9]+\.[0-9]+\.[0-9]+)/.*\$" \
     "an open Herdr window runs %s, installed $app: quit and reopen it (terminals keep running)"
 fi
 
