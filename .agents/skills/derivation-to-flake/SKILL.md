@@ -35,7 +35,7 @@ review) stay with you, guided by what the scripts print.
 
 ### 1. Inventory — know what you're touching
 ```
-bun .claude/skills/derivation-to-flake/scripts/inventory.ts <name>
+bun .agents/skills/derivation-to-flake/scripts/inventory.ts <name>
 ```
 Reports where the package is defined and **every** reference to it (the consumers you'll repoint:
 typically `modules/packages.nix`, an `overlays/<name>.nix`, and any `pkgs.<name>` usage). Read this
@@ -43,7 +43,7 @@ before changing anything so nothing is missed.
 
 ### 2. Scaffold the sub-flake
 ```
-bun .claude/skills/derivation-to-flake/scripts/scaffold.ts <name> [--from <path>] [--systems a,b,c]
+bun .agents/skills/derivation-to-flake/scripts/scaffold.ts <name> [--from <path>] [--systems a,b,c]
 ```
 Creates `flakes/<name>/` with a flake-parts `flake.nix` (exposing `packages.<system>.<name>` and
 `packages.<system>.default`), copies the package files in (`pkgs/<name>.nix` → `package.nix`; a
@@ -109,7 +109,7 @@ The scaffold prints these tailored to `<name>`; the shape is:
 
 ### 5. Verify the whole thing
 ```
-bun .claude/skills/derivation-to-flake/scripts/verify.ts <name>
+bun .agents/skills/derivation-to-flake/scripts/verify.ts <name>
 ```
 Builds the sub-flake standalone, builds the root's re-exported `.#packages.<system>.<name>` (proving
 consumption), runs `nix flake check`, and scans for stale references to the old in-tree path. It

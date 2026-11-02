@@ -39,5 +39,5 @@ Worked examples: [ccglass](../packages/ccglass.md) and
 [apple-container](../packages/apple-container.md) (which also exports a
 darwin module). Simple packages stay in `pkgs/` per the
 [add-package playbook](../playbooks/add-package.md). The
-`derivation-to-flake` skill (`.claude/skills/derivation-to-flake/`) automates
+`derivation-to-flake` skill (`.agents/skills/derivation-to-flake/`) automates
 the whole extraction end to end.

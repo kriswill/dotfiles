@@ -66,7 +66,7 @@ for (const f of ["flake.nix", "modules/packages.nix", "modules/overlays.nix", `o
 }
 
 hdr("next");
-const here = ".claude/skills/derivation-to-flake/scripts";
+const here = ".agents/skills/derivation-to-flake/scripts";
 console.log(`  bun ${here}/scaffold.ts ${name}   # create flakes/${name}/ from the in-tree package`);
 console.log(`  …then repoint the consumers above, delete the in-tree copy, lock, and:`);
 console.log(`  bun ${here}/verify.ts ${name}     # build + parity + flake check + stale-ref scan`);

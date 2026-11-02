@@ -22,7 +22,7 @@ Node.js replacement, plus a package manager (`bun install`), bundler
 
 **House rule: bun + [TypeScript](../languages/typescript.md) is the default
 for repo tooling** — skill
-drivers and helper scripts (`.claude/skills/patch-ccglass/driver.ts`,
+drivers and helper scripts (`.agents/skills/patch-ccglass/driver.ts`,
 `derivation-to-flake`'s inventory/scaffold/verify scripts) are bun-run TS,
 preferred over bash or python.
 

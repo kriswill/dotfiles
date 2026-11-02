@@ -17,11 +17,11 @@ import { tmpdir } from "node:os";
 const OWNER = "jianshuo";
 const REPO = "ccglass";
 const REPO_URL = `https://github.com/${OWNER}/${REPO}`;
-const ROOT = resolve(import.meta.dir, "../../.."); // repo root from .claude/skills/patch-ccglass/
+const ROOT = resolve(import.meta.dir, "../../.."); // repo root from .agents/skills/patch-ccglass/
 const FLAKE_DIR = join(ROOT, "flakes/ccglass"); // the standalone ccglass sub-flake
 const FORK_PATCH = join(FLAKE_DIR, "fork.patch");
 const WORK = join(tmpdir(), "patch-ccglass");
-const SELF = ".claude/skills/patch-ccglass/driver.ts";
+const SELF = ".agents/skills/patch-ccglass/driver.ts";
 
 const c = { red: "\x1b[31m", grn: "\x1b[32m", ylw: "\x1b[33m", b: "\x1b[1m", x: "\x1b[0m" };
 const ok = (m: string) => console.log(`${c.grn}✓${c.x} ${m}`);
