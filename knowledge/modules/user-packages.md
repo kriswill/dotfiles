@@ -4,7 +4,11 @@ title: User Packages
 description: 'The everyday CLI toolbox — on darwin the primary user''s per-user package list (bat/fzf/ripgrep … lazygit, uv, the Bun/Node runtimes); on nebula the re-enabled snowglobe defaults (bat, ripgrep, lazygit, yazi, jq, zip, brightnessctl, nix-index-database/comma) the stow configs call by name.'
 resource: modules/darwin/user-packages.nix
 tags: [darwin-module, nixos-module]
-generated: { by: okflight/0.4.0, at: 2026-07-04T00:00:00-07:00 }
+generated: { by: codex/gpt-6.1-sol, at: 2026-11-01T17:15:52-08:00 }
+sources:
+  - id: codex-sandbox
+    resource: https://learn.chatgpt.com/docs/sandboxing
+    title: 'Codex sandbox prerequisites'
 ---
 
 The darwin per-user package list (`users.users.k.packages`): the everyday
@@ -21,7 +25,16 @@ via the [Dendritic module layout](../patterns/dendritic-modules.md).
 
 ## Twin differences
 
-The NixOS twin (added 2026-10-11) installs nothing by package list. Until
+The NixOS twin (added 2026-10-11) enables the CLI tools through modules and
+installs `pkgs.bubblewrap` system-wide so Codex finds `bwrap` on PATH for
+its Linux sandbox. Without it, Codex 0.166.0 warns and uses its bundled
+bubblewrap. After installing it, restart Codex's background server through
+`/daemon` to refresh its prerequisite check. This dependency is Linux-only;
+the darwin twin does not install it.[^codex-sandbox] Applied on nebula
+2026-11-01 with `nrs`; `/run/current-system/sw/bin/bwrap --version`
+reports bubblewrap 0.12.0.
+
+Until
 snowglobe-factory's 2026-10 debloat (commit 1f9de238) snowglobe enabled
 bat, lazygit, ripgrep, yazi, jq, zip, brightnessctl and
 nix-index-database/comma by default, and the stow tree depends on them by
@@ -43,3 +56,5 @@ use the system nix). Tools other nixos modules already install (eza/fzf/fd in
 
 - darwin module: [`modules/darwin/user-packages.nix`](../../modules/darwin/user-packages.nix)
 - NixOS module: [`modules/nixos/user-packages.nix`](../../modules/nixos/user-packages.nix)
+
+[^codex-sandbox]: Official OpenAI documentation, sandbox prerequisites

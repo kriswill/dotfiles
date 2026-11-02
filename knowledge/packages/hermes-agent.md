@@ -4,7 +4,7 @@ title: hermes-agent
 description: 'Sub-flake that builds Nous Research''s Hermes Agent (the hermes CLI and its messaging/cron gateway) from a trimmed, path-rewritten copy of upstream''s nix/ against the v0.22.5 source, plus a single-owner services.hermes-agent NixOS module (wrapped CLI, 2750 state, Herdr integration option); enabled on nebula.'
 resource: flakes/hermes-agent/
 tags: [sub-flake, package, ai-agent]
-generated: { by: claude-code/opus-5-5, at: 2026-10-30T03:00:00+00:00 }
+generated: { by: hermes-agent/gpt-6-astra, at: 2026-11-01T18:02:53-08:00 }
 sources:
   - id: subflake-readme
     resource: ../../flakes/hermes-agent/README.md
@@ -29,9 +29,9 @@ Each changed file explains itself in a comment marked
   root, and a `lib.makeScope` hands it to every `callPackage`. Upstream's
   `../x` becomes `hermesSrc + "/x"`. It has to be a path: `lib.fileset`
   rejects strings, and copying a path is what reproduces upstream's filtered
-  store paths. With `version` reset to `0.0.0`, the package is
-  drv-identical to upstream's own `packages.x86_64-linux.default`
-  (`zfdxw3zg…`).
+  store paths. The original import was drv-identical to upstream with
+  `version = "0.0.0"`; runtime repairs for dependency receipts and writable
+  skill copies now intentionally diverge. Review those local patches on bumps.
 - **Outputs.** `packages.<system>.hermes-agent` (and `default`) is upstream's
   `full` package with `version` set to the tag. Upstream leaves it at
   `0.0.0`, so `hermes --version` printed `v0.0.0`. `nixosModules.default` is
@@ -47,6 +47,24 @@ Each changed file explains itself in a comment marked
   patchelf 0.19.2 in the root's nixpkgs corrupts it,[^patchelf-674] so node
   segfaults during the TUI build. The root's input therefore follows only
   flake-parts.
+- **PM dependency receipts.** The package ships PM-pinned ffmpeg/ripgrep and
+  registers them with node/npm in an immutable tool store, bound through the
+  install stamp's `runtimeDir`. Receipts contain pinned archive identities and
+  realized-tree digests after Nix fixups, not fabricated attestations for
+  differently built nixpkgs tools. A fresh-home `hermes pm doctor` passes;
+  corrupt digests/archive identities or missing trees still fail. The package's
+  ffmpeg is 9.0.1; [nebula](../modules/nebula-hermes-agent.md)'s terminal profile
+  independently supplies nixpkgs ffmpeg.
+- **Writable skills.** The local `writable-skill-copies.patch` fixes initial
+  seed, replacement, explicit restore and optional restore from Nix-store
+  sources. Copied directories gain owner read/write/search and regular files
+  gain owner read/write, retaining executable bits. Symlinks are not followed
+  for copying or permission repair. Existing user edits remain protected by
+  upstream's hash-based ownership checks. Older profile copies need a one-time
+  owner-permission repair; do not chmod the store or symlink targets.
+- **Herdr migration.** With the declarative shell hooks present, config merge
+  drops only `herdr-agent-state` from `plugins.enabled`, leaving other entries
+  and settings untouched.
 - **Bumping** means reading upstream's `nix/` diff between tags, porting it
   into the copies, re-locking those inputs to the new tag's lock, and
   re-checking parity.[^upstream-nix-v0-22-5]

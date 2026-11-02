@@ -14,9 +14,12 @@
 { inputs, ... }:
 {
   flake.modules.nixos.user-packages =
-    { config, ... }:
+    { config, pkgs, ... }:
     {
       imports = [ inputs.nix-index-database.nixosModules.default ];
+
+      # Codex's Linux sandbox looks for bwrap on PATH.
+      environment.systemPackages = [ pkgs.bubblewrap ];
 
       programs = {
         # nixpkgs modules (snowglobe has no module of its own for these)
