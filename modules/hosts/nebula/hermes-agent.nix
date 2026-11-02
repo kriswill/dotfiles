@@ -23,7 +23,7 @@
 # declared keys at build time, so the key must exist before a rebuild.
 {
   configurations.nixos.nebula.module =
-    { config, ... }:
+    { config, pkgs, ... }:
     {
       sops.secrets.hermes-env = { };
 
@@ -35,10 +35,21 @@
         # so herdr can resume Hermes sessions.
         herdr.enable = true;
         environmentFiles = [ config.sops.secrets.hermes-env.path ];
-        settings.model = {
-          provider = "anthropic";
-          default = "claude-opus-5-5";
-        };
+        # CODEX_HOME feeds explicit Codex CLI login import/recovery; it does
+        # not auto-register a provider. `hermes auth add openai-codex` creates
+        # an independent session and avoids sharing rotating refresh tokens.
+        environment.CODEX_HOME = "/home/k/.codex";
+        # Model selection belongs to Hermes (/model, including --global).
+        # Do not partially override model here: activation would keep stale
+        # base_url/api_mode fields from a different runtime-selected provider.
+
+        # extraPackages reaches both the gateway and k's login-shell PATH.
+        # The package wrapper's PATH alone does not reach terminal tools.
+        extraPackages = [
+          pkgs.ffmpeg
+          pkgs.nixd
+        ];
+        settings.lsp.servers.nixd.command = [ "${pkgs.nixd}/bin/nixd" ];
         # The passive startup check reports a bogus "Update available" on every
         # Nix build: a store path has no git origin, so default_channel() falls
         # back to `main` (not `stable`) and compares the pinned tag against

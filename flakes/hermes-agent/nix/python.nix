@@ -144,7 +144,9 @@ let
           # variable, not a devShell variable: ``nix develop -c uv build``
           # must remain blocked.
           (final: prev: {
-            hermes-agent = prev.hermes-agent.overrideAttrs (_old: {
+            hermes-agent = prev.hermes-agent.overrideAttrs (old: {
+              # Ours: store modes must not make profile skill copies read-only.
+              patches = (old.patches or [ ]) ++ [ ./writable-skill-copies.patch ];
               HERMES_NIX_BUILD = "1";
             });
           })

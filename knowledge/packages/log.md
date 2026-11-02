@@ -2,6 +2,14 @@
 
 ## 2026-11-01
 
+- **Update**: [hermes-agent](hermes-agent.md): register PM-pinned tool artifacts
+  with immutable digest-bound receipts (including node/npm), eliminating false
+  missing ffmpeg/ripgrep reports without suppressing integrity checks.
+- **Update**: [hermes-agent](hermes-agent.md): repair writable bundled/optional
+  skill copies from immutable Nix sources, preserving custom edits and symlink
+  targets; migrate the stale Herdr plugin entry without dropping other plugins.
+  Local runtime fixes now intentionally diverge from upstream derivation parity.
+
 - **Update**: [herdr](herdr.md): record Braille row gaps in app 0.1.11,
   the pending upstream cell-sized sprite renderer, and the release check
   showing app 0.1.11/core 0.1.16 still current; leave Nix pins unchanged

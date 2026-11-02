@@ -1,0 +1,64 @@
+Ours: make bundled and optional skill copies owner-writable without following symlinks.
+
+--- a/tools/skills_sync.py
++++ b/tools/skills_sync.py
+@@ -217,9 +217,28 @@
+     shutil.move(str(src), str(dest))
+ 
+ 
+-def _copy_dir(src: Path, dest: Path) -> None:
++def _make_skill_copy_writable(path: Path) -> None:
++    """Add owner access to a copied tree, never following symlinks.
++
++    copytree preserves immutable package modes (e.g. Nix's 0555 directories).
++    Keep all other mode bits, including executable scripts, and touch only the
++    destination after copytree has finished applying source metadata.
++    """
++    mode = path.lstat().st_mode
++    if stat.S_ISLNK(mode):
++        return
++    if stat.S_ISDIR(mode):
++        path.chmod(stat.S_IMODE(mode) | stat.S_IRWXU, follow_symlinks=False)
++        for child in path.iterdir():
++            _make_skill_copy_writable(child)
++    elif stat.S_ISREG(mode):
++        path.chmod(stat.S_IMODE(mode) | stat.S_IRUSR | stat.S_IWUSR, follow_symlinks=False)
++
++
++def _copy_dir(src: Path, dest: Path, **kwargs) -> None:
+     dest.parent.mkdir(parents=True, exist_ok=True)
+-    shutil.copytree(src, dest, ignore=_ignore_runtime_cache)
++    shutil.copytree(src, dest, symlinks=True, ignore=_ignore_runtime_cache, **kwargs)
++    _make_skill_copy_writable(dest)
+ 
+ 
+ def _recover_renamed_skill(st: "_SyncState", skill_name: str, dest: Path) -> Optional[str]:
+@@ -335,7 +354,7 @@
+         _rmtree_writable(backup)
+     shutil.move(str(dest), str(backup))
+     try:
+-        shutil.copytree(skill_src, dest, ignore=_ignore_runtime_cache)
++        _copy_dir(skill_src, dest)
+     except OSError:
+         if backup.exists():  # clear a partially-written dest so it can't shadow/block the restore
+             if dest.exists():
+--- a/tools/skills_sync_bundled_ops.py
++++ b/tools/skills_sync_bundled_ops.py
+@@ -6,7 +6,7 @@
+ from pathlib import Path
+ from typing import List, Optional, Tuple
+ 
+-from tools.skills_sync_optional import _ignore_runtime_cache, _skill_file_list, _ss
++from tools.skills_sync_optional import _skill_file_list, _ss
+ 
+ 
+ def _bundled_state():
+@@ -114,7 +114,7 @@
+         if dest.exists() and any(p.is_symlink() or is_junction(p) for p in dest.rglob("*")):
+             raise ValueError("the leftover directory contains a symlink or junction")
+         dest.parent.mkdir(parents=True, exist_ok=True)
+-        shutil.copytree(src, dest, ignore=_ignore_runtime_cache, dirs_exist_ok=True,
++        ss._copy_dir(src, dest, dirs_exist_ok=True,
+                         copy_function=lambda s, d: d if os.path.lexists(d) else shutil.copy2(s, d))
+     except (OSError, ValueError) as e:
+         return {"ok": False, "action": "not_restored", "path": dest,
