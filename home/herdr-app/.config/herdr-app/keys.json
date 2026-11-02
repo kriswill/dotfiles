@@ -80,7 +80,12 @@
     "ctrl-right": "send:\u001bf",
     "ctrl-shift-c": "terminal.copy",
     "ctrl-shift-v": "terminal.paste",
-    "ctrl-v": "terminal.paste_image"
+    "ctrl-v": "terminal.paste_image",
+    "cmd-c": "terminal.copy",
+    "cmd-v": "terminal.paste",
+    "cmd-backspace": "send:\u0015",
+    "cmd-left": "send:\u0001",
+    "cmd-right": "send:\u0005"
   },
   "layout:personal": {
     "ctrl-h": "vim-nav.left",
