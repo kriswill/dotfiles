@@ -55,6 +55,9 @@
     programs.ssh-private-hosts.enable = true;
     services.codebase-memory-mcp.enable = true;
     programs.podman-desktop.enable = true;
+    # The AI-usage collector (Claude Max limits from the keychain login,
+    # Codex limits) behind Herdr's ai-usage sidebar panel and `ai-usage`.
+    services.ai-usage.enable = true;
     # Chrome is gone for good: Helium is the browser; Google's updater kept
     # reinstalling Chrome over the Helium shim (modules/darwin/helium-chrome-shim.nix).
     programs.helium-chrome-shim.purgeGoogleChrome = true;

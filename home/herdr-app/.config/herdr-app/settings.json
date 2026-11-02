@@ -1,9 +1,9 @@
 {
-  "zoom": 1.1,
-  "core": "/etc/herdr-core/hc",
+  "zoom": 0.9,
   "sounds": {
     "enabled": true
   },
+  "core": "/etc/herdr-core/hc",
   "font": "MesloLGS Nerd Font",
   "font_size": 17.0,
   "telemetry": false,

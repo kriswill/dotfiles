@@ -2,6 +2,11 @@
 
 ## 2026-11-01
 
+- **Update** — [ai-usage](ai-usage.md): enabled on k (`services.ai-usage.enable`),
+  the first mac; a hand run of the collector read the Claude login from the
+  keychain and wrote `~/.cache/ai-usage/usage.json`, which Herdr's ai-usage
+  panel watches.
+
 - **Creation**: [ai-usage](ai-usage.md): the ai-usage daemon as a
   graphical-session user service on nebula and an opt-in launchd agent on
   the macs ([decision](../decisions/ai-usage-collector-daemon.md)).
