@@ -2,6 +2,10 @@
 
 ## 2026-11-01
 
+- **Creation**: [ai-usage-collector-daemon](ai-usage-collector-daemon.md):
+  a Bun daemon owns credentials and rate-limit pacing; the herdr-app mod
+  only draws its snapshot. Also records that Herdr won't load symlinked
+  (stowed) mod images, and that `touch -h` reloads a stowed mod.
 - **Creation** — [herdr-app-darwin-bundle](herdr-app-darwin-bundle.md):
   Herdr on the macs as upstream's signed bundle, with telemetry and the
   core pin written to settings.json and the updater defeated by ownership.

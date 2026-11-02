@@ -8,6 +8,7 @@
 { inputs, ... }:
 {
   flake.overlays = {
+    ai-usage = import ../overlays/ai-usage.nix;
     kitten = import ../overlays/kitten.nix;
     ld64-lld = import ../overlays/ld64-lld.nix; # TEMPORARY, see file header
 

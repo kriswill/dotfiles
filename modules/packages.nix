@@ -11,6 +11,10 @@
     }:
     {
       packages = {
+        # ai-usage — AI account usage (Claude Max limits, Anthropic API cost,
+        # ChatGPT/Codex limits): a Bun collector daemon + terminal view, drawn
+        # in herdr-app by the ai-usage mod. Cross-platform.
+        ai-usage = pkgs.callPackage ../pkgs/ai-usage/package.nix { };
         iv = pkgs.callPackage ../pkgs/iv.nix { };
         dots-adopt = pkgs.callPackage ../pkgs/dots-adopt.nix { };
         # cbissue/cbissues — open/browse Codeberg (Forgejo) issues from the CLI;
