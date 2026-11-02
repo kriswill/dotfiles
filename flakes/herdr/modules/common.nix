@@ -274,6 +274,9 @@ in
     })
 
     (lib.mkIf check.enable {
+      # On PATH too, for a run by hand after a bump (the scheduled run waits
+      # for its next slot).
+      environment.systemPackages = [ check.package ];
       warnings = lib.optional (!(cli.enable || core.enable || app.enable)) ''
         services.herdr-update-check is enabled but none of programs.herdr-cli,
         programs.herdr-core and programs.herdr-app is, so it checks nothing.
