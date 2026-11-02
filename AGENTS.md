@@ -24,6 +24,10 @@ module/package/sub-flake wiring walkthroughs, `lib/`, sops secrets — and
 
 ## Knowledge Bundle (`knowledge/`)
 
+Repository skills live in `.agents/skills/` (one directory per skill, with a
+`SKILL.md` entry point). `.claude/skills` is a relative symlink to that
+canonical directory so Claude and other agents share the same instructions.
+
 `knowledge/` is the repo's authored knowledge layer — an
 [OKF v0.1](https://github.com/GoogleCloudPlatform/knowledge-catalog/blob/main/okf/SPEC.md)
 bundle of architecture patterns, decision records, playbooks, and a scaffolded catalog

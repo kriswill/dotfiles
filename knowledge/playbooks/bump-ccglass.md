@@ -8,7 +8,7 @@ generated: { by: okflight/0.4.0, at: 2026-07-02T00:00:00-07:00 }
 
 [ccglass](../packages/ccglass.md) tracks an upstream that needs a fork patch
 to survive bun compilation, so bumps are driven by the **`patch-ccglass`
-skill** (`.claude/skills/patch-ccglass/`) rather than by hand:
+skill** (`.agents/skills/patch-ccglass/`) rather than by hand:
 
 ## Examples
 

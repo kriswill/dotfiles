@@ -22,7 +22,7 @@ erased at runtime, leaving plain JavaScript.
 **It is the default tooling language** (house rule: bun + TS over
 bash/python — see [Bun runtime](../runtimes/bun.md)): the [okf](../packages/okf.md)
 CLI and its Svelte viz-app, the skill drivers
-(`.claude/skills/patch-ccglass/driver.ts`, `derivation-to-flake`'s
+(`.agents/skills/patch-ccglass/driver.ts`, `derivation-to-flake`'s
 scripts), and [ccglass](../packages/ccglass.md)'s patched upstream are all TS.
 
 **There is no tsc build step anywhere** — bun transpiles on execution, so

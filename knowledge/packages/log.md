@@ -2,6 +2,11 @@
 
 ## 2026-11-01
 
+- **Update**: [herdr](herdr.md): record Braille row gaps in app 0.1.11,
+  the pending upstream cell-sized sprite renderer, and the release check
+  showing app 0.1.11/core 0.1.16 still current; leave Nix pins unchanged
+  until a release includes the fix, then verify it in a live pane.
+
 - **Update**: [ai-usage](ai-usage.md): simplify the widget to usage bars,
   disable local estimates, and support daily and code-review limit windows.
 - **Update**: [ai-usage](ai-usage.md): reflect the $100 Pro upgrade, use a

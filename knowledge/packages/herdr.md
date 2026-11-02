@@ -4,7 +4,7 @@ title: herdr
 description: 'Umbrella sub-flake for everything herdr: our kriswill/herdr TUI fork (herdr-cli) and herdr-nav, upstream''s prebuilt Herdr desktop app and herdr-core (`hc`) repackaged, a herdr-update-check package for Linux and macOS, and the NixOS + nix-darwin modules (programs.herdr-cli/-core/-app, services.herdr-update-check); consumed as inputs.herdr.'
 resource: flakes/herdr/
 tags: [sub-flake, package, herdr, terminal]
-generated: { by: claude-code/opus-5.5, at: 2026-11-01T14:00:00-08:00 }
+generated: { by: codex/gpt-6.1-sol, at: 2026-11-01T17:07:43-08:00 }
 sources:
   - id: subflake-readme
     resource: ../../flakes/herdr/README.md
@@ -24,6 +24,12 @@ sources:
   - id: nixpkgs-pr-581031
     resource: https://github.com/NixOS/nixpkgs/pull/581031
     title: 'NixOS/nixpkgs#581031 herdr-core, herdr-desktop: init (source builds; open)'
+  - id: app-terminal-0111
+    resource: https://github.com/herdrdev/herdr-app/blob/v0.1.11/src/terminal.rs
+    title: 'Herdr 0.1.11 terminal renderer (cell_size and font glyph rendering)'
+  - id: app-braille-renderer
+    resource: https://github.com/herdrdev/herdr-app/blob/8cbb9f3348ea802e9c06cca3b413a53d3ba9064e/src/sprites.rs
+    title: 'Upstream cell-sized Braille sprite renderer, present after 0.1.11'
 ---
 
 One flake for three products and their tools
@@ -100,6 +106,29 @@ Gotchas:
   (`577bb1e`, which follows our nixpkgs). Re-lock with `--override-input
   herdr/herdr-cli/rust-overlay` if a fresh lock jumps it.
 
+## Braille row gaps — checked 2026-11-01
+
+Herdr-app 0.1.11 shows horizontal bands between rows of Braille art, also
+reproduced with consecutive rows of `⣿` (U+28FF). The live window used
+MesloLGS Nerd Font at an effective 15.3 px. This release renders Braille as
+font glyphs; `cell_size` multiplies the font's ascent plus absolute descent
+by 1.15 and rounds up to device pixels. The dots do not fill that row
+height, leaving visible vertical gaps. There is no exposed line-spacing
+setting in this version.[^app-terminal-0111]
+
+Upstream source at `8cbb9f3` includes a custom Braille sprite renderer,
+using Ghostty's integer-pixel dot layout sized to each terminal cell,
+instead of font glyphs.[^app-braille-renderer] This is the pending remedy;
+it has not been visually tested here. The release-manifest check
+(`bun flakes/herdr/update.ts --check`) still reported app 0.1.11 and core
+0.1.16 as current on 2026-11-01, so the Nix pins were left unchanged.
+
+On the next app release, confirm its source contains the Braille renderer,
+run `bun flakes/herdr/update.ts`, build/rebuild, and reopen the window.
+Verify consecutive rows of `⣿` and the original artwork in a live pane.
+Keep the [release repackaging approach](../decisions/herdr-app-release-repack.md)
+rather than assuming a source fix is already in a released tarball.
+
 ## Source
 
 - Flake: [`flakes/herdr/`](../../flakes/herdr/)
@@ -118,4 +147,6 @@ to the `home/herdr-core` and `home/herdr-app` stow packages
 [^herdr-core-repo]: herdrdev/herdr-core README
 [^app-manifest]: releases.herdr.dev/app/latest.json, the installers' manifest
 [^app-update-rs]: herdr-app `src/update.rs`, `find_root` and `checks_app`
+[^app-terminal-0111]: Herdr 0.1.11 `src/terminal.rs`, `cell_size` and row rendering
+[^app-braille-renderer]: Upstream `src/sprites.rs`, `braille`, `is_sprite` and `paint`
 [^nixpkgs-pr-581031]: NixOS/nixpkgs#581031 notes for review: "No wrapper for herdr-desktop"

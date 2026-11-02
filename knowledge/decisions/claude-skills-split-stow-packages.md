@@ -20,7 +20,7 @@ sources:
 The `session-coordinator` skill (a global Claude Code skill for running
 coordinated multi-agent missions in tmux, distilled from the 2026-07-25
 flake-explorer extractor session) needed to reach every machine's *user-level*
-Claude config — not the repo-scoped `.claude/skills/` project skills. The
+Claude config — not the repo-scoped `.agents/skills/` project skills. The
 target differs per OS: nebula uses plain `~/.claude`, while the macs run the
 [account selector](../modules/claude-account-selector.md) whose profile split
 puts the personal config at `~/.claude-me`, with `~/.claude` existing only as

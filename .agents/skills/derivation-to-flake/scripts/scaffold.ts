@@ -151,4 +151,4 @@ console.log(`1) flake.nix — add the relative-path input (extracting to a separ
      git rm -r ${fromRel}${overlayFile ? ` ${overlayFile}` : ""}
 
 5) nix flake lock                 # adds the ${name} input to the root flake.lock
-6) bun .claude/skills/derivation-to-flake/scripts/verify.ts ${name}   # build + parity + flake check + stale-ref scan`);
+6) bun .agents/skills/derivation-to-flake/scripts/verify.ts ${name}   # build + parity + flake check + stale-ref scan`);

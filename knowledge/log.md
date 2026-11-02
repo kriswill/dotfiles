@@ -7,6 +7,13 @@ in that bundle's own `log.md` (e.g. [modules/log.md](modules/log.md)).
 
 ## 2026-11-01
 
+- **Update**: Project skills now live in `.agents/skills/`, with
+  `.claude/skills -> ../.agents/skills` for Claude discovery. Moved all three
+  skills and their resources, updated script/documentation paths, and added
+  the canonical location to [`AGENTS.md`](../AGENTS.md). This applies the
+  [vendor-neutral skills convention](decisions/agents-skills-vendor-neutral-package.md)
+  to repository skills as well as user-level skills.
+
 - **Update**: AI usage collection and Herdr display verified on host k;
   implementation findings and changes are recorded in the
   [package log](packages/log.md) and [decision log](decisions/log.md).

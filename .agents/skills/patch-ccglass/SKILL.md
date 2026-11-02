@@ -11,7 +11,7 @@ script-relative disk reads upstream relies on, the package carries a **maintaine
 ([`flakes/ccglass/fork.patch`](flakes/ccglass/fork.patch)). On every upstream release that patch
 must be re-checked, and the build re-verified.
 
-The whole workflow is driven by **[`driver.ts`](.claude/skills/patch-ccglass/driver.ts)** (bun + TypeScript). Paths below are
+The whole workflow is driven by **[`driver.ts`](.agents/skills/patch-ccglass/driver.ts)** (bun + TypeScript). Paths below are
 relative to the repo root. The package is exposed for **aarch64-darwin, aarch64-linux, and
 x86_64-linux** (`bun build --compile` emits a native binary per system); `verify` auto-detects the
 current system.
@@ -30,19 +30,19 @@ on the user's macOS machine. The driver uses bun's `fetch`/`Bun.spawn` for the r
 One command does clone + hazard scan + patch-check + build + all runtime checks:
 
 ```bash
-bun .claude/skills/patch-ccglass/driver.ts all
+bun .agents/skills/patch-ccglass/driver.ts all
 ```
 
 Or step through it. **Check what the latest upstream tag is:**
 
 ```bash
-bun .claude/skills/patch-ccglass/driver.ts latest-tag
+bun .agents/skills/patch-ccglass/driver.ts latest-tag
 ```
 
 **Clone it, scan for compile hazards, and test whether the current patch still applies:**
 
 ```bash
-bun .claude/skills/patch-ccglass/driver.ts prepare
+bun .agents/skills/patch-ccglass/driver.ts prepare
 ```
 
 `prepare` greps the new source for the three known hazard classes (version read at load, `web/`
@@ -53,7 +53,7 @@ Pass an explicit tag to target a specific release: `… prepare v1.2.0`.
 **Build the flake output and exercise the binary** (only meaningful if the patch applied):
 
 ```bash
-bun .claude/skills/patch-ccglass/driver.ts verify
+bun .agents/skills/patch-ccglass/driver.ts verify
 ```
 
 `verify` runs `nix build ./flakes/ccglass#packages.<current-system>.ccglass` (out-link under `$TMPDIR`, not the repo)
@@ -92,7 +92,7 @@ regenerate and re-verify:
 Then:
 
 ```bash
-bun .claude/skills/patch-ccglass/driver.ts regen-patch <CLONE>   # writes flakes/ccglass/fork.patch
+bun .agents/skills/patch-ccglass/driver.ts regen-patch <CLONE>   # writes flakes/ccglass/fork.patch
 ```
 
 …and update `version` in [`flakes/ccglass/package.nix`](flakes/ccglass/package.nix) (and the
