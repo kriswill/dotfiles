@@ -29,7 +29,8 @@ mod: [decision](../decisions/ai-usage-collector-daemon.md).
   reach `/run/wrappers/bin` for the setgid `op`, which is never pinned.
   A rebuild doesn't restart user units, so new code needs
   `systemctl --user restart ai-usage`.
-- **darwin** (`services.ai-usage.enable`, off on every host so far): a
+- **darwin** (`services.ai-usage.enable`, on [k](../hosts/k.md) since
+  2026-11-01, off on mini and SOC-Kris-Williams): a
   launchd agent with `KeepAlive`, logging to `~/Library/Logs/ai-usage.log`,
   `PATH` reaching Homebrew's `op`.[^nix-darwin-manual] Claude's login comes
   from the keychain via `/usr/bin/security`.
@@ -38,7 +39,7 @@ Accounts, labels, prices, budgets and the Admin key's 1Password reference
 live in the cross-OS `ai-usage` stow package, so editing them needs no
 rebuild; the daemon rereads the config on every pass.
 
-Imported on every darwin host but disabled by default — hosts opt in with `services.ai-usage.enable = true;`;
+Imported on every darwin host but disabled by default — hosts opt in with `services.ai-usage.enable = true;` (k does);
 mounted ungated on every NixOS host
 (see the [host-mounted modules pattern](../patterns/host-mounted-modules.md));
 auto-discovered via the [Dendritic module layout](../patterns/dendritic-modules.md).
