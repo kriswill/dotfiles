@@ -166,16 +166,6 @@
           ],
           "padding": 8,
           "gap": 8
-        },
-        {
-          "id": "status",
-          "type": "block",
-          "content": {
-            "mod": "workspace-status"
-          },
-          "size": {
-            "px": 28
-          }
         }
       ],
       "resizable": false
