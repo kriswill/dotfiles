@@ -1,6 +1,8 @@
-# The installed herdr-app: any herdr-app package (this flake's repack by
-# default, nixpkgs' herdr-desktop or numtide's build work too) with the
+# The installed herdr-app on Linux: any herdr-app package (this flake's repack
+# by default, nixpkgs' herdr-desktop or numtide's build work too) with the
 # choices made outside the app. Returns `package` itself when there are none.
+# macOS doesn't use it: Finder launches the bundle, not bin/herdr-app, so the
+# darwin module writes the same choices into settings.json (../modules/darwin.nix).
 #
 # - telemetry = false sets HERDR_TELEMETRY=0, upstream's off switch for a run.
 #   (It reaches every terminal through herdr-core, harmlessly: only herdr-app
@@ -20,12 +22,10 @@
 #   terminals too, harmlessly: only herdr-app reads it.
 {
   lib,
+  callPackage,
   symlinkJoin,
   makeWrapper,
-  writeShellApplication,
   writeText,
-  coreutils,
-  jq,
   package,
   core ? null,
   pinCore ? null,
@@ -33,14 +33,7 @@
   settings ? { },
 }:
 let
-  merge = writeShellApplication {
-    name = "herdr-app-merge-settings";
-    runtimeInputs = [
-      coreutils
-      jq
-    ];
-    text = builtins.readFile ./merge-settings.sh;
-  };
+  merge = callPackage ./herdr-app-merge-settings.nix { };
   declared = writeText "herdr-app-settings.json" (builtins.toJSON settings);
   args =
     lib.optionals (!telemetry) [

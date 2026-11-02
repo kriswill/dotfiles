@@ -2,6 +2,11 @@
 
 ## 2026-11-01
 
+- **Update** — [herdr](herdr.md): `herdr-app-unwrapped` and `herdr-app`
+  build on `aarch64-darwin` (upstream's signed `Herdr.app`, no fixup);
+  `update.ts` pins the macOS app target; `herdr-update-check` resolves
+  running executables with `lsof` on macOS.
+
 - **Update**: [hermes-agent](hermes-agent.md): the module's herdr option is
   a Herdr integration in TypeScript (`nix/herdr/`), not herdr's plugin
   ([decision](../decisions/hermes-herdr-integration-shell-hook.md)).

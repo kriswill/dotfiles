@@ -10,11 +10,11 @@ as `inputs.herdr` (`./flakes/herdr`).
 | `packages.herdr-cli` (`default`) | all | the herdr TUI, from our fork (the `herdr-cli` input), with a build identity |
 | `packages.herdr-nav` | all | vim-aware ctrl+h/j/k/l pane navigation for herdr |
 | `packages.herdr-core` | all | `hc` / `herdr-core`: upstream's release build, untouched |
-| `packages.herdr-app-unwrapped` | Linux | Herdr (GPUI + wgpu): upstream's release build, patchelf'd |
-| `packages.herdr-app` | Linux | the app with telemetry off and this core at the end of PATH, for `nix run` |
+| `packages.herdr-app-unwrapped` | all | Herdr (GPUI + wgpu): upstream's release build, patchelf'd on Linux, the signed `Herdr.app` untouched on macOS |
+| `packages.herdr-app` | all | the app with telemetry off and this core at the end of PATH, for `nix run` (a shell launch; Finder bypasses it) |
 | `packages.herdr-update-check` | all | is any of these behind upstream, or running a stale build? |
 | `nixosModules.herdr` (`default`) | | `programs.herdr-{cli,core,app}`, `services.herdr-update-check` |
-| `darwinModules.herdr` (`default`) | | the same options (herdr-app asserts off) |
+| `darwinModules.herdr` (`default`) | | the same options, with the app's choices written to settings.json |
 
 Systems: `x86_64-linux`, `aarch64-linux`, `aarch64-darwin`.
 
@@ -39,7 +39,8 @@ it by default.
 
 Nothing compiles, so there is nothing to cache. A build fetches upstream's
 tarball (the same bytes a substituter would send) and, for the Linux app,
-runs patchelf, all in seconds. Upstream releases about daily, and `update.ts`
+runs patchelf, all in seconds. On macOS both are upstream's Developer
+ID-signed builds, installed with no fixup at all (see "darwin"). Upstream releases about daily, and `update.ts`
 picks a release up as soon as you run it. The alternatives build from source
 (Rust + Zig 0.16 + vendored Ghostty):
 
@@ -65,14 +66,23 @@ Packaging notes:
 - **The core is pinned.** The app puts the folder it found hc in first on its
   PATH (upstream `src/core_bin.rs` `use_core`), and every terminal inherits
   it. Left to search, it found `/run/current-system/sw/bin`, which then
-  shadowed `/run/wrappers/bin` and broke `sudo` in every pane. The modules
-  set `HERDR_CORE_DIRS` to `programs.herdr-core.package`'s bin, so the app
-  finds hc there, and that folder holds only `hc` and `herdr-core`.
-- **Self-update is off.** A release build updates itself only when it finds
-  `herdr-app.svg` beside its binary (upstream `src/update.rs` `find_root`). The
-  icon lives in `share/icons`, and installCheck fails the build otherwise.
-  herdr-core sees its `/nix/store/` path and refuses `hc update` ("update it in
-  your Nix configuration"), and the app never offers updates to such a core.
+  shadowed `/run/wrappers/bin` and broke `sudo` in every pane. The NixOS
+  module sets `HERDR_CORE_DIRS` to `programs.herdr-core.package`'s bin, so
+  the app finds hc there, and that folder holds only `hc` and `herdr-core`.
+  The darwin module, which has no wrapper, writes `core = /etc/herdr-core/hc`
+  into settings.json instead: a link to the same package, in a folder that
+  holds only hc, at a path with no store hash in it.
+- **Self-update is off.** On Linux a release build updates itself only when
+  it finds `herdr-app.svg` beside its binary (upstream `src/update.rs`
+  `find_root`). The icon lives in `share/icons`, and installCheck fails the
+  build otherwise. On macOS any `Herdr.app` bundle is an install root, so the
+  updater stays armed, but it stages downloads beside the bundle and
+  nix-darwin's copy under `/Applications/Nix Apps` is root-owned: it gets
+  EACCES, logs a warning and retries in 30 minutes, only once upstream is
+  ahead (and only until the next `update.ts` bump). herdr-core sees its
+  `/nix/store/` path (canonicalized, so the `/etc/herdr-core/hc` link counts)
+  and refuses `hc update` ("update it in your Nix configuration"), and the
+  app never offers updates to such a core.
 - **No fixup for herdr-core.** On macOS it is upstream's signed Mach-O, so
   strip or install_name_tool would break the signature. On Linux it is
   static-pie and needs nothing.
@@ -86,7 +96,8 @@ Packaging notes:
 - **No core service.** hc spawns the core on demand; a declared unit would
   compete with it.
 - **Telemetry** is on by default upstream (a daily usage report). The modules
-  and the standalone package turn it off.
+  and the standalone package turn it off: `HERDR_TELEMETRY=0` from the Linux
+  wrapper, `telemetry: false` in settings.json on macOS.
 
 ## Modules
 
@@ -99,7 +110,7 @@ do.
 | `programs.herdr-cli.{enable,package,nav.enable,python}` | ✓ | ✓ |
 | `programs.herdr-core.{enable,package,users,settings}` | ✓ (`settings` → tmpfiles link) | ✓ (`settings` → activation-script link) |
 | `programs.herdr-core.linger` | ✓ | — |
-| `programs.herdr-app.{enable,package,finalPackage,telemetry,settings,keys}` | ✓ | asserts `enable = false` |
+| `programs.herdr-app.{enable,package,finalPackage,telemetry,settings,keys}` | ✓ (wrapper: env + merge at launch) | ✓ (`telemetry`, `core`, `settings` merged into settings.json at activation; `keys` → link; `finalPackage` is the bare bundle) |
 | `services.herdr-update-check.{enable,package}` | systemd user timer, `calendar` | launchd user agent, `startCalendarInterval` |
 
 `programs.herdr-cli.python` (default `python3`, `null` for none) is for
@@ -118,7 +129,7 @@ its target, and has tests for exactly that. So a linked `settings.json`,
 | File (under `~/.config`) | Written by | Module option |
 |---|---|---|
 | `herdr-core/config.toml` | you only | `programs.herdr-core.settings` → read-only store link |
-| `herdr-app/settings.json` | the app (Settings screen, zoom) | `programs.herdr-app.settings` → merged in at each launch, declared keys win |
+| `herdr-app/settings.json` | the app (Settings screen, zoom) | `programs.herdr-app.settings` → merged in at each launch (Linux) or each activation (macOS, with `telemetry` and `core`), declared keys win |
 | `herdr-app/keys.json` | you; the app writes the defaults if it's missing | `programs.herdr-app.keys` → read-only store link |
 | `herdr-app/{themes,layouts,mods}/…` | you, or the app when you duplicate/save one | — |
 | `herdr-app/` everything else | the app (shipped mods, `view.json`, telemetry state…) | — |
@@ -160,16 +171,44 @@ agent.
 
 ## darwin
 
-herdr-cli, herdr-nav, herdr-core and the update check all work there. Herdr
-itself doesn't yet. Upstream's macOS app is a Developer ID–signed `Herdr.app`,
-and both of our Linux mechanisms fail on it:
+Everything works on the macs. herdr-core is upstream's signed Mach-O, which
+`hc machine add` can copy to another Mac as-is. Herdr is upstream's Developer
+ID-signed `Herdr.app`, copied whole into `$out/Applications` with no fixup
+(installCheck runs `codesign --verify --deep --strict` on the copy), plus
+`bin/herdr-app` into the bundle for the CLI (`herdr-app ls|do|status`).
+nix-darwin copies `Applications/` of every system package into
+`/Applications/Nix Apps`, where Spotlight finds it. The Linux mechanisms
+don't reach a bundle Finder launches, so the darwin module does their work
+through files instead:
 
-- **Telemetry:** the wrapper can't reach a bundle launched from Finder, and
-  editing the bundle would break its signature.
-- **Self-update:** the updater would find the bundle and fail against the
-  read-only store every 30 minutes.
+- **Telemetry and the core pin** are settings.json keys (`telemetry`,
+  `core`), merged into each core user's `~/.config/herdr-app/settings.json`
+  at activation together with `programs.herdr-app.settings`, declared keys
+  winning. The core pin is `/etc/herdr-core/hc` (`environment.etc`), a link to
+  `programs.herdr-core.package`: a stable path, so a stowed settings.json in
+  a repo doesn't collect store hashes. The Settings screen can flip
+  telemetry back on until the next rebuild.
+- **Self-update** can't be disarmed by layout (a bundle is always a root),
+  and isn't editable out of the bundle (that breaks the signature). It is
+  defeated by ownership: the staging folder would go beside the bundle under
+  `/Applications/Nix Apps`, which root owns and nix-darwin rsyncs
+  (`--delete`) on every switch. A warning in the app's log every 30 minutes,
+  once upstream is ahead, is the whole cost; herdr-update-check reports the
+  same release once a day.
+- **No linger**: hc starts its core as a plain detached process.
+- **The CLI link.** On first launch the app symlinks `~/.local/bin/herdr-app`
+  to the bundle's binary (upstream `src/core_bin/cli_link.rs`), unless
+  something else is there. It points at nix-darwin's copy, which the next
+  switch replaces in place, so it stays current.
+- **Stale running builds**: a process started through a symlink (`hc` on
+  PATH, `/etc/herdr-core/hc`) names the link in its argv, so on macOS the
+  check asks `lsof` for the executable's store path. A window opened from
+  Finder runs the copy under `/Applications/Nix Apps`, which carries no
+  version, so only a window opened as `bin/herdr-app` from a shell is judged.
 
-So `darwinModules.herdr` asserts `programs.herdr-app.enable = false`.
+The macs' enables live in `modules/darwin/herdr.nix` (one user, one setup);
+their config files come from the same `home/herdr-core` and `home/herdr-app`
+stow packages as nebula's, so `keys.json` binds ctrl/alt there too, not cmd.
 
 ## Files
 
@@ -178,7 +217,8 @@ So `darwinModules.herdr` asserts `programs.herdr-app.enable = false`.
 - `pkgs/`:
   - `herdr-cli.nix`, `herdr-nav.{nix,sh}`
   - `herdr-core.nix`, `herdr-app.nix` (the repacks)
-  - `herdr-app-wrap.nix` + `merge-settings.sh` (the telemetry and settings
-    wrapper)
+  - `herdr-app-wrap.nix` (the Linux telemetry and settings wrapper),
+    `herdr-app-merge-settings.nix` + `merge-settings.sh` (the settings merge
+    it and the darwin module share)
   - `herdr-update-check.{nix,sh}`
 - `modules/`: `common.nix`, `nixos.nix`, `darwin.nix`

@@ -27,6 +27,10 @@
       "aarch64-linux": {
         "url": "https://releases.herdr.dev/app/0.1.11/herdr-app-linux-aarch64.tar.gz",
         "hash": "sha256-Bx/25znj5YGQw3hEFoQUXXIlRr+MrXBdRPBL871SAig="
+      },
+      "aarch64-darwin": {
+        "url": "https://releases.herdr.dev/app/0.1.11/herdr-app-macos-aarch64.tar.gz",
+        "hash": "sha256-fE5zGMVLvL8XX/1tG09hi1kTc4MzCv+OtbwQ3D/u7Lk="
       }
     }
   }

@@ -2,6 +2,13 @@
 
 ## 2026-11-01
 
+- **Creation** — [herdr-app-darwin-bundle](herdr-app-darwin-bundle.md):
+  Herdr on the macs as upstream's signed bundle, with telemetry and the
+  core pin written to settings.json and the updater defeated by ownership.
+  Supersedes the darwin scope of
+  [herdr-umbrella-subflake](herdr-umbrella-subflake.md); extends
+  [herdr-app-pin-core-dir](herdr-app-pin-core-dir.md) with the darwin pin.
+
 - **Update**: [herdr-umbrella-subflake](herdr-umbrella-subflake.md) and
   [hermes-herdr-integration-shell-hook](hermes-herdr-integration-shell-hook.md)
   record the `pkgs.herdr` overlay's removal.

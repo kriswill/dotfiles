@@ -1,5 +1,5 @@
 {
-  description = "herdr — everything herdr in one flake: our herdr TUI fork, Herdr's desktop app and herdr-core (hc), helper tools, an update check, and NixOS + nix-darwin modules";
+  description = "herdr — everything herdr in one flake: our herdr TUI fork, Herdr's desktop app (Linux and macOS) and herdr-core (hc), helper tools, an update check, and NixOS + nix-darwin modules";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
@@ -38,8 +38,8 @@
   outputs =
     inputs@{ self, flake-parts, ... }:
     flake-parts.lib.mkFlake { inherit inputs; } {
-      # herdr-app is Linux-only for now (README: darwin); everything else
-      # builds on the macs too.
+      # Everything builds everywhere: the TUI from source, the core and the app
+      # from upstream's release builds (Herdr.app on the macs).
       systems = [
         "x86_64-linux"
         "aarch64-linux"
@@ -50,7 +50,6 @@
         {
           pkgs,
           config,
-          lib,
           inputs',
           ...
         }:
@@ -66,11 +65,11 @@
               cliVersion = config.packages.herdr-cli.version;
             };
             default = config.packages.herdr-cli;
-          }
-          // lib.optionalAttrs pkgs.stdenv.hostPlatform.isLinux {
             herdr-app-unwrapped = pkgs.callPackage ./pkgs/herdr-app.nix { };
             # Standalone: telemetry off, and this core on PATH (after any other
-            # hc) so `nix run` finds one. The modules wrap their own.
+            # hc) so `nix run` finds one. The modules wrap their own. On macOS
+            # the wrapper only reaches a shell launch (`nix run`, the CLI); a
+            # Finder launch of the bundle reads settings.json instead.
             herdr-app = pkgs.callPackage ./pkgs/herdr-app-wrap.nix {
               package = config.packages.herdr-app-unwrapped;
               core = config.packages.herdr-core;

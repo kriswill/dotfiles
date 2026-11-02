@@ -55,9 +55,11 @@ Stow wiring stays outside the flake.
   It took over nebula's fork-only unit under the same name, and the host
   files went away.
 - **Darwin scope.** herdr-cli, herdr-nav, herdr-core and the check work on
-  the macs. `programs.herdr-app` asserts off there, because the signed bundle
-  can't take the telemetry wrapper and its updater would fail against the
-  store.[^subflake-readme] The macs enable only herdr-cli for now.
+  the macs. `programs.herdr-app` asserted off there at first, because the
+  signed bundle can't take the telemetry wrapper and its updater would fail
+  against the store.[^subflake-readme] The macs enabled only herdr-cli.
+  Superseded on 2026-11-01: the app is on the macs too
+  ([herdr-app-darwin-bundle](herdr-app-darwin-bundle.md)).
 
 ## Consequences
 

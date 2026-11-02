@@ -44,10 +44,13 @@ keeps the setuid `sudo`. The profile's `sudo` is the plain store copy.
   shadows nothing.
 - `HERDR_CORE_DIRS` reaches the terminals too. That's harmless, because only
   herdr-app reads it.
-- Not `programs.herdr-app.settings.core`. That would pin hc as well, but the
-  merge writes into nebula's stowed `settings.json`, which is a repo file, so
-  a store path would land in git and change on every core bump
-  ([stow decision](herdr-app-config-via-stow.md)).
+- Not `programs.herdr-app.settings.core` with a store path. That would pin
+  hc as well, but the merge writes into nebula's stowed `settings.json`,
+  which is a repo file, so a store path would land in git and change on
+  every core bump ([stow decision](herdr-app-config-via-stow.md)). The
+  darwin module, which has no wrapper to set an environment with, does use
+  `core`, pointed at the stable `/etc/herdr-core/hc` link
+  ([herdr-app-darwin-bundle](herdr-app-darwin-bundle.md)).
 
 ## Consequences
 

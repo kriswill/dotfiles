@@ -1,6 +1,7 @@
 # shellcheck shell=bash
-# Body of herdr-app-merge-settings (./herdr-app-wrap.nix, via writeShellApplication).
-# Runs from the herdr-app wrapper before every launch when settings are
+# Body of herdr-app-merge-settings (./herdr-app-merge-settings.nix, via
+# writeShellApplication). Runs from the Linux herdr-app wrapper before every
+# launch, and from the nix-darwin activation script, when settings are
 # declared: merges them into the app's settings.json, declared keys winning,
 # everything else (zoom, Settings-screen edits) kept as the app left it.
 #
@@ -11,7 +12,7 @@
 # A settings.json that is a symlink (into a dotfiles checkout, say) is written
 # through, as the app's own saves do, so the link survives. Nothing is written
 # when the merge changes nothing: the app reloads settings.json live, and
-# `herdr-app ls` & co. go through this wrapper too. Never blocks the launch.
+# `herdr-app ls` & co. go through the wrapper too. Never blocks the launch.
 set -euo pipefail
 
 declared=${1:?usage: herdr-app-merge-settings <declared.json>}
