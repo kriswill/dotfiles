@@ -4,7 +4,7 @@ title: Track AI Account Usage with a Bun Daemon and a Draw-Only herdr-app Mod
 description: 'Usage tracking for Claude Max, the Anthropic API and ChatGPT runs in a Bun daemon that owns credentials and rate-limit pacing and writes a JSON snapshot; the herdr-app mod only watches and draws it, because mods are sandboxed JS that can''t hold a 1Password-sourced key across polls.'
 tags: [herdr, ai, secrets, 1password]
 status: stable
-generated: { by: claude-code/opus-5.5, at: 2026-11-01T16:05:00-08:00 }
+generated: { by: codex/gpt-6, at: 2026-11-01T17:00:00-08:00 }
 sources:
   - id: usage-cost-api
     resource: https://platform.claude.com/docs/en/api/usage-cost-api
@@ -58,6 +58,14 @@ Split collection from drawing:
   over mini-bars.
 - **Config** is a stow-managed JSON file (`hosts` filter, `configDir`
   candidates for the macs' `~/.claude-me`), editable without a rebuild.
+
+Codex token renewal is delegated to its official app-server rather than
+leaving an unattended collector stuck on an expired login. The collector
+still never performs the OAuth exchange itself. Optional local dollar
+estimates are explicitly separate from billed spending: they use local
+session counters and published standard API rates, with coverage and
+exclusions shown on the card. Details and upstream references are in the
+[package doc](../packages/ai-usage.md#codex-collection-and-local-estimates).
 
 Rejected: a mod-only tracker (the reasons above); sops for the Admin key
 (it works unattended, but 1Password is where the user keeps keys, and the

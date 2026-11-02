@@ -4,7 +4,7 @@ title: Ai Usage
 description: 'ai-usage — a Bun collector for AI account usage (Claude Max plan limits and extra usage, Anthropic API month-to-date cost, ChatGPT Codex limits): a rate-limit-paced daemon plus a terminal view, drawn in herdr-app by the ai-usage mod.'
 resource: overlays/ai-usage.nix
 tags: [overlay, package, herdr]
-generated: { by: claude-code/opus-5.5, at: 2026-11-01T16:05:00-08:00 }
+generated: { by: codex/gpt-6, at: 2026-11-01T17:00:00-08:00 }
 sources:
   - id: usage-cost-api
     resource: https://platform.claude.com/docs/en/api/usage-cost-api
@@ -15,6 +15,12 @@ sources:
   - id: openai-codex
     resource: https://github.com/openai/codex
     title: openai/codex (`backend-client` wham/usage, `login` auth.json)
+  - id: codex-app-server
+    resource: https://learn.chatgpt.com/docs/app-server
+    title: Codex app-server account protocol
+  - id: openai-pricing
+    resource: https://developers.openai.com/api/docs/pricing
+    title: OpenAI API pricing
   - id: simple-icons
     resource: https://simpleicons.org/
     title: Simple Icons (the mod's logos, CC0)
@@ -33,7 +39,61 @@ recorded in a [decision](../decisions/ai-usage-collector-daemon.md).
 | `claude` | Claude Code's OAuth login (`.credentials.json`, or the macOS keychain item hashed from the config dir) | `api.anthropic.com/api/oauth/usage` | session (when present), weekly, per-model weekly (`limits[]`), cloud credits, extra usage $ |
 | `anthropic-api` | an **Admin** key, `sk-ant-admin01-…`[^usage-cost-api] | `/v1/organizations/cost_report`, paged, summed | this month $ (toward `budget`), today $ |
 | `hermes` | Hermes' `state.db` (`session_model_usage`, its own list-price estimate) | none | this month $, today $ |
-| `codex` | `$CODEX_HOME/auth.json` (or the `Codex Auth` keychain item) | `chatgpt.com/backend-api/wham/usage`[^openai-codex] | 5h and weekly windows, extras, credits |
+| `codex` | `$CODEX_HOME/auth.json` (or the `Codex Auth` keychain item), optional local session logs | `chatgpt.com/backend-api/wham/usage`[^openai-codex] | 5h and weekly windows, extras, credits, local API-equivalent estimate |
+
+## Codex collection and local estimates
+
+The ChatGPT title is plan-neutral; the live plan appears in the subtitle.
+The usage service's `prolite` tier is displayed as **Pro**. Subscription
+price remains an explicit config value (currently $100/month, supplied by
+the account owner), since the usage response does not return a price.
+
+The Herdr widget shows only meters with percentage bars and collection
+errors. Credits, local cost figures and informational disclaimers are hidden
+in both full cards and rail tooltips. Local cost collection is disabled in
+the shared config. Codex daily, weekly, code-review and additional model
+windows render as bars when returned by the service; the current $100 Pro
+response supplies only a weekly window (verified 2026-11-01).
+
+Optional `localCost: true` adds **Today est.** and
+**Month est.** from `sessions/` and `archived_sessions/` under `codexHome`.
+These are local API-equivalent estimates at standard prices, **not billed
+spending or a conversion of the subscription quota**. Prices are explicit
+USD per million input/cached-input/output tokens, verified 2026-11-01;
+unknown models are omitted with a visible notice.[^openai-pricing] Update
+the table when adding models or when published prices change.
+
+The parser follows model changes, subtracts cumulative counters, ignores
+duplicate notifications, and deduplicates copied fork/archive history.
+Periods use local calendar days/months and event timestamps; changed files
+are cached in memory. Logs on other devices, tool charges and speed/context
+surcharges are excluded. Logs in one Codex home may span multiple accounts;
+the estimate describes that local history, not an account billing ledger.
+No priced events means no dollar meters, rather than a misleading $0.
+
+Expired logins are renewed by `codex app-server` using
+`account/read` with `refreshToken: true`, with a 30-second timeout; the
+collector never redeems the refresh token itself.[^codex-app-server]
+The service finds Codex on PATH or in `~/.local/bin` / `~/.nix-profile/bin`.
+Failed renewal shows a `codex login` recovery message. Credit balances of
+zero are visible; absent credit fields are not guessed.
+
+On 2026-11-01, host [k](../hosts/k.md) had a stale one-shot snapshot but no
+installed collector or launchd agent, despite the module being enabled in
+the checkout. A config change needs activation: `nrs` installs both the
+command and service. A snapshot alone does not establish that polling is
+running. Check `ai-usage show` and the launchd service
+`gui/$(id -u)/org.nixos.ai-usage` (Linux: the user systemd service).
+
+The fix was activated on k without a full system switch: the built package
+is GC-rooted at `~/.local/state/ai-usage/package`, its generated-equivalent
+launchd plist uses the normal `org.nixos.ai-usage` label, and a
+`~/.local/bin/ai-usage` launcher prefers the system command once `nrs`
+installs it. Herdr also tries this local path and now displays command
+errors even when an old snapshot exists. The working panel was visually
+verified with quota bars, credits, and both estimate rows.
+
+Regression checks: `bun test pkgs/ai-usage/main.test.ts`.
 
 ## Gotchas
 
@@ -59,9 +119,9 @@ recorded in a [decision](../decisions/ai-usage-collector-daemon.md).
   daemon polls every 10 min, honours `retry-after` exactly (persisted, so a
   restart can't skip it), and a forced refresh still waits a minute.
   CodexBar does the same.[^codexbar]
-- **OAuth tokens are read, never refreshed.** Claude's and Codex's refresh
-  tokens rotate; redeeming one would sign the CLI out. An expired token
-  shows "open Claude Code / run codex" until the CLI renews it.
+- **OAuth refresh belongs to the provider's client.** Claude waits for its
+  CLI; Codex renewal is delegated to the official app-server. The collector
+  does not implement a competing refresh-token exchange.
 - **Cost needs an Admin API credential:** an Admin key (`sk-ant-admin01-`,
   created by an org admin under Settings → Admin keys), or a personal key
   that isn't scoped to a workspace, which carries its user's role. A plain
@@ -85,5 +145,7 @@ recorded in a [decision](../decisions/ai-usage-collector-daemon.md).
 
 [^usage-cost-api]: Claude Platform — Usage and Cost API (Admin API)
 [^openai-codex]: openai/codex (`backend-client` wham/usage, `login` auth.json)
+[^codex-app-server]: Codex app-server account protocol
+[^openai-pricing]: OpenAI API pricing
 [^codexbar]: steipete/CodexBar
 [^simple-icons]: Simple Icons (the mod's logos, CC0)

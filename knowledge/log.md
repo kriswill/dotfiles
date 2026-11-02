@@ -5,6 +5,12 @@ types or directories, root-level concept docs, `docs/` manuals, bundle-wide
 sweeps, and workspace tooling conventions. Changes scoped to one bundle log
 in that bundle's own `log.md` (e.g. [modules/log.md](modules/log.md)).
 
+## 2026-11-01
+
+- **Update**: AI usage collection and Herdr display verified on host k;
+  implementation findings and changes are recorded in the
+  [package log](packages/log.md) and [decision log](decisions/log.md).
+
 ## 2026-10-25
 
 - **Creation** — `docs/chromium-nvidia.md`, listed in

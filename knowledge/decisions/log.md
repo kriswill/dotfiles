@@ -2,6 +2,9 @@
 
 ## 2026-11-01
 
+- **Update**: [ai-usage-collector-daemon](ai-usage-collector-daemon.md):
+  delegate expired Codex login renewal to its app-server and keep local
+  API-equivalent estimates distinct from account billing.
 - **Creation**: [ai-usage-collector-daemon](ai-usage-collector-daemon.md):
   a Bun daemon owns credentials and rate-limit pacing; the herdr-app mod
   only draws its snapshot. Also records that Herdr won't load symlinked

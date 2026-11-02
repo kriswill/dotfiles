@@ -2,6 +2,14 @@
 
 ## 2026-11-01
 
+- **Update**: [ai-usage](ai-usage.md): simplify the widget to usage bars,
+  disable local estimates, and support daily and code-review limit windows.
+- **Update**: [ai-usage](ai-usage.md): reflect the $100 Pro upgrade, use a
+  plan-neutral ChatGPT title, and display the live `prolite` tier as Pro.
+- **Update**: [ai-usage](ai-usage.md): Codex-managed token renewal, visible
+  zero credit balances, and labeled local API-equivalent dollar estimates;
+  regression tests cover cumulative counters, fork deduplication and renewal.
+  Diagnosed host k's stale card as an uninstalled/non-running collector.
 - **Update**: [ai-usage](ai-usage.md): a `hermes` provider (Hermes'
   session-log estimate); the Anthropic API card is off, since an individual
   Console org gets no Admin API reports (findings in the doc).
