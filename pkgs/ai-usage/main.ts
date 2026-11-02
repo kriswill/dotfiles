@@ -20,9 +20,9 @@
 //   and the herdr TUI's herdr-usage-watcher.ts draws on the same bucket.
 //   So: every 10 min at most, retry-after honoured exactly, and the last good
 //   reading kept through any failure.
-// - OAuth tokens (Claude, Codex) are only ever READ. Their refresh tokens
-//   rotate; redeeming one here would sign the real CLI out. An expired token
-//   waits for the CLI to refresh it.
+// - OAuth credentials are only READ here. Codex renews expired tokens via
+//   its own app-server; this collector never redeems refresh tokens itself.
+//   Claude still waits for its CLI to refresh the login.
 // - The Admin API key is read once per daemon lifetime (1Password `op read`,
 //   a file, or an env var) and held in memory only.
 
@@ -31,6 +31,7 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import { createInterface } from "node:readline";
 
 const HOME = os.homedir();
 const HOST = os.hostname().split(".")[0];
@@ -108,6 +109,7 @@ type AccountConfig = {
   stateDb?: string; // hermes: its state.db
   workspaceId?: string | null; // anthropic-api: one workspace only (null = Default)
   codexHome?: string; // codex
+  localCost?: boolean; // codex: local session API-equivalent estimate, never billed spend
 };
 type Config = { accounts: AccountConfig[] };
 
@@ -495,8 +497,147 @@ function codexAuth(home: string): any | null {
   return null;
 }
 
+// Let the official client own token rotation and persistence. Never redeem a
+// refresh token ourselves, and never return account details from this helper.
+export async function renewCodexLogin(home: string, command?: string, timeoutMs = 30_000): Promise<boolean> {
+  const executable = command ?? Bun.which("codex") ??
+    [path.join(HOME, ".local/bin/codex"), path.join(HOME, ".nix-profile/bin/codex")]
+      .find((p) => fs.existsSync(p));
+  if (!executable) return false;
+  let child: ReturnType<typeof Bun.spawn> | undefined;
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    child = Bun.spawn([executable, "app-server"], {
+      env: { ...process.env, CODEX_HOME: expand(home) },
+      stdin: "pipe", stdout: "pipe", stderr: "ignore",
+    });
+    const proc = child;
+    const send = (message: object) => {
+      (proc.stdin as any).write(JSON.stringify(message) + "\n");
+      (proc.stdin as any).flush();
+    };
+    const read = async () => {
+      const lines = createInterface({ input: (await import("node:stream")).Readable.fromWeb(proc.stdout as any) });
+      try {
+        send({ id: 1, method: "initialize", params: { clientInfo: { name: "ai_usage", version: "1" } } });
+        for await (const line of lines) {
+          let msg: any;
+          try { msg = JSON.parse(line); } catch { continue; }
+          if (msg.id === 1) {
+            if (msg.error) return false;
+            send({ method: "initialized" });
+            send({ id: 2, method: "account/read", params: { refreshToken: true } });
+          } else if (msg.id === 2) {
+            return !msg.error && msg.result?.account?.type === "chatgpt";
+          }
+        }
+        return false;
+      } finally { lines.close(); }
+    };
+    return await Promise.race([
+      read(),
+      new Promise<boolean>((resolve) => { timer = setTimeout(() => resolve(false), timeoutMs); }),
+    ]);
+  } catch { return false; }
+  finally {
+    clearTimeout(timer);
+    child?.kill("SIGKILL");
+    if (child) await child.exited;
+  }
+}
+
+// Standard API USD / million tokens, verified 2026-11-01:
+// https://developers.openai.com/api/docs/pricing
+// This is a comparison at current standard prices, not subscription billing.
+const CODEX_PRICES: Record<string, [number, number, number]> = {
+  "gpt-6-astra": [10, 1, 50],
+  "gpt-6.1-sol": [2, 0.1, 10],
+  "gpt-6.1-terra": [1, 0.05, 5],
+  "gpt-6-luna": [0.1, 0.01, 0.5],
+  "gpt-5.6-sol": [4, 0.4, 20],
+  "gpt-5.3-codex": [1.75, 0.175, 14],
+};
+
+type CostEvent = { key: string; time: number; model: string; input: number; cached: number; output: number };
+const sessionCostCache = new Map<string, { size: number; mtime: number; events: CostEvent[] }>();
+
+export function codexCostEvents(text: string): CostEvent[] {
+  let model = "unknown";
+  let previous = [0, 0, 0];
+  const events: CostEvent[] = [];
+  for (const line of text.split("\n")) {
+    let e: any;
+    try { e = JSON.parse(line); } catch { continue; } // an in-progress final line
+    const p = e.payload;
+    if (e.type === "turn_context") model = p?.model ?? "unknown";
+    if (e.type !== "event_msg" || p?.type !== "token_count") continue;
+    const u = p.info?.total_token_usage;
+    if (!u) continue;
+    const total = [u.input_tokens, u.cached_input_tokens ?? 0, u.output_tokens];
+    if (!total.every((n) => Number.isFinite(n) && n >= 0)) continue;
+    // Repeated token_count notifications carry the same cumulative counters.
+    // After a counter reset, count only the explicitly reported last request.
+    const last = p.info?.last_token_usage;
+    const delta = total.some((n, i) => n < previous[i])
+      ? [last?.input_tokens, last?.cached_input_tokens ?? 0, last?.output_tokens]
+      : total.map((n, i) => n - previous[i]);
+    previous = total;
+    if (!delta.every((n) => Number.isFinite(n) && n >= 0) || delta.every((n) => n === 0)) continue;
+    const time = Date.parse(e.timestamp);
+    if (!Number.isFinite(time)) continue;
+    // Forks can copy parent history. Identical historical events count once.
+    const key = JSON.stringify([e.timestamp, model, total]);
+    events.push({ key, time, model, input: delta[0], cached: delta[1], output: delta[2] });
+  }
+  return events;
+}
+
+export function codexLocalCost(home: string, now = new Date()): { meters: Meter[]; message: string } {
+  const month = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  const seen = new Set<string>();
+  const unknown = new Set<string>();
+  let monthUsd = 0, todayUsd = 0, count = 0;
+  // Include archived sessions and older files resumed this month. Only read
+  // changed files; never cache prompts, tool output, or credentials.
+  for (const folder of ["sessions", "archived_sessions"]) {
+    const root = path.join(expand(home), folder);
+    if (!fs.existsSync(root)) continue;
+    for (const name of new Bun.Glob("**/*.jsonl").scanSync({ cwd: root })) {
+      const file = path.join(root, name);
+      let events: CostEvent[];
+      try {
+        const stat = fs.statSync(file);
+        if (stat.mtimeMs < month) continue;
+        const cached = sessionCostCache.get(file);
+        events = cached?.size === stat.size && cached.mtime === stat.mtimeMs
+          ? cached.events : codexCostEvents(fs.readFileSync(file, "utf8"));
+        sessionCostCache.set(file, { size: stat.size, mtime: stat.mtimeMs, events });
+      } catch { continue; } // a session may be archived while scanning
+      for (const e of events) {
+        if (e.time < month || e.time > now.getTime() || seen.has(e.key)) continue;
+        seen.add(e.key);
+        const rates = CODEX_PRICES[e.model];
+        if (!rates) { unknown.add(e.model); continue; }
+        const cached = Math.min(e.cached, e.input);
+        const cost = ((e.input - cached) * rates[0] + cached * rates[1] + e.output * rates[2]) / 1e6;
+        monthUsd += cost;
+        if (e.time >= today) todayUsd += cost;
+        count++;
+      }
+    }
+  }
+  const skipped = unknown.size ? ` Unpriced models omitted: ${[...unknown].sort().join(", ")}.` : "";
+  return {
+    meters: count ? [usdMeter("local-month", "Month est.", monthUsd, null), usdMeter("local-today", "Today est.", todayUsd, null)] : [],
+    message: (count ? "Local API-equivalent estimate at standard rates; not billed spend. Excludes tools, speed/context surcharges and other devices."
+      : "No priced local token usage this month.") + skipped,
+  };
+}
+
 function windowLabel(seconds: number): string {
   if (seconds === 18_000) return "Session (5h)";
+  if (seconds === 86_400) return "Daily";
   if (seconds === 604_800) return "Weekly";
   return seconds % 86_400 === 0 ? `${seconds / 86_400}d window` : `${Math.round(seconds / 3600)}h window`;
 }
@@ -513,9 +654,34 @@ function windowMeter(prefix: string, w: any): Meter | null {
   return pctMeter(slug(`${prefix} ${label}`), prefix ? `${prefix} ${label.toLowerCase()}` : label, w.used_percent, resets);
 }
 
+export function codexPlanLabel(plan: string): string {
+  // The $100 Pro tier is named "prolite" by the usage service.
+  return plan === "prolite" ? "Pro" : titleCase(plan);
+}
+
+export function codexLimitMeters(data: any): Meter[] {
+  const meters: Meter[] = [];
+  const limits = [
+    { name: "", limit: data.rate_limit },
+    { name: "Code review", limit: data.code_review_rate_limit },
+    ...(data.additional_rate_limits ?? []).map((extra: any) => ({
+      name: titleCase(String(extra.limit_name ?? extra.metered_feature ?? "Limit")),
+      limit: extra.rate_limit,
+    })),
+  ];
+  for (const { name, limit } of limits) {
+    for (const window of [limit?.primary_window, limit?.secondary_window]) {
+      const meter = windowMeter(name, window);
+      if (meter) meters.push(meter);
+    }
+  }
+  return meters;
+}
+
 async function fetchCodex(cfg: AccountConfig): Promise<Result> {
-  const auth = codexAuth(cfg.codexHome ?? process.env.CODEX_HOME ?? "~/.codex");
-  const t = auth?.tokens;
+  const home = cfg.codexHome ?? process.env.CODEX_HOME ?? "~/.codex";
+  let auth = codexAuth(home);
+  let t = auth?.tokens;
   if (!t?.access_token) {
     const apiKeyOnly = auth && (auth.OPENAI_API_KEY || auth.auth_mode === "apikey");
     return {
@@ -525,8 +691,15 @@ async function fetchCodex(cfg: AccountConfig): Promise<Result> {
     };
   }
   const claims = jwtClaims(t.access_token);
-  if (claims?.exp && claims.exp * 1000 < Date.now())
-    return { status: "stale", message: "Token expired; run codex to renew it", retryInMs: 2 * MIN };
+  if (claims?.exp && claims.exp * 1000 < Date.now()) {
+    if (await renewCodexLogin(home)) {
+      auth = codexAuth(home);
+      t = auth?.tokens;
+    }
+    const expires = t?.access_token && jwtClaims(t.access_token)?.exp;
+    if (!t?.access_token || (expires && expires * 1000 < Date.now()))
+      return { status: "stale", message: "Codex login expired; automatic renewal failed. Run codex login, then ai-usage refresh.", retryInMs: 10 * MIN };
+  }
   const idClaims = t.id_token ? jwtClaims(t.id_token) : null;
   const accountId =
     t.account_id ?? idClaims?.chatgpt_account_id ?? idClaims?.["https://api.openai.com/auth"]?.chatgpt_account_id;
@@ -536,24 +709,16 @@ async function fetchCodex(cfg: AccountConfig): Promise<Result> {
   const { res, data, err } = await getJson("https://chatgpt.com/backend-api/wham/usage", headers);
   if (!data) return httpFailure("ChatGPT", res, err);
 
-  const meters: Meter[] = [];
-  for (const w of [data.rate_limit?.primary_window, data.rate_limit?.secondary_window]) {
-    const m = windowMeter("", w);
-    if (m) meters.push(m);
-  }
-  for (const extra of data.additional_rate_limits ?? []) {
-    const name = extra.limit_name ?? extra.metered_feature ?? "Limit";
-    for (const w of [extra.rate_limit?.primary_window, extra.rate_limit?.secondary_window]) {
-      const m = windowMeter(titleCase(String(name)), w);
-      if (m) meters.push(m);
-    }
-  }
+  const meters = codexLimitMeters(data);
   const c = data.credits;
-  if (c?.has_credits && !c.unlimited && c.balance != null && c.balance !== "")
-    meters.push({ id: "credits", label: "Credits", percent: null, value: String(c.balance) });
+  if (c?.unlimited)
+    meters.push({ id: "credits", label: "Credits", percent: null, value: "Unlimited" });
+  else if (c?.balance != null && c.balance !== "")
+    meters.push({ id: "credits", label: "Credits left", percent: null, value: String(c.balance) });
 
-  const plan = data.plan_type ? titleCase(String(data.plan_type)) : undefined;
-  return { status: "ok", meters, subtitle: plan };
+  const plan = data.plan_type ? codexPlanLabel(String(data.plan_type)) : undefined;
+  const cost = cfg.localCost ? codexLocalCost(home) : undefined;
+  return { status: "ok", meters: [...meters, ...(cost?.meters ?? [])], subtitle: plan, message: cost?.message };
 }
 
 const FETCH: Record<Provider, (cfg: AccountConfig) => Promise<Result>> = {
@@ -883,4 +1048,4 @@ async function main() {
   }
 }
 
-await main();
+if (import.meta.main) await main();

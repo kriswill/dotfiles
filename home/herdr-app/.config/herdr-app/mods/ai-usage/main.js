@@ -71,6 +71,7 @@ export default class AiUsage extends View {
   init(_props, cx) {
     this.snap = null;
     this.problem = null; // why there's nothing to show
+    this.collector = "ai-usage";
     this.width = 268;
     this.refreshing = false;
     this.watching = false;
@@ -88,11 +89,16 @@ export default class AiUsage extends View {
     });
 
     cx.spawn(async (cx) => {
-      try {
-        const r = await exec("ai-usage", ["path"]);
-        if (r.code === 0 && r.stdout.trim()) this.dir = r.stdout.trim();
-      } catch {
-        this.problem = "The ai-usage collector isn't installed on this machine.";
+      this.problem = "The ai-usage collector isn't installed on this machine.";
+      for (const command of ["ai-usage", `${home()}/.local/bin/ai-usage`]) {
+        try {
+          const r = await exec(command, ["path"]);
+          if (r.code !== 0 || !r.stdout.trim()) continue;
+          this.collector = command;
+          this.dir = r.stdout.trim();
+          this.problem = null;
+          break;
+        } catch {}
       }
       await this.load(cx);
       // Reload on every change in the folder; if it isn't there yet (no
@@ -117,7 +123,6 @@ export default class AiUsage extends View {
     if (text) {
       try {
         this.snap = JSON.parse(text);
-        this.problem = null;
       } catch {
         // mid-write: keep the last good snapshot
       }
@@ -133,8 +138,11 @@ export default class AiUsage extends View {
     cx.notify();
     cx.spawn(async (cx) => {
       try {
-        await exec("ai-usage", ["refresh"]);
-      } catch {}
+        const result = await exec(this.collector, ["refresh"]);
+        this.problem = result.code === 0 ? null : "Usage refresh failed; check the ai-usage service.";
+      } catch {
+        this.problem = "Cannot run ai-usage; install the collector and reload this mod.";
+      }
       this.refreshing = false;
       await this.load(cx);
     });
@@ -214,8 +222,8 @@ export default class AiUsage extends View {
           )
           .when(Boolean(a.price), (el) => el.child(div().flex_none().text_size(11).text_color(t.muted).child(a.price))),
       )
-      .children(a.meters.map((m) => this.meter(a, m, t)))
-      .when(Boolean(a.message), (el) => el.child(div().text_size(11).text_color(tone).child(a.message)))
+      .children(a.meters.filter((m) => m.percent !== null && m.percent !== undefined).map((m) => this.meter(a, m, t)))
+      .when(a.status !== "ok" && Boolean(a.message), (el) => el.child(div().text_size(11).text_color(tone).child(a.message)))
       .when(Boolean(old) && !a.message, (el) => el.child(div().text_size(10.5).text_color(t.dim).child(`updated ${ago(a.fetchedAt)}`)));
   }
 
@@ -223,7 +231,7 @@ export default class AiUsage extends View {
   chip(a, t) {
     const bars = a.meters.filter((m) => m.percent !== null && m.percent !== undefined);
     const top = bars.reduce((x, m) => (!x || m.percent > x.percent ? m : x), null);
-    const lines = [a.title, ...a.meters.map((m) => `${m.label}: ${m.value}`), a.message].filter(Boolean);
+    const lines = [a.title, ...bars.map((m) => `${m.label}: ${m.value}`), a.status !== "ok" && a.message].filter(Boolean);
     return v_flex()
       .id(`au-${a.id}`)
       .items_center()
@@ -287,7 +295,7 @@ export default class AiUsage extends View {
             ),
         ),
       )
-      .when(accounts.length === 0, (el) =>
+      .when(Boolean(this.problem) || accounts.length === 0, (el) =>
         el.when(!rail, (el) =>
           el.child(div().px(16).text_size(12).text_color(t.dim).child(this.problem ?? "Loading…")),
         ),

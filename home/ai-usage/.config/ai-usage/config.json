@@ -6,7 +6,7 @@
     "claude: configDir, a Claude Code config dir or a list of candidates (first with a login wins).",
     "anthropic-api: exact month-to-date cost from the Admin API. adminKey ({op: 'op://…'} | {file: '…'} | {env: 'NAME'}) holding an Admin key (sk-ant-admin01-…, Console → Settings → Admin keys) or a personal key (sk-ant-usr-…) not scoped to a workspace; budget ($/mo the bar fills toward); workspaceId (one workspace only; null = Default). Unavailable to Console *individual* orgs (every report endpoint answers 403 'Missing permissions'): set up an organization first (Console → Settings → Organization).",
     "hermes: Hermes' own estimate of its Anthropic spend (list prices, from its session log); no key needed. stateDb (default /var/lib/hermes/.hermes/state.db); budget.",
-    "codex: codexHome (default $CODEX_HOME or ~/.codex)."
+    "codex: codexHome (default $CODEX_HOME or ~/.codex); localCost adds a local session API-equivalent estimate at standard rates, not billed spending. Codex itself renews expired logins when installed."
   ],
   "accounts": [
     {
@@ -21,9 +21,9 @@
     {
       "id": "chatgpt",
       "provider": "codex",
-      "title": "ChatGPT Plus",
+      "title": "ChatGPT",
       "subtitle": "Codex",
-      "price": 20,
+      "price": 100,
       "url": "https://chatgpt.com/codex/settings/usage"
     }
   ]
