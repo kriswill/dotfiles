@@ -46,6 +46,17 @@
                 "weight": 1
               },
               "min": 90
+            },
+            {
+              "id": "ai-usage",
+              "type": "block",
+              "content": {
+                "mod": "ai-usage"
+              },
+              "size": {
+                "weight": 1
+              },
+              "min": 90
             }
           ]
         },

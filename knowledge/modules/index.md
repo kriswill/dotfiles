@@ -7,6 +7,7 @@ interesting ones by hand — scaffolding never overwrites an existing doc.
 
 ## Concepts
 
+* [Ai Usage](ai-usage.md) - Runs the ai-usage collector daemon (Claude Max limits, Anthropic API cost, ChatGPT/Codex limits) as a systemd user service on nebula and an opt-in launchd agent on the macs, feeding the herdr-app ai-usage sidebar panel.
 * [Alias En0](alias-en0.md) - Alias a local dev IP onto en0 (work host only).
 * [Apple Container](apple-container.md) - apple-container ships its nix-darwin module with its sub-flake (./flakes/apple-container/darwin-module.nix); re-export it into the Dendritic module set so hosts pick it up like any in-tree modules/darwin/* module.
 * [ASTRO MixAmp Priority](astro-mixamp.md) - WirePlumber monitor.alsa.rules drop-in raising the ASTRO MixAmp Pro headset nodes' priority.session above the motherboard USB audio, so nebula falls back to the headset when a suspend/resume renames it.

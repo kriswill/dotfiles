@@ -2,6 +2,13 @@
 
 ## 2026-11-01
 
+- **Update**: [ai-usage](ai-usage.md): a `hermes` provider (Hermes'
+  session-log estimate); the Anthropic API card is off, since an individual
+  Console org gets no Admin API reports (findings in the doc).
+- **Creation**: [ai-usage](ai-usage.md): Bun collector for Claude Max
+  limits, Anthropic API cost (Admin API) and ChatGPT's Codex limits, with a
+  terminal view; drawn in herdr-app by the `ai-usage` mod
+  ([decision](../decisions/ai-usage-collector-daemon.md)).
 - **Update** — [herdr](herdr.md): `herdr-app-unwrapped` and `herdr-app`
   build on `aarch64-darwin` (upstream's signed `Herdr.app`, no fixup);
   `update.ts` pins the macOS app target; `herdr-update-check` resolves

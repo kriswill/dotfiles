@@ -2,6 +2,9 @@
 
 ## 2026-11-01
 
+- **Creation**: [ai-usage](ai-usage.md): the ai-usage daemon as a
+  graphical-session user service on nebula and an opt-in launchd agent on
+  the macs ([decision](../decisions/ai-usage-collector-daemon.md)).
 - **Update** — [herdr](herdr.md): the darwin twin now enables
   `programs.herdr-app`, `programs.herdr-core.users = [ "k" ]` and
   `services.herdr-update-check` on every mac; the app's telemetry, core pin

@@ -124,6 +124,14 @@ version the app's edits. nebula does exactly that
 file becomes a store link: `systemd-tmpfiles` `L+` on NixOS, `ln -sfn` from
 the activation script on darwin.
 
+Stowed **mods** have two limits. `image()` and `svg()` won't load a file
+whose path resolves outside `~/.config/herdr-app`, which every stow link
+does. And an edit in the repo doesn't hot-reload the mod until you
+`touch -h` its link. The `ai-usage` sidebar panel works around the first
+([decision](../decisions/ai-usage-collector-daemon.md)); its data comes from
+the [ai-usage](ai-usage.md) daemon, the app-side successor of the TUI's
+usage bars below.
+
 The TUI's own `config.toml` is the `home/herdr/`
 [stow package](../patterns/stow-tree.md). It's adopted per file because
 herdr keeps mutable runtime data (logs, sockets, `session.json`) in the same

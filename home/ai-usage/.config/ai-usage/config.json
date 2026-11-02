@@ -1,0 +1,30 @@
+{
+  "$comment": [
+    "Accounts the ai-usage daemon tracks (pkgs/ai-usage/main.ts), drawn by the herdr-app ai-usage mod and `ai-usage` in a terminal.",
+    "Edits apply on the daemon's next pass (or `ai-usage refresh`); no rebuild.",
+    "Common keys: id, provider (claude | anthropic-api | hermes | codex), title, subtitle, price ($/mo, subscriptions), url, color, interval (minutes), hosts (short hostnames; omit = everywhere), disabled.",
+    "claude: configDir, a Claude Code config dir or a list of candidates (first with a login wins).",
+    "anthropic-api: exact month-to-date cost from the Admin API. adminKey ({op: 'op://…'} | {file: '…'} | {env: 'NAME'}) holding an Admin key (sk-ant-admin01-…, Console → Settings → Admin keys) or a personal key (sk-ant-usr-…) not scoped to a workspace; budget ($/mo the bar fills toward); workspaceId (one workspace only; null = Default). Unavailable to Console *individual* orgs (every report endpoint answers 403 'Missing permissions'): set up an organization first (Console → Settings → Organization).",
+    "hermes: Hermes' own estimate of its Anthropic spend (list prices, from its session log); no key needed. stateDb (default /var/lib/hermes/.hermes/state.db); budget.",
+    "codex: codexHome (default $CODEX_HOME or ~/.codex)."
+  ],
+  "accounts": [
+    {
+      "id": "claude-max",
+      "provider": "claude",
+      "title": "Claude Max",
+      "subtitle": "Claude Code",
+      "price": 200,
+      "configDir": ["~/.claude-me", "~/.claude"],
+      "url": "https://claude.ai/settings/usage"
+    },
+    {
+      "id": "chatgpt",
+      "provider": "codex",
+      "title": "ChatGPT Plus",
+      "subtitle": "Codex",
+      "price": 20,
+      "url": "https://chatgpt.com/codex/settings/usage"
+    }
+  ]
+}
