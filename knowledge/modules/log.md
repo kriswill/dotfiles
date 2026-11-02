@@ -2,6 +2,18 @@
 
 ## 2026-11-01
 
+- **Update**: [nebula-hermes-agent](nebula-hermes-agent.md): leave the full
+  model mapping runtime-owned to prevent mixed-provider activation merges;
+  supply ffmpeg/nixd to gateway and terminal tools and pin the Nix LSP command.
+  The [package](../packages/hermes-agent.md) repairs writable skill copies
+  and dependency accounting; config activation removes only the retired
+  Herdr plugin's enabled entry, preserving unrelated plugins.
+
+- **Update**: [user-packages](user-packages.md): install bubblewrap on
+  NixOS so Codex's Linux sandbox finds `bwrap` on PATH instead of warning
+  and falling back to its bundled binary; restart the Codex daemon after
+  applying the configuration to refresh its prerequisite check.
+
 - **Update** — [ai-usage](ai-usage.md): enabled on k (`services.ai-usage.enable`),
   the first mac; a hand run of the collector read the Claude login from the
   keychain and wrote `~/.cache/ai-usage/usage.json`, which Herdr's ai-usage

@@ -4,7 +4,7 @@ title: Hermes Agent (nebula)
 description: 'Enables services.hermes-agent on nebula, running the gateway as k from /var/lib/hermes, with the module''s HERMES_HOME-defaulting CLI (addToSystemPackages) so the CLI and the service share one single-owner HERMES_HOME, plus the module''s Herdr integration; the Anthropic key arrives through the hermes-env sops secret.'
 resource: modules/hosts/nebula/hermes-agent.nix
 tags: [nixos-module, host-specific, ai-agent, secrets]
-generated: { by: claude-code/opus-5-5, at: 2026-10-30T03:00:00+00:00 }
+generated: { by: hermes-agent/gpt-6-astra, at: 2026-11-01T18:02:53-08:00 }
 sources:
   - id: hermes-nix-setup
     resource: https://hermes-agent.nousresearch.com/docs/getting-started/nix-setup
@@ -58,10 +58,19 @@ this file only sets options.
   each activation: Nix keys win, keys added at runtime survive. `hermes
   setup`, `hermes config set/edit` and `hermes gateway install` are refused
   under the module's managed mode.[^hermes-nix-setup]
-- **Model.** `provider = "anthropic"`, `default = "claude-opus-5-5"`, billed
-  per token via `ANTHROPIC_API_KEY`. The Claude-subscription OAuth path needs
-  Max plus purchased extra-usage credits.[^hermes-providers] Hermes v0.22.5
-  already lists Opus 5.5 as a mandatory-thinking model.
+- **Model selection is runtime-owned.** This host deliberately declares no
+  `settings.model`: `/model … --global` owns the complete model mapping.
+  Declaring only provider/default in Nix would retain a runtime-selected
+  provider's `base_url` and `api_mode` after the activation deep merge.
+  Anthropic remains available through its API key; OpenAI Codex uses a
+  separate `hermes auth add openai-codex` login.[^hermes-providers]
+  `CODEX_HOME=/home/k/.codex` enables explicit import/recovery, not automatic
+  provider registration; independent device-code login avoids shared refresh
+  token rotation.
+- **Tool dependencies.** `extraPackages` supplies ffmpeg and nixd to both the
+  gateway and k's per-user profile (terminal tools run login shells, which
+  replace the gateway wrapper's PATH). Nix LSP also has an absolute
+  `settings.lsp.servers.nixd.command`, so it does not depend on PATH.
 - **Secret.** `sops.secrets.hermes-env` (root, 0400) holds
   `ANTHROPIC_API_KEY=…`, sourced from the 1Password item "Antropic API Key
   (nebula-hermes)" (Private vault, field `password`). sops-nix's build-time

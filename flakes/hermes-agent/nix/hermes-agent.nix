@@ -14,10 +14,8 @@
   makeWrapper,
   writeText,
   callPackage,
-  ripgrep,
   git,
   openssh,
-  ffmpeg,
 
   # linux-only deps
   wl-clipboard,
@@ -150,6 +148,10 @@ let
     filter = path: _type: !(lib.hasInfix "/__pycache__/" path);
   };
 
+  # Ours: PM receipts must describe the actual pinned artifacts, not
+  # nixpkgs executables falsely labelled with PM's archive hashes.
+  inherit (pmPackages) ripgrep ffmpeg;
+
   runtimeDeps = [
     hermesNpmLib.nodejs
     ripgrep
@@ -275,6 +277,47 @@ stdenv.mkDerivation {
     # links resources and emits the derived command/environment description.
     PYTHONPATH=${agentBuilderSrc} ${python}/bin/python3 -m scripts.build.agent \
       --inputs ${agentInputsFile} --out "$out"
+
+    # Ours: publish a sealed PM store for the tools actually shipped here.
+    # Nix verifies the lock's archive hashes; PM verifies the executable and
+    # records the realized tree digest after Nix's ELF/wrapper fixups. Include
+    # node/npm so this store does not depend on a user's pre-existing receipts.
+    mkdir -p "$out/tools"
+    ln -s ${ffmpeg} "$out/tools/ffmpeg"
+    ln -s ${ripgrep} "$out/tools/ripgrep"
+    ln -s ${hermesNpmLib.nodejs} "$out/tools/node"
+    ln -s ${hermesNpmLib.nodejs} "$out/tools/npm"
+    PATH="${runtimePath}:$PATH" ${hermesVenv}/bin/python3 - "$out/tools" <<'PY'
+    import json, sys
+    from pathlib import Path
+    from pm.lock import Facts, Lockfile
+    from pm.paths import lockfile_path
+    from pm.registry import get_package
+    from pm.store import current_target, tree_digest
+
+    root = Path(sys.argv[1])
+    lock = Lockfile(lockfile_path())
+    facts = Facts(root / "facts.json")
+    target = current_target()
+    for name in ("ffmpeg", "ripgrep", "node", "npm"):
+        package = get_package(name)
+        entry = root / name
+        reason = package.verify(entry, target)
+        if reason:
+            raise RuntimeError(f"{name}: {reason}")
+        artifacts = [a["sha256"] for a in lock.artifacts(name, target)]
+        if not artifacts:
+            raise RuntimeError(f"{name}: no pinned artifacts for {target}")
+        facts.record(name, lock.version(name), name, package.env(entry, target),
+                     root, target=target, artifacts=artifacts, digest=tree_digest(entry))
+    # PM imports live in the separate venv, not beside the payload manifest.
+    # Its supported stamp binding makes this store discoverable there too.
+    stamp_path = root.parent / "share/hermes-agent/install-stamp.json"
+    stamp = json.loads(stamp_path.read_text())
+    stamp["runtimeDir"] = str(root)
+    stamp_path.unlink()
+    stamp_path.write_text(json.dumps(stamp) + "\n")
+    PY
 
     # Native wrappers retain Nix's PATH/PYTHONPATH policies. Names, executable
     # sources and resource bindings come from the builder, not another table.

@@ -36,9 +36,11 @@ path value at its root, which a `lib.makeScope` hands to every `callPackage`.
 a path: `lib.fileset` rejects strings, and copying a path into the store is
 what gives each filtered source the same store path that upstream gets.
 
-That makes parity checkable. With `version` reset to upstream's `0.0.0`, the
-package is the same derivation as upstream's `packages.x86_64-linux.default`
-at v0.22.5:
+The original v0.22.5 import was derivation-identical to upstream with `version`
+reset to `0.0.0`. Local runtime repairs now intentionally break that parity:
+PM dependency receipts and writable bundled-skill copies are packaging fixes.
+On a bump, compare the upstream files and port or retire each `Ours:` change;
+these commands still show the derivations for comparison:
 
 ```sh
 nix eval --raw --apply 'p: (p.override { version = "0.0.0"; }).drvPath' \
@@ -56,6 +58,15 @@ nix eval --raw github:NousResearch/hermes-agent/v0.22.5#packages.x86_64-linux.de
   - The desktop app, the dev-shell passthru and the npm-lockfile tooling are
     gone.
   - The TUI and web bundles still build, as passthru.
+  - PM's pinned ffmpeg/ripgrep and existing node/npm are registered in an
+    immutable, digest-bound tool store. The install stamp's `runtimeDir`
+    points PM at it, so a fresh profile recognizes the dependencies rather
+    than reporting PATH-only executables as missing. The package ships
+    ffmpeg 9.0.1 (the PM pin), not nixpkgs' former 8.1.2.
+  - `nix/writable-skill-copies.patch` makes bundled and optional skill copies
+    owner-writable after copying from the immutable store. It preserves
+    executable bits and symlinks without modifying their targets; custom
+    skills remain protected by upstream's content-hash checks.
 - `nixosModules.default`: the module. It keeps upstream's output name.
 
 ## The NixOS module
@@ -67,7 +78,8 @@ services.hermes-agent = {
   addToSystemPackages = true;       # the wrapped `hermes` CLI + HERMES_HOME
   herdr.enable = true;              # herdr's integration plugin
   environmentFiles = [ config.sops.secrets.hermes-env.path ];
-  settings.model = { provider = "anthropic"; default = "claude-opus-5-5"; };
+  # Leave settings.model unset to preserve runtime /model selections.
+  extraPackages = [ pkgs.ffmpeg pkgs.nixd ];
 };
 ```
 
@@ -113,7 +125,15 @@ Upstream's options keep their meaning, except for these:
   Activation approves exactly this build's hook in
   `shell-hooks-allowlist.json` (shell hooks need consent) and drops earlier
   builds' approvals; the gateway rereads it within ~30 s. It also removes the
-  old plugin's `plugins/herdr-agent-state` link.
+  old plugin's `plugins/herdr-agent-state` link. The config merge also removes
+  only that retired name from `plugins.enabled`, preserving unrelated entries.
+- **Model ownership.** Leave `settings.model` unset when `/model --global`
+  should persist across rebuilds. If Nix owns the model instead, declare its
+  full provider/endpoint/API-mode mapping: deep merge preserves unspecified
+  fields, including stale transport fields from a runtime provider switch.
+- **Terminal dependencies.** `extraPackages` populates both the gateway PATH
+  and the user's per-user profile. Login-shell terminal tools replace the
+  gateway wrapper's PATH, so dependencies needed there must be in the profile.
 - **`settings` lists concatenate** across definitions. Upstream's
   `recursiveUpdate` kept only the last module's list, so `herdr.enable`
   would have dropped a host's own `plugins.enabled` entries.
