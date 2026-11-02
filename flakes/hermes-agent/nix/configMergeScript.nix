@@ -35,6 +35,20 @@ pkgs.writeScript "hermes-config-merge" ''
       return result
 
   merged = deep_merge(existing, nix)
+
+  # Ours: herdr.enable replaced the Python plugin with these shell hooks.
+  # Retire only its stale enabled entry; preserve every unrelated plugin.
+  has_herdr_hook = any(
+      hook.get("command", "").endswith("-hermes-herdr-hook")
+      for hooks in nix.get("hooks", {}).values()
+      for hook in hooks
+      if isinstance(hook, dict)
+  )
+  if has_herdr_hook and isinstance(merged.get("plugins"), dict):
+      enabled = merged["plugins"].get("enabled")
+      if isinstance(enabled, list):
+          merged["plugins"]["enabled"] = [name for name in enabled if name != "herdr-agent-state"]
+
   with open(config_path, "w") as f:
       yaml.dump(merged, f)
 ''
