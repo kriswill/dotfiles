@@ -144,21 +144,9 @@ export default class HerdrUpdates extends View {
     this.running = false;
     this.icon = false;
     this.switchGen = 0; // debounces the post-switch check (this.gen: the hover delay)
+    this.retry = false; // a retry after a failed check is pending
 
-    cx.spawn(async (cx) => {
-      try {
-        const dir = `${appHome()}/mods/herdr-updates`;
-        const src = await readTextFile(`${dir}/update.svg`);
-        await fs.mkdir(`${dir}/.icons`, { recursive: true });
-        const dst = `${dir}/.icons/update.svg`;
-        const have = (await fs.exists(dst)) ? await fs.readFile(dst, "utf8") : null;
-        if (src && have !== src) await fs.writeFile(dst, src);
-        this.icon = Boolean(src);
-      } catch (e) {
-        console.log(`herdr-updates: icon: ${e}`);
-      }
-      cx.notify();
-    });
+    this.syncIcon(cx);
 
     cx.spawn(async (cx) => {
       for (;;) {
@@ -188,7 +176,28 @@ export default class HerdrUpdates extends View {
     this.check(cx);
   }
 
+  // On a first install, stow links this folder's files one at a time during
+  // the activation, so update.svg can be missing when main.js first loads:
+  // check() tries again until the copy has worked.
+  syncIcon(cx) {
+    cx.spawn(async (cx) => {
+      try {
+        const dir = `${appHome()}/mods/herdr-updates`;
+        const src = await readTextFile(`${dir}/update.svg`);
+        await fs.mkdir(`${dir}/.icons`, { recursive: true });
+        const dst = `${dir}/.icons/update.svg`;
+        const have = (await fs.exists(dst)) ? await fs.readFile(dst, "utf8") : null;
+        if (src && have !== src) await fs.writeFile(dst, src);
+        this.icon = Boolean(src);
+      } catch (e) {
+        console.log(`herdr-updates: icon: ${e}`);
+      }
+      cx.notify();
+    });
+  }
+
   check(cx) {
+    if (!this.icon) this.syncIcon(cx);
     if (this.running) return;
     this.running = true;
     setShared(KEY, { ...(shared(KEY) ?? {}), checking: true });
@@ -216,6 +225,15 @@ export default class HerdrUpdates extends View {
         at: data ? new Date().toISOString() : (prev.at ?? null),
       });
       this.running = false;
+      // A failure soon after a switch is often that switch still activating
+      // (the old check on PATH): try again in two minutes, not thirty.
+      if (!data && !this.retry) {
+        this.retry = true;
+        cx.timer.after(2 * MIN, (cx) => {
+          this.retry = false;
+          this.check(cx);
+        });
+      }
       cx.notify();
     });
   }
