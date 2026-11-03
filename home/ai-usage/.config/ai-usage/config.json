@@ -15,8 +15,25 @@
       "title": "Claude Ultra",
       "subtitle": "Claude Code",
       "price": 200,
-      "configDir": ["~/.claude-me", "~/.claude"],
+      "configDir": [
+        "~/.claude-me",
+        "~/.claude"
+      ],
       "url": "https://claude.ai/settings/usage"
+    },
+    {
+      "id": "claude-enterprise",
+      "provider": "claude",
+      "title": "Claude Enterprise",
+      "subtitle": "Perforce · Claude Code",
+      "configDir": "~/.claude-work",
+      "hosts": [
+        "k",
+        "SOC-Kris-Williams"
+      ],
+      "interval": 30,
+      "url": "https://claude.ai/settings/usage",
+      "$comment": "Shares the OAuth usage quota with ~/.claude-work/claude-usage-work.ts (15 min) and herdr-usage-watcher.ts, hence the slow interval."
     },
     {
       "id": "chatgpt",

@@ -337,14 +337,17 @@ async function fetchClaude(cfg: AccountConfig): Promise<Result> {
   if (cc && typeof cc.limit_dollars === "number" && cc.limit_dollars > 0)
     meters.push(usdMeter("cloud-credits", "Cloud credits", cc.used_dollars ?? 0, cc.limit_dollars, cc.resets_at));
 
-  // Extra usage: pay-as-you-go past the plan limits, capped monthly.
+  // Extra usage: pay-as-you-go past the plan limits, capped monthly. An
+  // enterprise seat has no plan limits (limits: [], every window null): the
+  // same block is then the org's whole credit spend, so name it that.
+  const spendLabel = meters.length ? "Extra usage" : "Credit spend";
   const spend = data.spend;
   const xu = data.extra_usage;
   if (spend?.enabled && money(spend.limit) !== null) {
-    meters.push(usdMeter("extra", "Extra usage", money(spend.used) ?? 0, money(spend.limit)));
+    meters.push(usdMeter("extra", spendLabel, money(spend.used) ?? 0, money(spend.limit)));
   } else if (xu?.is_enabled && typeof xu.monthly_limit === "number") {
     const scale = 10 ** (xu.decimal_places ?? 2);
-    meters.push(usdMeter("extra", "Extra usage", (xu.used_credits ?? 0) / scale, xu.monthly_limit / scale));
+    meters.push(usdMeter("extra", spendLabel, (xu.used_credits ?? 0) / scale, xu.monthly_limit / scale));
   }
 
   return { status: "ok", meters, subtitle: plan };
