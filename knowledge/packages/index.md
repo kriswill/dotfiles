@@ -5,7 +5,7 @@ flake consumes via relative-path inputs.
 
 ## Concepts
 
-* [Ai Usage](ai-usage.md) - ai-usage — a Bun collector for AI account usage (Claude Max plan limits and extra usage, Anthropic API month-to-date cost, ChatGPT Codex limits): a rate-limit-paced daemon plus a terminal view, drawn in herdr-app by the ai-usage mod.
+* [Ai Usage](ai-usage.md) - ai-usage — a Bun collector for AI account usage (Claude Ultra plan limits and extra usage, Anthropic API month-to-date cost, ChatGPT Codex limits): a rate-limit-paced daemon plus a terminal view, drawn in herdr-app by the ai-usage mod.
 * [apple-container](apple-container.md) - apple-container — Apple's native macOS container CLI, repackaged from the signed .pkg release.
 * [battlenet](battlenet.md) - Sub-flake that runs Blizzard's Battle.net in nixpkgs' GE-Proton without Steam or umu: a host-side `battlenet` launcher that keeps one wineserver per prefix and hands Proton to a steam.buildRuntimeEnv sandbox, installs Battle.net into a configurable prefix on first run, plus the programs.battlenet NixOS module; enabled on nebula.
 * [btop](btop.md) - Patch overlay on btop, the terminal resource monitor: on Linux, the CPU box colours the core labels of the CPUs sharing the largest L3 (nebula's 3D V-Cache CCD) in the Cached meter's colour; darwin keeps the cached build.

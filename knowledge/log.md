@@ -314,3 +314,5 @@ in that bundle's own `log.md` (e.g. [modules/log.md](modules/log.md)).
   stubs (modules, hosts, packages, sub-flakes). Tooling lives in
   `scripts/okf/` (`scaffold` / `index` / `validate` / `viz`); conventions in
   [okf-profile.md](okf-profile.md).
+
+- 2026-11-03: ai-usage: the $200/mo Claude plan is now sold as "Claude Ultra" (the $100/mo 5x tier keeps "Claude Max"); config title, live tier label reduced to the multiplier (max_20x → "20x") and docs renamed.

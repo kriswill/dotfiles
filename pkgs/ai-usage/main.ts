@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-// ai-usage: what the AI accounts have used. Claude Max (plan limits + extra
+// ai-usage: what the AI accounts have used. Claude Ultra/Max (plan limits + extra
 // usage), the Anthropic API (month-to-date $: exact via the Admin API, or
 // estimated from Hermes' own session log), and ChatGPT via Codex's plan limits.
 //
@@ -72,7 +72,7 @@ type Account = {
   id: string;
   provider: Provider;
   title: string;
-  plan?: string; // what the provider says the plan is ("Max 20x", "Plus")
+  plan?: string; // what the provider says the plan is ("20x", "Plus")
   subtitle?: string; // plan · the config's subtitle
   logo: string; // the mod's mods/ai-usage/<logo>.svg
   tint: boolean; // one-color logo: drawn in the text color
@@ -272,10 +272,13 @@ function claudeCredentials(configDir: string): any | null {
   }
 }
 
-function claudePlan(o: any): string | undefined {
+export function claudePlan(o: any): string | undefined {
+  // The usage service names the tiers max_5x / max_20x, but the $200/mo 20x
+  // tier is sold as "Claude Ultra" (5x stays "Claude Max"): show only the
+  // multiplier and let the config title carry the plan name.
   const tier = String(o?.rateLimitTier ?? "");
   const m = tier.match(/max_(\d+)x/);
-  if (m) return `Max ${m[1]}x`;
+  if (m) return `${m[1]}x`;
   const sub = String(o?.subscriptionType ?? "");
   return sub ? titleCase(sub) : undefined;
 }

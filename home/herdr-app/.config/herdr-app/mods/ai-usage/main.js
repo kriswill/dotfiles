@@ -1,4 +1,4 @@
-// ai-usage: the AI accounts' usage in the sidebar: Claude Max's plan limits,
+// ai-usage: the AI accounts' usage in the sidebar: Claude Ultra's plan limits,
 // the Anthropic API's month-to-date cost, ChatGPT's Codex limits. Each account
 // gets its logo, title, plan, a bar per limit and its $ where there is one.
 //

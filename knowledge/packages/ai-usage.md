@@ -1,7 +1,7 @@
 ---
 type: Overlay
 title: Ai Usage
-description: 'ai-usage — a Bun collector for AI account usage (Claude Max plan limits and extra usage, Anthropic API month-to-date cost, ChatGPT Codex limits): a rate-limit-paced daemon plus a terminal view, drawn in herdr-app by the ai-usage mod.'
+description: 'ai-usage — a Bun collector for AI account usage (Claude Ultra plan limits and extra usage, Anthropic API month-to-date cost, ChatGPT Codex limits): a rate-limit-paced daemon plus a terminal view, drawn in herdr-app by the ai-usage mod.'
 resource: overlays/ai-usage.nix
 tags: [overlay, package, herdr]
 generated: { by: codex/gpt-6, at: 2026-11-01T17:00:00-08:00 }

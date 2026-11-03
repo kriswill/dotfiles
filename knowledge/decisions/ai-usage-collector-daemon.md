@@ -1,7 +1,7 @@
 ---
 type: Decision
 title: Track AI Account Usage with a Bun Daemon and a Draw-Only herdr-app Mod
-description: 'Usage tracking for Claude Max, the Anthropic API and ChatGPT runs in a Bun daemon that owns credentials and rate-limit pacing and writes a JSON snapshot; the herdr-app mod only watches and draws it, because mods are sandboxed JS that can''t hold a 1Password-sourced key across polls.'
+description: 'Usage tracking for Claude Ultra, the Anthropic API and ChatGPT runs in a Bun daemon that owns credentials and rate-limit pacing and writes a JSON snapshot; the herdr-app mod only watches and draws it, because mods are sandboxed JS that can''t hold a 1Password-sourced key across polls.'
 tags: [herdr, ai, secrets, 1password]
 status: stable
 generated: { by: codex/gpt-6, at: 2026-11-01T17:00:00-08:00 }
@@ -23,7 +23,7 @@ sources:
 ## Context
 
 The goal was one labelled panel (logo, title, a bar, $ where it applies) in
-herdr-app for three accounts: Claude Max (Claude Code), the Anthropic API key
+herdr-app for three accounts: Claude Ultra (Claude Code), the Anthropic API key
 Hermes uses ([nebula-hermes-agent](../modules/nebula-hermes-agent.md)), and
 ChatGPT Plus. It had to work on macOS and Linux.
 

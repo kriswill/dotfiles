@@ -2,7 +2,7 @@
   writeShellApplication,
   bun,
 }:
-# ai-usage — what the AI accounts have used: Claude Max's plan limits and
+# ai-usage — what the AI accounts have used: Claude Ultra's plan limits and
 # extra usage (the OAuth usage endpoint behind Claude Code's /usage), the
 # Anthropic API's month-to-date cost (Admin API cost_report), and ChatGPT's
 # Codex limits (chatgpt.com wham/usage). One Bun script:

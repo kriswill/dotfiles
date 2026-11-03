@@ -1,7 +1,7 @@
 ---
 type: Dual Module
 title: Ai Usage
-description: 'Runs the ai-usage collector daemon (Claude Max limits, Anthropic API cost, ChatGPT/Codex limits) as a systemd user service on nebula and an opt-in launchd agent on the macs, feeding the herdr-app ai-usage sidebar panel.'
+description: 'Runs the ai-usage collector daemon (Claude Ultra limits, Anthropic API cost, ChatGPT/Codex limits) as a systemd user service on nebula and an opt-in launchd agent on the macs, feeding the herdr-app ai-usage sidebar panel.'
 resource: modules/darwin/ai-usage.nix
 tags: [darwin-module, nixos-module, herdr]
 generated: { by: claude-code/opus-5.5, at: 2026-11-01T16:05:00-08:00 }

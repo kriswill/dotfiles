@@ -10,9 +10,9 @@
   ],
   "accounts": [
     {
-      "id": "claude-max",
+      "id": "claude-ultra",
       "provider": "claude",
-      "title": "Claude Max",
+      "title": "Claude Ultra",
       "subtitle": "Claude Code",
       "price": 200,
       "configDir": ["~/.claude-me", "~/.claude"],

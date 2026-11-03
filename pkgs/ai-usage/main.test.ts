@@ -2,7 +2,7 @@ import { afterAll, describe, expect, test } from "bun:test";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { codexCostEvents, codexLocalCost, codexPlanLabel, codexLimitMeters, renewCodexLogin } from "./main";
+import { claudePlan, codexCostEvents, codexLocalCost, codexPlanLabel, codexLimitMeters, renewCodexLogin } from "./main";
 
 test("Codex renders daily, weekly, model and code-review windows as bars when supplied", () => {
   const daily = { used_percent: 25, limit_window_seconds: 86400, reset_at: 1793650000 };
@@ -21,6 +21,12 @@ test("Codex displays the upgraded $100 tier as Pro", () => {
   expect(codexPlanLabel("prolite")).toBe("Pro");
   expect(codexPlanLabel("plus")).toBe("Plus");
   expect(codexPlanLabel("pro")).toBe("Pro");
+});
+
+test("Claude tiers show only the multiplier", () => {
+  expect(claudePlan({ rateLimitTier: "default_claude_max_20x" })).toBe("20x");
+  expect(claudePlan({ rateLimitTier: "default_claude_max_5x" })).toBe("5x");
+  expect(claudePlan({ subscriptionType: "pro" })).toBe("Pro");
 });
 
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "ai-usage-test-"));
