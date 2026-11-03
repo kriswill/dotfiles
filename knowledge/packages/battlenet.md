@@ -4,7 +4,7 @@ title: battlenet
 description: 'Sub-flake that runs Blizzard''s Battle.net in nixpkgs'' GE-Proton without Steam or umu: a host-side `battlenet` launcher that keeps one wineserver per prefix and hands Proton to a steam.buildRuntimeEnv sandbox, installs Battle.net into a configurable prefix on first run, plus the programs.battlenet NixOS module; enabled on nebula.'
 resource: flakes/battlenet/
 tags: [sub-flake, package, gaming, proton, wine]
-generated: { by: claude-code/opus-5.5, at: 2026-10-28T21:30:00-07:00 }
+generated: { by: claude-code/opus-5.5, at: 2026-11-02T19:06:08-08:00 }
 sources:
   - id: subflake-readme
     resource: ../../flakes/battlenet/README.md
@@ -49,10 +49,12 @@ The environment details:
 Outputs (x86_64-linux only):
 
 - `packages.battlenet` (and `default`) is a `symlinkJoin` of the host
-  launcher, the desktop entry and the confinement units. The root re-exports
-  it in `modules/packages.nix`. `package.nix` is overridable: `proton`,
-  `prefix`, `cpus`, `confineSlices`, `confineNixDaemon`, `locale`, `icon`,
-  `environment`.
+  launcher, `battlenet-threads` (a read-only report of where a running
+  game's threads run, by CPU and by core next to the firmware's
+  preferred-core ranking), the desktop entry and the confinement units. The
+  root re-exports it in `modules/packages.nix`. `package.nix` is overridable:
+  `proton`, `prefix`, `cpus`, `confineSlices`, `confineNixDaemon`, `locale`,
+  `icon`, `environment`.
 - `nixosModules.battlenet` (and `default`) is re-exported as the
   [battlenet module](../modules/battlenet.md): `programs.battlenet.*`.
 

@@ -191,6 +191,7 @@ WoW's periodic exceptions.
 | `battlenet install` | Downloads the installer again and runs it (repair or reinstall). Refused while anything runs in the prefix. |
 | `battlenet run CMD [ARG...]` | Runs a program in the prefix: `winecfg`, `regedit`, any `.exe`. Joins a running session. |
 | `battlenet kill` | Stops everything in the prefix, whichever launcher started it. Also a desktop action. |
+| `battlenet-threads [PID\|NAME]` | Shows where a running game's threads run (WoW.exe by default). See [Checking where the threads run](#checking-where-the-threads-run). |
 
 `BATTLENET_PREFIX=/path battlenet ...` uses another prefix for one run.
 `BATTLENET_CPUS=LIST` overrides the CPU list for one run, and an empty value
@@ -307,6 +308,40 @@ that overrides a value the unit sets itself until reboot. The module
 therefore refuses a target that NixOS configures with `AllowedCPUs`. It
 can't see one set in `~/.config/systemd/user`.
 
+### Checking where the threads run
+
+`battlenet-threads` reports on a running game, WoW.exe unless given a PID
+or another process name. It prints:
+
+- the process's affinity, and any threads whose affinity differs, such as
+  one that widened its own;
+- how many threads the process has, and how many ran during the check;
+- how many processes and threads its session's scope holds.
+
+It then samples the busiest threads for 8 s (`-d`), the main thread and 11
+others (`-n`). For each one it shows CPU use, migrations and context
+switches per second, and how often it ran on each CPU. Last comes the same
+data grouped by physical core, next to each core's preferred-core ranking
+(`amd_pstate_prefcore_ranking`, or CPPC `highest_perf`). It only reads, so
+it can run while you play. Started from a terminal, it runs in `app.slice`,
+which the confinement keeps on the other CPUs.
+
+Measured on nebula on 2026-11-02 (WoW in game, `cpus = "0-5,12-17"`):
+
+- WoW.exe had 88 threads and the session 395, all on `0-5,12-17`. About 25
+  of WoW's threads ran in any few seconds.
+- The main thread used 60–90% of one CPU and moved between CPUs about
+  150–200 times a second. Six `ThreadPool High` workers used about 20% each.
+- No thread had a narrower affinity than the process, and this Proton's
+  ntdll treats `ThreadIdealProcessor` as a stub. Neither WoW nor Wine chooses
+  a thread's CPU: the kernel's scheduler does, within the affinity.
+- The main thread's time by core followed the firmware's ranking: core 1
+  (rank 191) got about half, core 0 (186) a quarter, and the lowest-ranked
+  cores 3–5%. The pool workers spread evenly.
+
+Under `amd_x3d_mode = frequency` the other CCD ranks higher (CPU 6: 211), so
+without the pinning the scheduler would favour the CCD without the V-Cache.
+
 ## The NixOS module
 
 ```nix
@@ -401,6 +436,7 @@ rename, however large the WoW install.
 | [`battlenet.sh`](battlenet.sh) | The host half: prefix, wineserver detection, join or refuse, `kill`, CPU pinning, and `_confine`, which the confinement unit runs. |
 | [`battlenet-proton.sh`](battlenet-proton.sh) | The sandbox half: Proton's environment, installer download and lock, the Proton verb. |
 | [`battlenet-confine-nix.sh`](battlenet-confine-nix.sh) | The root oneshot that sets `nix-daemon.service`'s CPUs, accepting only those outside `cpus`. |
+| [`battlenet-threads.sh`](battlenet-threads.sh) | `battlenet-threads`: reads `/proc` and `/sys` to show where a running game's threads run. |
 | [`nixos-module.nix`](nixos-module.nix) | `programs.battlenet.*`, the units (`systemd.packages`), the `cpuset` delegation and the polkit rule. |
 
 ## Consuming it

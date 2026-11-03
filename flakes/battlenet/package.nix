@@ -1,10 +1,12 @@
 # battlenet: Blizzard's Battle.net launcher in a Proton prefix, without Steam
-# or umu. Two halves:
+# or umu. Two halves, and a reporting tool:
 #
 #   battlenet (./battlenet.sh) runs on the host. It finds the prefix's
 #     wineserver in any sandbox, joins or refuses, and does `kill`. It can't
 #     run in the sandbox, where bwrap's user namespace hides other processes'
 #     cwd and environ.
+#   battlenet-threads (./battlenet-threads.sh) runs on the host too and only
+#     reports where a running game's threads run.
 #   battlenet-proton (./battlenet-proton.sh) runs inside nixpkgs' Steam FHS
 #     runtime (steam.buildRuntimeEnv, the builder behind steam-run and nixpkgs'
 #     umu-launcher), which provides the /lib64 loader and python3 that Proton's
@@ -182,6 +184,17 @@ let
     text = builtins.readFile ./battlenet.sh;
   };
 
+  # Where a running game's threads run (./battlenet-threads.sh). It only
+  # reads /proc and /sys on the host, so it takes none of the options.
+  threads = writeShellApplication {
+    name = "battlenet-threads";
+    runtimeInputs = [
+      coreutils
+      procps
+    ];
+    text = builtins.readFile ./battlenet-threads.sh;
+  };
+
   # A user unit per confinement target and session CPU list, upheld by the
   # scope of every invocation that starts Wine (see ./battlenet.sh).
   # StopWhenUnneeded= ties it to those scopes: systemd starts it with the first
@@ -239,11 +252,19 @@ symlinkJoin {
   name = "battlenet-${version}";
   paths = [
     launcher
+    threads
     desktopItem
     confineUnit
     confineNixUnit
   ];
-  passthru = { inherit fhs inner launcher; };
+  passthru = {
+    inherit
+      fhs
+      inner
+      launcher
+      threads
+      ;
+  };
   meta = {
     description = "Battle.net in ${protonName}, run directly in an FHS environment (no Steam, no umu)";
     homepage = "https://download.battle.net/";

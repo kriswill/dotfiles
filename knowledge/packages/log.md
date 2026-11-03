@@ -1,5 +1,14 @@
 # Log
 
+## 2026-11-02
+
+- **Update**: [battlenet](battlenet.md): `battlenet-threads`, a read-only
+  report of a running game's threads (affinity, thread counts, sampled
+  CPU and core placement next to the preferred-core ranking), on PATH with
+  the launcher. Measured on nebula: no WoW thread pinned narrower than the
+  process, Wine stubs `ThreadIdealProcessor`, and the scheduler favours the
+  V-Cache CCD's higher-ranked cores (findings in the sub-flake README).
+
 ## 2026-11-01
 
 - **Update**: [hermes-agent](hermes-agent.md): register PM-pinned tool artifacts
