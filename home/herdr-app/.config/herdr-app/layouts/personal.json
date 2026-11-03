@@ -87,15 +87,36 @@
       "type": "column",
       "children": [
         {
-          "id": "tabs",
-          "type": "block",
-          "content": {
-            "mod": "tabs"
-          },
+          "id": "topbar",
+          "type": "row",
+          "children": [
+            {
+              "id": "tabs",
+              "type": "block",
+              "content": {
+                "mod": "tabs"
+              },
+              "size": {
+                "weight": 1
+              },
+              "window_drag": true
+            },
+            {
+              "id": "herdr-updates",
+              "type": "block",
+              "content": {
+                "mod": "herdr-updates"
+              },
+              "size": {
+                "px": 40
+              },
+              "window_drag": true
+            }
+          ],
           "size": {
             "px": 42
           },
-          "window_drag": true
+          "resizable": false
         },
         {
           "id": "work-body",

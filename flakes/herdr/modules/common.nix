@@ -206,8 +206,18 @@ in
         type = lib.types.attrsOf lib.types.str;
         readOnly = true;
         description = ''
-          The versions the scheduled check compares against: the configured
-          packages', empty (skipped) for a program that isn't enabled.
+          The versions the check compares against: the configured packages',
+          empty (skipped) for a program that isn't enabled.
+        '';
+      };
+
+      finalPackage = lib.mkOption {
+        type = lib.types.package;
+        readOnly = true;
+        description = ''
+          The installed check: `package` with `environment` set, so a run by
+          hand, the schedule and the herdr-updates mod (`--json`) all compare
+          against the configured packages rather than this flake's pins.
         '';
       };
     };
@@ -228,10 +238,26 @@ in
             # found hc in; pin it to the core's own bin, not the system profile.
             pinCore = if core.enable then core.package else null;
           };
-      services.herdr-update-check.environment = {
-        HERDR_CLI_VERSION = if cli.enable then cli.package.version else "";
-        HERDR_CORE_VERSION = if core.enable then core.package.version else "";
-        HERDR_APP_VERSION = if app.enable then app.package.version else "";
+      services.herdr-update-check = {
+        environment = {
+          HERDR_CLI_VERSION = if cli.enable then cli.package.version else "";
+          HERDR_CORE_VERSION = if core.enable then core.package.version else "";
+          HERDR_APP_VERSION = if app.enable then app.package.version else "";
+        };
+        finalPackage =
+          pkgs.runCommand "herdr-update-check"
+            {
+              nativeBuildInputs = [ pkgs.makeWrapper ];
+              meta = check.package.meta or { } // {
+                mainProgram = "herdr-update-check";
+              };
+            }
+            ''
+              makeWrapper ${lib.getExe check.package} $out/bin/herdr-update-check \
+                ${lib.concatStringsSep " " (
+                  lib.mapAttrsToList (name: value: "--set ${name} ${lib.escapeShellArg value}") check.environment
+                )}
+            '';
       };
     }
 
@@ -275,8 +301,8 @@ in
 
     (lib.mkIf check.enable {
       # On PATH too, for a run by hand after a bump (the scheduled run waits
-      # for its next slot).
-      environment.systemPackages = [ check.package ];
+      # for its next slot) and for the herdr-updates mod's `--json` polls.
+      environment.systemPackages = [ check.finalPackage ];
       warnings = lib.optional (!(cli.enable || core.enable || app.enable)) ''
         services.herdr-update-check is enabled but none of programs.herdr-cli,
         programs.herdr-core and programs.herdr-app is, so it checks nothing.

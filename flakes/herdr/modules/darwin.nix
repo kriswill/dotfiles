@@ -2,7 +2,9 @@
 # shared options and config (./common.nix), plus what only nix-darwin does
 # here — config files as links made by the activation script, the app's
 # choices written into settings.json, and the update check as a launchd user
-# agent. No linger: on macOS hc starts its core as a plain detached process.
+# agent. No linger: on macOS hc starts its core as a one-shot launchd job
+# (core ≥ 0.1.17), which it boots out again once the core is up, so there is
+# nothing to declare here.
 #
 # programs.herdr-app installs upstream's signed Herdr.app (../pkgs/herdr-app.nix),
 # which nix-darwin copies into "/Applications/Nix Apps". Finder launches the
@@ -109,10 +111,9 @@ in
     (lib.mkIf check.enable {
       launchd.user.agents.herdr-update-check.serviceConfig = {
         ProgramArguments = [
-          (lib.getExe check.package)
+          (lib.getExe check.finalPackage)
           "--notify"
         ];
-        EnvironmentVariables = check.environment;
         StartCalendarInterval = check.startCalendarInterval;
         ProcessType = "Background";
       };

@@ -1,5 +1,18 @@
 # Log
 
+## 2026-11-03
+
+- **Update**: [herdr](herdr.md): `herdr-update-check --json`, and
+  `services.herdr-update-check.finalPackage` (the check with the configured
+  versions) on PATH and in both schedulers, for the new herdr-updates mod
+  ([decision](../decisions/herdr-updates-mod.md)).
+- **Update**: [herdr](herdr.md): core 0.1.16 → 0.1.17 and app 0.1.11 →
+  0.1.12 (`update.ts`). App 0.1.12 ships the Braille sprite renderer
+  (live check pending the switch). On macOS, core 0.1.17 starts through a
+  one-shot launchd job and keeps `--hc-launchd` as its argv, so
+  herdr-update-check's stale-core match accepts it. Fixed that check's
+  stale-window version capture, which never matched.
+
 ## 2026-11-02
 
 - **Update**: [battlenet](battlenet.md): `battlenet-threads`, a read-only

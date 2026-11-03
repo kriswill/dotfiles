@@ -28,6 +28,10 @@ Choices:
     also holds `keys.json`, `themes/kanagawa.json`, the `personal` layout and
     the `vim-nav` and `pane-rotate` mods: the herdr TUI's keys and theme,
     ported ([decision](../decisions/herdr-app-keys-via-hosted-mods.md)).
+    Since 2026-11-03 the layout's tab bar ends in the `herdr-updates` mod:
+    an update icon whose hover card lists `herdr-update-check --json`'s
+    releases and stale processes, each linking to a `herdr-changelog` pane
+    ([decision](../decisions/herdr-updates-mod.md)).
   - Herdr's live reload doesn't see edits to the repo copy. Write through
     the `~/.config/herdr-app/` link, then check `herdr-app status`.
 - **Terminal font: MesloLGS Nerd Font** at `font_size` 17, `zoom` 1.1, dark
@@ -36,8 +40,9 @@ Choices:
   JetBrains Mono 2.304, the default in both Herdr and Ghostty, has no
   braille glyphs (U+2800–28FF). Ghostty draws braille as sprites, but Herdr
   0.1.11's sprites cover only box drawing, blocks and powerline, so it fell
-  back to a proportional system font. If Herdr adds braille sprites, drop
-  `font` to get JetBrains Mono back.
+  back to a proportional system font. Herdr 0.1.12 (pinned 2026-11-03)
+  draws braille as sprites. Once a reopened window shows clean `⣿` rows,
+  drop `font` to get JetBrains Mono back.
   - Both packages are darwin-skipped until the macs enable them
     ([decision](../decisions/herdr-app-config-via-stow.md)).
 - **Linger on.** It was confirmed while choosing the design: hc wants it and

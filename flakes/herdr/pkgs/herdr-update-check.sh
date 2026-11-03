@@ -19,6 +19,16 @@
 #
 #   herdr-update-check            print what's pending; exit 10 if anything is
 #   herdr-update-check --notify   also raise a desktop notification; exit 0
+#   herdr-update-check --json     print it as JSON for the herdr-updates mod
+#                                 (home/herdr-app); exit 0. One object:
+#     checkedAt   ISO time, UTC
+#     installed   {"herdr-cli","herdr-core","herdr-app"}: ours, null = skipped
+#     latest      the same keys: upstream's, null = skipped or unreachable
+#     updates     [{kind, product, from, to, url, action, summary}], where kind
+#                 is "release" (upstream past ours; from = ours, to = theirs)
+#                 or "running" (a process older than installed; from = its
+#                 version, to = installed); url is the release or changelog
+#                 page, action what to do about it, summary the text line
 #
 # Ours: $HERDR_CLI_VERSION / $HERDR_CORE_VERSION / $HERDR_APP_VERSION (the
 # modules pass the configured packages'), else the versions this flake pins
@@ -33,12 +43,13 @@
 # buttons).
 set -euo pipefail
 
-notify=0
+mode=text
 case "${1:-}" in
---notify) notify=1 ;;
+--notify) mode=notify ;;
+--json) mode=json ;;
 "") ;;
 *)
-  echo "usage: herdr-update-check [--notify]" >&2
+  echo "usage: herdr-update-check [--notify | --json]" >&2
   exit 2
   ;;
 esac
@@ -55,47 +66,69 @@ newer() { # newer <ours> <theirs>: theirs is a strictly later version
 lines=()
 urls=()   # parallel to lines: what that item's button opens ('' = no button)
 labels=() # ... and the button's label
-add() {   # add <url> <label> <line>
-  urls+=("$1")
-  labels+=("$2")
-  lines+=("$3")
+items=()  # ... and the item as one line of JSON (--json)
+add() {   # add <kind> <product> <from> <to> <url> <label> <action> <line>
+  items+=("$(jq -cn --arg kind "$1" --arg product "$2" --arg from "$3" --arg to "$4" \
+    --arg url "$5" --arg action "$7" --arg summary "$8" \
+    '{$kind, $product, $from, $to, url: (if $url == "" then null else $url end), $action, $summary}')")
+  urls+=("$5")
+  labels+=("$6")
+  lines+=("$8")
 }
 
 # --- upstream: network hiccups or odd answers stay silent until next run
+latest_cli='' latest_core='' latest_app=''
 if [ -n "$cli" ]; then
   tag=$(curl -fsSL --max-time 30 -H 'Accept: application/vnd.github+json' \
     https://api.github.com/repos/herdrdev/herdr/releases/latest |
     jq -r '.tag_name // empty') || true
-  if [[ "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] && newer "$cli" "${tag#v}"; then
-    add "https://github.com/herdrdev/herdr/releases/tag/$tag" "herdr $tag release" \
-      "herdr $tag released (our fork: v$cli-custom): rebase custom onto $tag, tag $tag-custom, repoint the herdr-cli input"
+  if [[ "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+    latest_cli=${tag#v}
+    if newer "$cli" "$latest_cli"; then
+      action="rebase custom onto $tag, tag $tag-custom, repoint the herdr-cli input"
+      add release herdr-cli "$cli" "$latest_cli" "https://github.com/herdrdev/herdr/releases/tag/$tag" \
+        "herdr $tag release" "$action" "herdr $tag released (our fork: v$cli-custom): $action"
+    fi
   fi
 fi
 latest() { # latest core|app
   curl -fsSL --max-time 30 "https://releases.herdr.dev/$1/latest.json" | jq -r '.version // empty' || true
 }
 bump=0
+bump_action="refresh flakes/herdr/sources.json (bun update.ts), then rebuild"
 if [ -n "$core" ]; then
   v=$(latest core)
-  if [[ "$v" =~ $semver ]] && newer "$core" "$v"; then
-    add "https://github.com/herdrdev/herdr-core/blob/v$v/CHANGELOG.md" "herdr-core $v changes" \
-      "herdr-core $v released (ours: $core)"
-    bump=1
+  if [[ "$v" =~ $semver ]]; then
+    latest_core=$v
+    if newer "$core" "$v"; then
+      add release herdr-core "$core" "$v" "https://github.com/herdrdev/herdr-core/blob/v$v/CHANGELOG.md" \
+        "herdr-core $v changes" "$bump_action" "herdr-core $v released (ours: $core)"
+      bump=1
+    fi
   fi
 fi
 if [ -n "$app" ]; then
   v=$(latest app)
-  if [[ "$v" =~ $semver ]] && newer "$app" "$v"; then
-    add "https://github.com/herdrdev/herdr-app/blob/v$v/CHANGELOG.md" "herdr-app $v changes" \
-      "herdr-app $v released (ours: $app)"
-    bump=1
+  if [[ "$v" =~ $semver ]]; then
+    latest_app=$v
+    if newer "$app" "$v"; then
+      add release herdr-app "$app" "$v" "https://github.com/herdrdev/herdr-app/blob/v$v/CHANGELOG.md" \
+        "herdr-app $v changes" "$bump_action" "herdr-app $v released (ours: $app)"
+      bump=1
+    fi
   fi
 fi
 
 # --- running: versions read off the store path of each process's executable:
 #   <store>/herdr-X.Y.Z/bin/herdr                        `herdr server`, the TUI's server
 #   <store>/herdr-core-X.Y.Z/bin/herdr-core              `herdr-core serve`, the core
-#                                                        (holders drain on their own)
+#                                                        (holders drain on their own);
+#                                                        on macOS (core ≥ 0.1.17) it is
+#                                                        `<hc> --hc-launchd <socket>`
+#                                                        instead: hc starts it as a
+#                                                        one-shot launchd job and the
+#                                                        detached child keeps that argv
+#                                                        (`serve` is only in memory)
 #   <store>/herdr-app[-unwrapped]-X.Y.Z/…/herdr-app      a window (no arguments)
 # On Linux argv[0] is that path. On macOS a process started through a symlink
 # (`hc` on PATH, /etc/herdr-core/hc, the module's core pin) names the link in
@@ -114,38 +147,59 @@ exe_of() { # exe_of <pid> <argv0>: the executable's path
 }
 # pid, then argv, one process per line
 procs=$(ps -ww -u "$(id -u)" -o pid=,args= 2>/dev/null || true)
-stale() { # stale <installed> <ERE on the argv> <ERE on the executable, capturing the version> <line, with %s for it>
+stale() { # stale <product> <installed> <ERE on the argv> <ERE on the executable, capturing the version> <action> <line, with %s for it>
   local pid args exe v
   while read -r pid args; do
     [ -n "$pid" ] || continue
     exe=$(exe_of "$pid" "${args%% *}")
-    v=$(sed -nE "s#$3#\1#p" <<<"$exe")
-    if [ -n "$v" ] && newer "$v" "$1"; then
+    v=$(sed -nE "s#$4#\1#p" <<<"$exe")
+    if [ -n "$v" ] && newer "$v" "$2"; then
       # shellcheck disable=SC2059 # the format is ours
-      add "" "" "$(printf "$4" "$v")"
+      add running "$1" "$v" "$2" "" "" "$5" "$(printf "$6" "$v")"
     fi
-  done < <(grep -E "^ *[0-9]+ $2\$" <<<"$procs" | sort -u)
+  done < <(grep -E "^ *[0-9]+ $3\$" <<<"$procs" | sort -u)
 }
 store='^/nix/store/[a-z0-9]{32}-'
 if [ -n "$cli" ]; then
-  stale "$cli" '[^ ]*/herdr server' "${store}herdr-([0-9]+\.[0-9]+\.[0-9]+)/bin/herdr\$" \
+  stale herdr-cli "$cli" '[^ ]*/herdr server' "${store}herdr-([0-9]+\.[0-9]+\.[0-9]+)/bin/herdr\$" \
+    "'herdr server stop', then start herdr again" \
     "the running herdr server is %s, installed $cli: 'herdr server stop', then start herdr again"
 fi
 if [ -n "$core" ]; then
-  stale "$core" '[^ ]*/(herdr-core|hc) serve( .*)?' "${store}herdr-core-([0-9]+\.[0-9]+\.[0-9]+)/bin/(herdr-core|hc)\$" \
+  stale herdr-core "$core" '[^ ]*/(herdr-core|hc) (serve|--hc-launchd)( .*)?' "${store}herdr-core-([0-9]+\.[0-9]+\.[0-9]+)/bin/(herdr-core|hc)\$" \
+    "run 'hc server restart' (terminals keep running)" \
     "the running herdr-core is %s, installed $core: run 'hc server restart' (terminals keep running)"
 fi
 if [ -n "$app" ]; then
-  stale "$app" '[^ ]*/(herdr-app|Herdr)' "${store}herdr-app(-unwrapped)?-([0-9]+\.[0-9]+\.[0-9]+)/.*\$" \
+  stale herdr-app "$app" '[^ ]*/(herdr-app|Herdr)' "${store}herdr-app[-a-z]*-([0-9]+\.[0-9]+\.[0-9]+)/.*\$" \
+    "quit and reopen Herdr (terminals keep running)" \
     "an open Herdr window runs %s, installed $app: quit and reopen it (terminals keep running)"
+fi
+
+if [ "$mode" = json ]; then
+  # unique_by: two processes on the same old build are one thing to do.
+  printf '%s\n' "${items[@]}" | jq -s \
+    --arg checkedAt "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+    --arg cli "$cli" --arg core "$core" --arg app "$app" \
+    --arg lcli "$latest_cli" --arg lcore "$latest_core" --arg lapp "$latest_app" '
+    def v: if . == "" then null else . end;
+    {
+      $checkedAt,
+      installed: {"herdr-cli": ($cli | v), "herdr-core": ($core | v), "herdr-app": ($app | v)},
+      latest: {"herdr-cli": ($lcli | v), "herdr-core": ($lcore | v), "herdr-app": ($lapp | v)},
+      updates: unique_by([.kind, .product, .from])
+    }'
+  exit 0
 fi
 
 [ "${#lines[@]}" -gt 0 ] || exit 0
 if [ "$bump" = 1 ]; then
-  add "" "" "herdr-core/herdr-app: refresh flakes/herdr/sources.json (bun update.ts), then rebuild"
+  lines+=("herdr-core/herdr-app: $bump_action")
+  urls+=("")
+  labels+=("")
 fi
 printf '%s\n' "${lines[@]}"
-[ "$notify" = 1 ] || exit 10
+[ "$mode" = notify ] || exit 10
 
 summary="herdr: updates pending"
 body=$(printf '%s\n' "${lines[@]}")

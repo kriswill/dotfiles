@@ -317,3 +317,5 @@ in that bundle's own `log.md` (e.g. [modules/log.md](modules/log.md)).
 
 - 2026-11-03: ai-usage: the $200/mo Claude plan is now sold as "Claude Ultra" (the $100/mo 5x tier keeps "Claude Max"); config title, live tier label reduced to the multiplier (max_20x → "20x") and docs renamed.
 - 2026-11-03: ai-usage: second claude account for the work enterprise seat (~/.claude-work). Enterprise payloads carry no plan limits, only `spend`, which the daemon now labels "Credit spend" when it is the only meter.
+- 2026-11-03: herdr: core 0.1.17 + app 0.1.12 pinned. macOS core now starts via a one-shot launchd job (argv `--hc-launchd`), matched by herdr-update-check; fixed its stale-window version capture. App 0.1.12 draws braille as sprites, so nebula's MesloLGS `font` override can go once verified live.
+- 2026-11-03: herdr-updates: tab-bar update icon + hover card + herdr-changelog pane in the personal Herdr layout, fed by the new `herdr-update-check --json`; the PATH copy is now `services.herdr-update-check.finalPackage` (configured versions baked in). Decision: decisions/herdr-updates-mod.md.

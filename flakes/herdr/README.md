@@ -92,7 +92,7 @@ Packaging notes:
   default) for `programs.herdr-core.users`. Declaring it off doesn't stop hc.
   A lingering user manager starts at boot, and so does everything its
   `default.target` wants, timers included. macOS has no linger: hc starts the
-  core as a plain detached process.
+  core as a one-shot launchd job (see "darwin").
 - **No core service.** hc spawns the core on demand; a declared unit would
   compete with it.
 - **Telemetry** is on by default upstream (a daily usage report). The modules
@@ -111,7 +111,7 @@ do.
 | `programs.herdr-core.{enable,package,users,settings}` | ✓ (`settings` → tmpfiles link) | ✓ (`settings` → activation-script link) |
 | `programs.herdr-core.linger` | ✓ | — |
 | `programs.herdr-app.{enable,package,finalPackage,telemetry,settings,keys}` | ✓ (wrapper: env + merge at launch) | ✓ (`telemetry`, `core`, `settings` merged into settings.json at activation; `keys` → link; `finalPackage` is the bare bundle) |
-| `services.herdr-update-check.{enable,package}` | systemd user timer, `calendar` | launchd user agent, `startCalendarInterval` |
+| `services.herdr-update-check.{enable,package,finalPackage}` | systemd user timer, `calendar` | launchd user agent, `startCalendarInterval` |
 
 `programs.herdr-cli.python` (default `python3`, `null` for none) is for
 herdr's agent integration hooks. Claude's `herdr-agent-state.sh` reports the
@@ -165,9 +165,18 @@ so after a rebuild the new pins are live. The TUI moves when you repoint
 Run plain, it prints what's pending and exits 10. With `--notify` it raises
 a notification. On Linux that's notify-send with a button per release, after
 waiting for a notification daemon. On macOS it's osascript, which has no
-buttons. `services.herdr-update-check.enable` schedules it: a `Type=exec`
-systemd user unit (see the comment there for why not oneshot), or a launchd
-agent.
+buttons. With `--json` it prints one object for programs to read and exits
+0: `installed` and `latest` versions per product, and `updates`, each with a
+`kind` (`release`, or `running` for a stale process), `from`, `to`, the
+changelog or release `url` and the `action` to take (the header of
+`pkgs/herdr-update-check.sh` has the shape). The `herdr-updates` mod in the
+dotfiles' Herdr layout draws it in the tab bar.
+
+`services.herdr-update-check.enable` schedules it: a `Type=exec` systemd user
+unit (see the comment there for why not oneshot), or a launchd agent. Both,
+and the copy on PATH, run `finalPackage`: the package with the configured
+programs' versions set (`environment`), so a hand run or a `--json` read
+compares against what the modules installed rather than this flake's pins.
 
 ## darwin
 
@@ -195,14 +204,24 @@ through files instead:
   (`--delete`) on every switch. A warning in the app's log every 30 minutes,
   once upstream is ahead, is the whole cost; herdr-update-check reports the
   same release once a day.
-- **No linger**: hc starts its core as a plain detached process.
+- **No linger; a one-shot launchd job instead.** Since core 0.1.17
+  (herdr-app#294) hc starts the core through launchd, because a plain
+  detached process stayed in the app's coalition and quitting Herdr killed
+  every agent. hc bootstraps a temporary job into `gui/<uid>`, hands the new
+  core its own environment over a socket (so the core pin and
+  `HERDR_TELEMETRY` still reach every terminal), then boots the job out and
+  deletes the plist. Nothing lands in `~/Library/LaunchAgents`, and no store
+  path outlives a garbage collection. A core reached over SSH, or one whose
+  launchd start fails, still starts as a detached process.
 - **The CLI link.** On first launch the app symlinks `~/.local/bin/herdr-app`
   to the bundle's binary (upstream `src/core_bin/cli_link.rs`), unless
   something else is there. It points at nix-darwin's copy, which the next
   switch replaces in place, so it stays current.
 - **Stale running builds**: a process started through a symlink (`hc` on
   PATH, `/etc/herdr-core/hc`) names the link in its argv, so on macOS the
-  check asks `lsof` for the executable's store path. A window opened from
+  check asks `lsof` for the executable's store path. A core started through
+  launchd keeps `--hc-launchd <socket>` as its argv, not `serve`, and the
+  check matches both. A window opened from
   Finder runs the copy under `/Applications/Nix Apps`, which carries no
   version, so only a window opened as `bin/herdr-app` from a shell is judged.
 

@@ -30,6 +30,12 @@ sources:
   - id: app-braille-renderer
     resource: https://github.com/herdrdev/herdr-app/blob/8cbb9f3348ea802e9c06cca3b413a53d3ba9064e/src/sprites.rs
     title: 'Upstream cell-sized Braille sprite renderer, present after 0.1.11'
+  - id: app-sprites-0112
+    resource: https://github.com/herdrdev/herdr-app/blob/v0.1.12/src/sprites.rs
+    title: 'Herdr 0.1.12 src/sprites.rs (Braille U+2800–28FF drawn as cell-sized sprites)'
+  - id: core-launchd-0117
+    resource: https://github.com/herdrdev/herdr-core/blob/v0.1.17/crates/herdr-core/src/platform/macos_launchd.rs
+    title: 'herdr-core 0.1.17 macos_launchd.rs (one-shot launchd job for the macOS core, herdr-app#294)'
 ---
 
 One flake for three products and their tools
@@ -129,6 +135,28 @@ Verify consecutive rows of `⣿` and the original artwork in a live pane.
 Keep the [release repackaging approach](../decisions/herdr-app-release-repack.md)
 rather than assuming a source fix is already in a released tarball.
 
+**2026-11-03:** app 0.1.12 (released 2026-11-02) ships the renderer: its
+`src/sprites.rs` draws U+2800–28FF as sprites with Ghostty's layout, where
+0.1.11's had no Braille at all.[^app-sprites-0112] The pins moved to app
+0.1.12 and core 0.1.17 and nebula's build was checked with `nrb`. The live
+check (`⣿` rows in a reopened window) waits on the switch. After it passes,
+the `font` override in nebula's `settings.json` can go
+([nebula-herdr](../modules/nebula-herdr.md)).
+
+## Core 0.1.17: the macOS core starts through launchd
+
+On macOS, hc now starts the core as a one-shot launchd job in `gui/<uid>`
+(herdr-app#294: quitting Herdr killed every agent, because a detached core
+stayed in the app's coalition). The job is booted out and its plist deleted
+once the core is up, so the darwin module declares nothing for it.
+hc passes the caller's environment to the core over a socket, which keeps
+the core pin working. One thing did change: the detached core keeps
+`<hc> --hc-launchd <socket>` as its argv instead of `serve`. herdr-update-check's
+stale-core match accepts both forms now.[^core-launchd-0117] The same
+pass fixed the stale-window match, which had been capturing
+`-unwrapped` instead of the version, so a stale Herdr window was never
+reported.
+
 ## Source
 
 - Flake: [`flakes/herdr/`](../../flakes/herdr/)
@@ -149,4 +177,6 @@ to the `home/herdr-core` and `home/herdr-app` stow packages
 [^app-update-rs]: herdr-app `src/update.rs`, `find_root` and `checks_app`
 [^app-terminal-0111]: Herdr 0.1.11 `src/terminal.rs`, `cell_size` and row rendering
 [^app-braille-renderer]: Upstream `src/sprites.rs`, `braille`, `is_sprite` and `paint`
+[^app-sprites-0112]: Herdr 0.1.12 `src/sprites.rs`, `braille` (U+2800–28FF, Ghostty's integer-pixel layout)
+[^core-launchd-0117]: herdr-core 0.1.17 `platform/macos_launchd.rs`, `launch`, `detach` and `plist`
 [^nixpkgs-pr-581031]: NixOS/nixpkgs#581031 notes for review: "No wrapper for herdr-desktop"

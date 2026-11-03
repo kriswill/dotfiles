@@ -85,7 +85,6 @@ in
     (lib.mkIf check.enable {
       systemd.user.services.herdr-update-check = {
         description = "Notify when a herdr is behind upstream, or running an older build than installed";
-        inherit (check) environment;
         # Only for hc's users, when there are any (`|` ORs the conditions).
         unitConfig.ConditionUser = map (user: "|${user}") core.users;
         # notify-send -A blocks until the notification is answered (12h at
@@ -97,7 +96,7 @@ in
         restartIfChanged = false;
         serviceConfig = {
           Type = "exec";
-          ExecStart = "${lib.getExe check.package} --notify";
+          ExecStart = "${lib.getExe check.finalPackage} --notify";
         };
       };
       systemd.user.timers.herdr-update-check = {
