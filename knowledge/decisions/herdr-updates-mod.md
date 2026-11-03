@@ -60,6 +60,10 @@ environment, and the PATH copy fell back to the flake's own pins.
   at the right edge. An earlier one in that tab is closed first. It fetches
   `CHANGELOG.md` at the `to` tag and keeps the `(from, to]`
   sections.[^changelog-mod]
+- **Current products link their notes too** (Kris, testing on the mac): the
+  card lists every installed product with nothing pending under "Installed
+  by nix, current", each with "What's new in ‹installed›". Those open the
+  pane without `from`, which shows just that version's section.
 
 ## Consequences
 

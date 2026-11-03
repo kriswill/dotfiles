@@ -405,33 +405,56 @@ export default class HerdrUpdates extends View {
           .text_color(t.muted)
           .child(`${item.kind === "release" ? "New release" : "Restart to apply"} · ${item.action ?? ""}`),
       )
+      .child(h_flex().pl(15).child(this.whatsNew(`hu-log-${i}`, item, t)));
+  }
+
+  whatsNew(id, item, t) {
+    return div()
+      .id(id)
+      .text_size(11.5)
+      .font_medium()
+      .text_color(t.accent)
+      .cursor_pointer()
+      .hover((s) => s.underline())
+      .on_click(() => {
+        openChangelog(item);
+        closeOverlay(this.overlay);
+      })
+      .child(`What's new in ${item.to} ›`);
+  }
+
+  // A product with nothing pending: its installed version, and that
+  // version's notes (a changelog pane without `from` shows just `to`).
+  installedRow(product, version, t) {
+    const p = PRODUCTS[product];
+    const item = { kind: "installed", product, from: null, to: version, action: null };
+    return h_flex()
+      .id(`hu-inst-${product}`)
+      .px(14)
+      .py(5)
+      .gap(8)
+      .items_center()
+      .child(div().flex_none().text_size(12.5).text_color(t.foreground).child(p.name))
       .child(
-        h_flex()
-          .pl(15)
-          .gap(4)
-          .items_center()
-          .child(
-            div()
-              .id(`hu-log-${i}`)
-              .text_size(11.5)
-              .font_medium()
-              .text_color(t.accent)
-              .cursor_pointer()
-              .hover((s) => s.underline())
-              .on_click(() => {
-                openChangelog(item);
-                closeOverlay(this.overlay);
-              })
-              .child(`What's new in ${item.to} ›`),
-          ),
-      );
+        div()
+          .flex_none()
+          .px(5)
+          .rounded(4)
+          .bg(t.surface)
+          .text_size(10.5)
+          .font_family("JetBrains Mono")
+          .text_color(t.muted)
+          .child(version),
+      )
+      .child(div().flex_1())
+      .child(this.whatsNew(`hu-inst-log-${product}`, item, t));
   }
 
   renderCard(t) {
     const snap = shared(KEY);
     const list = pending(snap);
     const inst = snap?.data?.installed ?? {};
-    const versions = ORDER.filter((k) => inst[k]).map((k) => `${PRODUCTS[k].name} ${inst[k]}`);
+    const current = ORDER.filter((k) => inst[k] && !list.some((i) => i.product === k));
     const u = self();
     const unreachable = snap?.data && ORDER.some((k) => inst[k] && !snap.data.latest?.[k]);
 
@@ -497,6 +520,17 @@ export default class HerdrUpdates extends View {
         ),
       )
       .children(list.map((item, i) => this.row(item, t, i)))
+      .when(current.length > 0, (el) =>
+        el.child(
+          v_flex()
+            .pt(8)
+            .pb(6)
+            .border_t(1)
+            .border_color(t.input)
+            .child(div().px(14).pb(2).text_size(10.5).text_color(t.dim).child("Installed by nix, current"))
+            .children(current.map((k) => this.installedRow(k, inst[k], t))),
+        ),
+      )
       .child(
         v_flex()
           .px(14)
@@ -505,12 +539,7 @@ export default class HerdrUpdates extends View {
           .bg(t.surface)
           .border_t(1)
           .border_color(t.input)
-          .child(
-            div()
-              .text_size(10.5)
-              .text_color(t.dim)
-              .child(versions.length ? `installed by nix: ${versions.join(" · ")}` : "nothing installed by nix"),
-          )
+          .when(!snap?.data, (el) => el.child(div().text_size(10.5).text_color(t.dim).child("nothing read from nix yet")))
           .when(Boolean(u?.app?.version), (el) =>
             el.child(
               div()

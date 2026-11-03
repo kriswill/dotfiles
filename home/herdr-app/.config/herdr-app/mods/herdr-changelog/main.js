@@ -118,8 +118,10 @@ export default class HerdrChangelog extends View {
             continue;
           }
           const all = parse(await r.text());
-          const from = p.from ?? "0.0.0";
-          this.sections = all.filter((s) => newer(from, s.version) && !newer(p.to, s.version));
+          // No `from` (a current product, from the card's installed list): just `to`.
+          this.sections = p.from
+            ? all.filter((s) => newer(p.from, s.version) && !newer(p.to, s.version))
+            : all.filter((s) => s.version === p.to);
           this.ref = ref;
           this.error = null;
           break;
@@ -185,6 +187,15 @@ export default class HerdrChangelog extends View {
               .on_click(() => browse(this.url()))
               .child("GitHub ↗"),
           ),
+      )
+      .when(!p.from, (el) =>
+        el.child(
+          h_flex()
+            .gap(7)
+            .items_center()
+            .child(pill(p.to, true))
+            .child(div().text_size(11.5).text_color(t.dim).child("installed, current")),
+        ),
       )
       .when(Boolean(p.from), (el) =>
         el.child(
@@ -278,7 +289,11 @@ export default class HerdrChangelog extends View {
         .p(22)
         .text_size(12.5)
         .text_color(t.dim)
-        .child(`The changelog has no entries after ${this.p.from} up to ${this.p.to}. GitHub ↗ has the whole file.`);
+        .child(
+          this.p.from
+            ? `The changelog has no entries after ${this.p.from} up to ${this.p.to}. GitHub ↗ has the whole file.`
+            : `The changelog has no entry for ${this.p.to}. GitHub ↗ has the whole file.`,
+        );
     } else {
       body = v_flex()
         .id("cl-body")
