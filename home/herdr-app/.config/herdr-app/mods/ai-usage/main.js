@@ -170,7 +170,7 @@ export default class AiUsage extends View {
       .w_full()
       .flex_none()
       .rounded(height)
-      .bg(t.border)
+      .bg(t.input) // not t.border: the theme blanks that token to go borderless
       .overflow_hidden()
       .child(div().h_full().rounded(height).bg(this.barColor(a, m, t)).w(`${pct > 0 ? Math.max(pct, 2) : 0}%`));
   }

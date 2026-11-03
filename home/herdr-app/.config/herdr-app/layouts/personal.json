@@ -117,7 +117,7 @@
                   },
                   "background": "background",
                   "border": {
-                    "width": 1,
+                    "width": 0,
                     "color": "border"
                   },
                   "focus": {
@@ -177,7 +177,7 @@
     12
   ],
   "divider": {
-    "width": 1,
+    "width": 0,
     "color": "border"
   },
   "titlebar": "none",
