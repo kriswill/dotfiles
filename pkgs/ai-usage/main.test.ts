@@ -2,7 +2,7 @@ import { afterAll, describe, expect, test } from "bun:test";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { claudePlan, codexCostEvents, codexLocalCost, codexPlanLabel, codexLimitMeters, renewCodexLogin } from "./main";
+import { claudeCliUsage, claudeMeters, claudePlan, codexCostEvents, codexLocalCost, codexPlanLabel, codexLimitMeters, renewCodexLogin } from "./main";
 
 test("Codex renders daily, weekly, model and code-review windows as bars when supplied", () => {
   const daily = { used_percent: 25, limit_window_seconds: 86400, reset_at: 1793650000 };
@@ -103,5 +103,65 @@ for await (const line of createInterface({ input: process.stdin })) {
     const bin = client("hang.ts", "await new Promise(() => {});");
     expect(await renewCodexLogin(tmp, bin, 100)).toBe(false);
     expect(await renewCodexLogin(tmp, path.join(tmp, "missing"))).toBe(false);
+  });
+});
+
+test("Claude reads the usage body the same whether direct or via get_usage", () => {
+  const meters = claudeMeters({
+    five_hour: null,
+    seven_day: { utilization: 46, resets_at: "2026-11-06T22:59:59Z" },
+    limits: [
+      { kind: "weekly_all", percent: 46, severity: "normal", resets_at: "2026-11-06T22:59:59Z" },
+      { kind: "weekly_scoped", percent: 27, severity: "normal", scope: { model: { display_name: "Fable" } } },
+    ],
+    iguana_necktie: { limit_dollars: 250, used_dollars: 37.45, resets_at: "2026-11-05T07:59:00Z" },
+    spend: { enabled: true, used: { amount_minor: 0, exponent: 2 }, limit: { amount_minor: 20000, exponent: 2 } },
+  });
+  expect(meters.map((m) => m.label)).toEqual(["Weekly", "Fable weekly", "Cloud credits", "Extra usage"]);
+  expect(meters.map((m) => m.value)).toEqual(["46%", "27%", "$37.45 / $250", "$0.00 / $200"]);
+  // An enterprise seat: no plan limits, so its spend is the whole picture.
+  expect(claudeMeters({ limits: [], spend: { enabled: true, used: { amount_minor: 500 }, limit: { amount_minor: 1000 } } })
+    .map((m) => m.label)).toEqual(["Credit spend"]);
+});
+
+describe("Claude-managed login renewal (get_usage over the SDK control channel)", () => {
+  // Stands in for `claude -p … --input-format stream-json`: answers the
+  // get_usage control request, echoing what it was launched with.
+  function client(name: string, answer: string): string {
+    const file = path.join(tmp, name);
+    fs.writeFileSync(file, `#!${process.execPath}\nimport { createInterface } from 'node:readline';
+for await (const line of createInterface({ input: process.stdin })) {
+ const msg = JSON.parse(line);
+ const req = msg.request;
+ if (msg.type !== 'control_request' || req.subtype !== 'get_usage' || req.skip_behaviors !== true) process.exit(1);
+ const reply = (response) => console.log(JSON.stringify({ type: 'control_response', response: { request_id: msg.request_id, ...response } }));
+ console.log(JSON.stringify({ type: 'system', subtype: 'ui_invalidate' }));
+ ${answer}
+}\n`, { mode: 0o700 });
+    return file;
+  }
+  test("asks a prompt-less safe-mode session for usage under the account's config dir", async () => {
+    const bin = client("claude-ok.ts", "reply({ subtype: 'success', response: { rate_limits_available: true, rate_limits: { dir: process.env.CLAUDE_CONFIG_DIR, args: process.argv.slice(2), noUpdate: process.env.DISABLE_AUTOUPDATER } } });");
+    const { limits, why } = await claudeCliUsage(path.join(tmp, "profile"), bin);
+    expect(why).toBeUndefined();
+    expect(limits.dir).toBe(path.join(tmp, "profile"));
+    expect(limits.noUpdate).toBe("1");
+    expect(limits.args).toEqual(expect.arrayContaining(["-p", "--safe-mode", "--no-session-persistence", "--strict-mcp-config"]));
+    expect(limits.args).not.toContain("--bare"); // bare mode never reads the OAuth login
+  });
+  test("leaves CLAUDE_CONFIG_DIR unset for the default ~/.claude", async () => {
+    const bin = client("claude-env.ts", "reply({ subtype: 'success', response: { rate_limits: { dir: process.env.CLAUDE_CONFIG_DIR ?? null } } });");
+    expect((await claudeCliUsage("~/.claude", bin)).limits.dir).toBeNull();
+  });
+  test("reports a missing reading, a refused request, a stall and a missing executable", async () => {
+    const none = client("claude-none.ts", "reply({ subtype: 'success', response: { rate_limits_available: true, rate_limits: null } });");
+    expect(await claudeCliUsage(tmp, none)).toEqual({ why: "claude got no usage reading" });
+    const out = client("claude-out.ts", "reply({ subtype: 'success', response: { rate_limits_available: false, rate_limits: null } });");
+    expect((await claudeCliUsage(tmp, out)).why).toBe("claude isn't signed in to a Claude plan");
+    const refused = client("claude-error.ts", "reply({ subtype: 'error', error: 'get_usage is not supported in this context' });");
+    expect((await claudeCliUsage(tmp, refused)).why).toBe("claude: get_usage is not supported in this context");
+    const hang = client("claude-hang.ts", "await new Promise(() => {});");
+    expect(await claudeCliUsage(tmp, hang, 200)).toEqual({ why: "claude timed out" });
+    expect((await claudeCliUsage(tmp, path.join(tmp, "missing"))).why).toMatch(/^claude: /);
   });
 });

@@ -59,8 +59,11 @@ Split collection from drawing:
 - **Config** is a stow-managed JSON file (`hosts` filter, `configDir`
   candidates for the macs' `~/.claude-me`), editable without a rebuild.
 
-Codex token renewal is delegated to its official app-server rather than
-leaving an unattended collector stuck on an expired login. The collector
+Token renewal is delegated to each provider's official client rather than
+leaving an unattended collector stuck on an expired login: Codex's
+app-server, and for Claude (since 2026-11-04) a prompt-less `claude -p`
+session's `get_usage` control request, which renews the login under Claude
+Code's lock and returns the usage body in the same step. The collector
 still never performs the OAuth exchange itself. Optional local dollar
 estimates are explicitly separate from billed spending: they use local
 session counters and published standard API rates, with coverage and

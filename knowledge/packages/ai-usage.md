@@ -36,7 +36,7 @@ recorded in a [decision](../decisions/ai-usage-collector-daemon.md).
 
 | `provider` | Reads | Endpoint | Meters |
 |---|---|---|---|
-| `claude` | Claude Code's OAuth login (`.credentials.json`, or the macOS keychain item hashed from the config dir) | `api.anthropic.com/api/oauth/usage` | session (when present), weekly, per-model weekly (`limits[]`), cloud credits, extra usage $ |
+| `claude` | Claude Code's OAuth login (`.credentials.json`, or the macOS keychain item hashed from the config dir); an expired login is read through `claude` itself (below) | `api.anthropic.com/api/oauth/usage` | session (when present), weekly, per-model weekly (`limits[]`), cloud credits, extra usage $ |
 | `anthropic-api` | an **Admin** key, `sk-ant-admin01-…`[^usage-cost-api] | `/v1/organizations/cost_report`, paged, summed | this month $ (toward `budget`), today $ |
 | `hermes` | Hermes' `state.db` (`session_model_usage`, its own list-price estimate) | none | this month $, today $ |
 | `codex` | `$CODEX_HOME/auth.json` (or the `Codex Auth` keychain item), optional local session logs | `chatgpt.com/backend-api/wham/usage`[^openai-codex] | 5h and weekly windows, extras, credits, local API-equivalent estimate |
@@ -77,6 +77,44 @@ collector never redeems the refresh token itself.[^codex-app-server]
 The service finds Codex on PATH or in `~/.local/bin` / `~/.nix-profile/bin`.
 Failed renewal shows a `codex login` recovery message. Credit balances of
 zero are visible; absent credit fields are not guessed.
+
+### Claude login renewal
+
+A Claude Code access token lasts about 8 hours, and only a running Claude Code
+renews it. A profile left idle that long (the personal one through a work
+day, say) used to leave its card stale until someone opened Claude Code.
+Since 2026-11-04, when the stored login has expired (or expires within a
+minute), the daemon asks the CLI instead:
+
+```
+CLAUDE_CONFIG_DIR=<dir> claude -p --safe-mode --no-session-persistence --strict-mcp-config \
+  --input-format stream-json --output-format stream-json --verbose
+→ {"type":"control_request","request_id":"usage","request":{"subtype":"get_usage","skip_behaviors":true}}
+```
+
+That control request (the Agent SDK's `usage_EXPERIMENTAL…`) settles the
+token first, renewing it under Claude Code's own lock, then reads
+`api/oauth/usage`. Its `rate_limits` field is that endpoint's body, so the
+same `claudeMeters` parser takes it, and the answer counts as the poll. No
+prompt is sent, so no model call is made; safe mode keeps hooks, MCP servers
+(no 1Password prompt from op-run servers) and plugins out, and no transcript
+is written. `--bare` would not do: it never reads the OAuth login. Closing
+stdin lets the session exit by itself, so a token write in flight finishes;
+only a session still running after the timeout is signalled. For the default
+`~/.claude`, `CLAUDE_CONFIG_DIR` is left unset (its keychain item has no
+hash suffix). The daemon finds `claude` on PATH or in `~/.local/bin`,
+`~/.nix-profile/bin` or `/etc/profiles/per-user/$USER/bin`.
+
+On failure `rate_limits` is just `null`, with no status or `retry-after`.
+The card goes stale and the daemon waits 15 minutes: "Claude usage
+unavailable" if the login did renew (most likely the endpoint's 429), or
+"Login expired and renewal failed; run claude /login" if it didn't (a dead
+refresh token). Only the second case needs you.
+
+Rejected: `claude auth status` (it starts the renewal without awaiting it,
+then calls `process.exit`, which can cut off a rotation before the new
+refresh token is stored), and redeeming the refresh token in the daemon
+(it would race Claude Code's lock and could void the login).
 
 On 2026-11-01, host [k](../hosts/k.md) had a stale one-shot snapshot but no
 installed collector or launchd agent, despite the module being enabled in
@@ -119,9 +157,17 @@ Regression checks: `bun test pkgs/ai-usage/main.test.ts`.
   daemon polls every 10 min, honours `retry-after` exactly (persisted, so a
   restart can't skip it), and a forced refresh still waits a minute.
   CodexBar does the same.[^codexbar]
-- **OAuth refresh belongs to the provider's client.** Claude waits for its
-  CLI; Codex renewal is delegated to the official app-server. The collector
-  does not implement a competing refresh-token exchange.
+- **OAuth refresh belongs to the provider's client.** Claude renewal goes
+  through `claude`'s `get_usage` control request
+  ([above](#claude-login-renewal)); Codex renewal is delegated to the
+  official app-server. The collector does not implement a competing
+  refresh-token exchange.
+- **Never write the Claude keychain items by hand.** On 2026-11-04 a test
+  rewrote one through `security -i`. The item also holds the profile's MCP
+  OAuth tokens, so the line was ~9 KB of hex. `security -i` splits input
+  lines at about 4 KB, ran the truncated first piece, and the item was left
+  with broken JSON: the login was lost and needed `/login`. To exercise
+  renewal, wait for a token's natural expiry.
 - **Cost needs an Admin API credential:** an Admin key (`sk-ant-admin01-`,
   created by an org admin under Settings → Admin keys), or a personal key
   that isn't scoped to a workspace, which carries its user's role. A plain

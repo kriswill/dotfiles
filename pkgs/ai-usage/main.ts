@@ -20,9 +20,11 @@
 //   and the herdr TUI's herdr-usage-watcher.ts draws on the same bucket.
 //   So: every 10 min at most, retry-after honoured exactly, and the last good
 //   reading kept through any failure.
-// - OAuth credentials are only READ here. Codex renews expired tokens via
-//   its own app-server; this collector never redeems refresh tokens itself.
-//   Claude still waits for its CLI to refresh the login.
+// - OAuth credentials are only READ here; this collector never redeems a
+//   refresh token itself. Each provider's own CLI renews an expired login:
+//   Codex through its app-server, Claude through a prompt-less `claude -p`
+//   session whose get_usage control request renews the token and then
+//   answers this poll (claudeCliUsage).
 // - The Admin API key is read once per daemon lifetime (1Password `op read`,
 //   a file, or an env var) and held in memory only.
 
@@ -32,6 +34,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { createInterface } from "node:readline";
+import { Readable } from "node:stream";
 
 const HOME = os.homedir();
 const HOST = os.hostname().split(".")[0];
@@ -287,24 +290,8 @@ export function claudePlan(o: any): string | undefined {
 const money = (m: any): number | null =>
   m && typeof m.amount_minor === "number" ? m.amount_minor / 10 ** (m.exponent ?? 2) : null;
 
-async function fetchClaude(cfg: AccountConfig): Promise<Result> {
-  // configDir may list candidates; the first holding a login wins (macs keep
-  // the personal profile in ~/.claude-me, nebula in ~/.claude).
-  const dirs = ([] as string[]).concat(cfg.configDir ?? process.env.CLAUDE_CONFIG_DIR ?? "~/.claude");
-  const o = dirs.map(claudeCredentials).find((c) => c?.accessToken?.trim());
-  const token = o?.accessToken?.trim();
-  if (!token) return { status: "setup", message: "Sign in to Claude Code (claude /login)", retryInMs: 5 * MIN };
-  const plan = claudePlan(o);
-  if (typeof o.expiresAt === "number" && o.expiresAt < Date.now()) {
-    return { status: "stale", message: "Token expired; open Claude Code to renew it", subtitle: plan, retryInMs: 2 * MIN };
-  }
-
-  const { res, data, err } = await getJson("https://api.anthropic.com/api/oauth/usage", {
-    Authorization: `Bearer ${token}`,
-    "anthropic-beta": "oauth-2025-04-20",
-  });
-  if (!data) return { ...httpFailure("Claude", res, err), subtitle: plan };
-
+// The api/oauth/usage body (direct, or as get_usage's rate_limits) as meters.
+export function claudeMeters(data: any): Meter[] {
   const meters: Meter[] = [];
   const five = data.five_hour;
   if (five && typeof five.utilization === "number") meters.push(pctMeter("session", "Session (5h)", five.utilization, five.resets_at));
@@ -349,8 +336,115 @@ async function fetchClaude(cfg: AccountConfig): Promise<Result> {
     const scale = 10 ** (xu.decimal_places ?? 2);
     meters.push(usdMeter("extra", spendLabel, (xu.used_credits ?? 0) / scale, xu.monthly_limit / scale));
   }
+  return meters;
+}
 
-  return { status: "ok", meters, subtitle: plan };
+const findClaude = () =>
+  Bun.which("claude") ??
+  [path.join(HOME, ".local/bin/claude"), path.join(HOME, ".nix-profile/bin/claude"), `/etc/profiles/per-user/${os.userInfo().username}/bin/claude`]
+    .find((p) => fs.existsSync(p));
+
+// Claude Code renews its own OAuth login under a lock in the config dir, and
+// re-reads the store under that lock in case another session already rotated
+// the refresh token. Redeeming the token from here could race that and void
+// the login, so an expired login goes through the CLI: a prompt-less print
+// session (safe mode: no hooks, MCP servers or plugins; no transcript) asked
+// for the SDK's get_usage control request, which awaits that renewal before
+// it reads api/oauth/usage. Its rate_limits is that endpoint's body, so the
+// same request is this poll's reading too, and no model call is made. On
+// failure rate_limits is just null: no status, no retry-after. get_usage is
+// marked experimental upstream; anything unexpected surfaces as `why`.
+export async function claudeCliUsage(configDir: string, command?: string, timeoutMs = 60_000): Promise<{ limits?: any; why?: string }> {
+  const executable = command ?? findClaude();
+  if (!executable) return { why: "claude isn't installed" };
+  const dir = expand(configDir);
+  // ~/.claude is the default with CLAUDE_CONFIG_DIR unset (its keychain item
+  // has no hash suffix); anything else is named explicitly.
+  const env: Record<string, string | undefined> = { ...process.env, DISABLE_AUTOUPDATER: "1", CLAUDE_CONFIG_DIR: dir };
+  if (dir === path.join(HOME, ".claude")) delete env.CLAUDE_CONFIG_DIR;
+  let child: ReturnType<typeof Bun.spawn> | undefined;
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    fs.mkdirSync(CACHE_DIR, { recursive: true });
+    child = Bun.spawn(
+      [executable, "-p", "--safe-mode", "--no-session-persistence", "--strict-mcp-config",
+        "--input-format", "stream-json", "--output-format", "stream-json", "--verbose"],
+      { cwd: CACHE_DIR, env, stdin: "pipe", stdout: "pipe", stderr: "ignore" },
+    );
+    const proc = child;
+    (proc.stdin as any).write(JSON.stringify({ type: "control_request", request_id: "usage", request: { subtype: "get_usage", skip_behaviors: true } }) + "\n");
+    (proc.stdin as any).flush();
+    const read = async (): Promise<{ limits?: any; why?: string }> => {
+      const lines = createInterface({ input: Readable.fromWeb(proc.stdout as any) });
+      try {
+        for await (const line of lines) {
+          let msg: any;
+          try { msg = JSON.parse(line); } catch { continue; }
+          const r = msg?.type === "control_response" ? msg.response : null;
+          if (r?.request_id !== "usage") continue;
+          if (r.subtype !== "success") return { why: `claude: ${String(r.error ?? "get_usage failed").slice(0, 120)}` };
+          if (r.response?.rate_limits) return { limits: r.response.rate_limits };
+          return { why: r.response?.rate_limits_available === false ? "claude isn't signed in to a Claude plan" : "claude got no usage reading" };
+        }
+        return { why: "claude exited without answering" };
+      } finally { lines.close(); }
+    };
+    return await Promise.race([
+      read(),
+      new Promise<{ why: string }>((resolve) => { timer = setTimeout(() => resolve({ why: "claude timed out" }), timeoutMs); }),
+    ]);
+  } catch (e: any) {
+    return { why: `claude: ${e?.message ?? e}` };
+  } finally {
+    clearTimeout(timer);
+    if (child) {
+      // EOF lets it exit by itself, so a token write in flight lands; only a
+      // hung one is signalled.
+      const proc = child;
+      try { (proc.stdin as any).end(); } catch {}
+      const exited = (ms: number) => Promise.race([proc.exited.then(() => true), Bun.sleep(ms).then(() => false)]);
+      const grace = Math.min(15_000, timeoutMs);
+      if (!(await exited(grace))) {
+        proc.kill("SIGTERM");
+        if (!(await exited(5_000))) proc.kill("SIGKILL");
+      }
+    }
+  }
+}
+
+async function fetchClaude(cfg: AccountConfig): Promise<Result> {
+  // configDir may list candidates; the first holding a login wins (macs keep
+  // the personal profile in ~/.claude-me, nebula in ~/.claude).
+  const dirs = ([] as string[]).concat(cfg.configDir ?? process.env.CLAUDE_CONFIG_DIR ?? "~/.claude");
+  const login = dirs.map((dir) => ({ dir, o: claudeCredentials(dir) })).find(({ o }) => o?.accessToken?.trim() || o?.refreshToken);
+  if (!login) return { status: "setup", message: "Sign in to Claude Code (claude /login)", retryInMs: 5 * MIN };
+  const { dir, o } = login;
+  const plan = claudePlan(o);
+  const token = o.accessToken?.trim();
+
+  // An access token lasts ~8h and only a running Claude Code renews it, so
+  // an idle profile's login lapses: let the CLI renew it and read the usage.
+  if (!token || (typeof o.expiresAt === "number" && o.expiresAt < Date.now() + MIN)) {
+    const { limits, why } = await claudeCliUsage(dir);
+    if (limits) return { status: "ok", meters: claudeMeters(limits), subtitle: plan };
+    const now = claudeCredentials(dir);
+    const renewed = typeof now?.expiresAt === "number" && now.expiresAt > Date.now() + MIN;
+    return {
+      status: "stale",
+      // Renewed but no reading is most likely the endpoint's 429, which
+      // get_usage doesn't pass on: back off rather than ask again now.
+      message: renewed ? `Claude usage unavailable (${why})` : `Login expired and renewal failed (${why}); run claude /login`,
+      subtitle: plan,
+      retryInMs: 15 * MIN,
+    };
+  }
+
+  const { res, data, err } = await getJson("https://api.anthropic.com/api/oauth/usage", {
+    Authorization: `Bearer ${token}`,
+    "anthropic-beta": "oauth-2025-04-20",
+  });
+  if (!data) return { ...httpFailure("Claude", res, err), subtitle: plan };
+  return { status: "ok", meters: claudeMeters(data), subtitle: plan };
 }
 
 // ── Anthropic API (month-to-date cost via the Admin API) ───────────────────
