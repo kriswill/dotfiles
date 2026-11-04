@@ -14,14 +14,12 @@
 -- end)
 
 hl.on("hyprland.start", function()
-  -- Desktop wallpaper is painted by the Noctalia shell (started below), so no
-  -- separate wallpaper daemon (hyprpaper) runs in this session.
-
-  -- Noctalia shell (bar, launcher, control centre, lock screen, notifications).
-  -- Installed for k via modules/hosts/nebula/users/k/noctalia.nix. --daemon
-  -- backgrounds the shell so this returns immediately; keybinds below drive it
-  -- with `noctalia msg`. Replace any stale instance left by a session restart.
-  hl.exec_cmd("pkill -x noctalia; noctalia --daemon")
+  -- The desktop shell (bar, launcher, control centre, lock screen,
+  -- notifications, wallpaper) is Dux Shell. It is NOT started here: its
+  -- systemd user unit dms.service is WantedBy graphical-session.target, which
+  -- the uwsm session reaches (modules/hosts/nebula/users/k/dux-shell.nix).
+  -- Keybinds drive it with `dms ipc call …`. No separate wallpaper daemon
+  -- (hyprpaper) runs: the shell paints the wallpaper.
 
   -- 1Password, started minimized to tray with --silent. It HAS to be running for
   -- the SSH agent at ~/.1password/agent.sock to exist — that agent serves git

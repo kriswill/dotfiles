@@ -13,7 +13,8 @@ Enables the Hyprland desktop **directly** (`programs.hyprland.enable` +
 `snowglobe-factory.desktop.hyprland.enable`. That snowglobe module's only wanted
 contribution is `programs.hyprland` + uwsm; it also force-enables hyprlock
 (which auto-enables hypridle), kitty, dolphin, and hyprlauncher — none used
-here (ghostty terminal, fuzzel/Noctalia launcher, Noctalia lock), and
+here (ghostty terminal, fuzzel + the shell's launcher, the shell's lock — [Dux
+  Shell](users-k-dux-shell.md) since 2026-11-03, Noctalia before), and
 hyprlock repeatedly broke the build whenever the hyprland flake's hyprutils
 overlay outpaced nixpkgs. See the manual.
 

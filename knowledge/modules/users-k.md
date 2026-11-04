@@ -12,7 +12,7 @@ with `neededForUsers = true` (decrypted early enough for user creation),
 consumed via `users.users.k.hashedPasswordFile`. The authorized SSH key is
 pulled from snowglobe's keyring (`config.keyring.ssh.k`). Groups: `wheel`,
 `networkmanager`, `libvirtd` — the `i2c` group is added separately by
-[users-k-noctalia](users-k-noctalia.md) for DDC/CI brightness.
+[users-k-desktop-shell](users-k-desktop-shell.md) for DDC/CI brightness.
 
 Also installs `pkgs.flatpak-user` in `users.users.k.packages`: a flatpak CLI
 wrapper defaulted to `--user`, which shadows the system flatpak because the

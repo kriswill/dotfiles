@@ -1,5 +1,19 @@
 # Log
 
+## 2026-11-03
+
+- **Creation**: [users-k-dux-shell](users-k-dux-shell.md): Dux Shell (ex-DankMaterialShell)
+  from nixpkgs' `programs.dux-shell` becomes nebula's only desktop shell,
+  started by `dms.service`, with its own polkit agent replacing hyprpolkitagent
+  ([decision](../decisions/dux-shell-replaces-noctalia.md)).
+- **Creation**: [users-k-desktop-shell](users-k-desktop-shell.md): the
+  shell-agnostic plumbing (upower/ppd/bluetooth, swaync off, bare-name PAM
+  `login`, DDC/CI) split out of users-k-noctalia so either shell gets it.
+- **Update**: [users-k-noctalia](users-k-noctalia.md): disabled in place behind
+  `enable = false`; stale `disabledModules` note corrected (dropped in
+  `51db6bf`). Cross-links in [hyprland](hyprland.md), [users-k](users-k.md),
+  [ghostty](ghostty.md) and [nebula](../hosts/nebula.md) follow the move.
+
 ## 2026-11-01
 
 - **Update**: [nebula-hermes-agent](nebula-hermes-agent.md): leave the full

@@ -24,8 +24,10 @@ a global quick-terminal keybind. NixOS enables the upstream
 `window-decoration = none`,
 `gtk-custom-css = corners.css`, `window-theme = ghostty`,
 `confirm-close-surface = false`, background `#0e0e0e` at 0.92 opacity,
-font-size 14, and `theme = noctalia` (recolored by
-[Noctalia](users-k-noctalia.md) templates). See the
+font-size 14, and `theme = noctalia` (the file
+[Noctalia](users-k-noctalia.md) last generated; frozen since
+[Dux Shell](users-k-dux-shell.md) replaced it, which writes its own
+`dankcolors` theme instead). See the
 [cross-OS module twins pattern](../patterns/cross-os-module-twins.md).
 
 Mounted ungated on every host (see the

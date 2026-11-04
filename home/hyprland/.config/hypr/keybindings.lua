@@ -20,38 +20,23 @@ hl.bind(mainMod .. " + E", hl.dsp.exec_cmd(fileManager))
 hl.bind(mainMod .. " + V", hl.dsp.window.float({ action = "toggle" }))
 hl.bind(mainMod .. " + D", hl.dsp.exec_cmd(menu))
 
--- Noctalia shell panels, driven over IPC (`noctalia msg`). fuzzel stays on
--- SUPER+D above; these add Noctalia's own launcher, control centre, and
--- lock. See docs.noctalia.dev v5 IPC reference.
-hl.bind(mainMod .. " + space", hl.dsp.exec_cmd("noctalia msg panel-toggle launcher"))
-hl.bind(mainMod .. " + N", hl.dsp.exec_cmd("noctalia msg panel-toggle control-center"))
-hl.bind(mainMod .. " + L", hl.dsp.exec_cmd("noctalia msg session lock"))
-
--- SUPER+SHIFT+W: re-apply each monitor's wallpaper from its own configured
--- directory. Fixes the recurring case where a monitor drops its DisplayPort
--- signal (the OLED DP-3 @ high refresh — see docs/hdr-hyprland-june-2026.md),
--- Noctalia re-detects it and falls back to the global [wallpaper.default] (a
--- PORTRAIT image), leaving the landscape monitor with a stretched/wrong paper.
---
--- Directory-based (not filename-based) so it keeps working when you swap the
--- image files: each monitor has [wallpaper.monitor.<conn>].directory pointing at
--- the right-orientation folder (vertical-wide / horizontal-wide). For each such
--- monitor, set it to the first image in that folder (deterministic; one file per
--- folder is the intended layout). Reads connectors + dirs from the live config.
-hl.bind(
-  mainMod .. " + SHIFT + W",
-  hl.dsp.exec_cmd(
-    [==[s="$HOME/.local/state/noctalia/settings.toml"; command -v noctalia >/dev/null 2>&1 || exit 0; command -v tomato >/dev/null 2>&1 || exit 0; [ -f "$s" ] || exit 0; for c in $(grep -oE 'wallpaper\.monitor\.[A-Za-z0-9-]+' "$s" | sed 's/.*\.//' | sort -u); do d=$(tomato get "wallpaper.monitor.$c.directory" "$s"); [ -d "$d" ] || continue; f=$(find "$d" -maxdepth 1 -type f \( -iname '*.png' -o -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.webp' \) | sort | head -1); [ -n "$f" ] && noctalia msg wallpaper-set "$c" "$f"; done]==]
-  )
-)
+-- Dux Shell panels, driven over IPC (`dms ipc call <target> <fn>`; list them
+-- all with `dms ipc list`). fuzzel stays on SUPER+D above; these add the
+-- shell's own launcher, control centre, settings, and lock. See
+-- docs/dux-shell.md. (Noctalia's equivalents, until 2026-11-03: `noctalia msg
+-- panel-toggle launcher|control-center` and `noctalia msg session lock`, plus a
+-- SUPER+SHIFT+W bind that re-applied per-monitor wallpapers after a DP-3
+-- re-detect — a Noctalia-specific fallback bug, so it was not carried over.)
+hl.bind(mainMod .. " + space", hl.dsp.exec_cmd("dms ipc call spotlight toggle"))
+hl.bind(mainMod .. " + N", hl.dsp.exec_cmd("dms ipc call control-center toggle"))
+hl.bind(mainMod .. " + comma", hl.dsp.exec_cmd("dms ipc call settings focusOrToggle"))
+hl.bind(mainMod .. " + L", hl.dsp.exec_cmd("dms ipc call lock lock"))
 hl.bind(mainMod .. " + P", hl.dsp.window.pseudo())
 hl.bind(mainMod .. " + J", hl.dsp.layout("togglesplit")) -- dwindle only
 hl.bind(mainMod .. " + F", hl.dsp.window.fullscreen()) -- real fullscreen (mode 0)
 hl.bind(mainMod .. " + SHIFT + F", hl.dsp.window.fullscreen({ mode = 1 })) -- maximize (mode 1)
 
--- Toggle zero gaps + square (un-rounded) corners on the CURRENT MONITOR only,
--- plus Noctalia's rounded screen-corner overlay to match (gaps off -> corners
--- off so windows go truly edge-to-edge; gaps on -> corners on).
+-- Toggle zero gaps + square (un-rounded) corners on the CURRENT MONITOR only.
 --
 -- Gaps (general.gaps_in/out) and decoration.rounding are GLOBAL in Hyprland, so
 -- per-monitor scoping is done with a workspace rule on the workspace currently
@@ -62,20 +47,11 @@ hl.bind(mainMod .. " + SHIFT + F", hl.dsp.window.fullscreen({ mode = 1 })) -- ma
 -- stay in sync. (The restore values 5/20 mirror the general block in
 -- look-and-feel.lua — keep them in sync if those defaults change.)
 --
--- The Noctalia side is a separate process with no Lua API, so it necessarily
--- goes through hl.exec_cmd: `tomato` flips [shell.screen_corners].enabled while
--- preserving formatting, written to a same-dir temp then atomically `mv`d in (an
--- in-place edit races Noctalia's file watcher into a destructive re-save), then
--- `noctalia msg config-reload` applies it live. See docs/noctalia.md.
+-- Under Noctalia (until 2026-11-03) this also flipped Noctalia's rounded
+-- screen-corner overlay in lockstep, via `tomato` on its settings.toml +
+-- `noctalia msg config-reload` (see docs/noctalia.md); Dux Shell has no such
+-- overlay, so the toggle is now Hyprland-only.
 local gaplessWorkspaces = {} -- workspace name -> true while its gaps are zeroed
-
-local function setNoctaliaScreenCorners(enabled)
-  hl.exec_cmd(
-    [==[s="$HOME/.local/state/noctalia/settings.toml"; command -v tomato >/dev/null 2>&1 || exit 0; [ -f "$s" ] || exit 0; t=$(mktemp -p "$(dirname "$s")" .settings.toml.XXXXXX) || exit 0; if cp "$s" "$t" && tomato set shell.screen_corners.enabled ]==]
-      .. tostring(enabled)
-      .. [==[ "$t"; then mv -f "$t" "$s"; command -v noctalia >/dev/null 2>&1 && noctalia msg config-reload >/dev/null 2>&1; else rm -f "$t"; fi]==]
-  )
-end
 
 local function toggleGaps()
   local mon = hl.get_active_monitor()
@@ -90,11 +66,9 @@ local function toggleGaps()
   if gaplessWorkspaces[name] then
     gaplessWorkspaces[name] = nil
     hl.workspace_rule({ workspace = name, gaps_in = 5, gaps_out = 20, no_rounding = false })
-    setNoctaliaScreenCorners(true)
   else
     gaplessWorkspaces[name] = true
     hl.workspace_rule({ workspace = name, gaps_in = 0, gaps_out = 0, no_rounding = true })
-    setNoctaliaScreenCorners(false)
   end
 end
 
@@ -126,18 +100,15 @@ hl.bind(mainMod .. " + mouse_up", hl.dsp.focus({ workspace = "e-1" }))
 hl.bind(mainMod .. " + mouse:272", hl.dsp.window.drag(), { mouse = true })
 hl.bind(mainMod .. " + mouse:273", hl.dsp.window.resize(), { mouse = true })
 
--- Screenshots (mirrors the niri layout: region / window / monitor)
--- region + monitor go through noctalia (native screencopy, saves + notifies);
--- window has no native verb, so grab the active window's geometry and copy it.
-hl.bind("Print", hl.dsp.exec_cmd("noctalia msg screenshot-region"))
-hl.bind(
-  "ALT + Print",
-  hl.dsp.exec_cmd(
-    [[grim -g "$(hyprctl activewindow -j | jq -r '"\(.at[0]),\(.at[1]) \(.size[0])x\(.size[1])"')" - | wl-copy]]
-  )
-)
-hl.bind("CTRL + Print", hl.dsp.exec_cmd("noctalia msg screenshot-fullscreen"))
-hl.bind("CTRL + SHIFT + Print", hl.dsp.exec_cmd("noctalia msg screenshot-fullscreen pick"))
+-- Screenshots (mirrors the niri layout: region / window / monitor), all via
+-- Dux Shell's `dms screenshot` CLI (native screencopy; saves a file AND copies
+-- to the clipboard by default). It's a standalone Go command, so it works even
+-- if the shell itself is down. Noctalia had no window verb, which is why
+-- ALT+Print used a grim + hyprctl/jq geometry grab before 2026-11-03.
+hl.bind("Print", hl.dsp.exec_cmd("dms screenshot")) -- region (interactive)
+hl.bind("ALT + Print", hl.dsp.exec_cmd("dms screenshot window")) -- focused window
+hl.bind("CTRL + Print", hl.dsp.exec_cmd("dms screenshot full")) -- focused monitor
+hl.bind("CTRL + SHIFT + Print", hl.dsp.exec_cmd("dms screenshot all")) -- all monitors
 
 -- Laptop multimedia keys for volume and LCD brightness
 hl.bind(

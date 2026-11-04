@@ -1,5 +1,11 @@
 # Log
 
+## 2026-11-03
+
+- **Creation**: [dux-shell-replaces-noctalia](dux-shell-replaces-noctalia.md):
+  Dux Shell replaces Noctalia as the only shell, from nixpkgs' module,
+  colors-only Hyprland fragment, Noctalia kept disabled for a cheap switch back.
+
 ## 2026-11-01
 
 - **Update**: [ai-usage-collector-daemon](ai-usage-collector-daemon.md):

@@ -1,0 +1,181 @@
+# Dux Shell manual (nebula)
+
+A working reference for **Dux Shell**, nebula's Wayland desktop shell under
+Hyprland since 2026-11-03, replacing [Noctalia](noctalia.md). Distilled from
+the upstream docs (<https://github.com/duxlabs-dev/dux-docs>, `versioned_docs/version-2.0`)
+and the shipped source, and checked against this machine's build. Maintained for
+Claude's use: keep it accurate, prune anything that stops being true, and record
+real gotchas in **Learned behaviours & workarounds** at the bottom.
+
+## Version & state on nebula (read this first)
+
+- **Package:** nixpkgs `dux-shell` **2.0.0** (nixpkgs `0bb2eed`, 2026-11-01),
+  on nixpkgs `quickshell` **0.3.2**, plus `matugen` 4.2.0 and `cava`. Upstream
+  is already at v2.1.0 (2026-11-04 UTC); nixpkgs follows.
+- **Formerly DankMaterialShell ("DMS").** v2.0.0 (2026-10-20) moved the project
+  to Dux Labs and renamed the repos/packages, but the CLI is still **`dms`**,
+  the unit **`dms.service`**, the app ID `dev.duxlabs.shell`. nixpkgs keeps
+  `dms-shell` / `programs.dms-shell` as renamed aliases.
+- **Verified 2026-11-03:** eval + `nrb` build, live Hyprland config reload with
+  no `configerrors`, all binds registered. **Running since gen 219**
+  (2026-11-03 19:00): `dms.service` active at ~490 MB RSS (Noctalia v5 was
+  ~232 MB), owns `org.freedesktop.Notifications`, polkit agent registered, bars
+  on DP-1 + DP-3, `dms doctor` all green (run with the session env — see below).
+  Still to check: wallpapers, lock/unlock, workspace bar over time.
+
+## What it is
+
+A Quickshell/QML shell (bar, launcher "spotlight", control centre, dashboard,
+notifications, lock screen, idle/suspend, clipboard history, OSDs, dock,
+wallpaper + matugen theming, polkit agent, settings GUI) plus a Go `dms`
+binary that is both the CLI and the backend daemon (IPC, system monitoring,
+screenshots, PAM resolution, theme generation, plugin installs). Pick
+rationale: [knowledge/decisions/dux-shell-replaces-noctalia.md](../knowledge/decisions/dux-shell-replaces-noctalia.md).
+
+## How it is wired
+
+| Piece | Where | Notes |
+| --- | --- | --- |
+| Package + service | `modules/hosts/nebula/users/k/dux-shell.nix` | `programs.dux-shell.enable` (nixpkgs module). Also adds matugen + cava to systemPackages, mkDefaults accounts-daemon / i2c / graphics on. |
+| Startup | `dms.service` (user) | `dms run --session`, `Type=notify`, `Restart=on-failure`, WantedBy `graphical-session.target` (uwsm reaches it). Not in `autostart.lua`. |
+| Polkit agent | Dux's own | `hyprpolkitagent`'s `wantedBy` is forced empty while Dux is on (a session takes one agent). Escape hatch: `DMS_DISABLE_POLKIT=1`. |
+| Shared plumbing | `modules/hosts/nebula/users/k/desktop-shell.nix` | upower, power-profiles-daemon, bluetooth, swaync **off** (Dux owns `org.freedesktop.Notifications`), the bare-name `/etc/pam.d/login`, DDC/CI (i2c + ddcutil). |
+| Border colours | `home/hyprland/.config/hypr/hyprland.lua` | `require("dms.colors")` behind a `package.searchpath` guard (file is generated, may be absent), then `noctalia-overrides.lua` (historical name) re-darkens `inactive_border` for ghostty. |
+| Layer rule | `window-rules.lua` | `dms-no-anim`: `no_anim` on namespaces `^dms` (upstream recommendation). Blur needs no rule on 0.56+ (ext-background-effect-v1, toggled in Settings). |
+
+Only the **colors** fragment is required. Dux's other Hyprland fragments
+(`outputs`, `layout`, `cursor`, `input`, `binds`, `binds-user`, `windowrules`
+under `~/.config/hypr/dms/`) would fight `monitors.lua`, `look-and-feel.lua`,
+`input.lua` and `keybindings.lua`, which own those here. Consequence: Dux's
+Settings pages for displays, Hyprland layout, input, keybinds and window rules
+show nebula's own config read-only (or offer a "Setup" banner — see below).
+
+## Keybinds (keybindings.lua)
+
+| Bind | Command |
+| --- | --- |
+| SUPER+Space | `dms ipc call spotlight toggle` (launcher; fuzzel stays on SUPER+D) |
+| SUPER+N | `dms ipc call control-center toggle` |
+| SUPER+Comma | `dms ipc call settings focusOrToggle` |
+| SUPER+L | `dms ipc call lock lock` |
+| Print | `dms screenshot` (region) |
+| ALT+Print | `dms screenshot window` |
+| CTRL+Print | `dms screenshot full` (focused output) |
+| CTRL+SHIFT+Print | `dms screenshot all` (all outputs) |
+
+Volume/brightness/media keys still call `wpctl` / `brightnessctl` /
+`playerctl` directly; Dux's OSD reacts to the resulting changes. Discover
+every IPC target with `dms ipc list` (needs the shell running).
+`dms screenshot` is a standalone Go command with its own region selector, so
+it works even when the shell is down; by default it saves a file **and**
+copies to the clipboard (`--no-file` / `--no-clipboard`).
+
+## First session after `nrs`
+
+The switch installs Dux but does not hand the session over by itself:
+
+```sh
+pkill noctalia                        # frees the notifications name + wallpaper (NOT -x; see below)
+systemctl --user stop hyprpolkitagent # Dux's agent takes over
+systemctl --user restart dms          # (re)start so it claims both
+dms doctor                            # sanity report
+```
+
+(A logout/login does the same.) Then in Settings (SUPER+Comma):
+
+- **Wallpaper & colors:** set per-monitor wallpapers (Noctalia's per-monitor
+  directories are not imported). This also generates `~/.config/hypr/dms/colors.lua`.
+- **Lock Screen → Authentication:** leave **Auto**, or choose **Use system PAM
+  authentication** (`/etc/pam.d/login` directly). Test lock (SUPER+L) and unlock.
+- **Interface style → Surfaces → Background blur:** optional.
+
+## Do not
+
+- **Run `dms setup`.** It writes a fresh `hyprland.lua` (backing up the old one)
+  and refreshes `binds.lua` — `hyprland.lua` is a stow symlink into this repo.
+- **Click a Settings "Setup" banner.** The repair script appends
+  `require("dms.<fragment>")` lines with `>>` to `hyprland.lua` — through the
+  symlink, into the repo copy — for exactly the fragments excluded above.
+- **Change the icon theme away from "System Default".** Dux applies it with
+  `sed -i` on `~/.config/gtk-{3,4}.0/settings.ini`, which are stow symlinks
+  (`home/gtk/`); `sed -i` replaces a symlink with a plain file, and a plain file
+  at a stow target aborts the whole `gtk` package on the next rebuild.
+- **Install registry plugins casually.** Plugins are git-cloned third-party QML,
+  unsigned and unsandboxed; they run as you. Prefer the declarative
+  `programs.dux-shell.plugins.<name>.src` (pinned store paths) if you want one.
+
+Theme files Dux *creates* are fine — they are new files, never the tracked ones:
+`~/.config/ghostty/themes/dankcolors`, `~/.config/gtk-{3,4}.0/dank-colors.css`,
+`~/.config/nvim/colors/dms.lua`, `~/.config/qt{5,6}ct/colors/matugen.conf`, etc.
+Ghostty still uses `theme = noctalia` (the last Noctalia-generated file stays on
+disk); switching it to `dankcolors` in `modules/nixos/ghostty.nix` is optional.
+
+## State & config locations
+
+- Settings: `~/.config/dms/settings.json` (pre-2.0: `~/.config/DankMaterialShell/`,
+  auto-migrated). Not tracked in the repo yet.
+- Generated Hyprland fragments: `~/.config/hypr/dms/`.
+- Lock-screen PAM (Auto mode): `~/.local/state/dms/pam/`.
+- Cache (colors JSON, clipboard DB): `~/.cache/dms/`.
+
+## Known issues (2026-11-03)
+
+- **Lock crash-loop when outputs power off on lock** — upstream #4103, opened
+  against Hyprland 0.57. A crashed locker leaves the session locked (Hyprland's
+  ext-session-lock fallback), it does not unlock. If hit, avoid
+  `lock lockAndOutputsOff` and any idle setting that powers monitors off
+  right after locking.
+- **Quickshell 0.3.2 predates `4befab5` "hyprland/ipc: follow workspace id
+  changes"** (2026-10-16). Dux reads workspaces through `Quickshell.Hyprland`,
+  so a workspace whose id Hyprland changes (`changeworkspaceid`) can keep its
+  old id in the bar. Fix if seen: point `programs.dux-shell.quickshell.package`
+  at a quickshell git build.
+
+## Switching back to Noctalia
+
+1. `modules/hosts/nebula/users/k/noctalia.nix`: `enable = true`.
+2. `modules/hosts/nebula/users/k/dux-shell.nix`: `programs.dux-shell.enable = false`
+   (this also restores `hyprpolkitagent`).
+3. Hyprland Lua — restore from git (the commit that introduced this doc):
+   `autostart.lua` (`noctalia --daemon`; its old `pkill -x noctalia` never
+   matched — use `pkill noctalia`), `hyprland.lua`
+   (`require("noctalia").apply_theme()` behind the searchpath guard),
+   `keybindings.lua` (`noctalia msg …` binds, SUPER+SHIFT+W wallpaper re-apply,
+   the toggleGaps screen-corner sync, ALT+Print grim grab), `window-rules.lua`
+   (`noctalia-blur` layer rule).
+4. `nrs`, then `systemctl --user stop dms; noctalia --daemon` (or re-login).
+
+## Learned behaviours & workarounds
+
+- **2026-11-03 — PAM fix carries over without config.** Dux's default
+  ("Auto") lock auth on NixOS does not touch `/etc/pam.d`; it resolves the first
+  existing login-like service (`login`), filters it, and writes a copy to
+  `~/.local/state/dms/pam/`. Because nebula's `/etc/pam.d/login` already uses
+  bare linux-pam module names (desktop-shell.nix), the copy inherits the
+  glibc-bump fix. Source: `core/internal/pam/pam.go`.
+- **2026-11-03 — Apps survive shell restarts.** Dux launches apps through
+  `systemd-run --user --scope`, so restarting `dms.service` (including on a
+  rebuild that changes it) does not kill them. Source: `quickshell/Common/LaunchUnit.js`.
+- **2026-11-03 — Hyprland 0.57 `hyprctl binds` shows Lua binds as opaque ids**
+  (`dispatcher: HL.Dispatcher(exec_cmd)`, `arg: "<n>"`), so a bind's command
+  can't be read back from IPC — verify by key/modmask only.
+- **2026-11-03 — `pkill -x noctalia` never matches.** The running process's
+  `comm` is the wrapper's truncated name, `.noctalia-wrapp`, so an exact-name
+  match misses; the old `autostart.lua` line (`pkill -x noctalia; …`) was a
+  silent no-op. Use `pkill noctalia` (substring), or kill by PID from
+  `pgrep -a noctalia`. Same for any nix-wrapped binary (`.dms-wrapped`,
+  `.quickshell-wra…`).
+- **2026-11-03 — `dms doctor` needs the session environment.** Run from a
+  shell without `WAYLAND_DISPLAY` / `XDG_SESSION_TYPE` (e.g. an agent's
+  subprocess), it reports "Display Server: Unknown" and every Quickshell
+  feature (Polkit, IdleMonitor, BackgroundBlur…) as "Not available". Import
+  the unit's env first: `eval "$(tr '\0' '\n' < /proc/$(systemctl --user show
+  -p MainPID --value dms)/environ | grep -E '^(WAYLAND_DISPLAY|XDG_SESSION_TYPE)=' | sed 's/^/export /')"`.
+- **2026-11-03 — First-run log noise is expected.** Missing
+  `settings.json`/`session.json`/cache files (created on first save), GeoClue2
+  "not activatable" (weather falls back; no geoclue on nebula), Tailscale
+  socket absent, `WorkspaceSwitcher.qml` binding-loop warnings. One to weigh:
+  "Failed to initialize evdev manager … add your user to the 'input' group" —
+  left as is: `input` lets any of k's processes read every keystroke, which
+  isn't worth what Dux uses evdev for (a Caps Lock state indicator,
+  `core/internal/server/evdev`).

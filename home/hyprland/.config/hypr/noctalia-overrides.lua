@@ -1,11 +1,14 @@
--- Overrides applied AFTER the generated noctalia.lua (see hyprland.lua load order).
+-- Overrides applied AFTER the desktop shell's generated colour fragment (see
+-- hyprland.lua load order): Dux Shell's dms/colors.lua today, Noctalia's
+-- noctalia.lua before 2026-11-03. The filename is historical; it is kept so the
+-- stow link and hyprland.lua's require don't have to move in lockstep.
 --
--- Noctalia regenerates noctalia.lua from its theme and sets inactive_border to its
--- "surface" colour (rgb 131313), which is lighter than ghostty's window bg (#0e0e0e)
--- and shows a faint line between tiled ghostty windows in gapless layouts. We want the
--- inactive border to render the same as ghostty's interior so it disappears. Active
--- border is left to noctalia. (look-and-feel.lua sets inactive_border too but loses to
--- noctalia, which loads later — this file wins by loading last.)
+-- The shell's theme sets inactive_border to a "surface"/outline colour (Noctalia's was
+-- rgb 131313; Dux uses its outline tone) that is lighter than ghostty's window bg
+-- (#0e0e0e) and shows a faint line between tiled ghostty windows in gapless layouts. We
+-- want the inactive border to render the same as ghostty's interior so it disappears.
+-- Active border is left to the shell. (look-and-feel.lua sets inactive_border too but
+-- loses to the shell fragment, which loads later — this file wins by loading last.)
 --
 -- ponytail: the value is tuned to the current HDR session, not ghostty's literal bg.
 -- The opaque border goes through an HDR/gamma lift that ghostty content doesn't, so a

@@ -30,9 +30,12 @@ versions live in the manuals themselves, which lead with verified state.
   for Hyprland: the `hl.*` API, binds/rules/monitors, legacy
   `.conf`→Lua translation map, and a large dated gotcha log (`.conf` shadows
   `.lua`, OLED 240Hz DSC failure, NVIDIA/XWayland scaling).
+- [`docs/dux-shell.md`](../docs/dux-shell.md) — Dux Shell (nebula's shell since
+  2026-11-03): nixpkgs-module wiring, the colors-only Hyprland fragment, IPC
+  binds, first-session handover, what never to let it edit, switching back.
 - [`docs/noctalia.md`](../docs/noctalia.md) — Noctalia: install wiring,
   two-layer TOML config + `noctalia-config` snapshot sync, IPC/CLI surface,
-  theming templates, and DDC/CI brightness enablement.
+  theming templates, and DDC/CI brightness enablement. Disabled since 2026-11-03.
 - [`docs/helium.md`](../docs/helium.md) — Helium browser: the
   load-bearing fact that unbranded-Chromium Helium reads stock
   `/etc/chromium/policies` paths, the declarative managed-policy module, and

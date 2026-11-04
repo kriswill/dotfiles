@@ -1,5 +1,13 @@
 # Noctalia shell (https://noctalia.dev) for user `k` under Hyprland.
 #
+# DISABLED since 2026-11-03: Dux Shell is nebula's desktop shell
+# (dux-shell.nix). This module is kept whole so switching back is cheap: set
+# `enable = true` below, set `programs.dux-shell.enable = false` in
+# dux-shell.nix, and restore the Noctalia wiring in the stow-managed Hyprland
+# Lua (docs/dux-shell.md → "Switching back to Noctalia"). The shell-agnostic
+# plumbing (upower/ppd/bluetooth, swaync off, the bare-name PAM fix, DDC/CI)
+# moved to desktop-shell.nix and stays on for either shell.
+#
 # Noctalia v5 is a NATIVE C++ Wayland desktop shell (bar, launcher, control
 # centre, lock screen, notifications) built directly on Wayland + OpenGL ES —
 # NOT Quickshell/QML (that was v4). It ships as a single self-contained
@@ -16,105 +24,72 @@
 # systemPackages + snowglobe's desktop module) for the Hyprland keybinds
 # that use them, so dropping them here is a no-op for those.
 #
-# EXTERNAL monitor brightness (2026-06-19): nebula's DP monitors have no kernel
-# backlight, so brightness only works over DDC/CI on the I2C bus. We add
-# pkgs.ddcutil + `hardware.i2c.enable` (loads i2c-dev declaratively, creates the
-# i2c group + udev rules) and put k in the i2c group; then set
-# [brightness].enable_ddcutil = true in settings.toml. (k already had per-session
-# ACL access to /dev/i2c-*, so the group is the durable fallback.) Whether DDC/CI
-# actually works over the NVIDIA i2c buses is the real unknown — test with
-# `ddcutil detect`.
+# EXTERNAL monitor brightness: DDC/CI is enabled in desktop-shell.nix; Noctalia
+# also needs [brightness].enable_ddcutil = true in settings.toml.
 #
-# This installs it for `k` and enables the system services the shell's widgets
-# read. The Hyprland-side wiring (autostart + recommended blur layerrule +
-# keybinds) lives in the stow-managed Lua config, home/hyprland/.config/hypr/
-# hyprland.lua — Noctalia is launched via `noctalia --daemon` on hyprland.start
-# and driven with `noctalia msg <command>` from binds. NOT home-manager.
+# The Hyprland-side wiring (autostart + recommended blur layerrule + keybinds)
+# lives in the stow-managed Lua config, home/hyprland/.config/hypr/ — Noctalia
+# is launched via `noctalia --daemon` on hyprland.start and driven with
+# `noctalia msg <command>` from binds. NOT home-manager.
+let
+  # Off while Dux Shell is the shell (see the header). Only one integrated shell
+  # may run: both claim org.freedesktop.Notifications and paint the wallpaper.
+  enable = false;
+in
 {
   configurations.nixos.nebula.module =
     {
-      config,
       lib,
       pkgs,
       inputs,
       ...
     }:
     {
-      # Background daemons the shell surfaces (battery/power, bluetooth, power
-      # profiles). networking.networkmanager is already on (k is in the
-      # networkmanager group). Recommended by docs.noctalia.dev for full
-      # functionality; harmless on this desktop where unused.
-      services.upower.enable = true;
-      services.power-profiles-daemon.enable = true;
-      hardware.bluetooth.enable = true;
+      config = lib.mkIf enable {
+        users.users.k.packages = [
+          inputs.noctalia.packages.${pkgs.stdenv.hostPlatform.system}.default
 
-      # Noctalia owns org.freedesktop.Notifications; snowglobe's desktop module
-      # enables swaync, which then crash-loops on "Could not acquire
-      # notification name" (5k+ restarts by 2026-10-02).
-      programs.swaync.enable = false;
+          # tomato — comment/format-preserving TOML get/set CLI (Rust, toml_edit).
+          # The Hyprland "toggle gaps" keybind (toggleGaps in
+          # home/hyprland/.config/hypr/keybindings.lua, formerly
+          # scripts/toggle-gaps.sh) uses it to flip [shell.screen_corners].enabled
+          # in settings.toml in lockstep with the gaps toggle, then `noctalia msg
+          # config-reload`. Built from the `tomato` flake input; see
+          # pkgs/tomato.nix.
+          pkgs.tomato
 
-      # Bare module names: libpam loads them from its own dir, so a lock
-      # screen older than a glibc bump still unlocks. See docs/noctalia.md.
-      environment.etc."pam.d/login".source = lib.mkForce (
-        pkgs.writeText "login.pam" (
-          builtins.replaceStrings [ "${config.security.pam.package}/lib/security/" ] [ "" ]
-            config.security.pam.services.login.text
-        )
-      );
+          # noctalia-config — snapshot/restore settings.toml into the dotfiles repo (see
+          # the auto-capture path unit below)
+          # (config/noctalia/settings.toml) without symlinking the live file.
+          # noctalia rewrites settings.toml via atomic rename, which breaks a stow
+          # symlink on the first GUI save; and a dir-symlink would put the whole
+          # state dir (clipboard secrets, nested plugin .git) in the repo and let
+          # routine git ops clobber the live config. So we sync explicitly:
+          # `noctalia-config capture` after GUI edits, `restore` on a fresh machine.
+          # See pkgs/noctalia-config.nix and docs/noctalia.md.
+          pkgs.noctalia-config
+        ];
 
-      # DDC/CI for external-monitor brightness (Noctalia's ddcutil backend).
-      # Loads the i2c-dev module, creates the i2c group, and installs the udev
-      # rules that group-own /dev/i2c-*. Pair with [brightness].enable_ddcutil.
-      hardware.i2c.enable = true;
-      users.users.k.extraGroups = [ "i2c" ];
-
-      users.users.k.packages = [
-        inputs.noctalia.packages.${pkgs.stdenv.hostPlatform.system}.default
-
-        # External-monitor brightness over DDC/CI (no kernel backlight on DP).
-        # Used by Noctalia when [brightness].enable_ddcutil = true.
-        pkgs.ddcutil
-
-        # tomato — comment/format-preserving TOML get/set CLI (Rust, toml_edit).
-        # The Hyprland "toggle gaps" keybind (toggleGaps in
-        # home/hyprland/.config/hypr/keybindings.lua, formerly
-        # scripts/toggle-gaps.sh) uses it to flip [shell.screen_corners].enabled
-        # in settings.toml in lockstep with the gaps toggle, then `noctalia msg
-        # config-reload`. Built from the `tomato` flake input; see
-        # pkgs/tomato.nix.
-        pkgs.tomato
-
-        # noctalia-config — snapshot/restore settings.toml into the dotfiles repo (see
-        # the auto-capture path unit below)
-        # (config/noctalia/settings.toml) without symlinking the live file.
-        # noctalia rewrites settings.toml via atomic rename, which breaks a stow
-        # symlink on the first GUI save; and a dir-symlink would put the whole
-        # state dir (clipboard secrets, nested plugin .git) in the repo and let
-        # routine git ops clobber the live config. So we sync explicitly:
-        # `noctalia-config capture` after GUI edits, `restore` on a fresh machine.
-        # See pkgs/noctalia-config.nix and docs/noctalia.md.
-        pkgs.noctalia-config
-      ];
-
-      # Auto-capture: noctalia saves settings.toml via atomic rename; a path
-      # unit runs `noctalia-config capture` after each save (repo working tree
-      # only — review + commit stays manual). Debounce is the sleep (path
-      # triggers are suppressed while the service runs); no TriggerLimit* —
-      # exceeding it would fail the path unit and stop the watching.
-      # restartIfChanged = false: don't make a switch wait out the sleep.
-      # TimeoutStartSec: a oneshot's default is infinity; bound a hung capture.
-      systemd.user.paths.noctalia-config-capture = {
-        wantedBy = [ "paths.target" ];
-        pathConfig.PathChanged = "%h/.local/state/noctalia/settings.toml";
-      };
-      systemd.user.services.noctalia-config-capture = {
-        restartIfChanged = false;
-        serviceConfig.Type = "oneshot";
-        serviceConfig.TimeoutStartSec = "2min";
-        serviceConfig.ExecStart = pkgs.writeShellScript "noctalia-config-capture" ''
-          sleep 5
-          exec ${lib.getExe pkgs.noctalia-config} capture
-        '';
+        # Auto-capture: noctalia saves settings.toml via atomic rename; a path
+        # unit runs `noctalia-config capture` after each save (repo working tree
+        # only — review + commit stays manual). Debounce is the sleep (path
+        # triggers are suppressed while the service runs); no TriggerLimit* —
+        # exceeding it would fail the path unit and stop the watching.
+        # restartIfChanged = false: don't make a switch wait out the sleep.
+        # TimeoutStartSec: a oneshot's default is infinity; bound a hung capture.
+        systemd.user.paths.noctalia-config-capture = {
+          wantedBy = [ "paths.target" ];
+          pathConfig.PathChanged = "%h/.local/state/noctalia/settings.toml";
+        };
+        systemd.user.services.noctalia-config-capture = {
+          restartIfChanged = false;
+          serviceConfig.Type = "oneshot";
+          serviceConfig.TimeoutStartSec = "2min";
+          serviceConfig.ExecStart = pkgs.writeShellScript "noctalia-config-capture" ''
+            sleep 5
+            exec ${lib.getExe pkgs.noctalia-config} capture
+          '';
+        };
       };
     };
 }

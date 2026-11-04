@@ -58,15 +58,17 @@ hl.window_rule({
 -- })
 -- overlayLayerRule:set_enabled(false)
 
--- Noctalia: blur the shell's bar/panel background surfaces so their
--- translucency reads against the wallpaper. Recommended by docs.noctalia.dev;
--- pair `ignorealpha` with Noctalia's own background-opacity settings.
+-- Dux Shell: its layer surfaces (namespaces "dms:*") animate themselves, so
+-- skip Hyprland's layer animation on them (the rule Dux's docs recommend).
+-- Blur needs no layer rule here: on Hyprland 0.56+ Dux requests it through
+-- ext-background-effect-v1 (Settings → Interface style → Surfaces →
+-- Background blur). Noctalia, disabled since 2026-11-03, instead used a
+-- `noctalia-blur` rule (namespace "noctalia-background-.*$", blur +
+-- blur_popups + ignore_alpha 0.5) — restore it if switching back.
 hl.layer_rule({
-  name = "noctalia-blur",
-  match = { namespace = "noctalia-background-.*$" },
-  blur = true,
-  blur_popups = true,
-  ignore_alpha = 0.5,
+  name = "dms-no-anim",
+  match = { namespace = "^dms" },
+  no_anim = true,
 })
 
 -- Hyprland-run windowrule

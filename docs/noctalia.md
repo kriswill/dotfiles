@@ -7,6 +7,13 @@ the binary and config actually on this machine**. Maintained for Claude's use:
 keep it accurate, prune anything that stops being true, and record real gotchas
 in **Learned behaviours & workarounds** at the bottom.
 
+> **Disabled on nebula since 2026-11-03.** [Dux Shell](dux-shell.md) replaced
+> Noctalia; `modules/hosts/nebula/users/k/noctalia.nix` is kept whole behind
+> `enable = false`, and the shell-agnostic parts it used to carry (PAM fix,
+> swaync off, upower/ppd/bluetooth, DDC/CI) moved to `desktop-shell.nix`.
+> Switching back: [dux-shell.md → Switching back to Noctalia](dux-shell.md#switching-back-to-noctalia).
+> Everything below describes Noctalia as it ran until then.
+
 ## Version & state on nebula (read this first — it changes everything)
 
 ```

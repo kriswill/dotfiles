@@ -26,11 +26,13 @@ non-obvious things: it re-applies the full `flake.overlays` set
 longer does — it comes straight from `inputs.hyprland.packages`, see the
 [hyprland unfollow decision](../decisions/hyprland-unfollow-cachix.md)) and
 explicitly points `sops.defaultSopsFile` at `./nebula/secrets.yaml`, because
-`mkNixosHost` only sets it when given a `configDir` we don't pass. Three
-further host files under `nebula/users/k/` configure the user:
+`mkNixosHost` only sets it when given a `configDir` we don't pass. Further
+host files under `nebula/users/k/` configure the user and the desktop shell:
 [users-k](../modules/users-k.md),
-[users-k-helium](../modules/users-k-helium.md), and
-[users-k-noctalia](../modules/users-k-noctalia.md).
+[users-k-helium](../modules/users-k-helium.md),
+[users-k-dux-shell](../modules/users-k-dux-shell.md) (the shell since 2026-11-03),
+[users-k-desktop-shell](../modules/users-k-desktop-shell.md) (shell-agnostic plumbing), and
+[users-k-noctalia](../modules/users-k-noctalia.md) (disabled).
 
 Machine-verified manuals for this host live in `docs/`:
 [docs/suspend.md](../../docs/suspend.md) — S3/`deep` suspend, whose single

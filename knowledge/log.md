@@ -5,6 +5,12 @@ types or directories, root-level concept docs, `docs/` manuals, bundle-wide
 sweeps, and workspace tooling conventions. Changes scoped to one bundle log
 in that bundle's own `log.md` (e.g. [modules/log.md](modules/log.md)).
 
+## 2026-11-03
+
+- **Creation**: [`docs/dux-shell.md`](../docs/dux-shell.md) manual for nebula's
+  new desktop shell; [`docs/noctalia.md`](../docs/noctalia.md) marked disabled.
+  Listed in [manuals](manuals.md).
+
 ## 2026-11-01
 
 - **Update**: Project skills now live in `.agents/skills/`, with
