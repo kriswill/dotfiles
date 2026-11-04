@@ -64,6 +64,10 @@ Outputs (x86_64-linux only):
 - The sandbox shares the host's `/tmp`, where Wine keeps the server socket.
 - A second invocation joins a running session with `runinprefix`, which
   skips prefix setup. A second Battle.net.exe hands over to the running one.
+  Because prefix setup is also where Proton adds the DXVK/VKD3D-Proton/NVAPI
+  DLL overrides, the joiner inherits them from the session's wineserver;
+  before 2026-11-03 a joined Battle.net launched games on wined3d +
+  llvmpipe, rendering on the CPU.
 - A server in another sandbox, such as the umu entry, makes `battlenet`
   refuse.
 - `install` needs the prefix idle.

@@ -82,6 +82,13 @@ own Battle.net. So:
   it whatever sandbox it runs in. If its `/tmp` is ours, the new invocation
   joins it with Proton's `runinprefix` verb, which skips prefix setup; a
   second Battle.net.exe in the same wineserver hands over to the running one.
+  Prefix setup is also where Proton adds the DLL overrides that select DXVK,
+  VKD3D-Proton and NVAPI (`d3d11=n;dxgi=n;d3d12=n;…`), so the joiner copies
+  them from the session's wineserver environment into `WINEDLLOVERRIDES`
+  (Proton appends its own to whatever it is given). Without that, a
+  Battle.net.exe that becomes the client — the session's first one having
+  exited — launches games on Wine's wined3d, which renders on llvmpipe (the
+  CPU): WoW `_forever_`, 2026-11-03. An explicit `WINEDLLOVERRIDES` wins.
   If it isn't (another sandbox, such as an umu launcher on the same prefix),
   `battlenet` refuses instead of starting a second server.
 - **This half runs on the host.** Inside bwrap's user namespace the kernel

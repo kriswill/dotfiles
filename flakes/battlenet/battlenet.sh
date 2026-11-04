@@ -18,7 +18,9 @@
 # the FHS runtime shares the host's /tmp, so every invocation can reach the
 # same server. Before starting anything this script looks for that server
 # from any sandbox (find_servers). A second invocation joins it with Proton's
-# runinprefix verb, which skips prefix setup. A server it can't reach (another
+# runinprefix verb, which skips prefix setup — and with it the DLL overrides
+# that select DXVK and VKD3D-Proton, so the join carries the running session's
+# overrides over (inherit_overrides). A server it can't reach (another
 # sandbox, such as the umu entry) makes it refuse, because starting Wine anyway
 # would put a second server on the prefix and the two would overwrite each
 # other's registry.
@@ -241,6 +243,29 @@ find_servers() {
   done
 }
 
+# Proton picks DXVK, VKD3D-Proton and NVAPI (d3d11=n;dxgi=n;d3d12=n;
+# d3d12core=n;nvapi64=n;…) while setting up the prefix, which runinprefix skips.
+# A program started through a join (a second Battle.net.exe, and every game it
+# then launches) would otherwise get Wine's own wined3d, whose OpenGL adapter
+# here is Mesa's llvmpipe: the game renders on the CPU (seen 2026-11-03 with
+# WoW _forever_). Proton appends its runinprefix overrides to any
+# WINEDLLOVERRIDES it is given, so hand it the joined session's: its wineserver
+# was started by that session's Proton with the full list. An explicit
+# WINEDLLOVERRIDES wins.
+inherit_overrides() {
+  [[ -v WINEDLLOVERRIDES ]] && return 0
+  local pid kv
+  for pid in "${joinable[@]}"; do
+    { while IFS= read -r -d '' kv; do
+      if [[ $kv == WINEDLLOVERRIDES=* ]]; then
+        export WINEDLLOVERRIDES=${kv#WINEDLLOVERRIDES=}
+        return 0
+      fi
+    done <"/proc/$pid/environ"; } 2>/dev/null || true
+  done
+  say "couldn't read the running session's DLL overrides; games started from this window may run on Wine's wined3d instead of DXVK. Restart Battle.net ('battlenet kill', then 'battlenet') if one does."
+}
+
 refuse_foreign() {
   if ((${#foreign[@]})); then
     say "Wine is already running in $prefix from another launcher, such as the umu entry (wineserver ${foreign[*]}). Close it there, or run 'battlenet kill'."
@@ -436,6 +461,10 @@ case ${1:-} in
     if ((${#joinable[@]})); then
       # Joining the running session: in the same wineserver, a second
       # Battle.net.exe hands over to the running one, which comes forward.
+      # If the session's Battle.net already exited (window closed while the
+      # session lingers), this one becomes the client and launches the games,
+      # so it needs the session's DXVK/VKD3D overrides.
+      inherit_overrides
       exec "${fhs[@]}" runinprefix "$exe"
     fi
     if [[ ! -f $exe ]]; then
@@ -466,6 +495,7 @@ case ${1:-} in
     refuse_foreign
     prepare_wine
     if ((${#joinable[@]})); then
+      inherit_overrides
       exec "${fhs[@]}" runinprefix "$@"
     fi
     own_session waitforexitandrun "$@"

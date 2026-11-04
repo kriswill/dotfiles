@@ -2,6 +2,11 @@
 
 ## 2026-11-03
 
+- **Update**: [battlenet](battlenet.md): a join (`runinprefix`) now inherits
+  the running session's DXVK/VKD3D-Proton/NVAPI DLL overrides, which Proton
+  only adds during prefix setup; without them a joined Battle.net started WoW
+  `_forever_` on wined3d + llvmpipe (software rendering, all CPU cores).
+
 - **Update**: [herdr](herdr.md): `herdr-update-check --json`, and
   `services.herdr-update-check.finalPackage` (the check with the configured
   versions) on PATH and in both schedulers, for the new herdr-updates mod
