@@ -171,6 +171,15 @@ disk); switching it to `dankcolors` in `modules/nixos/ghostty.nix` is optional.
   feature (Polkit, IdleMonitor, BackgroundBlur…) as "Not available". Import
   the unit's env first: `eval "$(tr '\0' '\n' < /proc/$(systemctl --user show
   -p MainPID --value dms)/environ | grep -E '^(WAYLAND_DISPLAY|XDG_SESSION_TYPE)=' | sed 's/^/export /')"`.
+- **2026-11-04 — "Can't paste a screenshot into Claude" was herdr, not Dux.**
+  `dms screenshot` does put the image on the clipboard. It offers `image/png`,
+  `text/plain` (the saved file's path), `text/uri-list` and
+  `x-special/gnome-copied-files`. Claude Code's Ctrl+V runs `wl-paste`, and
+  herdr panes had no `WAYLAND_DISPLAY` because hc's lingering core started
+  before Hyprland. zsh's `session-env.zsh` now fixes new commands
+  ([decision](../knowledge/decisions/herdr-pane-session-env.md)). A Claude
+  that is already running must be restarted. Check from a pane with
+  `wl-paste -l`: it should list `image/png`.
 - **2026-11-03 — First-run log noise is expected.** Missing
   `settings.json`/`session.json`/cache files (created on first save), GeoClue2
   "not activatable" (weather falls back; no geoclue on nebula), Tailscale

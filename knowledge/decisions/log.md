@@ -1,5 +1,13 @@
 # Log
 
+## 2026-11-04
+
+- **Creation**: [herdr-pane-session-env](herdr-pane-session-env.md): herdr
+  panes inherit the lingering core's frozen environment (no
+  `WAYLAND_DISPLAY` when it predates Hyprland), so zsh re-syncs the session
+  variables from the systemd user manager before each command when they are
+  stale. Fixes Claude Code's image paste, `hyprctl` and `wl-copy` in panes.
+
 ## 2026-11-03
 
 - **Creation**: [dux-shell-replaces-noctalia](dux-shell-replaces-noctalia.md):

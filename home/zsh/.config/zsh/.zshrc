@@ -47,6 +47,12 @@ source "$ZDOTDIR/functions.zsh"
 ## cost outside a misbehaving pty relay.
 source "$ZDOTDIR/devenv-gh.zsh"
 
+## Graphical-session variables (WAYLAND_DISPLAY, …) re-synced from the
+## systemd user manager when stale. herdr panes start without them; see the
+## file's header. Linux-only, self-guarded. The [ -f ] guard covers a host
+## that pulled this .zshrc before its next rebuild restowed the new link.
+[ -f "$ZDOTDIR/session-env.zsh" ] && source "$ZDOTDIR/session-env.zsh"
+
 ## Darwin-specific setup — self-guarded, no-op elsewhere. Must precede the
 ## PATH export below (brew shellenv prepends its own paths).
 source "$ZDOTDIR/darwin.zsh"

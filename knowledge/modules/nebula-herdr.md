@@ -49,6 +49,14 @@ Choices:
   would set it anyway. k's user manager now starts at boot, so
   `default.target`'s timers can fire before login. herdr-update-check waits
   for a notification daemon for that reason.
+- **Panes don't see the session.** Pane shells inherit the environment of
+  hc's core (`hc-hold-*.service`), which was frozen when it spawned. With
+  linger, that can be before Hyprland, so the panes have no
+  `WAYLAND_DISPLAY`. zsh's `session-env.zsh` re-syncs the variables before
+  each command
+  ([decision](../decisions/herdr-pane-session-env.md)). A program that
+  started earlier, such as a running Claude Code, keeps the old values until
+  it is restarted.
 - **One update check.** It replaces nebula's old fork-only unit
   ([herdr-update-check](herdr-update-check.md), now deprecated) under the same
   unit name. It reports upstream releases past the fork and `sources.json`,

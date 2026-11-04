@@ -27,6 +27,14 @@ newer than the cache. See
 [shell-startup-performance manual](../../docs/shell-startup-performance.md)
 for the profiling that motivated it.
 
+`session-env.zsh` (also stowed, Linux-only and skipped over SSH) fixes the
+graphical-session variables (`WAYLAND_DISPLAY`, `DISPLAY`,
+`HYPRLAND_INSTANCE_SIGNATURE`, …) before each command when they are missing
+or point at a dead session. It copies them from
+`systemctl --user show-environment`. herdr panes need this because they
+inherit the environment of hc's lingering core, which can predate Hyprland.
+See [herdr-pane-session-env](../decisions/herdr-pane-session-env.md).
+
 Side effect of ZDOTDIR worth knowing: `~/.zshrc` is never read by zsh, so
 the stow tree ships one anyway as a PATH shim for GUI apps that parse it —
 see [GUI Path](gui-path.md).

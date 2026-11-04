@@ -1,5 +1,13 @@
 # Log
 
+## 2026-11-04
+
+- **Update**: [zsh](zsh.md): `session-env.zsh` re-syncs the graphical-session
+  variables from the systemd user manager when they are stale, for herdr panes
+  ([decision](../decisions/herdr-pane-session-env.md)).
+- **Update**: [nebula-herdr](nebula-herdr.md): panes inherit the core's
+  frozen environment; links the zsh fix.
+
 ## 2026-11-03
 
 - **Creation**: [users-k-dux-shell](users-k-dux-shell.md): Dux Shell (ex-DankMaterialShell)
