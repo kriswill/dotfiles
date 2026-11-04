@@ -164,11 +164,11 @@ widget_order = [
     [lockscreen_widgets.widget."lockscreen-login-box@HEADLESS-1"]
     box_height = 196.0
     box_width = 810.0
-    cx = 480.0
-    cy = 358.0
+    cx = 960.0
+    cy = 716.0
     output = "HEADLESS-1"
-    placement_height = 540.0
-    placement_width = 960.0
+    placement_height = 1080.0
+    placement_width = 1920.0
     rotation = 0.0
     type = "login_box"
 
