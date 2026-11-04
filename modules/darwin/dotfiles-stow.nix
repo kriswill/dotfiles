@@ -27,6 +27,7 @@
           "desktop-entries" # ~/.local/share/applications launchers
           "fuzzel" # Wayland launcher
           "gtk" # GTK settings
+          "herdr-app-linux" # nebula's Herdr settings.json (per-OS: zoom differs by display; macs use herdr-app-darwin)
           "hyprland" # Wayland compositor config
           "local-bin" # ~/.local/bin helpers (gajim-op-launch: op-integration wait, Linux desktop)
           "mimeapps" # freedesktop default-apps registry

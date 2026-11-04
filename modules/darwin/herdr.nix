@@ -21,7 +21,10 @@
     # options stay null): the stow packages home/herdr-core and home/herdr-app
     # own them, shared with nebula, so they're versioned and the app's saves
     # write through into the repo. keys.json there binds ctrl/alt like the
-    # Linux defaults, not macOS's cmd.
+    # Linux defaults, not macOS's cmd. settings.json alone is per-OS, in
+    # home/herdr-app-darwin (nebula's is home/herdr-app-linux): zoom suits
+    # the display (5K here, a 3440x1440 OLED there), and the core pin this
+    # module writes into it only exists on the macs.
     programs.herdr-app.enable = true;
     programs.herdr-core.users = [ "k" ];
 

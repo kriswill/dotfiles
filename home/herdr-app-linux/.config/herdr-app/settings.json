@@ -1,0 +1,12 @@
+{
+  "zoom": 1.2,
+  "sounds": {
+    "enabled": true
+  },
+  "font_size": 17.0,
+  "font_ligatures": false,
+  "telemetry": false,
+  "minimum_contrast": 1.0,
+  "appearance": "dark",
+  "theme": "kanagawa"
+}

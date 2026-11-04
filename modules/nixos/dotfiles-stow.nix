@@ -26,6 +26,7 @@
           "claude-me" # the ~/.claude-me profile split only exists on the macs (claude-account-selector); nebula uses plain ~/.claude via the claude package
           "claude-work" # ditto for ~/.claude-work; its statusline also reads the Claude desktop app's macOS Keychain/cookie store
           "glow" # macOS Library/Preferences path
+          "herdr-app-darwin" # the macs' Herdr settings.json (per-OS: zoom differs by display, plus the /etc/herdr-core/hc pin); nebula uses herdr-app-linux
           "karabiner" # macOS-only hardware remapper
           "kitty" # not installed on nebula (ghostty is the terminal)
           "oksh" # not installed on nebula

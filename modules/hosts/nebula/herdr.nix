@@ -15,7 +15,9 @@
     # null): the stow packages home/herdr-core and home/herdr-app own them, so
     # they're versioned. The app's saves write through those symlinks into
     # the repo; capture new ones (keys.json, a custom layout or theme) with
-    # `dots-adopt herdr-app .config/herdr-app/<file>`.
+    # `dots-adopt herdr-app .config/herdr-app/<file>`. settings.json alone is
+    # per-OS, in home/herdr-app-linux (the macs' is home/herdr-app-darwin):
+    # zoom suits each display, so the two no longer fight in git.
 
     # Daily: one notification when upstream releases past our herdr fork
     # (rebase `custom`, retag, repoint flakes/herdr's herdr-cli input) or past
