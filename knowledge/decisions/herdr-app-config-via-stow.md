@@ -1,7 +1,7 @@
 ---
 type: Decision
 title: Let Stow Own Herdr's Config Files; Module File Options Default to Null
-description: 'herdr-core''s config.toml and Herdr''s files live in the home/herdr-core and home/herdr-app stow packages (settings.json per-OS in home/herdr-app-darwin and home/herdr-app-linux, since zoom differs by display), and the sub-flake''s file options (settings, keys) default to null so the flake never touches them: Herdr''s saves write through symlinks, so stow links capture in-app edits for versioning, which a Nix store link cannot.'
+description: 'herdr-core''s config.toml and Herdr''s files live in the home/herdr-core and home/herdr-app stow packages (everything shared except settings.json, which is independent per OS in home/herdr-app-darwin and home/herdr-app-linux, since zoom and legibility differ by display, and which the shared package stow-ignores), and the sub-flake''s file options (settings, keys) default to null so the flake never touches them: Herdr''s saves write through symlinks, so stow links capture in-app edits for versioning, which a Nix store link cannot.'
 tags: [herdr, stow, config]
 status: stable
 generated: { by: claude-code/opus-5.5, at: 2026-11-01T12:00:00-08:00 }
@@ -56,20 +56,43 @@ edits versioned through stow, with the stow wiring kept out of the flake.
   lists are per class) and more copies to keep in sync. Declaring the shared
   keys through `programs.herdr-app.settings` with an unstowed file was
   rejected because Settings-screen edits would stop reaching git.
+- **Everything but settings.json is shared, and the two settings.json files
+  are independent on purpose.** Zoom and text legibility differ between k's
+  5K LCD and nebula's OLED, so nothing keeps the two files in sync.
+  `home/herdr-app/.stow-local-ignore` makes the split structural: the
+  shared package can never own `.config/herdr-app/settings.json`, even when
+  a stray copy lands in it (next section). A package-local list replaces
+  stow's built-in one, so the file repeats the built-in entries that could
+  occur there.
 
 ## Consequences
 
 - In-app edits show up as repo diffs, including zoom changes, in the
-  running OS's settings.json. A shared setting (font, theme) changed in the
-  app has to be copied into the other OS's file by hand.
-- Moving a stowed settings.json while Herdr runs leaves the link dangling,
-  and Herdr at once writes a new file through it, holding only the keys it
-  always saves (`zoom`, `sounds`, `font_ligatures`, `minimum_contrast`). Its
-  in-memory settings also fall back to defaults (theme, font size). That
-  stray file in the old package makes the next restow conflict-skip the new
-  one. Quit Herdr before a pull that moves the file, or repoint the link
-  (`ln` + `mv -f`) before deleting the stray file. Seen on k on 2026-11-04;
-  the app reloaded the full file once the link was repointed.
+  running OS's settings.json only. A font or theme change made on one OS
+  stays there; copy it into the other file by hand if both should have it.
+- Moving a stowed file while Herdr runs leaves its link dangling, and Herdr
+  writes through it. For settings.json it at once writes a new file holding
+  only the keys it always saves (`zoom`, `sounds`, `font_ligatures`,
+  `minimum_contrast`), and its in-memory settings fall back to defaults
+  (theme, font size). A Herdr relaunched against a dangling `keys.json`
+  replaces the link with a real file holding its stock keymap. On the macs
+  the activation settings merge also writes through a dangling link
+  (`readlink -m`, `mkdir -p`).
+  - A stray settings.json in `home/herdr-app` used to make the next restow
+    skip that whole package (keys, layouts, mods, themes). The local ignore
+    stops that. If the live link still points at the stray, the per-OS
+    package conflict-skips instead (nrs reports it), and `git status` shows
+    the untracked stray. That's why the path isn't gitignored: it's the
+    lasting sign that Herdr is saving to the wrong file.
+  - Quit Herdr before a pull that moves a stowed file. Otherwise repoint the
+    link atomically (`ln -s` to a temp name, then `mv -fT` over the link or
+    real file) and only then delete the stray. Herdr reloads a repointed
+    settings.json; for anything else, `touch -h` the link. A layout whose
+    theme went missing stays on the fallback until
+    `herdr-app do layout.switch --name personal`.
+  - Seen on k and nebula on 2026-11-04. On nebula the shared package was
+    also deleted from the working tree during cleanup, so 16 links dangled,
+    and `keys.json` became the stock keymap.
 - Files the app creates later (`keys.json` on first launch, a duplicated
   layout or theme) start as real files. They need
   `dots-adopt herdr-app .config/herdr-app/<file>` before stow can own them;

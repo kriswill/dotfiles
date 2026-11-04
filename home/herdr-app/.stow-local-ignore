@@ -1,0 +1,19 @@
+# Stow ignore list for the shared herdr-app package (stow itself never links
+# this file). A package-local list REPLACES stow's built-in one, so the
+# built-in entries that could ever occur here are repeated at the bottom.
+
+# settings.json is per-OS, in home/herdr-app-darwin and home/herdr-app-linux:
+# everything else in Herdr's config dir is shared, this one file is not.
+# Never let this package own it. Herdr's saves, and on the macs the activation
+# settings merge, write through a dangling settings.json link, so a pull that
+# moves the file under a running Herdr recreates it here. Linked from here, it
+# would conflict with the per-OS package and stow would skip this whole
+# package (keys, layouts, mods, themes) on that machine.
+^/\.config/herdr-app/settings\.json
+
+# From stow's built-in list.
+\.git
+\.gitignore
+\.\#.+
+.+~
+\#.*\#

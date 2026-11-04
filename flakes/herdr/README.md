@@ -239,6 +239,8 @@ through files instead:
 The macs' enables live in `modules/darwin/herdr.nix` (one user, one setup);
 their config files come from the same `home/herdr-core` and `home/herdr-app`
 stow packages as nebula's, so `keys.json` binds ctrl/alt there too, not cmd.
+Only `settings.json` is per-OS (`home/herdr-app-darwin`, nebula's
+`home/herdr-app-linux`), and `home/herdr-app` stow-ignores it.
 
 ## Files
 

@@ -1,7 +1,7 @@
 ---
 type: NixOS Module
 title: Herdr on nebula
-description: 'nebula''s herdr settings: enables the Herdr desktop app and hc for k with linger declared and telemetry off, plus the daily herdr-update-check timer (the fork, core and app), leaving every config file to the home/herdr-core and home/herdr-app stow packages.'
+description: 'nebula''s herdr settings: enables the Herdr desktop app and hc for k with linger declared and telemetry off, plus the daily herdr-update-check timer (the fork, core and app), leaving every config file to the home/herdr-core and home/herdr-app stow packages (settings.json alone to the per-OS home/herdr-app-linux).'
 resource: modules/hosts/nebula/herdr.nix
 tags: [nixos-module, host-specific, herdr]
 generated: { by: hermes-agent/gpt-6.1-sol, at: 2026-11-04T14:21:34-08:00 }
@@ -23,9 +23,12 @@ Choices:
 - **Config through stow, not Nix.** No file option is set.
   - `home/herdr-core` holds a commented `config.toml` with every key at its
     default.
-  - `home/herdr-app` holds a `settings.json` seeded with
-    `{"telemetry": false}`, so the link exists before the first launch and
-    every Settings-screen save or zoom change lands in the repo.
+  - `home/herdr-app-linux` holds nebula's own `settings.json`, independent
+    of the macs' `home/herdr-app-darwin` (zoom and legibility differ by
+    display). The shared `home/herdr-app` stow-ignores that path. The link
+    exists before the first launch, and every Settings-screen save or zoom
+    change lands in the repo
+    ([decision](../decisions/herdr-app-config-via-stow.md)).
   - `keys.json`, layouts and themes are captured when first customized, with
     `dots-adopt herdr-app .config/herdr-app/<file>`. The stow package now
     also holds `keys.json`, `themes/kanagawa.json`, the `personal` layout and
