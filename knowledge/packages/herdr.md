@@ -59,8 +59,10 @@ Outputs (`x86_64-linux`, `aarch64-linux`, `aarch64-darwin`):
 - `herdr-cli` (`default`): the TUI, the same derivation `pkgs.herdr` was
   before the move.
 - `herdr-nav`: [herdr-nav](herdr-nav.md), with `herdr-cli` pinned in.
-- `herdr-core`: the static-pie binary on Linux, or upstream's signed Mach-O
-  on macOS. Both are installed with no fixup at all, plus an `hc` link.
+- `herdr-core`: the static-pie binary on Linux, or upstream's signed
+  `Herdr Core.app` in `libexec/` on macOS, with `bin/` linking into it
+  ([decision](../decisions/herdr-core-darwin-bundle.md)). Both are installed
+  with no fixup at all, plus an `hc` link.
 - `herdr-app-unwrapped`: on Linux autoPatchelf'd, with the dlopened Vulkan,
   Wayland and EGL on its RUNPATH; on macOS upstream's signed `Herdr.app`
   copied whole into `Applications/`, no fixup, `bin/herdr-app` into the

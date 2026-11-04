@@ -108,8 +108,10 @@
     "ctrl-shift-c": "terminal.copy",
     "ctrl-shift-v": "terminal.paste",
     "ctrl-v": "terminal.paste_image",
+    "ctrl-shift-f": "terminal.search",
     "cmd-c": "terminal.copy",
     "cmd-v": "terminal.paste",
+    "cmd-f": "terminal.search",
     "cmd-backspace": "send:\u0015",
     "cmd-left": "send:\u0001",
     "cmd-right": "send:\u0005"

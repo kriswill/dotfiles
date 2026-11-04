@@ -123,6 +123,9 @@ fi
 #   <store>/herdr-X.Y.Z/bin/herdr                        `herdr server`, the TUI's server
 #   <store>/herdr-core-X.Y.Z/bin/herdr-core              `herdr-core serve`, the core
 #                                                        (holders drain on their own);
+#                                                        on macOS (core ≥ 0.1.18) the
+#                                                        executable is libexec/Herdr
+#                                                        Core.app/Contents/MacOS/herdr-core;
 #                                                        on macOS (core ≥ 0.1.17) it is
 #                                                        `<hc> --hc-launchd <socket>`
 #                                                        instead: hc starts it as a
@@ -166,7 +169,8 @@ if [ -n "$cli" ]; then
     "the running herdr server is %s, installed $cli: 'herdr server stop', then start herdr again"
 fi
 if [ -n "$core" ]; then
-  stale herdr-core "$core" '[^ ]*/(herdr-core|hc) (serve|--hc-launchd)( .*)?' "${store}herdr-core-([0-9]+\.[0-9]+\.[0-9]+)/bin/(herdr-core|hc)\$" \
+  stale herdr-core "$core" '([^ ]*|[^ ]*/Herdr Core\.app/Contents/MacOS)/(herdr-core|hc) (serve|--hc-launchd)( .*)?' \
+    "${store}herdr-core-([0-9]+\.[0-9]+\.[0-9]+)/(bin/(herdr-core|hc)|libexec/Herdr Core\.app/Contents/MacOS/herdr-core)\$" \
     "run 'hc server restart' (terminals keep running)" \
     "the running herdr-core is %s, installed $core: run 'hc server restart' (terminals keep running)"
 fi

@@ -83,9 +83,9 @@ Packaging notes:
   `/nix/store/` path (canonicalized, so the `/etc/herdr-core/hc` link counts)
   and refuses `hc update` ("update it in your Nix configuration"), and the
   app never offers updates to such a core.
-- **No fixup for herdr-core.** On macOS it is upstream's signed Mach-O, so
-  strip or install_name_tool would break the signature. On Linux it is
-  static-pie and needs nothing.
+- **No fixup for herdr-core.** On macOS it is upstream's signed
+  `Herdr Core.app`, so strip or install_name_tool would break the signature.
+  On Linux it is static-pie and needs nothing.
 - **Linger.** hc starts its core as a transient `systemd-run --user` unit and,
   the first time, turns on linger for the user by itself, so terminals outlive
   logouts. The NixOS module declares it (`programs.herdr-core.linger`, on by
@@ -180,8 +180,18 @@ compares against what the modules installed rather than this flake's pins.
 
 ## darwin
 
-Everything works on the macs. herdr-core is upstream's signed Mach-O, which
-`hc machine add` can copy to another Mac as-is. Herdr is upstream's Developer
+Everything works on the macs. Since 0.1.18 herdr-core is upstream's
+Developer ID-signed `Herdr Core.app` (`dev.herdr.core`), copied whole into
+`$out/libexec` (not `Applications/`: it's a background helper with nothing to
+launch from Finder), with `bin/herdr-core` and `bin/hc` linking into it.
+macOS credits a terminal program's privacy requests (local network,
+microphone) to the core, since the core and its holders disclaim
+responsibility, and only an executable inside the bundle carries the usage
+descriptions those prompts need. The tarball's bare `herdr-core` is left
+out. hc canonicalizes its own path, so the links still find the bundle, and
+`hc machine add` packs the whole bundle for another Mac. Grants key on the
+signature, so they survive version bumps. Terminals started under a pre-0.1.18
+core keep their old privacy context until they're recreated. Herdr is upstream's Developer
 ID-signed `Herdr.app`, copied whole into `$out/Applications` with no fixup
 (installCheck runs `codesign --verify --deep --strict` on the copy), plus
 `bin/herdr-app` into the bundle for the CLI (`herdr-app ls|do|status`).
@@ -219,9 +229,10 @@ through files instead:
   switch replaces in place, so it stays current.
 - **Stale running builds**: a process started through a symlink (`hc` on
   PATH, `/etc/herdr-core/hc`) names the link in its argv, so on macOS the
-  check asks `lsof` for the executable's store path. A core started through
-  launchd keeps `--hc-launchd <socket>` as its argv, not `serve`, and the
-  check matches both. A window opened from
+  check asks `lsof` for the executable's store path, which for the core is
+  inside the bundle (`libexec/Herdr Core.app/Contents/MacOS/herdr-core`). A
+  core started through launchd keeps `--hc-launchd <socket>` as its argv, not
+  `serve`, and the check matches both. A window opened from
   Finder runs the copy under `/Applications/Nix Apps`, which carries no
   version, so only a window opened as `bin/herdr-app` from a shell is judged.
 

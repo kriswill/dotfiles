@@ -2,9 +2,20 @@
 # On Linux it is a static-pie binary, so it needs no patching, and
 # `hc machine add` can copy it to another machine as-is (a source-built,
 # nix-linked hc can't; nixpkgs#581031 has to download upstream's build for
-# that). On macOS it is upstream's signed Mach-O, which any fixup (strip,
-# install_name_tool) would invalidate. Version and hashes: ../sources.json,
-# refreshed by ../update.ts.
+# that). Version and hashes: ../sources.json, refreshed by ../update.ts.
+#
+# On macOS (core >= 0.1.18) it is upstream's Developer ID-signed
+# `Herdr Core.app` (dev.herdr.core), copied whole into libexec/ (not
+# Applications/: it is an LSUIElement helper with no use from Finder or
+# Spotlight). bin/herdr-core and bin/hc link into the bundle. The core and
+# its holders disclaim privacy responsibility, so macOS asks on behalf of the
+# core's own executable, and only one inside the bundle carries the usage
+# descriptions (local network, microphone, …) that let terminal programs
+# reach the LAN or the mic. The tarball's bare `herdr-core` beside the bundle
+# (for older updaters) is skipped. Every path into it resolves to the bundle:
+# upstream canonicalizes its own path to find the bundle (`hc machine add`
+# packs the whole bundle) and the nix store (`hc update` refusal). TCC grants
+# key on the signature, not the path, so they survive version bumps.
 #
 # Installed under /nix/store, hc counts itself managed by nix: `hc update`
 # refuses ("update it in your Nix configuration") and the app never offers
@@ -34,7 +45,20 @@ stdenvNoCC.mkDerivation (finalAttrs: {
 
   installPhase = ''
     runHook preInstall
-    install -Dm755 herdr-core $out/bin/herdr-core
+  ''
+  + (
+    if stdenvNoCC.hostPlatform.isDarwin then
+      ''
+        mkdir -p $out/libexec $out/bin
+        cp -R "Herdr Core.app" $out/libexec/
+        ln -s "../libexec/Herdr Core.app/Contents/MacOS/herdr-core" $out/bin/herdr-core
+      ''
+    else
+      ''
+        install -Dm755 herdr-core $out/bin/herdr-core
+      ''
+  )
+  + ''
     # The installer adds `hc` only when no other `hc` exists (some window
     # managers ship one); a package can always have it.
     ln -s herdr-core $out/bin/hc
@@ -45,6 +69,13 @@ stdenvNoCC.mkDerivation (finalAttrs: {
   nativeInstallCheckInputs = [ versionCheckHook ];
   versionCheckProgram = "${placeholder "out"}/bin/hc";
   doInstallCheck = true;
+  # The copy must still carry upstream's signature (skipped where codesign
+  # isn't reachable, as in a sandboxed build).
+  preInstallCheck = lib.optionalString stdenvNoCC.hostPlatform.isDarwin ''
+    if [ -x /usr/bin/codesign ]; then
+      /usr/bin/codesign --verify --deep --strict "$out/libexec/Herdr Core.app"
+    fi
+  '';
 
   meta = {
     description = "Terminals for coding agents that keep running after you leave (hc)";
