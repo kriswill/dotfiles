@@ -1,5 +1,11 @@
 # Log
 
+## 2026-11-04
+
+- **Update**: [hermes-agent](hermes-agent.md): patch the Ink TUI's missing
+  terminal breadcrumbs, restoring Herdr status routing without a gateway
+  plugin or changes to the user's model settings.
+
 ## 2026-11-03
 
 - **Update**: [battlenet](battlenet.md): a join (`runinprefix`) now inherits

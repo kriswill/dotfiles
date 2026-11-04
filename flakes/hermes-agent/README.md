@@ -58,6 +58,13 @@ nix eval --raw github:NousResearch/hermes-agent/v0.22.5#packages.x86_64-linux.de
   - The desktop app, the dev-shell passthru and the npm-lockfile tooling are
     gone.
   - The TUI and web bundles still build, as passthru.
+  - `nix/tui-terminal-breadcrumbs.patch` attaches the TypeScript helper in
+    `nix/tui-breadcrumbs/` to the TUI's committed session state. Unlike v0.22.5's
+    TUI, it maintains the classic CLI's terminal breadcrumbs, so Herdr hooks
+    can route working/idle status after create, resume, reset and compaction.
+    Superseded attachment responses never write. Writes are atomic and private,
+    respect local `session.terminal_continue`, and skip explicit remote gateway
+    launches. The helper's regression tests run in the Nix TUI build.
   - PM's pinned ffmpeg/ripgrep and existing node/npm are registered in an
     immutable, digest-bound tool store. The install stamp's `runtimeDir`
     points PM at it, so a fresh profile recognizes the dependencies rather

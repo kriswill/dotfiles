@@ -65,6 +65,13 @@ Each changed file explains itself in a comment marked
 - **Herdr migration.** With the declarative shell hooks present, config merge
   drops only `herdr-agent-state` from `plugins.enabled`, leaving other entries
   and settings untouched.
+- **TUI terminal breadcrumbs.** A local TypeScript patch follows committed
+  session state (including compaction) and maintains the same tty-keyed
+  continuation files as the classic CLI. Without it, Herdr's gateway hooks
+  could not find a TUI session's live pane and left the spinner idle. The
+  [integration decision](../decisions/hermes-herdr-integration-shell-hook.md)
+  records routing and remote-launch restrictions; regression tests run during
+  the Nix TUI build.
 - **Bumping** means reading upstream's `nix/` diff between tags, porting it
   into the copies, re-locking those inputs to the new tag's lock, and
   re-checking parity.[^upstream-nix-v0-22-5]

@@ -1,0 +1,23 @@
+--- a/ui-tui/src/app/useSessionLifecycle.ts
++++ b/ui-tui/src/app/useSessionLifecycle.ts
+@@ -23,4 +23,5 @@
+ import { t } from '../i18n/runtime.js'
+ import { migratePendingInputs } from '../lib/pendingInputs.js'
+ import { asRpcResult } from '../lib/rpc.js'
++import { watchTerminalBreadcrumbs } from '../lib/terminalBreadcrumbs.js'
+ import type { Msg, PanelSection, SessionInfo } from '../types.js'
+@@ -33,5 +34,5 @@
+ import { captureDestination } from './submissionDestination.js'
+ import { turnController } from './turnController.js'
+ import { patchTurnState } from './turnStore.js'
+-import { getUiState, patchUiState } from './uiStore.js'
++import { $uiState, getUiState, patchUiState } from './uiStore.js'
+ import { describeCredentialWarning } from './userMessages.js'
+@@ -172,3 +173,7 @@
++  // Ours: follow committed create/resume/reset and compaction identities. Stale
++  // attachment responses must never overwrite this terminal's continuation hint.
++  useEffect(() => watchTerminalBreadcrumbs($uiState), [])
++
+   // Plugin on_session_finalize text comes back on the close result and is shown as system lines (never a
+   // model turn). `deferMessages`: the caller resets the transcript next and shows them itself afterwards.
+   // A canonical session is the gateway's: the view detaches, it never closes the owner's session.

@@ -74,6 +74,21 @@ Two scripts, TypeScript on bun, with shared helpers in `common.ts`:
 
 ## Consequences
 
+- The Ink TUI in v0.22.5 did not write the classic CLI's terminal breadcrumbs.
+  Its pane marker and launch-time idle status could therefore be correct while
+  every subsequent hook silently missed the pane. The local
+  [TUI patch](../../flakes/hermes-agent/nix/tui-terminal-breadcrumbs.patch)
+  subscribes to committed UI state, not unaccepted RPC responses, and the
+  [TypeScript writer](../../flakes/hermes-agent/nix/tui-breadcrumbs/terminalBreadcrumbs.ts)
+  atomically records the durable session id after attachment or compaction.
+  It honors the local continuation gate and never routes explicit remote
+  gateway session ids into the local continuation store. Regression tests run
+  in the Nix TUI build. Verified on 2026-11-04: a freshly built TUI in a
+  throwaway Herdr pane wrote its own breadcrumb, and replayed hook events
+  changed the pane from idle to working and back; exiting cleared its status.
+  After deployment, a pet Hermes in the real tab also verified automatic
+  idle/working/idle transitions on a terminal call, blocked/question on
+  clarification, and working/idle after answering, without synthetic hooks.
 - Desktop, messaging, cron, subagents and a CLI outside Herdr report
   nothing, because they have no live marker.
 - It leans on Hermes internals: the breadcrumb naming, the hook payload and

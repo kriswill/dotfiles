@@ -2,6 +2,10 @@
 
 ## 2026-11-04
 
+- **Update**: [hermes-herdr-integration-shell-hook](hermes-herdr-integration-shell-hook.md):
+  fix Ink TUI session-to-pane routing by writing terminal breadcrumbs from
+  committed session state, with Nix-build regression tests and a live Herdr
+  working/idle/exit verification.
 - **Creation**: [herdr-pane-session-env](herdr-pane-session-env.md): herdr
   panes inherit the lingering core's frozen environment (no
   `WAYLAND_DISPLAY` when it predates Hyprland), so zsh re-syncs the session
