@@ -4,7 +4,7 @@ title: Zsh
 description: 'Zsh with ZDOTDIR moved to ~/.config/zsh (exported from shellInit so it precedes .zshrc lookup), XDG history placement, starship-owned prompt, and the tools the stowed .zshrc calls by bare name.'
 resource: modules/darwin/zsh.nix
 tags: [darwin-module, nixos-module]
-generated: { by: okflight/0.4.0, at: 2026-07-03T12:00:00-07:00 }
+generated: { by: hermes-agent/gpt-6.1-sol, at: 2026-11-04T14:21:34-08:00 }
 ---
 
 Configures `programs.zsh` on both OSes: `ZDOTDIR` is exported to
@@ -34,6 +34,14 @@ or point at a dead session. It copies them from
 `systemctl --user show-environment`. herdr panes need this because they
 inherit the environment of hc's lingering core, which can predate Hyprland.
 See [herdr-pane-session-env](../decisions/herdr-pane-session-env.md).
+
+Inside [Herdr](herdr.md) panes (`HC_TERMINAL_ID` or `HERDR_ENV=1`), the
+stowed `.zshrc` defaults `HERMES_TUI` to `1`, selecting
+[Hermes](hermes-agent.md)' resize-aware TUI without changing its global
+configuration. An existing environment value is preserved; `hermes --cli`
+overrides it for one invocation. New shells pick this up without a rebuild.
+The condition scopes where the default is assigned, not inheritance: child
+processes retain the exported value unless they override or unset it.
 
 Side effect of ZDOTDIR worth knowing: `~/.zshrc` is never read by zsh, so
 the stow tree ships one anyway as a PATH shim for GUI apps that parse it —

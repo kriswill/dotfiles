@@ -4,11 +4,14 @@ title: Herdr on nebula
 description: 'nebula''s herdr settings: enables the Herdr desktop app and hc for k with linger declared and telemetry off, plus the daily herdr-update-check timer (the fork, core and app), leaving every config file to the home/herdr-core and home/herdr-app stow packages.'
 resource: modules/hosts/nebula/herdr.nix
 tags: [nixos-module, host-specific, herdr]
-generated: { by: claude-code/opus-5.5, at: 2026-11-01T14:00:00-08:00 }
+generated: { by: hermes-agent/gpt-6.1-sol, at: 2026-11-04T14:21:34-08:00 }
 sources:
   - id: subflake-readme
     resource: ../../flakes/herdr/README.md
     title: 'flakes/herdr/README.md (config files and stow, updating)'
+  - id: app-settings-0113
+    resource: https://github.com/herdrdev/herdr-app/blob/v0.1.13/src/settings.rs
+    title: 'Herdr 0.1.13 settings.rs (default terminal font and font_ligatures)'
 ---
 
 On top of the TUI that [herdr](herdr.md) installs everywhere, nebula turns on
@@ -34,15 +37,16 @@ Choices:
     ([decision](../decisions/herdr-updates-mod.md)).
   - Herdr's live reload doesn't see edits to the repo copy. Write through
     the `~/.config/herdr-app/` link, then check `herdr-app status`.
-- **Terminal font: MesloLGS Nerd Font** at `font_size` 17, `zoom` 1.1, dark
-  `appearance` (`settings.json`), for its braille. It's the non-Mono variant
-  since 2026-11-01. Both variants carry braille; the first pick was Mono.
-  JetBrains Mono 2.304, the default in both Herdr and Ghostty, has no
-  braille glyphs (U+2800–28FF). Ghostty draws braille as sprites, but Herdr
-  0.1.11's sprites cover only box drawing, blocks and powerline, so it fell
-  back to a proportional system font. Herdr 0.1.12 (pinned 2026-11-03)
-  draws braille as sprites. Once a reopened window shows clean `⣿` rows,
-  drop `font` to get JetBrains Mono back.
+- **Terminal font: Herdr's default** (JetBrains Mono) at `font_size` 17,
+  `zoom` 1.2, dark `appearance`, and `font_ligatures: false`
+  (`settings.json`).[^app-settings-0113] `settings.json` sets no
+  `font` since 2026-11-04. From 2026-11-01 it set MesloLGS Nerd Font for its
+  braille glyphs. JetBrains Mono 2.304 has none (U+2800–28FF), and Herdr
+  0.1.11's sprites covered only box drawing, blocks and powerline, so braille
+  fell back to a proportional system font. Herdr 0.1.12 and later draw
+  braille as sprites, like Ghostty, so the override was dropped. The Meslo
+  package itself comes from snowglobe-factory's desktop module, not from
+  this repo.
   - Both packages are darwin-skipped until the macs enable them
     ([decision](../decisions/herdr-app-config-via-stow.md)).
 - **Linger on.** It was confirmed while choosing the design: hc wants it and
@@ -76,3 +80,4 @@ that host's configuration per the
 - Module: [`modules/hosts/nebula/herdr.nix`](../../modules/hosts/nebula/herdr.nix)
 
 [^subflake-readme]: `flakes/herdr/README.md`: config files and stow; updating and upgrade notices
+[^app-settings-0113]: Herdr 0.1.13 `src/settings.rs`: `DEFAULT_FONT`, `Person.font_ligatures`, and `Settings::compose`

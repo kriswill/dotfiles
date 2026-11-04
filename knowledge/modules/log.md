@@ -2,6 +2,12 @@
 
 ## 2026-11-04
 
+- **Update**: [zsh](zsh.md): default Hermes to its resize-aware TUI in Herdr
+  panes through `HERMES_TUI=1`, preserving explicit values and `--cli`.
+- **Update**: [nebula-herdr](nebula-herdr.md): Herdr is back on its default
+  font (JetBrains Mono). The MesloLGS Nerd Font override is gone because
+  app 0.1.12 and later draw braille as sprites; zoom is 1.2 and terminal
+  ligatures are explicitly disabled.
 - **Update**: [zsh](zsh.md): `session-env.zsh` re-syncs the graphical-session
   variables from the systemd user manager when they are stale, for herdr panes
   ([decision](../decisions/herdr-pane-session-env.md)).

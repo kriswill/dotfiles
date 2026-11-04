@@ -4,7 +4,7 @@ title: herdr
 description: 'Umbrella sub-flake for everything herdr: our kriswill/herdr TUI fork (herdr-cli) and herdr-nav, upstream''s prebuilt Herdr desktop app and herdr-core (`hc`) repackaged, a herdr-update-check package for Linux and macOS, and the NixOS + nix-darwin modules (programs.herdr-cli/-core/-app, services.herdr-update-check); consumed as inputs.herdr.'
 resource: flakes/herdr/
 tags: [sub-flake, package, herdr, terminal]
-generated: { by: codex/gpt-6.1-sol, at: 2026-11-01T17:07:43-08:00 }
+generated: { by: hermes-agent/gpt-6.1-sol, at: 2026-11-04T14:21:34-08:00 }
 sources:
   - id: subflake-readme
     resource: ../../flakes/herdr/README.md
@@ -114,7 +114,7 @@ Gotchas:
   (`577bb1e`, which follows our nixpkgs). Re-lock with `--override-input
   herdr/herdr-cli/rust-overlay` if a fresh lock jumps it.
 
-## Braille row gaps — checked 2026-11-01
+## Braille row gaps — font workaround retired 2026-11-04
 
 Herdr-app 0.1.11 shows horizontal bands between rows of Braille art, also
 reproduced with consecutive rows of `⣿` (U+28FF). The live window used
@@ -126,24 +126,28 @@ setting in this version.[^app-terminal-0111]
 
 Upstream source at `8cbb9f3` includes a custom Braille sprite renderer,
 using Ghostty's integer-pixel dot layout sized to each terminal cell,
-instead of font glyphs.[^app-braille-renderer] This is the pending remedy;
-it has not been visually tested here. The release-manifest check
+instead of font glyphs.[^app-braille-renderer] At the initial check this was
+the pending remedy, not yet visually tested here. The release-manifest check
 (`bun flakes/herdr/update.ts --check`) still reported app 0.1.11 and core
 0.1.16 as current on 2026-11-01, so the Nix pins were left unchanged.
 
-On the next app release, confirm its source contains the Braille renderer,
-run `bun flakes/herdr/update.ts`, build/rebuild, and reopen the window.
-Verify consecutive rows of `⣿` and the original artwork in a live pane.
-Keep the [release repackaging approach](../decisions/herdr-app-release-repack.md)
-rather than assuming a source fix is already in a released tarball.
+The follow-up was to confirm the renderer in a released tarball, update the
+pins, rebuild and reopen the window, keeping the
+[release repackaging approach](../decisions/herdr-app-release-repack.md)
+rather than assuming a source fix was already released.
 
 **2026-11-03:** app 0.1.12 (released 2026-11-02) ships the renderer: its
 `src/sprites.rs` draws U+2800–28FF as sprites with Ghostty's layout, where
 0.1.11's had no Braille at all.[^app-sprites-0112] The pins moved to app
-0.1.12 and core 0.1.17 and nebula's build was checked with `nrb`. The live
-check (`⣿` rows in a reopened window) waits on the switch. After it passes,
-the `font` override in nebula's `settings.json` can go
+0.1.12 and core 0.1.17 and nebula's build was checked with `nrb`. At that
+point, switching and checking `⣿` rows in a reopened window remained the
+follow-up before removing nebula's font override
 ([nebula-herdr](../modules/nebula-herdr.md)).
+
+**2026-11-04:** the override is gone. nebula's Herdr is back on its default
+font (JetBrains Mono), and the app draws the braille itself.
+This retires the configuration workaround; a fresh pixel-level comparison
+of consecutive `⣿` rows in a reopened window was not recorded here.
 
 ## Core 0.1.17: the macOS core starts through launchd
 

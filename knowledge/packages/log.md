@@ -5,6 +5,9 @@
 - **Update**: [hermes-agent](hermes-agent.md): patch the Ink TUI's missing
   terminal breadcrumbs, restoring Herdr status routing without a gateway
   plugin or changes to the user's model settings.
+- **Update**: [herdr](herdr.md): retire nebula's Meslo `font` override now
+  that Braille uses sprites; distinguish this config change from a fresh
+  visual row-spacing check.
 
 ## 2026-11-03
 

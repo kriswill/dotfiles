@@ -25,6 +25,12 @@ setopt histignorespace     # space-prefixed commands are excluded from history
 ## system-wide by each OS's neovim module).
 export VISUAL=nvim
 
+## Hermes: prefer the resize-aware TUI in Herdr panes only. Keep an explicit
+## HERMES_TUI value; `hermes --cli` still overrides this per invocation.
+if [[ -n ${HC_TERMINAL_ID-} || ${HERDR_ENV-} == 1 ]]; then
+  export HERMES_TUI=${HERMES_TUI-1}
+fi
+
 ## Vi-mode + edit-command-line: press `v` in command mode to edit the current
 ## line in $VISUAL.
 set -o vi
