@@ -15,6 +15,9 @@ sources:
   - id: dux-docs-compositors
     resource: https://github.com/duxlabs-dev/dux-docs/blob/master/versioned_docs/version-2.0/dms/compositors.mdx
     title: Dux Shell 2.0 docs — compositor (Hyprland Lua) configuration
+  - id: dux-v2-1-release
+    resource: https://github.com/duxlabs-dev/dux-shell/releases/tag/v2.1.0
+    title: Dux Shell v2.1.0 release notes (video wallpapers, #4037)
   - id: dux-shell-manual
     resource: ../../docs/dux-shell.md
     title: docs/dux-shell.md — nebula's Dux Shell manual
@@ -22,10 +25,14 @@ sources:
 
 nebula's desktop shell since 2026-11-03, replacing
 [Noctalia](users-k-noctalia.md) (kept, disabled) — see the
-[decision](../decisions/dux-shell-replaces-noctalia.md). It is nixpkgs'
-`dux-shell` 2.0.0 on `quickshell` 0.3.2 through nixpkgs' own module, which
-also adds matugen + cava to the system PATH and mkDefaults
-accounts-daemon / i2c / graphics on.[^nixpkgs-dux-shell-module] The project
+[decision](../decisions/dux-shell-replaces-noctalia.md). It runs on
+`quickshell` 0.3.2 through nixpkgs' own module, which also adds
+matugen + cava to the system PATH and mkDefaults accounts-daemon / i2c /
+graphics on.[^nixpkgs-dux-shell-module] The package is nixpkgs'
+derivation bumped to **2.1.0** with an `overrideAttrs` that changes only
+`version`, `src` and `vendorHash`. nixpkgs was still on 2.0.0, and 2.1.0
+adds video wallpapers.[^dux-v2-1-release] `lib.warnIf` flags the override
+at eval once nixpkgs catches up. The project
 was renamed from DankMaterialShell at v2.0.0, but the CLI is still `dms`
 and the unit `dms.service`.[^nixos-options-dux-shell]
 
@@ -53,6 +60,13 @@ manual[^dux-shell-manual]):
   Dux's lock auth copies, upower/ppd/bluetooth and DDC/CI live in
   [users-k-desktop-shell](users-k-desktop-shell.md).
 
+- **Wallpaper sets are a repo plugin.** The `wallpaperSets` plugin
+  (stow package `home/dux-shell/`, a Dash tab plus
+  `dms ipc call wallpaperSets …`) saves each display's wallpaper under a
+  name and applies it to every display at once. Dux has per-display
+  wallpapers built in but no saved combinations
+  ([decision](../decisions/dux-wallpaper-sets-plugin.md)).
+
 Settings (`~/.config/dms/settings.json`) are not snapshot-synced yet, unlike
 Noctalia's ([snapshot-synced configs](../patterns/snapshot-synced-configs.md)).
 
@@ -69,3 +83,4 @@ that host's configuration per the
 [^nixos-options-dux-shell]: NixOS options search — programs.dux-shell
 [^dux-docs-compositors]: Dux Shell 2.0 docs — compositor (Hyprland Lua) configuration
 [^dux-shell-manual]: docs/dux-shell.md — nebula's Dux Shell manual
+[^dux-v2-1-release]: Dux Shell v2.1.0 release notes (video wallpapers, #4037)

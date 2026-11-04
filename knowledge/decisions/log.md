@@ -2,6 +2,11 @@
 
 ## 2026-11-04
 
+- **Creation**: [dux-wallpaper-sets-plugin](dux-wallpaper-sets-plugin.md):
+  named wallpaper sets for Dux, as a composite user plugin (Dash tab plus a
+  `dms ipc call wallpaperSets` daemon) on the supported plugin API, rather
+  than a QML patch. It is deployed from the stow tree so edits are live.
+
 - **Update**: [hermes-herdr-integration-shell-hook](hermes-herdr-integration-shell-hook.md):
   fix Ink TUI session-to-pane routing by writing terminal breadcrumbs from
   committed session state, with Nix-build regression tests and a live Herdr

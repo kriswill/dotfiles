@@ -25,6 +25,7 @@
         skip = [
           "claude" # targets ~/.claude, which on macs is the account-selector's unowned fallback symlink (-> ~/.claude-me) that stow refuses to traverse; macs get the same skills via the claude-me package
           "desktop-entries" # ~/.local/share/applications launchers
+          "dux-shell" # nebula's Wayland shell (~/.config/dms/plugins: the Wallpaper Sets plugin)
           "fuzzel" # Wayland launcher
           "gtk" # GTK settings
           "herdr-app-linux" # nebula's Herdr settings.json (per-OS: zoom differs by display; macs use herdr-app-darwin)

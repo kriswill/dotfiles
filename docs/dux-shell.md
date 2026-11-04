@@ -9,9 +9,17 @@ real gotchas in **Learned behaviours & workarounds** at the bottom.
 
 ## Version & state on nebula (read this first)
 
-- **Package:** nixpkgs `dux-shell` **2.0.0** (nixpkgs `0bb2eed`, 2026-11-01),
-  on nixpkgs `quickshell` **0.3.2**, plus `matugen` 4.2.0 and `cava`. Upstream
-  is already at v2.1.0 (2026-11-04 UTC); nixpkgs follows.
+- **Package:** `dux-shell` **2.1.0**. nixpkgs (`0bb2eed`, 2026-11-01, and
+  every branch on 2026-11-04) still ships 2.0.0, so `dux-shell.nix` overrides
+  `version`, `src` and `vendorHash` on nixpkgs' derivation; nothing else
+  changes. It's on nixpkgs `quickshell` **0.3.2**, which is the minimum
+  2.1.0's `dms doctor` accepts, plus `matugen` 4.2.0 and `cava`. An eval
+  warning says when nixpkgs reaches 2.1.0 and the override can go. 2.1.0
+  adds **video wallpapers** (mp4/webm/mkv/mov/m4v/avi via QtMultimedia, which
+  is already in the wrapper's QML path). Their poster frames are extracted
+  with `ffmpeg`, found on `dms.service`'s PATH through k's profile. GIF and
+  animated WebP still show only their first frame (no `AnimatedImage`), so
+  convert them to webm/mp4 to animate them.
 - **Formerly DankMaterialShell ("DMS").** v2.0.0 (2026-10-20) moved the project
   to Dux Labs and renamed the repos/packages, but the CLI is still **`dms`**,
   the unit **`dms.service`**, the app ID `dev.duxlabs.shell`. nixpkgs keeps
@@ -21,7 +29,15 @@ real gotchas in **Learned behaviours & workarounds** at the bottom.
   (2026-11-03 19:00): `dms.service` active at ~490 MB RSS (Noctalia v5 was
   ~232 MB), owns `org.freedesktop.Notifications`, polkit agent registered, bars
   on DP-1 + DP-3, `dms doctor` all green (run with the session env — see below).
-  Still to check: wallpapers, lock/unlock, workspace bar over time.
+  **2026-11-04:** per-display wallpapers (DP-1 portrait, DP-3 landscape) and
+  the Wallpaper Sets plugin verified live: IPC, Dash tab save/apply/remove,
+  keyboard + pointer. **2.1.0 running since gen 224:** an mp4 on DP-3 plays
+  (Quickshell holds the file open, with Qt's ffmpeg media plugin and
+  libavcodec loaded, and the wallpaper pixels change over time). Its poster
+  frame landed in `~/.cache/dms/video-wallpaper/`. A mixed video + image set
+  saves, shows the poster with a movie badge, and switches by click,
+  `apply`, `next` and `prev`. Still to check: lock/unlock, workspace bar
+  over time.
 
 ## What it is
 
@@ -83,11 +99,54 @@ dms doctor                            # sanity report
 
 (A logout/login does the same.) Then in Settings (SUPER+Comma):
 
-- **Wallpaper & colors:** set per-monitor wallpapers (Noctalia's per-monitor
-  directories are not imported). This also generates `~/.config/hypr/dms/colors.lua`.
+- **Wallpaper & colors:** turn on **"Separate per display"** (it's off by
+  default, so every display shows the global wallpaper), then use the
+  **Display** dropdown that appears at the top of Appearance to pick an image
+  for each one. Noctalia's per-monitor folders are not imported. This also
+  generates `~/.config/hypr/dms/colors.lua`. See
+  [Per-display wallpapers & sets](#per-display-wallpapers--sets).
 - **Lock Screen → Authentication:** leave **Auto**, or choose **Use system PAM
   authentication** (`/etc/pam.d/login` directly). Test lock (SUPER+L) and unlock.
 - **Interface style → Surfaces → Background blur:** optional.
+
+## Per-display wallpapers & sets
+
+Dux stores a wallpaper for each display itself (`SessionData.monitorWallpapers`,
+in `~/.local/state/dms/session.json`). Besides the Settings toggle above:
+
+- `dms ipc call wallpaper setFor DP-1 <path>`: sets one display, and turns on
+  per-display mode if it's off. The same target has `getFor`, `nextFor` and
+  `prevFor`. Per-display cycling, with its own folder for each display, is
+  in the cycling settings once per-display mode is on.
+- The Dash **Wallpapers** tab only sets the display the dash is open on.
+- **Matugen source display** (Settings → Wallpaper, shown in per-display
+  mode) picks which display's image drives the theme colours. Unset means
+  the first screen.
+
+Dux can't save a combination and switch back to it, so the repo adds the
+**Wallpaper Sets** plugin (`wallpaperSets`,
+[decision](../knowledge/decisions/dux-wallpaper-sets-plugin.md)). It is the
+stow package `home/dux-shell/` → `~/.config/dms/plugins/WallpaperSets/`,
+which is live-editable.
+
+- **Dash tab "Wallpaper Sets"** (`dms ipc call dash open plugin_wallpaperSets`)
+  shows the current displays with a name field. Save stores them as a set;
+  an existing name updates that set. Clicking a set applies it, the trash
+  icon removes it, and the active set is ticked.
+- **IPC:** `dms ipc call wallpaperSets list` (the active set is marked `*`),
+  plus `current`, `show <name>`, `apply <name>`, `save <name>`,
+  `remove <name>`, `next` and `prev`.
+- Sets and the enabled flag are kept in `~/.config/dms/plugin_settings.json`
+  (untracked) under `wallpaperSets`.
+- **New machine / fresh config:** `dms ipc call plugins enable wallpaperSets`.
+  Composite plugins don't load until they're enabled.
+- **After editing the QML:** `dms ipc call plugins reload wallpaperSets`.
+  **After editing `sets.js`:** `systemctl --user restart dms`. A reload does
+  not pick up JS changes; see Learned behaviours.
+- **Video sets (2.1+):** a set can hold video paths like any other wallpaper,
+  since saving and applying just pass paths to Dux. Each tile shows Dux's
+  poster frame (`VideoWallpaperService.imageFor`) with a movie badge.
+  Guarded with `typeof`, so the plugin still works on 2.0.
 
 ## Do not
 
@@ -114,6 +173,12 @@ disk); switching it to `dankcolors` in `modules/nixos/ghostty.nix` is optional.
 
 - Settings: `~/.config/dms/settings.json` (pre-2.0: `~/.config/DankMaterialShell/`,
   auto-migrated). Not tracked in the repo yet.
+- Per-display wallpapers, cycling state: `~/.local/state/dms/session.json`.
+- Plugins: `~/.config/dms/plugins/` (ours is stow-linked from
+  `home/dux-shell/`); plugin enable flags and data:
+  `~/.config/dms/plugin_settings.json`; plugin state:
+  `~/.local/state/dms/plugins/`. Nix-installed plugins:
+  `/etc/xdg/quickshell/dms-plugins/`.
 - Generated Hyprland fragments: `~/.config/hypr/dms/`.
 - Lock-screen PAM (Auto mode): `~/.local/state/dms/pam/`.
 - Cache (colors JSON, clipboard DB): `~/.cache/dms/`.
@@ -146,6 +211,36 @@ disk); switching it to `dankcolors` in `modules/nixos/ghostty.nix` is optional.
 4. `nrs`, then `systemctl --user stop dms; noctalia --daemon` (or re-login).
 
 ## Learned behaviours & workarounds
+
+- **2026-11-04 — `nrs` restarts the shell when the package changes.** The
+  switch reloads k's user units and stops and starts `dms.service` itself
+  ("stopping (user) dms.service … starting (user) dms.service"), so a Dux
+  bump is live straight after `nrs`. Apps survive, as with any restart.
+  First run of 2.1.0 opens a "What's New" window and a Settings window, and
+  the Dash got wider (928 px on DP-3).
+
+- **2026-11-04 — `plugins reload` keeps the old JS libraries.** It reloads a
+  plugin's QML (as `…qml?revision=N`), but a `.pragma library` JS import
+  resolves to the plain file URL, which the QML engine has already cached for
+  the life of the process. A new function in `sets.js` then shows up as
+  "TypeError: Property 'x' … is not a function". Restart `dms` after JS
+  edits.
+
+- **2026-11-04 — A plugins dir created after startup is invisible.**
+  `PluginService` watches `~/.config/dms/plugins/` with a `FolderListModel`.
+  If the directory didn't exist when the shell started, a later `mkdir` or
+  stow is never noticed: `dms ipc call plugins list` says "No plugins
+  available". Run `systemctl --user restart dms` once, then
+  `plugins enable <id>`.
+- **2026-11-04 — The shell's QML is extracted at runtime.** The package has
+  no `share/` QML tree. `dms run` unpacks it under
+  `/run/user/1000/dms-shell/<hash>/` and runs `quickshell -p` on that path.
+  That directory is the source to read when working out what Dux does,
+  including `PLUGINS/README.md` and the example plugins.
+- **2026-11-04 — An `Item` daemon logs one harmless warning.** A plugin
+  daemon that is a bare `Item` (ours, for `IpcHandler`) logs "Created
+  graphical object was not placed in the graphics scene" when it loads.
+  It's harmless.
 
 - **2026-11-03 — PAM fix carries over without config.** Dux's default
   ("Auto") lock auth on NixOS does not touch `/etc/pam.d`; it resolves the first

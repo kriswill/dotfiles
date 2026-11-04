@@ -1,0 +1,20 @@
+{
+    "id": "wallpaperSets",
+    "name": "Wallpaper Sets",
+    "description": "Save each display's wallpaper as a named set and switch every display at once (dash tab + `dms ipc call wallpaperSets`)",
+    "version": "1.0.0",
+    "author": "Kris Williams",
+    "type": "composite",
+    "capabilities": ["dash-tab", "daemon"],
+    "icon": "photo_library",
+    "components": {
+        "dash": "./WallpaperSetsTab.qml",
+        "daemon": "./WallpaperSetsDaemon.qml"
+    },
+    "dash": {
+        "title": "Wallpaper Sets",
+        "icon": "photo_library"
+    },
+    "requires_dms": ">=2.0.0",
+    "permissions": ["settings_read", "settings_write"]
+}

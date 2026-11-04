@@ -2,6 +2,15 @@
 
 ## 2026-11-04
 
+- **Update**: [users-k-dux-shell](users-k-dux-shell.md): Dux Shell 2.1.0
+  through an `overrideAttrs` on nixpkgs' 2.0.0 (version/src/vendorHash only;
+  `lib.warnIf` flags it once nixpkgs catches up) for video wallpapers;
+  Wallpaper Sets tiles show their poster frames.
+- **Update**: [users-k-dux-shell](users-k-dux-shell.md): the `wallpaperSets`
+  plugin (stow package `home/dux-shell/`) saves and applies wallpaper
+  combinations across displays
+  ([decision](../decisions/dux-wallpaper-sets-plugin.md)).
+
 - **Update**: [zsh](zsh.md): default Hermes to its resize-aware TUI in Herdr
   panes through `HERMES_TUI=1`, preserving explicit values and `--cli`.
 - **Update**: [nebula-herdr](nebula-herdr.md): Herdr is back on its default
