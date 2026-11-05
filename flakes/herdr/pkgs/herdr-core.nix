@@ -66,12 +66,20 @@ stdenvNoCC.mkDerivation (finalAttrs: {
     runHook postInstall
   '';
 
-  nativeInstallCheckInputs = [ versionCheckHook ];
+  # On macOS the bundle's executable is never run at build time: executing a
+  # signed .app makes macOS stamp it with com.apple.macl, an xattr the nix
+  # daemon may not strip (App Management protection), and the output then
+  # fails to register ("clearing flags of path …: Operation not permitted").
+  # The version is read from the bundle's Info.plist instead.
+  nativeInstallCheckInputs = lib.optional (!stdenvNoCC.hostPlatform.isDarwin) versionCheckHook;
   versionCheckProgram = "${placeholder "out"}/bin/hc";
   doInstallCheck = true;
   # The copy must still carry upstream's signature (skipped where codesign
   # isn't reachable, as in a sandboxed build).
   preInstallCheck = lib.optionalString stdenvNoCC.hostPlatform.isDarwin ''
+    plist="$out/libexec/Herdr Core.app/Contents/Info.plist"
+    grep -q "<key>CFBundleShortVersionString</key><string>${finalAttrs.version}</string>" "$plist" \
+      || { echo "Herdr Core.app is not version ${finalAttrs.version}" >&2; exit 1; }
     if [ -x /usr/bin/codesign ]; then
       /usr/bin/codesign --verify --deep --strict "$out/libexec/Herdr Core.app"
     fi

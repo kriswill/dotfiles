@@ -235,6 +235,14 @@ through files instead:
   `serve`, and the check matches both. A window opened from
   Finder runs the copy under `/Applications/Nix Apps`, which carries no
   version, so only a window opened as `bin/herdr-app` from a shell is judged.
+- **Never run a bundle at build time.** Executing a signed bundle's binary
+  makes macOS stamp the bundle with `com.apple.macl`, which the nix daemon
+  can't strip (App Management protection, macOS 26; granting the daemon App
+  Management didn't help). The output then fails to register with
+  `clearing flags of path "…/Herdr Core.app": Operation not permitted`. So
+  on darwin both packages skip `versionCheckHook` and check the version by
+  reading `CFBundleShortVersionString` from the bundle's `Info.plist`, next to
+  the `codesign --verify`. Linux keeps the `--version` check.
 
 The macs' enables live in `modules/darwin/herdr.nix` (one user, one setup);
 their config files come from the same `home/herdr-core` and `home/herdr-app`

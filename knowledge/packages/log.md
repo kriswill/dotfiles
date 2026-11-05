@@ -1,5 +1,12 @@
 # Log
 
+## 2026-11-05
+
+- **Update**: [herdr](herdr.md): darwin builds of herdr-core and herdr-app
+  no longer run the bundle's binary (`versionCheckHook`), since that adds
+  `com.apple.macl` and nix then can't register the output; the version is
+  checked against the bundle's `Info.plist` instead.
+
 ## 2026-11-04
 
 - **Update**: [hermes-agent](hermes-agent.md): patch the Ink TUI's missing

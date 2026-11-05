@@ -59,7 +59,10 @@ env.mkDerivation (
     dontConfigure = true;
     dontBuild = true;
 
-    nativeInstallCheckInputs = [ versionCheckHook ];
+    # Not on macOS: running the signed bundle's executable at build time makes
+    # macOS stamp it with com.apple.macl, which the nix daemon may not strip
+    # (see herdr-core.nix); the darwin preInstallCheck reads Info.plist instead.
+    nativeInstallCheckInputs = lib.optional (!isDarwin) versionCheckHook;
     versionCheckProgram = "${placeholder "out"}/bin/herdr-app";
     doInstallCheck = true;
 
@@ -152,6 +155,9 @@ env.mkDerivation (
     # The copy must still carry upstream's signature (skipped where codesign
     # isn't reachable, as in a sandboxed build).
     preInstallCheck = ''
+      grep -q "<key>CFBundleShortVersionString</key><string>${finalAttrs.version}</string>" \
+        $out/Applications/Herdr.app/Contents/Info.plist \
+        || { echo "Herdr.app is not version ${finalAttrs.version}" >&2; exit 1; }
       if [ -x /usr/bin/codesign ]; then
         /usr/bin/codesign --verify --deep --strict $out/Applications/Herdr.app
       fi
