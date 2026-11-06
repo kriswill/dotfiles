@@ -12,6 +12,10 @@
 
 ## 2026-11-04
 
+- **Creation**: [dux-owns-monitor-layout](dux-owns-monitor-layout.md):
+  Dux's Displays page owns the monitor layout. `monitors.lua` loads
+  `dms/outputs.lua` over baseline rules, takes only `desc:` rules, and guards
+  the OLED against `cm "auto"` and DSC-only refresh rates.
 - **Creation**: [dux-wallpaper-sets-plugin](dux-wallpaper-sets-plugin.md):
   named wallpaper sets for Dux, as a composite user plugin (Dash tab plus a
   `dms ipc call wallpaperSets` daemon) on the supported plugin API, rather

@@ -60,6 +60,10 @@ manual[^dux-shell-manual]):
   Dux's lock auth copies, upower/ppd/bluetooth and DDC/CI live in
   [users-k-desktop-shell](users-k-desktop-shell.md).
 
+- **Dux owns the monitor layout.** `monitors.lua` loads its
+  `dms/outputs.lua` (Displays → Name format: Model) over baseline rules,
+  with guards against the OLED's blank-screen settings
+  ([decision](../decisions/dux-owns-monitor-layout.md)).
 - **Wallpaper sets are a repo plugin.** The `wallpaperSets` plugin
   (stow package `home/dux-shell/`, a Dash tab plus
   `dms ipc call wallpaperSets …`) saves each display's wallpaper under a

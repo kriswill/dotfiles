@@ -21,7 +21,7 @@ historical (it applies only to the niri session).
 > signal" while Hyprland reports the output on. @143.97 10-bit fits HBR3 without DSC
 > and keeps full HDR. The `@239.984` in the example `hl.monitor`/`hl.eval` snippets
 > below is **stale** — substitute `3440x1440@143.97` (and the live position is now
-> `1440x1000`, not `900x355`). See the "OLED blanks at login" entry in
+> `1440x1581` since 2026-11-04, not `900x355`). See the "OLED blanks at login" entry in
 > `docs/hyprland.md` for the full diagnosis.
 
 Unlike niri (no color-management protocol at all), **Hyprland supports HDR.**

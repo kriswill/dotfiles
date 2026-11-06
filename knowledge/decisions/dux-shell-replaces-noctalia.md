@@ -65,6 +65,8 @@ the CLI stays `dms`.[^dux-shell-v2-release]
   is included; nebula's own Lua keeps monitors, layout, input, binds and
   window rules. `dms setup` and Settings "Setup" banners are off-limits
   because they write `hyprland.lua`, a stow symlink into the repo.
+  (Since 2026-11-04 the outputs fragment is loaded too, filtered and guarded:
+  [dux-owns-monitor-layout](dux-owns-monitor-layout.md).)
 - **Dux's polkit agent wins**: `hyprpolkitagent` isn't started while Dux is
   enabled, since a session takes one agent and the two would race.
 

@@ -14,6 +14,10 @@
 
 ## 2026-11-04
 
+- **Update**: [hyprland](hyprland.md), [users-k-dux-shell](users-k-dux-shell.md):
+  the monitor layout comes from Dux's Displays page over `monitors.lua`'s
+  baseline rules and OLED guards
+  ([decision](../decisions/dux-owns-monitor-layout.md)).
 - **Update**: [users-k-dux-shell](users-k-dux-shell.md): Dux Shell 2.1.0
   through an `overrideAttrs` on nixpkgs' 2.0.0 (version/src/vendorHash only;
   `lib.warnIf` flags it once nixpkgs catches up) for video wallpapers;

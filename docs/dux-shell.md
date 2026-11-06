@@ -59,12 +59,40 @@ rationale: [knowledge/decisions/dux-shell-replaces-noctalia.md](../knowledge/dec
 | Border colours | `home/hyprland/.config/hypr/hyprland.lua` | `require("dms.colors")` behind a `package.searchpath` guard (file is generated, may be absent), then `noctalia-overrides.lua` (historical name) re-darkens `inactive_border` for ghostty. |
 | Layer rule | `window-rules.lua` | `dms-no-anim`: `no_anim` on namespaces `^dms` (upstream recommendation). Blur needs no rule on 0.56+ (ext-background-effect-v1, toggled in Settings). |
 
-Only the **colors** fragment is required. Dux's other Hyprland fragments
-(`outputs`, `layout`, `cursor`, `input`, `binds`, `binds-user`, `windowrules`
-under `~/.config/hypr/dms/`) would fight `monitors.lua`, `look-and-feel.lua`,
-`input.lua` and `keybindings.lua`, which own those here. Consequence: Dux's
-Settings pages for displays, Hyprland layout, input, keybinds and window rules
-show nebula's own config read-only (or offer a "Setup" banner — see below).
+Two fragments are loaded: **colors** (from `hyprland.lua`) and **outputs**
+(from `monitors.lua`, filtered; see below). Dux's other Hyprland fragments
+(`layout`, `cursor`, `input`, `binds`, `binds-user`, `windowrules` under
+`~/.config/hypr/dms/`) would fight `look-and-feel.lua`, `input.lua` and
+`keybindings.lua`, which own those here. Dux's Settings pages for Hyprland
+layout, input, keybinds and window rules therefore look editable, but what
+they save lands in unloaded fragments: it never takes effect, or is undone at
+the next reload. Some pages also offer a "Setup" banner (see below).
+
+### Displays (Settings → Displays)
+
+Dux owns the monitor setup (position, scale, rotation, mode, VRR, bit depth,
+colour management), with
+[decision](../knowledge/decisions/dux-owns-monitor-layout.md). Apply writes
+`~/.config/hypr/dms/outputs.lua` and runs `hyprctl reload`. `monitors.lua`
+sets baseline rules first, then loads that file through a wrapped
+`hl.monitor`:
+
+- **Set "Name format" to Model** (once). Only `desc:` rules are taken.
+  Connector-named rules (`DP-3`) and Dux's empty-name catch-all are ignored,
+  so with "Name" Dux has no effect. Connector numbers change across boots
+  here.
+- **OLED guards** stop the two settings that blank the PG34WCDM:
+  `cm = "auto"` (or omitted, which is Dux's "Auto") becomes `"srgb"`, and a
+  rate above 144 Hz, `preferred`, or a bare `WxH` becomes `3440x1440@143.97`.
+  Any non-sRGB `cm` without a bit depth gets `bitdepth = 10`. Everything else
+  is kept, including HDR modes (`hdr`, `hdredid`), which are only cosmetic
+  risks.
+- Dux's rules **replace** the baseline whole: Hyprland keeps one rule per
+  output name, and the last match wins. A field Dux omits is not filled from
+  the baseline.
+- No Dux file (fresh home, shell never run), or a broken one: the baseline
+  layout applies (DP-3 at 1440x1581), and a broken file also shows in
+  Hyprland's config-error banner.
 
 ## Keybinds (keybindings.lua)
 
@@ -211,6 +239,36 @@ disk); switching it to `dankcolors` in `modules/nixos/ghostty.nix` is optional.
 4. `nrs`, then `systemctl --user stop dms; noctalia --daemon` (or re-login).
 
 ## Learned behaviours & workarounds
+
+- **2026-11-04 — Displays "Setup" banner = Dux can't see the include.** The
+  banner runs `dms config resolve-include hyprland outputs.lua`, which follows
+  `require`s from `hyprland.lua` but only matches the literal call form
+  `require("dms.outputs")` (`core/internal/luaconfig/lua.go`).
+  `pcall(require, "dms.outputs")` looked "not included", so Setup appended a
+  raw `require("dms.outputs")` to `hyprland.lua` (the repo copy, through the
+  symlink). That copy only did nothing because Lua had already cached the
+  module. `monitors.lua` now uses `pcall(function() require("dms.outputs") end)`.
+  Check with that command; it should print `"included":true`.
+- **2026-11-04 — Per-output colour settings are keyed by name format.**
+  `session.json` → `hyprlandOutputSettings` stores 10-bit/cm under the
+  identifier current when they were set (`DP-3` in "Name" mode, `desc:…` in
+  Model mode), and Model mode looks up `desc:…` first. After switching format,
+  re-check the OLED's bit depth/colour in Settings → Displays.
+
+- **2026-11-04 — Dux carries forward rules it finds in `outputs.lua`.** On
+  Apply it re-reads the existing file and writes back every entry it parsed,
+  not just the live outputs. A rule staged for testing (here, `desc:` rules
+  in "Name" mode) therefore came back at the next Apply, and since only
+  `desc:` rules are loaded, it pinned the layout. Don't leave hand-written
+  lines in that file; if one sneaks in, delete it and `hyprctl reload`.
+
+- **2026-11-04 — Display moves "snapped back".** Apply in Settings → Displays
+  writes `dms/outputs.lua` and then runs `hyprctl reload`. Before the
+  `monitors.lua` rework, the reload re-ran a hard-coded position and never
+  read Dux's file, so every move was undone within a second. Source:
+  `Services/HyprlandService.qml` (`writeOutputsConfig` → `reloadConfig`). In
+  `hyprctl monitors -j`, `make model serial` is exactly the string Dux's
+  Model mode puts after `desc:`.
 
 - **2026-11-04 — `nrs` restarts the shell when the package changes.** The
   switch reloads k's user units and stops and starts `dms.service` itself

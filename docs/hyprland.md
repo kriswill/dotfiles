@@ -880,7 +880,7 @@ Real findings on nebula — append as you discover more; correct/remove stale on
     `dpmsStatus:1` — the compositor thinks it's live but the link never re-trained
     (same class of failure as the 240Hz blank below). Recovery without a relog:
     **bounce DP-3's mode** to force a real modeset, e.g.
-    `hyprctl eval 'hl.monitor({ output="desc:ASUSTek COMPUTER INC PG34WCDM RCLMRS022510", mode="3440x1440@120.00", scale=1, position="1440x1000", bitdepth=10, cm="auto" })'`
+    `hyprctl eval 'hl.monitor({ output="desc:ASUSTek COMPUTER INC PG34WCDM RCLMRS022510", mode="3440x1440@120.00", scale=1, position="1440x1581", bitdepth=10, cm="auto" })'`
     then the same with `mode="3440x1440@143.97"`. Each `hyprctl eval` blocks until the
     modeset commits, so the two-step bounce reliably re-trains (a *same-mode* re-apply
     can short-circuit and do nothing). Verified 2026-06-19.
