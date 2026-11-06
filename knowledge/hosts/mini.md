@@ -15,7 +15,13 @@ are opted into below per the
 
 ## Host-selective features
 
-- (universal modules only)
+- [git-signing-agent](../modules/git-signing-agent.md): declared with
+  `enable = false` until its 1Password items exist. Once on, commits sign
+  through a root-loaded ssh-agent with no 1Password prompt, for headless
+  Claude sessions under herdr core
+  ([decision](../decisions/headless-git-signing-agent.md),
+  [setup](../playbooks/git-signing-agent-setup.md)). mini is a sops
+  recipient (`&mini` in `.sops.yaml`) for that token.
 
 ## Source
 

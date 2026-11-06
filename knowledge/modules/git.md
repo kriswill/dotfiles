@@ -11,6 +11,11 @@ Binaries-only module: it installs what the stow-managed git config
 (`home/git/`) invokes by bare name. The config itself — including
 SSH-format commit signing through the 1Password agent, OS-branched via
 `includeIf gitdir:/Users/ | /home/` — lives in the stow tree, not in nix.
+The config ends with `[include] path = /etc/git/host.inc`, the one hook nix
+can use to override it per host. On headless [mini](../hosts/mini.md),
+[git-signing-agent](git-signing-agent.md) writes that file to replace
+`op-ssh-sign` with a prompt-free signer. Elsewhere the file doesn't exist,
+and the include is a no-op.
 gh's `config.yml` is NOT stowed: gh rewrites it via atomic rename, so it's a
 `config/gh/` snapshot synced with [gh-config](../packages/gh-config.md)
 (shipped by this module on both OSes).

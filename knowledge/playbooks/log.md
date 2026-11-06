@@ -1,5 +1,12 @@
 # Log
 
+## 2026-11-05
+
+- **Creation**: [git-signing-agent-setup](git-signing-agent-setup.md): the
+  one-time 1Password, GitHub, and repo steps that enable
+  [git-signing-agent](../modules/git-signing-agent.md) on mini, plus
+  verify, rotate, revoke, and troubleshooting.
+
 ## 2026-07-18
 
 - **Creation** — [rotate-op-sa-token](rotate-op-sa-token.md) /

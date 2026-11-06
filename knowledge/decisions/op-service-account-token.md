@@ -55,6 +55,10 @@ non-interactive alternative: service-account tokens.
   a compromise backstop. Disk encryption would strictly improve this design.
 - Do not add other items to the Automation vault without re-running this
   analysis — the vault's one-item contents ARE the blast radius.
+- mini reuses this pattern for headless commit signing, but keeps the
+  token root-only and loads the key with a root daemon, so the session can
+  sign without being able to read either:
+  [headless-git-signing-agent](headless-git-signing-agent.md).
 - Rotation is a manual ~90-day chore (tokens never auto-refresh); the
   procedure is [rotate-op-sa-token](../playbooks/rotate-op-sa-token.md).
   Service accounts can't be rotated or deleted via `op` CLI — web UI only.

@@ -9,6 +9,7 @@ adding modules and packages, and keeping tooling up to date.
 * [Add a Custom Package](add-package.md) - Add a package under pkgs/ (or as a sub-flake), expose it via perSystem.packages and an overlay, and handle unfree licensing.
 * [Adopt a Dotfile Into the Stow Tree](adopt-dotfile.md) - Capture an existing $HOME config into home/, or pull live edits of a tracked file back into the repo.
 * [Bump ccglass](bump-ccglass.md) - Update the ccglass sub-flake for a new upstream release via the patch-ccglass skill.
+* [Set Up, Rotate, and Revoke mini's Headless Git Signing](git-signing-agent-setup.md) - One-time 1Password, GitHub, and repo steps that turn on services.git-signing-agent on mini, then how to verify it, rotate the token or key, and revoke it.
 * [Rebuild and Rollback](rebuild-and-rollback.md) - Apply, test-build, inspect, and roll back system generations on both OSes.
 * [Refresh the Codebase-memory Index](refresh-codebase-memory.md) - Bootstrap or refresh the code-graph index the codebase-memory MCP server keeps for this repo.
 * [Rotate the nebula-gh Service-Account Token](rotate-op-sa-token.md) - ~90-day rotation of the 1Password service-account token behind the gh wrapper's prompt-free op read — web-UI rotate, re-bank, sops re-set, rebuild, verify.

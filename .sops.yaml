@@ -6,7 +6,8 @@
 keys:
   - &nebula age1gduheq5k8trpxduq56qt3yy6g0mveshx4h06nshccejvv6yxp4vq77m3qf
   - &k age19lm2fsr2ugl0e2m4s84z885vluma0dlg8xv3vua72dn8zmu7paeq7tmqv2
-  # TODO(mini, SOC-Kris-Williams): derive on each machine as described above.
+  - &mini age1l3xh6zwrwtlgrepvt05sjn73sd7x93my3rfjuhxtgnsj7alxx9aslwhdjw
+  # TODO(SOC-Kris-Williams): derive on the machine as described above.
 creation_rules:
   - path_regex: modules/hosts/nebula/secrets.yaml
     key_groups:
@@ -16,6 +17,13 @@ creation_rules:
     key_groups:
       - age:
           - *k
+  # mini: the git-signing-agent service-account token (op-sa-token). Encrypting
+  # needs only this public recipient, so the file can be (re)written from any
+  # checkout; see knowledge/playbooks/git-signing-agent-setup.md.
+  - path_regex: modules/hosts/mini/secrets.yaml
+    key_groups:
+      - age:
+          - *mini
   # Private ssh Host entries (~/.ssh/config.d) — one shared file, every host
   # that deploys them is a recipient (add mini/SOC here + `sops updatekeys`).
   - path_regex: modules/hosts/ssh-hosts.yaml

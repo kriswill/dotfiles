@@ -1,5 +1,17 @@
 # Log
 
+## 2026-11-05
+
+- **Creation**: [git-signing-agent](git-signing-agent.md): a root launchd
+  daemon reads a host-only SSH signing key from 1Password, through a
+  service-account token (sops, root 0400), into an ssh-agent running as k.
+  git reaches it through `/etc/git/host.inc`
+  ([decision](../decisions/headless-git-signing-agent.md)).
+- **Update**: [git](git.md): the shared config ends with the
+  `/etc/git/host.inc` per-host include.
+- **Update**: [sops](sops.md): mini is now a recipient, for
+  git-signing-agent's token.
+
 ## 2026-11-04
 
 - **Update**: [users-k-dux-shell](users-k-dux-shell.md): Dux Shell 2.1.0

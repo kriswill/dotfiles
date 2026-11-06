@@ -1,5 +1,11 @@
 # Log
 
+## 2026-11-05
+
+- **Update**: [mini](mini.md) declares
+  [git-signing-agent](../modules/git-signing-agent.md) (off until setup)
+  and becomes a sops recipient (`&mini` in `.sops.yaml`).
+
 ## 2026-10-25
 
 - **Update**: [nebula](nebula.md) launches Discord with

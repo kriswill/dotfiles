@@ -1,5 +1,15 @@
 # Log
 
+## 2026-11-05
+
+- **Creation**: [headless-git-signing-agent](headless-git-signing-agent.md):
+  headless mini signs commits with its own key, loaded by a root daemon
+  from 1Password through a vault-scoped service account. The session can
+  sign but can't read the key or the token. This adapts the apple-machine
+  VM's pattern.
+- **Update**: [op-service-account-token](op-service-account-token.md):
+  links the mini reuse.
+
 ## 2026-11-04
 
 - **Creation**: [dux-wallpaper-sets-plugin](dux-wallpaper-sets-plugin.md):

@@ -154,3 +154,12 @@
 	email = "115474+kriswill@users.noreply.github.com"
 	name = "Kris Williams"
 	signingkey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBxqhXoAlCKYNwsB1YrszftURThiCI94oeR0W9EDhrLy"
+
+# Per-host overrides, written by nix rather than stow because they embed
+# /nix/store paths. /etc/git/host.inc exists only where a module writes one:
+# today mini's services.git-signing-agent
+# (modules/darwin/git-signing-agent), which replaces the op-ssh-sign signer
+# with a headless one. It stays LAST so its values win. git skips a missing
+# include without complaint, so every other host is unaffected.
+[include]
+	path = "/etc/git/host.inc"

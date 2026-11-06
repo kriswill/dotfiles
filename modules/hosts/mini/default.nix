@@ -23,6 +23,19 @@
     # Hexley the platypus on the Nix snowflake (modules/darwin/fastfetch.nix).
     programs.fastfetch.logo = "hexley-nix.png";
 
+    # Prompt-free commit signing for headless use (Claude under herdr core):
+    # a mini-only key, read from 1Password by a service account into a
+    # root-loaded ssh-agent (modules/darwin/git-signing-agent). Off until set
+    # up: git-signing.pub and secrets.yaml don't exist yet, and enabling it
+    # moves signing off 1Password. Steps:
+    # knowledge/playbooks/git-signing-agent-setup.md.
+    services.git-signing-agent = {
+      enable = false;
+      publicKey = ./git-signing.pub;
+      sopsFile = ./secrets.yaml;
+      opItem = "mini-automation/mini git signing key";
+    };
+
     nixpkgs.hostPlatform = "aarch64-darwin";
     nixpkgs.overlays = builtins.attrValues config.flake.overlays;
   };

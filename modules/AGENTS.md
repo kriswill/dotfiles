@@ -104,4 +104,8 @@ get the extended lib — nixos modules import lib files by path when needed.
 - git commit signing is NOT gpg: it's SSH-format signing through the 1Password
   agent, OS-branched inside `home/git/.config/git/config` via
   `includeIf gitdir:/Users/ | /home/`. gpg-agent (both OSes) only backs `pass`
-  and ad-hoc gpg; `enableSSHSupport` stays false.
+  and ad-hoc gpg; `enableSSHSupport` stays false. Exception: a host enabling
+  `services.git-signing-agent` (mini) signs with its own key through a
+  root-loaded ssh-agent, which nix wires in via `/etc/git/host.inc`. The
+  shared config includes that file last
+  (knowledge/modules/git-signing-agent.md).

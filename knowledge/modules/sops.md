@@ -30,7 +30,10 @@ key before it exists in the file breaks the build (verified 2026-07-10).
 
 Consumers today: [host k](../hosts/k.md) (smoke-test secret) and the
 [ssh-private-hosts twins](ssh-private-hosts.md) (shared
-`modules/hosts/ssh-hosts.yaml`, k + nebula recipients). Auto-discovered via the
+`modules/hosts/ssh-hosts.yaml`, k + nebula recipients). [mini](../hosts/mini.md)
+is a recipient for its own `secrets.yaml`, which holds
+[git-signing-agent](git-signing-agent.md)'s service-account token. That file
+doesn't exist until setup, so the module stays disabled until then. Auto-discovered via the
 [Dendritic module layout](../patterns/dendritic-modules.md).
 
 ## Source
