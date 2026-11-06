@@ -25,12 +25,10 @@
 
     # Prompt-free commit signing for headless use (Claude under herdr core):
     # a mini-only key, read from 1Password by a service account into a
-    # root-loaded ssh-agent (modules/darwin/git-signing-agent). Off until set
-    # up: git-signing.pub and secrets.yaml don't exist yet, and enabling it
-    # moves signing off 1Password. Steps:
-    # knowledge/playbooks/git-signing-agent-setup.md.
+    # root-loaded ssh-agent (modules/darwin/git-signing-agent). Setup,
+    # rotation and revocation: knowledge/playbooks/git-signing-agent-setup.md.
     services.git-signing-agent = {
-      enable = false;
+      enable = true;
       publicKey = ./git-signing.pub;
       sopsFile = ./secrets.yaml;
       opItem = "mini-automation/mini git signing key";
