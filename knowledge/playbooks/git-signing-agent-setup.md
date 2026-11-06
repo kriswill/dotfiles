@@ -57,23 +57,51 @@ provides `sops` and `jq`.
    Credential called "mini-automation token" in Private.
 
 3. **Repo files.** Write the public key and the allowed_signers line, then
-   encrypt the token to mini.[^op-secret-reference-syntax] This needs only mini's public age recipient,
-   which is already in `.sops.yaml`.
+   encrypt the token to mini.[^op-secret-reference-syntax] This needs only
+   mini's public age recipient and its creation rule in `.sops.yaml`, so
+   pull first: without the rule, `sops` fails with `no matching creation
+   rules found`. The block checks for the rule and changes nothing if it's
+   missing. It's safe to re-run: it rewrites the public key, adds the
+   allowed_signers line only once, and replaces `secrets.yaml` only after
+   `sops` succeeds (a bare `> secrets.yaml` redirect empties the file
+   before `sops` runs, and a failed token read would encrypt an empty
+   token).
 
    ```sh
-   op read "op://mini-automation/mini git signing key/public key" > modules/hosts/mini/git-signing.pub
-   { echo "# mini: headless git-signing-agent key (modules/hosts/mini/git-signing.pub)"
-     printf '115474+kriswill@users.noreply.github.com %s\n' "$(cut -d' ' -f1,2 modules/hosts/mini/git-signing.pub)"
-   } >> home/git/.config/git/allowed_signers
-   printf 'op-sa-token: "%s"\n' "$(op read 'op://Private/mini-automation token/credential')" \
-     | sops encrypt --filename-override modules/hosts/mini/secrets.yaml \
-         --input-type yaml --output-type yaml /dev/stdin > modules/hosts/mini/secrets.yaml
+   if ! grep -q 'path_regex: modules/hosts/mini/secrets.yaml' .sops.yaml; then
+     echo "stop: .sops.yaml has no mini rule yet; git pull first"
+   elif ! key=$(op read "op://mini-automation/mini git signing key/public key"); then
+     echo "stop: could not read the public key from 1Password"
+   else
+     pub=modules/hosts/mini/git-signing.pub
+     printf '%s\n' "$key" > "$pub"
+     grep -qF "$(cut -d' ' -f2 "$pub")" home/git/.config/git/allowed_signers || {
+       echo "# mini: headless git-signing-agent key ($pub)"
+       printf '115474+kriswill@users.noreply.github.com %s\n' "$(cut -d' ' -f1,2 "$pub")"
+     } >> home/git/.config/git/allowed_signers
+     tmp=$(mktemp)
+     if tok=$(op read 'op://Private/mini-automation token/credential') && [ -n "$tok" ] &&
+        printf 'op-sa-token: "%s"\n' "$tok" | sops encrypt --filename-override modules/hosts/mini/secrets.yaml \
+          --input-type yaml --output-type yaml /dev/stdin > "$tmp"; then
+       mv "$tmp" modules/hosts/mini/secrets.yaml && echo "ok: secrets.yaml encrypted to mini"
+     else
+       echo "stop: encrypting the token failed; secrets.yaml left as it was"
+     fi
+     unset tok key tmp
+   fi
    ```
 
    Then set `services.git-signing-agent.enable = true;` in
-   `modules/hosts/mini/default.nix`, run
-   `git add modules/hosts/mini/git-signing.pub modules/hosts/mini/secrets.yaml`
-   (flakes only see tracked files), and commit and push.
+   `modules/hosts/mini/default.nix` and commit the new files (flakes only
+   see tracked files). Naming the paths keeps the rest of the working tree
+   out of the commit:
+
+   ```sh
+   git add modules/hosts/mini/git-signing.pub modules/hosts/mini/secrets.yaml
+   git commit -m "mini: enable git-signing-agent" -- modules/hosts/mini/default.nix \
+     modules/hosts/mini/git-signing.pub modules/hosts/mini/secrets.yaml \
+     home/git/.config/git/allowed_signers && git push
+   ```
 
 4. **GitHub signing key.** Add `git-signing.pub` as a **Signing Key**: in
    the web UI, Settings → SSH and GPG keys → New SSH key → Key type:
@@ -110,8 +138,8 @@ Then push a real commit and check that GitHub shows **Verified**. On k,
   Developer → Service Accounts (`op` can't rotate). Paste the new token
   over "mini-automation token" using the copy button, not a terminal
   selection, which has truncated tokens before
-  ([rotate-op-sa-token](rotate-op-sa-token.md)). Re-run the `sops encrypt`
-  line from step 3, commit, `nrs` on mini, then
+  ([rotate-op-sa-token](rotate-op-sa-token.md)). Re-run step 3's first
+  block (it's safe to re-run), commit `secrets.yaml`, `nrs` on mini, then
   `sudo launchctl kickstart -k system/org.nixos.git-signing-agent`. The
   plist doesn't change, so `nrs` alone won't reload the daemon.
 - **Key:** generate a new SSH Key item in `mini-automation`. Rewrite
@@ -131,14 +159,18 @@ set `enable = false` and `nrs`.
 
 ## Troubleshooting
 
-All in `/var/log/git-signing-agent.log`:
+Step 3 on k: `error loading config: no matching creation rules found`
+means `.sops.yaml` has no mini rule in that checkout yet → `git pull`,
+then re-run step 3's first block.
+
+The rest are in `/var/log/git-signing-agent.log`:
 
 | Log line | Cause → fix |
 |---|---|
 | `waiting for /run/secrets/op-sa-token` | sops hasn't decrypted it. Check `secrets.yaml` was encrypted to `&mini` and committed, then `sudo launchctl print system/org.nixos.sops-install-secrets`. |
-| `could not load … [ERROR] … token` | Token wrong, expired, or truncated → re-bank it and re-run step 3's `sops encrypt`. |
+| `could not load … [ERROR] … token` | Token wrong, expired, or truncated → re-bank it and re-run step 3's first block. |
 | `could not load … isn't a vault/item` | `opItem` doesn't match the vault/item names, or the service account can't see the vault (`op vault list` with its token). |
-| `… is not the configured publicKey` | `git-signing.pub` and the 1Password item differ → re-run step 3's `op read … public key`. |
+| `… is not the configured publicKey` | `git-signing.pub` and the 1Password item differ → re-run step 3's first block. |
 | commit: `no signing key in the agent` | The daemon hasn't loaded yet (network or sops at boot) or has failed → read the log. |
 | GitHub says Unverified | Added as an authentication key, not a signing key, or the commit email isn't on the account. |
 

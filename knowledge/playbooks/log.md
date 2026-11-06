@@ -1,5 +1,15 @@
 # Log
 
+## 2026-11-06
+
+- **Update**: [git-signing-agent-setup](git-signing-agent-setup.md): step 3
+  is safe to re-run. It stops if `.sops.yaml` has no mini rule yet (run on
+  k before the module commit was pulled, `sops` failed with `no matching
+  creation rules found` and the old `> secrets.yaml` redirect left the file
+  empty). It adds the allowed_signers line only once, and replaces
+  `secrets.yaml` only after `sops` succeeds. The enable commit names its
+  paths instead of `git commit -am`.
+
 ## 2026-11-05
 
 - **Creation**: [git-signing-agent-setup](git-signing-agent-setup.md): the
