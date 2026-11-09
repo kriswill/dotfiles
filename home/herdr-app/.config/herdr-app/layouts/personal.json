@@ -26,26 +26,72 @@
           "type": "column",
           "children": [
             {
-              "id": "spaces",
-              "type": "block",
-              "content": {
-                "mod": "spaces"
-              },
+              "id": "spaces-column",
+              "type": "column",
+              "children": [
+                {
+                  "id": "spaces",
+                  "type": "block",
+                  "content": {
+                    "mod": "spaces"
+                  },
+                  "size": {
+                    "weight": 1
+                  }
+                },
+                {
+                  "id": "spaces-grip",
+                  "type": "block",
+                  "content": {
+                    "mod": "list-grip",
+                    "props": {
+                      "half": "top"
+                    }
+                  },
+                  "size": {
+                    "px": 5
+                  }
+                }
+              ],
               "size": {
                 "weight": 1
               },
-              "min": 90
+              "min": 95,
+              "resizable": false
             },
             {
-              "id": "agents",
-              "type": "block",
-              "content": {
-                "mod": "agents"
-              },
+              "id": "agents-column",
+              "type": "column",
+              "children": [
+                {
+                  "id": "agents-grip",
+                  "type": "block",
+                  "content": {
+                    "mod": "list-grip",
+                    "props": {
+                      "half": "bottom"
+                    }
+                  },
+                  "size": {
+                    "px": 5
+                  }
+                },
+                {
+                  "id": "agents",
+                  "type": "block",
+                  "content": {
+                    "mod": "agents"
+                  },
+                  "size": {
+                    "weight": 1
+                  }
+                }
+              ],
               "size": {
                 "weight": 1
               },
-              "min": 90
+              "min": 95,
+              "resizable": false
             },
             {
               "id": "ai-usage",
