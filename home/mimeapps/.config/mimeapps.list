@@ -7,3 +7,13 @@ x-scheme-handler/https=helium.desktop
 x-scheme-handler/about=helium.desktop
 x-scheme-handler/unknown=helium.desktop
 x-scheme-handler/discord=vesktop.desktop
+# Pinned: chatgpt.desktop (modules/hosts/nebula/chatgpt.nix) also claims these,
+# and without a default it sorts ahead of writer/impress for .docx/.pptx.
+text/csv=calc.desktop
+text/tab-separated-values=calc.desktop
+application/vnd.ms-excel=calc.desktop
+application/vnd.ms-excel.sheet.macroEnabled.12=calc.desktop
+application/vnd.openxmlformats-officedocument.spreadsheetml.sheet=calc.desktop
+application/vnd.openxmlformats-officedocument.wordprocessingml.document=writer.desktop
+application/vnd.openxmlformats-officedocument.presentationml.presentation=impress.desktop
+x-scheme-handler/codex=chatgpt.desktop

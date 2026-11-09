@@ -1,5 +1,14 @@
 # Log
 
+## 2026-11-08
+
+- **Creation**: [chatgpt](chatgpt.md): nebula installs OpenAI's ChatGPT
+  desktop app (ChatGPT and Codex, Linux preview) from nixpkgs' `chatgpt`.
+  The package's user-tmpfiles rule is linked into
+  `/etc/xdg/user-tmpfiles.d/` to prune its per-version plugin cache, and
+  `mimeapps.list` pins the Office/CSV types its desktop entry claims to
+  LibreOffice. Without that, .docx and .pptx would open in ChatGPT.
+
 ## 2026-11-05
 
 - **Creation**: [git-signing-agent](git-signing-agent.md): a root launchd
