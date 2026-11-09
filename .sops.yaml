@@ -24,6 +24,13 @@ creation_rules:
     key_groups:
       - age:
           - *mini
+  # mini: Hermes Agent's provider keys (hermes-env), in a file of their own so
+  # they can be rewritten from 1Password without decrypting secrets.yaml,
+  # which only mini's host key opens (knowledge/modules/mini-hermes-agent.md).
+  - path_regex: modules/hosts/mini/hermes-secrets.yaml
+    key_groups:
+      - age:
+          - *mini
   # Private ssh Host entries (~/.ssh/config.d) — one shared file, every host
   # that deploys them is a recipient (add mini/SOC here + `sops updatekeys`).
   - path_regex: modules/hosts/ssh-hosts.yaml

@@ -43,6 +43,21 @@ export function interactive(args: string[]): boolean {
   return true;
 }
 
+/** The pty on stdin: /dev/pts/N on Linux, /dev/ttysNNN on macOS (no /proc there). */
+function stdinTty(): string | null {
+  try {
+    if (process.platform === "darwin") {
+      const out = Bun.spawnSync(["/usr/bin/tty"], { stdin: "inherit", stdout: "pipe", stderr: "ignore" });
+      const tty = out.exitCode === 0 ? out.stdout.toString().trim() : "";
+      return /^\/dev\/ttys\d+$/.test(tty) ? tty : null;
+    }
+    const tty = readlinkSync("/proc/self/fd/0");
+    return tty.startsWith("/dev/pts/") ? tty : null;
+  } catch {
+    return null;
+  }
+}
+
 function paneMarker(): PaneMarker | null {
   const env = process.env;
   const hc = env.HC_TERMINAL_ID ? { terminal: env.HC_TERMINAL_ID } : undefined;
@@ -51,13 +66,8 @@ function paneMarker(): PaneMarker | null {
     : undefined;
   if (!hc && !herdr) return null;
   if (!process.stdin.isTTY || !process.stdout.isTTY) return null;
-  let tty: string;
-  try {
-    tty = readlinkSync("/proc/self/fd/0");
-  } catch {
-    return null;
-  }
-  if (!tty.startsWith("/dev/pts/")) return null;
+  const tty = stdinTty();
+  if (!tty) return null;
   return { pid: process.pid, tty, hc, herdr };
 }
 

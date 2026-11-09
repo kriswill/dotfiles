@@ -1,5 +1,11 @@
 # Log
 
+## 2026-11-09
+
+- **Update**: [hermes-agent](hermes-agent.md): bumped to v0.23.0 (webapp
+  bundle, pm-pinned tools, patched patchelf), builds on aarch64-darwin, and
+  exports a nix-darwin module with a Seatbelt sandbox.
+
 ## 2026-11-05
 
 - **Update**: [herdr](herdr.md): darwin builds of herdr-core and herdr-app

@@ -44,14 +44,20 @@
       # then reports; keep it in step with the tag in flake.nix.
       minimal = scope.callPackage ./hermes-agent.nix {
         inherit (inputs) uv2nix pyproject-nix pyproject-build-systems;
+        # Passed explicitly so `override (prev: ...)` sees it: a function form that appends to
+        # `prev.extraDependencyGroups` worked before the shipped groups moved to
+        # defaultDependencyGroups, and an argument default never lands in `prev`.
+        extraDependencyGroups = [ ];
         inherit pmPackages;
         inherit (src) rev lastModified;
-        version = "0.22.5";
+        version = "0.23.0";
       };
 
-      # All platform-portable optional integrations pre-built.
+      # All platform-portable optional integrations pre-built. These are the
+      # variant's own groups, not the user's extras, so an
+      # `.override { extraDependencyGroups = ...; }` adds to them.
       full = minimal.override {
-        extraDependencyGroups = [
+        defaultDependencyGroups = [
           "anthropic"
           "azure-identity"
           "bedrock"
@@ -70,7 +76,7 @@
           "voice"
         ]
         # matrix is Linux-only (oqs/liboqs lacks aarch64-darwin wheels).
-        ++ lib.optionals pkgs.stdenv.isLinux [ "matrix" ];
+        ++ lib.optionals pkgs.stdenv.hostPlatform.isLinux [ "matrix" ];
       };
     in
     {

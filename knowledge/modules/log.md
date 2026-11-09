@@ -1,5 +1,14 @@
 # Log
 
+## 2026-11-09
+
+- **Creation**: [mini-hermes-agent](mini-hermes-agent.md): Hermes Agent on
+  mini, sandboxed, with no extra paths granted; provider keys come from a
+  `hermes-env` sops secret in its own file.
+- **Update**: [hermes-agent](hermes-agent.md): now a dual module; the
+  nix-darwin twin runs the gateway under launchd inside a Seatbelt sandbox
+  ([decision](../decisions/hermes-agent-macos-seatbelt-sandbox.md)).
+
 ## 2026-11-08
 
 - **Creation**: [chatgpt](chatgpt.md): nebula installs OpenAI's ChatGPT

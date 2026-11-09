@@ -22,7 +22,9 @@ Local conventions:
   project from a trimmed copy of its own `nix/`, under upstream's file names,
   against the source as a `flake = false` input (a `hermesSrc` path handed to
   every `callPackage` by a scope). Keep each change marked `Ours:` and check
-  drv parity against upstream on bumps (its README).
+  drv parity against upstream on bumps (its README). It exports a module per
+  OS (`nixosModules.default`, `darwinModules.default`); the darwin one runs
+  Hermes inside a Seatbelt sandbox (`nix/darwinSandbox.nix`).
 - **`git add` everything** — untracked sub-flake files are invisible to nix.
 - **Wiring happens in modules/**: re-export the package in
   `modules/packages.nix`; if hosts need it on `pkgs`, add an INLINE overlay

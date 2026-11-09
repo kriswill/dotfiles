@@ -1,5 +1,10 @@
 # Log
 
+## 2026-11-09
+
+- **Update**: [mini](mini.md) runs
+  [hermes-agent](../modules/mini-hermes-agent.md) inside its sandbox.
+
 ## 2026-11-05
 
 - **Update**: [mini](mini.md) declares
