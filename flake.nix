@@ -178,7 +178,10 @@
     # users like gh/glow got the cursor report first and left the colour
     # reply in the tty buffer for zsh to eat), and a meson build-dir fix for
     # the static nix-store (libstore's `build/` subdir collides with meson's
-    # default build dir; meson >= 1.12 then fails the unity build). Rebase `custom` onto each new
+    # default build dir; meson >= 1.12 then fails the unity build), plus a
+    # cherry-pick of upstream's bundled-Nix bump to 2.35.3 (2.35.2 discards a
+    # nodiscard future::get(), a -Werror failure under darwin's newer clang;
+    # drops out at the next upstream tag). Rebase `custom` onto each new
     # upstream tag and drop commits as they land upstream. Builds from source
     # (devenv.cachix.org only caches upstream commits); the nixpkgs follow is
     # deliberate so it shares our package set rather than pulling a second one.

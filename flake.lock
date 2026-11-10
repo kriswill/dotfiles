@@ -271,11 +271,11 @@
         "rust-overlay": "rust-overlay"
       },
       "locked": {
-        "lastModified": 1793480273,
-        "narHash": "sha256-rpt4saWXDg0y/xZ0reFnHdbVAMwEvS8RDDgzaZsAEcY=",
+        "lastModified": 1794353875,
+        "narHash": "sha256-urksN4Dar6nxoyrCZWUWL1lbfC2repeQJo3jdPoGDc4=",
         "owner": "kriswill",
         "repo": "devenv",
-        "rev": "b2b4a31e47ca0adfb616f2fd2151c588a3af66eb",
+        "rev": "c828a59081ae3889cccdcef544a7df4fa310c9dc",
         "type": "github"
       },
       "original": {
@@ -1021,11 +1021,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1790176416,
-        "narHash": "sha256-acP7QvsB+dHghUeL9AwSSZ3qS//skpqjv484aveg1EQ=",
+        "lastModified": 1792015234,
+        "narHash": "sha256-HBX0GszzUDIkPUL9dtNzhxeKBBJ2vyot3iIyyajEtmY=",
         "owner": "cachix",
         "repo": "nix",
-        "rev": "bd10d7f563420c6034b9d1dc75c4168fc01e5afc",
+        "rev": "ab229d688f8402ef858ba69487e832075f7358e2",
         "type": "github"
       },
       "original": {
