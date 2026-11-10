@@ -14,6 +14,7 @@
 
     btop = import ../overlays/btop.nix;
     direnv = import ../overlays/direnv.nix;
+    dux-shell = import ../overlays/dux-shell.nix; # TEMPORARY, see file header
     dots-adopt = import ../overlays/dots-adopt.nix;
     podman = import ../overlays/podman.nix;
     cbissue = import ../overlays/cbissue.nix;
