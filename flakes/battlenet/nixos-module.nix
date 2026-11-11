@@ -101,9 +101,9 @@ in
 
     icon = lib.mkOption {
       type = lib.types.str;
-      default = "applications-games";
+      default = "battlenet";
       example = "/home/alice/Pictures/battlenet.png";
-      description = "Icon name or absolute path for the desktop entry.";
+      description = "Icon name or absolute path for the \"Battle.net\" desktop entry. The default is the launcher logo the package installs.";
     };
 
     environment = lib.mkOption {

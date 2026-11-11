@@ -12,8 +12,10 @@ sources:
 ---
 
 Turns on the [battlenet module](battlenet.md) with its default prefix,
-`~/.local/share/battlenet`, and the WoW icon from `~/Downloads`. "Battle.net"
-is the only Battle.net entry.
+`~/.local/share/battlenet`. "Battle.net" is the only Battle.net entry in the
+app launcher; the package's hidden "World of Warcraft" entries and its bundled
+icons give the dock an icon for the `battle.net.exe` and `wow.exe` windows
+(retail and Forever apart, through the dock patch in `overlays/dux-shell.nix`).
 
 The prefix's history:
 

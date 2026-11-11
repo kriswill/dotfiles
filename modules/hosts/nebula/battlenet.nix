@@ -7,7 +7,6 @@
     # touch it (see knowledge/modules/nebula-battlenet.md).
     programs.battlenet = {
       enable = true;
-      icon = "/home/k/Downloads/wow-icon.png";
       # The Ryzen 9 9900X3D's 3D V-Cache CCD: cores 0-5 and their SMT
       # siblings share the 96 MB L3 (6-11,18-23 share 32 MB). WoW is
       # cache-hungry. amd_x3d_mode stays "frequency", so other work prefers

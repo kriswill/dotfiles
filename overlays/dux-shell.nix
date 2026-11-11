@@ -17,11 +17,22 @@
 # builds from core/ (sourceRoot), and the QML lives beside it in
 # ../quickshell, read-only until made writable. Only nebula builds dux-shell.
 # Drop this once upstream fixes it.
+#
+# A second patch (./dux-shell-dock-wine-editions.patch) gives the dock a
+# different icon for each edition of a Wine game. Wine names a window after
+# its exe, and World of Warcraft's editions are all Wow.exe (_retail_,
+# _forever_), so they shared the app id "wow.exe" and one icon. The dock
+# button now reads the window's pid from Hyprland and the edition directory
+# from /proc/PID/cmdline, and looks for a desktop entry whose StartupWMClass
+# is "wow-<edition>.exe" before the plain app id's. flakes/battlenet ships
+# the entries. Hyprland only, and only the dock: the bar's running-apps
+# widget and the window switcher still go by app id. Cut against 2.1.1.
 _final: prev: {
   dux-shell = prev.dux-shell.overrideAttrs (old: {
     postPatch = (old.postPatch or "") + ''
       chmod -R u+w ../quickshell
       patch -d .. -p1 < ${./dux-shell-tray-menu-coords.patch}
+      patch -d .. -p1 < ${./dux-shell-dock-wine-editions.patch}
     '';
   });
 }

@@ -1,0 +1,56 @@
+--- a/quickshell/Modules/Dock/DockAppButton.qml
++++ b/quickshell/Modules/Dock/DockAppButton.qml
+@@ -1,5 +1,8 @@
+ import QtQuick
+ import QtQuick.Effects
++import Quickshell
++import Quickshell.Hyprland
++import Quickshell.Io
+ import qs.Common
+ import qs.Services
+ import qs.DCommon.Widgets
+@@ -25,7 +28,43 @@
+     property string windowTitle: ""
+     property bool isHovered: mouseArea.containsMouse && !dragging
+     property bool showTooltip: mouseArea.containsMouse && !dragging
+-    property var cachedDesktopEntry: dockApps?.desktopEntries[appData?.appId] ?? null
++    // Ours: a Wine window's app id is its exe name, so every edition of a game
++    // that keeps one exe name per edition directory (World of Warcraft:
++    // _retail_\Wow.exe, _forever_\Wow.exe) is "wow.exe". editionAppId adds the
++    // directory, read from the window's process: "wow-forever.exe". A desktop
++    // entry with that StartupWMClass then wins over the plain app id's.
++    readonly property int winePid: {
++        const appId = appData?.appId ?? "";
++        if (!appId.toLowerCase().endsWith(".exe"))
++            return 0;
++        const toplevel = appData?.toplevel ?? appData?.allWindows?.[0]?.toplevel ?? null;
++        if (!toplevel)
++            return 0;
++        const hyprToplevel = Hyprland.toplevels.values.find(t => t.wayland === toplevel);
++        return hyprToplevel?.lastIpcObject?.pid ?? 0;
++    }
++    readonly property string editionAppId: {
++        if (winePid <= 0 || !cmdlineFile.path)
++            return "";
++        const match = cmdlineFile.text().match(/\\_([A-Za-z0-9_]+?)_\\[^\\]*\.exe/i);
++        if (!match)
++            return "";
++        return appData.appId.slice(0, -4) + "-" + match[1].toLowerCase() + ".exe";
++    }
++    property var cachedDesktopEntry: {
++        // Read first: dockApps rebuilds it when desktop entries change, which
++        // re-runs the edition lookup too.
++        const plainEntry = dockApps?.desktopEntries[appData?.appId] ?? null;
++        return (editionAppId && DesktopEntries.heuristicLookup(editionAppId)) || plainEntry;
++    }
++
++    FileView {
++        id: cmdlineFile
++
++        path: root.winePid > 0 ? `/proc/${root.winePid}/cmdline` : ""
++        blockLoading: true
++        printErrors: false
++    }
+     property real actualIconSize: 40
+     readonly property real iconLoadScale: {
+         const config = dockApps?.surfaceContext?.config;

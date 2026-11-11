@@ -21,7 +21,9 @@ real gotchas in **Learned behaviours & workarounds** at the bottom.
 - **Patched:** `overlays/dux-shell.nix` applies
   `dux-shell-tray-menu-coords.patch` (tray context-menu coordinates, see
   Learned behaviours 2026-11-10). It is cut against 2.1.0 and still
-  applies to 2.1.1: re-cut or drop it on a version bump.
+  applies to 2.1.1: re-cut or drop it on a version bump. It also applies
+  `dux-shell-dock-wine-editions.patch` (a dock icon per edition of a Wine
+  game, see Learned behaviours 2026-11-11), cut against 2.1.1.
 - **Formerly DankMaterialShell ("DMS").** v2.0.0 (2026-10-20) moved the project
   to Dux Labs and renamed the repos/packages, but the CLI is still **`dms`**,
   the unit **`dms.service`**, the app ID `dev.duxlabs.shell`. nixpkgs keeps
@@ -242,6 +244,22 @@ disk); switching it to `dankcolors` in `modules/nixos/ghostty.nix` is optional.
 
 ## Learned behaviours & workarounds
 
+- **2026-11-11 — One dock icon for every WoW edition (patched).** The dock
+  finds a window's icon through `DesktopEntries.heuristicLookup(appId)`,
+  which matches a desktop entry's id or `StartupWMClass` (hidden
+  `NoDisplay` entries too, and it picks up new entries live). Wine's
+  Wayland driver sets the app id to the exe's name, so WoW retail
+  (`_retail_\Wow.exe`) and WoW: Forever (`_forever_\Wow.exe`) are both
+  `wow.exe`, and nothing in Wine or Hyprland can change that.
+  `overlays/dux-shell.nix` patches `DockAppButton.qml`: for an app id
+  ending in `.exe` it takes the window's pid from
+  `Hyprland.toplevels` (`lastIpcObject.pid`), reads
+  `/proc/PID/cmdline` with a blocking `FileView`, and if the path has a
+  `\_<edition>_\` directory it looks up `<name>-<edition>.exe`
+  (`wow-forever.exe`) before the plain app id. `flakes/battlenet` ships
+  the entries and icons. Dock only: the bar's running-apps widget and the
+  window switcher still use the app id. A grouped dock button takes its
+  first window's edition.
 - **2026-11-10 — A tray icon's own menu opened a screen away (patched).**
   Battle.net's tray menu (Wine's Wayland driver; a `wine-menu` layer
   surface, not a window, so no Hyprland rule can move it) opened at the top

@@ -53,7 +53,9 @@
   confineNixDaemon ? false,
   # Language for Blizzard's installer (--lang).
   locale ? "enUS",
-  icon ? "applications-games",
+  # Icon name or absolute path for the "Battle.net" entry. "battlenet" is the
+  # launcher logo in ./icons, installed with the package.
+  icon ? "battlenet",
   # Extra variables for Proton, e.g. { PROTON_ENABLE_WAYLAND = "1"; }.
   environment ? { },
 }:
@@ -242,11 +244,52 @@ let
     inherit icon;
     categories = [ "Game" ];
     startupNotify = true;
+    # The window class under Wine: the app_id from its Wayland driver, the
+    # WM_CLASS under XWayland. Docks and task bars match a window to its entry
+    # (and so its icon) by this.
+    startupWMClass = "battle.net.exe";
     actions.kill = {
       name = "Stop Battle.net and its games";
       exec = "battlenet kill";
     };
   };
+
+  # Battle.net starts the games, so these entries launch nothing of their own.
+  # They exist so a dock has a name and an icon for a game window. Every WoW
+  # edition (_retail_, _forever_, _classic_) runs as Wow.exe, so Wine gives
+  # them all the class "wow.exe": the first entry, with the retail icon. A
+  # dock that can tell the editions apart asks for "wow-<edition>.exe" first
+  # (Dux Shell does with overlays/dux-shell-dock-wine-editions.patch in the
+  # dotfiles this flake lives in); the Forever entry answers that.
+  wowDesktopItem = makeDesktopItem {
+    name = "battlenet-wow";
+    desktopName = "World of Warcraft";
+    exec = "battlenet";
+    icon = "battlenet-wow";
+    categories = [ "Game" ];
+    noDisplay = true;
+    startupWMClass = "wow.exe";
+  };
+  wowForeverDesktopItem = makeDesktopItem {
+    name = "battlenet-wow-forever";
+    desktopName = "World of Warcraft: Forever";
+    exec = "battlenet";
+    icon = "battlenet-wow-forever";
+    categories = [ "Game" ];
+    noDisplay = true;
+    startupWMClass = "wow-forever.exe";
+  };
+
+  # ./icons, in the hicolor theme. battlenet.png is the largest icon in
+  # Battle.net.exe. battlenet-wow.png is the Midnight app icon with its
+  # background cut out (the retail Wow.exe only carries a 48px icon).
+  # battlenet-wow-forever.png is the largest icon in the Forever Wow.exe, the
+  # same emblem Battle.net shows for the game.
+  icons = runCommand "battlenet-icons" { } ''
+    install -Dm444 ${./icons/battlenet.png} $out/share/icons/hicolor/256x256/apps/battlenet.png
+    install -Dm444 ${./icons/battlenet-wow.png} $out/share/icons/hicolor/256x256/apps/battlenet-wow.png
+    install -Dm444 ${./icons/battlenet-wow-forever.png} $out/share/icons/hicolor/512x512/apps/battlenet-wow-forever.png
+  '';
 in
 symlinkJoin {
   name = "battlenet-${version}";
@@ -254,6 +297,9 @@ symlinkJoin {
     launcher
     threads
     desktopItem
+    wowDesktopItem
+    wowForeverDesktopItem
+    icons
     confineUnit
     confineNixUnit
   ];

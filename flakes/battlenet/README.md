@@ -2,7 +2,14 @@
 
 Runs Blizzard's [Battle.net](https://download.battle.net/) launcher on NixOS
 in GE-Proton, without Steam and without umu. It provides a `battlenet` command,
-a "Battle.net" desktop entry, and a NixOS module (`programs.battlenet`).
+a "Battle.net" desktop entry, and a NixOS module (`programs.battlenet`). The
+package also carries the launcher and World of Warcraft icons and hidden
+entries for the game windows, so a dock shows the right icon for each
+(matched by `StartupWMClass`: `battle.net.exe`, `wow.exe`). Every WoW
+edition runs as `Wow.exe` with the one class, so they share the retail icon
+unless the dock looks further: the "World of Warcraft: Forever" entry answers
+to `wow-forever.exe`, the name a dock gets by adding the edition directory
+from the window's process command line (`…\_forever_\Wow.exe`).
 
 Battle.net itself is not packaged. It is closed-source and updates itself, so
 Nix supplies only what runs it: Proton, a filesystem layout Proton's binaries
@@ -364,7 +371,7 @@ without the pinning the scheduler would favour the CCD without the V-Cache.
     # confineSlices = [ "app.slice" ];      # hold these user slices off `cpus` while it runs
     # confineNixDaemon = true;              # and Nix builds (adds a polkit rule)
     # locale = "enUS";                      # installer language
-    # icon = "/path/to/icon.png";           # default: applications-games
+    # icon = "/path/to/icon.png";           # default: "battlenet", the bundled launcher logo
     # environment.PROTON_ENABLE_WAYLAND = "1";
   };
 }
