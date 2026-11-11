@@ -55,8 +55,8 @@ warrant its own file:
   (`programs.traceroute` and `programs.tcpdump`, which install nixpkgs'
   `cap_net_raw` wrappers, tcpdump's runnable only by the `pcap` group;
   `programs.nmap`; `pkgs.dnsutils`); firefox/chromium/alacritty/
-  batsignal/thunderbird disabled; Gajim enabled here and built against
-  Pillow 13.0.0 by [gajim-pillow](gajim-pillow.md); 1Password CLI + GUI; nix-ld (cc + zlib); discord plus
+  batsignal/thunderbird disabled; Gajim enabled here (stock since nixpkgs shipped
+  Pillow 13.0.0; [gajim-pillow](../decisions/gajim-pillow-13.md) is retired); 1Password CLI + GUI; nix-ld (cc + zlib); discord plus
   vesktop (its own `programs.vesktop` key since 2026-09; the pnpm whitelist
   is gone — see the
   [vesktop pnpm whitelist decision](../decisions/vesktop-pnpm-whitelist.md));

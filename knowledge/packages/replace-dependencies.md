@@ -20,7 +20,7 @@ sources:
 A drop-in replacement for nixpkgs' `replaceDirectDependencies`, the function
 that `replaceDependencies` and NixOS's `system.replaceDependencies` call for
 every store path they rewrite.[^nixpkgs-rdd] It started as a file inside
-[brotli-graft](../modules/brotli-graft.md). It became a sub-flake so it can be
+[brotli-graft](../decisions/brotli-graft.md). It became a sub-flake so it can be
 shared: unlike most of `flakes/`, it's a build helper rather than a package,
 so it exposes `overlays.default`, `nixosModules.default` (which only adds the
 overlay) and `checks` instead of `packages`.[^subflake-readme]
@@ -55,9 +55,10 @@ aarch64-linux and aarch64-darwin. x86_64-darwin isn't advertised, since
 nixpkgs 26.11 dropped it.
 
 Consumption doesn't follow the usual `modules/packages.nix` re-export. The
-only consumer, brotli-graft, applies `overlays.default` inside its own
-version-guarded overlay, so the patched rewriter is active only while the
-graft is. The move itself left nebula's system output path unchanged
+only consumer, brotli-graft, applied `overlays.default` inside its own
+version-guarded overlay, so the patched rewriter was active only while the
+graft was. The graft retired on 2026-11-10, so nothing consumes the input
+now; it stays for the next graft. The move itself left nebula's system output path unchanged
 (`zcfvp3kc…`, generation 193). The review fixes changed the rewrite steps, and
 the rebuilt system still matched the no-swap baseline in `nixploit inventory`
 (66 unversioned each, same small differences).

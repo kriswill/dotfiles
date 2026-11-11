@@ -220,7 +220,7 @@
           '';
         };
       };
-      programs.gajim.enable = true; # built against Pillow 13: ./gajim-pillow.nix
+      programs.gajim.enable = true;
       programs.thunderbird.enable = false; # snowglobe's office profile turns it on; unused
       programs.stoat-desktop.enable = true; # snowglobe: Stoat (Revolt) chat client
       programs.gthumb.enable = true;

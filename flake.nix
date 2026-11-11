@@ -138,7 +138,8 @@
     };
 
     # nixpkgs' replaceDirectDependencies, patched (./flakes/replace-dependencies):
-    # used by nebula's brotli graft while it's on.
+    # nothing uses it since nebula's brotli graft retired (2026-11-10); kept for
+    # the next graft.
     replace-dependencies = {
       url = "./flakes/replace-dependencies";
       inputs.nixpkgs.follows = "nixpkgs";

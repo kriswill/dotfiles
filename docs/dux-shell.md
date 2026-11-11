@@ -9,21 +9,19 @@ real gotchas in **Learned behaviours & workarounds** at the bottom.
 
 ## Version & state on nebula (read this first)
 
-- **Package:** `dux-shell` **2.1.0**. nixpkgs (`0bb2eed`, 2026-11-01, and
-  every branch on 2026-11-04) still ships 2.0.0, so `dux-shell.nix` overrides
-  `version`, `src` and `vendorHash` on nixpkgs' derivation; nothing else
-  changes. It's on nixpkgs `quickshell` **0.3.2**, which is the minimum
-  2.1.0's `dms doctor` accepts, plus `matugen` 4.2.0 and `cava`. An eval
-  warning says when nixpkgs reaches 2.1.0 and the override can go. 2.1.0
-  adds **video wallpapers** (mp4/webm/mkv/mov/m4v/avi via QtMultimedia, which
+- **Package:** `dux-shell` **2.1.1**, straight from nixpkgs since the
+  2026-11-10 lock update (the 2.1.0 override in `dux-shell.nix` is gone). It's
+  on nixpkgs `quickshell` **0.3.2**, which is the minimum 2.1.0's
+  `dms doctor` accepts, plus `matugen` 4.2.0 and `cava`. 2.1.0
+  added **video wallpapers** (mp4/webm/mkv/mov/m4v/avi via QtMultimedia, which
   is already in the wrapper's QML path). Their poster frames are extracted
   with `ffmpeg`, found on `dms.service`'s PATH through k's profile. GIF and
   animated WebP still show only their first frame (no `AnimatedImage`), so
   convert them to webm/mp4 to animate them.
 - **Patched:** `overlays/dux-shell.nix` applies
   `dux-shell-tray-menu-coords.patch` (tray context-menu coordinates, see
-  Learned behaviours 2026-11-10). It is cut against 2.1.0: re-cut or drop it
-  on a version bump.
+  Learned behaviours 2026-11-10). It is cut against 2.1.0 and still
+  applies to 2.1.1: re-cut or drop it on a version bump.
 - **Formerly DankMaterialShell ("DMS").** v2.0.0 (2026-10-20) moved the project
   to Dux Labs and renamed the repos/packages, but the CLI is still **`dms`**,
   the unit **`dms.service`**, the app ID `dev.duxlabs.shell`. nixpkgs keeps

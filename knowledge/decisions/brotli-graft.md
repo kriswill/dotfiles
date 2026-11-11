@@ -3,7 +3,7 @@ type: Decision
 title: Graft Brotli 1.2.1 Instead of Rebuilding Its Dependents
 description: 'nebula swaps brotli 1.2.1 (CVE-2026-111497, a decoder out-of-bounds write reachable from curl, libsoup, Qt, Node and others) into its built system with system.replaceDependencies, because brotli sits under 633 of ~3000 store paths that an override would recompile; a patched rewriter (nixpkgs PR #579409, plus a filesystem rewrite so renamed entries cannot unsort a NAR) catches compiler-garbled store paths, and it all switches off with a warning once nixpkgs ships 1.2.1.'
 tags: [nixploit, cve, brotli, replace-dependencies]
-status: stable
+status: deprecated
 generated: { by: claude-code/opus-5.5, at: 2026-10-26T19:10:00-07:00 }
 sources:
   - id: ghsa-111497
@@ -23,7 +23,11 @@ sources:
     title: 'nixpkgs #579409: replaceDirectDependencies: try rewriting with more effort (open)'
 ---
 
-**Where:** [brotli-graft](../modules/brotli-graft.md) on
+**Retired 2026-11-10:** nixpkgs ships brotli 1.2.1, so the graft and its file
+are gone. The patched rewriter stays as the
+[replace-dependencies](../packages/replace-dependencies.md) sub-flake.
+
+**Where:** `modules/hosts/nebula/brotli-graft.nix` (deleted) on
 [nebula](../hosts/nebula.md); found by
 [nebula-nixploit](../modules/nebula-nixploit.md).
 
