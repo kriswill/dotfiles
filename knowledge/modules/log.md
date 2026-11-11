@@ -1,5 +1,16 @@
 # Log
 
+## 2026-11-10
+
+- **Creation**: [chatgpt-broken-deps](chatgpt-broken-deps.md): temporary
+  fix for nixpkgs' tectonic (missing aws-lc input) and a switch to the
+  ChatGPT app's bundled codex, until nixpkgs' packages build again.
+- **Deprecation**: [gajim-pillow](../decisions/gajim-pillow-13.md) and
+  [brotli-graft](../decisions/brotli-graft.md): nixpkgs ships Pillow 13.0.0 and brotli
+  1.2.1, so both files and their module docs are deleted.
+- **Update**: [users-k-dux-shell](users-k-dux-shell.md): the 2.1.0 version
+  override is gone; nixpkgs ships 2.1.1 and the tray-menu patch still applies.
+
 ## 2026-11-09
 
 - **Creation**: [mini-hermes-agent](mini-hermes-agent.md): Hermes Agent on
@@ -234,19 +245,19 @@
   [nebula-battlenet](nebula-battlenet.md) confines `app.slice` to
   `6-11,18-23` ([decision](../decisions/battlenet-cpu-confinement.md)).
 
-- **Update**: [brotli-graft](brotli-graft.md) takes its patched rewriter from
+- **Update**: [brotli-graft](../decisions/brotli-graft.md) takes its patched rewriter from
   the new [replace-dependencies](../packages/replace-dependencies.md)
   sub-flake (`overlays.default`, still version-guarded) instead of
   `_replace-direct-dependencies.nix`. nebula's system output path is
   unchanged.
 
-- **Creation**: [brotli-graft](brotli-graft.md) swaps brotli 1.2.1
+- **Creation**: [brotli-graft](../decisions/brotli-graft.md) swaps brotli 1.2.1
   (CVE-2026-111497) into nebula's built system with
   `system.replaceDependencies`, through a patched rewriter from nixpkgs PR
   #579409, until nixpkgs ships 1.2.1
   ([decision](../decisions/brotli-graft.md)).
 
-- **Creation**: [gajim-pillow](gajim-pillow.md) takes over the Gajim Pillow 13
+- **Creation**: [gajim-pillow](../decisions/gajim-pillow-13.md) takes over the Gajim Pillow 13
   override from [configuration](configuration.md). Like brotli-graft, it now
   switches itself off with a warning once nixpkgs catches up, instead of
   failing evaluation.

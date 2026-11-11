@@ -28,11 +28,10 @@ nebula's desktop shell since 2026-11-03, replacing
 [decision](../decisions/dux-shell-replaces-noctalia.md). It runs on
 `quickshell` 0.3.2 through nixpkgs' own module, which also adds
 matugen + cava to the system PATH and mkDefaults accounts-daemon / i2c /
-graphics on.[^nixpkgs-dux-shell-module] The package is nixpkgs'
-derivation bumped to **2.1.0** with an `overrideAttrs` that changes only
-`version`, `src` and `vendorHash`. nixpkgs was still on 2.0.0, and 2.1.0
-adds video wallpapers.[^dux-v2-1-release] `lib.warnIf` flags the override
-at eval once nixpkgs catches up. The project
+graphics on.[^nixpkgs-dux-shell-module] The package is nixpkgs' own
+(2.1.1 since the 2026-11-10 lock update, which retired the 2.1.0
+`overrideAttrs`), patched by `overlays/dux-shell.nix`; 2.1.0 added video
+wallpapers.[^dux-v2-1-release] The project
 was renamed from DankMaterialShell at v2.0.0, but the CLI is still `dms`
 and the unit `dms.service`.[^nixos-options-dux-shell]
 

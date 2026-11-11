@@ -3,8 +3,8 @@
 # DankMaterialShell ("DMS"): renamed when the project moved to Dux Labs
 # (v2.0.0, 2026-10-20), but the CLI is still `dms` and the unit `dms.service`.
 #
-# Quickshell/QML UI + a Go `dms` daemon/CLI, straight from nixpkgs (dux-shell
-# 2.0.0 on quickshell 0.3.2) through nixpkgs' own NixOS module,
+# Quickshell/QML UI + a Go `dms` daemon/CLI, straight from nixpkgs (patched by
+# overlays/dux-shell.nix) through nixpkgs' own NixOS module,
 # programs.dux-shell — which also puts matugen + cava on the system PATH and
 # turns on accounts-daemon/i2c/graphics. The plumbing shared with any shell
 # (upower/ppd/bluetooth, swaync off, the bare-name PAM fix, DDC/CI) lives in
@@ -26,36 +26,9 @@
 # are not tracked yet. See docs/dux-shell.md.
 {
   configurations.nixos.nebula.module =
-    { lib, pkgs, ... }:
-    let
-      # nixpkgs still ships 2.0.0 (2026-11-04). 2.1.0 adds video wallpapers
-      # (QtMultimedia, already in the nixpkgs wrapper; ffmpeg poster frames).
-      # Only version, src and vendorHash change; the derivation reads them
-      # through finalAttrs. Drop this when nixpkgs catches up: the warning
-      # below fires at eval once its dux-shell reaches duxVersion.
-      duxVersion = "2.1.0";
-      dux-shell =
-        lib.warnIf (lib.versionAtLeast pkgs.dux-shell.version duxVersion)
-          "dux-shell.nix: nixpkgs' dux-shell is ${pkgs.dux-shell.version}; drop the ${duxVersion} override"
-          (
-            pkgs.dux-shell.overrideAttrs (
-              finalAttrs: _: {
-                version = duxVersion;
-                src = pkgs.fetchFromGitHub {
-                  owner = "duxlabs-dev";
-                  repo = "dux-shell";
-                  tag = "v${finalAttrs.version}";
-                  fetchSubmodules = true;
-                  hash = "sha256-Qp3Md/8UWjzUdC78IbgwKABY+1F2sOGmzWwavWEVS3o=";
-                };
-                vendorHash = "sha256-TZVq/BHFu6brw8MMdGDZWUiZUxtjNjKRKxR8SSV7W50=";
-              }
-            )
-          );
-    in
+    { lib, ... }:
     {
       programs.dux-shell.enable = true;
-      programs.dux-shell.package = dux-shell;
 
       # Dux registers its own polkit agent (themed dialog on the dms:polkit
       # layer). A session takes one agent, so hyprpolkitagent (enabled in

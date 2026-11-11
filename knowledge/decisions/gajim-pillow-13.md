@@ -3,7 +3,7 @@ type: Decision
 title: Build Gajim Against Pillow 13 Until nixpkgs Ships It
 description: 'nebula builds only Gajim against Pillow 13.0.0, because nixpkgs'' 12.3.0 has 39 advisories (five critical) fixed only in 13.0.0 and Gajim decodes images from the network; dropping CUPS and Thunderbird left Gajim as the only runtime user, so a 3-derivation override replaces a 52-derivation global overlay, and it switches itself off with a warning once nixpkgs catches up.'
 tags: [nixploit, cve, pillow, gajim]
-status: stable
+status: deprecated
 generated: { by: claude-code/opus-5.5, at: 2026-10-26T18:05:00-07:00 }
 sources:
   - id: ghsa-96639
@@ -17,7 +17,10 @@ sources:
     title: 'nixpkgs 084270a: python3Packages.pillow 12.3.0 -> 13.0.0 (staging)'
 ---
 
-**Where:** [gajim-pillow](../modules/gajim-pillow.md)
+**Retired 2026-11-10:** nixpkgs ships Pillow 13.0.0, so the override and its
+file are gone and Gajim is stock again.
+
+**Where:** `modules/hosts/nebula/gajim-pillow.nix` (deleted)
 (`programs.gajim.package`) and [configuration](../modules/configuration.md)
 on [nebula](../hosts/nebula.md); found by
 [nebula-nixploit](../modules/nebula-nixploit.md).
@@ -53,7 +56,7 @@ installed, through reportlab.
    delete the file. It first threw instead, but that would have blocked the
    weekly flake.lock PR and `nrs` over a cleanup. Since 2026-10-26 the
    override lives in its own file, so retiring it means deleting one file, as
-   with [brotli-graft](../modules/brotli-graft.md).
+   with [brotli-graft](brotli-graft.md).
 
 None of the four consumers (Gajim, lutris, reportlab, hplip) use an API that
 13.0.0 removed.[^pillow-13] The override passed Pillow's test suite (5627)

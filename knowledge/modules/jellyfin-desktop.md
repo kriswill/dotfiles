@@ -31,8 +31,8 @@ this module adds the commit (`e520e122`, a `webview.qml` change) as a
 `needed` compares the package's `src.rev` with that pin. Once nixpkgs moves
 the package, the stock build is installed and a NixOS warning says to delete
 the file and put `pkgs.jellyfin-desktop` back in
-[configuration](configuration.md). [gajim-pillow](gajim-pillow.md) and
-[brotli-graft](brotli-graft.md) retire the same way.
+[configuration](configuration.md). [gajim-pillow](../decisions/gajim-pillow-13.md) and
+[brotli-graft](../decisions/brotli-graft.md) retire the same way.
 
 Not the same bug as jellyfin/jellyfin-desktop#1291 (Flathub's Qt 6.11
 runtime, where mpv's VO fails to open with `No render context set` and the

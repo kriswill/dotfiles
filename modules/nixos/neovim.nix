@@ -61,9 +61,14 @@
               ;
             inherit (pkgs) typescript;
             # LSP wrapper for the vscode typescript extension. Upstream builds
-            # against nodejs-slim_22 and drags it into the closure; rebuild against
-            # the system node (24+, current LTS) so only one node version is present.
-            vtsls = pkgs.vtsls.override { nodejs-slim_22 = pkgs.nodejs-slim_24; };
+            # against a pinned nodejs-slim_<N> and drags it into the closure;
+            # rebuild against the system node so only one node version is present.
+            # Matched by prefix: nixpkgs renames the argument on every node bump
+            # (_22 -> _26), which broke the eval when the name was spelled out.
+            vtsls = pkgs.vtsls.override (
+              args:
+              lib.mapAttrs (_: _: pkgs.nodejs-slim) (lib.filterAttrs (n: _: lib.hasPrefix "nodejs-slim_" n) args)
+            );
           };
           ## Linters (invoked by efm-langserver)  ─────────────────────
           linters = builtins.attrValues {

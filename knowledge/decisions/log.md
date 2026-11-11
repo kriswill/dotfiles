@@ -1,5 +1,11 @@
 # Log
 
+## 2026-11-10
+
+- **Deprecation**: [gajim-pillow-13](gajim-pillow-13.md) and
+  [brotli-graft](brotli-graft.md): nixpkgs caught up (Pillow 13.0.0, brotli
+  1.2.1), so the override and the graft are removed.
+
 ## 2026-11-09
 
 - **Creation**: [hermes-agent-macos-seatbelt-sandbox](hermes-agent-macos-seatbelt-sandbox.md):

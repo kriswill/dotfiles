@@ -12,9 +12,8 @@
 # on those two edges. It covers the icons on the bar itself; the overflow
 # popout and the island have their own callers, left as they are.
 #
-# The patch is cut against 2.1.0, the version dux-shell.nix overrides to
-# (modules/hosts/nebula/users/k/), and overrideAttrs there keeps this hook.
-# It is applied by hand in postPatch, not through `patches`: the package
+# The patch is cut against 2.1.0 and still applies to 2.1.1, nixpkgs' version
+# since the 2026-11-10 lock update. It is applied by hand in postPatch, not through `patches`: the package
 # builds from core/ (sourceRoot), and the QML lives beside it in
 # ../quickshell, read-only until made writable. Only nebula builds dux-shell.
 # Drop this once upstream fixes it.
