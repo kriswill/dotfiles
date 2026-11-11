@@ -1,5 +1,5 @@
 {
-  description = "hermes-agent — Nous Research's Hermes Agent (CLI + gateway) and a single-owner NixOS module, from a trimmed copy of upstream's nix/";
+  description = "hermes-agent — Nous Research's Hermes Agent (CLI + gateway) and single-owner NixOS and nix-darwin modules, from a trimmed copy of upstream's nix/";
 
   inputs = {
     # The source tree the copied nix/ builds. Pinned to a release tag:
@@ -8,15 +8,14 @@
     # re-locking the inputs below to that tag's flake.lock (see README.md).
     # Keep `version` in nix/packages.nix in step with the tag.
     hermes-agent-src = {
-      url = "github:NousResearch/hermes-agent/v0.22.5";
+      url = "github:NousResearch/hermes-agent/v0.23.0";
       flake = false;
     };
 
     # Locked to the revs in the tag's own flake.lock, so the package is the
-    # derivation upstream tested. nixpkgs in particular must not follow a
-    # newer one yet: the patchelf 0.19.2 in the root's nixpkgs (2026-10-23)
-    # corrupts the prebuilt node from pm/lock.json (NixOS/patchelf#674), and
-    # node then segfaults during the TUI build.
+    # derivation upstream tested. Since v0.23.0 nix/pm-packages.nix patches
+    # patchelf itself (NixOS/patchelf#674 broke the prebuilt node), so
+    # following the root's nixpkgs is possible again but untried.
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     flake-parts = {
       url = "github:hercules-ci/flake-parts";
@@ -42,15 +41,18 @@
   outputs =
     inputs@{ flake-parts, ... }:
     flake-parts.lib.mkFlake { inherit inputs; } {
-      # The module is NixOS-only, and nebula is the one consumer.
+      # Upstream's own systems. nebula consumes the NixOS module, the macs
+      # the nix-darwin one.
       systems = [
         "x86_64-linux"
         "aarch64-linux"
+        "aarch64-darwin"
       ];
 
       imports = [
         ./nix/packages.nix
         ./nix/nixosModules.nix
+        ./nix/darwinModules.nix
       ];
     };
 }

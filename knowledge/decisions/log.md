@@ -1,5 +1,12 @@
 # Log
 
+## 2026-11-09
+
+- **Creation**: [hermes-agent-macos-seatbelt-sandbox](hermes-agent-macos-seatbelt-sandbox.md):
+  on the macs Hermes runs inside a deny-by-default Seatbelt profile (one
+  writable state directory, no real home, allow-listed sockets and
+  environment, open network).
+
 ## 2026-11-05
 
 - **Creation**: [headless-git-signing-agent](headless-git-signing-agent.md):

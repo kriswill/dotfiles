@@ -23,6 +23,10 @@ are opted into below per the
   [setup](../playbooks/git-signing-agent-setup.md)). mini is a sops
   recipient (`&mini` in `.sops.yaml`) for that token.
 
+- [hermes-agent](../modules/hermes-agent.md): the Hermes Agent gateway and
+  CLI as k, inside a Seatbelt sandbox that keeps them out of the rest of
+  the home ([mini-hermes-agent](../modules/mini-hermes-agent.md)).
+
 ## Source
 
 - Host module: [`modules/hosts/mini/default.nix`](../../modules/hosts/mini/default.nix)

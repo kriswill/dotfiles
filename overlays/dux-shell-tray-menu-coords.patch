@@ -1,0 +1,44 @@
+--- a/quickshell/Modules/DBar/Widgets/SystemTrayBar.qml
++++ b/quickshell/Modules/DBar/Widgets/SystemTrayBar.qml
+@@ -79,7 +79,7 @@
+             return;
+         }
+         if (!trayItem.hasMenu) {
+-            const gp = areaItem.mapToGlobal(mouse.x, mouse.y);
++            const gp = root.screenPointFor(areaItem, mouse.x, mouse.y);
+             root.callContextMenuFallback(trayItem.id, Math.round(gp.x), Math.round(gp.y));
+             return;
+         }
+@@ -102,6 +102,23 @@
+         TrayMenuManager.callContextMenuFallback(trayItemId, globalX, globalY);
+     }
+ 
++    // mapToGlobal() places a layer-shell window at its screen's origin, since a
++    // Wayland client is never told where the compositor put it. A bar on the
++    // bottom or right edge is really offset by the screen size minus its own.
++    function screenPointFor(item, x, y) {
++        const gp = item.mapToGlobal(x, y);
++        const win = item.Window.window;
++        const screen = root.parentScreen;
++        if (!win || !screen)
++            return gp;
++        const edge = root.axis?.edge;
++        if (edge === "bottom")
++            return Qt.point(gp.x, gp.y + Math.max(0, screen.height - win.height));
++        if (edge === "right")
++            return Qt.point(gp.x + Math.max(0, screen.width - win.width), gp.y);
++        return gp;
++    }
++
+     property int _trayOrderTrigger: 0
+ 
+     Connections {
+@@ -803,7 +820,7 @@
+                     if (mouse.button !== Qt.RightButton)
+                         return;
+                     if (!delegateRoot.trayItem?.hasMenu) {
+-                        const gp = trayItemArea.mapToGlobal(mouse.x, mouse.y);
++                        const gp = root.screenPointFor(trayItemArea, mouse.x, mouse.y);
+                         root.callContextMenuFallback(delegateRoot.trayItem.id, Math.round(gp.x), Math.round(gp.y));
+                         return;
+                     }

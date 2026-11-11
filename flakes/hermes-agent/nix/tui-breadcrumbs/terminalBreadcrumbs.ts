@@ -1,3 +1,4 @@
+import { spawnSync } from 'node:child_process'
 import { randomUUID } from 'node:crypto'
 import { mkdirSync, readFileSync, readlinkSync, renameSync, rmSync, writeFileSync } from 'node:fs'
 import { homedir } from 'node:os'
@@ -12,10 +13,19 @@ export interface BreadcrumbOptions { env?: Record<string, string | undefined>; t
 const sanitize = (value: string) => value.trim().replace(/^\/+|\/+$/g, '').replace(/[^A-Za-z0-9._-]/g, '-').slice(0, 120)
 const terminalVars = ['ZELLIJ_PANE_ID', 'TMUX_PANE', 'KITTY_WINDOW_ID', 'WEZTERM_PANE', 'TERM_SESSION_ID', 'WT_SESSION']
 
-// This package targets Linux; resolve the actual device, never the shared /dev/tty alias.
+// Resolve the actual device, never the shared /dev/tty alias. Linux reads it
+// from /proc; macOS has no /proc and node has no ttyname(), so ask tty(1) with
+// the descriptor as its stdin.
+function deviceName(fd: number): string | undefined {
+  if (!isatty(fd)) return undefined
+  if (process.platform !== 'darwin') return readlinkSync(`/proc/self/fd/${fd}`)
+  const out = spawnSync('/usr/bin/tty', [], { stdio: [fd, 'pipe', 'ignore'], encoding: 'utf8' })
+  return out.status === 0 ? out.stdout.trim() : undefined
+}
+
 export function terminalIdentity(
   env: Record<string, string | undefined> = process.env,
-  ttyName: (fd: number) => string | undefined = fd => isatty(fd) ? readlinkSync(`/proc/self/fd/${fd}`) : undefined
+  ttyName: (fd: number) => string | undefined = deviceName
 ): string | undefined {
   for (const fd of [0, 1]) {
     try {

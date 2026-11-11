@@ -1,5 +1,23 @@
 # Log
 
+## 2026-11-09
+
+- **Creation**: [mini-hermes-agent](mini-hermes-agent.md): Hermes Agent on
+  mini, sandboxed, with no extra paths granted; provider keys come from a
+  `hermes-env` sops secret in its own file.
+- **Update**: [hermes-agent](hermes-agent.md): now a dual module; the
+  nix-darwin twin runs the gateway under launchd inside a Seatbelt sandbox
+  ([decision](../decisions/hermes-agent-macos-seatbelt-sandbox.md)).
+
+## 2026-11-08
+
+- **Creation**: [chatgpt](chatgpt.md): nebula installs OpenAI's ChatGPT
+  desktop app (ChatGPT and Codex, Linux preview) from nixpkgs' `chatgpt`.
+  The package's user-tmpfiles rule is linked into
+  `/etc/xdg/user-tmpfiles.d/` to prune its per-version plugin cache, and
+  `mimeapps.list` pins the Office/CSV types its desktop entry claims to
+  LibreOffice. Without that, .docx and .pptx would open in ChatGPT.
+
 ## 2026-11-05
 
 - **Creation**: [git-signing-agent](git-signing-agent.md): a root launchd

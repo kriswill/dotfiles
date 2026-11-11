@@ -20,6 +20,10 @@ real gotchas in **Learned behaviours & workarounds** at the bottom.
   with `ffmpeg`, found on `dms.service`'s PATH through k's profile. GIF and
   animated WebP still show only their first frame (no `AnimatedImage`), so
   convert them to webm/mp4 to animate them.
+- **Patched:** `overlays/dux-shell.nix` applies
+  `dux-shell-tray-menu-coords.patch` (tray context-menu coordinates, see
+  Learned behaviours 2026-11-10). It is cut against 2.1.0: re-cut or drop it
+  on a version bump.
 - **Formerly DankMaterialShell ("DMS").** v2.0.0 (2026-10-20) moved the project
   to Dux Labs and renamed the repos/packages, but the CLI is still **`dms`**,
   the unit **`dms.service`**, the app ID `dev.duxlabs.shell`. nixpkgs keeps
@@ -240,6 +244,21 @@ disk); switching it to `dankcolors` in `modules/nixos/ghostty.nix` is optional.
 
 ## Learned behaviours & workarounds
 
+- **2026-11-10 — A tray icon's own menu opened a screen away (patched).**
+  Battle.net's tray menu (Wine's Wayland driver; a `wine-menu` layer
+  surface, not a window, so no Hyprland rule can move it) opened at the top
+  of DP-3 with the bar at the bottom. An icon with no D-Bus menu
+  (`hasMenu` false) gets `StatusNotifierItem.ContextMenu(x, y)` in screen
+  coordinates, and `SystemTrayBar.qml` took them from `mapToGlobal()`. For
+  a layer-shell window that is the screen origin plus the position inside
+  the window (checked with a 4 px probe panel: `1540,1365` for an item at
+  `100,2` on DP-3 at `1440,1363`), so y was the offset inside the 44 px
+  bar. `overlays/dux-shell.nix` patches the two callers to add screen size
+  minus bar-window size on the bottom and right edges. Sending Wine the
+  true point by hand (`busctl --user call <bus> /StatusNotifierItem
+  org.kde.StatusNotifierItem ContextMenu ii 3566 2785`) put the menu's
+  bottom-left corner on it. Not patched: the overflow popout and island
+  callers. Not yet reported upstream.
 - **2026-11-04 — Displays "Setup" banner = Dux can't see the include.** The
   banner runs `dms config resolve-include hyprland outputs.lua`, which follows
   `require`s from `hyprland.lua` but only matches the literal call form

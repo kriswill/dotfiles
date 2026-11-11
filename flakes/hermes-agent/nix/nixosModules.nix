@@ -56,58 +56,14 @@
 
       hermesHome = "${cfg.stateDir}/.hermes";
 
-      # The CLI that addToSystemPackages installs. It wraps effectivePackage,
-      # the package the unit runs, so a CLI session and the gateway always
-      # run the same build.
-      hermesCli = pkgs.symlinkJoin {
-        name = "hermes-agent-cli";
-        paths = [ effectivePackage ];
-        nativeBuildInputs = [ pkgs.makeWrapper ];
-        postBuild = ''
-          for bin in $out/bin/*; do
-            wrapProgram "$bin" --set-default HERMES_HOME ${hermesHome}
-          done
-        ''
-        # With herdr.enable, `hermes` is ./herdr/cli.ts in front of the
-        # wrapped CLI: it marks the pane for the hook and reports idle/clear
-        # to a Herdr app pane itself.
-        + lib.optionalString cfg.herdr.enable ''
-          mv $out/bin/hermes $out/bin/.hermes-herdr
-          makeWrapper ${lib.getExe pkgs.bun} $out/bin/hermes \
-            --set-default HERMES_HOME ${hermesHome} \
-            --set HERMES_HERDR_REAL $out/bin/.hermes-herdr \
-            --add-flags ${herdrScripts}/cli.ts
-        '';
+      # The CLI that addToSystemPackages installs and the Herdr integration
+      # (./hermesCli.nix, shared with the nix-darwin module).
+      hermesCliParts = import ./hermesCli.nix { inherit lib pkgs; } {
+        package = effectivePackage;
+        inherit hermesHome;
+        herdr = cfg.herdr.enable;
       };
-
-      # The Herdr integration, in TypeScript on bun (./herdr). Not a Hermes
-      # plugin: those are Python, loaded into the gateway. Instead
-      #   - cli.ts is the `hermes` CLI (above) in a Herdr pane: it leaves a
-      #     marker naming the pane's pty, and in a Herdr app pane reports
-      #     idle at launch and clears the status at exit;
-      #   - hook.ts is a gateway shell hook (`hooks:`) for the turn events: it
-      #     maps the session to the pty through the CLI's terminal
-      #     breadcrumbs and the marker, then writes OSC 7501 to the pty
-      #     (Herdr app) or runs `herdr pane report-agent-session` (Herdr TUI).
-      # The check transpiles both, so a syntax error fails the build.
-      herdrScripts = pkgs.runCommandLocal "hermes-herdr-scripts" { nativeBuildInputs = [ pkgs.bun ]; } ''
-        cp -r ${./herdr} $out
-        HOME=$TMPDIR bun build --target=bun --outdir $TMPDIR/check $out/cli.ts $out/hook.ts >/dev/null
-      '';
-      herdrHook = pkgs.writeShellScript "hermes-herdr-hook" ''
-        exec ${lib.getExe pkgs.bun} ${herdrScripts}/hook.ts
-      '';
-      herdrHookEvents = [
-        "on_session_start"
-        "on_session_reset"
-        "pre_llm_call"
-        "post_llm_call"
-        "agent_loop_stopped"
-        "on_human_input_request"
-        "on_human_input_resolved"
-      ];
-      # Where the plugin this replaced was linked; activation removes it.
-      herdrPluginLink = "${hermesHome}/plugins/herdr-agent-state";
+      hermesCli = hermesCliParts.cli;
 
       # The hardening and the environment that the gateway unit and the
       # backend unit share.
@@ -138,7 +94,8 @@
       commonUnitEnvironment = {
         HOME = cfg.stateDir;
       }
-      // common.processEnvironment { inherit hermesHome; };
+      // common.processEnvironment { inherit hermesHome; }
+      // common.backendSessionEnvironment { inherit cfg; };
 
       unitPath = common.processPath { inherit pkgs cfg; };
 
@@ -316,36 +273,11 @@
                 message = "services.hermes-agent.herdr.enable needs addToSystemPackages: the wrapped hermes CLI marks the pane.";
               }
             ];
-            services.hermes-agent.settings.hooks = lib.genAttrs herdrHookEvents (_: [
-              {
-                command = "${herdrHook}";
-                timeout = 5;
-              }
-            ]);
+            services.hermes-agent.settings.hooks = hermesCliParts.herdrHooks;
 
-            # Shell hooks run only once consented (shell-hooks-allowlist.json,
-            # by (event, command)). Approve exactly ours, and drop approvals of
-            # earlier builds' hooks. The gateway rereads it within ~30 s.
-            system.activationScripts.hermes-agent-herdr = lib.stringAfter [ "hermes-agent-setup" ] ''
-              allow=${hermesHome}/shell-hooks-allowlist.json
-              [ -s "$allow" ] || echo '{"approvals": []}' > "$allow"
-              ${lib.getExe pkgs.jq} \
-                --arg cmd ${herdrHook} \
-                --argjson events '${builtins.toJSON herdrHookEvents}' \
-                --arg now "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
-                '.approvals = ([.approvals[] | select((.command // "") | test("-hermes-herdr-hook$") | not)]
-                  + [$events[] | {event: ., command: $cmd, approved_at: $now,
-                                  script_mtime_at_approval: "1970-01-01T00:00:01Z"}])' \
-                "$allow" > "$allow.tmp"
-              mv "$allow.tmp" "$allow"
-              chown ${cfg.user}:${cfg.group} "$allow"
-              chmod 0600 "$allow"
-
-              # The Python plugin this replaced.
-              if [ -L ${herdrPluginLink} ] && [[ "$(readlink ${herdrPluginLink})" == /nix/store/* ]]; then
-                rm ${herdrPluginLink}
-              fi
-            '';
+            system.activationScripts.hermes-agent-herdr = lib.stringAfter [ "hermes-agent-setup" ] (
+              hermesCliParts.herdrActivation { owner = "${cfg.user}:${cfg.group}"; }
+            );
           })
 
           # ══════════════════════════════════════════════════════════════════

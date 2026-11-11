@@ -3,7 +3,10 @@
 # callPackage auto-wires nixpkgs args; flake inputs are passed explicitly.
 # Users override via:
 #   pkgs.hermes-agent.override { extraPythonPackages = [...]; }
-#   pkgs.hermes-agent.override { extraDependencyGroups = [ "voice" ]; }
+#   pkgs.hermes-agent.override { extraDependencyGroups = [ "google-meet" ]; }
+# Both extras add to what the package ships. The shipped groups live in
+# defaultDependencyGroups (set by packages.nix for `full`), so a plain
+# override of the extras never drops them.
 #
 # Ours: the source tree is hermesSrc (see packages.nix). Dropped the desktop
 # app (Electron), the dev shell passthru (editable venv, pm, devDeps) and the
@@ -14,8 +17,10 @@
   makeWrapper,
   writeText,
   callPackage,
+  runCommand,
   git,
   openssh,
+  ffmpeg-headless,
 
   # linux-only deps
   wl-clipboard,
@@ -40,6 +45,9 @@
   version ? "0.0.0",
   distance ? 0,
   extraPythonPackages ? [ ],
+  # The optional groups this variant ships; packages.nix owns the lists.
+  defaultDependencyGroups ? [ ],
+  # The user's additions on top of defaultDependencyGroups.
   extraDependencyGroups ? [ ],
 }:
 let
@@ -47,6 +55,8 @@ let
   # nixpkgs interpreter. Everything Python-shaped below derives from it.
   pythonLock = callPackage ./pythonLock.nix { };
   python = pythonLock.interpreter;
+
+  packageDependencyGroups = defaultDependencyGroups ++ extraDependencyGroups;
 
   # Install stamp values — written to install-stamp.json so the Python
   # runtime (CLI, TUI) reads one file instead of env vars or .git probes.
@@ -84,14 +94,16 @@ let
   );
 
   mkHermesVenv =
-    extraDependencyGroups:
+    groups:
     callPackage ./python.nix {
       inherit uv2nix pyproject-nix pyproject-build-systems;
       pythonSrc = hermesNpmLib.pythonSrc;
-      dependency-groups = [ "all" ] ++ extraDependencyGroups;
+      # Deduplicated so naming a group the variant already ships leaves the
+      # venv derivation unchanged.
+      dependency-groups = lib.unique ([ "all" ] ++ groups);
     };
 
-  hermesVenv = (mkHermesVenv extraDependencyGroups).venv;
+  hermesVenv = (mkHermesVenv packageDependencyGroups).venv;
 
   pmRuntime = callPackage ./pm-runtime.nix {
     inherit uv2nix pyproject-nix pyproject-build-systems;
@@ -112,6 +124,11 @@ let
 
   hermesWeb = callPackage ./web.nix {
     inherit hermesNpmLib generatedIcons;
+  };
+
+  # The store is read-only, so the Webapp is built here and never by `hermes webapp`.
+  hermesWebapp = callPackage ./webapp.nix {
+    inherit hermesNpmLib;
   };
 
   bundledSkills = lib.cleanSourceWith {
@@ -152,14 +169,26 @@ let
   # nixpkgs executables falsely labelled with PM's archive hashes.
   inherit (pmPackages) ripgrep ffmpeg;
 
+  # Tools come from pm/lock.json, the same builds `hermes pm install`
+  # provisions elsewhere. git and openssh are nixpkgs': the lock pins them for
+  # win32 only. hermesNpmLib.nodejs is the pinned node with the pinned npm.
   runtimeDeps = [
     hermesNpmLib.nodejs
-    ripgrep
+    pmPackages.ripgrep
+    pmPackages.ffmpeg
     git
     openssh
-    ffmpeg
   ]
-  ++ lib.optionals stdenv.isLinux [
+  # pm's macOS ffmpeg is a single binary with no ffprobe, which transcription
+  # needs to measure duration before splitting long recordings. Only ffprobe
+  # is linked, so `ffmpeg` on PATH stays the pinned build.
+  ++ lib.optionals stdenv.hostPlatform.isDarwin [
+    (runCommand "ffprobe-${ffmpeg-headless.version}" { } ''
+      mkdir -p $out/bin
+      ln -s ${lib.getBin ffmpeg-headless}/bin/ffprobe $out/bin/ffprobe
+    '')
+  ]
+  ++ lib.optionals stdenv.hostPlatform.isLinux [
     wl-clipboard
     xclip
   ];
@@ -203,6 +232,7 @@ let
       frontends = {
         tui = "${hermesTui}/lib/hermes-tui";
         web = toString hermesWeb;
+        webapp = toString hermesWebapp;
       };
       ref = if dirty then null else rev;
       stamp = toString installStampFile;
@@ -357,6 +387,7 @@ stdenv.mkDerivation {
     inherit
       hermesTui
       hermesWeb
+      hermesWebapp
       hermesNpmLib
       hermesVenv
       agentBuilderSrc

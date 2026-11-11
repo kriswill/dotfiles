@@ -1,9 +1,9 @@
 ---
-type: NixOS Module
+type: Dual Module
 title: Hermes Agent
-description: 'Hermes Agent (Nous Research''s self-hosted AI agent: CLI/TUI plus a messaging/cron gateway) — re-exports the hermes-agent sub-flake''s single-owner NixOS module (services.hermes-agent, a trimmed copy of upstream''s) into the nixos class, inert until a host enables it.'
-resource: modules/nixos/hermes-agent.nix
-tags: [nixos-module, ai-agent]
+description: 'Hermes Agent (Nous Research''s self-hosted AI agent: CLI/TUI plus a messaging/cron gateway) — re-exports the hermes-agent sub-flake''s single-owner modules (services.hermes-agent: a trimmed copy of upstream''s NixOS module, and our nix-darwin twin that runs it under launchd inside a Seatbelt sandbox) into both classes, inert until a host enables it.'
+resource: modules/darwin/hermes-agent.nix
+tags: [darwin-module, nixos-module, ai-agent, sandbox]
 generated: { by: claude-code/opus-5-5, at: 2026-10-30T03:00:00+00:00 }
 sources:
   - id: hermes-nix-setup
@@ -14,10 +14,10 @@ sources:
     title: 'flakes/hermes-agent/README.md (the module''s changes against upstream)'
 ---
 
-One-line re-export of `inputs.hermes-agent.nixosModules.default`, the same
-shape as [battlenet](battlenet.md). The module lives in the
+One-line re-exports of `inputs.hermes-agent.nixosModules.default` and
+`darwinModules.default`, the same shape as [battlenet](battlenet.md). The module lives in the
 [hermes-agent sub-flake](../packages/hermes-agent.md), copied from
-upstream's v0.22.5 module and trimmed
+upstream's module (now at v0.23.0) and trimmed
 ([decision](../decisions/hermes-agent-vendored-nix.md)). It defaults
 `services.hermes-agent.package` to the sub-flake's own package (every
 portable optional integration: messaging, voice, anthropic, …), so there is
@@ -42,23 +42,39 @@ these:[^subflake-readme]
 - `settings` lists concatenate across definitions.
 - Container mode is gone. `backend.mode` (`hermes serve`/`dashboard`) stays.
 
+The nix-darwin twin is ours (upstream covers macOS only through Home
+Manager). Same options, with these differences:[^subflake-readme]
+
+- `user` defaults to `system.primaryUser`; no group. `stateDir` defaults to
+  `~/.hermes-agent`, mode `0700`, and is `HOME` for every Hermes process.
+- The gateway is a launchd user agent (`gateway.enable`, default on), so it
+  runs while the user is logged in.
+- `sandbox.enable` (default on) starts the gateway and the CLI through a
+  deny-by-default Seatbelt profile; `sandbox.readPaths`, `readWritePaths`,
+  `unixSockets`, `passEnvironment` and `extraProfile` widen it
+  ([decision](../decisions/hermes-agent-macos-seatbelt-sandbox.md)).
+
 Why the system service, and the history of each workaround:
 [hermes-agent-system-service](../decisions/hermes-agent-system-service.md).
 
 Enabled on [nebula](../hosts/nebula.md) by
-[nebula-hermes-agent](nebula-hermes-agent.md); auto-discovered via the
+[nebula-hermes-agent](nebula-hermes-agent.md) and on [mini](../hosts/mini.md)
+by [mini-hermes-agent](mini-hermes-agent.md); auto-discovered via the
 [Dendritic module layout](../patterns/dendritic-modules.md) and mounted per
 the [host-mounted modules pattern](../patterns/host-mounted-modules.md).
 
-Gotcha: the module's activation script runs `lib.stringAfter [ "users"
+Gotcha (NixOS): the module's activation script runs `lib.stringAfter [ "users"
 "setupSecrets" ]` and copies `environmentFiles` into `$HERMES_HOME/.env` as
 root, so a root-only (default 0400) sops secret is enough. The unit itself
-never reads the secret path.
+never reads the secret path. On darwin the same copy runs late in
+`postActivation`, also as root.
 
 ## Source
 
-- Module: [`modules/nixos/hermes-agent.nix`](../../modules/nixos/hermes-agent.nix)
-- Implementation: [`flakes/hermes-agent/nix/nixosModules.nix`](../../flakes/hermes-agent/nix/nixosModules.nix)
+- Darwin module: [`modules/darwin/hermes-agent.nix`](../../modules/darwin/hermes-agent.nix) →
+  [`flakes/hermes-agent/nix/darwinModules.nix`](../../flakes/hermes-agent/nix/darwinModules.nix)
+- NixOS module: [`modules/nixos/hermes-agent.nix`](../../modules/nixos/hermes-agent.nix) →
+  [`flakes/hermes-agent/nix/nixosModules.nix`](../../flakes/hermes-agent/nix/nixosModules.nix)
 - Options under: `services.hermes-agent`
 
 [^hermes-nix-setup]: Hermes Agent docs: Nix & NixOS Setup (options reference)
