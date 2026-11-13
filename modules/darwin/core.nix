@@ -63,6 +63,8 @@
       users.users.k.openssh.authorizedKeys.keys = [
         "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBxqhXoAlCKYNwsB1YrszftURThiCI94oeR0W9EDhrLy"
       ];
+      # mini's dedicated headless SSH identity (not its Git signing key).
+      users.users.k.openssh.authorizedKeys.keyFiles = [ ../hosts/mini/ssh-client.pub ];
 
       # Cannot let nix-darwin control nix when using determinate
       nix.enable = lib.mkForce false;

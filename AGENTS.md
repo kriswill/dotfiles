@@ -47,10 +47,14 @@ nix-built from okf's own repo (`kriswill/okflight`, public — consumed as a Fla
 
 **Primary Commands:**
 
-- `darwin-rebuild switch --flake .` — apply system configuration (macOS); or `nrs`
-- `sudo nixos-rebuild switch --flake .#nebula` — apply on nebula (or `nrs`;
-  run after `cd` into the real checkout — nix's `--flake <path>` does not
-  follow a symlinked path like `~/src/dotfiles` on nebula)
+- `nrs` — the standard rebuild, switch, and activation command on **all
+  machines**, both macOS and NixOS. Run as the normal user, **without
+  `sudo`**; it handles privilege elevation, host detection, the real checkout
+  path, and the activation pipeline. Use it instead of invoking
+  `darwin-rebuild` or `nixos-rebuild` directly.
+- `nrb` (`nrs --dry`) — build, diff, and validate without activation.
+- `nrs --status` — check that the running system and boot default agree.
+- Full workflow and mode semantics: [`docs/nrs-pipeline.md`](docs/nrs-pipeline.md).
 - `nix develop` — dev shell (deadnix, statix, nixfmt-tree, just, okf, nil,
   nix-output-monitor, sops, age, ssh-to-age, stow)
 

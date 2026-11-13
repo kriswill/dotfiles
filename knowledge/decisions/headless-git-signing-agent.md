@@ -92,11 +92,11 @@ Considered and not chosen:
   command and the log.
 - After any reboot, FileVault waits for an unlock before anything loads.
   Use `fdesetup authrestart` for planned reboots.
-- Other 1Password prompts the headless host will still hit, and which
-  are out of scope here: ssh pushes (`gh:` pushInsteadOf, ssh remotes), the
-  Codeberg credential helper, and `hc` reaching k over ssh. All three go
-  through the 1Password agent or `op read`. The same pattern (a vault per
-  purpose, plus the service account) could cover them later.
+- Since 2026-11-13, [mini's machine SSH identity](headless-machine-ssh.md)
+  handles outgoing SSH, including `hc` connections, without 1Password.
+  It is separate from this signing key. Git hosting services still need to
+  authorize that authentication key before SSH pushes work. The Codeberg
+  credential helper's `op read` remains outside both mechanisms.
 
 [^ssh-agent-source]: openssh-portable `ssh-agent.c`: `if ((euid != 0) && (getuid() != euid))` → "uid mismatch".
 [^github-signature-verification]: GitHub: "GitHub will not re-verify previously signed commits or retroactively adjust their verification status".

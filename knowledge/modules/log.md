@@ -1,5 +1,12 @@
 # Log
 
+## 2026-11-13
+
+- **Creation**: [ssh-client](ssh-client.md): mini-only sops-managed SSH identity, an early client-config include disabling 1Password/agent forwarding, and public-key trust through [core](core.md) and [users-k](users-k.md). Fresh connections to k and nebula verified.
+  Post-activation verification confirmed the sops symlink, owner/mode,
+  matching public key, and fresh SSH logins; `nrs --status` reports a
+  consistent generation 22. Deployment instructions use [nrs](nrs.md).
+
 ## 2026-11-10
 
 - **Creation**: [chatgpt-broken-deps](chatgpt-broken-deps.md): temporary

@@ -1,10 +1,10 @@
 ---
 type: Host
 title: mini
-description: 'mini - my personal mac mini M1, 16GB RAM.'
+description: 'Headless personal M1 Mac mini with 16GB RAM, running Hermes and Herdr with machine SSH authentication and separate prompt-free Git signing.'
 resource: modules/hosts/mini/default.nix
 tags: [host]
-generated: { by: okflight/0.4.0, at: 2026-07-03T17:53:43+00:00 }
+generated: { by: codex/gpt-6, at: 2026-11-13T11:25:04-08:00 }
 ---
 
 mini - my personal mac mini M1, 16GB RAM.
@@ -15,13 +15,17 @@ are opted into below per the
 
 ## Host-selective features
 
-- [git-signing-agent](../modules/git-signing-agent.md): declared with
-  `enable = false` until its 1Password items exist. Once on, commits sign
+- [git-signing-agent](../modules/git-signing-agent.md): enabled; commits sign
   through a root-loaded ssh-agent with no 1Password prompt, for headless
   Claude sessions under herdr core
   ([decision](../decisions/headless-git-signing-agent.md),
   [setup](../playbooks/git-signing-agent-setup.md)). mini is a sops
   recipient (`&mini` in `.sops.yaml`) for that token.
+
+- [SSH client](../modules/ssh-client.md): a separate Ed25519 machine key,
+  encrypted for mini with sops, authenticates outgoing SSH without the
+  interactive 1Password agent. All managed hosts authorize its public key
+  for user `k` ([decision](../decisions/headless-machine-ssh.md)).
 
 - [hermes-agent](../modules/hermes-agent.md): the Hermes Agent gateway and
   CLI as k, inside a Seatbelt sandbox that keeps them out of the home

@@ -1,5 +1,9 @@
 # Log
 
+## 2026-11-13
+
+- **Update**: [mini](mini.md) uses its [sops-managed machine SSH key](../modules/ssh-client.md) for unattended outgoing access; all managed hosts declare trust, with the offline work Mac awaiting deployment.
+
 ## 2026-11-09
 
 - **Update**: [mini](mini.md) runs

@@ -4,7 +4,7 @@ title: Sops
 description: sops-nix on macOS — universal secrets machinery whose age identity derives from the host SSH key; inert until a host declares secrets.
 resource: modules/darwin/sops.nix
 tags: [darwin-module]
-generated: { by: okflight/0.4.0, at: 2026-07-11T12:40:00-07:00 }
+generated: { by: codex/gpt-6, at: 2026-11-13T11:25:04-08:00 }
 sources:
   - id: sops-nix
     resource: https://github.com/Mic92/sops-nix
@@ -32,10 +32,15 @@ Consumers today: [host k](../hosts/k.md) (smoke-test secret) and the
 [ssh-private-hosts twins](ssh-private-hosts.md) (shared
 `modules/hosts/ssh-hosts.yaml`, k + nebula recipients). [mini](../hosts/mini.md)
 is a recipient for its own `secrets.yaml`, which holds
-[git-signing-agent](git-signing-agent.md)'s service-account token. That file
-doesn't exist until setup, so the module stays disabled until then. Auto-discovered via the
+[git-signing-agent](git-signing-agent.md)'s service-account token, and its
+separate `ssh-client.yaml` holds the [machine SSH identity](ssh-client.md).
+The signing token remains root-only; the SSH private key is deployed as
+user `k`, mode `0400`, through a custom secret path.[^sops-nix]
+Auto-discovered via the
 [Dendritic module layout](../patterns/dendritic-modules.md).
 
 ## Source
 
 - Module: [`modules/darwin/sops.nix`](../../modules/darwin/sops.nix)
+
+[^sops-nix]: Per-secret `owner`, `mode`, and `path` control the deployed secret and its symlink.

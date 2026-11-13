@@ -5,6 +5,14 @@ types or directories, root-level concept docs, `docs/` manuals, bundle-wide
 sweeps, and workspace tooling conventions. Changes scoped to one bundle log
 in that bundle's own `log.md` (e.g. [modules/log.md](modules/log.md)).
 
+## 2026-11-13
+
+- **Update**: [`AGENTS.md`](../AGENTS.md) makes [nrs](modules/nrs.md) the
+  standard rebuild, switch, and activation command on every managed machine.
+  Run it as the normal user; it handles sudo internally. This corrects the
+  workspace guidance that previously presented direct OS rebuild commands
+  as the primary workflow.
+
 ## 2026-11-03
 
 - **Creation**: [`docs/dux-shell.md`](../docs/dux-shell.md) manual for nebula's

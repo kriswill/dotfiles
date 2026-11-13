@@ -1,16 +1,22 @@
 ---
 type: NixOS Module
 title: Users K
-description: 'Defines user k — sops-managed password (neededForUsers), authorized SSH key from snowglobe''s keyring, wheel/networkmanager/libvirtd groups, and pkgs.flatpak-user shadowing the system flatpak via PATH.'
+description: 'Defines nebula user k with a sops-managed password, personal and mini machine SSH keys, wheel/networkmanager/libvirtd groups, and a user-default flatpak wrapper.'
 resource: modules/hosts/nebula/users/k/default.nix
 tags: [nixos-module, host-specific]
-generated: { by: okflight/0.4.0, at: 2026-07-03T12:00:00-07:00 }
+generated: { by: codex/gpt-6, at: 2026-11-13T11:25:04-08:00 }
+sources:
+  - id: sops-nix
+    resource: https://github.com/Mic92/sops-nix
+    title: sops-nix secret provisioning
 ---
 
 Defines user `k`. The password comes from sops: `sops.secrets.k_password`
-with `neededForUsers = true` (decrypted early enough for user creation),
+with `neededForUsers = true` (decrypted early enough for user creation),[^sops-nix]
 consumed via `users.users.k.hashedPasswordFile`. The authorized SSH key is
-pulled from snowglobe's keyring (`config.keyring.ssh.k`). Groups: `wheel`,
+pulled from snowglobe's keyring (`config.keyring.ssh.k`), supplemented by
+[mini's machine public key](ssh-client.md) through `authorizedKeys.keyFiles`.
+Groups: `wheel`,
 `networkmanager`, `libvirtd` — the `i2c` group is added separately by
 [users-k-desktop-shell](users-k-desktop-shell.md) for DDC/CI brightness.
 
@@ -27,3 +33,5 @@ that host's configuration per the
 ## Source
 
 - Module: [`modules/hosts/nebula/users/k/default.nix`](../../modules/hosts/nebula/users/k/default.nix)
+
+[^sops-nix]: `neededForUsers` decrypts password secrets before user creation.

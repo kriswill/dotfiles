@@ -24,6 +24,12 @@ creation_rules:
     key_groups:
       - age:
           - *mini
+  # mini's outbound SSH identity. Separate from the signing service token;
+  # only mini can decrypt it, and only the public half is trusted by peers.
+  - path_regex: modules/hosts/mini/ssh-client.yaml
+    key_groups:
+      - age:
+          - *mini
   # mini: Hermes Agent's provider keys (hermes-env), in a file of their own so
   # they can be rewritten from 1Password without decrypting secrets.yaml,
   # which only mini's host key opens (knowledge/modules/mini-hermes-agent.md).

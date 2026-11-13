@@ -1,5 +1,9 @@
 # Log
 
+## 2026-11-13
+
+- **Creation**: [headless-machine-ssh](headless-machine-ssh.md): separate mini SSH authentication from Git signing, encrypt the private key with sops, and authorize its public key across the managed hosts.
+
 ## 2026-11-10
 
 - **Deprecation**: [gajim-pillow-13](gajim-pillow-13.md) and
