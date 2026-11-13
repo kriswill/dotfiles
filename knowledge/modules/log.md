@@ -2,7 +2,9 @@
 
 ## 2026-11-13
 
-- **Creation**: [ssh-client](ssh-client.md): mini-only sops-managed SSH identity, an early client-config include disabling 1Password/agent forwarding, and public-key trust through [core](core.md) and [users-k](users-k.md). Fresh connections to k and nebula verified.
+- **Creation**: [k SSH client](ssh-client.md) and [nebula SSH client](nebula-ssh-client.md): distinct sops-managed client identities for managed destinations, shared public-key trust, and preserved personal authentication elsewhere. `nrs` activated k generation 287 and nebula generation 235; all six fresh Herdr SSH handshakes among k, nebula, and mini passed. Moved the existing mini entry to [mini-ssh-client](mini-ssh-client.md).
+
+- **Creation**: [mini-ssh-client](mini-ssh-client.md): mini-only sops-managed SSH identity, an early client-config include disabling 1Password/agent forwarding, and public-key trust through [core](core.md) and [users-k](users-k.md). Fresh connections to k and nebula verified.
   Post-activation verification confirmed the sops symlink, owner/mode,
   matching public key, and fresh SSH logins; `nrs --status` reports a
   consistent generation 22. Deployment instructions use [nrs](nrs.md).

@@ -1,0 +1,16 @@
+ssh-client-key: ENC[AES256_GCM,data:Wa8p4fscC2lv7H33xPtjsxLN9p2uFdZJfnmY4vtZU0hyhglaiMrnbVo65oU2by+InaNzKlU1i/z2ikpMjibUC+T9jop2FO3ExgBHn8csrLFWokS54U3jkXN78tmwYh9XN/5AnD+LIkx8NQuy0baawh9Ig7gVkCGlaa4TF8Chx1GDHSdxOXORkx7aLcI+WU9T+AqLkmdv6unYi/KAYPG1z9N+X3k/Puai1ebhs92z9X9/nz52iLCMJr3yjBOqrvaap6gG5yEK+1cFjFUUf2GZiW/ZfJz74xsqUCzjJSUVHQX7F8NkH6ZzwoM1gCmVbrUvMSsrt7huWP6JJfmHwmOKaGTw2KlM8cGN87ErMa6m/xus0K3jclRryQfzTuyF2fdaiOxtv/4XE95iC0VDZ5I9zjefF+/u/dPqytRqFwewsTgNHrdeudOxN6ObRA9QoaoGkBZ1KOYeka0s/u518w1LefWXA3IhbJDTifxn+2w17jjfgjm95xkL86xcqHcbk3qKQSYiIjCMqAUHOE+o1uB34ZrNaQ0yBx0y8zHKJ6mToRzXKBc=,iv:tZKKc3KvkSPz9TnSgIazLiJvlHQQ8PF21dKDhupzXx8=,tag:GZR+Mvjp8lN/YUluMz0nzA==,type:str]
+sops:
+    age:
+        - enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBKclk3WDF2ZkxCeVFabkFM
+            bmszeFNkVkE5dGZVQys2NjNuZmttVGZSaG5JCmFVQ28vNlBGQVhzZlp6MXJDbzRm
+            d3FtazlveElTcGduREdoR3J5MXFrMjAKLS0tIHV6YnYxUmRta0VtaHR3QXpBc0pi
+            bDMrS0ZMNnQ3YllwSG43aFErS21GUHcKS3UbtSwp6wNtlCPV6O/+PQYLDIudu7O5
+            N/Xd+XkuDlxJO21yzZbj30J9W+YaUgihkvhZ2GuMge/QGAsrxzPqYA==
+            -----END AGE ENCRYPTED FILE-----
+          recipient: age1gduheq5k8trpxduq56qt3yy6g0mveshx4h06nshccejvv6yxp4vq77m3qf
+    lastmodified: "2026-11-13T19:44:42Z"
+    mac: ENC[AES256_GCM,data:Y1GJ9v2a//U+TwKztbLZWIu32SScfttRm2KnLYE+gWTHHpz5B+PaF0LQVoMkAHnCLwM4G2nMwRctOF0ayHjiulRh3KUSdMwCF07bfTfEkzzWh86hVStVdtF0CfGj/6+Gp1a7HipQoWzTKnZM4VBNVxaxNCcGlMPoM1Q8anMWWeg=,iv:lSArW6CJ0FigwgiWmO+TP/q2wgo/sqSzutTEFc8ZLSk=,tag:OdpLzb1QF280q6fICi2WWw==,type:str]
+    unencrypted_suffix: _unencrypted
+    version: 3.13.3

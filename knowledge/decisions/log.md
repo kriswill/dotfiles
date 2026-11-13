@@ -2,6 +2,8 @@
 
 ## 2026-11-13
 
+- **Update**: [headless-machine-ssh](headless-machine-ssh.md): extend to k and nebula with managed-destination scope; distinguish client keys from the SSH server key and retain nebula's existing sops recipient.
+
 - **Creation**: [headless-machine-ssh](headless-machine-ssh.md): separate mini SSH authentication from Git signing, encrypt the private key with sops, and authorize its public key across the managed hosts.
 
 ## 2026-11-10

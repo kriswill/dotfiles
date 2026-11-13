@@ -4,7 +4,7 @@ title: k
 description: 'k - my personal macbook pro M1 max, 64GB RAM.'
 resource: modules/hosts/k/default.nix
 tags: [host]
-generated: { by: okflight/0.4.0, at: 2026-07-11T12:40:00-07:00 }
+generated: { by: codex/gpt-6, at: 2026-11-13T11:54:45-08:00 }
 ---
 
 k - my personal macbook pro M1 max, 64GB RAM.
@@ -31,7 +31,9 @@ signature survives ([decision](../decisions/p4v-nix-apps-dont-strip.md)).
 Consumes [sops](../modules/sops.md) secrets: `sops-smoke-test` (end-to-end
 decryption proof), plus the shared private ssh hosts file via the gated
 [ssh-private-hosts module](../modules/ssh-private-hosts.md)
-([decision](../decisions/ssh-private-hosts.md)).
+([decision](../decisions/ssh-private-hosts.md)). A separate
+[machine SSH identity](../modules/ssh-client.md) authenticates Herdr to
+managed hosts; GitHub and other destinations retain personal authentication.
 
 ## Source
 

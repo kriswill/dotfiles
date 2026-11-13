@@ -10,7 +10,7 @@
         openssh.authorizedKeys.keys = with config.keyring.ssh; [
           k
         ];
-        openssh.authorizedKeys.keyFiles = [ ../../../mini/ssh-client.pub ];
+        openssh.authorizedKeys.keyFiles = (import ../../../../../lib/ssh-machines.nix).publicKeyFiles;
         extraGroups = [
           "wheel"
           "networkmanager"

@@ -17,6 +17,14 @@ creation_rules:
     key_groups:
       - age:
           - *k
+  - path_regex: modules/hosts/k/ssh-client.yaml
+    key_groups:
+      - age:
+          - *k
+  - path_regex: modules/hosts/nebula/ssh-client.yaml
+    key_groups:
+      - age:
+          - *nebula
   # mini: the git-signing-agent service-account token (op-sa-token). Encrypting
   # needs only this public recipient, so the file can be (re)written from any
   # checkout; see knowledge/playbooks/git-signing-agent-setup.md.

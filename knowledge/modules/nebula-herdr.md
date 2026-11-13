@@ -4,7 +4,7 @@ title: Herdr on nebula
 description: 'nebula''s herdr settings: enables the Herdr desktop app and hc for k with linger declared and telemetry off, plus the daily herdr-update-check timer (the fork, core and app), leaving every config file to the home/herdr-core and home/herdr-app stow packages (settings.json alone to the per-OS home/herdr-app-linux).'
 resource: modules/hosts/nebula/herdr.nix
 tags: [nixos-module, host-specific, herdr]
-generated: { by: hermes-agent/gpt-6.1-sol, at: 2026-11-04T14:21:34-08:00 }
+generated: { by: codex/gpt-6, at: 2026-11-13T11:54:45-08:00 }
 sources:
   - id: subflake-readme
     resource: ../../flakes/herdr/README.md
@@ -17,6 +17,10 @@ sources:
 On top of the TUI that [herdr](herdr.md) installs everywhere, nebula turns on
 `programs.herdr-app.enable`, `programs.herdr-core.users = [ "k" ]` (linger is
 declared by the module's default) and `services.herdr-update-check.enable`.
+
+Outgoing connections to the managed Macs use the
+[sops-managed client identity](nebula-ssh-client.md) through ordinary SSH
+configuration, without contacting the personal 1Password agent.
 
 Choices:
 

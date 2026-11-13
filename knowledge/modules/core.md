@@ -4,7 +4,7 @@ title: Core
 description: 'The always-on darwin system baseline shared by every host — stateVersion, primary user, baseline packages, touch-ID sudo, fonts, shell enables, nix/nixpkgs settings.'
 resource: modules/darwin/core.nix
 tags: [darwin-module]
-generated: { by: codex/gpt-6, at: 2026-11-13T11:25:04-08:00 }
+generated: { by: codex/gpt-6, at: 2026-11-13T11:54:45-08:00 }
 sources:
   - id: darwin-options
     resource: https://nix-darwin.github.io/nix-darwin/manual/
@@ -20,9 +20,11 @@ enables, `nix.enable = false` (Determinate owns nix), and
 see [p4v-nix-apps-dont-strip](../decisions/p4v-nix-apps-dont-strip.md)).
 The rebuild helpers live in [nrs](nrs.md).
 
-Every Mac authorizes both the existing personal SSH key and
-[mini's machine key](ssh-client.md) for `k`, using
-`users.users.k.openssh.authorizedKeys.keyFiles` for the latter.[^darwin-options]
+Every Mac authorizes the existing personal SSH key and the machine keys for
+[k](ssh-client.md), [mini](mini-ssh-client.md), and
+[nebula](nebula-ssh-client.md) as user `k`.
+`users.users.k.openssh.authorizedKeys.keyFiles` consumes the common
+[list](../../lib/ssh-machines.nix).[^darwin-options]
 This includes the offline [work Mac](../hosts/SOC-Kris-Williams.md) on its
 next rebuild; adding trust never replaces the personal key.
 

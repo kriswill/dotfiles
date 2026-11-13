@@ -94,8 +94,12 @@ get the extended lib — nixos modules import lib files by path when needed.
 ## Secrets (sops-nix)
 
 - Recipients and creation rules: `.sops.yaml` (repo root). Every host's age
-  identity is derived from its SSH host key — on a new machine run
+  identity normally derives from its SSH host key — on a new machine run
   `ssh-to-age < /etc/ssh/ssh_host_ed25519_key.pub` and add an anchor + rule.
+  Existing-host exception: nebula also configures
+  `/root/.config/sops/age/keys.txt`; its working recipient differs from its
+  current server key. Preserve the existing anchor for new nebula secrets
+  (see `knowledge/modules/nebula-ssh-client.md`).
 - Secrets files: `modules/hosts/<host>/secrets.yaml`, edited with
   `sops modules/hosts/<host>/secrets.yaml` (tools in the dev shell).
 - Machinery: darwin imports `sops-nix.darwinModules.sops` via

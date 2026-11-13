@@ -4,7 +4,7 @@ title: Sops
 description: sops-nix on macOS — universal secrets machinery whose age identity derives from the host SSH key; inert until a host declares secrets.
 resource: modules/darwin/sops.nix
 tags: [darwin-module]
-generated: { by: codex/gpt-6, at: 2026-11-13T11:25:04-08:00 }
+generated: { by: codex/gpt-6, at: 2026-11-13T11:54:45-08:00 }
 sources:
   - id: sops-nix
     resource: https://github.com/Mic92/sops-nix
@@ -18,7 +18,10 @@ to manage. Universal but inert: nothing happens until a host declares
 `sops.defaultSopsFile` + `sops.secrets.<name>` and `.sops.yaml` gains the
 matching recipient anchor + creation rule. Mirrors
 [nebula](../hosts/nebula.md)'s setup, which gets the NixOS sops module via
-snowglobe-factory's `mkNixosHost` instead.
+snowglobe-factory's `mkNixosHost` instead. Nebula additionally uses
+`/root/.config/sops/age/keys.txt`; its existing recipient is distinct from
+the current server key. See [nebula SSH client](nebula-ssh-client.md) before
+changing that recipient.
 
 Secrets install at activation through a launchd daemon
 (`org.nixos.sops-install-secrets`) into `/run/secrets.d/`, symlinked from
@@ -33,9 +36,11 @@ Consumers today: [host k](../hosts/k.md) (smoke-test secret) and the
 `modules/hosts/ssh-hosts.yaml`, k + nebula recipients). [mini](../hosts/mini.md)
 is a recipient for its own `secrets.yaml`, which holds
 [git-signing-agent](git-signing-agent.md)'s service-account token, and its
-separate `ssh-client.yaml` holds the [machine SSH identity](ssh-client.md).
+separate `ssh-client.yaml` holds the [machine SSH identity](mini-ssh-client.md).
 The signing token remains root-only; the SSH private key is deployed as
 user `k`, mode `0400`, through a custom secret path.[^sops-nix]
+[k](ssh-client.md) and [nebula](nebula-ssh-client.md) now have separate
+client-key files encrypted to their own existing recipients as well.
 Auto-discovered via the
 [Dendritic module layout](../patterns/dendritic-modules.md).
 

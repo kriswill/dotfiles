@@ -4,7 +4,7 @@ title: mini
 description: 'Headless personal M1 Mac mini with 16GB RAM, running Hermes and Herdr with machine SSH authentication and separate prompt-free Git signing.'
 resource: modules/hosts/mini/default.nix
 tags: [host]
-generated: { by: codex/gpt-6, at: 2026-11-13T11:25:04-08:00 }
+generated: { by: codex/gpt-6, at: 2026-11-13T11:54:45-08:00 }
 ---
 
 mini - my personal mac mini M1, 16GB RAM.
@@ -22,7 +22,7 @@ are opted into below per the
   [setup](../playbooks/git-signing-agent-setup.md)). mini is a sops
   recipient (`&mini` in `.sops.yaml`) for that token.
 
-- [SSH client](../modules/ssh-client.md): a separate Ed25519 machine key,
+- [SSH client](../modules/mini-ssh-client.md): a separate Ed25519 machine key,
   encrypted for mini with sops, authenticates outgoing SSH without the
   interactive 1Password agent. All managed hosts authorize its public key
   for user `k` ([decision](../decisions/headless-machine-ssh.md)).
