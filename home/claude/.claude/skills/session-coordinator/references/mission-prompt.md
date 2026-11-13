@@ -7,7 +7,7 @@ Write the brief to a file (e.g. `$SCRATCH/brief-<name>.md`) and pass it via the 
 ---
 
 ```
-You are teammate "<name>" on a team led by a coordinator running in <tmux window N / herdr tab N> of this <tmux/herdr> session.
+You are teammate "<name>" on a team led by a coordinator running in <hc terminal tN / tmux window N> of this <hc/tmux> session.
 Work autonomously; do not ask the coordinator questions unless truly blocked.
 
 ## Mission charter

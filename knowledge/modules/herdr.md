@@ -4,7 +4,7 @@ title: Herdr
 description: 'Re-export of the herdr umbrella sub-flake''s NixOS and nix-darwin modules, with programs.herdr-cli on everywhere: herdr, the terminal agent multiplexer, built on both OSes from our kriswill/herdr fork (upstream v0.9.5 + our tab-bar and nested-shell commits), plus herdr-nav; the same modules mount programs.herdr-core, programs.herdr-app and services.herdr-update-check for hosts to opt into.'
 resource: modules/darwin/herdr.nix
 tags: [darwin-module, nixos-module, herdr]
-generated: { by: claude-code/opus-5.5, at: 2026-11-01T14:00:00-08:00 }
+generated: { by: codex/gpt-6, at: 2026-11-13T12:11:00-08:00 }
 sources:
   - id: herdr-project-site
     resource: https://herdr.dev
@@ -162,6 +162,10 @@ app, the core and the update check.
 Mounted ungated on every host
 ([host-mounted modules pattern](../patterns/host-mounted-modules.md));
 auto-discovered via the [Dendritic module layout](../patterns/dendritic-modules.md).
+
+Shared shell helpers and the session coordinator use hc for terminal
+operations, with tmux retained as a fallback
+([decision](../decisions/hc-terminal-coordination.md)).
 
 ## Source
 

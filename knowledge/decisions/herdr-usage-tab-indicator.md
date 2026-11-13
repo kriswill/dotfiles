@@ -1,9 +1,10 @@
 ---
 type: Decision
 title: Herdr Tab-Bar Claude Usage Indicator via State File
-description: 'The Claude weekly-usage indicator renders through a ui.tab_bar_right command entry polling a /tmp state file that a per-pane watcher maintains from pushed tab.focused socket events — because herdr''s right tab-bar edge is config-only and workspace metadata tokens render solely in the sidebar.'
+description: 'Historical Claude usage indicator driven by per-pane Herdr watchers, retired in favor of the ai-usage collector and app mod.'
 tags: [claude, herdr, statusline]
-generated: { by: okflight/0.4.0, at: 2026-08-30T13:45:00-07:00 }
+status: deprecated
+generated: { by: codex/gpt-6, at: 2026-11-13T12:11:00-08:00 }
 sources:
   - id: claude-code-statusline-json-reference
     resource: https://code.claude.com/docs/en/statusline
@@ -13,18 +14,18 @@ sources:
     title: herdr repository
 ---
 
-**Status:** superseded — the render channel moved to the
-[token-bar patch](herdr-token-bar-patch.md)'s `{ type = "token", bar = true }`
-entries and then to the fork's [ANSI command
-entries](herdr-ansi-tab-bar-entries.md) rendered by `dotbar-usage` (both
-2026-08-30); the watcher, focus tracking, and data-source split below
-remain active. **Where:**
-[`home/claude-me/.claude-me/herdr-usage-watcher.ts`](../../home/claude-me/.claude-me/herdr-usage-watcher.ts),
-[`home/claude-me/.claude-me/statusline.sh`](../../home/claude-me/.claude-me/statusline.sh),
-[`home/herdr/.config/herdr/config.toml`](../../home/herdr/.config/herdr/config.toml)
-([herdr](../modules/herdr.md)).
+**Status:** retired on 2026-11-13. The per-pane watcher and its statusline
+startup hooks were removed when terminal automation moved to
+[hc](hc-terminal-coordination.md). Account usage now comes from the
+[ai-usage collector and app mod](ai-usage-collector-daemon.md); the work
+profile still displays its cached spend in the Claude statusline.
 
-## Context
+The historical design below explains the original state-file channel and
+its later moves through the [token-bar patch](herdr-token-bar-patch.md) and
+[ANSI command entries](herdr-ansi-tab-bar-entries.md). The watcher source
+was `home/claude-me/.claude-me/herdr-usage-watcher.ts` before removal.
+
+## Historical context
 
 The Claude Code statusline should surface weekly rate-limit consumption
 (all-models + Fable-scoped) in [herdr](../modules/herdr.md)'s tab bar,
@@ -34,7 +35,7 @@ tab bar's right edge; the OAuth usage endpoint that carries the per-model
 number rate-limits aggressively; and the statusline script runs on every
 refresh, so anything it spawns must be idempotent.
 
-## Decision
+## Historical decision
 
 - **Render channel:** a `ui.tab_bar_right` entry of type `command` that
   `cat`s `/tmp/herdr-claude-usage.txt` at `interval_seconds = 1` — the
@@ -67,7 +68,7 @@ refresh, so anything it spawns must be idempotent.
   5 s housekeeping tick re-asserts the state file if another instance's
   exit cleanup removed it.
 
-## Consequences
+## Historical consequences
 
 - Indicator appears/disappears within ~1 s of a tab switch; steady-state
   API cost is ~2 requests/hour regardless of pane count.
@@ -91,6 +92,4 @@ refresh, so anything it spawns must be idempotent.
   (via `dotbar-usage`), but reactive — re-run on token change, with ANSI
   passing through.
 
-## Citations
-
-- Commits `1973a19` (watcher + herdr config), `dbe7e12` (statusline adoption)
+Original commits `1973a19` (watcher + herdr config), `dbe7e12` (statusline adoption)

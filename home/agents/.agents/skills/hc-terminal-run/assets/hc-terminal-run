@@ -1,0 +1,129 @@
+#!/usr/bin/env bash
+#
+# hc-terminal-run — run ONE command in another hc (herdr-core) terminal and
+# return just that command's output, plus its exit status on stderr.
+#
+# Why this exists: a terminal is a teletype, not an API. `hc send` returns once
+# the text is typed, not when the command finishes, and `hc read` hands back the
+# whole screen and history: prompts, MOTD, earlier commands. This wrapper makes
+# a terminal behave like a request/response call. It brackets the command with
+# a begin and an end marker unique to this call, blocks on `hc wait --output`
+# until the end marker prints, then prints only the lines between the markers.
+#
+# Usage:  hc-terminal-run <terminal> <command...>
+#   e.g.  hc-terminal-run t3y 'sudo tail -5 /var/log/syslog'
+#         hc-terminal-run nebula/t3y 'uptime'
+#
+# Env:    HCR_TIMEOUT  seconds to wait for the end marker (default 90; keep it
+#                      under the caller's own tool timeout)
+#         HCR_LINES    history lines to read back (default 2000; raise for
+#                      commands with long output)
+#
+# Find terminals with `hc ls`. Quote the command so YOUR shell does not expand
+# it: it runs in the target terminal, which may be on another host. The target
+# must be sitting at an sh, bash or zsh prompt.
+#
+set -euo pipefail
+
+if [ "$#" -lt 2 ] || [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
+  sed -n '3,25p' "$0" | sed 's/^# \{0,1\}//'
+  exit 64
+fi
+
+term="$1"; shift
+id="$$${RANDOM}${RANDOM}"
+beg="HCRBEG_${id}"
+end="HCREND_${id}"
+timeout_s=${HCR_TIMEOUT:-90}
+lines=${HCR_LINES:-2000}
+if ! [[ "$timeout_s" =~ ^[1-9][0-9]*$ && "$lines" =~ ^[1-9][0-9]*$ ]]; then
+  echo "hc-terminal-run: HCR_TIMEOUT and HCR_LINES must be positive integers" >&2
+  exit 64
+fi
+
+# Only type into a plain program at a prompt. A terminal whose program reports
+# a status (OSC 7501) is an agent: typing there would land in its input box.
+if ! info=$(hc get "$term" --json 2>&1); then
+  echo "hc-terminal-run: no terminal '$term' ($info). List them with: hc ls" >&2
+  exit 2
+fi
+read -r address state has_status program <<<"$(printf '%s' "$info" |
+  jq -er '[.address, .state, (.status != null),
+    ((.foreground.argv[0] // .foreground.name // "unknown") | split("/") | last | ltrimstr("-"))] | @tsv')"
+if [ "$state" != "live" ]; then
+  echo "hc-terminal-run: $address is $state, not live" >&2
+  exit 2
+fi
+if [ -n "${HC_TERMINAL_ID:-}" ] && [ "$address" = "$HC_TERMINAL_ID" ]; then
+  echo "hc-terminal-run: $address is your own terminal" >&2
+  exit 2
+fi
+if [ "$has_status" = true ]; then
+  echo "hc-terminal-run: $address reports agent status, not a shell. Use hc send, or SendMessage for a Claude peer." >&2
+  exit 2
+fi
+case "$program" in
+  sh|bash|zsh|ssh) ;;
+  *) echo "hc-terminal-run: $address has $program in the foreground; wait for an sh, bash or zsh prompt" >&2; exit 2 ;;
+esac
+
+# The markers are split in the typed text ("HCRBEG_""<id>"), so the echoed
+# command line never contains them. Only the command's own output does, which
+# is what lets a plain substring wait ignore the echo.
+if ! hc send "$term" "{
+printf '%s\n' \"HCRBEG_\"\"${id}\"
+if (
+$*
+); then
+  printf '\n%s rc=%s\n' \"HCREND_\"\"${id}\" 0
+else
+  printf '\n%s rc=%s\n' \"HCREND_\"\"${id}\" \"\$?\"
+fi
+}" >/dev/null; then
+  echo "hc-terminal-run: hc send $term failed" >&2
+  exit 2
+fi
+
+# `hc wait --output` only sees output printed after the wait starts, so a fast
+# command can finish first. Check the history, then block for a short window
+# that ends early on the marker, and repeat until the deadline. That is hc's
+# wait doing the blocking, not a sleep.
+out=""
+deadline=$((SECONDS + timeout_s))
+while :; do
+  if ! out=$(hc read "$term" --lines "$lines" 2>/dev/null); then
+    echo "hc-terminal-run: cannot read $address; inspect it before retrying" >&2
+    exit 2
+  fi
+  printf '%s\n' "$out" | grep "^${end} rc=" >/dev/null && break
+  if [ "$SECONDS" -ge "$deadline" ]; then
+    echo "hc-terminal-run: no end marker after ${timeout_s}s. The command may still be running in $address; check with 'hc read $address' before the next call." >&2
+    break
+  fi
+  if ! hc wait "$term" --output "${end} rc=" --timeout 2 >/dev/null 2>&1; then
+    echo "hc-terminal-run: cannot wait on $address; inspect it before retrying" >&2
+    exit 2
+  fi
+done
+
+# Blank lines are held back until a non-blank line or the end marker follows,
+# so a timed-out read does not end in the screen's empty rows.
+if ! printf '%s\n' "$out" | awk -v b="$beg" -v e="$end" '
+  $0 == b { f = 1; seen = 1; next }
+  # The delimiter adds one blank line when output already ends in a newline.
+  f && index($0, e " rc=") == 1 { if (length(held)) printf "%s", substr(held, 1, length(held)-1); exit }
+  f && $0 ~ /^[[:space:]]*$/ { held = held $0 "\n"; next }
+  f { printf "%s%s\n", held, $0; held = "" }
+  END { if (!seen) exit 3 }
+'; then
+  echo "hc-terminal-run: begin marker not in the last $lines lines. Raise HCR_LINES." >&2
+  exit 2
+fi
+
+rc=$(printf '%s\n' "$out" | sed -n "s/^${end} rc=\([0-9][0-9]*\).*/\1/p" | tail -1)
+if [ -n "$rc" ]; then
+  echo "hc-terminal-run: exit=$rc" >&2
+  exit "$rc"
+fi
+echo "hc-terminal-run: no exit status captured" >&2
+exit 1

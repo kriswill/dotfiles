@@ -4,7 +4,7 @@ title: Track AI Account Usage with a Bun Daemon and a Draw-Only herdr-app Mod
 description: 'Usage tracking for Claude Ultra, the Anthropic API and ChatGPT runs in a Bun daemon that owns credentials and rate-limit pacing and writes a JSON snapshot; the herdr-app mod only watches and draws it, because mods are sandboxed JS that can''t hold a 1Password-sourced key across polls.'
 tags: [herdr, ai, secrets, 1password]
 status: stable
-generated: { by: codex/gpt-6, at: 2026-11-01T17:00:00-08:00 }
+generated: { by: codex/gpt-6, at: 2026-11-13T12:11:00-08:00 }
 sources:
   - id: usage-cost-api
     resource: https://platform.claude.com/docs/en/api/usage-cost-api
@@ -32,7 +32,8 @@ and assets only from inside `~/.config/herdr-app`. They do have `exec` and
 `fetch`, so a mod could poll the providers itself. Each source pushed back:
 
 - Claude's `api/oauth/usage` is quota-limited per account and already shared
-  by `herdr-usage-watcher.ts` and `claude-usage-work.ts`. Polling from every
+  with `claude-usage-work.ts`. The older per-pane watcher was
+  [retired](herdr-usage-tab-indicator.md) on 2026-11-13. Polling from every
   mod copy, on every host, would exhaust it.
 - Anthropic API cost needs an Admin key.[^usage-cost-api] Kept in 1Password
   (see [python-keyring-op-backend](python-keyring-op-backend.md) for how

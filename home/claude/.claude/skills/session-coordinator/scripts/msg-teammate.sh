@@ -1,13 +1,19 @@
 #!/usr/bin/env bash
 # msg-teammate.sh <teammate> "<message>"
 #
-# Reliable coordinator->teammate delivery in whichever multiplexer we're in
-# (herdr or tmux, auto-detected). <teammate> is the herdr agent name or the
-# tmux window name.
+# Reliable coordinator->teammate delivery wherever we're running (hc or tmux,
+# auto-detected: HC_TERMINAL_ID first, then TMUX). <teammate> is the hc
+# terminal name (or address) or the tmux window name.
+#
+# hc: `hc send` pastes and submits in one call and reports whether the turn
+# started (`started: true`; a message to a working teammate queues and also
+# reports true). It refuses a teammate that is blocked on a dialog (exit 9);
+# this script never forces past that - a person must answer the dialog.
+# Delivered text arrives wrapped in <hc from="tN">...</hc>.
 #
 # tmux paste rendering can swallow a trailing Enter sent in the same
-# send-keys call, leaving the message stranded in the input box; both paths
-# therefore send text and Enter separately, then verify the message left the
+# send-keys call, leaving the message stranded in the input box; the tmux path
+# therefore sends text and Enter separately, then verifies the message left the
 # input box (a turn started or the text rendered into the transcript),
 # retrying Enter a few times before giving up.
 #
@@ -23,7 +29,7 @@
 set -u
 
 detect_mux() {
-  if [ -n "${HERDR_PANE_ID:-}" ]; then echo herdr
+  if [ -n "${HC_TERMINAL_ID:-}" ]; then echo hc
   elif [ -n "${TMUX:-}" ]; then echo tmux
   else echo none; fi
 }
@@ -37,20 +43,19 @@ if [ "${1:-}" = "--self-test" ]; then
     grep -q "coordinator: hello-self-test-42" "$tmpi/inbox-$1.md" 2>/dev/null
   }
   case "$mux" in
-    herdr)
-      command -v herdr >/dev/null || { echo "self-test: inside herdr but herdr CLI not on PATH"; exit 1; }
+    hc)
+      { command -v hc >/dev/null && command -v jq >/dev/null; } || { echo "self-test: inside hc but hc or jq not on PATH"; exit 1; }
       s="msgteammate-selftest-$$"
-      herdr agent start "$s" --cwd /tmp --no-focus -- cat >/dev/null || { echo "self-test: cannot start herdr agent"; exit 1; }
+      hc run --bg --json --no-notify --name "$s" --cwd /tmp -- cat >/dev/null || { echo "self-test: cannot start hc terminal"; exit 1; }
       "$0" --inbox "$tmpi" "$s" "hello-self-test-42"; rc=$?
       sleep 1
-      out="$(herdr agent read "$s" --source visible --lines 10)"
-      pid="$(herdr agent get "$s" | grep -o '"pane_id":"[^"]*"' | head -1 | cut -d'"' -f4)"
-      [ -n "$pid" ] && herdr pane close "$pid" >/dev/null
+      out="$(hc read "$s" --lines 10 2>/dev/null)"
+      hc kill "$s" >/dev/null 2>&1; hc rm "$s" >/dev/null 2>&1
       inbox_ok "$s" || { echo "self-test: FAIL - message not mirrored to inbox"; exit 1; }
-      if printf '%s' "$out" | grep -q "hello-self-test-42"; then
-        echo "self-test: OK (herdr, rc=$rc, inbox mirrored)"; exit 0
+      if [ "$rc" = 0 ] && printf '%s' "$out" | grep -q "hello-self-test-42"; then
+        echo "self-test: OK (hc, rc=$rc, inbox mirrored)"; exit 0
       fi
-      echo "self-test: FAIL - text not found in herdr pane"; exit 1 ;;
+      echo "self-test: FAIL - rc=$rc or text not found in hc terminal"; exit 1 ;;
     tmux)
       s="msgteammate-selftest-$$"
       tmux new-session -d -s "$s" -n target 'cat' || { echo "self-test: cannot create tmux session"; exit 1; }
@@ -61,7 +66,7 @@ if [ "${1:-}" = "--self-test" ]; then
         echo "self-test: OK (tmux, rc=$rc, inbox mirrored)"; tmux kill-session -t "$s"; exit 0
       fi
       echo "self-test: FAIL - text not found in pane"; tmux kill-session -t "$s"; exit 1 ;;
-    none) echo "self-test: not inside tmux or herdr"; exit 1 ;;
+    none) echo "self-test: not inside hc or tmux"; exit 1 ;;
   esac
 fi
 
@@ -98,47 +103,44 @@ undelivered() {
   exit 1
 }
 
-if [ "$mux" = herdr ]; then
-  command -v herdr >/dev/null || { echo "inside herdr but herdr CLI not on PATH"; exit 2; }
-  pane_id="$(herdr agent get "$win" 2>/dev/null | grep -o '"pane_id":"[^"]*"' | head -1 | cut -d'"' -f4)"
-  [ -n "$pane_id" ] || { echo "no such teammate: $win"; exit 2; }
-  # herdr renamed `agent send` -> `agent prompt` around proto17 and this has
-  # CHANGED BACK on at least one build; a CLI that drifts under a running
-  # mission silently broke four consecutive directives (each printing herdr's
-  # help and exiting 2). Probe both spellings rather than assuming either.
-  herdr_send() {
-    herdr agent prompt "$1" "$2" >/dev/null 2>&1 && return 0
-    herdr agent send "$1" "$2" >/dev/null 2>&1 && return 0
-    return 1
-  }
-  # Same drift on the wait flag: `--until <state>` vs `--status <state>`.
-  herdr_wait_working() {
-    herdr agent wait "$1" --until working --timeout 5000 >/dev/null 2>&1 && return 0
-    herdr agent wait "$1" --status working --timeout 5000 >/dev/null 2>&1 && return 0
-    return 1
-  }
-  if [ -n "$msg" ]; then
-    herdr_send "$win" "$msg" || exit 2
-    sleep 1
+if [ "$mux" = hc ]; then
+  { command -v hc >/dev/null && command -v jq >/dev/null; } || { echo "inside hc but hc or jq not on PATH"; exit 2; }
+  info="$(hc get "$win" --json 2>/dev/null)" || { echo "no such teammate: $win"; exit 2; }
+  if [ -z "$msg" ]; then
+    # Let hc send enforce its blocked-state and human-draft protections even
+    # for an empty message. Raw keys could answer a newly opened dialog.
+    state="$(printf '%s' "$info" | jq -r '.status.state // "plain"')"
+    case "$state" in
+      idle|done|plain) ;;
+      *) echo "$win is $state; refusing automatic Enter" >&2; undelivered ;;
+    esac
   fi
-  for attempt in 1 2 3 4; do
-    herdr pane send-keys "$pane_id" enter >/dev/null
-    [ -z "$msg" ] && exit 0   # bare-Enter: nothing stranded is success
-    # Delivered if a turn started or the text rendered into the transcript.
-    if herdr_wait_working "$win"; then
-      exit 0
-    fi
-    frag="$(printf '%s' "$msg" | head -c 40)"
-    p="$(herdr agent read "$win" --source visible --lines 40 2>/dev/null)"
-    if ! printf '%s' "$p" | grep -q '\[Pasted text' && printf '%s' "$p" | grep -qF "$frag"; then
-      exit 0
-    fi
-    [ "$attempt" -lt 4 ] && sleep 2
+  out="$(hc send --json "$win" "$msg" 2>&1)"; rc=$?
+  if [ "$rc" = 9 ]; then
+    echo "$win is blocked on a dialog that needs a person - hc read $win; not forcing" >&2
+    undelivered
+  fi
+  [ "$rc" = 0 ] || { echo "hc send failed (rc=$rc): $out" >&2; undelivered; }
+  started="$(printf '%s' "$out" | jq -r '.started // empty' 2>/dev/null)"
+  status="$(printf '%s' "$out" | jq -r '.status // empty' 2>/dev/null)"
+  [ "$started" = true ] && exit 0
+  if [ -n "$status" ]; then
+    # hc already handles submission. An unconfirmed send needs inspection;
+    # a second Enter could submit twice or answer a newly opened dialog.
+    undelivered
+  fi
+  [ -z "$msg" ] && exit 0
+  # A plain program reports no status (started: null): confirm the text
+  # rendered on its screen instead.
+  frag="$(printf '%s' "$msg" | head -c 40)"
+  for attempt in 1 2 3; do
+    hc read "$win" --lines 40 2>/dev/null | grep -qF -- "$frag" && exit 0
+    [ "$attempt" -lt 3 ] && sleep 2
   done
   undelivered
 fi
 
-[ "$mux" = tmux ] || { echo "not inside tmux or herdr"; exit 2; }
+[ "$mux" = tmux ] || { echo "not inside hc or tmux"; exit 2; }
 tmux has-session 2>/dev/null || { echo "no tmux server"; exit 2; }
 tmux list-panes -t "$win" >/dev/null 2>&1 || { echo "no such window: $win"; exit 2; }
 

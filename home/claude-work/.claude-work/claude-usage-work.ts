@@ -39,11 +39,11 @@
 // by construction.
 //
 // The endpoint is quota-limited per account (a 429 carries `retry-after`, and
-// the window can run ~50 min), and herdr-usage-watcher.ts draws on the same
+// the window can run ~50 min), and the ai-usage collector draws on the same
 // bucket. So: refresh at most every FRESH_MS, honor `retry-after` exactly, and
 // serve the last good reading throughout. Writes
-// /tmp/claude-usage-work.json for the statusline and the herdr tab-bar watcher
-// to read. Never blocks either: they render whatever the cache already holds.
+// /tmp/claude-usage-work.json for the statusline to read. Never blocks it: it
+// renders whatever the cache already holds.
 
 import crypto from "node:crypto";
 import fs from "node:fs";
@@ -52,7 +52,7 @@ const CACHE = "/tmp/claude-usage-work.json";
 const LOCK = "/tmp/claude-usage-work.lock";
 const LOCK_STALE_MS = 60_000;
 
-// Refresh cadence. The bucket is shared with herdr-usage-watcher.ts, so stay
+// Refresh cadence. The bucket is shared with the ai-usage collector, so stay
 // well clear of it — spend moves in dollars over hours, not seconds.
 const FRESH_MS = 15 * 60_000;
 const FAIL_BACKOFF_MS = 10 * 60_000; // when a failure carries no retry-after

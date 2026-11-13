@@ -7,7 +7,10 @@
 #   - heavy.lock free (a held lock means a run is live or a holder crashed);
 #   - each worktree clean (`git status --porcelain` empty);
 #   - each worktree fully pushed (no commit unreachable from every remote
-#     ref — catches unpushed work regardless of upstream configuration).
+#     ref — catches unpushed work regardless of upstream configuration);
+#   - under hc, which teammate terminals are still live (info only: they
+#     outlive the coordinator, so end each with `hc kill`/`hc rm` after its
+#     retro is collected).
 #
 # THE PUSHED CHECK IS POLICY-DEPENDENT. Under `no-github`, `no-submit` and `local-merge`,
 # unpushed commits are the DESIGNED state - there may be no remote at all, in
@@ -166,6 +169,21 @@ for wt in ${wts[@]+"${wts[@]}"}; do
     issues=1
   fi
 done
+
+# hc: teammates start with --outlive-parent, so they keep running after the
+# coordinator ends. List the live ones; info only, since each retro must be
+# collected before its terminal is ended.
+if [ -n "${HC_TERMINAL_ID:-}" ] && command -v hc >/dev/null 2>&1 && command -v jq >/dev/null 2>&1; then
+  live="$(hc ls --json 2>/dev/null | jq -r --arg p "$HC_TERMINAL_ID" \
+    '.terminals[]? | select(.parent == $p and .state == "live") | "\(.name // .address) \(.address)"')"
+  if [ -n "$live" ]; then
+    printf '%s\n' "$live" | while read -r tname taddr; do
+      echo "info hc teammate still running: $tname ($taddr) - after its retro: hc kill $taddr && hc rm $taddr"
+    done
+  else
+    echo "ok   no live hc teammates"
+  fi
+fi
 
 if [ "$issues" = 0 ]; then
   echo "stand-down: ALL CLEAR"

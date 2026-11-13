@@ -2,6 +2,9 @@
 
 ## 2026-11-13
 
+- **Creation**: [hc-terminal-coordination](hc-terminal-coordination.md): migrate shared terminal/coordinator helpers to hc, verify command capture and protected message delivery, and preserve tmux support.
+- **Deprecation**: [herdr-usage-tab-indicator](herdr-usage-tab-indicator.md): retire per-pane watchers and statusline spawn hooks in favor of the [ai-usage collector](ai-usage-collector-daemon.md).
+
 - **Update**: [headless-machine-ssh](headless-machine-ssh.md): extend to k and nebula with managed-destination scope; distinguish client keys from the SSH server key and retain nebula's existing sops recipient.
 
 - **Creation**: [headless-machine-ssh](headless-machine-ssh.md): separate mini SSH authentication from Git signing, encrypt the private key with sops, and authorize its public key across the managed hosts.

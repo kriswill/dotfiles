@@ -33,7 +33,7 @@
       ],
       "interval": 30,
       "url": "https://claude.ai/settings/usage",
-      "$comment": "Shares the OAuth usage quota with ~/.claude-work/claude-usage-work.ts (15 min) and herdr-usage-watcher.ts, hence the slow interval."
+      "$comment": "Shares the OAuth usage quota with ~/.claude-work/claude-usage-work.ts (15 min), hence the slow interval."
     },
     {
       "id": "chatgpt",

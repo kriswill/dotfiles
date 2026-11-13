@@ -1,5 +1,9 @@
 # Log
 
+## 2026-11-13
+
+- **Update**: [ai-usage](ai-usage.md): remove retired Herdr watcher references; the work statusline keeps its cached spend visible inside Herdr.
+
 ## 2026-11-09
 
 - **Update**: [hermes-agent](hermes-agent.md): bumped to v0.23.0 (webapp

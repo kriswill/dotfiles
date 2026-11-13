@@ -1,15 +1,22 @@
 #!/usr/bin/env bash
 # spawn-teammate.sh <name> <workdir> <brief-file> [extra claude args...]
 #
-# Spawns a teammate claude session in the multiplexer this coordinator is
-# running inside — a new tmux window or a new herdr tab, auto-detected from
-# the environment (HERDR_PANE_ID vs TMUX) — named <name>, cwd <workdir>, with
-# the brief file's contents as the initial prompt, then verifies the session
-# actually started processing. Defaults to the strongest model at high
+# Spawns a teammate claude session where this coordinator is running — a new
+# hc (herdr-core) terminal or a new tmux window, auto-detected from the
+# environment (HC_TERMINAL_ID first, then TMUX) — named <name>, cwd <workdir>,
+# with the brief file's contents as the initial prompt, then verifies the
+# session actually started processing. Defaults to the strongest model at high
 # effort; override via extra args (passed through to claude).
 #
 # The brief travels as an argv element / "$(cat file)" - never typed through
 # send-keys - so paste-rendering length limits don't apply.
+#
+# hc: the teammate is a child terminal of the coordinator's, started with
+# --outlive-parent so a coordinator restart does not take the team down (tmux
+# windows survived that too). hc starts programs with the LOGIN session's
+# environment, not the caller's, so CLAUDE_CONFIG_DIR is forwarded explicitly
+# through `env` - without it the teammate opens an unauthenticated default
+# config. hc names are 1-32 of a-z 0-9 - _, unique among live terminals.
 #
 # Preflight (refuses before spawning; override with --force among the extra
 # args): a brief still containing unexpanded template placeholders (<name>,
@@ -24,7 +31,7 @@
 set -u
 
 detect_mux() {
-  if [ -n "${HERDR_PANE_ID:-}" ]; then echo herdr
+  if [ -n "${HC_TERMINAL_ID:-}" ]; then echo hc
   elif [ -n "${TMUX:-}" ]; then echo tmux
   else echo none; fi
 }
@@ -33,10 +40,21 @@ mux="$(detect_mux)"
 if [ "${1:-}" = "--self-test" ]; then
   command -v claude >/dev/null || { echo "self-test: claude missing"; exit 1; }
   case "$mux" in
-    herdr) command -v herdr >/dev/null || { echo "self-test: inside herdr but herdr CLI not on PATH"; exit 1; } ;;
-    tmux)  command -v tmux >/dev/null || { echo "self-test: tmux missing"; exit 1; } ;;
-    none)  echo "self-test: not inside tmux or herdr"; exit 1 ;;
+    hc)   { command -v hc >/dev/null && command -v jq >/dev/null; } || { echo "self-test: inside hc but hc or jq not on PATH"; exit 1; } ;;
+    tmux) command -v tmux >/dev/null || { echo "self-test: tmux missing"; exit 1; } ;;
+    none) echo "self-test: not inside hc or tmux"; exit 1 ;;
   esac
+  # hc name rule: the gate must refuse before any spawn attempt.
+  if [ "$mux" = hc ]; then
+    tmpn="$(mktemp -d)"; mkdir "$tmpn/wt"
+    printf 'Deliver X.\nIntegration policy: push-only\n' > "$tmpn/brief.md"
+    # --model: p4c-style copies refuse a spawn without one before the name gate,
+    # which would pass this test for the wrong reason; the message pins it.
+    out="$("$0" Bad.Name "$tmpn/wt" "$tmpn/brief.md" --model sonnet 2>&1)"; rc=$?
+    rm -rf "$tmpn"
+    { [ "$rc" = 2 ] && printf "%s" "$out" | grep -q "hc terminal names"; } \
+      || { echo "self-test: FAIL hc name gate did not refuse (rc=$rc: $out)"; exit 1; }
+  fi
   # Preflight guards - both cases must refuse BEFORE any spawn attempt.
   tmp="$(mktemp -d)"; trap 'rm -rf "$tmp"' EXIT
   mkdir "$tmp/wt" "$tmp/main-co"
@@ -86,7 +104,7 @@ extra_args=(${pruned[@]+"${pruned[@]}"})
 [ -r "$brief" ]  || { echo "brief not readable: $brief"; exit 2; }
 
 # --- Preflight (before any mux action; --force overrides) ---
-placeholders="$(grep -nE '<(name|scratch|skill-dir|branch|prefix|worktree path|\.\.\.)>|<(one-paragraph|tmux window|list the actual)' "$brief" || true)"
+placeholders="$(grep -nE '<(name|scratch|skill-dir|branch|prefix|worktree path|\.\.\.)>|<(one-paragraph|tmux window|hc terminal|list the actual)' "$brief" || true)"
 if [ -n "$placeholders" ] && [ "$force" = 0 ]; then
   echo "brief contains unexpanded template placeholders - a guaranteed-wrong brief fact costs the teammate its first work block:" >&2
   printf '%s\n' "$placeholders" >&2
@@ -114,55 +132,47 @@ if git -C "$workdir" rev-parse --git-dir >/dev/null 2>&1; then
   esac
 fi
 
-[ "$mux" = none ] && { echo "not inside tmux or herdr - nothing to spawn into"; exit 2; }
+[ "$mux" = none ] && { echo "not inside hc or tmux - nothing to spawn into"; exit 2; }
 
 model_args=(--model claude-opus-5 --effort high)
 # If the caller supplied their own --model, drop the defaults.
 for a in "${extra_args[@]:-}"; do [ "$a" = "--model" ] && model_args=(); done
 
-if [ "$mux" = herdr ]; then
-  command -v herdr >/dev/null || { echo "inside herdr but herdr CLI not on PATH"; exit 2; }
-  # Pin the tab to the COORDINATOR's workspace (HERDR_PANE_ID = "<ws>:p<n>").
-  # Without --workspace, tab create lands in the currently-FOCUSED workspace —
-  # which may be a different one — and herdr has no tab-move to recover
-  # (2026-07-28 mission: two teammates stranded in a sibling workspace).
-  ws="${HERDR_PANE_ID%%:*}"
-  # herdr agent start spawns from the SERVER's env, not the caller's: a
-  # coordinator running with a custom CLAUDE_CONFIG_DIR must forward it or the
-  # teammate lands in an unauthenticated default config (OAuth login screen).
-  # herdr >=proto17: env forwarding moved to `tab create --env`; `agent start`
-  # attaches to the tab's existing pane via --kind/--pane (pane must be at an
-  # interactive shell prompt — freshly created tabs are).
-  env_args=()
-  [ -n "${CLAUDE_CONFIG_DIR:-}" ] && env_args=(--env "CLAUDE_CONFIG_DIR=$CLAUDE_CONFIG_DIR")
-  tab_id="$(herdr tab create --workspace "$ws" --label "$name" --cwd "$workdir" --no-focus \
-    ${env_args[@]:+"${env_args[@]}"} \
-    | grep -o '"tab_id":"[^"]*"' | head -1 | cut -d'"' -f4)"
-  [ -n "$tab_id" ] || { echo "herdr tab create failed"; exit 2; }
-  # tab get doesn't list panes; pane list carries the tab_id mapping. jq, not
-  # grep: the nested scroll object separates pane_id from tab_id in the text.
-  command -v jq >/dev/null || { echo "herdr spawn path needs jq on PATH"; exit 2; }
-  pane_id="$(herdr pane list --workspace "$ws" \
-    | jq -r --arg t "$tab_id" '.result.panes[] | select(.tab_id==$t) | .pane_id' | head -1)"
-  [ -n "$pane_id" ] || { echo "no pane found in tab $tab_id"; exit 2; }
-  # herdr >=proto17 shell-encodes agent args into the pane and REFUSES
-  # multi-line text ("cannot be encoded safely"), so the brief can no longer
-  # travel as an argv element — pass a one-line bootstrap pointing at the file.
-  herdr agent start "$name" --kind claude --pane "$pane_id" -- \
-    --dangerously-skip-permissions ${model_args[@]:+"${model_args[@]}"} \
-    ${extra_args[@]:+"${extra_args[@]}"} \
-    "Read the file $brief and follow it: it is your complete mission brief and operating instructions. Start now." \
-    >/dev/null || exit 2
-  # working = processing the brief; a very short first turn can finish before
-  # the wait polls, so also accept visible claude chrome (as the tmux path does).
-  if { herdr agent wait "$name" --until working --timeout 60000 >/dev/null 2>&1 \
-       || herdr agent wait "$name" --status working --timeout 60000 >/dev/null 2>&1; } \
-     || herdr agent read "$name" --source visible --lines 50 2>/dev/null \
-        | grep -qE '\([0-9]+m? ?[0-9]*s? ?·|bypass permissions'; then
-    echo "spawned $name (herdr tab $tab_id, cwd $workdir)"
-    exit 0
+if [ "$mux" = hc ]; then
+  { command -v hc >/dev/null && command -v jq >/dev/null; } || { echo "inside hc but hc or jq not on PATH"; exit 2; }
+  if ! printf '%s' "$name" | grep -qE '^[a-z0-9_-]{1,32}$'; then
+    echo "hc terminal names are 1-32 of a-z 0-9 - _ (got: $name)"; exit 2
   fi
-  echo "WARNING: $name started but no claude activity detected - inspect the tab" >&2
+  env_args=(env)
+  [ -n "${CLAUDE_CONFIG_DIR:-}" ] && env_args+=("CLAUDE_CONFIG_DIR=$CLAUDE_CONFIG_DIR")
+  out="$(hc run --bg --json --outlive-parent --name "$name" --cwd "$workdir" -- \
+    "${env_args[@]}" claude --dangerously-skip-permissions ${model_args[@]:+"${model_args[@]}"} \
+    ${extra_args[@]:+"${extra_args[@]}"} "$(cat "$brief")" 2>&1)" \
+    || { echo "hc run failed: $out"; exit 2; }
+  addr="$(printf '%s' "$out" | jq -r '.address // empty' 2>/dev/null)"
+  [ -n "$addr" ] || { echo "hc run returned no address: $out"; exit 2; }
+  # Status is claude's own OSC 7501 report (hc get .status.state), never screen
+  # text. A very short first turn can already be done by the first poll, so a
+  # finished turn (turn >= 1) also counts as started.
+  for _ in $(seq 1 30); do
+    sleep 2
+    info="$(hc get "$addr" --json 2>/dev/null)" || info='{}'
+    tstate="$(printf '%s' "$info" | jq -r '.state // "unknown"')"
+    st="$(printf '%s' "$info" | jq -r '.status.state // "none"')"
+    turn="$(printf '%s' "$info" | jq -r '.turn // 0')"
+    if [ "$tstate" = finished ]; then
+      echo "$name exited during startup (exit $(printf '%s' "$info" | jq -r '.exit_code')) - hc read $addr" >&2
+      exit 2
+    fi
+    case "$st" in
+      working) echo "spawned $name (hc terminal $addr, cwd $workdir)"; exit 0 ;;
+      idle|done)
+        if [ "$turn" -ge 1 ]; then echo "spawned $name (hc terminal $addr, cwd $workdir; first turn already ended)"; exit 0; fi ;;
+      blocked) echo "WARNING: $name is blocked at startup (a dialog needs a person) - hc read $addr" >&2; exit 1 ;;
+      error)   echo "WARNING: $name reported an error at startup - hc read $addr" >&2; exit 1 ;;
+    esac
+  done
+  echo "WARNING: $name started but reported no working status within 60s - hc read $addr" >&2
   exit 1
 fi
 
@@ -174,7 +184,7 @@ win_id="$(tmux new-window -dP -F '#{window_id}' -t "${sess}:" -n "$name" -c "$wo
 tmux send-keys -t "$win_id" "claude --dangerously-skip-permissions ${model_args[*]} ${extra_args[*]:-} \"\$(cat $(printf '%q' "$brief"))\"" Enter
 
 # Verify the session came up and began processing the brief.
-for i in $(seq 1 12); do
+for _ in $(seq 1 12); do
   sleep 5
   p="$(tmux capture-pane -t "$win_id" -p 2>/dev/null)"
   if printf '%s' "$p" | grep -qE '\([0-9]+m? ?[0-9]*s? ?·|bypass permissions'; then

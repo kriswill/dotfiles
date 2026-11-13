@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 # heartbeat.sh [--interval S] [--no-submit] [--once] <teammate>...
 #
-# Persistent teammate monitor for the multiplexer this coordinator runs inside
-# (herdr or tmux, auto-detected). Emits one line per CONFIRMED state change:
+# Persistent teammate monitor for wherever this coordinator runs (hc or tmux,
+# auto-detected: HC_TERMINAL_ID first, then TMUX). Emits one line per
+# CONFIRMED state change:
 #
 #   [17:42] heartbeat: impl IDLE (2 consecutive reads; was working)
 #
@@ -12,9 +13,11 @@
 #     idle/done alert across two missions was a turn-boundary race;
 #   - tmux panes are classified by the SPINNER line, never the last line
 #     (the last line is the input box: it always looks idle);
-#   - herdr status comes from `herdr agent get <name>` (agent_status; any
-#     non-working value is treated as idle-class and shown verbatim, so an
-#     unexpected status like "done" reports rather than false-MISSINGs);
+#   - hc status is claude's own OSC 7501 report from `hc get <name>`
+#     (.status.state: idle, working, done, blocked, error), never screen text.
+#     Any non-working value is shown verbatim: BLOCKED means a dialog needs a
+#     person (read it, ask the user; never force past it). A terminal that is
+#     no longer live reports EXITED, an unknown name MISSING;
 #   - an idle pane with text in its input box is QUEUED: a stranded
 #     self-prompt. Once confirmed it is auto-submitted with msg-teammate.sh's
 #     verified bare-Enter (harmless if the box turns out empty). Disable with
@@ -35,7 +38,7 @@ set -u
 script_dir="$(cd "$(dirname "$0")" && pwd)"
 
 detect_mux() {
-  if [ -n "${HERDR_PANE_ID:-}" ]; then echo herdr
+  if [ -n "${HC_TERMINAL_ID:-}" ]; then echo hc
   elif [ -n "${TMUX:-}" ]; then echo tmux
   else echo none; fi
 }
@@ -51,7 +54,24 @@ classify() {
   if printf '%s\n' "$text" | grep -qE '\([0-9]+m? ?[0-9]*s? ?·'; then
     echo working; return
   fi
-  # Only the bottom of the pane can be the input box. Strip box borders and
+  # Current Claude Code draws the input between the last two ─── rules, as
+  # "❯<nbsp>text". Earlier "❯ ..." lines above the rules are past prompts.
+  local rules r1 r2 region first
+  rules="$(printf '%s\n' "$text" | grep -nE '^[[:space:]]*(─){8,}[[:space:]]*$' | tail -n 2 | cut -d: -f1)"
+  if [ "$(printf '%s\n' "$rules" | grep -c .)" = 2 ]; then
+    r1="$(printf '%s\n' "$rules" | head -n 1)"; r2="$(printf '%s\n' "$rules" | tail -n 1)"
+    region="$(printf '%s\n' "$text" | sed -n "$((r1 + 1)),$((r2 - 1))p")"
+    first="$(printf '%s\n' "$region" | grep -v '^[[:space:]]*$' | head -n 1)"
+  fi
+  if [ -n "${first:-}" ] && [ "${first#*❯}" != "$first" ]; then
+    if printf '%s\n' "$region" | grep -q '\[Pasted text'; then echo queued; return; fi
+    first="${first#*❯}"
+    first="${first//$'\xc2\xa0'/ }"
+    first="${first#"${first%%[![:space:]]*}"}"
+    if [ -n "$first" ]; then echo queued; else echo idle; fi
+    return
+  fi
+  # Older layout: only the bottom of the pane can be the input box. Strip box borders and
   # edge whitespace so an empty prompt ("│ > │") doesn't read as queued.
   bottom="$(printf '%s\n' "$text" | grep -v '^[[:space:]]*$' | tail -n 8 \
     | sed -e 's/^[[:space:]│|]*//' -e 's/[[:space:]│|]*$//')"
@@ -71,12 +91,32 @@ ctx_parse() {
   echo "${pct:--} $limit"
 }
 
+# hc_state: `hc get <t> --json` on stdin -> working|idle|done|blocked|error|exited|unknown
+# (the program's own OSC 7501 word; a terminal that is no longer live is exited)
+hc_state() {
+  jq -r 'if (.state // "") != "live" then "exited" else (.status.state // "unknown") end' 2>/dev/null \
+    || echo unknown
+}
+
 if [ "${1:-}" = "--self-test" ]; then
   fail=0
   expect() {
     local got; got="$(classify)"
     [ "$got" = "$2" ] || { echo "self-test: $1 classified $got (want $2)"; fail=1; }
   }
+  expect_hc() {
+    local got; got="$(hc_state)"
+    [ "$got" = "$2" ] || { echo "self-test: hc $1 mapped to $got (want $2)"; fail=1; }
+  }
+  if command -v jq >/dev/null; then
+    expect_hc working working <<< '{"state":"live","status":{"app":"claude-code","state":"working"},"turn":0}'
+    expect_hc 'done' 'done' <<< '{"state":"live","status":{"app":"claude-code","state":"done"},"turn":3}'
+    expect_hc blocked blocked <<< '{"state":"live","status":{"app":"claude-code","state":"blocked","kind":"permission"}}'
+    expect_hc no-report unknown <<< '{"state":"live","status":null}'
+    expect_hc finished exited <<< '{"state":"finished","status":{"state":"done"},"exit_code":0}'
+  else
+    echo "self-test: note - jq missing, hc status mapping not exercised"
+  fi
   expect spinner working <<'EOF'
 ✻ Churning… (3m 42s · ↓ 2.1k tokens · esc to interrupt)
 EOF
@@ -101,6 +141,12 @@ EOF
 │ > [Pasted text #1 +42 lines]             │
 ╰──────────────────────────────────────────╯
 EOF
+  # Current layout: input between two ─── rules, "❯" then a no-break space.
+  rule='────────────────────────────────────────'
+  # Process substitution, not a pipe: expect must run in this shell to set fail.
+  expect current-empty-input idle < <(printf '❯ <hc from="t25">earlier prompt</hc>\n⏺ PONG\n✻ Worked for 1s\n%s\n❯\xc2\xa0\n%s\n  repo main 5%%  Opus 5.5\n' "$rule" "$rule")
+  expect current-typed-input queued < <(printf '⏺ PONG\n%s\n❯\xc2\xa0say ok\n%s\n  repo main 5%%  Opus 5.5\n' "$rule" "$rule")
+  expect current-stranded-paste queued < <(printf '⏺ PONG\n%s\n❯\xc2\xa0[Pasted text #1 +42 lines]\n%s\n  repo main 5%%  Opus 5.5\n' "$rule" "$rule")
   expect shell-prompt idle <<'EOF'
 $ ls
 brief-impl.md  status-impl.md
@@ -139,9 +185,9 @@ EOF
 EOF
   [ -x "$script_dir/msg-teammate.sh" ] || { echo "self-test: msg-teammate.sh missing/not executable"; fail=1; }
   case "$mux" in
-    herdr) command -v herdr >/dev/null || { echo "self-test: inside herdr but herdr CLI not on PATH"; fail=1; } ;;
-    tmux)  command -v tmux >/dev/null || { echo "self-test: tmux missing"; fail=1; } ;;
-    none)  echo "self-test: note - not inside tmux or herdr (classifier only)" ;;
+    hc)   { command -v hc >/dev/null && command -v jq >/dev/null; } || { echo "self-test: inside hc but hc or jq not on PATH"; fail=1; } ;;
+    tmux) command -v tmux >/dev/null || { echo "self-test: tmux missing"; fail=1; } ;;
+    none) echo "self-test: note - not inside hc or tmux (classifier only)" ;;
   esac
   [ "$fail" = 0 ] && echo "self-test: OK ($mux; classifier fixtures pass; live polling not exercised)"
   exit "$fail"
@@ -162,34 +208,38 @@ while [ $# -gt 0 ]; do
   esac
 done
 [ $# -ge 1 ] || { echo "usage: heartbeat.sh [--interval S] [--no-submit] [--ctx-threshold PCT] [--once] <teammate>..." >&2; exit 2; }
-[ "$mux" = none ] && { echo "not inside tmux or herdr - nothing to monitor" >&2; exit 2; }
-[ "$mux" = herdr ] && { command -v herdr >/dev/null || { echo "inside herdr but herdr CLI not on PATH" >&2; exit 2; }; }
+[ "$mux" = none ] && { echo "not inside hc or tmux - nothing to monitor" >&2; exit 2; }
+[ "$mux" = hc ] && { { command -v hc >/dev/null && command -v jq >/dev/null; } || { echo "inside hc but hc or jq not on PATH" >&2; exit 2; }; }
 
 names=("$@")
 
-# read_status <name> -> working|queued|idle|missing (or herdr's own status word)
+# read_status <name> -> working|queued|idle|missing (or hc's own status word:
+# done, blocked, error, exited, unknown)
 read_status() {
   local name="$1" text hstatus c info
-  if [ "$mux" = herdr ]; then
-    info="$(herdr agent get "$name" 2>/dev/null)" || info=""
-    hstatus="$(printf '%s' "$info" | grep -o '"agent_status":"[^"]*"' | head -1 | cut -d'"' -f4)"
-    [ -n "$hstatus" ] || { echo missing; return; }
-    [ "$hstatus" = working ] && { echo working; return; }
-    # idle-class (idle/done/blocked/unknown): check the pane for stranded input
-    text="$(herdr agent read "$name" --source visible --lines 40 2>/dev/null)"
-    c="$(printf '%s\n' "$text" | classify)"
-    if [ "$c" = queued ]; then echo queued; else echo "$hstatus"; fi
+  if [ "$mux" = hc ]; then
+    info="$(hc get "$name" --json 2>/dev/null)" || { echo missing; return; }
+    hstatus="$(printf '%s' "$info" | hc_state)"
+    case "$hstatus" in
+      idle|done)
+        # check the screen for stranded input (a screen fact, not a status guess)
+        text="$(hc read "$name" --lines 0 2>/dev/null)"
+        c="$(printf '%s\n' "$text" | classify)"
+        if [ "$c" = queued ]; then echo queued; else echo "$hstatus"; fi ;;
+      *) echo "$hstatus" ;;
+    esac
   else
     text="$(tmux capture-pane -t "$name" -p 2>/dev/null)" || { echo missing; return; }
     printf '%s\n' "$text" | classify
   fi
 }
 
-# read_ctx <name> -> "<pct or -> <limit 0|1>" (visible pane; herdr allows it while working)
+# read_ctx <name> -> "<pct or -> <limit 0|1>" (visible screen; hc returns the
+# screen at once even while the teammate is working)
 read_ctx() {
   local name="$1"
-  if [ "$mux" = herdr ]; then
-    herdr agent read "$name" --source visible --lines 40 2>/dev/null | ctx_parse
+  if [ "$mux" = hc ]; then
+    hc read "$name" --lines 0 2>/dev/null | ctx_parse
   else
     tmux capture-pane -t "$name" -p 2>/dev/null | ctx_parse
   fi

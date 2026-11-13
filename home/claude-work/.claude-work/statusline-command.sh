@@ -53,11 +53,6 @@ esac
 # network call against a per-account quota, so it never runs inline: read
 # whatever the cache holds, and kick off a detached refresh only once the
 # cache says the next attempt is due. Stale numbers beat a stalled statusline.
-#
-# Inside Herdr the tab bar shows this (one copy per window, always visible),
-# so the statusline stays out of its way and only renders the segment when
-# there is no tab bar to carry it. The refresh still runs either way — the
-# watcher that feeds the tab bar reads this same cache and never fetches.
 USAGE_CACHE=/tmp/claude-usage-work.json
 
 spend_info=""
@@ -73,21 +68,13 @@ if [ "$profile" = "work" ]; then
   if [ "$now" -ge "$nextat" ] && command -v bun >/dev/null 2>&1; then
     (nohup bun "$here/claude-usage-work.ts" >/dev/null 2>&1 &) || true
   fi
-  if [ -n "$spend_pct" ] && [ "${HERDR_ENV:-}" != "1" ]; then
+  if [ -n "$spend_pct" ]; then
     if command -v dotbar >/dev/null 2>&1; then
       spend_info=$(printf '  \033[2m%s/%s\033[0m %s' "$spend_used" "$spend_limit" "$(dotbar --dense "$spend_pct")")
     else
       spend_info=$(printf '  \033[2m%s/%s %s%%\033[0m' "$spend_used" "$spend_limit" "$spend_pct")
     fi
   fi
-fi
-
-# Herdr tab-bar usage indicator: inside a Herdr pane, keep a watcher alive that
-# publishes usage into the tab bar while this tab is focused. Singleton per
-# pane; dies with claude ($PPID). The watcher reads the spend cache this
-# statusline already refreshes, so it costs no extra API calls.
-if [ "${HERDR_ENV:-}" = "1" ] && [ "$profile" = "work" ] && command -v bun >/dev/null 2>&1; then
-  (nohup bun "$here/herdr-usage-watcher.ts" "$PPID" >/dev/null 2>&1 &) || true
 fi
 
 # Per-profile badge background (truecolor). Warm = work, cool = me.

@@ -17,7 +17,7 @@
 // Rate limits matter more than freshness here:
 // - api.anthropic.com/api/oauth/usage backs Claude Code's own /usage panel
 //   and is quota-limited per account; a 429's retry-after can run ~50 min,
-//   and the herdr TUI's herdr-usage-watcher.ts draws on the same bucket.
+//   and ~/.claude-work/claude-usage-work.ts draws on the same bucket.
 //   So: every 10 min at most, retry-after honoured exactly, and the last good
 //   reading kept through any failure.
 // - OAuth credentials are only READ here; this collector never redeems a

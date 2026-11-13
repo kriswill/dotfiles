@@ -1,1 +1,0 @@
-../../claude-me/.claude-me/herdr-usage-watcher.ts

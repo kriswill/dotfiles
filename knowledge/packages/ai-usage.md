@@ -4,7 +4,7 @@ title: Ai Usage
 description: 'ai-usage — a Bun collector for AI account usage (Claude Ultra plan limits and extra usage, Anthropic API month-to-date cost, ChatGPT Codex limits): a rate-limit-paced daemon plus a terminal view, drawn in herdr-app by the ai-usage mod.'
 resource: overlays/ai-usage.nix
 tags: [overlay, package, herdr]
-generated: { by: codex/gpt-6, at: 2026-11-01T17:00:00-08:00 }
+generated: { by: codex/gpt-6, at: 2026-11-13T12:11:00-08:00 }
 sources:
   - id: usage-cost-api
     resource: https://platform.claude.com/docs/en/api/usage-cost-api
@@ -152,8 +152,11 @@ Regression checks: `bun test pkgs/ai-usage/main.test.ts`.
     $4.85 against the Console's ~$5. It counts only Hermes' calls, and only
     on nebula.
 
-- **The Claude endpoint is quota-limited per account**, and the herdr TUI's
-  `herdr-usage-watcher.ts` and `claude-usage-work.ts` share the bucket. The
+- **The Claude endpoint is quota-limited per account**, and
+  `claude-usage-work.ts` shares the bucket. The
+  [old Herdr watcher](../decisions/herdr-usage-tab-indicator.md) and its
+  statusline startup hooks were retired; work spend now remains visible in
+  the statusline even inside Herdr. The
   daemon polls every 10 min, honours `retry-after` exactly (persisted, so a
   restart can't skip it), and a forced refresh still waits a minute.
   CodexBar does the same.[^codexbar]

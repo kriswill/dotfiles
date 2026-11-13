@@ -45,21 +45,6 @@ case "$profile_dir" in
   *)         profile="$profile_dir" ;;
 esac
 
-# Herdr tab-bar usage indicator (experiment): on the personal profile inside a
-# Herdr pane, keep a watcher alive that shows weekly consumption in the tab
-# bar while this tab is focused. Singleton per pane; dies with claude ($PPID).
-# The weekly all-models % is free in the statusline JSON — publish it for the
-# watcher so only the Fable-scoped % ever needs the (touchy) OAuth endpoint.
-# "default" counts as personal: nebula's single-account setup has no
-# account-selector, so CLAUDE_CONFIG_DIR is unset there ("me" is macs-only).
-if [ "${HERDR_ENV:-}" = "1" ] && { [ "$profile" = "me" ] || [ "$profile" = "default" ]; } && command -v bun >/dev/null 2>&1; then
-  weekly=$(echo "$input" | jq -r '.rate_limits.seven_day.used_percentage // empty')
-  if [ -n "$weekly" ]; then
-    printf '{"at":%s000,"all":%s}' "$(date +%s)" "$weekly" > /tmp/herdr-claude-weekly.json
-  fi
-  (nohup bun "$HOME/.claude/herdr-usage-watcher.ts" "$PPID" >/dev/null 2>&1 &) || true
-fi
-
 # Effort level next to the model, e.g. "Fable 5 (medium)".
 effort_info=""
 [ -n "$effort" ] && effort_info=" (${effort})"
