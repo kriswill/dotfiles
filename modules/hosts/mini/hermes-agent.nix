@@ -4,13 +4,12 @@
 # wrapped `hermes` CLI on PATH shares its HERMES_HOME
 # (~/.hermes-agent/.hermes).
 #
-# Both run inside the module's Seatbelt sandbox (on by default): the agent
-# reads the system but nothing in /Users/k outside ~/.hermes-agent, writes
-# only there and in a private TMPDIR, and cannot reach the keychain, launchd,
-# other applications or other programs' sockets (tmux, herdr, the ssh and
-# git-signing agents). To let it work on a project, list the checkout in
-# `sandbox.readWritePaths`; nothing is listed, so it works in
-# ~/.hermes-agent/workspace.
+# Direct access remains confined to the system, agent state, private TMPDIR,
+# and opted-in ~/src checkouts. Socket exceptions below grant desktop-driver
+# access and FULL Herdr core access. The latter intentionally allows commands
+# outside Seatbelt and interaction with local/remote agent sessions; this is
+# not an end-to-end confinement boundary once hc is connected.
+# Started outside readable paths, Hermes uses ~/.hermes-agent/workspace.
 #
 # The model provider is OpenAI through the ChatGPT/Codex login, as on nebula:
 # `hermes auth add openai-codex` (device code) once on the machine, then
@@ -33,6 +32,8 @@ in
   configurations.darwin.mini.module =
     { config, lib, ... }:
     {
+      imports = [ ../../../flakes/hermes-agent/nix/cua-calculator-module.nix ];
+
       sops.secrets = lib.mkIf haveSecrets {
         hermes-env = { inherit sopsFile; };
       };
@@ -42,6 +43,28 @@ in
         addToSystemPackages = true;
         # Idle/working/blocked status in the Herdr app's Agents list.
         herdr.enable = true;
+        # Official signed immutable bundle + reviewed manual user-side launcher.
+        # No startup/approval assertion is performed by activation or Hermes.
+        cuaCalculator.enable = true;
+        # Every checkout under ~/src, read and write. That includes this
+        # repo, which `nrs` builds and activates as root: review what the
+        # agent changed here before rebuilding.
+        sandbox.readWritePaths = [ "/Users/k/src" ];
+        # Explicit desktop-control boundary: connect to the user-launched
+        # Calculator-only CuaDriver without enabling LaunchServices or Apple events.
+        # This grants access to the daemon, not merely a filesystem path;
+        # keep its authorization policy enabled. No GUI auto-start here.
+        sandbox.unixSockets = [
+          # The helper grants only its dedicated hermes-cua-calculator/driver.sock;
+          # the unrestricted/default CuaDriver endpoint is deliberately absent.
+          # Full access to the existing desktop core: deliberately permits
+          # unsandboxed commands, other terminals, and configured machines.
+          "/Users/k/.local/state/herdr-core/default/default.sock"
+        ];
+        # Shared environment is loaded by both the CLI and launchd gateway.
+        # HOME stays confined; hc must not discover a separate core there.
+        # The desktop app owns core startup; no new launchd service is added.
+        environment.HC_SOCKET = "/Users/k/.local/state/herdr-core/default/default.sock";
         environmentFiles = lib.optional haveSecrets config.sops.secrets.hermes-env.path;
         # Model selection belongs to Hermes (/model, including --global); see
         # nebula's file for why it is not declared here.

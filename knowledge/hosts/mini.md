@@ -24,8 +24,8 @@ are opted into below per the
   recipient (`&mini` in `.sops.yaml`) for that token.
 
 - [hermes-agent](../modules/hermes-agent.md): the Hermes Agent gateway and
-  CLI as k, inside a Seatbelt sandbox that keeps them out of the rest of
-  the home ([mini-hermes-agent](../modules/mini-hermes-agent.md)).
+  CLI as k, inside a Seatbelt sandbox that keeps them out of the home
+  except `~/src` ([mini-hermes-agent](../modules/mini-hermes-agent.md)).
 
 ## Source
 

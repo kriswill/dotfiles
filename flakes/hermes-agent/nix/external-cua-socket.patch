@@ -1,0 +1,208 @@
+Ours: connect to an explicit external CuaDriver socket without owning its runtime.
+
+Based on NousResearch/hermes-agent 2bd378ed1b8d6bf2192cb26e0a55ff3091e6bd19 (v0.23.0).
+External policy/manifest and lifetime belong to the operator, outside the sandbox.
+
+--- a/tools/computer_use/cua_backend.py
++++ b/tools/computer_use/cua_backend.py
+@@ -22,6 +22,7 @@
+ from tools.computer_use.backend import ActionResult, ComputerUseBackend
+ from tools.computer_use.cua_backend_capture import _CaptureMixin
+ from tools.computer_use.cua_backend_daemon import _EmbeddedCuaDaemon
++from tools.computer_use.cua_backend_external import _ExternalCuaSocket
+ from tools.computer_use.cua_backend_driver import (
+     _CUA_DRIVER_CMD_ENV, cua_driver_binary_available, cua_driver_runtime_contract_status,
+     resolve_cua_driver_cmd)
+@@ -252,8 +253,11 @@
+         if permission_mode not in {"standard", "bounded", "unrestricted"}:
+             raise ValueError(f"unsupported cua-driver permission mode: {permission_mode}")
+         self.permission_mode = permission_mode
+-        self._embedded_daemon: Optional[_EmbeddedCuaDaemon] = None
+-        if permission_mode != "standard":
++        self._embedded_daemon: Optional[_EmbeddedCuaDaemon | _ExternalCuaSocket] = None
++        external_socket = _computer_use_cfg().get("external_socket")
++        if external_socket is not None:
++            self._embedded_daemon = _ExternalCuaSocket(external_socket, permission_mode)
++        elif permission_mode != "standard":
+             # Manifest: mandatory for bounded (the daemon validates it), optional for unrestricted where it still
+             # caps what an approval-bypassed run may touch.
+             raw = _computer_use_cfg().get("capability_manifest")
+@@ -282,7 +286,7 @@
+         # binary (if any) is not the one that will run, so neither its acquisition nor its contract
+         # matters. On the host, runtime acquisition is on-demand, never the explicit install command
+         # (which may elevate for host setup and bypass the lazy-install gate).
+-        if sandbox_mcp_invocation() is not None:
++        if not isinstance(self._embedded_daemon, _ExternalCuaSocket) and sandbox_mcp_invocation() is not None:
+             contract = {"ready": True}
+         else:
+             if not os.environ.get(_CUA_DRIVER_CMD_ENV, "").strip():
+@@ -318,7 +322,9 @@
+                           self._session.call_tool, "start_session", {"session": self._session_id})
+         # Post-handshake tuning guards on `_started`: before the handshake flips it, call_tool would re-enter
+         # session.start() (stubbed start() recurses).
+-        if self._session._started:
++        # Ours: external runtime configuration belongs to its operator; these
++        # optional mutations may be intentionally denied by its immutable policy.
++        if self._session._started and not isinstance(self._embedded_daemon, _ExternalCuaSocket):
+             max_dim = _computer_use_max_image_dimension()
+             if max_dim:  # smaller screenshots cost less over the daemon socket and per turn
+                 self._best_effort("set_config(max_image_dimension) failed",
+@@ -349,5 +355,8 @@
+     def is_available(self) -> bool:
+-        return sys.platform in ("darwin", "win32", "linux") and cua_driver_binary_available()  # other Unix-likes untested E2E
+-
++        # Configuration keeps the tool discoverable; start/status still fail
++        # closed if the external socket or its local proxy client is absent.
++        return sys.platform in ("darwin", "win32", "linux") and (
++            _computer_use_cfg().get("external_socket") is not None or cua_driver_binary_available())
++
+     def _clear_active_target(self) -> None:
+         """Forget a capture/focus target so a failed lookup cannot misroute input."""
+--- a/tools/computer_use/cua_backend_session.py
++++ b/tools/computer_use/cua_backend_session.py
+@@ -222,11 +222,11 @@
+         # reports HOW FAR it got instead of an opaque "never reached ready".
+         self._startup_phase = "binary-check"
+         try:
++            daemon = self._embedded_daemon
+             driver_cmd = _driver.resolve_cua_driver_cmd()
+-            if not driver_cmd and _cb.sandbox_mcp_invocation() is None:
++            if daemon is None and not driver_cmd and _cb.sandbox_mcp_invocation() is None:
+                 raise RuntimeError(_driver.cua_driver_install_hint())
+             self._startup_phase = "manifest-discovery"
+-            daemon = self._embedded_daemon
+             (command, args), child_env = (
+                 (daemon.proxy_invocation(), daemon.child_env()) if daemon is not None
+                 else _cb.sandbox_mcp_invocation() or (_driver._resolve_mcp_invocation(driver_cmd), _cb.cua_driver_child_env()))
+@@ -440,6 +440,11 @@
+         working. Output is remapped to the ``_extract_tool_result`` shape. ``get_window_state`` routes its
+         screenshot to a temp file (``screenshot_out_file``) so the daemon returns a tiny JSON body, not the
+         multi-megabyte base64 blob that congests the socket; ``_cli_result`` reads it back."""
++        from tools.computer_use.cua_backend_external import _ExternalCuaSocket
++        if isinstance(getattr(self, "_embedded_daemon", None), _ExternalCuaSocket):
++            # No check-then-call race or dependency on a plain CLI's launch
++            # behavior. External runtimes use only the embedded MCP transport.
++            raise RuntimeError("external CuaDriver CLI fallback is disabled; use the embedded MCP transport")
+         import tempfile as _tempfile
+         from tools.computer_use import cua_backend as _cb
+         from tools.environments.local import _sanitize_subprocess_env
+--- /dev/null
++++ b/tools/computer_use/cua_backend_external.py
+@@ -0,0 +1,73 @@
++"""Ours: non-owning transport for a user-managed, externally bounded CuaDriver.
++
++The external runtime owns its launch-time manifest and lifetime. This adapter
++must never inherit the private daemon's launch/stop/kill/unlink implementation.
++"""
++from __future__ import annotations
++
++import os
++import stat
++import subprocess
++
++from tools.computer_use import cua_backend_driver as _driver
++
++
++def _cb():
++    from tools.computer_use import cua_backend
++    return cua_backend
++
++
++class _ExternalCuaSocket:
++    """The private daemon's transport interface, without runtime ownership.
++
++    An absolute Unix socket path is explicit opt-in. This adapter checks
++    liveness only and trusts the operator-controlled endpoint and immutable
++    launch policy; it does not attest runtime mode or manifest contents.
++    """
++
++    def __init__(self, socket_path: str, permission_mode: str, *, driver_cmd: str | None = None) -> None:
++        if (not isinstance(socket_path, str) or not socket_path
++                or "\x00" in socket_path or not os.path.isabs(socket_path)):
++            raise ValueError("computer_use.external_socket must be a non-empty absolute socket path")
++        configured_mode = str(_cb()._computer_use_cfg().get("permission_mode", "")).strip().lower()
++        if permission_mode == "unrestricted" or configured_mode == "unrestricted":
++            raise ValueError("computer_use.external_socket cannot be combined with YOLO/unrestricted mode")
++        self.socket_path = socket_path
++        self._driver_cmd = driver_cmd
++        self._command = ""
++
++    def child_env(self) -> dict[str, str]:
++        from tools.environments.local import _sanitize_subprocess_env
++        env = dict(_cb().cua_driver_child_env())
++        # The external daemon alone owns permission policy; never escalate it
++        # or pass the owned runtime's mode switches to a client process.
++        env.pop("CUA_DRIVER_PERMISSION_MODE", None)
++        env.pop("CUA_DRIVER_DANGEROUSLY_BYPASS_APPROVALS", None)
++        return _sanitize_subprocess_env(env)
++
++    def start(self) -> None:
++        self._command = ""
++        try:
++            if not stat.S_ISSOCK(os.lstat(self.socket_path).st_mode):
++                raise RuntimeError("not a Unix socket")
++            command = _driver.resolve_cua_driver_cmd(self._driver_cmd)
++            if not command:
++                raise RuntimeError(_driver.cua_driver_install_hint())
++            probe = _cb()._run_quiet(
++                [command, "status", "--socket", self.socket_path],
++                timeout=2.0, env=self.child_env())
++            if probe is None or probe.returncode != 0:
++                raise RuntimeError("external runtime did not answer status")
++        except (OSError, subprocess.SubprocessError, RuntimeError) as exc:
++            raise RuntimeError(f"computer_use.external_socket {self.socket_path!r} unavailable: {exc}") from exc
++        self._command = command
++
++    def proxy_invocation(self) -> tuple[str, list[str]]:
++        # Revalidate each MCP connection/reconnection for liveness only.
++        # --embedded itself prevents launch if the endpoint then disappears.
++        self.start()
++        return self._command, ["mcp", "--embedded", "--socket", self.socket_path]
++
++    def stop(self) -> None:
++        # Non-owning: no driver stop verb, process handle, signal or unlink.
++        self._command = ""
+--- a/plugins/computer_use/cua/__init__.py
++++ b/plugins/computer_use/cua/__init__.py
+@@ -19,6 +19,11 @@
+         """macOS/Windows/Linux + cua-driver binary (or env override). `hermes computer-use doctor` names blocked checks."""
+         if sys.platform not in ("darwin", "win32", "linux"):
+             return False
++        # Ours: expose configured external mode even before the native client
++        # is packaged. Readiness/start explain missing prerequisites separately.
++        from tools.computer_use.cua_backend import _computer_use_cfg
++        if _computer_use_cfg().get("external_socket") is not None:
++            return True
+         from tools.computer_use.cua_backend_driver import cua_driver_binary_available
+         if cua_driver_binary_available():
+             return True
+--- a/tools/computer_use/permissions.py
++++ b/tools/computer_use/permissions.py
+@@ -103,6 +103,27 @@
+         out.update(installed=True, version=f"{provider.display_name} (computer_use.backend: {provider.name})",
+                    ready=provider.is_available())
+         return out
++    # Ours: external configuration remains visible even when the local client
++    # is not installed. Native TCC/doctor probes target the wrong runtime.
++    from tools.computer_use.cua_backend import _computer_use_cfg, _cua_configured_permission_mode
++    external_socket = _computer_use_cfg().get("external_socket")
++    if external_socket is not None:
++        out.update(external_socket=external_socket, permission_mode=_cua_configured_permission_mode(),
++                   ready=False, can_grant=False)
++        if not binary:
++            out["error"] = "external CuaDriver proxy client is not installed; configure HERMES_CUA_DRIVER_CMD"
++            return out
++        from tools.computer_use.cua_backend_external import _ExternalCuaSocket
++        try:
++            adapter = _ExternalCuaSocket(external_socket, out["permission_mode"], driver_cmd=binary)
++            adapter.start()
++        except (ValueError, RuntimeError) as exc:
++            out["error"] = str(exc)
++        else:
++            out["ready"] = True
++            out["checks"] = [{"label": "external socket", "status": "ok",
++                              "message": "reachable; permission policy is managed by the external runtime"}]
++        return out
+     if not binary:
+         return out
+     with suppress(Exception):

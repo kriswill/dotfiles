@@ -146,7 +146,11 @@ let
           (final: prev: {
             hermes-agent = prev.hermes-agent.overrideAttrs (old: {
               # Ours: store modes must not make profile skill copies read-only.
-              patches = (old.patches or [ ]) ++ [ ./writable-skill-copies.patch ];
+              patches = (old.patches or [ ]) ++ [
+                ./writable-skill-copies.patch
+                # Ours: non-owning adapter for an externally bounded CuaDriver.
+                ./external-cua-socket.patch
+              ];
               HERMES_NIX_BUILD = "1";
             });
           })

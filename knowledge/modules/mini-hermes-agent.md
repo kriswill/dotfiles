@@ -1,7 +1,7 @@
 ---
 type: Darwin Module
 title: Hermes Agent (mini)
-description: 'Enables services.hermes-agent on mini: the gateway as a launchd user agent running as k, the wrapped hermes CLI sharing its HERMES_HOME under ~/.hermes-agent, the Herdr integration, OpenAI through the Codex OAuth login (as on nebula) with an optional sops secret for API keys, and everything inside the module''s Seatbelt sandbox with no extra paths granted.'
+description: 'Enables services.hermes-agent on mini: the gateway as a launchd user agent running as k, the wrapped hermes CLI sharing its HERMES_HOME under ~/.hermes-agent, the Herdr integration, OpenAI through the Codex OAuth login (as on nebula) with an optional sops secret for API keys, and everything inside the module''s Seatbelt sandbox, which is also granted ~/src so the agent can work on the checkouts there.'
 resource: modules/hosts/mini/hermes-agent.nix
 tags: [darwin-module, host-specific, ai-agent, sandbox, secrets]
 generated: { by: claude-code/fable-5-2, at: 2026-11-09T13:15:00-08:00 }
@@ -19,15 +19,23 @@ merged into the host per the
 [host-mounted modules pattern](../patterns/host-mounted-modules.md). nebula's
 counterpart is [nebula-hermes-agent](nebula-hermes-agent.md).
 
-- **Sandboxed, with nothing extra granted.** The gateway and the CLI read
-  the system and write `~/.hermes-agent` and a private `TMPDIR`. They can't
-  read the rest of `/Users/k`, or reach the keychain, launchd, other
-  applications, or the tmux, herdr, 1Password and
-  [git-signing](git-signing-agent.md) sockets
+- **Sandboxed, with `~/src` granted.** The gateway and the CLI read
+  the system and write `~/.hermes-agent`, a private `TMPDIR` and
+  `/Users/k/src` (`sandbox.readWritePaths`, added 2026-11-11 so the agent
+  can work on the checkouts there). They can't read the rest of `/Users/k`,
+  or reach the keychain, launchd, other applications, or the tmux, herdr,
+  1Password and [git-signing](git-signing-agent.md) sockets
   ([decision](../decisions/hermes-agent-macos-seatbelt-sandbox.md)).[^subflake-readme]
-  The agent works in `~/.hermes-agent/workspace`. To let it into a
-  checkout, add the canonical path to `sandbox.readWritePaths`.
-- **`hermes` run from anywhere else starts in the workspace**, with a note
+- **`~/src` is trusted the moment its code runs outside the sandbox.** The
+  agent can edit any checkout's hooks, `.envrc` and build scripts, and this
+  repo is one of them: `nrs` builds and activates it as root. Review the
+  agent's changes here before rebuilding. It can also read everything under
+  `~/src` (untracked `.env` files included) and the network is open.
+- **Git inside the sandbox has no identity or signing.** `HOME` is
+  `~/.hermes-agent`, so `~/.gitconfig` and the signing agent are out of
+  reach; commits the agent makes are unsigned unless it is given a config
+  of its own.
+- **`hermes` run from outside `~/src` starts in the workspace** (`~/.hermes-agent/workspace`), with a note
   on stderr: a working directory the sandbox can't read breaks every child.
 - **The provider is OpenAI through the Codex login**, the same as nebula
   (checked there on 2026-11-09: `openai-codex`, OAuth by device code, model
