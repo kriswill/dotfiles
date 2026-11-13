@@ -4,8 +4,11 @@ title: Hermes Agent (mini)
 description: 'Enables services.hermes-agent on mini: the gateway as a launchd user agent running as k, the wrapped hermes CLI sharing its HERMES_HOME under ~/.hermes-agent, the Herdr integration, OpenAI through the Codex OAuth login (as on nebula) with an optional sops secret for API keys, and everything inside the module''s Seatbelt sandbox, which is also granted ~/src so the agent can work on the checkouts there.'
 resource: modules/hosts/mini/hermes-agent.nix
 tags: [darwin-module, host-specific, ai-agent, sandbox, secrets]
-generated: { by: claude-code/fable-5-2, at: 2026-11-09T13:15:00-08:00 }
+generated: { by: codex/gpt-6, at: 2026-11-13T12:11:00-08:00 }
 sources:
+  - id: cua-launch-grants
+    resource: https://github.com/trycua/cua/pull/5690
+    title: CuaDriver per-application launch authorization
   - id: subflake-readme
     resource: ../../flakes/hermes-agent/README.md
     title: 'flakes/hermes-agent/README.md (the nix-darwin module and its sandbox)'
@@ -78,6 +81,24 @@ counterpart is [nebula-hermes-agent](nebula-hermes-agent.md).
   `tail ~/Library/Logs/hermes-agent.err.log`, `hermes gateway status`,
   `hermes -z hi`.
 
+## Bounded desktop driver package
+
+The local signed-driver package at
+[`cua-driver.nix`](../../flakes/hermes-agent/nix/cua-driver.nix) pins **0.47.24**, replacing 0.21.0.
+The older version allowed `launch_app` by tool name without checking the
+per-application launch grant; upstream PR #5690 adds that admission check.[^cua-launch-grants]
+The official ARM64 bundle is redistributed without binary modifications,
+and the package verifies bundle identity `com.trycua.driver` and Team ID
+`YCK386LBJ7`.
+
+Build verification passed for the driver, unchanged Calculator manifest,
+and control wrapper. The signed app matches the release archive byte-for-byte;
+14 non-GUI control tests pass. The new CLI retains the adapter's
+`mcp --embedded --socket` and reviewed `serve` flags. This is **not** live
+GUI or end-to-end adapter verification: activation/start and allowed/denied
+resource tests remain separate checkpoints. The earlier Calculator
+observation identity failure is not yet established as resolved.
+
 ## Writing or rotating API keys
 
 From the repo root, with the 1Password app unlocked (the CLI asks for
@@ -105,3 +126,5 @@ key) or `hermes -z hi`.
 
 [^subflake-readme]: flakes/hermes-agent/README.md
 [^sops-nix]: sops-nix
+
+[^cua-launch-grants]: CuaDriver enforces a matching per-app launch grant before dispatching launch_app.

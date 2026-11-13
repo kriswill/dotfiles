@@ -9,6 +9,11 @@
   matching public key, and fresh SSH logins; `nrs --status` reports a
   consistent generation 22. Deployment instructions use [nrs](nrs.md).
 
+- **Update**: [mini-hermes-agent](mini-hermes-agent.md): pin the official signed
+  CuaDriver 0.47.24 bundle containing per-app launch authorization. Driver,
+  policy, and control builds passed; signature and archive identity checked;
+  14 non-GUI tests passed. No activation, driver start, or live GUI testing.
+
 ## 2026-11-10
 
 - **Creation**: [chatgpt-broken-deps](chatgpt-broken-deps.md): temporary
