@@ -38,6 +38,10 @@ in
         hermes-env = { inherit sopsFile; };
       };
 
+      # This is mini's primary workload. Keep the sub-flake's default for
+      # other hosts while measuring normal scheduling against cold boot.
+      launchd.user.agents.hermes-agent.serviceConfig.ProcessType = lib.mkForce "Standard";
+
       services.hermes-agent = {
         enable = true;
         addToSystemPackages = true;

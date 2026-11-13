@@ -2,6 +2,58 @@
 
 ## 2026-11-13
 
+- **Update**: [Mini Hermes](mini-hermes-agent.md) distinguishes direct
+  sandbox restrictions from explicit Core delegation into user k's host
+  authority; the live delegation check succeeded. Clarify that the root
+  signing token does not provision general agent vault access, and correct
+  the optional environment-file lifecycle. [Git signing](git-signing-agent.md)
+  records generation-28 cold readiness at about +30 s and a verified
+  post-boot signature; Hermes initialized at +28.413 s. [Headless login](headless-login.md)
+  records successful restoration suppression and ServiceManagement's
+  re-enabling of 1Password. Normal 1Password launch is required; the initial
+  launcher-disable action awaits a separate configuration correction.
+
+- **Update**: [Mini Hermes](mini-hermes-agent.md) and
+  [Git signing](git-signing-agent.md) declare mini-only `Standard` scheduling;
+  signing gains startup-phase timestamps. The scheduling dry build and
+  lint checks pass. Generation 27 is active: signing loaded in two seconds
+  during the warm restart and a temporary signed commit verified; Hermes
+  reached its initialization marker in about three seconds and reports running.
+- **Creation**: [Headless login](headless-login.md) separates GUI session
+  restoration from 1Password's login launcher. It preserves manual app
+  use and desktop login. The combined dry build, lint and host-isolation
+  evaluations pass. `nrs` activated generation 28 successfully; live
+  defaults and the launchd disable override match the policy, while Hermes,
+  signing and existing GUI apps remain healthy. The macOS-specific
+  restoration preference still needs a cold-login check.
+
+- **Creation**: [Boot activation](boot-activation.md) skips full-rebuild
+  probes at boot while retaining upstream `/etc` overwrite checks, and logs
+  its result and duration. [Zsh](zsh.md) moves the persistent system-profile
+  PATH fallback into noninteractive startup. Mini's dry build, all Darwin
+  host evaluations, and denied-write/conflicting-file/PATH fixture checks
+  passed. `nrs` activated mini generation 26; the boot job ran once during
+  the switch with exit 0 and logged `elapsed=0s` (whole-second precision).
+  Live PATH, login-shell, and all 24 managed `/etc` link checks passed;
+  the subsequent cold reboot completed activation at +10.2 s
+  (`elapsed=1s`, exit 0), with hc active at +16.4 s versus +47.1 s before.
+
+- **Update**: [Git signing agent](git-signing-agent.md) starts through
+  Apple's shell and waits for its Nix-store loader before executing it.
+  On [mini](../hosts/mini.md), launchd tried the direct store path before
+  it existed at boot and left the job at `EX_CONFIG` despite `KeepAlive`.
+  [nrs](nrs.md) activated generation 25 and reloaded the failed job;
+  the expected key loaded and a temporary signed Git commit verified with
+  status `G`. Build, lint, and native bootstrap checks passed. The subsequent
+  reboot confirmed automatic startup and signing: socket at boot +64 s,
+  expected key at +68 s, and another verified temporary commit.
+
+- **Update**: [Zsh](zsh.md) documents the macOS upgrade failure on
+  [mini](../hosts/mini.md): replaced `/etc/zshrc` and `/etc/zprofile` links
+  bypass completion initialization, plugins, and the managed history path.
+  [nrs](nrs.md) restored generation 24; fresh login and non-login shells
+  verified completions, both plugins, the history path, and tool hooks.
+
 - **Creation**: [k SSH client](ssh-client.md) and [nebula SSH client](nebula-ssh-client.md): distinct sops-managed client identities for managed destinations, shared public-key trust, and preserved personal authentication elsewhere. `nrs` activated k generation 287 and nebula generation 235; all six fresh Herdr SSH handshakes among k, nebula, and mini passed. Moved the existing mini entry to [mini-ssh-client](mini-ssh-client.md).
 
 - **Creation**: [mini-ssh-client](mini-ssh-client.md): mini-only sops-managed SSH identity, an early client-config include disabling 1Password/agent forwarding, and public-key trust through [core](core.md) and [users-k](users-k.md). Fresh connections to k and nebula verified.

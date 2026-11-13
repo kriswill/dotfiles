@@ -2,6 +2,26 @@
 
 ## 2026-11-13
 
+- **Update**: [Darwin SOPS](sops-darwin-ssh-host-keys.md) preserves the
+  original rollout context while documenting Mini's current recipient,
+  service-account signing and separate machine SSH key. Link the existing
+  headless decisions and distinguish nebula's retained age identity.
+  [Hermes sandboxing](hermes-agent-macos-seatbelt-sandbox.md) records Mini's
+  subsequent Core delegation exception. [Mini startup](mini-headless-startup.md)
+  records the cold-boot results and supersedes only the mistaken decision
+  to disable normal 1Password launch; implementation is unchanged here.
+
+- **Creation**: [Mini headless startup](mini-headless-startup.md) prioritizes
+  Hermes and signing with host-only scheduling overrides, records their
+  readiness evidence, and reduces automatic GUI launches. It documents the
+  unmeasured boot benefit, macOS preference dependency and explicit rollback.
+
+- **Creation**: [darwin-early-boot](darwin-early-boot.md): make SSH tool
+  discovery independent of the volatile runtime profile, scope boot probes
+  to the files boot actually changes, and retain full checks on rebuilds.
+  Cold reboot verified successful activation at +10.2 s and hc at +16.4 s;
+  the prior measured hc startup was +47.1 s.
+
 - **Creation**: [hc-terminal-coordination](hc-terminal-coordination.md): migrate shared terminal/coordinator helpers to hc, verify command capture and protected message delivery, and preserve tmux support.
 - **Deprecation**: [herdr-usage-tab-indicator](herdr-usage-tab-indicator.md): retire per-pane watchers and statusline spawn hooks in favor of the [ai-usage collector](ai-usage-collector-daemon.md).
 

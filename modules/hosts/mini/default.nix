@@ -1,5 +1,5 @@
 # mini - my personal mac mini M1, 16GB RAM
-{ config, ... }:
+{ config, lib, ... }:
 {
   configurations.darwin.mini.module = {
     imports = (builtins.attrValues config.flake.modules.darwin) ++ [
@@ -33,6 +33,10 @@
       sopsFile = ./secrets.yaml;
       opItem = "mini-automation/mini git signing key";
     };
+
+    # Signing is needed by interactive headless agents. Background scheduling
+    # competes poorly with login's GUI work; measure Standard on mini first.
+    launchd.daemons.git-signing-agent.serviceConfig.ProcessType = lib.mkForce "Standard";
 
     nixpkgs.hostPlatform = "aarch64-darwin";
     nixpkgs.overlays = builtins.attrValues config.flake.overlays;

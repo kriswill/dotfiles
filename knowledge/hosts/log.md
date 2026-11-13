@@ -2,6 +2,11 @@
 
 ## 2026-11-13
 
+- **Update**: [mini](mini.md) records the verified generation-28 cold
+  startup, explicit Hermes delegation through Core and the corrected
+  requirement to let 1Password launch normally. General agent vault access
+  remains separate from the root signing loader's credential.
+
 - **Update**: [k](k.md) and [nebula](nebula.md) reconcile main with unrelated work preserved and gain per-host client keys for unattended Herdr connections; [mini](mini.md) trusts both identities.
 
 - **Update**: [mini](mini.md) uses its [sops-managed machine SSH key](../modules/mini-ssh-client.md) for unattended outgoing access; all managed hosts declare trust, with the offline work Mac awaiting deployment.

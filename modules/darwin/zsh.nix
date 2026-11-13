@@ -15,6 +15,13 @@
         # picks where to drop .zcompdump). Both then land in ~/.config/zsh.
         shellInit = ''
           export ZDOTDIR="$HOME/.config/zsh"
+
+          # SSH commands also need the system tools before boot activation
+          # recreates /run/current-system. Append without disturbing inherited
+          # dev-shell priorities or duplicating the fallback in child shells.
+          if (( ! ''${path[(Ie)/nix/var/nix/profiles/system/sw/bin]} )); then
+            path+=(/nix/var/nix/profiles/system/sw/bin)
+          fi
         '';
 
         # Larger in-memory history; the on-disk file goes under XDG state so it

@@ -5,7 +5,7 @@ description: 'A root launchd daemon that reads a host-only SSH signing key from 
 resource: modules/darwin/git-signing-agent/default.nix
 tags: [darwin-module, git, 1password, secrets]
 status: stable
-generated: { by: claude-code/opus-5.5, at: 2026-11-05T12:45:00-08:00 }
+generated: { by: codex/gpt-6, at: 2026-11-13T14:43:17-08:00 }
 sources:
   - id: op-secret-reference-syntax
     resource: https://developer.1password.com/docs/cli/secret-reference-syntax/
@@ -40,8 +40,8 @@ Setup, rotation and revocation:
 Gated on `services.git-signing-agent.enable` (the
 [host-mounted modules pattern](../patterns/host-mounted-modules.md)),
 auto-discovered via the [Dendritic module layout](../patterns/dendritic-modules.md).
-[mini](../hosts/mini.md) declares it with `enable = false` until its
-1Password items exist.
+[mini](../hosts/mini.md) enables it with its own signing key and
+service-account token.
 
 ## Pieces
 
@@ -49,6 +49,8 @@ auto-discovered via the [Dendritic module layout](../patterns/dendritic-modules.
   sops-nix's darwin default of `root:staff 0400`, so only root can read
   it.[^sops-nix] Machinery: [sops](sops.md).
 - **Daemon** `org.nixos.git-signing-agent` (`./loader.sh`, root, `KeepAlive`):
+  Apple's `/bin/sh` first waits for the loader with `/bin/wait4path`, so
+  launchd can start the job before the Nix volume is mounted. Then the loader:
   1. Starts `/usr/bin/ssh-agent -D -a /var/run/git-signing/agent.sock` as
      `user` through `sudo -u`.[^ssh-agent-man]
   2. Pipes `op read "op://<opItem>/private key?ssh-format=openssh"`
@@ -71,8 +73,55 @@ auto-discovered via the [Dendritic module layout](../patterns/dendritic-modules.
   [store-path configs pattern](../patterns/store-path-configs.md): nix
   writes it because it embeds a store path.
 
+Verified on mini, 2026-11-13: `nrs` activated generation 25 with the native
+bootstrap, the daemon loaded the expected public key, and a temporary Git
+commit signed and verified with status `G` through the configured signer
+and allowed-signers file. The build, Nix lint checks, and bootstrap checks
+with an absent/already-available loader passed. A subsequent reboot at
+13:22:04.807 PST confirmed automatic startup: the socket appeared at boot
++64 seconds and the expected key loaded at +68 seconds, followed by another
+successfully verified temporary commit. Detailed timing and the separate
+boot-activation failure are in the
+[startup manual](../../docs/shell-startup-performance.md#mini-reboot-timeline-2026-11-13-generation-25).
+Generation 26
+[reboot verification](../../docs/shell-startup-performance.md#mini-reboot-verification-2026-11-13-generation-26)
+measured the socket at +57.6 seconds and the expected key at about +61
+seconds, with one daemon launch and no key-load retries. The remaining delay
+mostly precedes the key load; its full cause is not established.
+
+Mini declares a host-only `ProcessType = "Standard"` override.
+The native bootstrap logs before and after its
+store wait; the loader logs entry, agent startup, socket creation, key-load
+attempt and successful load, with Bash elapsed seconds. This separates
+launch/store/interpreter delay from work inside the loader. These changes
+preserve the root-only token and in-memory key boundary. Generation 27's
+warm restart entered at 14:06:17, loaded the expected key at
+14:06:19 (`loader elapsed=2s`), and a temporary signed Git commit verified
+successfully. This is a warm-restart result, not a cold-boot comparison.
+
+Generation 28's cold reboot on 2026-11-13 created the socket at kernel
++17.323 s and loaded the expected key at about +30 s, versus about +61 s
+in generation 26. SOPS published the token at +24.828 s; a five-second
+retry left roughly two to three seconds before the next load attempt.
+The loader's successful fetch establishes access to its designated signing
+item, not general vault access for user agents or the full scope of the
+service account's server-side grants. A post-boot challenge signed through
+the configured Git signer and verified against the existing allowed-signers
+file, entirely through pipes without creating a commit or exposing the key.
+See the [cold-boot and credential record](../../docs/shell-startup-performance.md#mini-cold-boot-and-credential-readiness-2026-11-13-generation-28).
+
 ## Gotchas
 
+- **Boot before `/nix` is mounted:** on mini after the 2026-11-13 OS
+  upgrade, launchd rejected the direct store executable with `ENOENT` and
+  left the job at `EX_CONFIG` (78), with an empty log and no agent socket.
+  `KeepAlive` did not retry it after the executable became available, and
+  [nrs](nrs.md) did not reload an unchanged plist. The native-shell wait
+  above fixes that ordering; activating the changed plist reloads the job.
+  For an already-installed older plist, `sudo launchctl kickstart -k
+  system/org.nixos.git-signing-agent` retries startup once `/nix` is ready.
+  `wait4path` rechecks on mount-table changes, not ordinary file creation;
+  a test that merely creates a missing file does not simulate volume mount.
 - **The boundary relies on there being no passwordless sudo.** The
   session's user can sign through the socket, but can't read the token or
   the key. Adding `NOPASSWD` for that user removes the boundary.

@@ -1,10 +1,10 @@
 ---
 type: Darwin Module
 title: Hermes Agent (mini)
-description: 'Enables services.hermes-agent on mini: the gateway as a launchd user agent running as k, the wrapped hermes CLI sharing its HERMES_HOME under ~/.hermes-agent, the Herdr integration, OpenAI through the Codex OAuth login (as on nebula) with an optional sops secret for API keys, and everything inside the module''s Seatbelt sandbox, which is also granted ~/src so the agent can work on the checkouts there.'
+description: 'Hermes gateway and CLI on mini share private state and a Seatbelt sandbox with checkout access, plus explicit delegation through the existing Herdr Core socket into user k''s host authority.'
 resource: modules/hosts/mini/hermes-agent.nix
 tags: [darwin-module, host-specific, ai-agent, sandbox, secrets]
-generated: { by: codex/gpt-6, at: 2026-11-13T12:11:00-08:00 }
+generated: { by: codex/gpt-6, at: 2026-11-13T14:43:17-08:00 }
 sources:
   - id: cua-launch-grants
     resource: https://github.com/trycua/cua/pull/5690
@@ -22,22 +22,43 @@ merged into the host per the
 [host-mounted modules pattern](../patterns/host-mounted-modules.md). nebula's
 counterpart is [nebula-hermes-agent](nebula-hermes-agent.md).
 
+Mini overrides the gateway's launchd `ProcessType` to `Standard`; the
+sub-flake's `Background` default is unchanged. Generation 26 started its
+process at about boot +20 s, but the existing `logs/gateway.log` completion
+marker (`Press Ctrl+C to stop`, after startup wiring in pinned Hermes
+0.23.0) arrived at +72.6 s. Use that marker alongside runtime state and a
+functional check for the next comparison; it does not prove model-provider
+or desktop-driver readiness. The related [headless login policy](headless-login.md)
+reduces automatic GUI launches. See the
+[startup manual](../../docs/shell-startup-performance.md).
+Generation 27's warm restart with this scheduling override
+started PID 5206 at about 14:06:18 and reached the initialization marker at
+14:06:21.316. Generation 28's cold reboot reached the same marker at
+boot +28.413 s, versus +72.647 s in generation 26. Runtime state reports
+`running`; provider and desktop-driver readiness remain unverified. These
+are separate warm and cold measurements, with multiple changes between boots.
+
 - **Sandboxed, with `~/src` granted.** The gateway and the CLI read
   the system and write `~/.hermes-agent`, a private `TMPDIR` and
   `/Users/k/src` (`sandbox.readWritePaths`, added 2026-11-11 so the agent
-  can work on the checkouts there). They can't read the rest of `/Users/k`,
-  or reach the keychain, launchd, other applications, or the tmux, herdr,
-  1Password and [git-signing](git-signing-agent.md) sockets
+  can work on the checkouts there). Direct sandbox access excludes the rest
+  of the real home, keychain, launchd, arbitrary applications, and tmux,
+  1Password and [git-signing](git-signing-agent.md) sockets. Mini explicitly
+  allows the existing Herdr Core socket and the bounded desktop-driver
+  endpoint; these grant the authority of those servers, not just access to
+  their filesystem paths
   ([decision](../decisions/hermes-agent-macos-seatbelt-sandbox.md)).[^subflake-readme]
 - **`~/src` is trusted the moment its code runs outside the sandbox.** The
   agent can edit any checkout's hooks, `.envrc` and build scripts, and this
   repo is one of them: `nrs` builds and activates it as root. Review the
   agent's changes here before rebuilding. It can also read everything under
   `~/src` (untracked `.env` files included) and the network is open.
-- **Git inside the sandbox has no identity or signing.** `HOME` is
-  `~/.hermes-agent`, so `~/.gitconfig` and the signing agent are out of
-  reach; commits the agent makes are unsigned unless it is given a config
-  of its own.
+- **Direct Git and delegated Git have different authority.** `HOME` is
+  `~/.hermes-agent`, so direct commands do not inherit the user's Git config
+  or signing socket. Commands explicitly delegated through Core run outside
+  Seatbelt as k and can use the host Git signer and
+  [machine SSH identity](mini-ssh-client.md). This does not give Hermes the
+  root signing token or the private signing key.
 - **`hermes` run from outside `~/src` starts in the workspace** (`~/.hermes-agent/workspace`), with a note
   on stderr: a working directory the sandbox can't read breaks every child.
 - **The provider is OpenAI through the Codex login**, the same as nebula
@@ -63,14 +84,28 @@ counterpart is [nebula-hermes-agent](nebula-hermes-agent.md).
   from any checkout.
 - **The secret is declared only once that file is tracked**
   (`builtins.pathExists`), so the host builds before the key exists; Hermes
-  then relies on the Codex login alone. Removing the file later stops declaring the secret
-  but leaves the last `.env` in place: activation rewrites `.env` only when
-  there is something to write, so delete `~/.hermes-agent/.hermes/.env` by
-  hand.
-- **Herdr integration on.** Status reaches the Herdr app by OSC 7501 written
-  to the pane's pty, which the sandbox allows. The herdr TUI path
-  (`herdr pane report-agent-session`) needs herdr's socket and would not
-  work from inside.
+  then relies on the Codex login alone. Mini's nonempty `environment`
+  also supplies `HC_SOCKET` and `HERMES_CUA_DRIVER_CMD`, so activation
+  rewrites `.env` even without that secret. Removing the secret declaration
+  drops its copied values at the next activation; already-running processes
+  retain their environment until restarted.
+- **Herdr integration and delegation are enabled.** Status hooks support
+  OSC reporting to the pane. Separately, the host allows
+  `/Users/k/.local/state/herdr-core/default/default.sock` and sets `HC_SOCKET`
+  for both CLI and gateway. `hc` can therefore reach the existing Core
+  from inside the sandbox. Core can execute unsandboxed commands as k,
+  interact with other terminals and reach configured remote machines:
+  this is intentionally not an end-to-end confinement boundary. A read-only
+  post-boot check through the actual sandbox launcher and Core successfully
+  read the host's `gpg.ssh.program`. This verifies that delegation path,
+  not an LLM-driven Git workflow or every status-reporting transport.
+- **General vault access is not provisioned by the signing service.** The
+  post-boot `.env` contained only the two nonsecret settings above; no
+  `hermes-env` file or agent service-account token was configured. The
+  root-only signing token can fetch its designated key, but is not exported
+  to Hermes, Core or Codex. Additional assigned vaults need separately scoped
+  noninteractive credentials or a broker. An existing OAuth `auth.json`
+  does not establish working provider authentication after this reboot.
 - **Model selection is runtime-owned and the update check is off**, for the
   reasons in nebula's doc.
 - **Restart the gateway with launchd**, not `hermes gateway restart`: the
@@ -101,8 +136,9 @@ observation identity failure is not yet established as resolved.
 
 ## Writing or rotating API keys
 
-From the repo root, with the 1Password app unlocked (the CLI asks for
-approval). One `KEY=value` per line; add lines for more providers. The file
+This is a manual provisioning procedure, not a boot or agent-runtime
+dependency. From the repo root, with the 1Password app unlocked (the CLI
+asks for approval). One `KEY=value` per line; add lines for more providers. The file
 is replaced only after `sops` succeeds.
 
 ```sh

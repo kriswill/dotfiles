@@ -63,15 +63,9 @@ source "$ZDOTDIR/devenv-gh.zsh"
 ## PATH export below (brew shellenv prepends its own paths).
 source "$ZDOTDIR/darwin.zsh"
 
-## PATH: bun globals and user-local bins, plus the persistent system-profile path
-## as a fallback. On macOS, set-environment puts /run/current-system/sw/bin on
-## PATH, but that symlink lives in volatile /run and is only recreated by the
-## activate-system daemon once the FileVault-encrypted /nix volume mounts at login
-## — so a terminal opened in that brief post-login window can't find
-## starship/zoxide/direnv/etc. /nix/var/nix/profiles/system/sw/bin is the same
-## store path and resolves the moment /nix is mounted, independent of /run.
-## (Harmless on NixOS, where /run/current-system is reliable.)
-export PATH="$HOME/.bun/bin:$HOME/.local/bin:$PATH:/nix/var/nix/profiles/system/sw/bin"
+## PATH: bun globals and user-local bins. Darwin's persistent system-profile
+## fallback lives in /etc/zshenv so noninteractive SSH commands get it too.
+export PATH="$HOME/.bun/bin:$HOME/.local/bin:$PATH"
 
 ## Third-party tool hooks: starship prompt, zoxide, direnv, fzf, atuin. Must
 ## follow the PATH export above so the tools are findable.

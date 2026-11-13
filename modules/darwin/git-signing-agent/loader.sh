@@ -27,7 +27,9 @@ SSH_ADD=${GSA_SSH_ADD:-/usr/bin/ssh-add}
 MAX_BACKOFF=${GSA_MAX_BACKOFF:-300}
 SOCK="$GSA_SOCKET_DIR/agent.sock"
 
-log() { printf '%s git-signing-agent: %s\n' "$(date '+%Y-%m-%dT%H:%M:%S%z')" "$*"; }
+log() { printf '%s git-signing-agent: %s (loader elapsed=%ss)\n' "$(/bin/date '+%Y-%m-%dT%H:%M:%S%z')" "$*" "$SECONDS"; }
+
+log "loader entered"
 
 agent_pid=""
 # shellcheck disable=SC2329 # invoked by the EXIT trap
@@ -55,6 +57,7 @@ chown "$GSA_USER:$(id -g "$GSA_USER")" "$GSA_SOCKET_DIR"
 chmod 0700 "$GSA_SOCKET_DIR"
 rm -f "$SOCK"
 
+log "starting ssh-agent as $GSA_USER"
 if [ "$(id -u)" -eq 0 ] && [ "$GSA_USER" != root ]; then
   /usr/bin/sudo -u "$GSA_USER" -- "$SSH_AGENT" -D -a "$SOCK" >/dev/null &
 else
@@ -73,6 +76,7 @@ log "ssh-agent (pid $agent_pid) listening on $SOCK"
 # --- 2+3. the key -------------------------------------------------------------
 load_key() {
   local err have
+  log "loading signing key"
   # The token reaches op only through its environment, never argv. The
   # private key goes from op's stdout into ssh-add's stdin. Only the stderr
   # of the two (error text, no secrets) is captured, for the log.

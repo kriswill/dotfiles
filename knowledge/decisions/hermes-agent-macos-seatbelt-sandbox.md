@@ -4,7 +4,7 @@ title: Confine Hermes Agent on macOS with a Seatbelt Sandbox
 description: 'On the macs Hermes Agent (gateway and CLI) starts through a deny-by-default Seatbelt profile from the sub-flake''s nix-darwin module, because upstream''s only macOS isolation is a container terminal backend that leaves the agent itself unconfined; the agent reads the system, writes one state directory, and keeps the open network.'
 tags: [ai-agent, sandbox, darwin, sub-flake]
 status: stable
-generated: { by: claude-code/fable-5-2, at: 2026-11-09T13:15:00-08:00 }
+generated: { by: codex/gpt-6, at: 2026-11-13T14:43:17-08:00 }
 sources:
   - id: subflake-readme
     resource: ../../flakes/hermes-agent/README.md
@@ -55,7 +55,7 @@ starts the gateway agent and every binary of the installed CLI through
   directories. Metadata (`stat`) is allowed everywhere so `realpath` works.
 - **Unix sockets are allow-listed.** A socket is a way into its server: a
   tmux or herdr server types into an unsandboxed pane, an ssh agent signs.
-  Only sockets under the writable paths, mDNSResponder and syslog connect.
+  By default, only sockets under the writable paths, mDNSResponder and syslog connect.
   The nix daemon socket is opt-in (`sandbox.unixSockets`).
 - **The environment is allow-listed** (`env -i` plus named variables), so
   tokens exported in the calling shell don't reach the agent.
@@ -67,6 +67,16 @@ lists each escape tried and its result, and the gateway, `hermes gateway
 status` and the Herdr hook ran inside. Later that day a live agent on
 mini (Codex login) ran its terminal and file tools against the same list,
 with the same results, and Herdr showed working/idle.
+
+Mini's subsequent host-specific exceptions change the effective authority:
+it now permits its bounded desktop-driver endpoint and the existing Herdr
+Core socket, with `HC_SOCKET` supplied to the CLI and gateway. Core can run
+commands outside Seatbelt as k, interact with other terminals and reach
+configured peers. Thus the original direct-access checks do not establish
+end-to-end confinement for today's Mini. A read-only sandbox → Core → host
+Git-config check succeeded after the 2026-11-13 generation-28 reboot; see
+[Mini's current boundary](../modules/mini-hermes-agent.md). This delegation
+does not expose the root signing token or private signing key.
 
 ## Consequences
 

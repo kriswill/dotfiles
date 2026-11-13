@@ -125,7 +125,19 @@
 
         launchd.daemons.git-signing-agent.serviceConfig = {
           Label = label;
-          ProgramArguments = [ (lib.getExe loader) ];
+          # launchd can start this job before /nix is mounted. A missing
+          # executable leaves it in EX_CONFIG despite KeepAlive; use Apple's
+          # shell to wait for the loader, as nix-darwin's boot activation does.
+          ProgramArguments = [
+            "/bin/sh"
+            "-c"
+            ''
+              printf '%s git-signing-agent: bootstrap started\n' "$(/bin/date '+%Y-%m-%dT%H:%M:%S%z')"
+              /bin/wait4path ${lib.getExe loader} || exit $?
+              printf '%s git-signing-agent: loader available; executing\n' "$(/bin/date '+%Y-%m-%dT%H:%M:%S%z')"
+              exec ${lib.getExe loader}
+            ''
+          ];
           RunAtLoad = true;
           KeepAlive = true;
           ThrottleInterval = 30;

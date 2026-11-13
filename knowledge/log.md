@@ -7,6 +7,44 @@ in that bundle's own `log.md` (e.g. [modules/log.md](modules/log.md)).
 
 ## 2026-11-13
 
+- **Update**: The [startup manual](../docs/shell-startup-performance.md#mini-cold-boot-and-credential-readiness-2026-11-13-generation-28)
+  records the completed generation-28 cold boot with exact time origins,
+  comparison against generation 26 and separate warm-restart results. It
+  distinguishes local Core startup from the external observation's outage
+  upper bound, verifies restoration suppression and unattended signing/SSH,
+  and documents credential authority, unconfigured agent vault access and
+  the limits of password-prompt evidence. The read-only analysis preserves
+  normal 1Password launch as the requirement and proposes targeted future
+  measurements without changing configuration or permissions.
+
+- **Update**: The [shell startup manual](../docs/shell-startup-performance.md)
+  adds the machine-verified diagnosis and recovery procedure for `compdef`
+  errors after macOS replaced nix-darwin's startup files on mini. It also
+  records that `nrs --status` does not detect overwritten `/etc` files.
+  The generation-25 reboot timeline confirms signing recovery and records
+  strong evidence for hc's roughly 47-second boot-to-core delay: an early
+  noninteractive PATH gap followed by reconnect backoff. Boot activation
+  separately exited on an App Management denial while probing Herdr.app.
+  The manual now records the noninteractive PATH and boot-probe fixes,
+  passing pre-activation tests, and new boot logging. Generation 26
+  activated successfully and its boot job exited 0 during the switch;
+  the cold reboot completed activation at +10.2 s and brought hc up at
+  +16.4 s, versus +47.1 s before. It records the remaining signing delay,
+  Hermes sandbox-denial noise, and an app-data notice caused by the
+  diagnostic log search rather than boot-time SSH.
+  Follow-up inspection adds unapplied boot optimization candidates: test
+  normal scheduling for the two Background jobs, reduce optional GUI app
+  launches, and keep the one-second boot activation early. It distinguishes
+  idle launchd jobs from actual startup work and records the limits of the
+  available timing and login-item evidence.
+  The startup-tuning record adds the prepared mini-only scheduling and
+  GUI-startup changes, passing dry builds, and Hermes's existing +72.6 s
+  initialization marker. Generation 27 now runs the scheduling changes;
+  warm signing and Hermes initialization pass, including a verified signed
+  commit. `nrs` subsequently activated generation 28; the GUI-startup
+  defaults and launcher override are verified live. Cold-boot behavior
+  and timing remain to be measured.
+
 - **Update**: [`AGENTS.md`](../AGENTS.md) makes [nrs](modules/nrs.md) the
   standard rebuild, switch, and activation command on every managed machine.
   Run it as the normal user; it handles sudo internally. This corrects the
