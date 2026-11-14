@@ -4,7 +4,7 @@ title: codebase-memory-mcp via Nix-aware Fork
 description: 'The codebase-memory MCP server is consumed from the kriswill fork''s nix branch (Nix symbols + flake topology, PR #19 upstream) with its index artifact kept out of git for now.'
 resource: modules/darwin/codebase-memory-mcp.nix
 tags: [mcp, codebase-memory, fork]
-generated: { by: okflight/0.4.0, at: 2026-07-02T00:00:00-07:00 }
+generated: { by: codex/gpt-6, at: 2026-11-13T23:52:00-08:00 }
 sources:
   - id: kriswill-codebase-memory-mcp-pr-19
     resource: https://github.com/kriswill/codebase-memory-mcp
@@ -13,6 +13,16 @@ sources:
 
 **Status:** active. **Where:**
 [codebase-memory-mcp](../modules/codebase-memory-mcp.md).
+
+## Current deployment
+
+As of 2026-11-13, all host installations and the repository MCP launch entry
+are disabled at the user's request to remove startup/indexing work. The
+flake input, module re-exports, overlay and package outputs stay available.
+Existing indexes are preserved. This changes deployment, not the choice of
+fork. K's generation-289 launch interval was 40.656 seconds, but it ran in
+parallel with other startup work. The [generation-290 comparison](../../docs/shell-startup-performance.md#k-follow-up-comparison-generation-290-2026-11-14)
+did not establish an equal whole-boot saving.
 
 ## Context
 

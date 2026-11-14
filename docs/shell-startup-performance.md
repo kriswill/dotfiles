@@ -1,10 +1,19 @@
 # zsh/tmux startup performance (SOC-Kris-Williams, macOS)
 
-**Latest verification: 2026-11-13 on mini, macOS 27.2.1 (26B131), Apple
-zsh 5.9.** The OS upgrade replaced nix-darwin's `/etc/zshrc` and
+**Latest verification: 2026-11-14 on k, macOS 27.0.1 (26A434), generation
+290; and 2026-11-13 on mini, macOS 27.2.1 (26B131), Apple zsh 5.9.** On mini, the OS
+upgrade replaced nix-darwin's `/etc/zshrc` and
 `/etc/zprofile` links with regular files. The completion failure and recovery
 are covered below; the performance measurements remain the historical
 SOC-Kris-Williams baseline from 2026-07-16.
+
+**Live-state reconciliation, 2026-11-14:** k now runs generation **291**, with
+a matching boot default, after the separately deployed SOPS-backed Git signing
+change (`a138e87`, live verification `c9344f1`). The cold-boot measurements below
+remain generation 288–290 evidence; no generation-291 reboot was measured here.
+Git commits now use the root-loaded signing agent described in
+[the signing module](../knowledge/modules/git-signing-agent.md). This does not
+retroactively identify the earlier ordinary 1Password unlock screen's cause.
 
 Investigation into "why is opening a new tmux pane with zsh slow." Findings
 are machine-verified on `SOC-Kris-Williams` (aarch64-darwin); the zsh config
@@ -14,6 +23,227 @@ apply everywhere — only the specific numbers and the stray `.cache` directory
 were local to this machine. Maintained for Claude's use: keep it accurate,
 re-measure rather than trust stale numbers, and record new findings in
 **Learned behaviours** at the bottom.
+
+## K cold boot: generation 288 (2026-11-13)
+
+K booted checkpoint `2d34d982686b7d5b18919d8802a695670200549b` on its M1
+Max MacBook Pro. Running generation and boot default agree. Kernel origin
+was 15:03:16.035552 PST; offsets below exclude firmware/power-button time.
+
+| Observation | Seconds after kernel boot | Meaning |
+|---|---:|---|
+| FileVault UI / Data unlock | 9.803 / 21.807 | Includes user interaction; not pure system delay |
+| Nix Store mount | 33.897 | APFS completion |
+| Runtime profile restored | 34.187 | Symlink birth |
+| Boot activation exits 0 | 35.091 | Script reports one second; wrapper also waited for store |
+| Core socket / DesktopReady | 40.060 / 41.094 | Local milestones, not tested interactive/remote readiness |
+| SOPS publication | 46.666 | Successful job and publication metadata |
+| Wired address/DNS publication | 69.785 | Late USB enumeration plus DHCP; Wi-Fi published at 35.599 |
+| First retained SSH key acceptance | 73.930 | Authentication observed by then, not earliest readiness |
+| Restored apps all registered | 83.589 | Calendar last; releases deferred GUI agents |
+| ai-usage / codebase-memory executable markers | 145.935 / 150.252 | Long launch handshakes; Background scheduling and launch constraints not isolated |
+
+All 22 managed `/etc` targets, the noninteractive persistent-profile PATH
+fallback, interactive PTY completion, Core recovery and current services
+passed checks. Fresh SSH and Core commands through Mini succeeded at
+15:08:26 PST. No external observer covered reboot, so there is no measured
+outage or earliest command-ready time. October 24 unified boot logs and
+the old activation log were unavailable; one surviving initializer record
+does not establish a speedup. The user tentatively reported that desktop
+restoration and 1Password appeared normal ("I believe so"). K retains its
+interactive policy; Mini-only Hermes, signing and restoration suppression
+remain absent.
+
+Determinate's store/daemon/repair jobs are installer-owned (`nix.enable=false`),
+not flake-owned merely because they serve Nix. Its repair hook recovered
+from opening a log under unmounted `/nix` before its wait script ran. The
+legacy NAS helper failed authentication; current flake ownership was not
+established. Neither failure is an established Core critical-path delay.
+
+Private, gitignored evidence and portable authored artifacts on k:
+`/Users/k/src/dotfiles/.local-state/.cache/k-boot-validation-20261113/`.
+`report.md` has phase analysis, full timestamps, provenance and follow-ups;
+`k-boot-analysis.html` replays parallel lanes from `boot-events.json` without
+network dependencies or raw private logs. No startup changes were made
+during post-boot evidence collection. Mini timings below describe a
+different machine/login flow, not a controlled comparison with k.
+
+## K follow-up comparison: generation 289 (2026-11-13)
+
+Generation 289 activates one k-only scheduling change: ai-usage uses
+`ProcessType = "Standard"`; codebase-memory remains `Background`. The
+installed ai-usage plist differs only in that field, its binary is unchanged,
+and running generation equals boot default. The next boot's kernel origin
+was **23:35:50.214904 PST**. Its measured launchd xpcproxy-to-spawn interval
+was **0.492 s**, down from generation 288's **62.303 s**. The unchanged
+Background codebase-memory job went from **66.660 s to 40.656 s**. This
+supports retaining Standard for ai-usage, with one paired boot's uncertainty:
+other startup conditions improved too, so not all savings can be attributed
+to scheduling alone. Neither marker establishes fresh provider data or UI
+readiness.
+
+ai-usage's absolute spawn moved from +145.935 s to +68.508 s; restoration
+released deferred jobs earlier as well. Its cached account state remained
+unchanged until the next scheduled refresh, then Claude succeeded at
+23:39:22.698 and Codex at 23:40:41.661. The collector preserves per-account
+poll deadlines across restarts; an old snapshot immediately after boot is
+not by itself evidence of a stalled daemon.
+
+An independent observer was started and verified on nebula at 23:32:50 PST,
+2026-11-13, with successful pre-reboot SSH and Core command samples. This
+time it covered reboot: first successful commands completed at **+100.492 s
+(SSH)** and **+127.065 s (Core)**. Wired address publication was already
++26.953 s; earlier SSH attempts timed out during connection/banner exchange.
+The exact handshake delay remains unresolved. Fast repeated Core failures
+after independent SSH succeeded suggest reconnect/backoff also contributed,
+but do not quantify its cause. These are first observed successes under the
+probe's deadlines, not earliest possible readiness. The observer used the
+usual hostname and active Core requests, and was stopped at 23:41:45 PST
+after saving samples. The previous boot had no external observer, so no
+before/after remote-readiness improvement can be calculated.
+
+Experiment evidence and guarded post-boot collector are under the private
+validation directory in `ai-usage-standard-20261114T072850Z/`;
+`comparison.md` and `comparison.json` contain the measured results and
+source references. Desktop restoration and interactive 1Password policy
+were preserved; no new user UI confirmation was received during collection.
+
+## K follow-up comparison: generation 290 (2026-11-14)
+
+The user activated codebase-memory removal with NRS. After reboot, generation
+290 matches the boot default; the job, user LaunchAgent plist, executable and
+process are absent. ai-usage retains Standard scheduling and a healthy
+0.200-second launch handshake. No further activation or restart was performed
+while collecting evidence.
+
+Kernel origin was **2026-11-13 23:57:31.747863 PST**. Against generation 289:
+
+| Observation after kernel | Generation 289 | Generation 290 |
+|---|---:|---:|
+| Nix Store mounted | 27.247 s | 32.515 s |
+| Boot activation complete | 27.928 s | 33.490 s |
+| SOPS job complete | 32.523 s | 36.038 s |
+| DesktopReady marker | 34.227 s | 37.535 s |
+| All restored apps registered | 67.980 s | 66.720 s |
+| First successful external Core command | 127.065 s | 43.597 s |
+| First successful fresh SSH command | 100.492 s | 93.761 s |
+
+The FileVault UI-to-authorization interval increased from 6.999 to 11.548
+seconds, including user interaction; authorization-to-desktop decreased from
+17.277 to 15.450 seconds. The removed daemon's old 40.656-second launch
+handshake was concurrent work, not a serial boot delay. Core's new first
+success precedes the old daemon's +67.980-second launch start, so removal of
+its running workload alone cannot explain the 83.467-second Core difference.
+This single comparison does not establish a large overall boot-time saving.
+
+This observer used the same probe policy as generation 289. An SSH key was
+already accepted at +35.488 s; fresh two-second-deadline SSH probes still
+reported banner timeouts while Core commands worked. Connection lifecycle,
+probe deadlines and retries need separate investigation. First observed
+successes are not earliest possible readiness. Nebula saved 20 successful
+new-boot SSH and 30 Core samples; its temporary observer was stopped at
+00:00:46.781 PST on November 14.
+
+Determinate's installer repair hook repeated its initial failure/ten-second
+retry and then exited zero. The legacy NAS helper still exited 1; its retained
+untimestamped log reports SMB authentication errors. Neither is attributed to
+codebase-memory removal. Scheduled provider refreshes succeeded; desktop and
+1Password policies remain unchanged, with no new user UI confirmation.
+
+Detailed timestamp table, component provenance, interval boundaries and
+prioritized follow-ups are in the private validation directory under
+`codebase-memory-disabled-20261114T075200Z/comparison.md` and
+`comparison.json`. Earlier reports remain historical evidence.
+
+## K fresh SSH follow-up (2026-11-14)
+
+Current service order already prefers active USB Ethernet over Wi-Fi; the
+higher-ranked Belkin service has no present interface. K resolves to the
+wired address from nebula. Generation 290's en10 link became active at
++31.005 s and published IPv4/DNS at +32.034 s; no later inactive marker was
+found through +101.7 s, although fresh banner timeouts continued. This does
+not establish a benefit from changing service order or physical USB ports.
+
+Six warm authenticated fresh SSH probes all succeeded. Banners arrived in
+109–125 ms at the Ethernet address and 89–185 ms at the Wi-Fi address. These
+address tests are not isolated physical-interface packet captures. Boot
+failures had distinct stages: TCP timeouts, a locked-system response, a
+6.741-second server-alive failure and seven two-second banner timeouts.
+The original observer's short deadlines can under-report practical readiness.
+
+The staged cold test on unchanged generation 290 used kernel origin
+**2026-11-14 00:22:40.437744 PST**. A patient wired command succeeded at
++32.430 s, then fresh connections degraded: wired TCP took about 9 ms and
+Wi-Fi-address TCP 14–16 ms, but both patient streams timed out waiting ten
+seconds for an SSH banner. The short stream also failed. This is a real
+pre-banner startup delay, not only an overly strict two-second deadline.
+
+During recovery, patient wired/Wi-Fi banners took 3.908/8.387 seconds;
+commands completed at +86.554/+94.034 s. The short wired stream first
+succeeded at +102.426 s, with no subsequent failed completed probes through
+approximately +189 s. First success alone is an inadequate readiness metric:
+the +32.430-second success was followed by failures.
+
+Retained launchd records show a 20.962-second gap between SSH wrapper launches
+while fresh TCP connections arrive. Connection dispatch/early process startup
+is the next focus; exact probe-to-PID mapping and the blocking stack remain
+unresolved. No SSH-specific throttle marker was found. This does not justify
+network reordering, authentication changes or blaming a particular restored app.
+A bounded server-side process/packet capture during a future stall would
+separate queued connections from slow process initialization.
+
+All 68 completed attempt traces were preserved; the observer was stopped at
+00:25:51.231 PST. No external Core loop ran in this test. Three streams and
+a ten-second post-attempt cadence differ from earlier measurement load, so
+this is a protocol-stage diagnosis, not a configuration speedup comparison.
+Detailed findings are in
+`ssh-banner-investigation-20261114/reboot-20261114T082121Z/findings.md`, with
+`analysis.json` and verified raw-log references. No network/SSH configuration
+was changed; that test's observer was stopped.
+
+### Server-side diagnostic result (2026-11-14)
+
+The next unchanged-generation boot began **00:48:34.195617 PST**. The
+pre-banner stall reproduced despite early successful commands: wired short
+and patient commands completed at +28.903/+29.568s, Wi-Fi patient +35.569s,
+then all three streams failed. The last short-deadline failure ended +123.749s;
+subsequent completed probes succeeded through +363.686s. First success still
+does not establish sustained readiness. Nebula's actual pre-started observer
+saved 95 new-boot attempts (80 successes) and is now stopped.
+
+Native packet capture confirms that the tests traversed **en10 and en0**:
+K promptly answered TCP and acknowledged client banners on both interfaces.
+One wired banner left K 6.530 seconds after the client banner, after the client
+had timed out. Its SSH handler did not launch until after the client closed.
+Another connection waited 2.816 seconds after wrapper launch for a server
+banner. Dispatch and early handler/output work are implicated; USB ordering
+is not supported as the primary fix. The exact blocking operation remains
+unresolved.
+
+Eleven launchd and 22 root SSH stack reports survived. A launchd worker was
+sampled in `close()`; another semaphore wait belonged to a thread named
+`xpc.otherbsd throttled after exit()`, not an identified SSH job. Root SSH
+samples in `pselect` do not locate the blocker. The selector omitted `_sshd`
+`sshd-auth` children, an important gap for any next diagnostic. The native
+capture recorded 15,568 packets but reported 28,646 kernel capture drops;
+missing packets alone cannot establish absence or network loss. Instrumentation
+adds work, so this is cause-finding evidence, not a clean speed comparison.
+
+The user reported an ordinary 1Password unlock screen during restoration,
+not an apparent SSH-signing request. Logs show saved-window restoration but
+no identified SSH requester. Herdr's confirmed outgoing `nebula.home.lan`
+connection uses `IdentityAgent none`, as do the managed Mini aliases. Bare IP
+addresses retain the personal-agent default, a conditional path worth checking
+only if an actual unattended caller uses them. No evidence yet connects the
+visible screen to inbound pre-banner stalls; preserve interactive 1Password.
+
+Detailed phase/packet/probe tables, sources, provenance, uncertainty and
+prioritized follow-ups are in
+`ssh-banner-investigation-20261114/capture-prep-20261114T083504Z/findings.md`
+and `analysis.json` in the private validation directory. The one-shot diagnostic
+finished and its consumed claim prevents another capture; native-authorized
+cleanup of its plist/script remains pending. SSH/network policy and generation
+290 are unchanged. No external Core loop ran; current local checks succeeded.
 
 ## Completion errors after a macOS upgrade
 

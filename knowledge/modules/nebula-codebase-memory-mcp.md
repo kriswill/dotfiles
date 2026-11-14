@@ -1,20 +1,17 @@
 ---
 type: NixOS Module
 title: Codebase Memory Mcp
-description: 'Flips services.codebase-memory-mcp.enable on nebula — the supervised code-graph daemon (systemd user service) + cbm-ctl from the fork''s NixOS module.'
+description: 'Keeps the optional codebase-memory daemon and control CLI disabled on nebula while retaining the fork module.'
 resource: modules/hosts/nebula/codebase-memory-mcp.nix
 tags: [nixos-module, host-specific]
-generated: { by: okflight/0.4.0, at: 2026-07-06T04:14:27+00:00 }
+generated: { by: codex/gpt-6, at: 2026-11-13T23:52:00-08:00 }
 ---
 
-One-setting file: enables
-[codebase-memory-mcp](codebase-memory-mcp.md) (the fork's NixOS module,
-re-exported by `modules/nixos/codebase-memory-mcp.nix`) on
-[nebula](../hosts/nebula.md) — merged straight into the host's configuration
-per the [host-mounted modules pattern](../patterns/host-mounted-modules.md).
-The nixos class is otherwise all-universal; this gate lives host-side so the
-class module stays a pure re-export, mirroring how the darwin hosts flip the
-same option in their `default.nix`.
+Explicitly disables [codebase-memory-mcp](codebase-memory-mcp.md) on
+[nebula](../hosts/nebula.md), matching the fleet-wide installation removal.
+The fork's NixOS module remains imported, so the option and package exports
+remain available without installing the daemon or `cbm-ctl`. Normal NRS
+activation applies this configuration; existing index data is preserved.
 
 ## Source
 

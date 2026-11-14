@@ -15,11 +15,11 @@ enable-gated features are
 [codebase-memory-mcp](../modules/codebase-memory-mcp.md),
 [git-signing-agent](../modules/git-signing-agent.md),
 [hermes-agent](../modules/hermes-agent.md) and
-[nixploit](../modules/nixploit.md), flipped on by the host-specific files
-[nebula-codebase-memory-mcp](../modules/nebula-codebase-memory-mcp.md),
+[nixploit](../modules/nixploit.md). Codebase-memory is disabled by
+[nebula-codebase-memory-mcp](../modules/nebula-codebase-memory-mcp.md);
 [nebula-git-signing-agent](../modules/nebula-git-signing-agent.md),
 [nebula-hermes-agent](../modules/nebula-hermes-agent.md) and
-[nebula-nixploit](../modules/nebula-nixploit.md). The
+[nebula-nixploit](../modules/nebula-nixploit.md) enable the other three. The
 other entries below are host-specific *files* merged in per the
 [host-mounted modules pattern](../patterns/host-mounted-modules.md), not
 opt-in feature flags). Beyond the imports, the registry entry does two
@@ -74,7 +74,7 @@ Non-declarative BIOS facts, invisible to the flake:
 
 - [nebula-battlenet](../modules/nebula-battlenet.md) (enable-gate for the GE-Proton Battle.net launcher)
 - [ntsync](../modules/ntsync.md) (host-specific file)
-- [nebula-codebase-memory-mcp](../modules/nebula-codebase-memory-mcp.md) (enable-gate for the code-graph daemon)
+- [nebula-codebase-memory-mcp](../modules/nebula-codebase-memory-mcp.md) (code-graph daemon disabled)
 - [nebula-git-signing-agent](../modules/nebula-git-signing-agent.md) (enable-gate for prompt-free commit signing with the key mini uses, loaded from the shared sops file)
 - [nebula-herdr](../modules/nebula-herdr.md) (enable-gate for the Herdr desktop app + hc, linger and the daily herdr-update-check; config via stow)
 - [nebula-hermes-agent](../modules/nebula-hermes-agent.md) (enable-gate for the Hermes Agent gateway, run as k, + shared CLI state)

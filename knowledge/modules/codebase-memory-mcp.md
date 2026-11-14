@@ -4,7 +4,7 @@ title: Codebase Memory Mcp
 description: 'Supervised codebase-memory-mcp MCP daemon (semantic code graph + HTTP UI on :9749) from the kriswill fork, whose flake ships both OS modules — a launchd user agent on darwin, a systemd user service on NixOS — plus the cbm-ctl control CLI.'
 resource: modules/darwin/codebase-memory-mcp.nix
 tags: [darwin-module, nixos-module]
-generated: { by: okflight/0.4.0, at: 2026-07-03T10:23:09-07:00 }
+generated: { by: codex/gpt-6, at: 2026-11-14T00:08:00-08:00 }
 sources:
   - id: fork-supervision-layer-nix-tools-readme-md
     resource: https://github.com/kriswill/codebase-memory-mcp/blob/nix/nix/tools/README.md
@@ -33,12 +33,21 @@ fork's `cbm-tools` also provides `cbm-ctl`
 (status / flush / commit / start·stop·restart / logs), which selects launchctl
 or `systemctl --user` at compile time.
 
-Gated per host: enabled on [k](../hosts/k.md) and
-[SOC-Kris-Williams](../hosts/SOC-Kris-Williams.md) (darwin, per the
-[host-mounted modules pattern](../patterns/host-mounted-modules.md)) and on
-[nebula](../hosts/nebula.md) via
-[nebula-codebase-memory-mcp](nebula-codebase-memory-mcp.md); auto-discovered
-via the [Dendritic module layout](../patterns/dendritic-modules.md).
+Disabled on every host as of 2026-11-13: [k](../hosts/k.md),
+[SOC-Kris-Williams](../hosts/SOC-Kris-Williams.md) and
+[nebula](../hosts/nebula.md) explicitly disable the service; mini retains
+its disabled default. The shared [darwin baseline](core.md) no longer
+installs the CLI, and the repository's `.mcp.json` no longer launches it.
+The flake input, package exports, overlay and both module re-exports remain
+available for optional use. Existing indexes are retained.
+
+K's generation 290 activation and following reboot verified the job,
+executable and process absent. Other hosts apply removal on their next normal
+NRS activation. K's measured generation-289 launch interval was
+40.656 seconds, concurrent with other startup work; removing it does not
+establish an equal reduction in interactive or remote readiness. See the
+[startup comparison](../../docs/shell-startup-performance.md) and
+[fork decision](../decisions/codebase-memory-fork.md).
 
 ## Source
 

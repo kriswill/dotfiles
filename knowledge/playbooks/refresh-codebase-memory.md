@@ -3,12 +3,14 @@ type: Playbook
 title: Refresh the Codebase-memory Index
 description: Bootstrap or refresh the code-graph index the codebase-memory MCP server keeps for this repo.
 tags: [mcp, codebase-memory, maintenance]
-generated: { by: okflight/0.4.0, at: 2026-07-02T00:00:00-07:00 }
+generated: { by: codex/gpt-6, at: 2026-11-13T23:52:00-08:00 }
 ---
 
 Background in [codebase-memory via Nix-aware fork](../decisions/codebase-memory-fork.md);
-the server is wired by [codebase-memory-mcp](../modules/codebase-memory-mcp.md)
-and declared for this repo in `.mcp.json`.
+the optional server module is [codebase-memory-mcp](../modules/codebase-memory-mcp.md).
+It is disabled fleet-wide and no longer declared in `.mcp.json`. The examples
+below apply only after an explicit optional installation and client setup;
+existing index data is retained.
 
 ## Examples
 

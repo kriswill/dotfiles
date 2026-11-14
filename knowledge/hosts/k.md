@@ -16,8 +16,8 @@ are opted into below per the
 ## Host-selective features
 
 - [apple-container](../modules/apple-container.md)
+- [ai-usage](../modules/ai-usage.md)
 - [claude-account-selector](../modules/claude-account-selector.md)
-- [codebase-memory-mcp](../modules/codebase-memory-mcp.md)
 - [git-signing-agent](../modules/git-signing-agent.md): commits sign through a
   root-loaded ssh-agent with no 1Password prompt, so AI harnesses can commit
   unattended. The key is the one [mini](mini.md) uses, loaded from the
@@ -28,7 +28,24 @@ are opted into below per the
   made on k, not only the harnesses'.
 - [podman-desktop](../modules/podman-desktop.md)
 
+Codebase-memory is now [disabled fleet-wide](../modules/codebase-memory-mcp.md)
+in configuration; the recorded generation-289 comparison predates that removal.
+K activated this removal in generation 290; post-boot job, executable and
+process checks confirm absence. Other hosts require their next normal NRS
+activation. The [startup manual](../../docs/shell-startup-performance.md)
+records mixed timing results rather than a claimed whole-boot speedup.
+
 ## Apps
+
+The 2026-11-13 boot comparison sets only ai-usage's launchd `ProcessType`
+to `Standard` on k. Generation 289's xpcproxy-to-launchd-spawn interval was
+0.492 seconds versus generation 288's 62.303 seconds. The unchanged
+Background codebase-memory job also improved, from 66.660 to 40.656 seconds,
+so this single paired boot supports Standard without isolating all effects
+of scheduling and launch validation. Scheduled provider refreshes succeeded
+after cached poll deadlines expired. Desktop restoration and 1Password
+policy remain unchanged. The [startup manual](../../docs/shell-startup-performance.md)
+records the comparison and independently observed remote commands.
 
 Installs P4V, P4Admin and P4Merge 2026.3 into `/Applications/Nix Apps`
 through `environment.systemPackages`, built with `dontStrip` so Perforce's

@@ -4,7 +4,7 @@ title: Core
 description: 'The always-on darwin system baseline shared by every host — stateVersion, primary user, baseline packages, touch-ID sudo, fonts, shell enables, nix/nixpkgs settings.'
 resource: modules/darwin/core.nix
 tags: [darwin-module]
-generated: { by: codex/gpt-6, at: 2026-11-13T11:54:45-08:00 }
+generated: { by: codex/gpt-6, at: 2026-11-13T23:52:00-08:00 }
 sources:
   - id: darwin-options
     resource: https://nix-darwin.github.io/nix-darwin/manual/
@@ -12,8 +12,7 @@ sources:
 ---
 
 The always-on darwin system baseline shared by every host: stateVersion,
-primary user, baseline packages (iproute2mac, pstree, glow,
-codebase-memory-mcp CLI), touch-ID sudo (pam-reattach), fonts, fish/zsh
+primary user, baseline packages (iproute2mac, pstree, glow), touch-ID sudo (pam-reattach), fonts, fish/zsh
 enables, `nix.enable = false` (Determinate owns nix), and
 `allowUnfree = false` with a per-package `allowUnfreePredicate` list
 ([unfree-default-deny](../decisions/unfree-default-deny.md); first entry `p4v`,

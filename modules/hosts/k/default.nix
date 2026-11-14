@@ -1,5 +1,5 @@
 # k - my personal macbook pro M1 max, 64GB RAM
-{ config, ... }:
+{ config, lib, ... }:
 {
   configurations.darwin.k.module = {
     imports = (builtins.attrValues config.flake.modules.darwin) ++ [
@@ -70,11 +70,14 @@
     # ship disabled; enabling here is what mounts them into k.
     services.apple-container.enable = true;
     programs.ssh-private-hosts.enable = true;
-    services.codebase-memory-mcp.enable = true;
+    services.codebase-memory-mcp.enable = false;
     programs.podman-desktop.enable = true;
     # The AI-usage collector (Claude Max limits from the keychain login,
     # Codex limits) behind Herdr's ai-usage sidebar panel and `ai-usage`.
     services.ai-usage.enable = true;
+    # Generation 289 reduced ai-usage's launch handshake from 62s to 0.49s.
+    # Keep this scheduling policy local to k.
+    launchd.user.agents.ai-usage.serviceConfig.ProcessType = lib.mkForce "Standard";
     # Chrome is gone for good: Helium is the browser; Google's updater kept
     # reinstalling Chrome over the Helium shim (modules/darwin/helium-chrome-shim.nix).
     programs.helium-chrome-shim.purgeGoogleChrome = true;

@@ -29,8 +29,6 @@
           # markdown reader; config is stow-managed (home/glow/), and the
           # yazi previewer invokes it by bare name
           pkgs.glow
-          # MCP server for codebase memory/graph indexing (flakes/codebase-memory-mcp)
-          pkgs.codebase-memory-mcp
         ];
         etc."pam.d/sudo_local".text = ''
           # Allow for touch ID to work for sudo, inside of tmux

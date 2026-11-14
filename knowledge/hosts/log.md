@@ -10,8 +10,19 @@
   [mini](mini.md) signs with, loaded from a shared sops file and on only
   while that file is tracked. nebula activated it in generation 236 and
   signs with it; k has not activated it yet.
+- **Update**: [k](k.md) booted generation 290 after codebase-memory removal. Job/executable/process absence is verified; desktop readiness and remote command timings are mixed, with user interaction and connection recovery confounders. The external observer covered reboot and was stopped after collecting samples.
 
 ## 2026-11-13
+
+- **Update**: [k](k.md), [SOC-Kris-Williams](SOC-Kris-Williams.md) and [nebula](nebula.md) disable codebase-memory. Mini retains its disabled service default and loses the shared CLI installation. Existing boot-comparison evidence remains historical.
+
+- **Update**: [k](k.md) tests `Standard` launchd scheduling for ai-usage only,
+  with generation 289 measuring 0.492 seconds from xpcproxy to launchd spawn
+  versus generation 288's 62.303 seconds. The unchanged Background
+  codebase-memory job also improved (66.660 → 40.656 seconds), so the paired
+  boot supports the setting without isolating every cause. Scheduled
+  provider refreshes succeeded. Desktop restoration and 1Password remain
+  intact; the temporary external observer's results were saved and it was stopped.
 
 - **Update**: [mini](mini.md) records the verified generation-28 cold
   startup, explicit Hermes delegation through Core and the corrected

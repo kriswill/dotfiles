@@ -13,6 +13,8 @@
 
 ## 2026-11-13
 
+- **Update**: [Codebase-memory fork](codebase-memory-fork.md) records fleet installation removal while retaining the input and package/module exports; no overall boot-time saving is assumed.
+
 - **Update**: [Darwin SOPS](sops-darwin-ssh-host-keys.md) preserves the
   original rollout context while documenting Mini's current recipient,
   service-account signing and separate machine SSH key. Link the existing

@@ -9,6 +9,10 @@
   missing rule). Adds nebula's verify commands, rotation and revocation
   across hosts, and the public key's new path.
 
+## 2026-11-13
+
+- **Update**: [Codebase-memory refresh](refresh-codebase-memory.md) now requires explicit optional installation/client setup because fleet installation and the repository MCP entry are disabled. Existing indexes remain intact.
+
 ## 2026-11-06
 
 - **Update**: [git-signing-agent-setup](git-signing-agent-setup.md): step 3

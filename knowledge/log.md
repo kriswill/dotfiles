@@ -1,11 +1,29 @@
 # Log
 
+## 2026-11-14
+
+- **Update**: The [startup manual](../docs/shell-startup-performance.md) separates newly activated generation 291 and SOPS-backed Git signing from the historical generation 288–290 boot captures. Existing measurements and unresolved 1Password-prompt attribution remain unchanged.
+
+- **Update**: The [startup manual](../docs/shell-startup-performance.md#server-side-diagnostic-result-2026-11-14) records the completed packet/stack test: client banners acknowledged on both interfaces, late handler/banner evidence, capture drops and omitted auth-child samples. The ordinary 1Password unlock observation is distinguished from unproven SSH-agent involvement. The observer is stopped; exact blocking remains unresolved.
+
+- **Update**: The [startup manual](../docs/shell-startup-performance.md#server-side-diagnostic-result-2026-11-14) records the validated one-boot SSH diagnostic: native packet/process/stack capture, source-port-correlated external probes, explicit expiry and cleanup, and measurement limits. This temporary instrumentation leaves generation 290 and SSH/network policy unchanged.
+
+- **Update**: The [startup manual](../docs/shell-startup-performance.md#k-fresh-ssh-follow-up-2026-11-14) records the staged cold test: fast TCP but ten-second banner stalls on both addresses, an early command success followed by failures, and later sampled recovery. The observer is stopped; server connection dispatch remains unresolved and no network reordering was applied.
+
+- **Update**: The [startup manual](../docs/shell-startup-performance.md#k-fresh-ssh-follow-up-2026-11-14) records fresh SSH stage diagnosis, healthy warm wired/Wi-Fi-address probes and the lack of evidence for network reordering. A prepared observer separates handshake stages and deadline policies; no startup configuration changed.
+
+- **Update**: The [startup manual](../docs/shell-startup-performance.md#k-follow-up-comparison-generation-290-2026-11-14) records generation 290 after codebase-memory removal, including actual external commands, longer unlock interaction, concurrent work and persistent SSH/NAS/installer-hook issues. The detailed private report preserves event sources and causal limits.
+
 Root-bundle log: entries here cover bundle-level events only — new bundle
 types or directories, root-level concept docs, `docs/` manuals, bundle-wide
 sweeps, and workspace tooling conventions. Changes scoped to one bundle log
 in that bundle's own `log.md` (e.g. [modules/log.md](modules/log.md)).
 
 ## 2026-11-13
+
+- **Update**: The [startup manual](../docs/shell-startup-performance.md#k-follow-up-comparison-generation-289-2026-11-13) records k's generation-289 scheduling comparison and the first reboot actually covered by an external observer. It distinguishes the shorter ai-usage launch interval, scheduled provider refreshes and independently successful SSH/Core commands; the generation-288 baseline and its missing observer remain unchanged.
+
+- **Update**: [Shell/startup manual](../docs/shell-startup-performance.md) records k generation 288's FileVault cold boot, verified activation/shell behavior, concurrent service timeline and ownership distinctions. No external observer covered reboot and the October 24 baseline is incomplete; no speedup or earliest remote readiness is claimed. Detailed private evidence, provenance inventory and a standalone HTML replay remain in k's gitignored validation directory named in the manual. Documentation only; no post-boot startup changes.
 
 - **Update**: The [startup manual](../docs/shell-startup-performance.md#mini-cold-boot-and-credential-readiness-2026-11-13-generation-28)
   records the completed generation-28 cold boot with exact time origins,

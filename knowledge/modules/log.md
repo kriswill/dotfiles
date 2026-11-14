@@ -19,8 +19,11 @@
 - **Creation**: [nebula-git-signing-agent](nebula-git-signing-agent.md):
   the host file that enables the agent on nebula, guarded on the key file
   being tracked.
+- **Update**: [codebase-memory-mcp](codebase-memory-mcp.md) records successful removal on k generation 290; other hosts still require deployment. No overall boot-time saving is assumed from the removed concurrent launch interval.
 
 ## 2026-11-13
+
+- **Update**: [codebase-memory-mcp](codebase-memory-mcp.md) is disabled fleet-wide; [core](core.md) drops its macOS CLI installation and the repository MCP launch entry is removed. Flake inputs, exports, optional modules and existing indexes remain. Activation is separate; boot savings are not yet measured.
 
 - **Update**: [Mini Hermes](mini-hermes-agent.md) distinguishes direct
   sandbox restrictions from explicit Core delegation into user k's host
