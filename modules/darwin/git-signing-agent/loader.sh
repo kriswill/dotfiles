@@ -3,9 +3,12 @@
 # (./default.nix has the design). Runs as root and:
 #
 #   1. starts an ssh-agent as $GSA_USER on $GSA_SOCKET_DIR/agent.sock
-#   2. reads the signing key from 1Password with a service-account token
-#      (root-only sops secret) and pipes it straight into that agent with
-#      ssh-add, so the key is never written to disk
+#   2. pipes the signing key straight into that agent with ssh-add, from one
+#      of two root-only sops secrets:
+#        GSA_KEY_FILE    the private key itself, or
+#        GSA_TOKEN_FILE  a 1Password service-account token, used to read
+#                        $GSA_OP_ITEM with $GSA_OP; the key then never
+#                        touches the disk at all
 #   3. checks that the loaded key is the configured public key
 #   4. waits on the agent; when the agent dies this script exits and launchd
 #      (KeepAlive) starts the whole thing again
@@ -13,15 +16,22 @@
 # ssh-agent accepts connections from its own uid and from root, so the agent
 # runs as the user and root loads it. The user's processes (git, a Claude
 # session) can ask for signatures through the socket, but can't read the
-# token (0400 root) or the key (ssh-agent memory).
+# secret (0400 root) or the key (ssh-agent memory).
 #
 # Configured entirely through the environment (set by the launchd plist), so
 # the script runs outside launchd for testing. When not run as root it starts
 # the agent directly instead of via sudo.
 set -euo pipefail
 
-: "${GSA_USER:?}" "${GSA_SOCKET_DIR:?}" "${GSA_TOKEN_FILE:?}" "${GSA_OP_ITEM:?}"
-: "${GSA_PUBLIC_KEY:?}" "${GSA_OP:?}"
+: "${GSA_USER:?}" "${GSA_SOCKET_DIR:?}" "${GSA_PUBLIC_KEY:?}"
+if [ -n "${GSA_KEY_FILE:-}" ]; then
+  SECRET_FILE=$GSA_KEY_FILE
+  KEY_SOURCE=$GSA_KEY_FILE
+else
+  : "${GSA_TOKEN_FILE:?}" "${GSA_OP_ITEM:?}" "${GSA_OP:?}"
+  SECRET_FILE=$GSA_TOKEN_FILE
+  KEY_SOURCE="op://${GSA_OP_ITEM}"
+fi
 SSH_AGENT=${GSA_SSH_AGENT:-/usr/bin/ssh-agent}
 SSH_ADD=${GSA_SSH_ADD:-/usr/bin/ssh-add}
 MAX_BACKOFF=${GSA_MAX_BACKOFF:-300}
@@ -74,24 +84,32 @@ done
 log "ssh-agent (pid $agent_pid) listening on $SOCK"
 
 # --- 2+3. the key -------------------------------------------------------------
+# The private key on stdout. From 1Password, the token reaches op only
+# through its environment, never argv.
+read_key() {
+  if [ -n "${GSA_KEY_FILE:-}" ]; then
+    cat "$GSA_KEY_FILE"
+  else
+    OP_SERVICE_ACCOUNT_TOKEN=$(<"$GSA_TOKEN_FILE") \
+      "$GSA_OP" read "op://${GSA_OP_ITEM}/private key?ssh-format=openssh"
+  fi
+}
+
 load_key() {
   local err have
   log "loading signing key"
-  # The token reaches op only through its environment, never argv. The
-  # private key goes from op's stdout into ssh-add's stdin. Only the stderr
-  # of the two (error text, no secrets) is captured, for the log.
+  # The key goes from read_key's stdout into ssh-add's stdin. Only the
+  # stderr of the two (error text, no secrets) is captured, for the log.
   if ! err=$({
-    OP_SERVICE_ACCOUNT_TOKEN=$(<"$GSA_TOKEN_FILE") \
-      "$GSA_OP" read "op://${GSA_OP_ITEM}/private key?ssh-format=openssh" |
-      SSH_AUTH_SOCK="$SOCK" "$SSH_ADD" -q -
+    read_key | SSH_AUTH_SOCK="$SOCK" "$SSH_ADD" -q -
   } 2>&1 >/dev/null); then
-    log "could not load op://${GSA_OP_ITEM}: $(printf '%s' "$err" | tr '\n' ' ')"
+    log "could not load $KEY_SOURCE: $(printf '%s' "$err" | tr '\n' ' ')"
     return 1
   fi
   have=$(SSH_AUTH_SOCK="$SOCK" "$SSH_ADD" -L | key_id)
   if [ "$have" != "$WANT" ]; then
     SSH_AUTH_SOCK="$SOCK" "$SSH_ADD" -D >/dev/null 2>&1 || true
-    log "op://${GSA_OP_ITEM} is not the configured publicKey; unloaded it." \
+    log "$KEY_SOURCE is not the configured publicKey; unloaded it." \
       "Loaded: ${have:-nothing}. Expected: $WANT"
     return 1
   fi
@@ -100,8 +118,8 @@ load_key() {
 delay=$((MAX_BACKOFF < 5 ? MAX_BACKOFF : 5))
 while :; do
   kill -0 "$agent_pid" 2>/dev/null || { log "ssh-agent exited"; exit 1; }
-  if [ ! -s "$GSA_TOKEN_FILE" ]; then
-    log "waiting for $GSA_TOKEN_FILE (decrypted by sops-install-secrets)"
+  if [ ! -s "$SECRET_FILE" ]; then
+    log "waiting for $SECRET_FILE (decrypted by sops-install-secrets)"
   elif load_key; then
     break
   fi

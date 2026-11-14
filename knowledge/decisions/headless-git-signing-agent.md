@@ -1,10 +1,10 @@
 ---
 type: Decision
-title: Sign Headless Commits With a Host-Only Key Loaded by a Root Daemon
-description: 'On a headless Mac, git signs with a host-only SSH key that a root launchd daemon reads from 1Password with a vault-scoped service-account token and loads into an ssh-agent running as the user, so commits never wait on a 1Password prompt and the session can sign but cannot read the key or the token.'
+title: Sign Headless Commits With a Dedicated Key Loaded by a Root Daemon
+description: 'On a headless Mac, git signs with a dedicated automation SSH key that a root launchd daemon reads from 1Password with a vault-scoped service-account token and loads into an ssh-agent running as the user, so commits never wait on a 1Password prompt and the session can sign but cannot read the key or the token.'
 tags: [git, 1password, secrets, darwin]
 status: stable
-generated: { by: claude-code/opus-5.5, at: 2026-11-05T12:45:00-08:00 }
+generated: { by: claude-code/fable-5.2, at: 2026-11-14T13:40:00-08:00 }
 sources:
   - id: ssh-agent-source
     resource: https://github.com/openssh/openssh-portable/blob/master/ssh-agent.c
@@ -19,7 +19,10 @@ sources:
 
 **Where:** [git-signing-agent](../modules/git-signing-agent.md), enabled on
 [mini](../hosts/mini.md). Procedure:
-[git-signing-agent-setup](../playbooks/git-signing-agent-setup.md).
+[git-signing-agent-setup](../playbooks/git-signing-agent-setup.md). This
+record covers the agent and mini's 1Password key source. k and nebula
+enabled the same agent on 2026-11-14 with the key in sops:
+[git-signing-key-in-sops](git-signing-key-in-sops.md).
 
 ## Context
 
@@ -68,7 +71,9 @@ Considered and not chosen:
 - **The private key straight in sops.** That avoids the network and token
   expiry at boot. But rotating or revoking the key would need a repo
   commit, there'd be no read audit, and it breaks from the
-  apple-machine/nebula pattern.
+  apple-machine/nebula pattern. (k and nebula took this route later and
+  accepted those costs:
+  [git-signing-key-in-sops](git-signing-key-in-sops.md).)
 - **A Secure Enclave key** (macOS 26 `sc_auth create-ctk-identity` plus
   `/usr/lib/ssh-keychain.dylib`, both present on mini). The key couldn't
   be exported at all, but it's unverified whether GitHub accepts its
@@ -97,6 +102,12 @@ Considered and not chosen:
   It is separate from this signing key. Git hosting services still need to
   authorize that authentication key before SSH pushes work. The Codeberg
   credential helper's `op read` remains outside both mechanisms.
+- Since 2026-11-14 the key is no longer mini's alone. k and nebula sign
+  with it too, from a sops secret
+  ([git-signing-key-in-sops](git-signing-key-in-sops.md)). "Signed with
+  this key" now means "committed on mini, k or nebula", and a hijacked
+  session on any of the three can sign while it is there. mini's own copy
+  still never leaves 1Password and the agent's memory.
 
 [^ssh-agent-source]: openssh-portable `ssh-agent.c`: `if ((euid != 0) && (getuid() != euid))` → "uid mismatch".
 [^github-signature-verification]: GitHub: "GitHub will not re-verify previously signed commits or retroactively adjust their verification status".

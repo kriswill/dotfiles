@@ -4,7 +4,7 @@ title: k
 description: 'k - my personal macbook pro M1 max, 64GB RAM.'
 resource: modules/hosts/k/default.nix
 tags: [host]
-generated: { by: codex/gpt-6, at: 2026-11-13T11:54:45-08:00 }
+generated: { by: claude-code/fable-5.2, at: 2026-11-14T13:40:00-08:00 }
 ---
 
 k - my personal macbook pro M1 max, 64GB RAM.
@@ -18,6 +18,14 @@ are opted into below per the
 - [apple-container](../modules/apple-container.md)
 - [claude-account-selector](../modules/claude-account-selector.md)
 - [codebase-memory-mcp](../modules/codebase-memory-mcp.md)
+- [git-signing-agent](../modules/git-signing-agent.md): commits sign through a
+  root-loaded ssh-agent with no 1Password prompt, so AI harnesses can commit
+  unattended. The key is the one [mini](mini.md) uses, loaded from the
+  shared sops file `modules/hosts/git-signing.yaml` and on only while that
+  file is tracked
+  ([decision](../decisions/git-signing-key-in-sops.md),
+  [setup](../playbooks/git-signing-agent-setup.md)). It signs every commit
+  made on k, not only the harnesses'.
 - [podman-desktop](../modules/podman-desktop.md)
 
 ## Apps
@@ -34,6 +42,10 @@ decryption proof), plus the shared private ssh hosts file via the gated
 ([decision](../decisions/ssh-private-hosts.md)). A separate
 [machine SSH identity](../modules/ssh-client.md) authenticates Herdr to
 managed hosts; GitHub and other destinations retain personal authentication.
+The commit-signing key is a third secret, `git-signing-key` from the shared
+`modules/hosts/git-signing.yaml` (recipients: k and
+[nebula](nebula.md)). Unlike the SSH identity it stays root-only: only the
+[signing agent](../modules/git-signing-agent.md)'s loader reads it.
 
 ## Source
 

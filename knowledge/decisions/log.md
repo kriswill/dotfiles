@@ -1,5 +1,16 @@
 # Log
 
+## 2026-11-14
+
+- **Creation**: [git-signing-key-in-sops](git-signing-key-in-sops.md): k
+  and nebula sign with mini's key, stored as a shared sops secret and
+  loaded into a root-loaded ssh-agent, host-wide. Records why the key
+  itself is in sops here, what a public ciphertext rests on, and the three
+  alternatives turned down.
+- **Update**: [headless-git-signing-agent](headless-git-signing-agent.md)
+  links forward: the key is no longer mini's alone, and the "key straight
+  in sops" option it turned down was taken for k and nebula.
+
 ## 2026-11-13
 
 - **Update**: [Darwin SOPS](sops-darwin-ssh-host-keys.md) preserves the

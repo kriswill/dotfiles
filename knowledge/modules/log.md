@@ -1,5 +1,22 @@
 # Log
 
+## 2026-11-14
+
+- **Update**: [Git signing](git-signing-agent.md) becomes a cross-OS twin.
+  It gains a key source that loads the private key straight from a sops
+  secret (used whenever `opItem` is unset) and a NixOS twin built on a
+  systemd unit. The signer and `host.inc` text move to
+  `lib/git-signing.nix`. [k](../hosts/k.md) and [nebula](../hosts/nebula.md)
+  enable it with the key mini uses. Tested with throwaway keys: 21 loader
+  checks covering both sources, a 12-subtest NixOS VM test with real
+  sops-nix, and nebula's full system build. nebula then activated it with
+  the real key (generation 236) and a test commit verified as `G`; k has
+  not activated it yet. [git](git.md) and [sops](sops.md) record the new
+  hosts and the shared key file.
+- **Creation**: [nebula-git-signing-agent](nebula-git-signing-agent.md):
+  the host file that enables the agent on nebula, guarded on the key file
+  being tracked.
+
 ## 2026-11-13
 
 - **Update**: [Mini Hermes](mini-hermes-agent.md) distinguishes direct

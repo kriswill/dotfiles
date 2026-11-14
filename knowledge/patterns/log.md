@@ -1,5 +1,13 @@
 # Log
 
+## 2026-11-14
+
+- **Update**: [cross-os-module-twins](cross-os-module-twins.md): a `lib/`
+  builder can cover only the half the twins share.
+  `lib/git-signing.nix` is the example: what
+  [git-signing-agent](../modules/git-signing-agent.md) hands to git is
+  shared, the daemon that loads the key is per-OS.
+
 ## 2026-07-03
 
 - **Update** — `config/` snapshot capture is now automatic on nebula: one

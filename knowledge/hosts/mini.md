@@ -4,7 +4,7 @@ title: mini
 description: 'Headless personal M1 Mac mini with 16GB RAM, running Hermes and Herdr with machine SSH authentication and separate prompt-free Git signing.'
 resource: modules/hosts/mini/default.nix
 tags: [host]
-generated: { by: codex/gpt-6, at: 2026-11-13T14:43:17-08:00 }
+generated: { by: claude-code/fable-5.2, at: 2026-11-14T13:40:00-08:00 }
 ---
 
 mini - my personal mac mini M1, 16GB RAM.
@@ -20,7 +20,11 @@ are opted into below per the
   Claude sessions under herdr core
   ([decision](../decisions/headless-git-signing-agent.md),
   [setup](../playbooks/git-signing-agent-setup.md)). mini is a sops
-  recipient (`&mini` in `.sops.yaml`) for that token.
+  recipient (`&mini` in `.sops.yaml`) for that token. Since 2026-11-14
+  [k](k.md) and [nebula](nebula.md) sign with the same key, which they load
+  from a shared sops file instead of 1Password
+  ([decision](../decisions/git-signing-key-in-sops.md)); mini's source is
+  unchanged.
 
 - [SSH client](../modules/mini-ssh-client.md): a separate Ed25519 machine key,
   encrypted for mini with sops, authenticates outgoing SSH without the

@@ -45,6 +45,16 @@ creation_rules:
     key_groups:
       - age:
           - *mini
+  # The git commit-signing key itself (services.git-signing-agent with
+  # keySecret), shared by every host that loads it straight from sops. mini
+  # signs with the same key but reads it from 1Password with the service
+  # account above, so it is not a recipient. Adding a host: add its anchor
+  # here + `sops updatekeys` (knowledge/playbooks/git-signing-agent-setup.md).
+  - path_regex: modules/hosts/git-signing.yaml
+    key_groups:
+      - age:
+          - *k
+          - *nebula
   # Private ssh Host entries (~/.ssh/config.d) — one shared file, every host
   # that deploys them is a recipient (add mini/SOC here + `sops updatekeys`).
   - path_regex: modules/hosts/ssh-hosts.yaml

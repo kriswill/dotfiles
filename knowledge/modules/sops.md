@@ -41,6 +41,11 @@ The signing token remains root-only; the SSH private key is deployed as
 user `k`, mode `0400`, through a custom secret path.[^sops-nix]
 [k](ssh-client.md) and [nebula](nebula-ssh-client.md) now have separate
 client-key files encrypted to their own existing recipients as well.
+A second shared file, `modules/hosts/git-signing.yaml` (k + nebula
+recipients), holds the commit-signing key itself for
+[git-signing-agent](git-signing-agent.md) on those two hosts; it stays
+root-only like mini's token
+([decision](../decisions/git-signing-key-in-sops.md)).
 Auto-discovered via the
 [Dendritic module layout](../patterns/dendritic-modules.md).
 

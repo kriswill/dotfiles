@@ -49,6 +49,23 @@
       secrets.sops-smoke-test = { };
     };
 
+    # Prompt-free commit signing, so the AI harnesses on k (Claude Code and
+    # Codex under herdr) can commit without a 1Password approval nobody is
+    # there to give. The key is the one mini already signs with, held in a
+    # shared sops file and loaded into a root-loaded ssh-agent
+    # (modules/darwin/git-signing-agent). It applies to every commit made on
+    # this host, at the keyboard or not: /etc/git/host.inc overrides the
+    # op-ssh-sign signer for all of them. Setup, rotation and revocation:
+    # knowledge/playbooks/git-signing-agent-setup.md.
+    services.git-signing-agent = {
+      # On only while the key is in the tree (tracked: flakes see nothing
+      # else). Without it the host still builds and signs through 1Password,
+      # so deleting the file is also how the key is withdrawn.
+      enable = builtins.pathExists ../git-signing.yaml;
+      publicKey = ../git-signing.pub;
+      sopsFile = ../git-signing.yaml;
+    };
+
     # Host-selective features: their modules are imported on every host but
     # ship disabled; enabling here is what mounts them into k.
     services.apple-container.enable = true;

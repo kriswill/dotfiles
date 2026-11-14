@@ -1,5 +1,13 @@
 # Log
 
+## 2026-11-14
+
+- **Update**: [k](k.md) and [nebula](nebula.md) declare
+  [git-signing-agent](../modules/git-signing-agent.md) with the key
+  [mini](mini.md) signs with, loaded from a shared sops file and on only
+  while that file is tracked. nebula activated it in generation 236 and
+  signs with it; k has not activated it yet.
+
 ## 2026-11-13
 
 - **Update**: [mini](mini.md) records the verified generation-28 cold

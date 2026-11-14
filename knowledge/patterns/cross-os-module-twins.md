@@ -43,6 +43,12 @@ How twins stay in sync without drifting:
   skip lists) and the shared generator is what keeps a future fix from landing
   on only one OS. Trivial twins ([tmux](../modules/tmux.md)'s ~10-line
   `plugins.conf`) duplicate freely — extraction is for text worth sharing.
+  A builder can also cover only the part the twins truly share:
+  [`lib/git-signing.nix`](../../lib/git-signing.nix) holds what
+  [git-signing-agent](../modules/git-signing-agent.md) hands to git (the
+  signer script and `/etc/git/host.inc`), while the daemon that loads the
+  key stays per-OS, a launchd loader script on darwin and a systemd unit on
+  nixos.
 - **Generated files link per-OS** — each class has its own link mechanism
   (activation script on darwin, tmpfiles on nixos); full treatment in
   [store-path-embedding configs](store-path-configs.md).

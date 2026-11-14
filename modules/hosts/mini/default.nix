@@ -24,12 +24,14 @@
     programs.fastfetch.logo = "hexley-nix.png";
 
     # Prompt-free commit signing for headless use (Claude under herdr core):
-    # a mini-only key, read from 1Password by a service account into a
-    # root-loaded ssh-agent (modules/darwin/git-signing-agent). Setup,
-    # rotation and revocation: knowledge/playbooks/git-signing-agent-setup.md.
+    # the automation signing key, read from 1Password by a service account
+    # into a root-loaded ssh-agent (modules/darwin/git-signing-agent). k and
+    # nebula sign with the same key, loaded from a shared sops file instead.
+    # Setup, rotation and revocation:
+    # knowledge/playbooks/git-signing-agent-setup.md.
     services.git-signing-agent = {
       enable = true;
-      publicKey = ./git-signing.pub;
+      publicKey = ../git-signing.pub;
       sopsFile = ./secrets.yaml;
       opItem = "mini-automation/mini git signing key";
     };

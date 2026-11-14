@@ -4,7 +4,7 @@ title: nebula
 description: 'nebula — AMD CPU, NVIDIA GPU, UEFI desktop.'
 resource: modules/hosts/nebula/default.nix
 tags: [host]
-generated: { by: codex/gpt-6, at: 2026-11-13T11:54:45-08:00 }
+generated: { by: claude-code/fable-5.2, at: 2026-11-14T13:40:00-08:00 }
 ---
 
 nebula — AMD CPU, NVIDIA GPU, UEFI desktop. Registers into the `configurations.nixos` registry (realised by `modules/nixos.nix` through snowglobe-factory's `mkNixosHost`). This file carries the host metadata and the shared baseline of its `module`; the host-specific pieces live as their own first-class dendritic files under `nebula/`, each a flake-parts module that merges into `configurations.nixos.nebula.module` (the realizer's `deferredModule` option), so there is no import-tree exclusion and no hand-maintained imports list. Non-`.nix` files (secrets.yaml, *.pub) sit in `nebula/` too — import-tree only picks up `.nix`, so they are ignored by the scan and referenced by path.
@@ -13,9 +13,11 @@ Imports every [nixos module](../modules/index.md) (`builtins.attrValues
 config.flake.modules.nixos` — the nixos class is almost all-universal; the
 enable-gated features are
 [codebase-memory-mcp](../modules/codebase-memory-mcp.md),
+[git-signing-agent](../modules/git-signing-agent.md),
 [hermes-agent](../modules/hermes-agent.md) and
 [nixploit](../modules/nixploit.md), flipped on by the host-specific files
 [nebula-codebase-memory-mcp](../modules/nebula-codebase-memory-mcp.md),
+[nebula-git-signing-agent](../modules/nebula-git-signing-agent.md),
 [nebula-hermes-agent](../modules/nebula-hermes-agent.md) and
 [nebula-nixploit](../modules/nebula-nixploit.md). The
 other entries below are host-specific *files* merged in per the
@@ -73,6 +75,7 @@ Non-declarative BIOS facts, invisible to the flake:
 - [nebula-battlenet](../modules/nebula-battlenet.md) (enable-gate for the GE-Proton Battle.net launcher)
 - [ntsync](../modules/ntsync.md) (host-specific file)
 - [nebula-codebase-memory-mcp](../modules/nebula-codebase-memory-mcp.md) (enable-gate for the code-graph daemon)
+- [nebula-git-signing-agent](../modules/nebula-git-signing-agent.md) (enable-gate for prompt-free commit signing with the key mini uses, loaded from the shared sops file)
 - [nebula-herdr](../modules/nebula-herdr.md) (enable-gate for the Herdr desktop app + hc, linger and the daily herdr-update-check; config via stow)
 - [nebula-hermes-agent](../modules/nebula-hermes-agent.md) (enable-gate for the Hermes Agent gateway, run as k, + shared CLI state)
 - [nebula-nixploit](../modules/nebula-nixploit.md) (enable-gate for the daily vulnerability scan)

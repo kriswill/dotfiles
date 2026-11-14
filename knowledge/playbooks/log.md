@@ -1,5 +1,14 @@
 # Log
 
+## 2026-11-14
+
+- **Update**: [git-signing-agent-setup](git-signing-agent-setup.md) covers
+  all three hosts. A new section puts the key in sops for k and nebula
+  with a block that changes nothing unless every step succeeds (run
+  against a stand-in `op`: success, a dismissed prompt, a different key, a
+  missing rule). Adds nebula's verify commands, rotation and revocation
+  across hosts, and the public key's new path.
+
 ## 2026-11-06
 
 - **Update**: [git-signing-agent-setup](git-signing-agent-setup.md): step 3
