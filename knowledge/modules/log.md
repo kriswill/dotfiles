@@ -2,6 +2,9 @@
 
 ## 2026-11-14
 
+- **Update**: [Git signing](git-signing-agent.md) is live on
+  [k](../hosts/k.md) too (generation 291), so the sops key source is
+  verified on darwin as well as on nixos.
 - **Update**: [Git signing](git-signing-agent.md) becomes a cross-OS twin.
   It gains a key source that loads the private key straight from a sops
   secret (used whenever `opItem` is unset) and a NixOS twin built on a

@@ -205,7 +205,14 @@ secret is root `0400` and unreadable by `k`, as is the agent's
 repository, with no terminal attached, verified as `G` against the
 existing `allowed_signers`.
 
-k had not activated it when this was written.
+Verified live on k the same day, after `nrs` activated generation 291: the
+daemon is running on its first launch; the loader log shows the agent
+started as `k` and the expected fingerprint loaded within the same second,
+with no private key text; `/var/run/git-signing` is `k` `0700`; the secret
+is root `0400` and unreadable by `k`; both overridden settings resolve to
+`/etc/git/host.inc`. A commit and a signed tag in a throwaway repository
+verified as `G`. The build added six paths (the daemon script and plist,
+the signer, `host.inc`, the log-rotation rule and the key file).
 
 ## Gotchas
 

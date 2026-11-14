@@ -2,6 +2,9 @@
 
 ## 2026-11-14
 
+- **Update**: [k](k.md) activated
+  [git-signing-agent](../modules/git-signing-agent.md) in generation 291;
+  a test commit and tag verify as `G` with the shared key.
 - **Update**: [k](k.md) and [nebula](nebula.md) declare
   [git-signing-agent](../modules/git-signing-agent.md) with the key
   [mini](mini.md) signs with, loaded from a shared sops file and on only
