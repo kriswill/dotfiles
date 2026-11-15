@@ -1,10 +1,11 @@
-# Public identities and client policy for the managed machines. Private keys
-# live only in each host's sops file and runtime secret path.
+# Trusted client public identities and policy for the managed machines.
+# Managed private keys live in sops; the iPad keeps its own private key.
 {
   publicKeyFiles = [
     ../modules/hosts/k/ssh-client.pub
     ../modules/hosts/mini/ssh-client.pub
     ../modules/hosts/nebula/ssh-client.pub
+    ../modules/hosts/ipad/ssh-client.pub
   ];
 
   # Exact names used by Herdr, plus the normal LAN/mDNS aliases.

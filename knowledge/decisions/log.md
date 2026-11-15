@@ -2,6 +2,12 @@
 
 ## 2026-11-14
 
+- **Update**: [Managed SSH access](headless-machine-ssh.md) also enrolls
+  the iPad's Herdr mobile public key through the common authorized-key list.
+  Its private key stays on the iPad; each managed host gains access after
+  rebuilding. Record the malformed-copy diagnosis and nebula's Nix-managed
+  authorized-key location.
+
 - **Creation**: [git-signing-key-in-sops](git-signing-key-in-sops.md): k
   and nebula sign with mini's key, stored as a shared sops secret and
   loaded into a root-loaded ssh-agent, host-wide. Records why the key

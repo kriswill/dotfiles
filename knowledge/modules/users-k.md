@@ -16,7 +16,8 @@ with `neededForUsers = true` (decrypted early enough for user creation),[^sops-n
 consumed via `users.users.k.hashedPasswordFile`. The authorized SSH key is
 pulled from snowglobe's keyring (`config.keyring.ssh.k`), supplemented by
 the machine public keys of [k](ssh-client.md), [mini](mini-ssh-client.md),
-and [nebula](nebula-ssh-client.md). The common
+and [nebula](nebula-ssh-client.md), plus the
+[iPad's Herdr mobile key](../../modules/hosts/ipad/ssh-client.pub). The common
 [list](../../lib/ssh-machines.nix) feeds `authorizedKeys.keyFiles`, also
 used by [darwin core](core.md).
 Groups: `wheel`,

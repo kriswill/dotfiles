@@ -21,7 +21,8 @@ The rebuild helpers live in [nrs](nrs.md).
 
 Every Mac authorizes the existing personal SSH key and the machine keys for
 [k](ssh-client.md), [mini](mini-ssh-client.md), and
-[nebula](nebula-ssh-client.md) as user `k`.
+[nebula](nebula-ssh-client.md), plus the
+[iPad's Herdr mobile key](../../modules/hosts/ipad/ssh-client.pub), as user `k`.
 `users.users.k.openssh.authorizedKeys.keyFiles` consumes the common
 [list](../../lib/ssh-machines.nix).[^darwin-options]
 This includes the offline [work Mac](../hosts/SOC-Kris-Williams.md) on its

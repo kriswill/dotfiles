@@ -49,6 +49,15 @@ authentication for GitHub and work destinations. A single
 darwin and NixOS trust declarations aligned. Herdr uses these SSH settings
 without its own key copy.
 
+The iPad's [Herdr mobile public key](../../modules/hosts/ipad/ssh-client.pub)
+also uses this shared list, authorizing user `k` on each managed host after
+its next rebuild. The iPad is an external client, not a Nix-managed host;
+its private key stays on the iPad and it needs no sops secret or client
+configuration here. Validate copied keys with `ssh-keygen -lf` before
+enrollment: the initial home-directory copy had a space inside the encoded
+key and was invalid. On nebula, Nix deploys the shared keys to
+`/etc/ssh/authorized_keys.d/k`, independently of `~/.ssh/authorized_keys`.
+
 Nebula's existing machine key was its root-only server identity; no client
 key existed. Keep that role separate. Its working sops recipient also
 differs from the current server key and uses the existing root age keyfile,
