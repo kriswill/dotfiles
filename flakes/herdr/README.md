@@ -82,7 +82,8 @@ Packaging notes:
   ahead (and only until the next `update.ts` bump). herdr-core sees its
   `/nix/store/` path (canonicalized, so the `/etc/herdr-core/hc` link counts)
   and refuses `hc update` ("update it in your Nix configuration"), and the
-  app never offers updates to such a core.
+  app never updates such a core: since 0.1.16 its Settings says "Managed by
+  nix: update it there", with the newer version when there is one.
 - **No fixup for herdr-core.** On macOS it is upstream's signed
   `Herdr Core.app`, so strip or install_name_tool would break the signature.
   On Linux it is static-pie and needs nothing.

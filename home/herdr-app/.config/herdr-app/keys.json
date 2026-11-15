@@ -99,7 +99,8 @@
     "ctrl-space b": "layout.toggle:sidebar",
     "ctrl-space ?": "app.help",
     "ctrl-space shift-/": "app.help",
-    "ctrl-space s": "app.settings"
+    "ctrl-space s": "app.settings",
+    "cmd-m": "window.minimize"
   },
   "terminal": {
     "ctrl-backspace": "send:\u0017",
@@ -112,6 +113,7 @@
     "cmd-c": "terminal.copy",
     "cmd-v": "terminal.paste",
     "cmd-f": "terminal.search",
+    "cmd-a": "terminal.select_all",
     "cmd-backspace": "send:\u0015",
     "cmd-left": "send:\u0001",
     "cmd-right": "send:\u0005"
