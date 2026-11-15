@@ -4,7 +4,7 @@ title: Prioritize Mini's Agent Services and Suppress Session Restoration
 description: 'Use normal launchd scheduling for mini''s primary agents and suppress optional GUI restoration without removing the logged-in desktop.'
 tags: [darwin, mini, boot, performance]
 status: stable
-generated: { by: codex/gpt-6, at: 2026-11-13T14:43:17-08:00 }
+generated: { by: codex/gpt-6, at: 2026-11-13T15:07:54-08:00 }
 sources:
   - id: startup-manual
     resource: ../../docs/shell-startup-performance.md
@@ -32,9 +32,10 @@ block session-wide GUI restoration. The initial implementation also disabled
 1Password's login launcher. That part was based on an incorrect reading of
 the requirement and is superseded: **1Password should launch normally**;
 startup and autonomous agent workflows must not require interactive desktop
-authentication. Remove the launcher-disable action in a future configuration
-change, keeping desktop login and restoration suppression. This follow-up
-corrected documentation only; the implementation still contains that action.
+authentication. Generation 29 replaces the disable action with an enable
+that clears the old override, keeping desktop login and restoration
+suppression. The preceding startup checkpoint `2d34d982`
+recorded the correction before it was implemented.
 
 ## Consequences
 

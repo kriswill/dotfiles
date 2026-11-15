@@ -538,7 +538,7 @@ with one completed run. The initial post-activation implementation disabled
 that exact GUI-domain job without editing the app's own checkbox. This was
 an incorrect interpretation of the requirement: 1Password should launch
 normally, while boot and autonomous agent work avoid desktop authentication.
-The disable action still needs removal in a separate configuration change.
+Generation 29 later replaced the disable action with an enable to clear it.
 Desktop auto-login and Hermes remain enabled. History and version caveats:
 [headless login](../knowledge/modules/headless-login.md).
 
@@ -647,8 +647,8 @@ were not restored; the logged-in desktop remains available to Hermes.
 
 At 22:19:29.812822, ServiceManagement (`smd`) re-enabled the 1Password login
 launcher; it ran and launched the app. This override did not survive that
-re-registration, but **normal 1Password launch is expected**. The pending
-correction is to remove the module's launcher-disable action, not suppress
+re-registration, but **normal 1Password launch is expected**. At this
+checkpoint the correction was to remove the launcher-disable action, not suppress
 1Password or remove desktop login. Ordinary manual-use authentication is
 also expected; it must not be a dependency of boot or agent workflows.
 
@@ -713,6 +713,140 @@ the root signing token or relax secret/store permissions. Ordinary user
 desktop integration. That is an unverified dependency, not an observed
 cause of the reported prompt. NRS's explicit sudo authentication is a
 maintenance step, separate from these root launchd boot jobs.
+
+## mini follow-up activation (2026-11-13, generation 29)
+
+The signed checkpoint `2d34d982686b7d5b18919d8802a695670200549b` was verified
+and pushed to origin main before these follow-ups. At that boundary the
+worktree was clean. The subsequent implementation:
+
+- Replaces Mini's 1Password launcher-disable action with an enable that
+  clears the old persistent override, without opening/unlocking the app.
+  Auto-login and the successful restoration suppression remain intact.
+- Separates the signing loader's local SOPS-file wait from remote-error
+  backoff. It checks once per second, logs the wait once and still validates
+  the loaded public key. Failed remote loads retain exponential backoff.
+- Adds [Mini-only SOPS startup settings](../modules/hosts/mini/credential-startup.nix):
+  no unused RSA-to-GPG import for its age-only files, plus native bootstrap
+  and installation timestamps in `/var/log/sops-boot.log`.
+- Adds builtin epoch timestamps for runtime-profile setup, checks, `/etc`
+  and keyboard phases to the shared Darwin boot log. Failure logs retain
+  exit status and last phase. Full NRS checks and `/etc` overwrite guards
+  are unchanged; there is no new activation/SOPS ordering dependency.
+
+Further source/log inspection located substantial SOPS time in its protected
+RAM-disk setup. Pinned `pkgs/sops-install-secrets/darwin.go` allocates a
+64 MiB RAM disk with `hdiutil`, formats HFS and mounts with
+`nobrowse,nodev,nosuid,-m=0751` before decryption. In generation 28,
+`hdiutil` startup was observed at **22:19:30.787709 UTC**, its exit handler
+completed at **22:19:40.723596**, and secrets were published at
+**22:19:40.907725**. The first-to-last observed hdiutil span is **9.935887 s**;
+these markers do not measure every internal phase. SOPS was not waiting for
+boot activation to finish. The RAM filesystem and permissions are preserved.
+Removing the unused GPG import avoids work but has no measured cold saving.
+The separate 13-second activation delay still needs the new phase logs.
+
+`nrs --dry` built successfully. Changed-file Nix format/statix/deadnix,
+ShellCheck and shell syntax checks passed. Five loader tests use disposable
+keys and a local `op` fixture: delayed publication, failed-read backoff,
+wrong-key unloading, termination and agent death. They do not contact
+1Password or use production keys. All three Darwin configurations fully
+evaluate; generated scripts retain `/etc` protection and correct phase
+ordering. At that November 13 validation, k/SOC kept their existing SOPS
+imports, no Mini restoration settings, and signing/Hermes disabled. Their
+interactive 1Password behavior was unchanged. k subsequently enabled signing
+in the separate November 14 change `a138e87e`; evaluation here does not
+establish deployment or reboot behavior.
+
+The user authenticated NRS in Mini terminal `t1g`. Generation **29** became
+running and boot default: build 6.62 s, native authentication wait 119.59 s,
+profile 0.10 s, activation 7.55 s. The changed boot job ran during this
+**warm activation**, from epoch 1794610792.818861 to 1794610793.195827
+(**0.376966 s**). SOPS logged exit 0, elapsed 0 s at whole-second precision,
+reusing the mounted RAM disk. Signing loaded its expected key in three
+whole-second ticks. A challenge signed through the configured Git signer
+and verified through pipes; fresh non-multiplexed SSH to k and nebula passed.
+The root token and user SSH key remain 0400. Both 1Password jobs are enabled.
+Hermes's sandbox → Core → host Git-config check passed again. No reboot
+occurred; these warm results are not cold-boot savings.
+
+## Mini integration checkpoint (2026-11-14, running generation 30)
+
+Kris added Mini-only `power.sleep.computer = "never"` and activated generation
+30. Read-only checks confirm running/boot-default generation 30 and AC
+`pmset sleep 0`, while display sleep remains 10 minutes. This prevents idle
+system sleep from interrupting headless access; it is not a boot speedup.
+
+The pending generation-29 changes were reconciled with origin through
+`85e3e8e4`, preserving the newer k boot records, codebase-memory removal and
+separately approved k/nebula signing setup. The Darwin loader's local wait
+now handles either the SOPS key file (k) or service-account token (Mini).
+Seven disposable-key tests pass, including late publication and wrong-key
+rejection for both sources. Mini retains its root-only signing token; no
+vault grants or agent credentials changed. The credential proposal remains
+pending the explicit Core-delegation decision.
+
+Integration validation passed: `nrs --dry` built Mini in 14.81 s; all three
+Darwin systems and nebula's full system derivation evaluate. Changed-file
+Nix format/statix/deadnix, ShellCheck, shell/Python syntax and generated
+activation guard/phase/SOPS-command checks pass. Probe fixtures reject
+refused commands, timeouts, malformed output and missing executables.
+`okf validate` checked 290 files with no errors or warnings. Evaluation
+confirms k/SOC inherit no Mini sleep/restoration/SOPS-import overrides;
+k retains its separately approved signing backend, SOC its default signer.
+
+This integration has not been activated or cold-boot-tested. Generation 30
+is the live baseline; a later NRS switch would also apply the incoming
+codebase-memory removal and updated shared loader. The new phase logs and
+external probe remain useful for the next user-authorized reboot.
+
+## External command-readiness measurement
+
+[`scripts/boot-readiness.py`](../scripts/boot-readiness.py) runs independent
+SSH and Core command probes from another machine. Both return hostname,
+kernel boot time and the active system path. SSH disables multiplexing and
+agent use, requires batch authentication and strict host checking, and does
+not update known-host files. Core uses the existing named peer and a bounded
+remote command timeout. Each JSONL record contains attempt start/end epoch
+times, duration, success and (on success) the remote boot origin/generation.
+Timeouts, nonzero exits and malformed responses cannot report ready.
+
+The actual script ran on nebula against Mini for four seconds: both routes
+executed successfully on each sample. Separate checks covered refused exits,
+timeouts, malformed output and missing executables. This validates the
+observer, not readiness through an unperformed reboot.
+
+For the next user-planned Mini reboot, run this on nebula or another
+independent observer with a checkout containing the script:
+
+```sh
+hc run --bg --outlive-parent --name mini-reboot-observer /bin/sh -c '
+  umask 077
+  mkdir -p "$HOME/.local/state/boot-diagnostics"
+  probe_log="$HOME/.local/state/boot-diagnostics/mini-$(date -u +%Y%m%dT%H%M%SZ).jsonl"
+  printf "Log: %s\n" "$probe_log"
+  exec python3 /path/to/dotfiles/scripts/boot-readiness.py \
+    --ssh mini --machine mini --interval 1 --timeout 3 --duration 600 > "$probe_log"
+'
+```
+
+For a future planned k reboot, run on **Mini**, use the actual script path
+`/Users/k/src/github/kriswill/dotfiles/scripts/boot-readiness.py`, and change
+the target parameters to `--ssh k --machine k` and log/name prefixes to k.
+`--outlive-parent` keeps observation alive through coordinator disconnection.
+`hc read <observer-name>` shows its log path; `hc get <observer-name>` shows
+status. Retain the JSONL after exit. Group by `boot_epoch`, distinguish
+pre-reboot successes, and report each route's first new-boot success alongside
+its preceding failed attempt. Clock agreement is required for cross-machine
+subtraction; receipt time includes transport latency. Sampling/timeout gaps
+limit the readiness bracket. The probe never initiates a reboot.
+
+Vault design remains a separate experiment. The
+[credential map and proposal](mini-agent-credentials.md) records the user's
+intended Mini/Hermes separation, inspected item metadata and Core's effective
+authority. No new service-account token, vault grant or secret consumer was
+deployed with generation 29. k's separate session owns its checkout,
+activation and reboot preparation; this session did not mutate or activate it.
 
 ### Herdr Core app-data notice during the investigation
 

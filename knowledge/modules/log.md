@@ -2,6 +2,8 @@
 
 ## 2026-11-14
 
+- **Update**: [Git signing](git-signing-agent.md) reconciles the pending Mini local-secret wait with both upstream Darwin key sources. Seven disposable-key tests pass, including delayed key-file publication and wrong-key rejection. [Boot activation](boot-activation.md) clarifies shared instrumentation versus host-only policy; no new vault grants.
+
 - **Update**: [Git signing](git-signing-agent.md) is live on
   [k](../hosts/k.md) too (generation 291), so the sops key source is
   verified on darwin as well as on nixos.
@@ -24,6 +26,21 @@
 ## 2026-11-13
 
 - **Update**: [codebase-memory-mcp](codebase-memory-mcp.md) is disabled fleet-wide; [core](core.md) drops its macOS CLI installation and the repository MCP launch entry is removed. Flake inputs, exports, optional modules and existing indexes remain. Activation is separate; boot savings are not yet measured.
+
+- **Creation**: [Mini credential startup](credential-startup.md) keeps the
+  protected RAM filesystem, removes unused RSA-to-GPG import and timestamps
+  the native SOPS boot job. Source/log inspection places substantial cold
+  delay in hdiutil RAM-disk setup, not activation ordering.
+- **Update**: [Headless login](headless-login.md) clears the obsolete
+  1Password launcher-disable override; [signing](git-signing-agent.md)
+  separates one-second local publication checks from remote-error backoff;
+  [boot activation](boot-activation.md) gains builtin phase timestamps.
+  Generation 29 activated successfully with warm signing, fresh peer SSH
+  and Hermes-to-Core checks passing. Five disposable-key loader tests and
+  all Darwin evaluations passed; cold gains remain unmeasured.
+- **Update**: [Mini Hermes](mini-hermes-agent.md) links the credential review:
+  its intended mini-automation scope and broad Core delegation are distinct;
+  no new vault credential or grant has been deployed.
 
 - **Update**: [Mini Hermes](mini-hermes-agent.md) distinguishes direct
   sandbox restrictions from explicit Core delegation into user k's host

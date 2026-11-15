@@ -2,6 +2,8 @@
 
 ## 2026-11-14
 
+- **Update**: [mini](mini.md) records Kris's generation-30 idle-sleep policy: running/boot default agree and AC `sleep 0` is verified; display sleep remains unchanged. No reboot or activation was performed during integration.
+
 - **Update**: [k](k.md) activated
   [git-signing-agent](../modules/git-signing-agent.md) in generation 291;
   a test commit and tag verify as `G` with the shared key.
@@ -23,6 +25,12 @@
   boot supports the setting without isolating every cause. Scheduled
   provider refreshes succeeded. Desktop restoration and 1Password remain
   intact; the temporary external observer's results were saved and it was stopped.
+
+- **Update**: [mini](mini.md) activates generation 29 with launcher
+  correction, credential timing and improved local token wait. Fresh signing
+  and SSH pass. k and SOC-Kris-Williams configurations evaluate unchanged in
+  their interactive desktop/1Password policies; k's separate session owns
+  its live activation and reboot testing.
 
 - **Update**: [mini](mini.md) records the verified generation-28 cold
   startup, explicit Hermes delegation through Core and the corrected

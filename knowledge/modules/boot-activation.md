@@ -4,7 +4,7 @@ title: Boot Activation
 description: 'Boot activation restores /etc and keyboard settings; full rebuild probes belong to nrs, where applications, users, Homebrew, and Nix can change.'
 resource: modules/darwin/boot-activation.nix
 tags: [darwin-module]
-generated: { by: codex/gpt-6, at: 2026-11-13T13:52:03-08:00 }
+generated: { by: codex/gpt-6, at: 2026-11-14T17:02:07-08:00 }
 sources:
   - id: upstream-boot
     resource: https://github.com/nix-darwin/nix-darwin/blob/ff0e21a414d4547183396da1b44a66f2577b65e9/modules/services/activate-system/default.nix
@@ -32,6 +32,23 @@ script records a UTC start timestamp, exit status, and elapsed seconds;
 the timer excludes waiting for the store and interpreter to become usable.
 Check this log and `launchctl print system/org.nixos.activate-system` after
 a reboot: `nrs --status` only compares generations.[^startup-manual]
+
+The generation-29 follow-up adds builtin `EPOCHREALTIME` phase markers for
+runtime-profile setup, checks, `/etc` and keyboard settings, with exit status
+and the last phase on failure. No command/environment tracing is enabled.
+Normal NRS activation does not set the boot flag, so these markers are
+inactive there. The changed boot job ran during the warm switch in
+0.377 s; the preceding cold boot took 13 s. That cold delay still needs
+phase measurement; the warm result is not a boot improvement.
+
+This shared instrumentation and the original guarded boot checks apply to
+all Darwin hosts. k and SOC-Kris-Williams retain their interactive desktop
+and 1Password login behavior, with no Mini restoration policy or Hermes
+opt-in. k separately enabled SOPS-backed signing in `a138e87e`; the work
+Mac keeps the default signer. These boot changes do not select a signing
+backend or grant vault access. Evaluation is not live deployment or reboot
+verification.
+[Mini's SOPS timings](credential-startup.md) are a separate host-only override.
 
 [Zsh](zsh.md) separately provides a persistent-profile PATH fallback so
 noninteractive SSH tools can start while this job is still pending.

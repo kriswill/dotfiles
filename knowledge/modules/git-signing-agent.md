@@ -5,7 +5,7 @@ description: 'A root daemon loads an SSH signing key into an ssh-agent running a
 resource: modules/darwin/git-signing-agent/default.nix
 tags: [darwin-module, nixos-module, git, 1password, secrets]
 status: stable
-generated: { by: claude-code/fable-5.2, at: 2026-11-14T13:40:00-08:00 }
+generated: { by: codex/gpt-6, at: 2026-11-14T17:02:07-08:00 }
 sources:
   - id: op-secret-reference-syntax
     resource: https://developer.1password.com/docs/cli/secret-reference-syntax/
@@ -101,8 +101,10 @@ loader:
    token.[^op-secret-reference-syntax] With `opItem` the key never touches
    the disk at all.
 3. Unloads the key again unless it is `publicKey`.
-4. Retries with exponential backoff, capped at 5 min, until the sops
-   secret exists and the load succeeds. Afterwards it waits on the agent,
+4. Checks for a readable, nonempty SOPS secret once per second, logging
+   the wait once. Local publication of either source does not consume the
+   exponential load-error backoff (5 s up to 5 min). Failed reads and
+   mismatched keys retain that backoff. Afterwards it waits on the agent,
    and exits when the agent dies so launchd starts a fresh one. Logs go to
    `/var/log/git-signing-agent.log`, which newsyslog rotates.
 
@@ -213,6 +215,23 @@ is root `0400` and unreadable by `k`; both overridden settings resolve to
 `/etc/git/host.inc`. A commit and a signed tag in a throwaway repository
 verified as `G`. The build added six paths (the daemon script and plist,
 the signer, `host.inc`, the log-rotation rule and the key file).
+
+Generation 29 activated this separate local-file wait. Five disposable-key
+tests cover late publication, remote-error backoff, wrong-key unloading,
+termination during the wait and agent death. Warm reload fetched the expected
+key in three whole-second log ticks; a challenge signed and verified without
+creating a commit. No cold-boot speedup is claimed for this follow-up.
+
+The November 14 integration with `a138e87e` retains both Darwin key sources:
+the one-second local wait now uses their common secret path. Seven durable
+disposable-key tests pass on Mini, adding delayed key-file publication and
+wrong-key-file rejection to the five cases above. No service restart or new
+cold boot was performed for this integration.
+
+The [agent credential review](../../docs/mini-agent-credentials.md) distinguishes
+the ability to request a signature from raw vault/key access. Mini/Hermes's
+designated vault currently contains this private signing key, so handing
+agents the loader's token would defeat the boundary.
 
 ## Gotchas
 

@@ -4,7 +4,7 @@ title: mini
 description: 'Headless personal M1 Mac mini with 16GB RAM, running Hermes and Herdr with machine SSH authentication and separate prompt-free Git signing.'
 resource: modules/hosts/mini/default.nix
 tags: [host]
-generated: { by: claude-code/fable-5.2, at: 2026-11-14T13:40:00-08:00 }
+generated: { by: codex/gpt-6, at: 2026-11-14T17:02:07-08:00 }
 ---
 
 mini - my personal mac mini M1, 16GB RAM.
@@ -39,10 +39,23 @@ are opted into below per the
 
 - [Headless login](../modules/headless-login.md): suppress automatic GUI
   session restoration while retaining the desktop. 1Password should launch
-  normally; the initial launcher-disable action still needs removal from
-  the implementation. Generation 28 verified restoration suppression,
+  normally; generation 29 clears the initial launcher-disable override.
+  Generation 28 verified restoration suppression,
   Hermes initialization at +28.413 s and signing at about +30 s after kernel
   boot, with normal launchd scheduling on this host.
+
+Generation 29 adds [credential startup](../modules/credential-startup.md)
+timing and age-only SOPS import; signing checks local token publication
+without spending network backoff. All are warm-verified, with no new reboot.
+The [agent credential review](../../docs/mini-agent-credentials.md) keeps
+Hermes's designated vault separate and documents how Core delegation
+widens its effective user authority. No broader vault grant was deployed.
+
+Kris additionally set `power.sleep.computer = "never"` on Mini and activated
+generation 30. Read-only verification on 2026-11-14 confirmed running and
+boot-default generation 30 and `pmset` AC `sleep 0`; display sleep remains
+10 minutes. This keeps unattended access available during idle periods and
+does not change another host's power policy.
 
 ## Source
 

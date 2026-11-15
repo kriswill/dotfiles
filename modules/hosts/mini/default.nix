@@ -20,6 +20,9 @@
       )
     ];
 
+    # Keep this headless agent host reachable when displays are idle.
+    power.sleep.computer = "never";
+
     # Hexley the platypus on the Nix snowflake (modules/darwin/fastfetch.nix).
     programs.fastfetch.logo = "hexley-nix.png";
 

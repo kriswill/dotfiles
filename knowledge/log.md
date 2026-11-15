@@ -2,6 +2,8 @@
 
 ## 2026-11-14
 
+- **Update**: The [startup manual](../docs/shell-startup-performance.md) and [Mini credential review](../docs/mini-agent-credentials.md) reconcile the pending work with origin `85e3e8e4`, retaining k's newer evidence and separately approved SOPS signing setup. Mini remains on generation 30; the credential proposal stays unimplemented.
+
 - **Update**: The [startup manual](../docs/shell-startup-performance.md) separates newly activated generation 291 and SOPS-backed Git signing from the historical generation 288–290 boot captures. Existing measurements and unresolved 1Password-prompt attribution remain unchanged.
 
 - **Update**: The [startup manual](../docs/shell-startup-performance.md#server-side-diagnostic-result-2026-11-14) records the completed packet/stack test: client banners acknowledged on both interfaces, late handler/banner evidence, capture drops and omitted auth-child samples. The ordinary 1Password unlock observation is distinguished from unproven SSH-agent involvement. The observer is stopped; exact blocking remains unresolved.
@@ -24,6 +26,18 @@ in that bundle's own `log.md` (e.g. [modules/log.md](modules/log.md)).
 - **Update**: The [startup manual](../docs/shell-startup-performance.md#k-follow-up-comparison-generation-289-2026-11-13) records k's generation-289 scheduling comparison and the first reboot actually covered by an external observer. It distinguishes the shorter ai-usage launch interval, scheduled provider refreshes and independently successful SSH/Core commands; the generation-288 baseline and its missing observer remain unchanged.
 
 - **Update**: [Shell/startup manual](../docs/shell-startup-performance.md) records k generation 288's FileVault cold boot, verified activation/shell behavior, concurrent service timeline and ownership distinctions. No external observer covered reboot and the October 24 baseline is incomplete; no speedup or earliest remote readiness is claimed. Detailed private evidence, provenance inventory and a standalone HTML replay remain in k's gitignored validation directory named in the manual. Documentation only; no post-boot startup changes.
+
+- **Update**: The [startup manual](../docs/shell-startup-performance.md)
+  records the signed/pushed checkpoint, generation-29 warm activation,
+  SOPS RAM-disk evidence, fleet impact and external command-readiness probe.
+  The observer passed actual SSH/Core checks from nebula to Mini and has a
+  persistent launch/log-collection procedure for either Mini or k reboot.
+- **Creation**: [Mini agent credential review](../docs/mini-agent-credentials.md)
+  maps intended vaults, direct/delegated operations and verified versus
+  proposed access. Authorized metadata inspection found the signing key in
+  mini-automation and GitHub/nebula credentials in Automation. Preserve
+  signature-only access and resolve Hermes's Core authority before adding
+  broader credentials; no grants, tokens or vault contents changed.
 
 - **Update**: The [startup manual](../docs/shell-startup-performance.md#mini-cold-boot-and-credential-readiness-2026-11-13-generation-28)
   records the completed generation-28 cold boot with exact time origins,

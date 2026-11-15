@@ -1,10 +1,10 @@
 ---
 type: Darwin Module
 title: Headless Login
-description: 'Mini login policy retains the desktop for Hermes and suppresses restored applications; its initial 1Password launcher-disable action awaits correction to allow normal launch.'
+description: 'Mini retains its desktop for Hermes, suppresses restored applications, and clears the obsolete 1Password launcher-disable override so normal login launch works.'
 resource: modules/hosts/mini/headless-login.nix
 tags: [darwin-module, host-specific]
-generated: { by: codex/gpt-6, at: 2026-11-13T14:43:17-08:00 }
+generated: { by: codex/gpt-6, at: 2026-11-13T15:07:54-08:00 }
 sources:
   - id: startup-manual
     resource: ../../docs/shell-startup-performance.md
@@ -41,12 +41,13 @@ effect; recheck after macOS updates. Merely writing
 `TALLogoutSavesState = false` is insufficient evidence: it was already false
 in the generation-26 boot's diagnostic log while apps were restored.
 
-The initial implementation also makes [nrs](nrs.md) post-activation disable
-1Password's login-launcher job. **This conflicts with the clarified
-requirement:** 1Password should launch normally; boot and autonomous agent
-work should not depend on desktop authentication. Remove only that disable
-action in a future configuration change, retaining the restoration policy.
-The documentation follow-up did not change the active implementation.
+The initial generation-28 implementation also disabled 1Password's launcher.
+That conflicted with the clarified requirement: 1Password should launch
+normally; boot and autonomous agent work should not depend on desktop
+authentication. Generation 29 replaces that action with `launchctl enable`
+to clear any persistent disable override, retaining restoration suppression.
+It does not open or unlock 1Password during [nrs](nrs.md), or alter the
+app's own login checkbox. A missing GUI domain is reported for later repair.
 The [SSH client](mini-ssh-client.md) and root service-account
 [signing loader](git-signing-agent.md) already avoid desktop authentication.
 
@@ -68,13 +69,17 @@ interactive prompt appeared. Post-boot signing verification and fresh SSH
 checks to k and nebula succeeded without desktop authentication.
 Detailed timestamps and evidence limits are in the startup manual.
 
+Generation 29 activated successfully through `nrs`: the launcher and browser
+helper are enabled, signing verified through the configured signer, and
+fresh SSH to k and nebula passed. This warm verification does not replace
+the next cold-login check.
+
 Inspect the live preference with
 `defaults read com.apple.loginwindow TALBlockSavingAndLaunch` and launchd
 overrides with `launchctl print-disabled gui/$(id -u)`. These state checks
 do not by themselves prove a prompt-free startup.
 
-To roll back the entire policy (distinct from the pending launcher-only
-correction), remove this host policy and run `nrs`, delete
+To roll back restoration suppression, remove this host policy and run `nrs`, delete
 `TALBlockSavingAndLaunch` with `defaults delete com.apple.loginwindow
 TALBlockSavingAndLaunch`, then run `launchctl enable
 gui/$(id -u)/com.1password.1password-launcher` as the user. Removing a Nix

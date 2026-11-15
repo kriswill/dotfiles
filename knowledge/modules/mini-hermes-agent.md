@@ -4,7 +4,7 @@ title: Hermes Agent (mini)
 description: 'Hermes gateway and CLI on mini share private state and a Seatbelt sandbox with checkout access, plus explicit delegation through the existing Herdr Core socket into user k''s host authority.'
 resource: modules/hosts/mini/hermes-agent.nix
 tags: [darwin-module, host-specific, ai-agent, sandbox, secrets]
-generated: { by: codex/gpt-6, at: 2026-11-13T14:43:17-08:00 }
+generated: { by: codex/gpt-6, at: 2026-11-13T15:07:54-08:00 }
 sources:
   - id: cua-launch-grants
     resource: https://github.com/trycua/cua/pull/5690
@@ -106,6 +106,7 @@ are separate warm and cold measurements, with multiple changes between boots.
   to Hermes, Core or Codex. Additional assigned vaults need separately scoped
   noninteractive credentials or a broker. An existing OAuth `auth.json`
   does not establish working provider authentication after this reboot.
+
 - **Model selection is runtime-owned and the update check is off**, for the
   reasons in nebula's doc.
 - **Restart the gateway with launchd**, not `hermes gateway restart`: the
@@ -115,6 +116,14 @@ are separate warm and cold measurements, with multiple changes between boots.
 - **Verify.** `launchctl print gui/$(id -u)/org.nixos.hermes-agent`,
   `tail ~/Library/Logs/hermes-agent.err.log`, `hermes gateway status`,
   `hermes -z hi`.
+
+The user's designated-vault boundary for Hermes remains `mini-automation`.
+It currently contains the signing key only; direct read access would expose
+that key, whereas the present delegated signer only answers signature
+requests. Do not introduce k-readable Automation credentials for Codex
+without resolving that Hermes's full Core delegation can reach them too.
+The [credential review](../../docs/mini-agent-credentials.md) records verified
+metadata, existing host GitHub access, and the pending authority decision.
 
 ## Bounded desktop driver package
 

@@ -1,5 +1,5 @@
-# mini keeps a logged-in desktop for Hermes, but opens optional GUI apps
-# on demand. See knowledge/modules/headless-login.md for verification
+# mini keeps a logged-in desktop for Hermes and normal 1Password login
+# launch. See knowledge/modules/headless-login.md for verification
 # and rollback; macOS session restoration and login items are separate.
 {
   configurations.darwin.mini.module =
@@ -14,15 +14,14 @@
       };
 
       system.activationScripts.postActivation.text = lib.mkAfter ''
-        # Disable only 1Password's login launcher. The main app and its
-        # browser helper remain available when explicitly needed. launchd
-        # persists this override across boots; no running app is stopped.
+        # Clear the disable override installed by generation 28. Let the
+        # app's normal login registration run; do not open/unlock it here.
         mini_login_uid=$(/usr/bin/id -u ${lib.escapeShellArg config.system.primaryUser})
         if /bin/launchctl print "gui/$mini_login_uid" >/dev/null 2>&1; then
-          echo "disabling 1Password's login launcher on mini..." >&2
-          /bin/launchctl disable "gui/$mini_login_uid/com.1password.1password-launcher"
+          echo "enabling 1Password's normal login launcher on mini..." >&2
+          /bin/launchctl enable "gui/$mini_login_uid/com.1password.1password-launcher"
         else
-          echo "mini: no GUI login domain; rerun nrs after login to disable 1Password's launcher" >&2
+          echo "mini: no GUI login domain; rerun nrs after login to clear the old 1Password launcher override" >&2
         fi
       '';
     };

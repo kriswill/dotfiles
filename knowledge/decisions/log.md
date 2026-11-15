@@ -15,6 +15,11 @@
 
 - **Update**: [Codebase-memory fork](codebase-memory-fork.md) records fleet installation removal while retaining the input and package/module exports; no overall boot-time saving is assumed.
 
+- **Update**: [Mini startup](mini-headless-startup.md) records generation
+  29 implementing the previously documented 1Password-launch correction,
+  following signed/pushed checkpoint `2d34d982`. Desktop login and
+  restoration suppression remain intact; no reboot was performed.
+
 - **Update**: [Darwin SOPS](sops-darwin-ssh-host-keys.md) preserves the
   original rollout context while documenting Mini's current recipient,
   service-account signing and separate machine SSH key. Link the existing

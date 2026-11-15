@@ -116,11 +116,25 @@ load_key() {
 }
 
 delay=$((MAX_BACKOFF < 5 ? MAX_BACKOFF : 5))
+waiting_for_secret=false
 while :; do
   kill -0 "$agent_pid" 2>/dev/null || { log "ssh-agent exited"; exit 1; }
-  if [ ! -s "$SECRET_FILE" ]; then
-    log "waiting for $SECRET_FILE (decrypted by sops-install-secrets)"
-  elif load_key; then
+  # Local SOPS publication is not a network failure. Check at most once a
+  # second without consuming the remote-error backoff or spamming the log.
+  # wait4path cannot help: it observes mount changes, not atomic symlinking.
+  if [ ! -r "$SECRET_FILE" ] || [ ! -s "$SECRET_FILE" ]; then
+    if ! "$waiting_for_secret"; then
+      log "waiting for $SECRET_FILE (decrypted by sops-install-secrets)"
+      waiting_for_secret=true
+    fi
+    pause 1
+    continue
+  fi
+  if "$waiting_for_secret"; then
+    log "SOPS secret available"
+    waiting_for_secret=false
+  fi
+  if load_key; then
     break
   fi
   log "retrying in ${delay}s"
