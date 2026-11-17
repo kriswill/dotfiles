@@ -2,6 +2,12 @@
 
 ## 2026-11-16
 
+- **Update**: [Agent Remote](agent-remote.md) gains a NixOS twin, so
+  [nebula](../hosts/nebula.md) also answers on port 2122. It is a systemd
+  unit beside `sshd.service` with the same binary, config, host keys and
+  authorized keys, and it opens the port in the firewall. Not yet
+  activated on nebula when written.
+
 - **Creation**: [Agent Remote](agent-remote.md), a host-selective module
   enabled on [k](../hosts/k.md), [mini](../hosts/mini.md) and
   [SOC-Kris-Williams](../hosts/SOC-Kris-Williams.md). It runs a second sshd as its own launchd
