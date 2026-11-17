@@ -64,8 +64,9 @@ connections for sshd on the new port.
   `sshd-keygen.service`, which creates the host keys.
 - **The firewall port is opened by the module.** nebula's firewall is on and
   `services.openssh.openFirewall` covers only `services.openssh.ports`.
-- **Universal, with no options**, as the nixos class has one host; the port
-  is fixed at 2122 in the file. An assertion requires
+- **Same options, one extra check.** `services.agent-remote.enable` and
+  `.port` exist in both classes, off by default; nebula turns it on in
+  [nebula-agent-remote](nebula-agent-remote.md). An assertion requires
   `services.openssh.enable`, whose `/etc/ssh/sshd_config`, `sshd` user and
   host keys the unit reuses.
 - **The password flags change nothing today.** snowglobe-factory already
@@ -81,7 +82,7 @@ overridden) and `PidFile none`.
 
 - Module: [`modules/darwin/agent-remote.nix`](../../modules/darwin/agent-remote.nix)
 - NixOS module: [`modules/nixos/agent-remote.nix`](../../modules/nixos/agent-remote.nix)
-- Options under: `services.agent-remote` (darwin only)
+- Options under: `services.agent-remote` (both classes)
 
 [^sshd-man]: sshd(8): `-o` gives options in configuration-file format; `-p` overrides any `Port` in the file.
 [^darwin-options]: nix-darwin `launchd.daemons.<name>`: a system launchd job labelled `org.nixos.<name>`.

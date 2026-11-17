@@ -2,6 +2,11 @@
 
 ## 2026-11-16
 
+- **Update**: the NixOS [Agent Remote](agent-remote.md) twin takes the
+  darwin module's options (`services.agent-remote.enable`, `.port`), off by
+  default. **Creation**: [nebula-agent-remote](nebula-agent-remote.md)
+  enables it on [nebula](../hosts/nebula.md). The built system is unchanged.
+
 - **Update**: [Agent Remote](agent-remote.md) gains a NixOS twin, so
   [nebula](../hosts/nebula.md) also answers on port 2122. It is a systemd
   unit beside `sshd.service` with the same binary, config, host keys and

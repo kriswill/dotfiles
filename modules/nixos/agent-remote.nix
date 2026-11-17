@@ -17,7 +17,11 @@
 #   itself after; there is no `ssh-keygen -A` step;
 # - the NixOS firewall is on and only opens services.openssh.ports, so the
 #   port is opened here;
-# - universal, with no options: nebula is the only host in the nixos class.
+# - an assertion requires services.openssh.enable, whose sshd_config, sshd
+#   user and host keys this unit reuses.
+#
+# Same options as the darwin twin (services.agent-remote.enable / .port),
+# off by default; nebula turns it on in modules/hosts/nebula/agent-remote.nix.
 #
 # The -o flags are read before the file and win over it: the port, no pid
 # file (sshd.service owns /run/sshd.pid), and no password or
@@ -27,7 +31,7 @@
   flake.modules.nixos.agent-remote =
     { config, lib, ... }:
     let
-      port = 2122;
+      cfg = config.services.agent-remote;
       sshd = lib.getExe' config.services.openssh.package "sshd";
       sshdArgs = [
         "-D" # foreground: systemd supervises it
@@ -35,7 +39,7 @@
         "-f"
         "/etc/ssh/sshd_config"
         "-p"
-        (toString port)
+        (toString cfg.port)
         "-o"
         "PidFile=none"
         "-o"
@@ -45,31 +49,46 @@
       ];
     in
     {
-      assertions = [
-        {
-          assertion = config.services.openssh.enable;
-          message = "agent-remote reuses /etc/ssh/sshd_config, the sshd user and the host keys that services.openssh.enable provides.";
-        }
-      ];
-
-      systemd.services.agent-remote = {
-        description = "Key-only SSH daemon on port ${toString port}";
-        wantedBy = [ "multi-user.target" ];
-        after = [
-          "network.target"
-          "sshd-keygen.service"
-        ];
-        wants = [ "sshd-keygen.service" ];
-        # Pick up sshd_config changes on a rebuild, as sshd.service does.
-        restartTriggers = [ config.environment.etc."ssh/sshd_config".source ];
-        serviceConfig = {
-          Type = "notify-reload";
-          ExecStart = "${sshd} ${lib.escapeShellArgs sshdArgs}";
-          KillMode = "process";
-          Restart = "always";
+      options.services.agent-remote = {
+        enable = lib.mkEnableOption "a second, key-only sshd on its own port";
+        port = lib.mkOption {
+          type = lib.types.port;
+          default = 2122;
+          description = ''
+            TCP port the second sshd listens on, also opened in the
+            firewall. 2122 is outside the well-known range; IANA lists it
+            for "CauPC Remote Control", which nothing here uses.
+          '';
         };
       };
 
-      networking.firewall.allowedTCPPorts = [ port ];
+      config = lib.mkIf cfg.enable {
+        assertions = [
+          {
+            assertion = config.services.openssh.enable;
+            message = "agent-remote reuses /etc/ssh/sshd_config, the sshd user and the host keys that services.openssh.enable provides.";
+          }
+        ];
+
+        systemd.services.agent-remote = {
+          description = "Key-only SSH daemon on port ${toString cfg.port}";
+          wantedBy = [ "multi-user.target" ];
+          after = [
+            "network.target"
+            "sshd-keygen.service"
+          ];
+          wants = [ "sshd-keygen.service" ];
+          # Pick up sshd_config changes on a rebuild, as sshd.service does.
+          restartTriggers = [ config.environment.etc."ssh/sshd_config".source ];
+          serviceConfig = {
+            Type = "notify-reload";
+            ExecStart = "${sshd} ${lib.escapeShellArgs sshdArgs}";
+            KillMode = "process";
+            Restart = "always";
+          };
+        };
+
+        networking.firewall.allowedTCPPorts = [ cfg.port ];
+      };
     };
 }
