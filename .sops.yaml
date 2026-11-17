@@ -7,7 +7,7 @@ keys:
   - &nebula age1gduheq5k8trpxduq56qt3yy6g0mveshx4h06nshccejvv6yxp4vq77m3qf
   - &k age19lm2fsr2ugl0e2m4s84z885vluma0dlg8xv3vua72dn8zmu7paeq7tmqv2
   - &mini age1l3xh6zwrwtlgrepvt05sjn73sd7x93my3rfjuhxtgnsj7alxx9aslwhdjw
-  # TODO(SOC-Kris-Williams): derive on the machine as described above.
+  - &soc age12r0fj4p0k693xl8gtedjfe84l8ny5pc0s30jqs0ln8asqxt0p4csm8dzvs
 creation_rules:
   - path_regex: modules/hosts/nebula/secrets.yaml
     key_groups:
@@ -55,6 +55,7 @@ creation_rules:
       - age:
           - *k
           - *nebula
+          - *soc
   # Private ssh Host entries (~/.ssh/config.d) — one shared file, every host
   # that deploys them is a recipient (add mini/SOC here + `sops updatekeys`).
   - path_regex: modules/hosts/ssh-hosts.yaml

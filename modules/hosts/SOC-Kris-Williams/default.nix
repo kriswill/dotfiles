@@ -37,6 +37,19 @@
     # (modules/darwin/agent-remote.nix).
     services.agent-remote.enable = true;
 
+    # Prompt-free commit signing from the shared sops key, as on k
+    # (modules/darwin/git-signing-agent). Commits here otherwise go through
+    # 1Password's op-ssh-sign, which fails whenever the app is locked. Stays
+    # off until git-signing.yaml is encrypted to this host (.sops.yaml has the
+    # recipient; run `sops updatekeys modules/hosts/git-signing.yaml` on k or
+    # nebula), because sops-install-secrets fails to activate without that.
+    # Setup: knowledge/playbooks/git-signing-agent-setup.md.
+    services.git-signing-agent = {
+      enable = false;
+      publicKey = ../git-signing.pub;
+      sopsFile = ../git-signing.yaml;
+    };
+
     # Hexley the platypus on the Nix snowflake (modules/darwin/fastfetch.nix).
     programs.fastfetch.logo = "hexley-nix.png";
 
