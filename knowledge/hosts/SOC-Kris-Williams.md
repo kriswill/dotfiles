@@ -15,6 +15,8 @@ are opted into below per the
 
 ## Host-selective features
 
+- [agent-remote](../modules/agent-remote.md): a second, key-only sshd on
+  port 2122, independent of Remote Login.
 - [apple-container](../modules/apple-container.md)
 - [podman-desktop](../modules/podman-desktop.md)
 - [remote-login](../modules/remote-login.md)

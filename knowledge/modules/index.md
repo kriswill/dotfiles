@@ -7,6 +7,7 @@ interesting ones by hand — scaffolding never overwrites an existing doc.
 
 ## Concepts
 
+* [Agent Remote](agent-remote.md) - A second OpenSSH server run as its own launchd daemon on a configurable port (default 2122), accepting public keys only and independent of the macOS Remote Login switch.
 * [Ai Usage](ai-usage.md) - Runs the ai-usage collector daemon (Claude Ultra limits, Anthropic API cost, ChatGPT/Codex limits) as a systemd user service on nebula and an opt-in launchd agent on the macs, feeding the herdr-app ai-usage sidebar panel.
 * [Alias En0](alias-en0.md) - Alias a local dev IP onto en0 (work host only).
 * [Apple Container](apple-container.md) - apple-container ships its nix-darwin module with its sub-flake (./flakes/apple-container/darwin-module.nix); re-export it into the Dendritic module set so hosts pick it up like any in-tree modules/darwin/* module.

@@ -43,6 +43,10 @@
     # competes poorly with login's GUI work; measure Standard on mini first.
     launchd.daemons.git-signing-agent.serviceConfig.ProcessType = lib.mkForce "Standard";
 
+    # A second, key-only sshd on port 2122, independent of Remote Login
+    # (modules/darwin/agent-remote.nix).
+    services.agent-remote.enable = true;
+
     nixpkgs.hostPlatform = "aarch64-darwin";
     nixpkgs.overlays = builtins.attrValues config.flake.overlays;
   };

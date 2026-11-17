@@ -2,6 +2,13 @@
 
 ## 2026-11-16
 
+- **Creation**: [Agent Remote](agent-remote.md), a host-selective module
+  enabled on [k](../hosts/k.md), [mini](../hosts/mini.md) and
+  [SOC-Kris-Williams](../hosts/SOC-Kris-Williams.md). It runs a second sshd as its own launchd
+  daemon on `services.agent-remote.port` (default 2122), public keys only,
+  sharing port 22's host keys and authorized keys and unaffected by the
+  Remote Login switch.
+
 - **Creation**: [Remote Login](remote-login.md), a host-selective module
   enabled on [SOC-Kris-Williams](../hosts/SOC-Kris-Williams.md). Each
   activation turns the built-in sshd back on and adds `k` to the

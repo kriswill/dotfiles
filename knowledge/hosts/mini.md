@@ -15,6 +15,8 @@ are opted into below per the
 
 ## Host-selective features
 
+- [agent-remote](../modules/agent-remote.md): a second, key-only sshd on
+  port 2122, independent of Remote Login.
 - [git-signing-agent](../modules/git-signing-agent.md): enabled; commits sign
   through a root-loaded ssh-agent with no 1Password prompt, for headless
   Claude sessions under herdr core

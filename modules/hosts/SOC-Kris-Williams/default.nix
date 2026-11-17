@@ -33,6 +33,9 @@
     # Reached from the home network as `work` (UniFi local DNS record); see
     # modules/darwin/remote-login.nix for why both switches need re-applying.
     services.remote-login.enable = true;
+    # A second, key-only sshd on port 2122, independent of Remote Login
+    # (modules/darwin/agent-remote.nix).
+    services.agent-remote.enable = true;
 
     # Hexley the platypus on the Nix snowflake (modules/darwin/fastfetch.nix).
     programs.fastfetch.logo = "hexley-nix.png";

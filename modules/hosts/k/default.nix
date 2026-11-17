@@ -75,6 +75,9 @@
     # The AI-usage collector (Claude Max limits from the keychain login,
     # Codex limits) behind Herdr's ai-usage sidebar panel and `ai-usage`.
     services.ai-usage.enable = true;
+    # A second, key-only sshd on port 2122, independent of Remote Login
+    # (modules/darwin/agent-remote.nix).
+    services.agent-remote.enable = true;
     # Generation 289 reduced ai-usage's launch handshake from 62s to 0.49s.
     # Keep this scheduling policy local to k.
     launchd.user.agents.ai-usage.serviceConfig.ProcessType = lib.mkForce "Standard";
