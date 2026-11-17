@@ -45,8 +45,14 @@ Imported on every darwin host but disabled by default (the
 [host-mounted modules pattern](../patterns/host-mounted-modules.md));
 enabled on [k](../hosts/k.md), [mini](../hosts/mini.md) and
 [SOC-Kris-Williams](../hosts/SOC-Kris-Williams.md). Output goes to `/var/log/agent-remote.log`.
-The macOS application firewall, when on, may need to allow incoming
-connections for sshd on the new port.
+The macOS application firewall did not block the port on SOC-Kris-Williams,
+where it is on with stealth mode.
+
+Reaching SOC-Kris-Williams from the home network also needs a rule on the
+UniFi gateway, which is not in this repo: the zone policy
+`Agent Remote Home -> Work` allows TCP 2122 from the Home network to
+`10.4.0.12`, beside `SSH Home -> Work` for port 22. Without it the
+connection times out.
 
 ## Twin differences
 
