@@ -30,6 +30,9 @@
     services.apple-container.enable = true;
     services.codebase-memory-mcp.enable = false;
     programs.podman-desktop.enable = true;
+    # Reached from the home network as `work` (UniFi local DNS record); see
+    # modules/darwin/remote-login.nix for why both switches need re-applying.
+    services.remote-login.enable = true;
 
     # Hexley the platypus on the Nix snowflake (modules/darwin/fastfetch.nix).
     programs.fastfetch.logo = "hexley-nix.png";

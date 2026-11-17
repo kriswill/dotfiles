@@ -1,5 +1,16 @@
 # Log
 
+## 2026-11-16
+
+- **Creation**: [Remote Login](remote-login.md), a host-selective module
+  enabled on [SOC-Kris-Williams](../hosts/SOC-Kris-Williams.md). Each
+  activation turns the built-in sshd back on and adds `k` to the
+  `com.apple.access_ssh` service ACL group when macOS restricts logins to
+  it. `work` (the UniFi DNS name for that Mac) joins the machine-key host
+  list in `lib/ssh-machines.nix`, which changes
+  [k's](ssh-client.md) and [nebula's](nebula-ssh-client.md) generated
+  `00-machine-key` at their next rebuild.
+
 ## 2026-11-14
 
 - **Update**: [Git signing](git-signing-agent.md) reconciles the pending Mini local-secret wait with both upstream Darwin key sources. Seven disposable-key tests pass, including delayed key-file publication and wrong-key rejection. [Boot activation](boot-activation.md) clarifies shared instrumentation versus host-only policy; no new vault grants.

@@ -17,6 +17,7 @@ are opted into below per the
 
 - [apple-container](../modules/apple-container.md)
 - [podman-desktop](../modules/podman-desktop.md)
+- [remote-login](../modules/remote-login.md)
 - [alias-en0](../modules/alias-en0.md) (host-specific file)
 
 ## Source

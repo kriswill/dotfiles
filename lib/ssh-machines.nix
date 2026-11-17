@@ -23,6 +23,9 @@
     "SOC-Kris-Williams"
     "SOC-Kris-Williams.home.lan"
     "SOC-Kris-Williams.local"
+    # UniFi local DNS record for SOC-Kris-Williams (Work VLAN); its mDNS
+    # name resolves to ::1 from the home network, so Herdr uses this one.
+    "work"
   ];
 
   clientConfig =

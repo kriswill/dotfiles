@@ -83,6 +83,7 @@ interesting ones by hand — scaffolding never overwrites an existing doc.
 * [Pass](pass.md) - Installs pass-xdg — a wrapper itself named `pass` that defaults PASSWORD_STORE_DIR to $XDG_DATA_HOME/password-store; never also install pkgs.pass or the two binaries collide.
 * [Podman Desktop](podman-desktop.md) - Podman Desktop — the GUI for podman containers and machines; a deliberately thin module (enable toggle + /libexec pathsToLink) with all real config stow-managed, including a git filter that scrubs the GUI's volatile settings.json rewrites.
 * [Qmd Sqlite](qmd-sqlite.md) - Custom sqlite with loadable-extension support, for sqlite-vec and qmd (system-level port of the sqliteWithExtensions package + linkSqliteForQmd activation that used to live in home-manager/core.nix).
+* [Remote Login](remote-login.md) - macOS Remote Login (the built-in sshd) re-enabled on each activation, with user k kept in the SSH service ACL group, so the work Mac stays reachable from the home network.
 * [Slack Leave Devopsinc](slack-leave-devopsinc.md) - Installs the slack-leave-devopsinc package system-wide on every Mac, so the CLI is on PATH and "Leave devopsinc Channels" is launchable from Spotlight.
 * [Sops](sops.md) - sops-nix on macOS — universal secrets machinery whose age identity derives from the host SSH key; inert until a host declares secrets.
 * [K Machine SSH Client](ssh-client.md) - OpenSSH client identity for k, decrypted by sops-nix for unattended Herdr connections to managed machines while other destinations retain personal authentication.
