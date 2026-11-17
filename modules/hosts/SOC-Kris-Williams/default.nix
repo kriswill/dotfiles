@@ -39,13 +39,14 @@
 
     # Prompt-free commit signing from the shared sops key, as on k
     # (modules/darwin/git-signing-agent). Commits here otherwise go through
-    # 1Password's op-ssh-sign, which fails whenever the app is locked. Stays
-    # off until git-signing.yaml is encrypted to this host (.sops.yaml has the
-    # recipient; run `sops updatekeys modules/hosts/git-signing.yaml` on k or
-    # nebula), because sops-install-secrets fails to activate without that.
+    # 1Password's op-ssh-sign, which fails whenever the app is locked.
+    # git-signing.yaml is encrypted to this host's age recipient (`soc` in
+    # .sops.yaml); without that sops-install-secrets fails to activate.
     # Setup: knowledge/playbooks/git-signing-agent-setup.md.
     services.git-signing-agent = {
-      enable = false;
+      # On only while the key is in the tree, as on k: deleting the file
+      # withdraws the key and the host goes back to signing through 1Password.
+      enable = builtins.pathExists ../git-signing.yaml;
       publicKey = ../git-signing.pub;
       sopsFile = ../git-signing.yaml;
     };

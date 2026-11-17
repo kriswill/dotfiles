@@ -2,6 +2,13 @@
 
 ## 2026-11-16
 
+- **Update**: [Git signing](git-signing-agent.md) is enabled on
+  [SOC-Kris-Williams](../hosts/SOC-Kris-Williams.md), the fourth host and
+  the third reading the key from sops. `modules/hosts/git-signing.yaml` was
+  re-encrypted on k with `sops updatekeys` to add that host's age recipient;
+  the secret is unchanged, and the recipient matches the work Mac's public
+  host key. Takes effect at that Mac's next `nrs`.
+
 - **Update**: macOS [Agent Remote](agent-remote.md) now runs nixpkgs OpenSSH
   with a dedicated Nix-store config requiring public-key authentication.
   It keeps the existing host and authorized keys, uses internal SFTP, and

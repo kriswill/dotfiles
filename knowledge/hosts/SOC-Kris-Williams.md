@@ -18,6 +18,8 @@ are opted into below per the
 - [agent-remote](../modules/agent-remote.md): a second, key-only sshd on
   port 2122, independent of Remote Login.
 - [apple-container](../modules/apple-container.md)
+- [git-signing-agent](../modules/git-signing-agent.md): prompt-free commit
+  signing with the shared key from `modules/hosts/git-signing.yaml`.
 - [podman-desktop](../modules/podman-desktop.md)
 - [remote-login](../modules/remote-login.md)
 - [alias-en0](../modules/alias-en0.md) (host-specific file)

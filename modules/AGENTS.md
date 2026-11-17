@@ -109,9 +109,9 @@ get the extended lib — nixos modules import lib files by path when needed.
   agent, OS-branched inside `home/git/.config/git/config` via
   `includeIf gitdir:/Users/ | /home/`. gpg-agent (both OSes) only backs `pass`
   and ad-hoc gpg; `enableSSHSupport` stays false. Exception: a host enabling
-  `services.git-signing-agent` (mini, k, nebula) signs with the automation
+  `services.git-signing-agent` (mini, k, nebula, SOC-Kris-Williams) signs with the automation
   key through a root-loaded ssh-agent, with no prompt, which nix wires in
   via `/etc/git/host.inc`. The shared config includes that file last. mini
-  reads the key from 1Password; k and nebula read it from the shared
+  reads the key from 1Password; the others read it from the shared
   `modules/hosts/git-signing.yaml` and enable the agent only while that
   file is tracked (knowledge/modules/git-signing-agent.md).

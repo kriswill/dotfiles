@@ -48,7 +48,7 @@ rotation and revocation:
 Gated on `services.git-signing-agent.enable` in both classes (the
 [host-mounted modules pattern](../patterns/host-mounted-modules.md)),
 auto-discovered via the [Dendritic module layout](../patterns/dendritic-modules.md),
-a [cross-OS twin](../patterns/cross-os-module-twins.md). Three hosts enable
+a [cross-OS twin](../patterns/cross-os-module-twins.md). Four hosts enable
 it, all with one key (`modules/hosts/git-signing.pub`):
 
 | Host | The daemon gets the key from | sops secret |
@@ -56,8 +56,9 @@ it, all with one key (`modules/hosts/git-signing.pub`):
 | [mini](../hosts/mini.md) | 1Password (`opItem`), read with a service account | `op-sa-token` in `modules/hosts/mini/secrets.yaml` |
 | [k](../hosts/k.md) | sops | `git-signing-key` in the shared `modules/hosts/git-signing.yaml` |
 | [nebula](../hosts/nebula.md), through [nebula-git-signing-agent](nebula-git-signing-agent.md) | sops | the same file |
+| [SOC-Kris-Williams](../hosts/SOC-Kris-Williams.md) | sops | the same file |
 
-k and nebula set `enable = builtins.pathExists ../git-signing.yaml`. A
+k, nebula and SOC-Kris-Williams set `enable = builtins.pathExists ../git-signing.yaml`. A
 checkout without the key file still builds and keeps signing through
 1Password, and deleting the file withdraws the key.
 

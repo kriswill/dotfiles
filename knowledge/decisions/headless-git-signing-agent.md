@@ -105,8 +105,9 @@ Considered and not chosen:
 - Since 2026-11-14 the key is no longer mini's alone. k and nebula sign
   with it too, from a sops secret
   ([git-signing-key-in-sops](git-signing-key-in-sops.md)). "Signed with
-  this key" now means "committed on mini, k or nebula", and a hijacked
-  session on any of the three can sign while it is there. mini's own copy
+  this key" now means "committed on mini, k or nebula" (and, since
+  2026-11-16, SOC-Kris-Williams), and a hijacked
+  session on any of them can sign while it is there. mini's own copy
   still never leaves 1Password and the agent's memory.
 
 [^ssh-agent-source]: openssh-portable `ssh-agent.c`: `if ((euid != 0) && (getuid() != euid))` → "uid mismatch".
