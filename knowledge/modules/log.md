@@ -2,6 +2,12 @@
 
 ## 2026-11-16
 
+- **Update**: macOS [Agent Remote](agent-remote.md) now runs nixpkgs OpenSSH
+  with a dedicated Nix-store config requiring public-key authentication.
+  It keeps the existing host and authorized keys, uses internal SFTP, and
+  no longer depends on Apple's SSH config or PAM Remote Login ACL. Missing
+  host keys are supplied by nix-darwin activation. Deployment requires `nrs`.
+
 - **Update**: the NixOS [Agent Remote](agent-remote.md) twin takes the
   darwin module's options (`services.agent-remote.enable`, `.port`), off by
   default. **Creation**: [nebula-agent-remote](nebula-agent-remote.md)

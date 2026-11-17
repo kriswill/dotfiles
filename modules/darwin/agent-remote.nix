@@ -1,35 +1,45 @@
 # A second, key-only sshd on its own port, separate from macOS Remote Login.
 #
-# The built-in service (system/com.openssh.sshd, port 22) is left exactly as
-# macOS or services.remote-login has it; this is an extra launchd daemon
-# running the same /usr/sbin/sshd in the foreground on another port. Turning
-# Remote Login off in the Sharing pane does not stop it.
+# Runs nixpkgs OpenSSH with its own immutable config, not Apple's binary or
+# /etc/ssh/sshd_config. The Darwin package has no PAM support, so neither the
+# Remote Login switch nor its com.apple.access_ssh ACL controls this daemon.
 #
-# It reads the stock /etc/ssh/sshd_config, so the nix-darwin drop-ins in
-# /etc/ssh/sshd_config.d still apply: the same host keys and the same
-# authorized keys (users.users.<name>.openssh.authorizedKeys, set in
-# core.nix). The differences are passed as -o flags, which sshd reads before
-# the file and which therefore win: the port, no pid file, and no password or
-# keyboard-interactive login.
-#
-# UsePAM stays on, so the com.apple.access_ssh service ACL still decides who
-# may log in (see remote-login.nix).
+# Host keys and declarative authorized keys still come from nix-darwin;
+# its openssh activation creates missing host keys before launchd starts.
 {
   flake.modules.darwin.agent-remote =
-    { lib, config, ... }:
+    {
+      lib,
+      config,
+      pkgs,
+      ...
+    }:
     let
       cfg = config.services.agent-remote;
+      sshdConfig = pkgs.writeText "agent-remote-sshd_config" ''
+        Port ${toString cfg.port}
+        PidFile none
+        ${lib.concatMapStringsSep "\n" (key: "HostKey ${key.path}") config.services.openssh.hostKeys}
+
+        AuthenticationMethods publickey
+        PubkeyAuthentication yes
+        PasswordAuthentication no
+        KbdInteractiveAuthentication no
+        PermitEmptyPasswords no
+
+        AuthorizedKeysFile .ssh/authorized_keys
+        # Match nix-darwin's reader for its symlinked, declarative keys.
+        AuthorizedKeysCommand /bin/cat /etc/ssh/nix_authorized_keys.d/%u
+        AuthorizedKeysCommandUser _sshd
+
+        AcceptEnv LANG LC_*
+        Subsystem sftp internal-sftp
+      '';
       sshdArgs = [
         "-D" # foreground: launchd supervises it
         "-e" # log to stderr, captured in the log file below
-        "-p"
-        (toString cfg.port)
-        "-o"
-        "PidFile=none"
-        "-o"
-        "PasswordAuthentication=no"
-        "-o"
-        "KbdInteractiveAuthentication=no"
+        "-f"
+        (toString sshdConfig)
       ];
     in
     {
@@ -47,12 +57,17 @@
       };
 
       config = lib.mkIf cfg.enable {
+        assertions = [
+          {
+            assertion = config.services.openssh.hostKeys != [ ];
+            message = "agent-remote requires services.openssh.hostKeys for its server identity.";
+          }
+        ];
+
         launchd.daemons.agent-remote = {
-          # ssh-keygen -A only creates host keys that are missing, which is
-          # the case on a Mac where Remote Login has never been turned on.
           script = ''
-            /usr/bin/ssh-keygen -A
-            exec /usr/sbin/sshd ${lib.escapeShellArgs sshdArgs}
+            set -euo pipefail
+            exec ${lib.getExe' pkgs.openssh "sshd"} ${lib.escapeShellArgs sshdArgs}
           '';
           serviceConfig = {
             RunAtLoad = true;
