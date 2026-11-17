@@ -41,7 +41,8 @@
         system.activationScripts.postActivation.text = lib.mkOrder 1600 ''
           # --- remote-login: keep the listed users in the SSH service ACL ---
           if /usr/bin/dscl . -read /Groups/com.apple.access_ssh >/dev/null 2>&1; then
-            for user in ${lib.escapeShellArgs cfg.users}; do
+            remote_login_users=(${lib.escapeShellArgs cfg.users})
+            for user in "''${remote_login_users[@]}"; do
               if ! /usr/sbin/dseditgroup -o checkmember -m "$user" com.apple.access_ssh >/dev/null 2>&1; then
                 if /usr/sbin/dseditgroup -o edit -a "$user" -t user com.apple.access_ssh; then
                   echo "remote-login: added $user to com.apple.access_ssh"
