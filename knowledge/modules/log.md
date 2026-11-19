@@ -1,5 +1,14 @@
 # Log
 
+## 2026-11-19
+
+- **Update**: macOS [Agent Remote](agent-remote.md) adds its `sshd` store
+  path to the application firewall in `preActivation`, before launchd
+  restarts the daemon, and warns when the firewall refuses (an MDM-managed
+  firewall, as on [SOC-Kris-Williams](../hosts/SOC-Kris-Williams.md)).
+  Without a rule the firewall queued every connection to port 2122 behind an
+  unanswered desktop prompt for about three days.
+
 ## 2026-11-16
 
 - **Update**: [Git signing](git-signing-agent.md) is enabled on

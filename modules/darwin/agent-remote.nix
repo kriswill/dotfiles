@@ -6,6 +6,12 @@
 #
 # Host keys and declarative authorized keys still come from nix-darwin;
 # its openssh activation creates missing host keys before launchd starts.
+#
+# The application firewall holds every inbound connection to a binary it
+# does not know until someone answers a desktop prompt, so clients connect
+# but never get a banner. Each OpenSSH rebuild gives sshd a new store path,
+# so activation adds the current path to the firewall before launchd
+# restarts the daemon.
 {
   flake.modules.darwin.agent-remote =
     {
@@ -35,6 +41,7 @@
         AcceptEnv LANG LC_*
         Subsystem sftp internal-sftp
       '';
+      sshd = lib.getExe' pkgs.openssh "sshd";
       sshdArgs = [
         "-D" # foreground: launchd supervises it
         "-e" # log to stderr, captured in the log file below
@@ -64,10 +71,37 @@
           }
         ];
 
+        # preActivation runs before launchd reloads the daemon on a new path.
+        # `--getappblocked` reports "permitted" for any binary it has no rule
+        # for, and a managed firewall refuses `--add` with exit 0, so the
+        # check reads the `--listapps` entry itself.
+        system.activationScripts.preActivation.text = ''
+          # --- agent-remote: let the application firewall accept sshd ---
+          agent_remote_fw=/usr/libexec/ApplicationFirewall/socketfilterfw
+          agent_remote_sshd=${sshd}
+          agent_remote_fw_allows_sshd() {
+            local apps
+            apps="$("$agent_remote_fw" --listapps 2>/dev/null)" || return 1
+            /usr/bin/awk -v p="$agent_remote_sshd" '
+              index($0, p) { getline; ok = /Allow incoming connections/; exit }
+              END { exit !ok }' <<<"$apps"
+          }
+          if ! agent_remote_fw_allows_sshd; then
+            "$agent_remote_fw" --add "$agent_remote_sshd" >/dev/null 2>&1 || true
+            "$agent_remote_fw" --unblockapp "$agent_remote_sshd" >/dev/null 2>&1 || true
+            if agent_remote_fw_allows_sshd; then
+              echo "agent-remote: application firewall now allows $agent_remote_sshd"
+            elif [[ "$("$agent_remote_fw" --getglobalstate 2>/dev/null)" == *enabled* ]]; then
+              echo "agent-remote: the application firewall did not accept $agent_remote_sshd;" >&2
+              echo "agent-remote: approve the sshd prompt on this Mac's desktop, or port ${toString cfg.port} hangs" >&2
+            fi
+          fi
+        '';
+
         launchd.daemons.agent-remote = {
           script = ''
             set -euo pipefail
-            exec ${lib.getExe' pkgs.openssh "sshd"} ${lib.escapeShellArgs sshdArgs}
+            exec ${sshd} ${lib.escapeShellArgs sshdArgs}
           '';
           serviceConfig = {
             RunAtLoad = true;

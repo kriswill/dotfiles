@@ -52,14 +52,39 @@ Imported on every darwin host but disabled by default (the
 [host-mounted modules pattern](../patterns/host-mounted-modules.md));
 enabled on [k](../hosts/k.md), [mini](../hosts/mini.md) and
 [SOC-Kris-Williams](../hosts/SOC-Kris-Williams.md). The port defaults to 2122;
-output goes to `/var/log/agent-remote.log`. Local loopback tests do not verify
-macOS application-firewall access from another machine for this new binary.
+output goes to `/var/log/agent-remote.log`.
 
 Reaching SOC-Kris-Williams from the home network also needs a rule on the
 UniFi gateway, which is not in this repo: the zone policy
 `Agent Remote Home -> Work` allows TCP 2122 from the Home network to
 `10.4.0.12`, beside `SSH Home -> Work` for port 22. Without it the
 connection times out.
+
+## Application firewall
+
+When the macOS application firewall is on, it holds every inbound connection
+to a binary it has no rule for until someone answers a desktop prompt. The
+client completes the TCP handshake but never receives the SSH banner, so
+`hc` reports the machine as timed out. "Automatically allow signed software"
+does not cover a Nix-built `sshd`, and each OpenSSH rebuild gives it a new
+store path, which the firewall treats as a new binary.
+
+`preActivation`, which runs before launchd reloads the daemon, checks the
+`socketfilterfw --listapps` entry for the current `sshd` path and, when it is
+missing, runs `--add` and `--unblockapp`. It reads `--listapps` because
+`--getappblocked` reports "permitted" for any binary with no rule. If the
+entry is still missing afterwards and the firewall is on, activation warns
+to approve the desktop prompt. That happens on a Mac whose firewall is
+managed by MDM (SOC-Kris-Williams has a `com.apple.security.firewall`
+profile), where `socketfilterfw` answers "Firewall settings cannot be
+modified from command line on managed Mac computers" with exit 0. Whether it
+also refuses root is untested; the next `nrs` there will show it.
+
+On SOC-Kris-Williams the firewall queued every connection to port 2122 from
+the switch to nixpkgs OpenSSH (2026-11-16 22:24) until the prompt was
+approved on 2026-11-19 12:51, logging `Enqueuing new inbound flow for sshd`;
+`/var/log/agent-remote.log` showed each attempt as
+`kex_exchange_identification: read: Connection reset by peer`.
 
 ## Verification (2026-11-16)
 
