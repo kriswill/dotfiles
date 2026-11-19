@@ -1,0 +1,25 @@
+{
+  "name": "tsc-lsp",
+  "description": "TypeScript/JavaScript code intelligence from the TypeScript 7 native language server (tsc --lsp)",
+  "version": "1.0.0",
+  "author": {
+    "name": "Kris Williams",
+    "url": "https://github.com/kriswill"
+  },
+  "lspServers": {
+    "typescript": {
+      "command": "/run/current-system/sw/bin/tsc",
+      "args": ["--lsp", "--stdio"],
+      "extensionToLanguage": {
+        ".ts": "typescript",
+        ".tsx": "typescriptreact",
+        ".js": "javascript",
+        ".jsx": "javascriptreact",
+        ".mts": "typescript",
+        ".cts": "typescript",
+        ".mjs": "javascript",
+        ".cjs": "javascript"
+      }
+    }
+  }
+}

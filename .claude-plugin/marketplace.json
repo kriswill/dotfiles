@@ -1,7 +1,7 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "kriswill",
-  "description": "Pointer marketplace: re-exports upstream plugins whose repo layout Claude Desktop's account-synced reader rejects. No code is vendored — each entry references the upstream repo, so syncs track upstream.",
+  "description": "Kris's plugins: in-repo plugins under plugins/, plus pointer entries that re-export upstream plugins whose repo layout Claude Desktop's account-synced reader rejects (no upstream code is vendored).",
   "owner": {
     "name": "Kris Williams",
     "url": "https://github.com/kriswill"
@@ -15,6 +15,12 @@
         "source": "github",
         "repo": "typesafe-ai/skills"
       }
+    },
+    {
+      "name": "tsc-lsp",
+      "description": "TypeScript/JavaScript code intelligence from the TypeScript 7 native language server (tsc --lsp).",
+      "category": "development",
+      "source": "./plugins/tsc-lsp"
     }
   ]
 }
