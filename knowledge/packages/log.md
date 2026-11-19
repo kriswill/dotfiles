@@ -1,5 +1,12 @@
 # Log
 
+## 2026-11-18
+
+- **Update**: [herdr](herdr.md): new `herdr-open` package and
+  `programs.herdr-core.browser` option (`BROWSER` for the core and shells on
+  both OSes); see
+  [the decision](../decisions/herdr-open-links-where-you-are.md).
+
 ## 2026-11-13
 
 - **Update**: [ai-usage](ai-usage.md): remove retired Herdr watcher references; the work statusline keeps its cached spend visible inside Herdr.

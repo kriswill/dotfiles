@@ -1,5 +1,13 @@
 # Log
 
+## 2026-11-18
+
+- **Creation**: [herdr-open-links-where-you-are](herdr-open-links-where-you-are.md):
+  `BROWSER=herdr-open` puts a link opened in an hc terminal on that terminal
+  as a label, and the herdr-open mod in whichever Herdr window is in front
+  opens it there. Records why a label and not an escape sequence, how
+  windows decide (front, focus, macOS idle time), and the Linux idle gap.
+
 ## 2026-11-14
 
 - **Update**: [Managed SSH access](headless-machine-ssh.md) also enrolls

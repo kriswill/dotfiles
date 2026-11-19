@@ -27,6 +27,10 @@
     # module writes into it only exists on the macs.
     programs.herdr-app.enable = true;
     programs.herdr-core.users = [ "k" ];
+    # BROWSER=herdr-open: a link opened in an hc terminal here (a click in
+    # Claude Code) opens on the machine whose Herdr window shows it to you,
+    # through the herdr-open mod in home/herdr-app. Outside hc, plain `open`.
+    programs.herdr-core.browser.enable = true;
 
     # Daily at 10:00 (a launchd agent; a run missed asleep happens on wake):
     # one notification when upstream releases past our herdr fork (rebase

@@ -10,6 +10,10 @@
       # user manager starts at boot (so herdr-update-check waits for a
       # notification daemon).
       users = [ "k" ];
+      # BROWSER=herdr-open: a click on a link in Claude Code on nebula opens in
+      # the browser of the machine whose Herdr window you clicked in, through
+      # the herdr-open mod in home/herdr-app. Outside hc, plain xdg-open.
+      browser.enable = true;
     };
     # Config files are NOT declared here (the module's file options stay
     # null): the stow packages home/herdr-core and home/herdr-app own them, so

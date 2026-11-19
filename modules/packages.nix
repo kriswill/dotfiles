@@ -36,11 +36,13 @@
         # (`hc`) and the Herdr app (upstream's release builds; the standalone
         # wrap with telemetry off and herdr-core on PATH), and
         # herdr-update-check (any of our herdrs behind upstream, or running a
-        # stale build).
+        # stale build), and herdr-open ($BROWSER that opens links where you
+        # look at the terminal from).
         herdr = inputs.herdr.packages.${system}.herdr-cli;
         herdr-core = inputs.herdr.packages.${system}.herdr-core;
         herdr-app = inputs.herdr.packages.${system}.herdr-app;
         herdr-update-check = inputs.herdr.packages.${system}.herdr-update-check;
+        herdr-open = inputs.herdr.packages.${system}.herdr-open;
         gh-config = pkgs.callPackage ../pkgs/gh-config.nix { };
         # system-update-report — HTML page of nvd diff (booted/previous vs current
         # generation) + the latest "nix flake update" commit. Cross-platform.
@@ -109,5 +111,6 @@
     herdr-core = inputs.herdr.packages.aarch64-linux.herdr-core;
     herdr-app = inputs.herdr.packages.aarch64-linux.herdr-app;
     herdr-update-check = inputs.herdr.packages.aarch64-linux.herdr-update-check;
+    herdr-open = inputs.herdr.packages.aarch64-linux.herdr-open;
   };
 }

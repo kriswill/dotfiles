@@ -74,6 +74,13 @@ in
       );
     })
 
+    # Session variables reach PAM sessions, so also the systemd user manager,
+    # whose environment `hc` hands the core it starts (systemd-run --user),
+    # and so every terminal. A running manager or core keeps its old one.
+    (lib.mkIf (core.enable && core.browser.enable) {
+      environment.sessionVariables.BROWSER = core.browser.path;
+    })
+
     (lib.mkIf app.enable {
       # The window draws with Vulkan (or GL); either needs the system driver.
       hardware.graphics.enable = lib.mkDefault true;

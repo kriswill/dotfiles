@@ -13,6 +13,7 @@ as `inputs.herdr` (`./flakes/herdr`).
 | `packages.herdr-app-unwrapped` | all | Herdr (GPUI + wgpu): upstream's release build, patchelf'd on Linux, the signed `Herdr.app` untouched on macOS |
 | `packages.herdr-app` | all | the app with telemetry off and this core at the end of PATH, for `nix run` (a shell launch; Finder bypasses it) |
 | `packages.herdr-update-check` | all | is any of these behind upstream, or running a stale build? |
+| `packages.herdr-open` | all | `$BROWSER` that opens a link where you're looking at the terminal from (see "Links open where you are") |
 | `nixosModules.herdr` (`default`) | | `programs.herdr-{cli,core,app}`, `services.herdr-update-check` |
 | `darwinModules.herdr` (`default`) | | the same options, with the app's choices written to settings.json |
 
@@ -111,12 +112,93 @@ do.
 | `programs.herdr-cli.{enable,package,nav.enable,python}` | ✓ | ✓ |
 | `programs.herdr-core.{enable,package,users,settings}` | ✓ (`settings` → tmpfiles link) | ✓ (`settings` → activation-script link) |
 | `programs.herdr-core.linger` | ✓ | — |
+| `programs.herdr-core.browser.{enable,package}` | ✓ (`BROWSER` session variable) | ✓ (`BROWSER` for shells and launchd's user domain) |
 | `programs.herdr-app.{enable,package,finalPackage,telemetry,settings,keys}` | ✓ (wrapper: env + merge at launch) | ✓ (`telemetry`, `core`, `settings` merged into settings.json at activation; `keys` → link; `finalPackage` is the bare bundle) |
 | `services.herdr-update-check.{enable,package,finalPackage}` | systemd user timer, `calendar` | launchd user agent, `startCalendarInterval` |
 
 `programs.herdr-cli.python` (default `python3`, `null` for none) is for
 herdr's agent integration hooks. Claude's `herdr-agent-state.sh` reports the
 session id over the herdr socket with python3, and exits silently without it.
+
+## Links open where you are (`herdr-open`)
+
+Claude Code on nebula, seen from Herdr on a Mac: a plain click on a link
+used to open it in nebula's browser. Claude Code's fullscreen TUI turns on
+mouse reporting, so the click goes to Claude Code, which runs `$BROWSER <url>`
+on its own machine (`xdg-open` or `open` when `BROWSER` is unset). Herdr never
+sees it. Cmd-click (Ctrl-click on Linux) already opened links in the Mac's
+browser, because Herdr acts on that before the program gets the click
+(upstream `src/terminal.rs`, `link_mods`). The URL has to be in the cell's
+OSC 8 link or match Ghostty's link pattern.
+
+`programs.herdr-core.browser.enable` makes plain clicks, and anything else a
+program opens (`gh … --web`, an agent's login), land where you are:
+
+1. **`herdr-open`** is `$BROWSER`. In an hc terminal, an http(s) URL becomes
+   a label on that terminal, `herdr-open.<ms>-<hex>=<url>`, and it waits up
+   to 2.5 s for `<key>.done`. With no answer it opens the URL locally, as
+   before. Without `HC_TERMINAL_ID`, for another scheme, or with
+   `HERDR_OPEN=off`, it skips the label and opens locally straight away. The
+   local opener runs with `BROWSER` unset, because xdg-open falls back to
+   `$BROWSER`.
+2. herdr-core sends label changes to every Herdr window that knows the
+   terminal, on every machine (`events.subscribe` mirrors other machines'
+   terminals).
+3. **The `herdr-open` mod**, an empty float in the `personal` layout, sees the
+   request in `terminals()`. Only a window that is in front may claim it.
+   Each window waits a while first: 0/100/200 ms if the terminal has the
+   keyboard / is on screen in this tab / is elsewhere, plus, on macOS,
+   10 ms per second since the last input (more than 60 s idle: no claim at
+   all), or a flat 400 ms on Linux, which has no idle time here. The first
+   window to claim (`<key>.claim=<me>`, read back, because the last write
+   wins) opens the link with `open` or `xdg-open` and answers
+   `<me> here`. For a loopback URL (localhost, 127.x, ::1, or an OAuth
+   `redirect_uri` that points at one) from another machine's terminal, it
+   answers `<me> host` and shows a toast, and herdr-open opens it on its own
+   machine, where that address lives.
+
+No machine names are configured anywhere. Whichever window you're in claims
+the link, whichever machine runs the program. A Mac in use beats nebula's
+window left in front on its desk, and a Mac idle for a minute stays out.
+
+Security:
+
+- **Who can ask.** Only a label carries a request, and labels are written
+  through the core's API. Terminal output can't write one, so a hostile file
+  you `cat` or a remote log can't open anything. (An escape sequence could
+  have come from any output; that's why this isn't one.) Anything that can
+  write labels already runs as you on one of your machines.
+- **What can be opened.** http and https only, at most 8 KiB, no whitespace
+  or control characters. The mod checks again, and runs `open` by argv with
+  no shell. `vscode:`, `file:` and the like stay with the host's own opener
+  (Claude Code reveals `file:` links itself).
+- **Worst case.** A process running as you on one of your machines opens up
+  to 6 http(s) tabs every 10 s in the browser of the machine you're using.
+  Further requests are refused with a toast and open on their own machine.
+  Every open that doesn't come from the terminal with the keyboard shows a
+  toast with the URL.
+- Cmd-click already follows a link's OSC 8 target, which needn't match the
+  text shown. That's ordinary terminal behaviour, and it's Herdr's, not
+  ours.
+
+Testing, with nobody's hands on anything:
+
+- `herdr-open --where <url>` in an hc terminal sends a dry request: every
+  copy of the mod runs its checks and the claim, opens nothing, and the
+  winner answers. It prints which machine would open the link, or that
+  nobody answered.
+- `bun test flakes/herdr/tests/herdr-open-mod.test.ts` runs the real mod
+  against a simulated core and windows: Mac against nebula, an idle Mac,
+  loopback, unsafe URLs, stale requests, two Macs racing, the rate limit.
+- `HERDR_OPEN_LOCAL=<logger>` stands in for the local opener.
+
+Applying it: `nrs` restows the mod, and the layout links pick up the float.
+A core started before then has the old environment, so terminals it starts
+don't have `BROWSER`. On NixOS the user manager learns the variable at the
+next login (with linger, at a reboot), and on a Mac new shells have it.
+After that, `hc server restart` moves running programs to a new core. Each
+program keeps the environment it started with, so restart Claude Code to
+pick it up.
 
 ## Config files and stow
 
@@ -262,4 +344,6 @@ Only `settings.json` is per-OS (`home/herdr-app-darwin`, nebula's
     `herdr-app-merge-settings.nix` + `merge-settings.sh` (the settings merge
     it and the darwin module share)
   - `herdr-update-check.{nix,sh}`
+  - `herdr-open.{nix,sh}` (its Herdr half: `home/herdr-app/.config/herdr-app/mods/herdr-open`)
 - `modules/`: `common.nix`, `nixos.nix`, `darwin.nix`
+- `tests/herdr-open-mod.test.ts`: the herdr-open mod against simulated windows

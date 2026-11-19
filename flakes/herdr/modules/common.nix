@@ -108,6 +108,36 @@ in
             from a dotfiles repo works.
           '';
         };
+
+        browser = {
+          enable = lib.mkEnableOption ''
+            herdr-open as `$BROWSER`: a link a program opens in an hc terminal
+            (a click in Claude Code, `gh … --web`) opens in the browser of the
+            machine whose Herdr window shows the terminal to you, whichever
+            machine runs it. Needs the herdr-open mod in Herdr on the viewing
+            machine; without an answer from one it opens here, as before. Set
+            for login shells and for the core's environment, which every
+            terminal inherits: terminals started by a core that predates the
+            change don't have it (`hc server restart` after logging in again)'';
+
+          package = lib.mkOption {
+            type = lib.types.package;
+            default = pkgs.callPackage ../pkgs/herdr-open.nix { };
+            defaultText = lib.literalMD "this flake's `pkgs/herdr-open.nix`";
+            description = "The herdr-open package.";
+          };
+
+          path = lib.mkOption {
+            type = lib.types.str;
+            readOnly = true;
+            default = "/run/current-system/sw/bin/herdr-open";
+            description = ''
+              What `BROWSER` is set to: herdr-open through the system profile,
+              a path that survives rebuilds (a store path would go stale in a
+              long-lived core's environment).
+            '';
+          };
+        };
       };
 
       herdr-app = {
@@ -267,6 +297,10 @@ in
       ]
       ++ lib.optional cli.nav.enable (pkgs.callPackage ../pkgs/herdr-nav.nix { herdr = cli.package; })
       ++ lib.optional (cli.python != null) cli.python;
+    })
+
+    (lib.mkIf (core.enable && core.browser.enable) {
+      environment.systemPackages = [ core.browser.package ];
     })
 
     (lib.mkIf core.enable {

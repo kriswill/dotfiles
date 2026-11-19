@@ -81,6 +81,11 @@ Outputs (`x86_64-linux`, `aarch64-linux`, `aarch64-darwin`):
 
   By default it prints and exits 10. With `--notify` it sends notify-send
   with a button per release, or osascript on macOS.
+- `herdr-open`, the `$BROWSER` behind `programs.herdr-core.browser`. A link
+  opened in an hc terminal (a plain click in Claude Code) becomes a label on
+  that terminal, and the herdr-open mod in whichever Herdr window is in front
+  opens it there; with no answer it opens locally
+  ([decision](../decisions/herdr-open-links-where-you-are.md)).
 - `nixosModules.herdr` and `darwinModules.herdr`: `modules/common.nix` plus
   per-OS layers, re-exported by [herdr](../modules/herdr.md).
 

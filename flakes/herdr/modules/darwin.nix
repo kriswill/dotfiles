@@ -89,6 +89,14 @@ in
       );
     })
 
+    # The core takes the environment of whatever starts it: a shell running
+    # hc, or Herdr.app (launchd's user domain), and passes it to every
+    # terminal. So both get BROWSER; a running core keeps its old one.
+    (lib.mkIf (core.enable && core.browser.enable) {
+      environment.variables.BROWSER = core.browser.path;
+      launchd.user.envVariables.BROWSER = core.browser.path;
+    })
+
     (lib.mkIf app.enable {
       environment.etc."herdr-core/hc" = lib.mkIf core.enable {
         source = "${lib.getBin core.package}/bin/hc";
