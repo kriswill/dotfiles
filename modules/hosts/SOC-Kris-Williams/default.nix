@@ -36,6 +36,11 @@
     # A second, key-only sshd on port 2122, independent of Remote Login
     # (modules/darwin/agent-remote.nix).
     services.agent-remote.enable = true;
+    # Touch ID for sudo only while someone can reach this MacBook's own
+    # readers; under sshd, at a locked screen, after 5 minutes without local
+    # input, or while Universal Control is linked, sudo asks for the password
+    # (./flakes/pam-tid-gate).
+    security.pam-tid-gate.enable = true;
 
     # Prompt-free commit signing from the shared sops key, as on k
     # (modules/darwin/git-signing-agent). Commits here otherwise go through

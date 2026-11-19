@@ -1,5 +1,13 @@
 # Log
 
+## 2026-11-19
+
+- **Creation**: [pam-tid-gate](pam-tid-gate.md), a sub-flake: a PAM module
+  that sends sudo to the password under sshd, at a locked screen, with no
+  console session, after 300 s without local input, or while Universal
+  Control is linked, and otherwise forwards to `pam_tid`; plus a CLI that
+  prints the decision. See [the decision](../decisions/sudo-touchid-gate.md).
+
 ## 2026-11-18
 
 - **Update**: [herdr](herdr.md): new `herdr-open` package and

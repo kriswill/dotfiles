@@ -20,6 +20,8 @@ are opted into below per the
 - [apple-container](../modules/apple-container.md)
 - [git-signing-agent](../modules/git-signing-agent.md): prompt-free commit
   signing with the shared key from `modules/hosts/git-signing.yaml`.
+- [pam-tid-gate](../modules/pam-tid-gate.md): Touch ID for sudo only while
+  someone can reach this MacBook's readers; otherwise the password.
 - [podman-desktop](../modules/podman-desktop.md)
 - [remote-login](../modules/remote-login.md)
 - [alias-en0](../modules/alias-en0.md) (host-specific file)

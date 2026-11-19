@@ -1,5 +1,10 @@
 # Log
 
+## 2026-11-19
+
+- **Update**: [SOC-Kris-Williams](SOC-Kris-Williams.md) enables
+  [pam-tid-gate](../modules/pam-tid-gate.md).
+
 ## 2026-11-14
 
 - **Update**: [mini](mini.md) records Kris's generation-30 idle-sleep policy: running/boot default agree and AC `sleep 0` is verified; display sleep remains unchanged. No reboot or activation was performed during integration.

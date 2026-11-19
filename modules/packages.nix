@@ -76,6 +76,10 @@
         # slack-leave-devopsinc — leave the Slack devopsinc-N incident channels
         # (CLI + Spotlight app); Keychain token + osascript notifications.
         slack-leave-devopsinc = pkgs.callPackage ../pkgs/slack-leave-devopsinc.nix { };
+        # pam-tid-gate (./flakes/pam-tid-gate) — Touch ID for sudo only while
+        # someone can reach this Mac's own readers; its darwin module is
+        # re-exported by modules/darwin/pam-tid-gate.nix.
+        pam-tid-gate = inputs.pam-tid-gate.packages.${system}.pam-tid-gate;
       }
       # Linux-only: wowup wraps an AppImage (needs the appimage runtime);
       # flatpak-user shims a Linux-only package manager.

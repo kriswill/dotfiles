@@ -82,6 +82,7 @@ interesting ones by hand — scaffolding never overwrites an existing doc.
 * [OLED Resume Bump](oled-resume-bump.md) - DPMS off/on bounce of the DP-3 OLED after every resume from S3, via powerManagement.resumeCommands — works around the PG34WCDM panel staying black while Hyprland reports the output live.
 * [Overlays](overlays.md) - Nixpkgs overlays, exposed as flake outputs and consumed by the host modules via `nixpkgs.overlays = builtins.attrValues config.flake.overlays`.
 * [Packages](packages.md) - Custom package outputs (also surfaced into nix-darwin via ./overlays.nix).
+* [Pam Tid Gate](pam-tid-gate.md) - pam-tid-gate ships its nix-darwin module with its sub-flake (./flakes/pam-tid-gate/darwin-module.nix); re-export it into the Dendritic module set so hosts pick it up like any in-tree modules/darwin/* module.
 * [Pass](pass.md) - Installs pass-xdg — a wrapper itself named `pass` that defaults PASSWORD_STORE_DIR to $XDG_DATA_HOME/password-store; never also install pkgs.pass or the two binaries collide.
 * [Podman Desktop](podman-desktop.md) - Podman Desktop — the GUI for podman containers and machines; a deliberately thin module (enable toggle + /libexec pathsToLink) with all real config stow-managed, including a git filter that scrubs the GUI's volatile settings.json rewrites.
 * [Qmd Sqlite](qmd-sqlite.md) - Custom sqlite with loadable-extension support, for sqlite-vec and qmd (system-level port of the sqliteWithExtensions package + linkSqliteForQmd activation that used to live in home-manager/core.nix).

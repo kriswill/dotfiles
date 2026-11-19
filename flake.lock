@@ -1268,6 +1268,25 @@
         "url": "https://flakehub.com/f/kriswill/okflight/0"
       }
     },
+    "pam-tid-gate": {
+      "inputs": {
+        "flake-parts": [
+          "flake-parts"
+        ],
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "path": "./flakes/pam-tid-gate",
+        "type": "path"
+      },
+      "original": {
+        "path": "./flakes/pam-tid-gate",
+        "type": "path"
+      },
+      "parent": []
+    },
     "pre-commit-hooks": {
       "inputs": {
         "flake-compat": "flake-compat_3",
@@ -1380,6 +1399,7 @@
         "nixploit": "nixploit",
         "noctalia": "noctalia",
         "okf": "okf",
+        "pam-tid-gate": "pam-tid-gate",
         "replace-dependencies": "replace-dependencies",
         "snowglobe-factory": "snowglobe-factory",
         "sops-nix": "sops-nix",

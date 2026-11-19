@@ -2,6 +2,11 @@
 
 ## 2026-11-19
 
+- **Creation**: [pam-tid-gate](pam-tid-gate.md) imports the sub-flake's
+  darwin module (`security.pam-tid-gate`) and, on hosts that enable it,
+  replaces [core](core.md)'s `sudo_local` with `pam_reattach ignore_ssh`
+  followed by the gate. Other Macs keep core's file unchanged.
+
 - **Update**: macOS [Agent Remote](agent-remote.md) adds its `sshd` store
   path to the application firewall in `preActivation`, before launchd
   restarts the daemon, and warns when the firewall refuses (an MDM-managed

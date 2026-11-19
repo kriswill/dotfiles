@@ -1,5 +1,14 @@
 # Log
 
+## 2026-11-19
+
+- **Creation**: [sudo-touchid-gate](sudo-touchid-gate.md): on the work
+  MacBook, sudo uses Touch ID only while someone can reach its readers. Records
+  why a PAM module (OpenPAM has no conditional skip, macOS no `pam_exec`), why
+  lock or idle alone miss Universal Control, and what could only be tested
+  through real `sudo` (`authd` grants `com.apple.security.sudo` to entitled
+  clients only).
+
 ## 2026-11-18
 
 - **Creation**: [herdr-open-links-where-you-are](herdr-open-links-where-you-are.md):

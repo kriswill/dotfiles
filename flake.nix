@@ -43,6 +43,11 @@
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.flake-parts.follows = "flake-parts";
     };
+    pam-tid-gate = {
+      url = "./flakes/pam-tid-gate";
+      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.flake-parts.follows = "flake-parts";
+    };
     # okf ships from FlakeHub (kriswill/okflight, public); "0" tracks the 0.x
     # release series — `nix flake update okf` moves to the newest release.
     # If it ever goes private: FlakeHub supports private flakes (netrc auth).
