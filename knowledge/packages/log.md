@@ -2,6 +2,10 @@
 
 ## 2026-11-20
 
+- **Update**: [nixploit](nixploit.md): each run now waits up to 2 minutes for
+  a connection before upstream's steps. The persistent timer fired at resume
+  from suspend, before DNS was back, and failed the unit three days running.
+
 - **Update**: [herdr](herdr.md): new `herdr-md` package and `programs.herdr-md`
   option: the herdr-md markdown viewer mod and `mdh`, pinned upstream plus
   our Linux patch, built by bun into one `main.js` and one `render.js`; see

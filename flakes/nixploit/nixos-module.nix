@@ -2,7 +2,8 @@
 # Parameterized over this flake's inputs: it imports upstream's module
 # (services.nixploit.*: the scheduled feed update + scan, its state under
 # /var/lib/nixploit and the node_exporter metrics) and adds the report step
-# and its readers under services.nixploit.report.
+# and its readers under services.nixploit.report, a rescan after a switch,
+# and a wait for the network before each run.
 inputs:
 {
   config,
@@ -16,6 +17,18 @@ let
   # Built against the Nix the daemon runs, so path-info speaks its protocol.
   graph = pkgs.callPackage ./report-graph.nix { nix = config.nix.package; };
   report = pkgs.callPackage ./report.nix { nixploit-report-graph = graph; };
+
+  # Whose answer says the network is back: most of the repositories a run
+  # clones live there.
+  probeHost = "github.com";
+  # Up to two minutes for a connection, then go on either way.
+  waitOnline = pkgs.writeShellScript "nixploit-wait-online" ''
+    while (( SECONDS < 120 )); do
+      ${pkgs.coreutils}/bin/timeout 5 ${pkgs.runtimeShell} -c ': < /dev/tcp/${probeHost}/443' 2> /dev/null && exit 0
+      ${pkgs.coreutils}/bin/sleep 3
+    done
+    echo "nixploit: ${probeHost} still unreachable after 2 minutes, running anyway" >&2
+  '';
 in
 {
   imports = [ inputs.upstream.nixosModules.default ];
@@ -56,6 +69,17 @@ in
   # every entry runs. `-` ignores failures before a first report exists.
   config = lib.mkIf cfg.enable (
     lib.mkMerge [
+      # The timer is persistent, so a run missed during a suspend starts the
+      # instant the machine resumes, before the network is back: every feed
+      # and repository fails on "Could not resolve host", and the unit stays
+      # failed until the next run succeeds. Upstream's
+      # After=network-online.target doesn't cover it, because that target
+      # stays reached across a suspend. So wait for a connection first, ahead
+      # of upstream's own ExecStartPre. Still offline after that, the run goes
+      # on as before: upstream scans against its cache.
+      {
+        systemd.services.nixploit.serviceConfig.ExecStartPre = lib.mkBefore [ "${waitOnline}" ];
+      }
       (lib.mkIf (cfg.report.readers != [ ]) {
         users.users = lib.genAttrs cfg.report.readers (_: {
           extraGroups = [ "nixploit" ];

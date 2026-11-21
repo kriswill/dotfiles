@@ -38,6 +38,14 @@ The three options:
   switch that adds or drops one rescans 2 to 17 min later. See
   [the decision](../decisions/nixploit-rescan-on-switch.md).
 
+Beyond the options, the module makes every run wait up to 2 minutes for a
+connection to `github.com:443` before upstream's own steps. The timer is
+persistent, so a run missed during a suspend starts the instant the machine
+resumes, before the network is back; upstream's `network-online.target`
+ordering doesn't cover a resume. On [nebula](../modules/nebula-nixploit.md)
+that failed the unit on 2026-11-18, 11-19 and 11-20 with every repository on
+"Could not resolve host".
+
 The data is embedded because browsers block `fetch()` from `file://` pages.
 Every `<` in the embedded JSON is escaped as `\u003c`, so advisory text can't
 close the script tag. Opened alone, the viewer takes a `report.json` by file

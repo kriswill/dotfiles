@@ -16,12 +16,15 @@ re-exports upstream's package and NixOS module, and adds three options:
 - `services.nixploit.rescanOnSwitch` rescans after a switch that changes the
   installed packages.
 
+It also makes every run wait for the network first (see "Waiting for the
+network").
+
 ## Files
 
 | File | Purpose |
 | --- | --- |
 | [`flake.nix`](flake.nix) | flake-parts flake: packages and `nixosModules` for `x86_64-linux` and `aarch64-linux`. |
-| [`nixos-module.nix`](nixos-module.nix) | Imports upstream's module and adds the `services.nixploit.report.*` and `rescanOnSwitch` options. |
+| [`nixos-module.nix`](nixos-module.nix) | Imports upstream's module and adds the `services.nixploit.report.*` and `rescanOnSwitch` options, and the wait for the network. |
 | [`report.html`](report.html) | The viewer: one self-contained page, with no network access and a dark/light theme. |
 | [`report.nix`](report.nix), [`report.sh`](report.sh) | `nixploit-report`: renders the viewer with a report embedded. |
 | [`report-graph.nix`](report-graph.nix), [`report-graph.sh`](report-graph.sh) | `nixploit-report-graph`: the running system's dependency graph as JSON. |
@@ -87,6 +90,21 @@ Not set here: the node_exporter that upstream's module enables listens on
 `0.0.0.0:9100`. Bind it with
 `services.prometheus.exporters.node.listenAddress` if nothing scrapes it from
 another host.
+
+## Waiting for the network
+
+`nixploit.timer` is persistent, so a run whose time passed while the machine
+was suspended starts the instant it resumes. The network isn't back yet:
+every feed and every repository fails on "Could not resolve host", and the
+unit stays failed until the next run succeeds (on nebula, three days running,
+2026-11-18 to 11-20). Upstream's `After=network-online.target` doesn't
+cover this, because that target stays reached across a suspend.
+
+So the module puts a step ahead of upstream's `ExecStartPre`: it tries a
+connection to `github.com:443` every 3 seconds for up to 2 minutes, and
+goes on as soon as one opens. If none does, the run goes on anyway, as
+before: upstream still scans against its cache, and the unit fails with the
+update.
 
 ## The report step
 

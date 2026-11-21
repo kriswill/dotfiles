@@ -37,7 +37,9 @@ Enabling upstream's part brings in more than a timer:[^nixploit-module]
   `Persistent` and 15 min of jitter. A switch restarts it (and so rescans)
   only when its unit file changes: upstream's `X-Job` key covers the job
   config, and `rescanOnSwitch`'s `X-Packages` key covers the installed
-  packages.
+  packages. A run missed during a suspend fires at resume, before the
+  network is back, so [our wrapper](../packages/nixploit.md) makes each run
+  wait for a connection first.
 - **node_exporter** is force-enabled with the textfile collector reading
   `/var/lib/nixploit/metrics`. Its default listen address is `0.0.0.0:9100`.
   Nebula's host file pins it to loopback.
