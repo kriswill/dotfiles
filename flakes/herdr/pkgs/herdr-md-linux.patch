@@ -1,0 +1,206 @@
+Local changes to ryanthedev/herdr-md: Linux support (upstream is built and
+tested on macOS), and a key help that shows the keys keys.json really binds.
+
+- macOS tools get a Linux counterpart, chosen by window().platform: image size
+  from ffprobe (sips), copy through the app clipboard (pbcopy), xdg-open (open,
+  open -R, QuickTime Player), the signature helper in place of BSD stat -f.
+- Mermaid: the browser is also looked up on PATH (NixOS has none in /usr/bin).
+- Help: the "anywhere in Herdr" row lists the keys bound to a pane.split into
+  the picker, read from keys(), instead of a fixed cmd-shift-o.
+
+Made against e96cc755eb1afd18209822b638f1e7664685193e; ./herdr-md.nix applies it.
+Paths are relative to the upstream repo root (git apply / patch -p1).
+
+diff --git a/mods/herdr-md/main.js b/mods/herdr-md/main.js
+index b75e4c9..9e92690 100644
+--- a/mods/herdr-md/main.js
++++ b/mods/herdr-md/main.js
+@@ -15,7 +15,7 @@
+ // videos are copied here (base64 over exec) because the app only draws local files.
+ import { View, div, image } from "gpui-kit";
+ import { v_flex, h_flex, Editor, EditorState, TextView, InputState, Input } from "gpui-base";
+-import { props, readTextFile, watchFolder, exec, theme, settings, home, appHome, nextCommand, panes, spaces, focused, run } from "herdr";
++import { props, readTextFile, watchFolder, exec, theme, settings, home, appHome, nextCommand, panes, spaces, focused, run, window as appWindow, keys } from "herdr";
+ import { marked, splitChunks, capSource, refDefs, lexChunk, blocks, LEX_MAX } from "./lex.js";
+ import { inlineMath } from "./tex.js";
+ import { hash as bhash, diffBlocks, slug, labelOf, inlineRoles, alertOf, ALERTS, nextNumberMode, ordinals, gutterLabel, nextLook, nextMotion, parseCursorPref, cursorParts, LOOK_NAMES } from "./doc.js";
+@@ -47,9 +47,9 @@ const HELP = [[
+   ["SHARE", [["V", "select blocks"], ["y", "copy the markdown source"], ["p", "pin the selection for Claude"], ["Esc", "unselect, close search, unpin"]]],
+   ["FIND A FILE (ctrl-p)", [["ctrl-n ctrl-p", "next / previous (or ctrl-j ctrl-k, arrows)"], ["Enter", "open here (Backspace comes back)"],
+     ["ctrl-v", "open in a split to the right"], ["ctrl-d ctrl-u", "scroll the preview"], ["Esc", "close"],
+-    ["cmd-shift-o", "anywhere in Herdr: a new viewer, picker open (keys.json)"]]],
++    ["@pick", "anywhere in Herdr: a new viewer, picker open (keys.json)"]]],   // @pick, @player: filled in by helpRows()
+ ], [
+-  ["READ", [["ctrl-p", "find a markdown file, with preview (ctrl-f: folders, ctrl-g: up a folder)"], ["o", "outline"], ["Enter", "fold a heading, follow a link, zoom a figure, play a video"], ["O", "open a video in QuickTime"], ["Backspace", "back after a link"],
++  ["READ", [["ctrl-p", "find a markdown file, with preview (ctrl-f: folders, ctrl-g: up a folder)"], ["o", "outline"], ["Enter", "fold a heading, follow a link, zoom a figure, play a video"], ["O", "@player"], ["Backspace", "back after a link"],
+     ["za zc zo", "toggle / close / open fold"], ["zM zR", "fold / unfold all"], ["] [", "next / previous change"], ["c", "clear change marks"],
+     ["/", "search"], ["n N", "next / previous match or note"], ["#", "line numbers: absolute, relative, off"],
+     ["C", "cursor look: highlight, number badge, lift"], ["B", "cursor motion: blink (default), steady, pulse, grow"]]],
+@@ -91,6 +91,16 @@ const MODIFIER_KEYS = ["shift", "control", "alt", "platform", "function", "capsl
+ // The app only loads images from its own folder, so local images are copied
+ // here first. Hidden folder: saving into it doesn't hot-reload the mod.
+ const CACHE = `mods/${MOD}/.cache`;
++// ---- Linux fit (a local change: upstream is built and tested on macOS) ----
++// sips, pbcopy, open and QuickTime are Mac tools. Elsewhere an image's size comes
++// from ffprobe, with the demuxer forced by the file's extension and only the file
++// protocol allowed (the guard the video path uses); copies go through the app's
++// own clipboard; links go to xdg-open, as mods/herdr-open does.
++const MAC = () => appWindow().platform === "macos";
++const IMG_FMT = { png: "png_pipe", jpg: "jpeg_pipe", jpeg: "jpeg_pipe", gif: "gif", webp: "webp_pipe", bmp: "bmp_pipe" };
++const SIZE_SH = `PATH="$PATH:/opt/homebrew/bin:/usr/local/bin"; ffprobe -v error -protocol_whitelist file -f "$2" -select_streams v:0 -show_entries stream=width,height -of default=nw=1 "file:$1" | sed -e 's/^width=/pixelWidth: /' -e 's/^height=/pixelHeight: /'`;
++const openExternal = target => (MAC() ? exec("open", [target]) : exec("env", ["-u", "BROWSER", "xdg-open", target])).catch(() => {});
++const copyText = (cx, text) => { if (MAC()) exec("sh", ["-c", 'printf %s "$1" | LANG=en_US.UTF-8 pbcopy', "copy", text]); else cx.write_to_clipboard(text); };
+ const REMOTE_POLL = 1500;   // ms between stats of a remote file
+ const REMOTE_HOME = {};   // machine -> promise of its $HOME
+ const REMOTE_IMG_MAX = 20 << 20, REMOTE_VIDEO_MAX = 32 << 20;
+@@ -451,13 +461,14 @@ export default class Md extends View {
+     // Links come from untrusted documents: never hand `open` anything it could
+     // run. Web and mail links go to the browser or mail app; local non-markdown
+     // files are only revealed in Finder; other schemes are refused.
+-    if (/^(https?|mailto):/i.test(url)) { exec("open", [url]); return; }
++    if (/^(https?|mailto):/i.test(url)) { openExternal(url); return; }
+     if (/^[a-z][a-z0-9+.-]*:/i.test(url) && !url.startsWith("file:")) { this.flash = `not opening ${url.split(":")[0]}: links`; return cx.notify(); }
+     const [path, frag = null] = url.replace(/^file:\/\//, "").split("#");
+     const abs = path.startsWith("/") ? path : `${dirname(this.file)}/${decodeURIComponent(path)}`.replace(/\/\.\//g, "/");
+     if (/\.(md|markdown|mdx)$/i.test(abs)) this.navigate(abs, frag, cx, true);
+     else if (this.on) { this.flash = `${abs.split("/").pop()} is on ${this.on}: can't show it in Finder`; cx.notify(); }
+-    else { exec("open", ["-R", abs]); this.flash = "shown in Finder"; cx.notify(); }
++    else if (MAC()) { exec("open", ["-R", abs]); this.flash = "shown in Finder"; cx.notify(); }
++    else { openExternal(dirname(abs)); this.flash = "opened its folder"; cx.notify(); }   // the folder only: the file itself is never opened
+   }
+ 
+   navigate(file, frag, cx, push) {
+@@ -664,9 +675,12 @@ export default class Md extends View {
+       } else ok = (await exec("cp", ["-p", abs, local])).code === 0;
+       if (!ok) { this.images[href] = { missing: true }; continue; }
+       let w = 800, h = 450;
+-      const s = await exec("sips", ["-g", "pixelWidth", "-g", "pixelHeight", abs]);
++      // A missing or failing size tool leaves the 800x450 default instead of failing the load.
++      const fmt = IMG_FMT[ext];
++      const s = await (MAC() ? exec("sips", ["-g", "pixelWidth", "-g", "pixelHeight", abs])
++        : fmt ? exec("sh", ["-c", SIZE_SH, "size", abs, fmt]) : Promise.resolve({ stdout: "" })).catch(() => ({ stdout: "" }));
+       const mw = s.stdout.match(/pixelWidth: (\d+)/), mh = s.stdout.match(/pixelHeight: (\d+)/);
+-      if (mw && mh) { w = +mw[1]; h = +mh[1]; }
++      if (mw && mh && +mw[1] > 0 && +mh[1] > 0) { w = +mw[1]; h = +mh[1]; }   // ffprobe says 0x0 for a file that isn't an image
+       this.images[href] = { path: `${CACHE}/${name}`, w, h };
+     }
+   }
+@@ -704,9 +718,9 @@ export default class Md extends View {
+         v.abs = local;
+       } else {
+         v.abs = src;
+-        const st = await exec("stat", ["-f", "%m:%z", v.abs]);
+-        if (st.code !== 0) { v.missing = true; continue; }
+-        sig = st.stdout.trim();
++        // GNU stat first, then BSD (STAT_SH in remote.js): a bare `stat -f` fails on Linux.
++        [sig] = await this.stats([v.abs]);
++        if (!sig) { v.missing = true; continue; }
+       }
+       const key = fnv(v.abs + sig), dir = `${CACHE}/v/${key}`;
+       if (v.dir === dir && v.meta) continue;
+@@ -819,7 +833,7 @@ export default class Md extends View {
+     const n = this.videoList.indexOf(tok.href);
+     return v_flex().my(8).gap(6).items_center()
+       .child(div().id(`video-${n}`).cursor_pointer().on_click((_e, cx) => this.videoCmd(n, "toggle", undefined, cx)).child(v.entity))
+-      .child(div().text_size(13).text_color(t.dim).italic().child(`${tok.text ? tok.text + " · " : ""}Enter plays · O opens in QuickTime`));
++      .child(div().text_size(13).text_color(t.dim).italic().child(`${tok.text ? tok.text + " · " : ""}Enter plays · O opens in ${MAC() ? "QuickTime" : "your video player"}`));
+   }
+ 
+   figKey(tok) {
+@@ -962,7 +976,7 @@ export default class Md extends View {
+           .child(h_flex().h(28).px(12).items_center().justify_between().border_b(1).border_color(t.border).text_size(12).text_color(t.dim)
+             .child(div().child(tok.lang || "text"))
+             .child(div().id(`${id}-copy`).px(8).rounded(4).cursor_pointer().hover(s => s.bg(t.hover).text_color(t.foreground))
+-              .on_click(() => exec("sh", ["-c", 'printf %s "$1" | LANG=en_US.UTF-8 pbcopy', "copy", tok.text])).child("copy")))
++              .on_click((_e, cx) => copyText(cx, tok.text)).child("copy")))
+           .child(div().h(Math.min(lines, 40) * 20 + 4).child(Editor.new(tok.state).size_full()));
+       }
+       case "blockquote": {
+@@ -1136,7 +1150,9 @@ export default class Md extends View {
+     cx.spawn(async cx => {
+       const probe = await this.probeVideo(v.abs);
+       if (probe.error) { v.error = probe.error; this.flash = `O: couldn't prepare: ${probe.error}`; return cx.notify(); }
+-      exec("open", ["-a", "QuickTime Player", v.abs]); this.flash = "opened in QuickTime Player"; cx.notify();
++      if (MAC()) { exec("open", ["-a", "QuickTime Player", v.abs]); this.flash = "opened in QuickTime Player"; }
++      else { openExternal(v.abs); this.flash = "opened in the default video player"; }
++      cx.notify();
+     });
+   }
+ 
+@@ -1613,6 +1629,19 @@ export default class Md extends View {
+     this.closeHelp(cx);
+   }
+ 
++  // The help's rows for this machine (a local change: upstream lists the Mac's
++  // cmd-shift-o and QuickTime). "@pick" becomes one row per key that keys.json
++  // really binds to "a new viewer, in its picker", or no row when none is bound;
++  // "@player" names the player O hands a video to.
++  helpRows() {
++    const bound = keys().filter(k => {
++      try { const a = JSON.parse(k.action); return a?.command === "pane.split" && a.args?.mod === MOD && a.args?.props?.pick === true; } catch { return false; }
++    }).map(k => k.keys);
++    const player = MAC() ? "open a video in QuickTime" : "open a video in the default player";
++    return HELP.map(col => col.map(([section, rows]) => [section, rows.flatMap(([k, what]) =>
++      k === "@pick" ? bound.map(b => [b, what]) : [[k, what === "@player" ? player : what]])]));
++  }
++
+   helpPanel(t) {
+     const key = k => div().px(6).rounded(4).bg(t.surface).border_1().border_color(t.border).text_color(t.foreground).child(k);
+     const w = Math.min(720, Math.max(280, this.colW + PAD * 2 - 40));
+@@ -1621,7 +1650,7 @@ export default class Md extends View {
+     // The filter: every word must appear in the section name, the keys or the description.
+     const words = this.helpQ.toLowerCase().split(/\s+/).filter(Boolean);
+     const hit = (section, [keys, what]) => words.every(w => `${section} ${keys} ${what}`.toLowerCase().includes(w));
+-    const cols = HELP.map(col => col.map(([section, rows]) => [section, rows.filter(r => hit(section, r))]).filter(([, rows]) => rows.length)).filter(col => col.length);
++    const cols = this.helpRows().map(col => col.map(([section, rows]) => [section, rows.filter(r => hit(section, r))]).filter(([, rows]) => rows.length)).filter(col => col.length);
+     const count = cols.reduce((n, col) => n + col.reduce((m, [, rows]) => m + rows.length, 0), 0);
+     return h_flex().id("md-help-wrap").absolute().left(0).w_full().justify_center().top(this.helpIn ? 18 : 30)
+       .opacity(this.helpIn).transition("opacity", { duration: 180, easing: "ease-out" }).transition("top", { duration: 220, easing: "ease-out" })
+@@ -1720,7 +1749,7 @@ export default class Md extends View {
+     exec("sh", ["-c", 'mkdir -p "$1" && printf %s "$2" > "$1/.cursor.$$" && mv -f "$1/.cursor.$$" "$1/cursor.json"', "cursor", NOTES(), JSON.stringify({ look: this.look, motion: this.cmotion })]);
+   }
+ 
+-  yank() { const { text } = this.selection(); exec("sh", ["-c", 'printf %s "$1" | LANG=en_US.UTF-8 pbcopy', "yank", text]); this.flash = "copied"; }
++  yank(cx) { const { text } = this.selection(); copyText(cx, text); this.flash = "copied"; }
+ 
+   // Pin the selection for Claude: `mdh sel` prints it.
+   share() {
+@@ -1802,7 +1831,7 @@ export default class Md extends View {
+       case "backspace": return this.back(cx);
+       case "g": case "z": this.pending = k; return;
+       case "V": case "v": this.anchor = this.anchor === null ? this.cursor : null; return cx.notify();
+-      case "y": this.yank(); this.anchor = null; return cx.notify();
++      case "y": this.yank(cx); this.anchor = null; return cx.notify();
+       case "p": this.share(); this.anchor = null; return cx.notify();
+       case "enter": return this.activate(cx);
+       case "escape":
+diff --git a/mods/herdr-md/mdh b/mods/herdr-md/mdh
+index e6ad04c..3233e0f 100755
+--- a/mods/herdr-md/mdh
++++ b/mods/herdr-md/mdh
+@@ -19,9 +19,9 @@
+                                                 this shell's folder (its git repo if it's in one)
+ 
+ The viewer watches ~/.cache/herdr-md/ and redraws and scrolls when a file there changes.
+-Anywhere in Herdr: cmd-shift-o opens a viewer straight into the picker (a keys.json binding, see README).
++Anywhere in Herdr: a keys.json binding opens a viewer straight into the picker (the viewer's ? help shows the key; see README).
+ Viewer keys: ctrl-p find a file (fuzzy, with preview), j/k move the cursor, V visual select, y copy, p pin for Claude, Enter fold/follow/zoom/play,
+-O open a video in QuickTime, za fold, / search, n/N next match or highlight, # line numbers, ? key help, q close.
++O open a video in the system's player, za fold, / search, n/N next match or highlight, # line numbers, ? key help, q close.
+ """
+ import argparse, json, os, re, subprocess, sys, time
+ 
+diff --git a/mods/herdr-md/render/render.mjs b/mods/herdr-md/render/render.mjs
+index e6338ff..7c0446b 100644
+--- a/mods/herdr-md/render/render.mjs
++++ b/mods/herdr-md/render/render.mjs
+@@ -52,6 +52,9 @@ function chrome() {
+     "/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge",
+     "/usr/bin/google-chrome", "/usr/bin/google-chrome-stable", "/usr/bin/chromium", "/usr/bin/chromium-browser",
+     "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
++    // Linux fit (a local change): NixOS keeps no browser under /usr/bin, so look on PATH too.
++    ...["chromium", "chromium-browser", "google-chrome-stable", "google-chrome", "brave", "microsoft-edge", "helium"]
++      .flatMap(n => (process.env.PATH || "").split(":").filter(Boolean).map(d => `${d}/${n}`)),
+   ].find(p => p && fs.existsSync(p));
+   if (!found) throw new Error("Mermaid needs Chrome, Chromium, Brave or Edge installed (or set CHROME_PATH)");
+   return found;

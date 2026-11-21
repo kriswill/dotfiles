@@ -1,5 +1,12 @@
 # Log
 
+## 2026-11-20
+
+- **Update**: [herdr](herdr.md): new `herdr-md` package and `programs.herdr-md`
+  option: the herdr-md markdown viewer mod and `mdh`, pinned upstream plus
+  our Linux patch, built by bun into one `main.js` and one `render.js`; see
+  [the decision](../decisions/herdr-md-store-build.md).
+
 ## 2026-11-19
 
 - **Creation**: [pam-tid-gate](pam-tid-gate.md), a sub-flake: a PAM module

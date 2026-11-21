@@ -1,5 +1,11 @@
 # Log
 
+## 2026-11-20
+
+- **Update**: [nebula-herdr](nebula-herdr.md) enables `programs.herdr-md`, and
+  [herdr](herdr.md) lists the option; see
+  [the decision](../decisions/herdr-md-store-build.md).
+
 ## 2026-11-19
 
 - **Creation**: [pam-tid-gate](pam-tid-gate.md) imports the sub-flake's

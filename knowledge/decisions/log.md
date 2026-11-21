@@ -1,5 +1,13 @@
 # Log
 
+## 2026-11-20
+
+- **Creation**: [herdr-md-store-build](herdr-md-store-build.md): herdr-md is
+  two pinned fetches built by bun into one `main.js` (Herdr refuses imports
+  that resolve outside a mod's folder) and one `render.js` run by bun (no
+  `node_modules`, no Node), linked file by file into a real mod folder.
+  Records why not copies, a compiled executable or a `bun install` fetch.
+
 ## 2026-11-19
 
 - **Creation**: [sudo-touchid-gate](sudo-touchid-gate.md): on the work

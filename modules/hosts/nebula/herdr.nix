@@ -1,20 +1,30 @@
 {
   configurations.nixos.nebula.module = {
-    # Herdr, the desktop app, and herdr-core (`hc`), from upstream's release
-    # builds (./flakes/herdr, via modules/nixos/herdr.nix, which also installs
-    # the herdr TUI everywhere). Telemetry stays off (the module's default).
-    programs.herdr-app.enable = true;
-    programs.herdr-core = {
-      # Declares linger (the module's default), which hc would turn on by
-      # itself anyway: the core and its terminals outlive logouts, and k's
-      # user manager starts at boot (so herdr-update-check waits for a
-      # notification daemon).
-      users = [ "k" ];
-      # BROWSER=herdr-open: a click on a link in Claude Code on nebula opens in
-      # the browser of the machine whose Herdr window you clicked in, through
-      # the herdr-open mod in home/herdr-app. Outside hc, plain xdg-open.
-      browser.enable = true;
+    programs = {
+      # Herdr, the desktop app, and herdr-core (`hc`), from upstream's release
+      # builds (./flakes/herdr, via modules/nixos/herdr.nix, which also installs
+      # the herdr TUI everywhere). Telemetry stays off (the module's default).
+      herdr-app.enable = true;
+      herdr-core = {
+        # Declares linger (the module's default), which hc would turn on by
+        # itself anyway: the core and its terminals outlive logouts, and k's
+        # user manager starts at boot (so herdr-update-check waits for a
+        # notification daemon).
+        users = [ "k" ];
+        # BROWSER=herdr-open: a click on a link in Claude Code on nebula opens in
+        # the browser of the machine whose Herdr window you clicked in, through
+        # the herdr-open mod in home/herdr-app. Outside hc, plain xdg-open.
+        browser.enable = true;
+      };
+      # herdr-md, a markdown viewer mod, and `mdh`, which opens a file in it and
+      # highlights passages (for agents): upstream at a pinned commit with our
+      # Linux patch, its figure renderer on bun (flakes/herdr/pkgs/herdr-md.nix).
+      # Linked into ~/.config/herdr-app/mods/herdr-md; home/herdr-app's keys.json
+      # binds ctrl-shift-m and ctrl-space m to a viewer in its file picker.
+      # Mermaid diagrams are drawn by the helium on PATH.
+      herdr-md.enable = true;
     };
+
     # Config files are NOT declared here (the module's file options stay
     # null): the stow packages home/herdr-core and home/herdr-app own them, so
     # they're versioned. The app's saves write through those symlinks into

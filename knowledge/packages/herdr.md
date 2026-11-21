@@ -1,7 +1,7 @@
 ---
 type: Sub-flake
 title: herdr
-description: 'Umbrella sub-flake for everything herdr: our kriswill/herdr TUI fork (herdr-cli) and herdr-nav, upstream''s prebuilt Herdr desktop app and herdr-core (`hc`) repackaged, a herdr-update-check package for Linux and macOS, and the NixOS + nix-darwin modules (programs.herdr-cli/-core/-app, services.herdr-update-check); consumed as inputs.herdr.'
+description: 'Umbrella sub-flake for everything herdr: our kriswill/herdr TUI fork (herdr-cli) and herdr-nav, upstream''s prebuilt Herdr desktop app and herdr-core (`hc`) repackaged, a herdr-update-check package for Linux and macOS, the herdr-md markdown viewer mod with its mdh CLI, and the NixOS + nix-darwin modules (programs.herdr-cli/-core/-app/-md, services.herdr-update-check); consumed as inputs.herdr.'
 resource: flakes/herdr/
 tags: [sub-flake, package, herdr, terminal]
 generated: { by: hermes-agent/gpt-6.1-sol, at: 2026-11-04T14:21:34-08:00 }
@@ -12,6 +12,9 @@ sources:
   - id: herdr-app-repo
     resource: https://github.com/herdrdev/herdr-app
     title: 'herdrdev/herdr-app (the desktop app: README, install, settings)'
+  - id: herdr-md-repo
+    resource: https://github.com/ryanthedev/herdr-md
+    title: 'ryanthedev/herdr-md (the markdown viewer mod and mdh: README, keys, what it runs)'
   - id: herdr-core-repo
     resource: https://github.com/herdrdev/herdr-core
     title: 'herdrdev/herdr-core (hc: README, config.toml, machines)'
@@ -86,6 +89,13 @@ Outputs (`x86_64-linux`, `aarch64-linux`, `aarch64-darwin`):
   that terminal, and the herdr-open mod in whichever Herdr window is in front
   opens it there; with no answer it opens locally
   ([decision](../decisions/herdr-open-links-where-you-are.md)).
+- `herdr-md`, behind `programs.herdr-md`: a mod that shows a markdown file
+  as native elements (code, tables, images, video, typeset math, Mermaid),
+  and `mdh`, which opens a file in it and highlights passages, so an agent
+  can show you one.[^herdr-md-repo] It is upstream at a pinned commit with
+  our Linux patch, built by bun into one `main.js` and one `render.js`
+  (22 MB, no Node), and linked file by file into a real mod folder
+  ([decision](../decisions/herdr-md-store-build.md)).
 - `nixosModules.herdr` and `darwinModules.herdr`: `modules/common.nix` plus
   per-OS layers, re-exported by [herdr](../modules/herdr.md).
 
@@ -184,6 +194,7 @@ to the `home/herdr-core` and `home/herdr-app` stow packages
 [^subflake-readme]: `flakes/herdr/README.md`: outputs, packaging notes, darwin
 [^herdr-app-repo]: herdrdev/herdr-app README
 [^herdr-core-repo]: herdrdev/herdr-core README
+[^herdr-md-repo]: ryanthedev/herdr-md README
 [^app-manifest]: releases.herdr.dev/app/latest.json, the installers' manifest
 [^app-update-rs]: herdr-app `src/update.rs`, `find_root` and `checks_app`
 [^app-terminal-0111]: Herdr 0.1.11 `src/terminal.rs`, `cell_size` and row rendering

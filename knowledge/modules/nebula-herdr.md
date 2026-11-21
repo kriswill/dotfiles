@@ -1,7 +1,7 @@
 ---
 type: NixOS Module
 title: Herdr on nebula
-description: 'nebula''s herdr settings: enables the Herdr desktop app and hc for k with linger declared and telemetry off, plus the daily herdr-update-check timer (the fork, core and app), leaving every config file to the home/herdr-core and home/herdr-app stow packages (settings.json alone to the per-OS home/herdr-app-linux).'
+description: 'nebula''s herdr settings: enables the Herdr desktop app and hc for k with linger declared and telemetry off, the herdr-md markdown viewer mod, plus the daily herdr-update-check timer (the fork, core and app), leaving every config file to the home/herdr-core and home/herdr-app stow packages (settings.json alone to the per-OS home/herdr-app-linux).'
 resource: modules/hosts/nebula/herdr.nix
 tags: [nixos-module, host-specific, herdr]
 generated: { by: codex/gpt-6, at: 2026-11-13T11:54:45-08:00 }
@@ -16,7 +16,8 @@ sources:
 
 On top of the TUI that [herdr](herdr.md) installs everywhere, nebula turns on
 `programs.herdr-app.enable`, `programs.herdr-core.users = [ "k" ]` (linger is
-declared by the module's default) and `services.herdr-update-check.enable`.
+declared by the module's default), `programs.herdr-md.enable` and
+`services.herdr-update-check.enable`.
 
 Outgoing connections to the managed Macs use the
 [sops-managed client identity](nebula-ssh-client.md) through ordinary SSH
@@ -56,6 +57,13 @@ Choices:
   this repo.
   - Both packages are darwin-skipped until the macs enable them
     ([decision](../decisions/herdr-app-config-via-stow.md)).
+- **herdr-md from the store.** The markdown viewer mod and `mdh` are the
+  umbrella's package: three links in a real
+  `~/.config/herdr-app/mods/herdr-md`, not a stowed mod and not a copy
+  ([decision](../decisions/herdr-md-store-build.md)). The stowed `keys.json`
+  binds `ctrl-shift-m` and `ctrl-space m` to a viewer in its file picker.
+  Mermaid diagrams are drawn by the `helium` on PATH. The hand-installed
+  copy it replaced on 2026-11-20 was 436 MB.
 - **Linger on.** It was confirmed while choosing the design: hc wants it and
   would set it anyway. k's user manager now starts at boot, so
   `default.target`'s timers can fire before login. herdr-update-check waits

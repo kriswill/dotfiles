@@ -1,7 +1,7 @@
 ---
 type: Dual Module
 title: Herdr
-description: 'Re-export of the herdr umbrella sub-flake''s NixOS and nix-darwin modules, with programs.herdr-cli on everywhere: herdr, the terminal agent multiplexer, built on both OSes from our kriswill/herdr fork (upstream v0.9.5 + our tab-bar and nested-shell commits), plus herdr-nav; the same modules mount programs.herdr-core, programs.herdr-app and services.herdr-update-check for hosts to opt into.'
+description: 'Re-export of the herdr umbrella sub-flake''s NixOS and nix-darwin modules, with programs.herdr-cli on everywhere: herdr, the terminal agent multiplexer, built on both OSes from our kriswill/herdr fork (upstream v0.9.5 + our tab-bar and nested-shell commits), plus herdr-nav; the same modules mount programs.herdr-core, programs.herdr-app, programs.herdr-md and services.herdr-update-check for hosts to opt into.'
 resource: modules/darwin/herdr.nix
 tags: [darwin-module, nixos-module, herdr]
 generated: { by: codex/gpt-6, at: 2026-11-13T12:11:00-08:00 }
@@ -109,6 +109,12 @@ layers:[^subflake-readme]
     ([decision](../decisions/herdr-app-pin-core-dir.md)). On darwin the pin
     is settings.json's `core = /etc/herdr-core/hc`, an `environment.etc` link
     to the same package.
+- `programs.herdr-md`:
+  - `enable`, `package`: the herdr-md markdown viewer mod and `mdh`.
+  - The mod is linked into each core user's
+    `~/.config/herdr-app/mods/herdr-md`, a real folder holding one link per
+    file, because Herdr and the mod both write into it
+    ([decision](../decisions/herdr-md-store-build.md)).
 - `services.herdr-update-check`:
   - `enable`, `package`.
   - The schedule is a NixOS `calendar` (systemd user timer, `Type=exec`,

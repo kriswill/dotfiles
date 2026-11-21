@@ -1,5 +1,5 @@
 {
-  description = "herdr — everything herdr in one flake: our herdr TUI fork, Herdr's desktop app (Linux and macOS) and herdr-core (hc), helper tools, an update check, and NixOS + nix-darwin modules";
+  description = "herdr — everything herdr in one flake: our herdr TUI fork, Herdr's desktop app (Linux and macOS) and herdr-core (hc), helper tools, the herdr-md markdown viewer mod, an update check, and NixOS + nix-darwin modules";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
@@ -65,6 +65,7 @@
               cliVersion = config.packages.herdr-cli.version;
             };
             herdr-open = pkgs.callPackage ./pkgs/herdr-open.nix { };
+            herdr-md = pkgs.callPackage ./pkgs/herdr-md.nix { };
             default = config.packages.herdr-cli;
             herdr-app-unwrapped = pkgs.callPackage ./pkgs/herdr-app.nix { };
             # Standalone: telemetry off, and this core on PATH (after any other

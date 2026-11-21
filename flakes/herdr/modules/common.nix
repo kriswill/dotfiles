@@ -7,6 +7,7 @@
 #   programs.herdr-cli       the herdr TUI (our fork) + herdr-nav
 #   programs.herdr-core      hc, the terminal daemon
 #   programs.herdr-app       the Herdr window
+#   programs.herdr-md        a markdown viewer mod for the window, and mdh
 #   services.herdr-update-check   releases past ours, stale running builds
 #
 # Config files are opt-in. Each file option defaults to null, which leaves the
@@ -23,6 +24,7 @@ let
   cli = config.programs.herdr-cli;
   core = config.programs.herdr-core;
   app = config.programs.herdr-app;
+  md = config.programs.herdr-md;
   check = config.services.herdr-update-check;
   inherit (pkgs.stdenv.hostPlatform) system;
   json = pkgs.formats.json { };
@@ -213,6 +215,32 @@ in
         };
       };
 
+      herdr-md = {
+        enable = lib.mkEnableOption ''
+          herdr-md, a markdown viewer for Herdr (text, code, tables, images,
+          video, typeset math and Mermaid, drawn natively), and `mdh`, the CLI
+          that opens a file in it and highlights passages, built for agents.
+          The mod is installed as `~/.config/herdr-app/mods/herdr-md` for each
+          of programs.herdr-core's `users`: a real folder holding links to the
+          package's files (a copy installed by hand has those replaced; its
+          other files stay). A viewer opens only when
+          asked for: `mdh open FILE`, or a keys.json binding of `pane.split`
+          with `mod: "herdr-md"`. Mermaid needs a Chromium-family browser on
+          PATH (or `CHROME_PATH`)'';
+
+        package = lib.mkOption {
+          type = lib.types.package;
+          default = pkgs.callPackage ../pkgs/herdr-md.nix { };
+          defaultText = lib.literalMD "upstream at a pinned commit with our Linux patch, from this flake's `pkgs/herdr-md.nix`";
+          description = ''
+            The herdr-md package: `bin/mdh`, and the mod's files under
+            `share/herdr-app/mods/<mod>`, where `mod` (the folder's name) and
+            `modFiles` (its entries, which the modules link one by one) are
+            attributes of the package.
+          '';
+        };
+      };
+
     };
 
     services.herdr-update-check = {
@@ -331,6 +359,16 @@ in
               programs.herdr-core.package is ${core.package.version}; the app will
               refuse it and offer to install its own.
             '';
+    })
+
+    (lib.mkIf md.enable {
+      # mdh. The OS module links the mod's files into each core user's mods
+      # folder.
+      environment.systemPackages = [ md.package ];
+      warnings = lib.optional (core.users == [ ]) ''
+        programs.herdr-md is enabled but programs.herdr-core.users is empty,
+        so only mdh is installed: the mod is linked into nobody's Herdr.
+      '';
     })
 
     (lib.mkIf check.enable {

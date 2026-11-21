@@ -77,7 +77,7 @@ Non-declarative BIOS facts, invisible to the flake:
 - [nebula-codebase-memory-mcp](../modules/nebula-codebase-memory-mcp.md) (code-graph daemon disabled)
 - [nebula-agent-remote](../modules/nebula-agent-remote.md) (enable-gate for [agent-remote](../modules/agent-remote.md): a second, key-only sshd on port 2122, the port [Herdr](../modules/herdr.md) uses for every managed machine)
 - [nebula-git-signing-agent](../modules/nebula-git-signing-agent.md) (enable-gate for prompt-free commit signing with the key mini uses, loaded from the shared sops file)
-- [nebula-herdr](../modules/nebula-herdr.md) (enable-gate for the Herdr desktop app + hc, linger and the daily herdr-update-check; config via stow)
+- [nebula-herdr](../modules/nebula-herdr.md) (enable-gate for the Herdr desktop app + hc, linger, the herdr-md viewer mod and the daily herdr-update-check; config via stow)
 - [nebula-hermes-agent](../modules/nebula-hermes-agent.md) (enable-gate for the Hermes Agent gateway, run as k, + shared CLI state)
 - [nebula-nixploit](../modules/nebula-nixploit.md) (enable-gate for the daily vulnerability scan)
 - [astro-mixamp](../modules/astro-mixamp.md) (host-specific file)

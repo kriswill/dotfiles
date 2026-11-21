@@ -1,7 +1,7 @@
 # NixOS module, exported as `nixosModules.herdr` (and `default`): the shared
 # options and config (./common.nix), plus what only NixOS does here — linger
-# for hc's users, config files as systemd-tmpfiles links, the GPU stack for
-# the app, and the update check as a systemd user timer.
+# for hc's users, config files and the herdr-md mod as systemd-tmpfiles links,
+# the GPU stack for the app, and the update check as a systemd user timer.
 self:
 {
   config,
@@ -12,6 +12,7 @@ self:
 let
   core = config.programs.herdr-core;
   app = config.programs.herdr-app;
+  md = config.programs.herdr-md;
   check = config.services.herdr-update-check;
   json = pkgs.formats.json { };
   toml = pkgs.formats.toml { };
@@ -87,6 +88,30 @@ in
       systemd.tmpfiles.rules = lib.optionals (app.keys != null) (
         links "herdr-app" "keys.json" (json.generate "herdr-app-keys.json" app.keys)
       );
+    })
+
+    # The mod folder stays a real one, owned by the user, with a link per
+    # entry: Herdr writes its typings into every mod folder and the mod keeps
+    # its cache there, so the folder can't be a link into the store. `L+`
+    # replaces what is there, the files of a copy installed by hand included;
+    # anything else in the folder is left alone.
+    (lib.mkIf md.enable {
+      systemd.tmpfiles.rules = lib.concatMap (
+        user:
+        let
+          inherit (config.users.users.${user}) home group;
+          inherit (md.package) mod;
+          mods = "${home}/.config/herdr-app/mods";
+        in
+        map (dir: "d ${dir} 0755 ${user} ${group} - -") [
+          "${home}/.config/herdr-app"
+          mods
+          "${mods}/${mod}"
+        ]
+        ++ map (
+          file: "L+ ${mods}/${mod}/${file} - - - - ${md.package}/share/herdr-app/mods/${mod}/${file}"
+        ) md.package.modFiles
+      ) core.users;
     })
 
     (lib.mkIf check.enable {

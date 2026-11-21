@@ -1,8 +1,8 @@
 # herdr
 
 Everything herdr in one flake: our fork of the herdr TUI, Herdr's desktop app
-and herdr-core (`hc`), the helper tools around them, an update check, and the
-NixOS and nix-darwin modules that configure them. The root flake consumes it
+and herdr-core (`hc`), the helper tools around them, a markdown viewer mod,
+an update check, and the NixOS and nix-darwin modules that configure them. The root flake consumes it
 as `inputs.herdr` (`./flakes/herdr`).
 
 | Output | Systems | What |
@@ -14,7 +14,8 @@ as `inputs.herdr` (`./flakes/herdr`).
 | `packages.herdr-app` | all | the app with telemetry off and this core at the end of PATH, for `nix run` (a shell launch; Finder bypasses it) |
 | `packages.herdr-update-check` | all | is any of these behind upstream, or running a stale build? |
 | `packages.herdr-open` | all | `$BROWSER` that opens a link where you're looking at the terminal from (see "Links open where you are") |
-| `nixosModules.herdr` (`default`) | | `programs.herdr-{cli,core,app}`, `services.herdr-update-check` |
+| `packages.herdr-md` | all | a markdown viewer mod for Herdr and `mdh`, its CLI: upstream at a pinned commit, patched for Linux (see "The markdown viewer") |
+| `nixosModules.herdr` (`default`) | | `programs.herdr-{cli,core,app,md}`, `services.herdr-update-check` |
 | `darwinModules.herdr` (`default`) | | the same options, with the app's choices written to settings.json |
 
 Systems: `x86_64-linux`, `aarch64-linux`, `aarch64-darwin`.
@@ -114,6 +115,7 @@ do.
 | `programs.herdr-core.linger` | ✓ | — |
 | `programs.herdr-core.browser.{enable,package}` | ✓ (`BROWSER` session variable) | ✓ (`BROWSER` for shells and launchd's user domain) |
 | `programs.herdr-app.{enable,package,finalPackage,telemetry,settings,keys}` | ✓ (wrapper: env + merge at launch) | ✓ (`telemetry`, `core`, `settings` merged into settings.json at activation; `keys` → link; `finalPackage` is the bare bundle) |
+| `programs.herdr-md.{enable,package}` | ✓ (the mod → tmpfiles links) | ✓ (the mod → activation-script links) |
 | `services.herdr-update-check.{enable,package,finalPackage}` | systemd user timer, `calendar` | launchd user agent, `startCalendarInterval` |
 
 `programs.herdr-cli.python` (default `python3`, `null` for none) is for
@@ -200,6 +202,64 @@ After that, `hc server restart` moves running programs to a new core. Each
 program keeps the environment it started with, so restart Claude Code to
 pick it up.
 
+## The markdown viewer (`herdr-md`)
+
+[ryanthedev/herdr-md](https://github.com/ryanthedev/herdr-md) is a Herdr mod
+that shows a markdown file as native elements (text, code, tables, images,
+video, typeset math, Mermaid), with vim keys and a file picker. `mdh` drives
+it from a shell, which is how an agent shows you a file and points at
+passages: `mdh open FILE`, `mdh hl FILE --lines 40-52 --note …`, and
+`mdh sel` for what you pinned back (`V`, move, `p`). `mdh --help` lists
+the rest, and `?` in a viewer lists its keys. A viewer exists only where
+something opens one: `mdh`, or a keys.json binding of `pane.split` with
+`"mod": "herdr-md"` (`"props": {"pick": true}` starts in the picker).
+
+Upstream installs by copying a folder into `~/.config/herdr-app/mods`, and
+the mod then runs `npm install` for its figure renderer. `pkgs/herdr-md.nix`
+pins both instead: the repo at a commit (`fetchFromGitHub`) and the
+renderer's npm dependencies from upstream's lock file (`fetchNpmDeps`).
+On top of that:
+
+- **`herdr-md-linux.patch`.** Upstream is built and tested on macOS. The
+  patch gives each Mac tool a Linux counterpart, chosen by the window's
+  platform (image sizes from ffprobe, the app clipboard, xdg-open), finds the
+  Mermaid browser on PATH, and makes the key help show the keys keys.json
+  really binds to the picker.
+- **One `main.js`.** A mod can only be JavaScript that Herdr's own engine
+  loads, and Herdr refuses an import that resolves outside the mod's folder,
+  which a link into the store does. `main.js` itself may be a link (every
+  stowed mod's is). So `bun build` joins the mod's eight modules into one
+  file with nothing left to import but Herdr's own modules.
+- **One `render.js`, run by bun.** What a mod runs can be anything. The
+  figure renderer (MathJax, mermaid-cli, puppeteer: 838 modules, 430 MB of
+  `node_modules`) is bundled into one 6 MB file, and the mod runs it with
+  bun, both by store path. mermaid-cli has the browser load a page and two
+  scripts from beside its own source; those are installed as
+  `libexec/herdr-md/mermaid` and its three lookups point there. Node is only
+  in the build, to unpack the dependencies, and `disallowedReferences` keeps
+  it out of the closure. The whole package is 22 MB.
+- **Pinned helpers.** `mdh` runs a pinned python3. ffmpeg and ffprobe (video
+  frames; image sizes on Linux) fall back to a pinned build when PATH has
+  none. Mermaid needs a Chromium-family browser on PATH or in `CHROME_PATH`
+  (nebula: helium); none is pinned, and without one diagrams show their
+  source.
+
+`programs.herdr-md.enable` puts `mdh` on PATH and installs the mod for
+each of `programs.herdr-core.users`. `~/.config/herdr-app/mods/herdr-md`
+stays a real folder owned by the user, because Herdr writes its typings into
+every mod folder and the mod keeps its cache there (`.cache`). The modules
+link the package's entries into it one by one (`main.js`, `mdh`,
+`mod.json`: the package's `modFiles`). A copy installed by hand has those
+three replaced; delete its other files (the separate modules, `render/`).
+
+To update, set `rev`, the date in `version` and the two hashes in
+`pkgs/herdr-md.nix`. The build fails if the patch or a substitution no
+longer applies, or if upstream ships a file nothing places. Its checks run
+upstream's tests on the patched source and render a formula with the
+installed renderer. The sandbox has no browser, so draw one Mermaid diagram
+by hand afterwards, and run `herdr-app check ~/.config/herdr-app/mods/herdr-md`
+after the switch.
+
 ## Config files and stow
 
 Each file option defaults to `null`, and then the module leaves the file
@@ -215,6 +275,7 @@ its target, and has tests for exactly that. So a linked `settings.json`,
 | `herdr-app/settings.json` | the app (Settings screen, zoom) | `programs.herdr-app.settings` → merged in at each launch (Linux) or each activation (macOS, with `telemetry` and `core`), declared keys win |
 | `herdr-app/keys.json` | you; the app writes the defaults if it's missing | `programs.herdr-app.keys` → read-only store link |
 | `herdr-app/{themes,layouts,mods}/…` | you, or the app when you duplicate/save one | — |
+| `herdr-app/mods/herdr-md/{main.js,mdh,mod.json}` | nobody | `programs.herdr-md.enable` → read-only store links in a real folder (the mod's `.cache` and Herdr's typings sit beside them) |
 | `herdr-app/` everything else | the app (shipped mods, `view.json`, telemetry state…) | — |
 | `herdr/config.toml` (the TUI) | you | — |
 
@@ -345,5 +406,6 @@ Only `settings.json` is per-OS (`home/herdr-app-darwin`, nebula's
     it and the darwin module share)
   - `herdr-update-check.{nix,sh}`
   - `herdr-open.{nix,sh}` (its Herdr half: `home/herdr-app/.config/herdr-app/mods/herdr-open`)
+  - `herdr-md.nix`, `herdr-md-linux.patch` (the markdown viewer mod and `mdh`)
 - `modules/`: `common.nix`, `nixos.nix`, `darwin.nix`
 - `tests/herdr-open-mod.test.ts`: the herdr-open mod against simulated windows

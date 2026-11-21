@@ -1,7 +1,7 @@
 # nix-darwin module, exported as `darwinModules.herdr` (and `default`): the
 # shared options and config (./common.nix), plus what only nix-darwin does
-# here — config files as links made by the activation script, the app's
-# choices written into settings.json, and the update check as a launchd user
+# here — config files and the herdr-md mod as links made by the activation
+# script, the app's choices written into settings.json, and the update check as a launchd user
 # agent. No linger: on macOS hc starts its core as a one-shot launchd job
 # (core ≥ 0.1.17), which it boots out again once the core is up, so there is
 # nothing to declare here.
@@ -32,6 +32,7 @@ self:
 let
   core = config.programs.herdr-core;
   app = config.programs.herdr-app;
+  md = config.programs.herdr-md;
   check = config.services.herdr-update-check;
   json = pkgs.formats.json { };
   toml = pkgs.formats.toml { };
@@ -112,6 +113,24 @@ in
         )
         + lib.optionalString (declared != { }) (
           forCoreUsers (_: "${lib.getExe merge} ${json.generate "herdr-app-settings.json" declared} || true")
+        )
+      );
+    })
+
+    # A real mod folder with a link per entry, as on NixOS (see ./nixos.nix):
+    # Herdr and the mod both write into it.
+    (lib.mkIf md.enable {
+      system.activationScripts.postActivation.text = lib.mkOrder 1600 (
+        forCoreUsers (
+          user:
+          let
+            inherit (md.package) mod;
+            dir = "${home user}/.config/herdr-app/mods/${mod}";
+          in
+          "mkdir -p '${dir}'"
+          + lib.concatMapStrings (
+            file: " && ln -sfn '${md.package}/share/herdr-app/mods/${mod}/${file}' '${dir}/${file}'"
+          ) md.package.modFiles
         )
       );
     })
