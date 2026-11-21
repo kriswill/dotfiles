@@ -1,5 +1,5 @@
 # battlenet: Blizzard's Battle.net launcher in a Proton prefix, without Steam
-# or umu. Two halves, and a reporting tool:
+# or umu. Two halves, a reporting tool and a backup tool:
 #
 #   battlenet (./battlenet.sh) runs on the host. It finds the prefix's
 #     wineserver in any sandbox, joins or refuses, and does `kill`. It can't
@@ -7,6 +7,9 @@
 #     cwd and environ.
 #   battlenet-threads (./battlenet-threads.sh) runs on the host too and only
 #     reports where a running game's threads run.
+#   battlenet-wow-backup (./battlenet-wow-backup.sh) runs on the host as well
+#     and commits each WoW client's settings to a git repository; the NixOS
+#     module runs it from a user timer.
 #   battlenet-proton (./battlenet-proton.sh) runs inside nixpkgs' Steam FHS
 #     runtime (steam.buildRuntimeEnv, the builder behind steam-run and nixpkgs'
 #     umu-launcher), which provides the /lib64 loader and python3 that Proton's
@@ -28,7 +31,9 @@
   makeDesktopItem,
   coreutils,
   curl,
+  git,
   libnotify,
+  openssh,
   procps,
   systemd,
   util-linux,
@@ -58,6 +63,13 @@
   icon ? "battlenet",
   # Extra variables for Proton, e.g. { PROTON_ENABLE_WAYLAND = "1"; }.
   environment ? { },
+  # Where World of Warcraft is installed, inside the Wine prefix (pfx/).
+  wowDirectory ? "drive_c/Program Files (x86)/World of Warcraft",
+  # WoW client folder -> the directory of the git repository its settings are
+  # backed up to (a relative path is under the user's home), e.g.
+  # { _retail_ = "src/wow-settings"; }. battlenet-wow-backup backs these up
+  # when run with no arguments.
+  wowBackupClients ? { },
 }:
 let
   version = "0.1.0";
@@ -197,6 +209,26 @@ let
     text = builtins.readFile ./battlenet-threads.sh;
   };
 
+  # Commits each WoW client's settings to its repository
+  # (./battlenet-wow-backup.sh). openssh is for git's SSH commit signing,
+  # where gpg.ssh.program is left at ssh-keygen.
+  wowBackup = writeShellApplication {
+    name = "battlenet-wow-backup";
+    runtimeInputs = [
+      coreutils
+      git
+      openssh
+    ];
+    runtimeEnv = {
+      BATTLENET_DEFAULT_PREFIX = if prefix == null then "" else prefix;
+      BATTLENET_WOW_DIR = wowDirectory;
+      BATTLENET_WOW_CLIENTS = lib.concatStringsSep "\n" (
+        lib.mapAttrsToList (client: repo: "${client}=${repo}") wowBackupClients
+      );
+    };
+    text = builtins.readFile ./battlenet-wow-backup.sh;
+  };
+
   # A user unit per confinement target and session CPU list, upheld by the
   # scope of every invocation that starts Wine (see ./battlenet.sh).
   # StopWhenUnneeded= ties it to those scopes: systemd starts it with the first
@@ -296,6 +328,7 @@ symlinkJoin {
   paths = [
     launcher
     threads
+    wowBackup
     desktopItem
     wowDesktopItem
     wowForeverDesktopItem
@@ -309,6 +342,7 @@ symlinkJoin {
       inner
       launcher
       threads
+      wowBackup
       ;
   };
   meta = {

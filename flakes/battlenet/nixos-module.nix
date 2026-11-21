@@ -1,6 +1,8 @@
 # NixOS module, exported as `nixosModules.battlenet` (and `default`).
 # programs.battlenet.enable installs the `battlenet` launcher and its desktop
 # entry, built by ./package.nix from these options against the system's pkgs.
+# programs.battlenet.wowBackup adds a user timer that commits WoW's settings
+# to git.
 {
   config,
   lib,
@@ -121,6 +123,52 @@ in
       '';
     };
 
+    wowBackup = {
+      enable = lib.mkEnableOption ''
+        backing up World of Warcraft settings to git on a timer: for each of
+        `clients`, what changed in its `WTF`, `Fonts` and `Interface`
+        folders is committed to that client's repository. The repository's
+        work tree is the client's folder and its `.git` lives elsewhere, so
+        nothing is written into the game folder. A user timer (`wow-backup`)
+        runs `battlenet-wow-backup`, which finds the folders from `prefix`
+        on every run, so the backups follow a prefix that moves'';
+
+      clients = lib.mkOption {
+        type = lib.types.attrsOf lib.types.str;
+        default = { };
+        example = {
+          _retail_ = "src/wow-settings";
+          _forever_ = "src/wow-settings-forever";
+        };
+        description = ''
+          WoW client folders to back up, each with the directory of the git
+          repository that holds its history; a relative path is under each
+          user's home. A repository that doesn't exist is created on the
+          first run. Commits are made as the user, with their git identity
+          and signing setup. A user with no prefix and no repositories is
+          skipped quietly; a configured client whose folder is missing fails
+          the unit.
+        '';
+      };
+
+      directory = lib.mkOption {
+        type = lib.types.str;
+        default = "drive_c/Program Files (x86)/World of Warcraft";
+        description = "Where World of Warcraft is installed, inside the Wine prefix (`pfx/`): the folder that holds the client folders.";
+      };
+
+      calendar = lib.mkOption {
+        type = lib.types.str;
+        default = "*-*-* 00,12:00:00";
+        example = "daily";
+        description = ''
+          When the backup runs (systemd.time OnCalendar syntax), with up to
+          two minutes of random delay. A run missed while the machine was off
+          or the user logged out happens when their session next starts.
+        '';
+      };
+    };
+
     package = lib.mkOption {
       type = lib.types.package;
       readOnly = true;
@@ -141,6 +189,8 @@ in
           icon
           environment
           ;
+        wowDirectory = cfg.wowBackup.directory;
+        wowBackupClients = cfg.wowBackup.clients;
         # The launcher's systemctl and systemd-run, from the systemd it talks to.
         systemd = config.systemd.package;
       };
@@ -149,6 +199,46 @@ in
       environment.systemPackages = [ cfg.package ];
       # battlenet-confine@.service and battlenet-confine-nix@.service.
       systemd.packages = [ cfg.package ];
+    })
+    (lib.mkIf (cfg.enable && cfg.wowBackup.enable) {
+      assertions = [
+        {
+          assertion = lib.all (client: builtins.match "[A-Za-z0-9_.-]+" client != null) (
+            lib.attrNames cfg.wowBackup.clients
+          );
+          message = "programs.battlenet.wowBackup.clients: a client is the name of a folder in the WoW install, such as _retail_.";
+        }
+      ];
+      warnings = lib.optional (cfg.wowBackup.clients == { }) ''
+        programs.battlenet.wowBackup is enabled with no clients, so its timer
+        has nothing to back up and fails.
+      '';
+      # User units, so commits are the player's own. A oneshot: a failed
+      # backup leaves the unit failed, where `systemctl --user --failed`
+      # shows it.
+      systemd.user.services.wow-backup = {
+        description = "Back up World of Warcraft settings (WTF, Fonts, Interface) to git";
+        unitConfig.ConditionUser = "!@system";
+        # A switch restarts changed user units that are running and waits
+        # for them, with system services still down. A backup in flight
+        # finishes on the old script instead, and can't hang for good.
+        restartIfChanged = false;
+        serviceConfig = {
+          Type = "oneshot";
+          TimeoutStartSec = "10min";
+          ExecStart = lib.getExe' cfg.package "battlenet-wow-backup";
+        };
+      };
+      systemd.user.timers.wow-backup = {
+        description = "Back up World of Warcraft settings on a schedule";
+        wantedBy = [ "timers.target" ];
+        unitConfig.ConditionUser = "!@system";
+        timerConfig = {
+          OnCalendar = cfg.wowBackup.calendar;
+          Persistent = true;
+          RandomizedDelaySec = "2min";
+        };
+      };
     })
     (lib.mkIf (cfg.enable && (cfg.confineSlices != [ ] || cfg.confineNixDaemon)) {
       assertions = [

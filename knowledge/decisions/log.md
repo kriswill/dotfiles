@@ -2,6 +2,12 @@
 
 ## 2026-11-20
 
+- **Creation**: [wow-settings-backup-from-prefix](wow-settings-backup-from-prefix.md):
+  WoW's settings are committed to one git repository per client by a
+  declared user timer, and the client folders are found from the launcher's
+  prefix on every run. A path kept only in the repository went stale when
+  the prefix moved, and backups failed for 27 days.
+
 - **Creation**: [herdr-md-store-build](herdr-md-store-build.md): herdr-md is
   two pinned fetches built by bun into one `main.js` (Herdr refuses imports
   that resolve outside a mod's folder) and one `render.js` run by bun (no

@@ -72,7 +72,7 @@ Non-declarative BIOS facts, invisible to the flake:
 
 ## Host-selective features
 
-- [nebula-battlenet](../modules/nebula-battlenet.md) (enable-gate for the GE-Proton Battle.net launcher)
+- [nebula-battlenet](../modules/nebula-battlenet.md) (enable-gate for the GE-Proton Battle.net launcher, and the twice-daily git backup of WoW's settings)
 - [ntsync](../modules/ntsync.md) (host-specific file)
 - [nebula-codebase-memory-mcp](../modules/nebula-codebase-memory-mcp.md) (code-graph daemon disabled)
 - [nebula-agent-remote](../modules/nebula-agent-remote.md) (enable-gate for [agent-remote](../modules/agent-remote.md): a second, key-only sshd on port 2122, the port [Herdr](../modules/herdr.md) uses for every managed machine)

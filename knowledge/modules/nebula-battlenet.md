@@ -1,7 +1,7 @@
 ---
 type: NixOS Module
 title: Battle.net on nebula
-description: 'nebula''s programs.battlenet settings: enables the GE-Proton Battle.net launcher on the default prefix, ~/.local/share/battlenet, which holds the WoW install moved out of Steam''s compatdata/3082075026.'
+description: 'nebula''s programs.battlenet settings: enables the GE-Proton Battle.net launcher on the default prefix, ~/.local/share/battlenet, which holds the WoW install moved out of Steam''s compatdata/3082075026, and backs up the settings of its _retail_ and _forever_ clients to git twice a day.'
 resource: modules/hosts/nebula/battlenet.nix
 tags: [nixos-module, host-specific, gaming, proton]
 generated: { by: claude-code/opus-5.5, at: 2026-10-27T23:30:00-07:00 }
@@ -91,6 +91,15 @@ lines that are normal are in the README's "What WoW runs on"):[^subflake-readme]
   2026-10-25 entry). Battle.net's window lays out oddly for a few seconds,
   then settles. `PROTON_ENABLE_WAYLAND=0 battlenet` goes back to XWayland for
   one run.
+
+- **Settings backup:** `wowBackup` commits `WTF`, `Fonts` and `Interface` of
+  `_retail_` and `_forever_` to `~/src/wow-settings` and
+  `~/src/wow-settings-forever`, twice a day, from the `wow-backup` user
+  timer. The repositories predate the module, hold game files only and have
+  no remote. The retail one kept the old Steam path after the move above,
+  so nothing was backed up from 2026-10-25 to 2026-11-20; the backup now
+  finds the folders from the prefix
+  ([decision](../decisions/wow-settings-backup-from-prefix.md)).
 
 [wowup](../packages/wowup.md) points into the same prefix's WoW install. The
 WoW window rules in

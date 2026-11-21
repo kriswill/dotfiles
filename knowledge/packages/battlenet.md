@@ -1,7 +1,7 @@
 ---
 type: Sub-flake
 title: battlenet
-description: 'Sub-flake that runs Blizzard''s Battle.net in nixpkgs'' GE-Proton without Steam or umu: a host-side `battlenet` launcher that keeps one wineserver per prefix and hands Proton to a steam.buildRuntimeEnv sandbox, installs Battle.net into a configurable prefix on first run, plus the programs.battlenet NixOS module; enabled on nebula.'
+description: 'Sub-flake that runs Blizzard''s Battle.net in nixpkgs'' GE-Proton without Steam or umu: a host-side `battlenet` launcher that keeps one wineserver per prefix and hands Proton to a steam.buildRuntimeEnv sandbox, installs Battle.net into a configurable prefix on first run, plus the programs.battlenet NixOS module, which can also back up WoW''s settings to git on a timer; enabled on nebula.'
 resource: flakes/battlenet/
 tags: [sub-flake, package, gaming, proton, wine]
 generated: { by: claude-code/opus-5.5, at: 2026-11-02T19:06:08-08:00 }
@@ -39,6 +39,13 @@ The launcher has two halves:
   standalone without allowing unfree. This half sets Proton's environment
   (what umu-run sets, minus the container),[^umu-run-source] runs the
   installer under a lock, and executes the Proton verb the host chose.
+
+Beside the launcher, `battlenet-wow-backup` commits each WoW client's `WTF`,
+`Fonts` and `Interface` folders to a git repository whose `.git` lives
+outside the game folder, and `programs.battlenet.wowBackup` runs it from a
+`wow-backup` user timer. It finds the client folders from the launcher's
+prefix on every run
+([decision](../decisions/wow-settings-backup-from-prefix.md)).
 
 The environment details:
 

@@ -2,6 +2,10 @@
 
 ## 2026-11-20
 
+- **Update**: [nebula-battlenet](nebula-battlenet.md) enables `wowBackup` for
+  the `_retail_` and `_forever_` clients, replacing a hand-made timer that
+  had failed since the prefix moved on 2026-10-25.
+
 - **Update**: [nebula-herdr](nebula-herdr.md) enables `programs.herdr-md`, and
   [herdr](herdr.md) lists the option; see
   [the decision](../decisions/herdr-md-store-build.md).

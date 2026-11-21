@@ -2,6 +2,10 @@
 
 ## 2026-11-20
 
+- **Update**: [battlenet](battlenet.md): new `battlenet-wow-backup` tool and
+  `programs.battlenet.wowBackup` options (a `wow-backup` user timer); see
+  [the decision](../decisions/wow-settings-backup-from-prefix.md).
+
 - **Update**: [nixploit](nixploit.md): each run now waits up to 2 minutes for
   a connection before upstream's steps. The persistent timer fired at resume
   from suspend, before DNS was back, and failed the unit three days running.

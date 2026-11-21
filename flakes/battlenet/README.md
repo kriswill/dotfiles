@@ -206,6 +206,7 @@ WoW's periodic exceptions.
 | `battlenet run CMD [ARG...]` | Runs a program in the prefix: `winecfg`, `regedit`, any `.exe`. Joins a running session. |
 | `battlenet kill` | Stops everything in the prefix, whichever launcher started it. Also a desktop action. |
 | `battlenet-threads [PID\|NAME]` | Shows where a running game's threads run (WoW.exe by default). See [Checking where the threads run](#checking-where-the-threads-run). |
+| `battlenet-wow-backup [CLIENT \| CLIENT=REPO]...` | Commits what changed in WoW's settings to git: every configured client, or the ones named. See [Backing up WoW settings](#backing-up-wow-settings). |
 
 `BATTLENET_PREFIX=/path battlenet ...` uses another prefix for one run.
 `BATTLENET_CPUS=LIST` overrides the CPU list for one run, and an empty value
@@ -356,6 +357,54 @@ Measured on nebula on 2026-11-02 (WoW in game, `cpus = "0-5,12-17"`):
 Under `amd_x3d_mode = frequency` the other CCD ranks higher (CPU 6: 211), so
 without the pinning the scheduler would favour the CCD without the V-Cache.
 
+## Backing up WoW settings
+
+A WoW client (`_retail_`, `_forever_`, ...) keeps what's worth keeping in
+three folders of its own: `WTF` (settings, macros, addons' saved variables),
+`Fonts` and `Interface` (addons). `programs.battlenet.wowBackup` commits
+what changed in them to git, twice a day by default, one repository per
+client.
+
+- **Nothing is written into the game folder.** Battle.net locks and rewrites
+  files there. Each repository's work tree is the client's folder
+  (`core.worktree`), its `.git` lives wherever `clients` says, and the
+  "only these three folders" rule is in the repository's `info/exclude`, not
+  in a `.gitignore`. WoW's own `*.bak` copies of saved variables are left
+  out.
+- **The folder is found from `prefix` on every run**, and written back to
+  the repository's `core.worktree`, which plain `git -C REPO status` goes
+  by. Before this module, the path lived only in the repository. On nebula
+  the prefix moved out of Steam on 2026-10-25, and every backup failed for 27
+  days.
+- **Failures show.** The `wow-backup` user timer runs `battlenet-wow-backup`
+  as a oneshot service. A client that fails doesn't stop the others, and the
+  unit ends failed: `systemctl --user status wow-backup`. A configured client
+  whose folder is missing is a failure. A user with no prefix and no
+  repositories doesn't play here and is skipped quietly.
+- **Commits are the player's own**: a user unit, so git uses their identity
+  and signing setup. Each commit is `WoW backup <time> (<n> files)` with the
+  per-folder counts in its body.
+- **A repository that doesn't exist is created** on the first run, so adding
+  a client is one line in `clients`. It gets no remote; add one yourself if
+  the history should leave the machine.
+
+By hand: `battlenet-wow-backup` backs up every configured client,
+`battlenet-wow-backup _retail_` one of them, and
+`battlenet-wow-backup _classic_=backups/classic` any client into any
+repository. To look at a repository or restore from it, use git in its
+directory. `git restore` and `git checkout` write into the live game
+folder, so close the game first:
+
+```sh
+cd ~/src/wow-settings
+git log --stat
+git restore --source <commit> -- Interface/AddOns/SomeAddon
+```
+
+A unit of the same name in `~/.config/systemd/user` outranks the declared
+one. Hand-made `wow-backup` units belong in `~/.local/share/systemd/user`
+(below `/etc/systemd/user`) or nowhere.
+
 ## The NixOS module
 
 ```nix
@@ -373,6 +422,12 @@ without the pinning the scheduler would favour the CCD without the V-Cache.
     # locale = "enUS";                      # installer language
     # icon = "/path/to/icon.png";           # default: "battlenet", the bundled launcher logo
     # environment.PROTON_ENABLE_WAYLAND = "1";
+    # wowBackup = {                         # WoW's settings to git, twice a day
+    #   enable = true;
+    #   clients._retail_ = "src/wow-settings";   # client folder -> repository (relative = under $HOME)
+    #   calendar = "*-*-* 00,12:00:00";     # default
+    #   directory = "drive_c/Program Files (x86)/World of Warcraft";  # default, inside pfx/
+    # };
   };
 }
 ```
@@ -451,7 +506,8 @@ rename, however large the WoW install.
 | [`battlenet-proton.sh`](battlenet-proton.sh) | The sandbox half: Proton's environment, installer download and lock, the Proton verb. |
 | [`battlenet-confine-nix.sh`](battlenet-confine-nix.sh) | The root oneshot that sets `nix-daemon.service`'s CPUs, accepting only those outside `cpus`. |
 | [`battlenet-threads.sh`](battlenet-threads.sh) | `battlenet-threads`: reads `/proc` and `/sys` to show where a running game's threads run. |
-| [`nixos-module.nix`](nixos-module.nix) | `programs.battlenet.*`, the units (`systemd.packages`), the `cpuset` delegation and the polkit rule. |
+| [`battlenet-wow-backup.sh`](battlenet-wow-backup.sh) | `battlenet-wow-backup`: commits each WoW client's `WTF`, `Fonts` and `Interface` to its git repository. |
+| [`nixos-module.nix`](nixos-module.nix) | `programs.battlenet.*`, the units (`systemd.packages`), the `cpuset` delegation, the polkit rule, and the `wow-backup` user service and timer. |
 
 ## Consuming it
 

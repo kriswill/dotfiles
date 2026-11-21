@@ -31,6 +31,20 @@
         # home/hyprland/.config/hypr/window-rules.lua) lives on.
         PROTON_WAYLAND_MONITOR = "DP-3";
       };
+      # WoW's settings and addons (WTF, Fonts, Interface) of both clients,
+      # committed to git twice a day by the wow-backup user timer. The
+      # repositories predate the module and hold game files only, with no
+      # remote: they aren't part of these dotfiles. The backup finds the
+      # client folders from the prefix above. A path kept in the repositories
+      # went stale when the prefix moved on 2026-10-25, and nothing was backed
+      # up until 2026-11-20.
+      wowBackup = {
+        enable = true;
+        clients = {
+          _retail_ = "src/wow-settings";
+          _forever_ = "src/wow-settings-forever";
+        };
+      };
     };
   };
 }
