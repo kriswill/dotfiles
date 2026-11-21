@@ -1,9 +1,10 @@
 ---
 type: NixOS Module
 title: ChatGPT Broken Deps
-description: 'Temporary nebula workaround for two ChatGPT app dependencies that don''t build at the flake''s nixpkgs pin: gives tectonic the aws-lc input nixpkgs left out and runs the app on its bundled codex, until nixpkgs'' tectonic and codex build again; then it switches itself off and warns.'
-resource: modules/hosts/nebula/chatgpt-broken-deps.nix
+description: 'Deprecated 2026-11-20: the temporary nebula workaround (2026-11-10 to 2026-11-20) for two ChatGPT app dependencies that didn''t build at the flake''s nixpkgs pin. It gave tectonic the aws-lc input nixpkgs had left out and ran the app on its bundled codex; nixpkgs fixed both, it switched itself off, and the file was deleted.'
+resource: modules/hosts/nebula/chatgpt.nix
 tags: [nixos-module, host-specific, temporary]
+status: deprecated
 generated: { by: claude-code/fable-5.2, at: 2026-11-10T19:45:00-08:00 }
 sources:
   - id: nixpkgs-tectonic-fix
@@ -13,6 +14,13 @@ sources:
     resource: https://github.com/NixOS/nixpkgs/commit/16b46369
     title: 'nixpkgs 16b46369: codex: fix build with sys libs'
 ---
+
+**Deprecated (2026-11-20).** The file is gone. The 2026-11-16 flake.lock
+update brought a nixpkgs whose tectonic and codex list `aws-lc`, so both
+halves switched themselves off and the warning below asked for the
+deletion. Removing it left nebula's system derivation unchanged. The
+[ChatGPT app](chatgpt.md) runs nixpkgs' codex again (0.167.1 at the time).
+What follows describes it as it was.
 
 An overlay on [nebula](../hosts/nebula.md) for the two packages the
 [ChatGPT app](chatgpt.md) swaps in for its bundled binaries. nixpkgs' rust
@@ -39,7 +47,7 @@ that host's configuration per the
 
 ## Source
 
-- Module: [`modules/hosts/nebula/chatgpt-broken-deps.nix`](../../modules/hosts/nebula/chatgpt-broken-deps.nix)
+- Module: `modules/hosts/nebula/chatgpt-broken-deps.nix`, deleted 2026-11-20; it is in the git history.
 
 [^nixpkgs-tectonic-fix]: nixpkgs 743696b7: tectonic-unwrapped: fix build with system libs
 [^nixpkgs-codex-fix]: nixpkgs 16b46369: codex: fix build with sys libs

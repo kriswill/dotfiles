@@ -2,6 +2,11 @@
 
 ## 2026-11-20
 
+- **Deprecation**: [chatgpt-broken-deps](chatgpt-broken-deps.md): deleted.
+  nixpkgs' tectonic and codex build again since the 2026-11-16 lock update,
+  so the workaround had switched itself off and was warning on every
+  evaluation. nebula's system derivation is unchanged by the removal.
+
 - **Update**: [nebula-battlenet](nebula-battlenet.md) enables `wowBackup` for
   the `_retail_` and `_forever_` clients, replacing a hand-made timer that
   had failed since the prefix moved on 2026-10-25.

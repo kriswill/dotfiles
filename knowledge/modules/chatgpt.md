@@ -30,8 +30,9 @@ OpenAI's standalone install (`~/.local/bin/codex` →
 background. Both use `~/.codex` (auth, config, sessions), so expect a
 version gap of a few days. `pkgs.chatgpt.override { codex = null; }`
 switches the app to the codex OpenAI bundled with it.
-While nixpkgs' codex doesn't build,
-[chatgpt-broken-deps](chatgpt-broken-deps.md) does exactly that.
+While nixpkgs' codex didn't build (2026-11-10 to the 2026-11-16 lock
+update), [chatgpt-broken-deps](chatgpt-broken-deps.md) did exactly that; it
+is gone since 2026-11-20.
 [user-packages](user-packages.md) still provides the system `bwrap` the
 standalone CLI's sandbox wants. The app's wrapper adds its own.
 
