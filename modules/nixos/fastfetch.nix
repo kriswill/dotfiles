@@ -1,36 +1,25 @@
+# fastfetch on NixOS: the ./flakes/fastfetch module
+# (flakes/fastfetch/module.nix), re-exported into the Dendritic module set.
+# It brings programs.fastfetch.logo and .logoPaddingTop, which each host sets
+# beside its registration, and builds .finalPackage: this system's
+# pkgs.fastfetch wrapped with those flags and the kitten shim that makes the
+# logo draw in Herdr panes (docs/fastfetch.md).
+#
+# The sub-flake's module installs nothing. snowglobe-factory already installs
+# fastfetch through its own programs.fastfetch options
+# (enable/package/installGlobally), so the wrapped build goes in through its
+# `package` option and no second copy ships to collide with the first.
+# Darwin twin: modules/darwin/fastfetch.nix.
+{ inputs, ... }:
 {
   flake.modules.nixos.fastfetch =
-    # Darwin twin: modules/darwin/fastfetch.nix. Hosts pick their logo via
-    # programs.fastfetch.logo; the wrapper's CLI flags beat the stowed
-    # config.jsonc's `source` (docs/fastfetch.md).
+    { config, lib, ... }:
     {
-      config,
-      lib,
-      pkgs,
-      ...
-    }:
-    {
-      options.programs.fastfetch = {
-        logo = lib.mkOption {
-          type = lib.types.str;
-          default = "Nebula.png";
-          description = "Logo image filename under ~/.config/fastfetch/ (stow package `fastfetch`).";
-        };
-        logoPaddingTop = lib.mkOption {
-          type = lib.types.ints.unsigned;
-          default = 0;
-          description = "Blank rows above the logo.";
-        };
-      };
+      imports = [ inputs.fastfetch.nixosModules.fastfetch ];
 
-      # snowglobe-factory already installs fastfetch via its own programs.fastfetch
-      # options (enable/package/installGlobally) — our logo/logoPaddingTop
-      # declarations merge into that set, and swapping the wrapped binary in
-      # through its `package` option avoids shipping a colliding second copy.
-      config.programs.fastfetch.package = import ../../lib/fastfetch-logo-wrapper.nix {
-        inherit pkgs;
-        inherit (config.programs.fastfetch) logo;
-        paddingTop = config.programs.fastfetch.logoPaddingTop;
+      programs.fastfetch = {
+        logo = lib.mkDefault "Nebula.png";
+        package = config.programs.fastfetch.finalPackage;
       };
     };
 }

@@ -23,3 +23,7 @@ Added per the [add-package playbook](../playbooks/add-package.md).
   `fetchurl` keyed on `stdenv.hostPlatform.system`). On nebula it exists solely so
   [fastfetch](../modules/fastfetch.md)'s `kitty-icat` logo can shell out to it (`docs/fastfetch.md`) — the full
   `kitty` package was dropped from nebula in `907cf90`, which silently broke the logo.
+- fastfetch doesn't call it directly: its wrapper puts a shim named `kitten` first on
+  fastfetch's PATH, which adds two arguments in Herdr panes and otherwise `exec`s the
+  next `kitten` on PATH, this one on nebula
+  ([decision](../decisions/fastfetch-kitten-shim.md)).

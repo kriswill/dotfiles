@@ -1,23 +1,41 @@
 # fastfetch manual (nebula)
 
-A working reference for **fastfetch** as configured on `nebula` (ghostty under
-Hyprland, usually inside tmux). Distilled from the upstream wiki and **verified
-against the binary and live rendering on this machine** (screenshots of real
-ghostty+tmux panes). Maintained for Claude's use: keep it accurate, prune what
-stops being true, and record real gotchas in **Learned behaviours & workarounds**
-at the bottom.
+A working reference for **fastfetch** as configured on `nebula` (Hyprland;
+day to day inside Herdr panes, also bare ghostty and ghostty+tmux). Distilled
+from the upstream wiki and **verified against the binary and live rendering
+on this machine** (screenshots of real ghostty, tmux and Herdr panes).
+Maintained for Claude's use: keep it accurate, prune what stops being true,
+and record real gotchas in **Learned behaviours & workarounds** at the bottom.
 
 ## Version & state on nebula (read this first)
 
+Checked 2026-11-21:
+
 ```
 $ fastfetch --version
-fastfetch 2.64.2 (x86_64)
+fastfetch 2.70.0 (x86_64)
 $ kitten --version
-kitten 0.42.2 created by Kovid Goyal    # from pkgs/kitten.nix (prebuilt static binary)
+kitten 0.48.2 created by Kovid Goyal    # from pkgs/kitten.nix (prebuilt static binary)
 $ command -v fastfetch kitten
 /run/current-system/sw/bin/fastfetch
 /run/current-system/sw/bin/kitten        # required by logo type "kitty-icat"
+$ ghostty --version; tmux -V; hc --version; herdr-app --version; herdr --version
+Ghostty 1.4.0
+tmux 3.8
+hc 0.1.21
+herdr-app 0.1.16
+herdr 0.9.5-kriswill-custom.b52188b
 ```
+
+Where the PNG logo renders:
+
+| Terminal | Logo | Why |
+|---|---|---|
+| ghostty | ✓ | `kitty-icat` works as is |
+| ghostty + tmux | ✓ | needs tmux's `TERM` ≠ `screen` (below) |
+| ghostty + herdr TUI (`herdr`, our fork) | ✓ | needs `experimental.kitty_graphics` + the pixel-size fix (≥ v0.8.0) |
+| Herdr app / herdr-core (`hc`) pane | ✓ | only through the kitten shim ("Inside Herdr" below) |
+| `devenv shell` inside a Herdr pane | ✓ | same shim |
 
 - **Install:** fastfetch comes from snowglobe-factory's package set (it's on the
   system `PATH`, not declared in this repo). `kitten` comes from
@@ -31,15 +49,18 @@ $ command -v fastfetch kitten
   dotfile (symlinked into `~/.config/fastfetch/` by `dotfiles-stow.nix`, not
   nix-managed). The config carries no logo `source`: each host sets
   `programs.fastfetch.logo` (a filename beside the config in the stow tree —
-  `Nebula.png` here, `hexley-nix.png` on the Macs) and
-  `modules/{darwin,nixos}/fastfetch.nix` wrap the binary with `--logo` via
-  `lib/fastfetch-logo-wrapper.nix`; CLI flags beat config.jsonc, so a stray
+  `Nebula.png` here, `hexley-nix.png` on the Macs) and the module wraps the
+  binary with `--logo`; CLI flags beat config.jsonc, so a stray
   `source` (the `76a05ff` merge once pointed it at the Apple `logo.png`)
   can no longer change what renders.
+- **Nix side:** the `flakes/fastfetch` sub-flake (its `README.md` is the
+  reference): `package.nix` is the wrapper, `kitten-shim.sh` the shim,
+  `module.nix` the options for both OSes. `modules/{darwin,nixos}/fastfetch.nix`
+  re-export that module and install its `finalPackage`.
 
 ## The logo image situation on nebula (the load-bearing facts)
 
-**Terminal here is ghostty 1.3.1, not kitty.** ghostty speaks the kitty graphics
+**Terminal here is ghostty (1.4.0 now, 1.3.1 when this was tested), not kitty.** ghostty speaks the kitty graphics
 protocol but is *not* the kitty terminal — this is why the macOS recipe doesn't
 transplant unchanged. Two independent things have to be true for the PNG to
 render inside tmux:
@@ -91,6 +112,117 @@ either one alone still shows ASCII.)
 > `fastfetch --show-errors` in the real pane. `Image logo is not supported in
 > terminal multiplexers` = the `TERM=="screen"` guard. `Image logo is not
 > supported in pipe mode` = stdout is redirected/not a tty (e.g. you piped it).
+
+## Inside Herdr: herdr-core (`hc`) and the Herdr app
+
+The Herdr app draws kitty images, but fastfetch's fixed `kitten icat`
+arguments never get one onto the screen there. Two separate failures, both
+reproduced on hc 0.1.21 / herdr-app 0.1.16 (2026-11-21):
+
+| Where | What you see | Cause |
+|---|---|---|
+| a plain Herdr pane | the builtin ASCII logo | the pty reports no pixel size, and kitten refuses to draw without one |
+| `devenv shell` in a Herdr pane | an empty logo box beside the text | kitten sends the image as a temp file, which Herdr refuses |
+
+**No pixel size in the pty.** `TIOCGWINSZ` gives `(46, 123, 0, 0)`: rows and
+columns, zero pixels. kitten reads only that, and fails with `Terminal does
+not support reporting screen sizes in pixels`
+(``Logo (kitty-icat): `kitten icat` returned empty output`` under
+`--show-errors`). The terminal does know its size: `CSI 14 t` answers
+`ESC[4;1196;1476t` and `CSI 16 t` answers a 26×12 cell. Upstream:
+[herdr-app#81](https://github.com/herdrdev/herdr-app/issues/81), with the
+core half proposed in
+[herdr-core#217](https://github.com/herdrdev/herdr-core/pull/217) (open, and
+by its own review a freshly opened pane would still start at 0×0).
+
+**File transfer inside `devenv shell`.** devenv 2.4 runs the shell in its own
+pty behind its own libghostty-vt, and that pty does report pixels, so kitten
+gets further. It then asks which transfer methods work, devenv's layer says
+yes to files, and kitten emits 112 bytes: `ESC_Ga=T,q=2,t=t,…;<path under
+/dev/shm>`. Herdr refuses file media
+([herdr-app#302](https://github.com/herdrdev/herdr-app/issues/302); its reply
+to the query is `EINVAL: unsupported medium`) and `q=2` hides the error.
+fastfetch has already reserved the 27 columns, hence the empty box. A viewer
+on another machine couldn't open that path anyway.
+
+**The fix is `flakes/fastfetch/kitten-shim.sh`**, a `kitten` that
+`flakes/fastfetch/package.nix` puts first on fastfetch's PATH and nowhere
+else. For `icat` in a herdr-core terminal (`HC_TERMINAL_ID` is set, and
+survives into `devenv shell`), it asks the terminal for `CSI 14 t` and runs
+the real kitten with two more arguments:
+
+```
+--transfer-mode=stream --use-window-size=<cols>,<rows>,<width px>,<height px>
+```
+
+Any other call goes to the real kitten unchanged, so ghostty and tmux behave
+exactly as before. So does a call with no terminal, or one whose terminal
+hasn't answered within 0.3 s. It costs about 5 ms a run (62 ms against 57 ms for kitten
+alone, 30 runs each).
+
+Forcing `stream` does a second job. Herdr answers a kitty graphics query late
+and more than once
+([herdr-app#533](https://github.com/herdrdev/herdr-app/issues/533)): a probe
+of query + DA1 read back `OK`, DA1, `OK`. kitten's detection stops reading at
+DA1, so the second reply lands in the shell as typed text
+(`^[_Gi=1;OK^[\…` on the prompt). With `stream` kitten asks nothing.
+`CSI 14 t` is answered by the core alone, once.
+
+What still doesn't work, and what to expect:
+
+- **Only fastfetch is fixed.** A bare `kitten icat x.png` in a Herdr pane
+  still fails on the pixel size. By hand:
+  `kitten icat --transfer-mode=stream --use-window-size=$COLUMNS,$LINES,<w>,<h> x.png`.
+- **A terminal no window is showing** still answers `CSI 14 t`, with a
+  default 10×20 cell, so the logo is sent into it. An image sent before a
+  viewer attaches may be missing once one does
+  ([herdr-core#234](https://github.com/herdrdev/herdr-core/issues/234)):
+  an empty box, where there used to be ASCII.
+- **The logo is 18.7 rows tall in a Herdr pane** (27 columns of a 12×26
+  cell are 324 px, so the 2:3 image is 486 px), and fastfetch leaves the
+  cursor on row 19. Whatever prints next overlaps the logo's last row; with
+  the prompt's leading blank line that's invisible.
+- **When to remove the shim:** `--use-window-size` once a release fills the
+  pty's pixel fields (#217), `--transfer-mode=stream` once Herdr takes file
+  media or answers queries in order (#302, #533). To test without the shim,
+  run the unwrapped binary that sits beside the wrapper:
+  `"$(dirname "$(readlink -f "$(command -v fastfetch)")")/.fastfetch-wrapped" --logo ~/.config/fastfetch/Nebula.png`.
+
+### Testing in a Herdr pane
+
+No ghostty window needed: drive a pane with `hc` and take the app's own
+frame.
+
+```sh
+hc ls                                  # find a zsh pane in the visible tab
+hc send t13n "clear; fastfetch --show-errors; echo FF_DONE"
+hc wait t13n --output FF_DONE --timeout 30
+herdr-app shot /tmp/shot.png           # the whole window, 3336x1352 here
+magick /tmp/shot.png -crop 1700x700+1800+40 +repage /tmp/pane.png   # then Read it
+hc read t13n | cat -n                  # text rows, to check where the cursor ended
+```
+
+- The shim's logic has a check that needs no pane:
+  `nix build ./flakes/fastfetch#checks.x86_64-linux.kitten-shim -L` runs it
+  against a stand-in kitten and three `script(1)` terminals. It can't show
+  the image on screen; the steps above do.
+- `herdr-app shot` is the frame the window shows. If the person has moved to
+  another tab, it is their tab, not the pane under test: check
+  `herdr-app ls` for the active tab, and count bytes instead of switching
+  their view.
+- Run probes from a script inside the pane and log to a file. The agent's
+  own shell has no tty, and `hc read` returns text, never images.
+- The pixel fields of any pane, from outside:
+  `python3 -c "import fcntl,termios,struct,os,sys; print(struct.unpack('HHHH', fcntl.ioctl(os.open(sys.argv[1], os.O_RDONLY|os.O_NOCTTY), termios.TIOCGWINSZ, b'\0'*8)))" /dev/pts/N`
+  (`readlink /proc/<pid>/fd/0` for N, pid from `hc get <t>`).
+- What kitten really emits: run it as fastfetch does, with stdout to a file
+  (`kitten icat -n --align=left --place=27x20@0x0 --scale-up x.png > out.bin`).
+  112 bytes is a file handoff, about 260 KB is the image streamed.
+- Don't send the next command while `devenv shell` is exiting. It runs in
+  the inner shell, and devenv's teardown wipes the image it just drew, which
+  reads as a failure.
+- `hc run <cmd>` from the agent's shell makes a terminal with no pane, at a
+  default 120×200. It is not a stand-in for a pane the app shows.
 
 ## Config options (official `logo` object)
 
@@ -195,9 +327,9 @@ Hard-won gotchas from doing this (so the next session doesn't relearn them):
 ## Learned behaviours & workarounds
 
 - **Both OSes pick the logo at the package layer, not in config.jsonc** —
-  `modules/{darwin,nixos}/fastfetch.nix` declare `programs.fastfetch.logo`
-  (+ `logoPaddingTop`) and wrap the binary through
-  `lib/fastfetch-logo-wrapper.nix` (symlinkJoin + wrapProgram, same idiom as
+  the `flakes/fastfetch` module (re-exported by
+  `modules/{darwin,nixos}/fastfetch.nix`) declares `programs.fastfetch.logo` (+ `logoPaddingTop`) and wraps the
+  binary in `package.nix` (symlinkJoin + wrapProgram, same idiom as
   `modules/darwin/diffnav.nix`) with `--logo
   "$HOME/.config/fastfetch/<logo>"`; each host sets the option beside its
   registration. On nixos the wrapped package rides in through snowglobe-factory's
@@ -230,6 +362,22 @@ Hard-won gotchas from doing this (so the next session doesn't relearn them):
   `**/.cache/`. Removing such a dir without sudo: you can't `mv` it to a new
   parent (macOS needs write on the dir itself to rewrite `..`) — only
   `sudo rm -rf` it. (2026-08-03)
+- **The Herdr app and herdr-core need the kitten shim.** The pty has no pixel
+  size, and inside `devenv shell` kitten hands the image over as a file that
+  Herdr refuses. `flakes/fastfetch/kitten-shim.sh` adds `--use-window-size`
+  (from `CSI 14 t`) and `--transfer-mode=stream` for fastfetch only. Checked
+  by screenshot in a plain pane and in `devenv shell`, 20 of 20 runs each
+  streaming the full image; the Macs get the same wrapper but weren't
+  tested. Full story: "Inside Herdr" above. (2026-11-21)
+- **A `stty` timeout does not survive bash's `read -d`.** The shim first
+  waited for the size reply with `stty raw min 0 time 3`. With a delimiter,
+  `read` sets the terminal to block (VMIN 1) for the read, so against a
+  terminal that never answers it waited for ever. Every terminal tried by
+  hand answered; the sub-flake's check, which has a silent one, found it.
+  The wait is `read -t 0.3` now. (2026-11-21)
+- **The entry below is about the herdr TUI (`herdr`, the `herdr-cli` fork),
+  not the app.** Its fix, a pty that reports pixels, is exactly what
+  herdr-core still lacks.
 - **No image logo is possible inside herdr (0.7.5 stable)** — but with the
   upstream-flake pin below this is FIXED on both OSes: darwin joined the pin
   in `df2d5ae` (2026-08-01), and the kitty-icat logo verified rendering inside
@@ -298,3 +446,5 @@ Hard-won gotchas from doing this (so the next session doesn't relearn them):
 - [fastfetch #861 — Don't disable image logos inside tmux](https://github.com/fastfetch-cli/fastfetch/issues/861)
 - [Discussion #1039 — use kitten icat for logo](https://github.com/fastfetch-cli/fastfetch/discussions/1039)
 - Machine-verified on nebula via screenshots of real ghostty+tmux panes (grim + `magick` crop), `fastfetch --show-errors`, `fastfetch -s terminal`, and `env` diffs in/out of tmux, 2026-06-20.
+- [herdr-app#81](https://github.com/herdrdev/herdr-app/issues/81) (no pixel size in `TIOCGWINSZ`), [herdr-core#217](https://github.com/herdrdev/herdr-core/pull/217) (the proposed fix), [herdr-app#302](https://github.com/herdrdev/herdr-app/issues/302) (file media never draws), [herdr-app#533](https://github.com/herdrdev/herdr-app/issues/533) (late graphics replies)
+- Machine-verified in Herdr panes on nebula (`hc send` + `herdr-app shot`), with `TIOCGWINSZ`/`CSI 14t`/`16t` probes and kitten's raw output captured, 2026-11-21.

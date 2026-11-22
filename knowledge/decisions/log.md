@@ -1,5 +1,14 @@
 # Log
 
+## 2026-11-21
+
+- **Creation**: [fastfetch-kitten-shim](fastfetch-kitten-shim.md): in a
+  herdr-core terminal the pty reports no pixel size and Herdr refuses the
+  file handoff kitten picks, and fastfetch's kitten arguments are fixed. A
+  shim on fastfetch's PATH alone asks the terminal for its size and streams
+  the image. Records why not a system-wide kitten wrapper or setting the
+  pty size from the shell.
+
 ## 2026-11-20
 
 - **Creation**: [wow-settings-backup-from-prefix](wow-settings-backup-from-prefix.md):

@@ -1,36 +1,27 @@
+# fastfetch on nix-darwin: the ./flakes/fastfetch module
+# (flakes/fastfetch/module.nix), re-exported into the Dendritic module set.
+# It brings programs.fastfetch.logo and .logoPaddingTop, which each host sets
+# beside its registration, and builds .finalPackage: this system's
+# pkgs.fastfetch wrapped with those flags and the kitten shim that makes the
+# logo draw in Herdr panes (docs/fastfetch.md).
+#
+# The sub-flake's module installs nothing, and nix-darwin has no fastfetch
+# module of its own, so the wrapped build goes into
+# environment.systemPackages here. NixOS twin: modules/nixos/fastfetch.nix.
+{ inputs, ... }:
 {
   flake.modules.darwin.fastfetch =
-    # Nixos twin: modules/nixos/fastfetch.nix. Hosts pick their logo via
-    # programs.fastfetch.logo; the wrapper's CLI flags beat the stowed
-    # config.jsonc's `source` (docs/fastfetch.md).
+    { config, lib, ... }:
     {
-      config,
-      lib,
-      pkgs,
-      ...
-    }:
-    {
-      options.programs.fastfetch = {
-        logo = lib.mkOption {
-          type = lib.types.str;
-          default = "hexley-nix.png";
-          description = "Logo image filename under ~/.config/fastfetch/ (stow package `fastfetch`).";
-        };
-        logoPaddingTop = lib.mkOption {
-          type = lib.types.ints.unsigned;
-          # Hexley is wide: width-fit leaves ~13 rows beside ~19 rows of
-          # output, so drop it toward vertical center.
-          default = 3;
-          description = "Blank rows above the logo.";
-        };
+      imports = [ inputs.fastfetch.darwinModules.fastfetch ];
+
+      programs.fastfetch = {
+        logo = lib.mkDefault "hexley-nix.png";
+        # Hexley is wide: width-fit leaves ~13 rows beside ~19 rows of
+        # output, so drop it toward vertical center.
+        logoPaddingTop = lib.mkDefault 3;
       };
 
-      config.environment.systemPackages = [
-        (import ../../lib/fastfetch-logo-wrapper.nix {
-          inherit pkgs;
-          inherit (config.programs.fastfetch) logo;
-          paddingTop = config.programs.fastfetch.logoPaddingTop;
-        })
-      ];
+      environment.systemPackages = [ config.programs.fastfetch.finalPackage ];
     };
 }

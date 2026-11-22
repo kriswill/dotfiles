@@ -52,6 +52,8 @@ versions live in the manuals themselves, which lead with verified state.
 - [`docs/fastfetch.md`](../docs/fastfetch.md) — fastfetch under
   ghostty+Hyprland+tmux: why only `logo.type: "kitty-icat"` renders the PNG,
   the `TERM == "screen"` image guard, and a grim/ghostty screenshot test
+  harness. Also Herdr panes: why the logo needs a kitten shim there (no
+  pixel size in the pty, file media refused), and an `hc` + `herdr-app shot`
   harness.
 - [`docs/chromium-nvidia.md`](../docs/chromium-nvidia.md) — why
   Chromium/Electron apps on Wayland decode video on NVDEC despite Chromium's

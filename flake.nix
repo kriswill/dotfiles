@@ -128,6 +128,18 @@
       inputs.flake-parts.follows = "flake-parts";
     };
 
+    # fastfetch (./flakes/fastfetch): nixpkgs' fastfetch wrapped with a logo
+    # picked per host and a kitten shim that makes the kitty-icat logo draw
+    # in Herdr panes. Its module (programs.fastfetch.logo, .logoPaddingTop,
+    # .finalPackage; one file for both OSes) is re-exported by
+    # modules/{nixos,darwin}/fastfetch.nix, which also install the result.
+    # The module wraps each host's own pkgs.fastfetch, so no overlay.
+    fastfetch = {
+      url = "./flakes/fastfetch";
+      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.flake-parts.follows = "flake-parts";
+    };
+
     # Hermes Agent (NousResearch): agent CLI + messaging/cron gateway, built
     # from a trimmed copy of upstream's nix/ (./flakes/hermes-agent); its
     # single-owner modules (services.hermes-agent) are re-exported by

@@ -15,6 +15,7 @@ flake consumes via relative-path inputs.
 * [Direnv](direnv.md) - Nixpkgs overlay 'direnv'.
 * [dotbar](dotbar.md) - Braille-dot progress bar CLI for statuslines and terminals, consumed straight from the tlehman/dotbar flake.
 * [Dots Adopt](dots-adopt.md) - Custom Nix package 'dots-adopt'.
+* [fastfetch](fastfetch.md) - fastfetch — nixpkgs' fastfetch wrapped with a build-time logo and a kitten shim that makes the kitty-icat logo draw in Herdr panes, plus one module for NixOS and nix-darwin; the root's fastfetch twins re-export the module and install its finalPackage.
 * [Flatpak User](flatpak-user.md) - A drop-in `flatpak` that defaults the CLI to the per-user installation.
 * [Gh Config](gh-config.md) - Snapshot/restore gh's config.yml between ~/.config/gh (app-owned) and config/gh/ — gh's atomic-rename saves break stow symlinks, so it left the stow tree for the snapshot pattern.
 * [gh-op](gh-op.md) - Linux-only gh wrapper sourcing GH_TOKEN from 1Password at runtime — via a vault-scoped service-account token when deployed, desktop-app auth otherwise — so ~/.config/gh/hosts.yml holds no plain-text token on nebula's unencrypted disk.

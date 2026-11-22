@@ -1,5 +1,14 @@
 # Log
 
+## 2026-11-21
+
+- **Creation**: [fastfetch](fastfetch.md): the fastfetch wrapper, its
+  `kitten` shim for Herdr panes and one module for both OSes, moved out of
+  `lib/` and the module twins into `flakes/fastfetch`. The module wraps the
+  host's own `pkgs.fastfetch` and installs nothing. With the shim text held
+  the same, nebula's wrapper derivation changed by `NIX_MAIN_PROGRAM` alone.
+  Its check found a hang in the shim on the first run.
+
 ## 2026-11-20
 
 - **Update**: [battlenet](battlenet.md): new `battlenet-wow-backup` tool and

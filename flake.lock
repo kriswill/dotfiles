@@ -349,6 +349,25 @@
         "type": "github"
       }
     },
+    "fastfetch": {
+      "inputs": {
+        "flake-parts": [
+          "flake-parts"
+        ],
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "path": "./flakes/fastfetch",
+        "type": "path"
+      },
+      "original": {
+        "path": "./flakes/fastfetch",
+        "type": "path"
+      },
+      "parent": []
+    },
     "flake-compat": {
       "flake": false,
       "locked": {
@@ -1388,6 +1407,7 @@
         "determinate": "determinate",
         "devenv": "devenv",
         "dotbar": "dotbar",
+        "fastfetch": "fastfetch",
         "flake-parts": "flake-parts_3",
         "herdr": "herdr",
         "hermes-agent": "hermes-agent",

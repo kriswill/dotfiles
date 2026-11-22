@@ -59,6 +59,11 @@
         # kitten — prebuilt standalone binary (darwin-arm64 + linux-amd64);
         # fastfetch's kitty-icat logo shells out to it on both OSes.
         kitten = pkgs.callPackage ../pkgs/kitten.nix { };
+        # fastfetch (./flakes/fastfetch) — nixpkgs' fastfetch with the kitten
+        # shim and no logo chosen (config.jsonc decides). Hosts don't install
+        # this one: their module builds its own from the host's pkgs, with the
+        # host's logo (modules/{nixos,darwin}/fastfetch.nix).
+        fastfetch = inputs.fastfetch.packages.${system}.fastfetch;
         # ccglass is built by its own flake (./flakes/ccglass); re-export it here.
         ccglass = inputs.ccglass.packages.${system}.ccglass;
         # okf (the knowledge-bundle CLI) is built from its own repo
@@ -119,5 +124,6 @@
     herdr-update-check = inputs.herdr.packages.aarch64-linux.herdr-update-check;
     herdr-open = inputs.herdr.packages.aarch64-linux.herdr-open;
     herdr-md = inputs.herdr.packages.aarch64-linux.herdr-md;
+    fastfetch = inputs.fastfetch.packages.aarch64-linux.fastfetch;
   };
 }

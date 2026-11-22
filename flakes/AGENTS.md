@@ -17,7 +17,9 @@ Local conventions:
   `checks`: `replace-dependencies/` has `overlays.default` and
   `nixosModules.default`, consumed directly by its host module. Auxiliary
   files live beside it (fork patches, apple-container's `darwin-module.nix`,
-  nixploit's `nixos-module.nix` and report scripts).
+  nixploit's `nixos-module.nix` and report scripts, fastfetch's `module.nix`:
+  one file for both OSes, which wraps the host's own `pkgs.fastfetch` and
+  leaves installing to the root's module twins).
 - **Vendored upstream packaging:** `hermes-agent/` builds an upstream
   project from a trimmed copy of its own `nix/`, under upstream's file names,
   against the source as a `flake = false` input (a `hermesSrc` path handed to

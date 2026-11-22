@@ -51,7 +51,10 @@ the fork's `custom` branch (2026-08-30), its `v0.9.1-custom` tag
 ([#835](https://github.com/herdrdev/herdr/issues/835)) that nixpkgs' 0.7.5
 lacks. Together with `experimental.kitty_graphics = true` in the stow
 `config.toml`, it makes in-pane images render (fastfetch, yazi;
-[`docs/fastfetch.md`](../../docs/fastfetch.md)).
+[`docs/fastfetch.md`](../../docs/fastfetch.md)). That's the TUI. herdr-core's
+pty still reports no pixel size, so in the app's panes fastfetch's logo goes
+through a kitten shim
+([decision](../decisions/fastfetch-kitten-shim.md)).
 
 nixpkgs' herdr doesn't matter here. Dropping the fork would mean upstreaming
 the tab-bar change first, or losing the usage indicator, and it would revert

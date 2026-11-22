@@ -1,5 +1,9 @@
 # Log
 
+## 2026-11-21
+
+- **Update**: The [fastfetch manual](../docs/fastfetch.md#inside-herdr-herdr-core-hc-and-the-herdr-app) covers Herdr app panes: the two ways the logo failed there, the kitten shim that fixes them, the upstream issues that would retire it, and a test harness built on `hc` and `herdr-app shot`. Its version block is re-checked (fastfetch 2.70.0, kitten 0.48.2, Ghostty 1.4.0).
+
 ## 2026-11-14
 
 - **Update**: The [startup manual](../docs/shell-startup-performance.md) and [Mini credential review](../docs/mini-agent-credentials.md) reconcile the pending work with origin `85e3e8e4`, retaining k's newer evidence and separately approved SOPS signing setup. Mini remains on generation 30; the credential proposal stays unimplemented.

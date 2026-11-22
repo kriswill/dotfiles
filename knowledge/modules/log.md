@@ -1,5 +1,15 @@
 # Log
 
+## 2026-11-21
+
+- **Update**: [fastfetch](fastfetch.md)'s twins re-export the
+  [fastfetch sub-flake](../packages/fastfetch.md)'s module and install its
+  `finalPackage`; the options and the wrapper left `modules/` and `lib/`.
+  The wrapper puts a `kitten` shim first on fastfetch's PATH, so the logo
+  draws in [Herdr](herdr.md) app panes, where it had fallen back to ASCII
+  (or to an empty box inside `devenv shell`); see
+  [the decision](../decisions/fastfetch-kitten-shim.md).
+
 ## 2026-11-20
 
 - **Deprecation**: [chatgpt-broken-deps](chatgpt-broken-deps.md): deleted.
