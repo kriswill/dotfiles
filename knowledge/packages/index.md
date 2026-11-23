@@ -15,6 +15,7 @@ flake consumes via relative-path inputs.
 * [Direnv](direnv.md) - Nixpkgs overlay 'direnv'.
 * [dotbar](dotbar.md) - Braille-dot progress bar CLI for statuslines and terminals, consumed straight from the tlehman/dotbar flake.
 * [Dots Adopt](dots-adopt.md) - Custom Nix package 'dots-adopt'.
+* [Dux Shell](dux-shell.md) - Patch Dux Shell (./dux-shell-tray-menu-coords.patch) so a tray icon's own context menu opens at the cursor when the bar sits on the bottom or right edge.
 * [fastfetch](fastfetch.md) - fastfetch — nixpkgs' fastfetch wrapped with a build-time logo and a kitten shim that makes the kitty-icat logo draw in Herdr panes, plus one module for NixOS and nix-darwin; the root's fastfetch twins re-export the module and install its finalPackage.
 * [Flatpak User](flatpak-user.md) - A drop-in `flatpak` that defaults the CLI to the per-user installation.
 * [Gh Config](gh-config.md) - Snapshot/restore gh's config.yml between ~/.config/gh (app-owned) and config/gh/ — gh's atomic-rename saves break stow symlinks, so it left the stow tree for the snapshot pattern.

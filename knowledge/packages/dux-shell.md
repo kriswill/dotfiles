@@ -1,0 +1,14 @@
+---
+type: Overlay
+title: Dux Shell
+description: 'Patch Dux Shell (./dux-shell-tray-menu-coords.patch) so a tray icon''s own context menu opens at the cursor when the bar sits on the bottom or right edge.'
+resource: overlays/dux-shell.nix
+tags: [overlay]
+generated: { by: okflight/0.5.0, at: 2026-11-11T14:51:11-08:00 }
+---
+
+Patch Dux Shell (./dux-shell-tray-menu-coords.patch) so a tray icon's own context menu opens at the cursor when the bar sits on the bottom or right edge. Battle.net under Wine's Wayland driver showed it: its menu opened at the top of the monitor, a screen height away from the icon. A tray icon that exports no D-Bus menu (Wine's do not) draws the menu itself, and the bar asks for it with StatusNotifierItem.ContextMenu(x, y), in screen coordinates. The bar took them from mapToGlobal(), which puts a layer-shell window at its screen's origin: a Wayland client is never told where the compositor placed it. On a bottom bar y came out as the offset inside the 44 px bar. The patch adds the screen size minus the bar window's on those two edges. It covers the icons on the bar itself; the overflow popout and the island have their own callers, left as they are. The patch is cut against 2.1.0 and still applies to 2.1.1, nixpkgs' version since the 2026-11-10 lock update. It is applied by hand in postPatch, not through `patches`: the package builds from core/ (sourceRoot), and the QML lives beside it in ../quickshell, read-only until made writable. Only nebula builds dux-shell. Drop this once upstream fixes it. A second patch (./dux-shell-dock-wine-editions.patch) gives the dock a different icon for each edition of a Wine game. Wine names a window after its exe, and World of Warcraft's editions are all Wow.exe (_retail_, _forever_), so they shared the app id "wow.exe" and one icon. The dock button now reads the window's pid from Hyprland and the edition directory from /proc/PID/cmdline, and looks for a desktop entry whose StartupWMClass is "wow-<edition>.exe" before the plain app id's. flakes/battlenet ships the entries. Hyprland only, and only the dock: the bar's running-apps widget and the window switcher still go by app id. Cut against 2.1.1.
+
+## Source
+
+- Overlay: [`overlays/dux-shell.nix`](../../overlays/dux-shell.nix)
