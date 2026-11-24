@@ -103,6 +103,7 @@ interesting ones by hand — scaffolding never overwrites an existing doc.
 * [Users K Noctalia](users-k-noctalia.md) - Installs the Noctalia v5 desktop shell (native C++ Wayland binary) for user k with its tomato + noctalia-config snapshot tooling — disabled behind a local `enable = false` since 2026-11-03, when Dux Shell replaced it.
 * [Users K](users-k.md) - Defines nebula user k with a sops-managed password, personal and managed-machine SSH keys, wheel/networkmanager/libvirtd groups, and a user-default flatpak wrapper.
 * [Windows Mount](windows-mount.md) - Permanent read-only ntfs-3g mount of the Windows NTFS partition (the other NVMe) at /mnt/windows — lazy systemd automount with nofail; read-only tolerates Fast-Startup-"dirty" volumes.
+* [Wowdps Journal Backup](wowdps-journal-backup.md) - Hourly check for the wowdps-suite coordinator journal backup: a declarative copy of the suite's tools/journal-backup.{service,timer} (~/src/wowdps-suite, install notes in tools/journal-backup.md).
 * [Xdg Open Journal](xdg-open-journal.md) - PATH-shadowing xdg-open wrapper that diverts stdout to the systemd journal when running on a tty, hiding the portal reply tuple gdbus prints on every URL open while keeping it inspectable via journalctl.
 * [Yazi](yazi.md) - yazi — the Rust terminal file manager; here installed system-wide with stow-managed config, a generated kanagawa-dragon flavor, and a mix of store-linked and vendored preview plugins.
 * [Zk](zk.md) - Kris' zk.
