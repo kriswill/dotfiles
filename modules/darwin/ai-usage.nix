@@ -19,24 +19,38 @@
       ...
     }:
     {
-      options.services.ai-usage.enable = lib.mkEnableOption "the ai-usage AI account usage daemon";
-
-      config = lib.mkIf config.services.ai-usage.enable {
-        environment.systemPackages = [ pkgs.ai-usage ];
-
-        launchd.user.agents.ai-usage.serviceConfig = {
-          ProgramArguments = [
-            (lib.getExe pkgs.ai-usage)
-            "daemon"
-          ];
-          RunAtLoad = true;
-          KeepAlive = true;
-          ProcessType = "Background";
-          ThrottleInterval = 30;
-          EnvironmentVariables.PATH = "/opt/homebrew/bin:/run/current-system/sw/bin:/usr/bin:/bin";
-          StandardOutPath = "/Users/${config.system.primaryUser}/Library/Logs/ai-usage.log";
-          StandardErrorPath = "/Users/${config.system.primaryUser}/Library/Logs/ai-usage.log";
-        };
+      options.services.ai-usage = {
+        enable = lib.mkEnableOption "the ai-usage AI account usage daemon";
+        gcpBilling.enable = lib.mkEnableOption "the shared read-only Herdr GCP billing configuration";
       };
+
+      config = lib.mkMerge [
+        (lib.mkIf (config.services.ai-usage.enable || config.services.ai-usage.gcpBilling.enable) {
+          environment.systemPackages = [ pkgs.ai-usage ];
+        })
+        (lib.mkIf config.services.ai-usage.gcpBilling.enable {
+          sops.secrets = lib.genAttrs [ "ai-usage-gcp-config" "ai-usage-gcp-credentials" ] (_: {
+            sopsFile = ../hosts/ai-usage-gcp.json;
+            format = "json";
+            owner = config.system.primaryUser;
+            mode = "0400";
+          });
+        })
+        (lib.mkIf config.services.ai-usage.enable {
+          launchd.user.agents.ai-usage.serviceConfig = {
+            ProgramArguments = [
+              (lib.getExe pkgs.ai-usage)
+              "daemon"
+            ];
+            RunAtLoad = true;
+            KeepAlive = true;
+            ProcessType = "Background";
+            ThrottleInterval = 30;
+            EnvironmentVariables.PATH = "/opt/homebrew/bin:/run/current-system/sw/bin:/usr/bin:/bin";
+            StandardOutPath = "/Users/${config.system.primaryUser}/Library/Logs/ai-usage.log";
+            StandardErrorPath = "/Users/${config.system.primaryUser}/Library/Logs/ai-usage.log";
+          };
+        })
+      ];
     };
 }

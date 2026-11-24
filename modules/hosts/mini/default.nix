@@ -47,6 +47,10 @@
     # (modules/darwin/agent-remote.nix).
     services.agent-remote.enable = true;
 
+    # The AI-usage collector + shared SOPS-backed GCP billing config behind Herdr's sidebar panel.
+    services.ai-usage.enable = true;
+    services.ai-usage.gcpBilling.enable = true;
+
     nixpkgs.hostPlatform = "aarch64-darwin";
     nixpkgs.overlays = builtins.attrValues config.flake.overlays;
   };

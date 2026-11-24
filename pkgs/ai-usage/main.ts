@@ -93,8 +93,15 @@ type Account = {
 
 type Snapshot = { version: 1; host: string; updatedAt: string; accounts: Account[] };
 
-type Provider = "claude" | "anthropic-api" | "hermes" | "codex";
+type Provider = "claude" | "anthropic-api" | "hermes" | "codex" | "antigravity";
 type KeySource = { op?: string; file?: string; env?: string };
+type GcpBillingConfig = {
+  table: string; // BigQuery billing export table: project.dataset.gcp_billing_export_v1_...
+  projectId?: string; // GCP project to run the BigQuery job in (default: settings.json gcp.project or table's project)
+  filterProjectId?: string | null; // project.id filter in SQL (default: projectId; null = all projects)
+  serviceId?: string | null; // billing service.id filter (default: "C7E2-9256-1C43" = Vertex AI / Agent Platform; null = all)
+  credentials?: KeySource; // service account or ADC JSON ({op|file|env}); omitted = GOOGLE_APPLICATION_CREDENTIALS / gcloud ADC
+};
 type AccountConfig = {
   id: string;
   provider: Provider;
@@ -108,11 +115,14 @@ type AccountConfig = {
   interval?: number; // minutes between fetches
   configDir?: string | string[]; // claude: the Claude Code config dir(s)
   adminKey?: KeySource; // anthropic-api
-  budget?: number; // anthropic-api, hermes: $/month the bar fills toward
+  budget?: number; // anthropic-api, hermes, antigravity: $/month the bar fills toward
   stateDb?: string; // hermes: its state.db
   workspaceId?: string | null; // anthropic-api: one workspace only (null = Default)
   codexHome?: string; // codex
   localCost?: boolean; // codex: local session API-equivalent estimate, never billed spend
+  agyDir?: string; // antigravity: CLI app data dir (default ~/.gemini/antigravity-cli)
+  gcpBilling?: GcpBillingConfig; // antigravity: exact Google Cloud spend from BigQuery billing export (+ optional Budgets API)
+  gcpBillingFile?: string; // optional per-host JSON; missing file leaves the normal local fallback enabled
 };
 type Config = { accounts: AccountConfig[] };
 
@@ -131,6 +141,7 @@ const DEFAULTS: Record<Provider, { title: string; logo: string; tint: boolean; c
   "anthropic-api": { title: "Anthropic API", logo: "anthropic", tint: true, color: "#D4A27F", interval: 15 },
   hermes: { title: "Anthropic API", logo: "anthropic", tint: true, color: "#D4A27F", interval: 5 },
   codex: { title: "ChatGPT", logo: "openai", tint: true, color: "#10A37F", interval: 10 },
+  antigravity: { title: "Antigravity", logo: "gemini", tint: false, color: "#4285F4", interval: 10 },
 };
 
 // ── Small helpers ──────────────────────────────────────────────────────────
@@ -821,11 +832,499 @@ async function fetchCodex(cfg: AccountConfig): Promise<Result> {
   return { status: "ok", meters: [...meters, ...(cost?.meters ?? [])], subtitle: plan, message: cost?.message };
 }
 
+// ── Antigravity (agy CLI quotas + GCP BigQuery billing / local transcript fallback) ─
+
+const VERTEX_AI_SERVICE_ID = "C7E2-9256-1C43";
+const BQ_TABLE_RE = /^[A-Za-z0-9_.:-]+\.[A-Za-z0-9_]+\.[A-Za-z0-9_]+$/;
+const gcpTokenCache = new Map<string, { token: string; expiresAt: number }>();
+
+const b64url = (v: string | Buffer) => Buffer.from(v).toString("base64url");
+
+export function signGcpServiceAccountJwt(
+  sa: { client_email: string; private_key: string; token_uri?: string },
+  scopes: string[],
+  nowSec = Math.floor(Date.now() / 1000),
+): string {
+  const header = b64url(JSON.stringify({ alg: "RS256", typ: "JWT" }));
+  const claims = b64url(JSON.stringify({
+    iss: sa.client_email,
+    scope: scopes.join(" "),
+    aud: sa.token_uri || "https://oauth2.googleapis.com/token",
+    iat: nowSec,
+    exp: nowSec + 3600,
+  }));
+  const input = `${header}.${claims}`;
+  const sig = crypto.createSign("RSA-SHA256").update(input).sign(sa.private_key, "base64url");
+  return `${input}.${sig}`;
+}
+
+async function gcpAccessToken(
+  id: string,
+  src: KeySource | undefined,
+  scopes: string[],
+  fetcher: typeof fetch = fetch,
+): Promise<{ token?: string; why?: string; setup?: boolean }> {
+  const cacheKey = `${id}:${scopes.join(" ")}`;
+  const cached = gcpTokenCache.get(cacheKey);
+  if (cached && cached.expiresAt > Date.now() + MIN) return { token: cached.token };
+
+  const effectiveSrc: KeySource | undefined =
+    src ??
+    (process.env.GOOGLE_APPLICATION_CREDENTIALS
+      ? { file: process.env.GOOGLE_APPLICATION_CREDENTIALS }
+      : { file: "~/.config/gcloud/application_default_credentials.json" });
+
+  const { key: raw, why } = await adminKey(`gcp:${id}`, effectiveSrc);
+  if (!raw) return { why: why ?? "no GCP credentials configured", setup: true };
+
+  let creds: any;
+  try {
+    creds = JSON.parse(raw);
+  } catch {
+    keyCache.delete(`gcp:${id}`);
+    return { why: "GCP credentials are not valid JSON", setup: true };
+  }
+
+  let tokenUrl = creds.token_uri || "https://oauth2.googleapis.com/token";
+  let body: URLSearchParams;
+  if (creds.type === "service_account" && creds.client_email && creds.private_key) {
+    try {
+      const assertion = signGcpServiceAccountJwt(creds, scopes);
+      body = new URLSearchParams({
+        grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer",
+        assertion,
+      });
+    } catch (e: any) {
+      keyCache.delete(`gcp:${id}`);
+      return { why: `GCP key signing failed: ${e?.message ?? e}`, setup: true };
+    }
+  } else if (creds.type === "authorized_user" && creds.client_id && creds.client_secret && creds.refresh_token) {
+    tokenUrl = "https://oauth2.googleapis.com/token";
+    body = new URLSearchParams({
+      grant_type: "refresh_token",
+      client_id: creds.client_id,
+      client_secret: creds.client_secret,
+      refresh_token: creds.refresh_token,
+    });
+  } else {
+    keyCache.delete(`gcp:${id}`);
+    return { why: "GCP credentials must be a service_account or authorized_user JSON", setup: true };
+  }
+
+  try {
+    const res = await fetcher(tokenUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body,
+      signal: AbortSignal.timeout(20_000),
+    });
+    const data: any = await res.json().catch(() => null);
+    if (!res.ok || !data?.access_token) {
+      if (res.status === 400 || res.status === 401) keyCache.delete(`gcp:${id}`);
+      const reason = data?.error_description ?? data?.error ?? `HTTP ${res.status}`;
+      return { why: `GCP OAuth: ${String(reason).slice(0, 140)}` };
+    }
+    const ttlMs = (Number(data.expires_in) || 3600) * 1000;
+    gcpTokenCache.set(cacheKey, { token: data.access_token, expiresAt: Date.now() + ttlMs });
+    return { token: data.access_token };
+  } catch (e: any) {
+    return { why: `GCP OAuth: ${e?.message ?? e}` };
+  }
+}
+
+export function buildGcpBillingSql(table: string): string {
+  if (!BQ_TABLE_RE.test(table)) throw new Error(`invalid BigQuery table identifier: ${table}`);
+  return [
+    "SELECT",
+    "  COALESCE(SUM(cost) + SUM(IFNULL((SELECT SUM(c.amount) FROM UNNEST(credits) c), 0)), 0) AS net_mtd,",
+    "  COALESCE(SUM(IF(DATE(usage_start_time, 'UTC') = CURRENT_DATE('UTC'),",
+    "    cost + IFNULL((SELECT SUM(c.amount) FROM UNNEST(credits) c), 0), 0)), 0) AS net_today,",
+    "  COALESCE(SUM(cost), 0) AS gross_mtd,",
+    "  MAX(export_time) AS last_export,",
+    "  COUNT(*) AS row_count",
+    `FROM \`${table}\``,
+    "WHERE invoice.month = FORMAT_DATE('%Y%m', CURRENT_DATE('America/Los_Angeles'))",
+    "  AND (@projectId = '' OR project.id = @projectId)",
+    "  AND (@serviceId = '' OR service.id = @serviceId)",
+  ].join("\n");
+}
+
+export function parseGcpBillingRow(data: any): {
+  netMtd: number;
+  netToday: number;
+  grossMtd: number;
+  lastExport: string | null;
+  rowCount: number;
+} | null {
+  const fields = data?.rows?.[0]?.f;
+  if (!Array.isArray(fields) || fields.length < 5) return null;
+  const num = (v: any) => {
+    const n = Number.parseFloat(String(v ?? "0"));
+    return Number.isFinite(n) ? n : 0;
+  };
+  let lastExport: string | null = null;
+  const rawTs = fields[3]?.v;
+  if (rawTs != null && rawTs !== "") {
+    const sec = Number(rawTs);
+    if (Number.isFinite(sec) && sec > 0) lastExport = new Date(sec * 1000).toISOString();
+    else if (Number.isFinite(Date.parse(String(rawTs)))) lastExport = new Date(String(rawTs)).toISOString();
+  }
+  return {
+    netMtd: num(fields[0]?.v),
+    netToday: num(fields[1]?.v),
+    grossMtd: num(fields[2]?.v),
+    lastExport,
+    rowCount: Math.max(0, Math.round(num(fields[4]?.v))),
+  };
+}
+
+export function isMissingExpectedBillingTable(
+  status: number | undefined,
+  errorMessage: string | undefined,
+  table: string,
+): boolean {
+  if (status !== 404 || !errorMessage) return false;
+  const dot = table.indexOf(".");
+  if (dot < 0) return false;
+  const colonTable = `${table.slice(0, dot)}:${table.slice(dot + 1)}`;
+  return /Not found:\s*Table\b/i.test(errorMessage) && (errorMessage.includes(colonTable) || errorMessage.includes(table));
+}
+
+export async function fetchGcpBilling(
+  id: string,
+  bq: GcpBillingConfig,
+  fallbackProject: string | undefined,
+  fetcher: typeof fetch = fetch,
+): Promise<Result> {
+  const table = bq.table?.trim();
+  if (!table || !BQ_TABLE_RE.test(table)) {
+    return { status: "error", subtitle: "GCP Billing", meters: [], message: "gcpBilling.table must be project.dataset.table", retryInMs: 30 * MIN };
+  }
+
+  const jobProject = bq.projectId ?? fallbackProject ?? table.split(".")[0];
+  const filterProject = bq.filterProjectId === null ? "" : (bq.filterProjectId ?? bq.projectId ?? fallbackProject ?? "");
+  const serviceId = bq.serviceId === null ? "" : (bq.serviceId ?? VERTEX_AI_SERVICE_ID);
+
+  const scopes = ["https://www.googleapis.com/auth/bigquery.readonly"];
+
+  const auth = await gcpAccessToken(id, bq.credentials, scopes, fetcher);
+  if (!auth.token) {
+    const op = !!bq.credentials?.op;
+    return {
+      status: auth.setup ? "error" : "stale",
+      subtitle: "GCP Billing",
+      meters: auth.setup ? [] : undefined,
+      message: `${auth.why}${op ? "; refresh to retry" : ""}`,
+      retryInMs: op ? 60 * MIN : 10 * MIN,
+    };
+  }
+
+  const headers = {
+    Authorization: `Bearer ${auth.token}`,
+    Accept: "application/json",
+    "Content-Type": "application/json",
+  };
+  const queryUrl = `https://bigquery.googleapis.com/bigquery/v2/projects/${encodeURIComponent(jobProject)}/queries`;
+  let res: Response | undefined;
+  let data: any;
+  let rawWhy = "";
+  let err: string | undefined;
+  try {
+    res = await fetcher(queryUrl, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        query: buildGcpBillingSql(table),
+        useLegacySql: false,
+        parameterMode: "NAMED",
+        timeoutMs: 15_000,
+        queryParameters: [
+          { name: "projectId", parameterType: { type: "STRING" }, parameterValue: { value: filterProject } },
+          { name: "serviceId", parameterType: { type: "STRING" }, parameterValue: { value: serviceId } },
+        ],
+      }),
+      signal: AbortSignal.timeout(25_000),
+    });
+    if (!res.ok) {
+      const body: any = await res.json().catch(() => null);
+      rawWhy = String(body?.error?.message ?? "").slice(0, 200);
+      err = rawWhy ? `HTTP ${res.status}: ${rawWhy}` : `HTTP ${res.status}`;
+    } else {
+      data = await res.json();
+      // Poll briefly if a cold BigQuery job hasn't completed within timeoutMs.
+      for (let i = 0; i < 3 && data && !data.jobComplete && data.jobReference?.jobId; i++) {
+        const loc = data.jobReference.location ? `&location=${encodeURIComponent(data.jobReference.location)}` : "";
+        const pollUrl = `${queryUrl}/${encodeURIComponent(data.jobReference.jobId)}?timeoutMs=10000${loc}`;
+        const pr = await fetcher(pollUrl, { headers: { Authorization: `Bearer ${auth.token}`, Accept: "application/json" }, signal: AbortSignal.timeout(15_000) });
+        if (!pr.ok) break;
+        data = await pr.json();
+      }
+    }
+  } catch (e: any) {
+    err = String(e?.message ?? e);
+  }
+
+  if (isMissingExpectedBillingTable(res?.status, rawWhy, table)) {
+    return {
+      status: "pending",
+      subtitle: "GCP Billing",
+      meters: [],
+      message: "Waiting for Google billing data",
+      retryInMs: 10 * MIN,
+    };
+  }
+
+  if (!data || !data.jobComplete) {
+    if (res?.status === 401 || res?.status === 403) {
+      gcpTokenCache.delete(`${id}:${scopes.join(" ")}`);
+      keyCache.delete(`gcp:${id}`);
+      return {
+        status: "error",
+        subtitle: "GCP Billing",
+        meters: [],
+        message: `BigQuery billing refused the credentials (${err ?? res.status})`,
+        retryInMs: 15 * MIN,
+      };
+    }
+    if (res?.status === 400 || res?.status === 404) {
+      return {
+        status: "error",
+        subtitle: "GCP Billing",
+        meters: [],
+        message: `BigQuery billing: ${err ?? `HTTP ${res.status}`}`,
+        retryInMs: 15 * MIN,
+      };
+    }
+    return { ...httpFailure("BigQuery billing", res, err ?? "query did not complete"), subtitle: "GCP Billing" };
+  }
+
+  const parsed = parseGcpBillingRow(data);
+  if (!parsed) {
+    return {
+      status: "error",
+      subtitle: "GCP Billing",
+      meters: [],
+      message: "BigQuery billing returned an unexpected row shape",
+      retryInMs: 10 * MIN,
+    };
+  }
+
+  if (parsed.rowCount === 0) {
+    return {
+      status: "pending",
+      subtitle: "GCP Billing",
+      meters: [],
+      message: "Waiting for Google billing data",
+      retryInMs: 10 * MIN,
+    };
+  }
+
+  const now = new Date();
+  const nextMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1)).toISOString();
+  return {
+    status: "ok",
+    subtitle: "GCP Billing",
+    meters: [
+      usdMeter("month", "This month", parsed.netMtd, null, nextMonth),
+      usdMeter("today", "Today (UTC)", parsed.netToday, null),
+    ],
+  };
+}
+
+const findAgy = () =>
+  Bun.which("agy") ??
+  [path.join(HOME, ".local/bin/agy"), path.join(HOME, ".nix-profile/bin/agy"), `/etc/profiles/per-user/${os.userInfo().username}/bin/agy`]
+    .find((p) => fs.existsSync(p));
+
+// Standard Google Cloud / Vertex AI global USD / million [input, cached, output]
+// tokens, verified 2026-11-24. Output includes thinking/reasoning tokens.
+function agyModelRates(model: string, timeMs: number): [number, number, number] | null {
+  const base = model.toLowerCase().replace(/-(low|medium|high|xhigh|max)$/, "");
+  const dec2026 = Date.UTC(2026, 11, 1);
+  const jan2027 = Date.UTC(2027, 0, 1);
+  if (base === "gemini-4-neon") return [3, 0.15, 15];
+  if (base === "gemini-4-hydrogen") return [1.5, 0.075, 7.5];
+  if (base === "gemini-4-carbon" || base === "gemini-4-argon") return timeMs >= dec2026 ? [4, 0.2, 20] : [2, 0.1, 10];
+  if (base === "gemini-3.8-flash") return timeMs >= jan2027 ? [1.5, 0.15, 7.5] : [0.75, 0.075, 3.75];
+  if (base === "gemini-3.1-pro") return [2, 0.2, 12];
+  return null;
+}
+
+type AgyCostEvent = { time: number; model: string; input: number; cached: number; output: number };
+const agyTranscriptCache = new Map<string, { size: number; mtime: number; events: AgyCostEvent[] }>();
+
+export function antigravityTranscriptEvents(text: string): AgyCostEvent[] {
+  const events: AgyCostEvent[] = [];
+  for (const line of text.split("\n")) {
+    let e: any;
+    try { e = JSON.parse(line); } catch { continue; }
+    if (typeof e?.input_tokens !== "number" || typeof e?.output_tokens !== "number" || typeof e?.model !== "string") continue;
+    const cached = typeof e.cache_read_tokens === "number" ? e.cache_read_tokens : 0;
+    if (e.input_tokens < 0 || cached < 0 || e.output_tokens < 0) continue;
+    const time = Date.parse(e.created_at);
+    if (!Number.isFinite(time)) continue;
+    events.push({ time, model: e.model, input: e.input_tokens, cached, output: e.output_tokens });
+  }
+  return events;
+}
+
+export function antigravityLocalCost(
+  agyDir: string,
+  budget: number | null,
+  regionalUplift = false,
+  now = new Date(),
+): { meters: Meter[]; message: string } {
+  const month = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1);
+  const today = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+  const nextMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1)).toISOString();
+  const brain = path.join(expand(agyDir), "brain");
+  const unknown = new Set<string>();
+  const multiplier = regionalUplift ? 1.1 : 1;
+  let monthUsd = 0, todayUsd = 0;
+
+  if (fs.existsSync(brain)) {
+    for (const rel of new Bun.Glob("*/.system_generated/logs/transcript.jsonl").scanSync({ cwd: brain })) {
+      const file = path.join(brain, rel);
+      let events: AgyCostEvent[];
+      try {
+        const stat = fs.statSync(file);
+        if (stat.mtimeMs < month) continue;
+        const cached = agyTranscriptCache.get(file);
+        events = cached?.size === stat.size && cached.mtime === stat.mtimeMs
+          ? cached.events : antigravityTranscriptEvents(fs.readFileSync(file, "utf8"));
+        agyTranscriptCache.set(file, { size: stat.size, mtime: stat.mtimeMs, events });
+      } catch { continue; }
+      for (const e of events) {
+        if (e.time < month || e.time > now.getTime()) continue;
+        const rates = agyModelRates(e.model, e.time);
+        if (!rates) { unknown.add(e.model); continue; }
+        // In agy transcripts, input_tokens is uncached input; cache_read_tokens is separate.
+        const cost = ((e.input * rates[0] + e.cached * rates[1] + e.output * rates[2]) / 1e6) * multiplier;
+        monthUsd += cost;
+        if (e.time >= today) todayUsd += cost;
+      }
+    }
+  }
+
+  const skipped = unknown.size ? ` Unpriced models omitted: ${[...unknown].sort().join(", ")}.` : "";
+  return {
+    meters: [
+      usdMeter("month", "This month", monthUsd, budget, nextMonth),
+      usdMeter("today", "Today (UTC)", todayUsd, null),
+    ],
+    message: "Local estimate from transcripts; not billed spend." + skipped,
+  };
+}
+
+export function antigravityQuotaMeters(groups: any[]): Meter[] {
+  const meters: Meter[] = [];
+  for (const g of groups) {
+    const rawName = String(g?.name ?? "").trim();
+    const shortName = /gemini/i.test(rawName)
+      ? "Gemini"
+      : /claude/i.test(rawName) && /gpt/i.test(rawName)
+        ? "Claude/GPT"
+        : rawName.replace(/\s+models?$/i, "") || "Quota";
+    for (const b of Array.isArray(g?.buckets) ? g.buckets : []) {
+      const pct =
+        typeof b?.used_percent === "number"
+          ? b.used_percent
+          : typeof b?.remaining_fraction === "number"
+            ? Math.round((1 - b.remaining_fraction) * 10000) / 100
+            : null;
+      if (pct === null || !Number.isFinite(pct)) continue;
+      const winRaw = String(b.window ?? "").trim().toLowerCase();
+      const win = winRaw === "5h" ? "(5h)" : winRaw || "";
+      const label = win ? `${shortName} ${win}` : shortName;
+      meters.push(pctMeter(slug(label), label, pct, b.reset_time ?? b.resets_at ?? null));
+    }
+  }
+  return meters;
+}
+
+export async function antigravityCliUsage(command?: string, timeoutMs = 25_000): Promise<{ groups?: any[]; missing?: boolean; why?: string }> {
+  const executable = command ?? findAgy();
+  if (!executable) return { missing: true, why: "agy isn't installed" };
+  let child: ReturnType<typeof Bun.spawn> | undefined;
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    fs.mkdirSync(CACHE_DIR, { recursive: true });
+    child = Bun.spawn([executable, "-p", "/usage", "--output-format", "json"], {
+      cwd: CACHE_DIR,
+      stdin: "ignore",
+      stdout: "pipe",
+      stderr: "pipe",
+    });
+    const proc = child;
+    const result = await Promise.race([
+      Promise.all([new Response(proc.stdout as any).text(), new Response(proc.stderr as any).text(), proc.exited]).then(
+        ([out, err, code]) => ({ out, err, code }),
+      ),
+      new Promise<{ timeout: true }>((resolve) => { timer = setTimeout(() => resolve({ timeout: true }), timeoutMs); }),
+    ]);
+    if ("timeout" in result) {
+      proc.kill("SIGKILL");
+      return { why: "agy timed out" };
+    }
+    let parsed: any = null;
+    for (const line of result.out.trim().split("\n").reverse()) {
+      try { parsed = JSON.parse(line); break; } catch {}
+    }
+    if (!parsed) return { why: `agy: ${(result.err || result.out || `exit ${result.code}`).trim().slice(0, 120)}` };
+    if (parsed.status === "ERROR") return { why: `agy: ${String(parsed.error ?? "usage failed").slice(0, 120)}` };
+    const groups = parsed?.command?.data?.groups;
+    if (Array.isArray(groups)) return { groups };
+    return { why: "agy returned no usage groups" };
+  } catch (e: any) {
+    return { why: `agy: ${e?.message ?? e}` };
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+export async function fetchAntigravity(cfg: AccountConfig, fetcher: typeof fetch = fetch): Promise<Result> {
+  const dir = cfg.agyDir ?? "~/.gemini/antigravity-cli";
+  const settings = readJson<any>(path.join(expand(dir), "settings.json"));
+
+  // Google-reported net charges from BigQuery billing export (no estimates or spending caps).
+  if (cfg.gcpBilling) {
+    return fetchGcpBilling(cfg.id, cfg.gcpBilling, settings?.gcp?.project, fetcher);
+  }
+  if (cfg.gcpBillingFile) {
+    const file = expand(cfg.gcpBillingFile);
+    const billing = readJson<GcpBillingConfig>(file);
+    if (!billing) {
+      return {
+        status: "error",
+        subtitle: "GCP Billing",
+        meters: [],
+        message: `Cannot read GCP billing config (${cfg.gcpBillingFile})`,
+        retryInMs: 5 * MIN,
+      };
+    }
+    return fetchGcpBilling(cfg.id, billing, settings?.gcp?.project, fetcher);
+  }
+
+  const { groups, missing, why } = await antigravityCliUsage();
+  if (missing) return { status: "setup", message: "Install Antigravity CLI (agy) and sign in", retryInMs: 10 * MIN };
+  if (!groups) return { status: "stale", message: why ?? "Antigravity usage unavailable", retryInMs: 5 * MIN };
+  if (groups.length > 0) return { status: "ok", meters: antigravityQuotaMeters(groups) };
+
+  return {
+    status: "pending",
+    subtitle: "GCP Billing",
+    meters: [],
+    message: "Waiting for Google billing data",
+    retryInMs: 10 * MIN,
+  };
+}
+
 const FETCH: Record<Provider, (cfg: AccountConfig) => Promise<Result>> = {
   claude: fetchClaude,
   "anthropic-api": fetchAnthropicApi,
   hermes: async (cfg) => fetchHermes(cfg),
   codex: fetchCodex,
+  antigravity: fetchAntigravity,
 };
 
 // ── Config, snapshot, scheduling ───────────────────────────────────────────
@@ -896,9 +1395,14 @@ async function refreshAccount(cfg: AccountConfig, prev: Account | undefined, for
     acc.status = "ok";
     acc.meters = r.meters ?? [];
     acc.fetchedAt = acc.checkedAt;
-  } else if (r.status === "setup") {
-    acc.status = "setup";
+  } else if (r.status === "setup" || r.status === "pending") {
+    acc.status = r.status;
     acc.meters = [];
+    acc.fetchedAt = undefined;
+  } else if (r.meters !== undefined) {
+    acc.status = r.status;
+    acc.meters = r.meters;
+    if (!r.meters.length) acc.fetchedAt = undefined;
   } else {
     // stale beats nothing: keep the last good meters through a failure
     acc.status = acc.meters.length ? "stale" : r.status;
@@ -1008,6 +1512,7 @@ async function daemon() {
   // 1Password gets another try), and fetch everything not server-blocked.
   process.on("SIGUSR1", () => {
     keyCache.clear();
+    gcpTokenCache.clear();
     force = true;
     void pass();
   });
@@ -1036,7 +1541,7 @@ const hex = (h: string) => {
   const n = Number.parseInt(h.replace("#", ""), 16);
   return sgr(`38;2;${(n >> 16) & 255};${(n >> 8) & 255};${n & 255}`);
 };
-const GLYPH: Record<string, string> = { claude: "✻", anthropic: "A", openai: "◎" };
+const GLYPH: Record<string, string> = { claude: "✻", anthropic: "A", openai: "◎", gemini: "✦" };
 const SEV_COLOR: Record<Severity, string | null> = { normal: null, warning: "#E6C384", critical: "#E46876" };
 
 function bar(pct: number, width: number, color: string): string {
@@ -1081,7 +1586,7 @@ function render(snap: Snapshot | null): string {
       const b = m.percent === null ? " ".repeat(width) : bar(m.percent, width, color);
       out.push(`  ${m.label.padEnd(16)} ${b}  ${m.value.padStart(m.percent === null ? 0 : 4)}${reset}`);
     }
-    if (a.message) out.push(`  ${a.status === "ok" ? dim(a.message) : hex("#E6C384")(a.message)}`);
+    if (a.message) out.push(`  ${a.status === "ok" || a.status === "pending" ? dim(a.message) : hex("#E6C384")(a.message)}`);
     if (a.fetchedAt) out.push(dim(`  updated ${ago(a.fetchedAt)}`));
     out.push("");
   }

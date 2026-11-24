@@ -32,7 +32,7 @@ import { exec, home, appHome, readTextFile, watchFolder, theme, window, layout, 
 import * as fs from "fs/promises";
 
 const MIN = 60_000;
-const LOGOS = ["claude", "anthropic", "openai"];
+const LOGOS = ["claude", "anthropic", "openai", "gemini"];
 const HEADER = 41;
 const ROW = 24; // a compact line
 const ROW_GAP = 2;
@@ -51,6 +51,11 @@ function block(node = layout()) {
 }
 
 const measured = (a) => a.meters.filter((m) => m.percent !== null && m.percent !== undefined);
+const billedUsd = (a) => a.meters.filter((m) => typeof m.usedUsd === "number");
+const cardMeters = (a) => {
+  const bars = measured(a);
+  return bars.length ? bars : billedUsd(a);
+};
 const fullest = (bars) => bars.reduce((x, m) => (!x || m.percent > x.percent ? m : x), null);
 
 // Copy each logo to a real file under .logos/, rewriting only on change.
@@ -288,7 +293,7 @@ export default class AiUsage extends View {
           )
           .when(Boolean(a.price), (el) => el.child(div().flex_none().text_size(11).text_color(t.muted).child(a.price))),
       )
-      .children(measured(a).map((m) => this.meter(a, m, t)))
+      .children(cardMeters(a).map((m) => this.meter(a, m, t)))
       .when(a.status !== "ok" && Boolean(a.message), (el) => el.child(div().text_size(11).text_color(tone).child(a.message)))
       .when((floating || Boolean(old)) && !a.message && Boolean(a.fetchedAt), (el) =>
         el.child(div().text_size(10.5).text_color(t.dim).child(`updated ${ago(a.fetchedAt)}`)),
@@ -311,9 +316,20 @@ export default class AiUsage extends View {
   // Compact: one line. Logo, name, a slim bar per limit, the fullest one's %.
   row(a, t) {
     const bars = measured(a);
+    const charge = !bars.length && a.status === "ok" ? billedUsd(a)[0] : null;
     const top = fullest(bars);
-    const bad = a.status !== "ok";
+    const bad = a.status !== "ok" && a.status !== "pending";
     const tone = a.status === "error" ? t.blocked : t.ansi3;
+    const right = bad ? "!" : a.status === "pending" ? "…" : top ? `${Math.round(top.percent)}%` : charge ? charge.value : "–";
+    const rightColor = bad
+      ? tone
+      : top
+        ? top.severity === "normal"
+          ? t.muted
+          : this.barColor(a, top, t)
+        : charge
+          ? t.muted
+          : t.dim;
     const line = h_flex()
       .id(`au-${a.id}`)
       .h(ROW)
@@ -326,30 +342,33 @@ export default class AiUsage extends View {
       .when(Boolean(a.url), (el) => el.cursor_pointer().on_click(() => this.open(a)))
       .child(this.logo(a, 14, t))
       .child(div().flex_1().min_w(0).truncate().text_size(12).text_color(t.foreground).child(a.title))
-      .child(
-        h_flex()
-          .w(66)
-          .flex_none()
-          .gap(3)
-          .items_center()
-          .children(bars.map((m) => div().flex_1().min_w(0).child(this.bar(a, m, t, 4)))),
+      .when(bars.length > 0, (el) =>
+        el.child(
+          h_flex()
+            .w(66)
+            .flex_none()
+            .gap(3)
+            .items_center()
+            .children(bars.map((m) => div().flex_1().min_w(0).child(this.bar(a, m, t, 4)))),
+        ),
       )
       .child(
         div()
-          .w(30)
+          .when(!charge, (el) => el.w(30))
           .flex_none()
           .flex()
           .justify_end()
           .text_size(11)
-          .text_color(bad ? tone : top ? (top.severity === "normal" ? t.muted : this.barColor(a, top, t)) : t.dim)
-          .child(bad ? "!" : top ? `${Math.round(top.percent)}%` : "–"),
+          .text_color(rightColor)
+          .child(right),
       );
     return this.hover(a, t, line);
   }
 
-  // The rail: logo over a short bar of the fullest limit.
+  // The rail: logo over a short bar of the fullest limit (or net $ figure).
   chip(a, t) {
     const bars = measured(a);
+    const charge = !bars.length && a.status === "ok" ? billedUsd(a)[0] : null;
     const top = fullest(bars);
     const chip = v_flex()
       .id(`au-${a.id}`)
@@ -360,7 +379,13 @@ export default class AiUsage extends View {
       .hover((s) => s.bg(t.hover))
       .on_click(() => this.open(a))
       .child(this.logo(a, 18, t))
-      .child(div().w(24).child(top ? this.bar(a, top, t, 3) : div().h(3)));
+      .child(
+        top
+          ? div().w(24).child(this.bar(a, top, t, 3))
+          : charge
+            ? div().text_size(9.5).text_color(t.muted).child(charge.value)
+            : div().h(3),
+      );
     return this.hover(a, t, chip);
   }
 

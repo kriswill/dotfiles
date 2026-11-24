@@ -1,5 +1,9 @@
 # Log
 
+## 2026-11-24
+
+- **Update**: [ai-usage](ai-usage.md): wired SOPS-backed Google Cloud BigQuery billing (`modules/hosts/ai-usage-gcp.json` encrypted to `k`, `mini`, `nebula`, and `SOC-Kris-Williams`; installed at `/run/secrets/ai-usage-gcp-{config,credentials}` owned by the collector user `0400`) into `antigravity` — shows Google-reported net charges only (no spending cap or Budgets API) and `"Waiting for Google billing data"` until the export table exists and is populated, enabled the `ai-usage` launchd agent on `mini` and `SOC-Kris-Williams`, and updated the `herdr-app` `ai-usage` mod (`gemini.svg` + dollar-only/pending rendering).
+
 ## 2026-11-21
 
 - **Creation**: [fastfetch](fastfetch.md): the fastfetch wrapper, its

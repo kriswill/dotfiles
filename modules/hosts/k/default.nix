@@ -106,6 +106,8 @@
       fallbackProfile = "me";
     };
 
+    services.ai-usage.gcpBilling.enable = true;
+
     nixpkgs.hostPlatform = "aarch64-darwin";
     nixpkgs.overlays = builtins.attrValues config.flake.overlays;
   };

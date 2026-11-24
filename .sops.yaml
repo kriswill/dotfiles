@@ -63,3 +63,11 @@ creation_rules:
       - age:
           - *k
           - *nebula
+  # Shared Herdr billing reader: k, mini, nebula, and SOC-Kris-Williams.
+  - path_regex: ^modules/hosts/ai-usage-gcp\.json$
+    key_groups:
+      - age:
+          - *k
+          - *mini
+          - *nebula
+          - *soc

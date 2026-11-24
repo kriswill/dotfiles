@@ -40,6 +40,7 @@ recorded in a [decision](../decisions/ai-usage-collector-daemon.md).
 | `anthropic-api` | an **Admin** key, `sk-ant-admin01-…`[^usage-cost-api] | `/v1/organizations/cost_report`, paged, summed | this month $ (toward `budget`), today $ |
 | `hermes` | Hermes' `state.db` (`session_model_usage`, its own list-price estimate) | none | this month $, today $ |
 | `codex` | `$CODEX_HOME/auth.json` (or the `Codex Auth` keychain item), optional local session logs | `chatgpt.com/backend-api/wham/usage`[^openai-codex] | 5h and weekly windows, extras, credits, local API-equivalent estimate |
+| `antigravity` | SOPS-installed `/run/secrets/ai-usage-gcp-config` + `/run/secrets/ai-usage-gcp-credentials` (`modules/hosts/ai-usage-gcp.json`, encrypted to `k`, `mini`, `nebula`, `SOC-Kris-Williams`) querying BigQuery Standard billing export (`gcp_billing_export_v1_*`), or `agy -p /usage --output-format json` when no GCP billing config is set | `bigquery.googleapis.com` (`bigquery.readonly`) or local `agy` CLI | Google-reported net charges (this month and today UTC, no spending cap), or `"Waiting for Google billing data"` until the export table is created and populated |
 
 ## Codex collection and local estimates
 

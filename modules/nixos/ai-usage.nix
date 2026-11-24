@@ -18,20 +18,37 @@
 # Darwin twin: modules/darwin/ai-usage.nix.
 {
   flake.modules.nixos.ai-usage =
-    { lib, pkgs, ... }:
     {
-      environment.systemPackages = [ pkgs.ai-usage ];
+      config,
+      lib,
+      pkgs,
+      ...
+    }:
+    {
+      options.services.ai-usage.gcpBilling.enable =
+        lib.mkEnableOption "the shared read-only Herdr GCP billing configuration";
+      config = {
+        environment.systemPackages = [ pkgs.ai-usage ];
+        sops.secrets = lib.mkIf config.services.ai-usage.gcpBilling.enable (
+          lib.genAttrs [ "ai-usage-gcp-config" "ai-usage-gcp-credentials" ] (_: {
+            sopsFile = ../hosts/ai-usage-gcp.json;
+            format = "json";
+            owner = "k";
+            mode = "0400";
+          })
+        );
 
-      systemd.user.services.ai-usage = {
-        description = "AI account usage collector (ai-usage daemon)";
-        wantedBy = [ "graphical-session.target" ];
-        partOf = [ "graphical-session.target" ];
-        after = [ "graphical-session.target" ];
-        environment.PATH = lib.mkForce "/run/wrappers/bin:/etc/profiles/per-user/%u/bin:/run/current-system/sw/bin";
-        serviceConfig = {
-          ExecStart = "${lib.getExe pkgs.ai-usage} daemon";
-          Restart = "on-failure";
-          RestartSec = 30;
+        systemd.user.services.ai-usage = {
+          description = "AI account usage collector (ai-usage daemon)";
+          wantedBy = [ "graphical-session.target" ];
+          partOf = [ "graphical-session.target" ];
+          after = [ "graphical-session.target" ];
+          environment.PATH = lib.mkForce "/run/wrappers/bin:/etc/profiles/per-user/%u/bin:/run/current-system/sw/bin";
+          serviceConfig = {
+            ExecStart = "${lib.getExe pkgs.ai-usage} daemon";
+            Restart = "on-failure";
+            RestartSec = 30;
+          };
         };
       };
     };
