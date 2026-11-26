@@ -2,6 +2,11 @@
 
 ## 2026-11-26
 
+- **Creation**: [sudo-agent-gate](sudo-agent-gate.md): nebula's sudo probes
+  1Password's agent with a real 2-second signature before `pam_ssh_agent_auth`
+  and skips it on failure, because the agent holds a locked or unapproved
+  request for 60 s and `ssh-add -l` answers even while locked.
+
 - **Update**: [herdr-askpass-sudo-where-you-are](herdr-askpass-sudo-where-you-are.md):
   `SUDO_ASKPASS` is no longer exported system-wide (Homebrew adds `-A` to
   every sudo when it's set, so casks in ordinary shells failed); it lives in

@@ -320,9 +320,12 @@ Testing:
 On nebula, `DISPLAY=:0` already comes from the session (Xwayland), so
 Claude Code's env there gets only `SUDO_ASKPASS`; a made-up `DISPLAY` would
 break X clients it starts. nebula's sudo also tries 1Password's ssh agent
-first (`modules/hosts/nebula/sudo-1password.nix`), and that answered a no-tty
-`sudo -k true` at once when tested, so the dialog is the fallback there, for
-when the agent can't sign.
+first (`modules/hosts/nebula/sudo-1password.nix`): unlocked and approved, it
+answers at once and no dialog appears. Locked, 1Password would hold sudo for
+60 s behind its own dialog on nebula's screen, so a 2-second probe
+(`sudo-agent-gate`, knowledge/decisions/sudo-agent-gate.md) skips the agent
+step when it can't sign in time, and the Herdr dialog appears after about
+2 s.
 
 Applying it: `nrs` installs it and restows the mod. Then give the agent
 both variables and restart it. For Claude Code, in `~/.claude/settings.json`:
