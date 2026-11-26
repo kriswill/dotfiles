@@ -1,6 +1,6 @@
 # Hourly check for the wowdps-suite coordinator journal backup: a declarative
 # copy of the suite's tools/journal-backup.{service,timer} in the coordinator's
-# private checkout (~/.config/coordinator/wowdps-suite; install notes in
+# private checkout (~/src/coordinator-home/wowdps-suite; install notes in
 # tools/journal-backup.md, moved from ~/src/wowdps-suite on 2026-11-25). The
 # suite's own 20-hour `--if-due` window decides whether a run actually
 # snapshots; the saved plan
@@ -28,8 +28,8 @@
       ];
       serviceConfig = {
         Type = "oneshot";
-        WorkingDirectory = "%h/.config/coordinator/wowdps-suite";
-        ExecStart = "%h/.config/coordinator/wowdps-suite/bin/journal backup --if-due";
+        WorkingDirectory = "%h/src/coordinator-home/wowdps-suite";
+        ExecStart = "%h/src/coordinator-home/wowdps-suite/bin/journal backup --if-due";
         Nice = 10;
         IOSchedulingClass = "idle";
         UMask = "0077";
