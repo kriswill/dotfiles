@@ -17,7 +17,13 @@ sources:
 On top of the TUI that [herdr](herdr.md) installs everywhere, nebula turns on
 `programs.herdr-app.enable`, `programs.herdr-core.users = [ "k" ]` (linger is
 declared by the module's default), `programs.herdr-md.enable` and
-`services.herdr-update-check.enable`.
+`services.herdr-update-check.enable`. `programs.herdr-core.browser.enable`
+and `programs.herdr-core.askpass.enable` install herdr-open (`BROWSER`) and
+herdr-askpass, the `SUDO_ASKPASS` of Claude Code's env here; `DISPLAY=:0`
+already comes from the session. sudo tries 1Password's ssh agent first
+([sudo-1password](sudo-1password.md)), and only when that
+fails asks in a Herdr dialog on whichever machine is showing the terminal
+([decision](../decisions/herdr-askpass-sudo-where-you-are.md)).
 
 Outgoing connections to the managed Macs use the
 [sops-managed client identity](nebula-ssh-client.md) through ordinary SSH

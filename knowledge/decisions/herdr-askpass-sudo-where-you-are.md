@@ -25,7 +25,9 @@ sources:
 `home/herdr-app/.config/herdr-app/mods/herdr-askpass`, hosted as an empty
 float like [herdr-open](herdr-open-links-where-you-are.md) and the
 [keys mods](herdr-app-keys-via-hosted-mods.md); enabled on every Mac
-(`modules/darwin/herdr.nix`).
+(`modules/darwin/herdr.nix`) and on [nebula](../modules/nebula-herdr.md).
+mini, k and nebula's cores all connect to each other, so each one's Herdr
+shows the others' prompts.
 
 ## Context
 

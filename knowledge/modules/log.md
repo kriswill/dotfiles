@@ -1,5 +1,9 @@
 # Log
 
+## 2026-11-26
+
+- **Update**: [nebula-herdr](nebula-herdr.md): `programs.herdr-core.askpass.enable` installs herdr-askpass on nebula, the `SUDO_ASKPASS` of Claude Code's env there (with the session's own `DISPLAY=:0`); sudo still tries 1Password's ssh agent first.
+
 ## 2026-11-21
 
 - **Update**: [fastfetch](fastfetch.md)'s twins re-export the

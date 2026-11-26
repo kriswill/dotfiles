@@ -15,6 +15,13 @@
         # the browser of the machine whose Herdr window you clicked in, through
         # the herdr-open mod in home/herdr-app. Outside hc, plain xdg-open.
         browser.enable = true;
+        # herdr-askpass at /run/current-system/sw/bin/herdr-askpass, the
+        # SUDO_ASKPASS of Claude Code's env here (~/.claude/settings.json;
+        # DISPLAY=:0 already comes from the session). sudo tries 1Password's
+        # ssh agent first (sudo-1password.nix), which answered a no-tty sudo
+        # at once when tested; only when that fails does sudo ask, in a dialog
+        # of the Herdr window showing the terminal, via the herdr-askpass mod.
+        askpass.enable = true;
       };
       # herdr-md, a markdown viewer mod, and `mdh`, which opens a file in it and
       # highlights passages (for agents): upstream at a pinned commit with our
