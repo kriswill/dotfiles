@@ -8,5 +8,8 @@
   "telemetry": false,
   "minimum_contrast": 1.0,
   "appearance": "dark",
-  "theme": "kanagawa"
+  "theme": "kanagawa",
+  "worktrees": {
+    "directory": "~/src/wt"
+  }
 }
