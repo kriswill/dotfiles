@@ -37,13 +37,15 @@
         # wrap with telemetry off and herdr-core on PATH), and
         # herdr-update-check (any of our herdrs behind upstream, or running a
         # stale build), herdr-open ($BROWSER that opens links where you look
-        # at the terminal from), and herdr-md (a markdown viewer mod for the
+        # at the terminal from), herdr-askpass (SUDO_ASKPASS that asks in the
+        # Herdr window you look from), and herdr-md (a markdown viewer mod for the
         # app, with its `mdh` CLI).
         herdr = inputs.herdr.packages.${system}.herdr-cli;
         herdr-core = inputs.herdr.packages.${system}.herdr-core;
         herdr-app = inputs.herdr.packages.${system}.herdr-app;
         herdr-update-check = inputs.herdr.packages.${system}.herdr-update-check;
         herdr-open = inputs.herdr.packages.${system}.herdr-open;
+        herdr-askpass = inputs.herdr.packages.${system}.herdr-askpass;
         herdr-md = inputs.herdr.packages.${system}.herdr-md;
         gh-config = pkgs.callPackage ../pkgs/gh-config.nix { };
         # system-update-report — HTML page of nvd diff (booted/previous vs current
@@ -123,6 +125,7 @@
     herdr-app = inputs.herdr.packages.aarch64-linux.herdr-app;
     herdr-update-check = inputs.herdr.packages.aarch64-linux.herdr-update-check;
     herdr-open = inputs.herdr.packages.aarch64-linux.herdr-open;
+    herdr-askpass = inputs.herdr.packages.aarch64-linux.herdr-askpass;
     herdr-md = inputs.herdr.packages.aarch64-linux.herdr-md;
     fastfetch = inputs.fastfetch.packages.aarch64-linux.fastfetch;
   };

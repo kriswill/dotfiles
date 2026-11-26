@@ -89,6 +89,12 @@ Outputs (`x86_64-linux`, `aarch64-linux`, `aarch64-darwin`):
   that terminal, and the herdr-open mod in whichever Herdr window is in front
   opens it there; with no answer it opens locally
   ([decision](../decisions/herdr-open-links-where-you-are.md)).
+- `herdr-askpass`, the `SUDO_ASKPASS` behind `programs.herdr-core.askpass`.
+  When sudo has no terminal (an agent's shell, with `DISPLAY` set in the
+  agent's env), it starts a labelled prompt terminal, and the herdr-askpass
+  mod in every Herdr window showing that machine opens it as a dialog. The
+  password goes from your keystrokes over a private FIFO to sudo
+  ([decision](../decisions/herdr-askpass-sudo-where-you-are.md)).
 - `herdr-md`, behind `programs.herdr-md`: a mod that shows a markdown file
   as native elements (code, tables, images, video, typeset math, Mermaid),
   and `mdh`, which opens a file in it and highlights passages, so an agent

@@ -31,6 +31,10 @@
     # Claude Code) opens on the machine whose Herdr window shows it to you,
     # through the herdr-open mod in home/herdr-app. Outside hc, plain `open`.
     programs.herdr-core.browser.enable = true;
+    # SUDO_ASKPASS=herdr-askpass: sudo with no terminal to ask on (an agent's
+    # shell, with DISPLAY set in its env) asks in a dialog of the Herdr window
+    # showing that terminal, through the herdr-askpass mod in home/herdr-app.
+    programs.herdr-core.askpass.enable = true;
 
     # Daily at 10:00 (a launchd agent; a run missed asleep happens on wake):
     # one notification when upstream releases past our herdr fork (rebase

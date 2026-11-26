@@ -140,6 +140,37 @@ in
             '';
           };
         };
+
+        askpass = {
+          enable = lib.mkEnableOption ''
+            herdr-askpass as `SUDO_ASKPASS`: when sudo in an hc terminal has
+            no terminal to ask on (an agent's shell) or runs as `sudo -A`, its
+            password prompt opens as a dialog in the Herdr window that shows
+            you that terminal, on whichever machine you're looking from. Needs
+            the herdr-askpass mod in Herdr there; with no answer it times out
+            and sudo fails. sudo only uses an askpass on its own when
+            `DISPLAY` is set as well, so set that for the agent alone (Claude
+            Code: `env` in `~/.claude/settings.json`); without it only
+            `sudo -A` asks this way. Set for login shells and for the core's
+            environment, like `browser`'';
+
+          package = lib.mkOption {
+            type = lib.types.package;
+            default = pkgs.callPackage ../pkgs/herdr-askpass.nix { };
+            defaultText = lib.literalMD "this flake's `pkgs/herdr-askpass.nix`";
+            description = "The herdr-askpass package.";
+          };
+
+          path = lib.mkOption {
+            type = lib.types.str;
+            readOnly = true;
+            default = "/run/current-system/sw/bin/herdr-askpass";
+            description = ''
+              What `SUDO_ASKPASS` is set to: herdr-askpass through the system
+              profile, a path that survives rebuilds.
+            '';
+          };
+        };
       };
 
       herdr-app = {
@@ -329,6 +360,10 @@ in
 
     (lib.mkIf (core.enable && core.browser.enable) {
       environment.systemPackages = [ core.browser.package ];
+    })
+
+    (lib.mkIf (core.enable && core.askpass.enable) {
+      environment.systemPackages = [ core.askpass.package ];
     })
 
     (lib.mkIf core.enable {

@@ -65,6 +65,7 @@
               cliVersion = config.packages.herdr-cli.version;
             };
             herdr-open = pkgs.callPackage ./pkgs/herdr-open.nix { };
+            herdr-askpass = pkgs.callPackage ./pkgs/herdr-askpass.nix { };
             herdr-md = pkgs.callPackage ./pkgs/herdr-md.nix { };
             default = config.packages.herdr-cli;
             herdr-app-unwrapped = pkgs.callPackage ./pkgs/herdr-app.nix { };

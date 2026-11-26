@@ -1,5 +1,14 @@
 # Log
 
+## 2026-11-26
+
+- **Creation**: [herdr-askpass-sudo-where-you-are](herdr-askpass-sudo-where-you-are.md):
+  `SUDO_ASKPASS=herdr-askpass` puts sudo's password prompt in a labelled hc
+  terminal that the herdr-askpass mod opens as a dialog in every Herdr window
+  showing that machine, so an agent on headless mini can sudo. Records why
+  not a password-manager askpass, a native field in the mod, or the asking
+  terminal, and that sudo needs `DISPLAY` set to use an askpass unprompted.
+
 ## 2026-11-21
 
 - **Creation**: [fastfetch-kitten-shim](fastfetch-kitten-shim.md): in a

@@ -82,6 +82,12 @@ in
       environment.sessionVariables.BROWSER = core.browser.path;
     })
 
+    # SUDO_ASKPASS the same way. It does nothing by itself: sudo reads it for
+    # `sudo -A`, or with no terminal while DISPLAY is set too.
+    (lib.mkIf (core.enable && core.askpass.enable) {
+      environment.sessionVariables.SUDO_ASKPASS = core.askpass.path;
+    })
+
     (lib.mkIf app.enable {
       # The window draws with Vulkan (or GL); either needs the system driver.
       hardware.graphics.enable = lib.mkDefault true;
