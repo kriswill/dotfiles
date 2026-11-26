@@ -2,6 +2,14 @@
 
 ## 2026-11-26
 
+- **Update**: [herdr-askpass-sudo-where-you-are](herdr-askpass-sudo-where-you-are.md):
+  `SUDO_ASKPASS` is no longer exported system-wide (Homebrew adds `-A` to
+  every sudo when it's set, so casks in ordinary shells failed); it lives in
+  the agent's env with `DISPLAY`. Records the code-review fixes: echo off for
+  the whole prompt, a prompt that ends when its askpass is SIGKILLed, the
+  command line out of argv, control characters stripped, and the mod's
+  per-window dialog heartbeat.
+
 - **Creation**: [herdr-askpass-sudo-where-you-are](herdr-askpass-sudo-where-you-are.md):
   `SUDO_ASKPASS=herdr-askpass` puts sudo's password prompt in a labelled hc
   terminal that the herdr-askpass mod opens as a dialog in every Herdr window

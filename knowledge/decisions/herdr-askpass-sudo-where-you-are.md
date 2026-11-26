@@ -61,10 +61,14 @@ keystrokes take from any Herdr window to any machine.
 - **Trigger:** sudo uses an askpass with no terminal only when `DISPLAY` is
   also set. That held on sudo 1.9.17p2 here, where a probe askpass ran with
   both set and not with `SUDO_ASKPASS` alone; the manual describes only
-  `SUDO_ASKPASS`.[^sudo-man] So the module sets `SUDO_ASKPASS` everywhere,
-  harmless on its own, and `DISPLAY` goes only in the agent's environment
-  (Claude Code's `settings.json` `env`). Plain `sudo` and `nrs`'s `sudo -v`
-  then ask through Herdr, with no `-A` and no change to nrs.
+  `SUDO_ASKPASS`.[^sudo-man] Both variables go only in the agent's
+  environment (Claude Code's `settings.json` `env`), and the module only
+  installs the program. The first version exported `SUDO_ASKPASS`
+  system-wide as "harmless on its own". It isn't: Homebrew adds `-A` to
+  every sudo whenever the variable is set, so cask installs in ordinary
+  shells went to the askpass and failed. Plain `sudo` and `nrs`'s `sudo -v`
+  from the agent ask through Herdr, with no `-A` and no change to nrs. With
+  a terminal to ask on, herdr-askpass asks there, as sudo would.
 
 Rejected:
 
@@ -94,6 +98,23 @@ well, and opened a dialog per dialog. `pane.focus` on a terminal in an
 overlay fails ("no such pane") and posts a toast. A dialog opened for a
 prompt that had just ended never closes, so the bar closes its own dialog
 once its terminal isn't live.[^app-agents]
+
+A code review of the first commit found more, all fixed:
+
+- `read -s` turns echo back on after every key, so a key arriving between
+  two reads was echoed onto a screen every window shares. The prompt now
+  turns echo off once for its whole life.
+- A SIGKILLed askpass (the Bash tool's 120 s default timeout is shorter than
+  its 180 s) left the prompt and dialog up for good. The prompt now watches
+  the askpass's pid.
+- sudo's command line went into the prompt's argv, which every connected
+  window can see. It now goes through a 0600 file.
+- `sudo -p` with escape sequences could redraw the command line shown in
+  the dialog. Control characters are now stripped from both.
+- A timeout like `09` was read as octal.
+- In the mod: a dialog closed from outside never came back, and a reloaded
+  watcher stacked a second dialog. A heartbeat in `shared()` now records
+  which prompts have a dialog in each window.
 
 Each viewing machine needs the mod, which means its dotfiles checkout and a
 restow. With no window showing the machine, sudo times out after 180 s

@@ -2,6 +2,8 @@
 
 ## 2026-11-26
 
+- **Update**: [herdr](herdr.md): `programs.herdr-core.askpass` only installs `herdr-askpass` now; `SUDO_ASKPASS` goes in the agent's env, because Homebrew adds `-A` to every sudo whenever it's set.
+
 - **Update**: [herdr](herdr.md): added `herdr-askpass` (`programs.herdr-core.askpass`, enabled on every Mac), the `SUDO_ASKPASS` that asks in a Herdr dialog through the new `herdr-askpass` mod (hosted as a float in the `personal` layout); see [the decision](../decisions/herdr-askpass-sudo-where-you-are.md).
 
 ## 2026-11-24

@@ -14,7 +14,7 @@ as `inputs.herdr` (`./flakes/herdr`).
 | `packages.herdr-app` | all | the app with telemetry off and this core at the end of PATH, for `nix run` (a shell launch; Finder bypasses it) |
 | `packages.herdr-update-check` | all | is any of these behind upstream, or running a stale build? |
 | `packages.herdr-open` | all | `$BROWSER` that opens a link where you're looking at the terminal from (see "Links open where you are") |
-| `packages.herdr-askpass` | all | `SUDO_ASKPASS` that asks for sudo's password in a dialog of the Herdr window you're looking from (see "sudo asks where you are") |
+| `packages.herdr-askpass` | all | an agent's `SUDO_ASKPASS` that asks for sudo's password in a dialog of the Herdr window you're looking from (see "sudo asks where you are") |
 | `packages.herdr-md` | all | a markdown viewer mod for Herdr and `mdh`, its CLI: upstream at a pinned commit, patched for Linux (see "The markdown viewer") |
 | `nixosModules.herdr` (`default`) | | `programs.herdr-{cli,core,app,md}`, `services.herdr-update-check` |
 | `darwinModules.herdr` (`default`) | | the same options, with the app's choices written to settings.json |
@@ -115,7 +115,7 @@ do.
 | `programs.herdr-core.{enable,package,users,settings}` | ✓ (`settings` → tmpfiles link) | ✓ (`settings` → activation-script link) |
 | `programs.herdr-core.linger` | ✓ | — |
 | `programs.herdr-core.browser.{enable,package}` | ✓ (`BROWSER` session variable) | ✓ (`BROWSER` for shells and launchd's user domain) |
-| `programs.herdr-core.askpass.{enable,package}` | ✓ (`SUDO_ASKPASS` session variable) | ✓ (`SUDO_ASKPASS` for shells and launchd's user domain) |
+| `programs.herdr-core.askpass.{enable,package}` | ✓ (installs it; `SUDO_ASKPASS` goes in the agent's env) | ✓ (the same) |
 | `programs.herdr-app.{enable,package,finalPackage,telemetry,settings,keys}` | ✓ (wrapper: env + merge at launch) | ✓ (`telemetry`, `core`, `settings` merged into settings.json at activation; `keys` → link; `finalPackage` is the bare bundle) |
 | `programs.herdr-md.{enable,package}` | ✓ (the mod → tmpfiles links) | ✓ (the mod → activation-script links) |
 | `services.herdr-update-check.{enable,package,finalPackage}` | systemd user timer, `calendar` | launchd user agent, `startCalendarInterval` |
@@ -210,41 +210,51 @@ An agent's shell has no terminal: Claude Code's Bash tool runs commands
 without one, so `sudo` (and `nrs`, which runs `sudo -v`) fails with "a
 terminal is required to read the password". On a Mac you're using, Touch ID
 might answer, but not on a headless one like mini, seen from Herdr on
-another machine. `programs.herdr-core.askpass.enable` makes sudo ask in a
-dialog of the Herdr window you're looking from:
+another machine. `programs.herdr-core.askpass.enable` installs
+`herdr-askpass` at `/run/current-system/sw/bin/herdr-askpass`, which makes
+sudo ask in a dialog of the Herdr window you're looking from:
 
 1. **sudo runs its askpass.** It does that for `sudo -A`, and on its own when
    it has no terminal while `SUDO_ASKPASS` *and* `DISPLAY` are both set.
    sudo's manual documents `SUDO_ASKPASS` for "if no terminal is available",
    but not the `DISPLAY` condition: that comes from sudo 1.9.17p2 on mini,
    where a probe askpass ran with both set and not with `SUDO_ASKPASS`
-   alone. The module sets `SUDO_ASKPASS` (shells and the core's
-   environment, like `BROWSER`). It doesn't set `DISPLAY`: that goes in the
-   agent's own environment (`env` in `~/.claude/settings.json`), so sudo
-   asks this way only for the agent, and other programs keep their
-   no-`DISPLAY` behaviour.
-2. **`herdr-askpass`** needs `HC_TERMINAL_ID` (it exits 1 at once without
-   it). It makes a private directory (`mktemp -d`, 0700) with a FIFO in it,
-   opens the FIFO read-write, and starts a prompt terminal on this
-   machine's core: `hc run --bg --no-parent --no-notify --rm` with labels
-   `herdr-askpass=1` and `herdr-askpass.for=<the asking terminal>`, running
-   `herdr-askpass --read <fifo> <prompt> <asker> <command>`. `<command>` is
-   sudo's command line (`ps` of the askpass's parent), so the prompt shows
-   what you're authorising.
-3. **The `herdr-askpass` mod**, an empty float in the `personal` layout,
+   alone. Both go in the agent's own environment (`env` in
+   `~/.claude/settings.json`), and **neither is exported system-wide**:
+   Homebrew adds `-A` to every sudo whenever `SUDO_ASKPASS` is set
+   (`system_command.rb`, and `bin/brew` passes the variable through), so a
+   global export would send every cask's sudo to the askpass.
+2. **`herdr-askpass` with a terminal** (`sudo -A` or brew from a shell that
+   has one) asks there, as sudo would have: prompt to `/dev/tty`, `read -s`.
+3. **Without one**, it needs `HC_TERMINAL_ID` (otherwise it exits 1 at
+   once). It makes a private directory (`mktemp -d`, 0700) holding a FIFO and
+   two 0600 files, sudo's prompt and sudo's command line (`ps` of its
+   parent), with control characters removed from both. It opens the FIFO
+   read-write and starts a prompt terminal on this machine's core:
+   `hc run --bg --no-parent --no-notify --rm` with labels `herdr-askpass=1`
+   and `herdr-askpass.for=<the asking terminal>`, running
+   `herdr-askpass --read <dir> <askpass pid> <deadline> <asker>`. The prompt
+   and command line travel as files because herdr-core shows a terminal's
+   argv to every connected window.
+4. **The `herdr-askpass` mod**, an empty float in the `personal` layout,
    sees the labelled terminal in `terminals()`. Every window connected to
    that machine does, so each one opens it as a modal dialog: the mod again
    as a title bar (`{bar: true}`: where sudo runs, who asked, Cancel) over
    a `{terminal}` block. The dialog plays the `blocked` sound.
-4. **You type into that terminal.** The prompt reads a key at a time with
-   no echo. Enter sends the password, Esc or ctrl-c cancels, and the bar's
-   Cancel kills the prompt terminal. The prompt writes one line to the FIFO,
-   `P:<password>` or `C`, and herdr-askpass prints the password for sudo.
-   The terminal ends, so every dialog closes itself.
-5. **No answer** within `HERDR_ASKPASS_TIMEOUT` seconds (default 180), or the
-   prompt ends without one: herdr-askpass exits 1, kills the prompt, and sudo
-   reports no password. After a wrong password sudo calls it again (three
-   tries), so a fresh dialog opens each time.
+5. **You type into that terminal.** The prompt turns echo off once for its
+   whole life and reads a key at a time. Enter sends the password, Esc or
+   ctrl-c cancels, and the bar's Cancel kills the prompt terminal. The prompt
+   writes one line to the FIFO, `P:<password>` or `C`, and herdr-askpass
+   prints the password for sudo. The terminal ends, so every dialog closes
+   itself.
+6. **No answer** within `HERDR_ASKPASS_TIMEOUT` seconds (default 180, read as
+   decimal), or the prompt ends without one: herdr-askpass exits 1, kills
+   the prompt, and sudo reports no password. After a wrong password sudo
+   calls it again (three tries), so a fresh dialog opens each time. If
+   herdr-askpass is killed without its cleanup (Claude Code's Bash tool
+   SIGKILLs a command at its timeout, 120 s by default), the prompt sees
+   its pid gone within a second, removes the directory and ends, which
+   closes the dialogs.
 
 Security:
 
@@ -252,12 +262,16 @@ Security:
   prompt's pty, by the same path as anything you type in an hc terminal
   (to another machine, over the core's ssh connection). Then the FIFO in a
   0700 directory, then sudo's pipe. It's never in a label, an argument, a
-  file or on screen: no echo, and `--rm` removes the terminal's history as
-  it exits.
+  file or on screen. Echo is off for the prompt's whole life, not per
+  `read -s` (that turns echo back on after each key, so a key arriving
+  between two reads would be echoed), and `--rm` removes the terminal as it
+  exits.
 - **Who can ask.** Any process running as you can start a terminal with
   these labels, so a fake prompt is possible. Such a process could already
   wrap `sudo` itself. The dialog names the asking terminal and shows sudo's
-  command line. If you didn't expect it, press Cancel.
+  command line, and since the prompt text is stripped of control
+  characters, `sudo -p` can't redraw that line. If you didn't expect it,
+  press Cancel.
 - **Who can answer.** Anything that can `hc send` into the prompt terminal,
   which again means a process running as you, and it still needs the
   password.
@@ -271,11 +285,23 @@ Gotchas the mod handles (keep them if you edit it):
 - **No `pane.focus`.** A terminal in an overlay isn't a pane: `pane.focus
   {terminal}` fails with "no such pane" and posts a toast. The dialog takes
   the keyboard by itself.
+- **One dialog per prompt per window.** Each dialog's bar beats in
+  `shared("herdr-askpass.shown")` (prompt address → ms) every second and
+  drops its entry when its dialog goes. The watcher opens a dialog for a live
+  prompt with no fresh beat (3.5 s), unless it opened one in the last 2.5 s.
+  So a reloaded watcher (a saved mod file, a layout switch) doesn't stack a
+  second dialog, and a dialog closed while its prompt is live
+  (`overlay.close`) comes back. After Cancel the entry is left to go stale,
+  so no dialog flashes back while `terminals()` still lists the killed
+  prompt.
 - **Stale prompts.** `terminals()` can still list a prompt that just ended,
   and a dialog whose terminal is already gone never sees it end (it shows
   `terminal.attach: no terminal`). The watcher checks again just before it
-  opens a dialog, and the bar closes its own dialog once its terminal isn't
-  live.
+  opens a dialog, and the bar closes its own dialog after its terminal has
+  been missing for two checks in a row (one can be a reconnect's gap).
+- **Notice on a timer too.** New prompts are noticed in `render()` and every
+  250 ms, so a window that isn't being drawn still opens the dialog and
+  plays the sound.
 
 Testing:
 
@@ -283,20 +309,20 @@ Testing:
   whose `hc get` labels include `herdr-askpass=1` (`hc ls --json` lists no
   labels), and answer with `hc send <t> <text>` or `hc keys <t> esc`. The
   text comes back on stdout. A window with the mod shows the dialog meanwhile,
-  and `herdr-app status` lists it as a `layout` overlay.
+  and `herdr-app status` lists it as a `layout` overlay. Send keys one at a
+  time with `hc keys` and `hc read` the prompt to check nothing is echoed;
+  SIGKILL the askpass and the prompt should end within a second.
+- With a terminal: `printf 'pw\n' | script -q /dev/null herdr-askpass` asks
+  on the pty and prints `pw`.
 - With sudo: `SUDO_ASKPASS=… DISPLAY=x sudo -k /usr/bin/id -u` from an
   agent prints `0` once you answer.
 
-Applying it: `nrs` installs it and sets `SUDO_ASKPASS` for new shells and
-cores, and restows the mod. Add `DISPLAY` to the agent's environment and
-restart it. For Claude Code, in `~/.claude/settings.json`:
+Applying it: `nrs` installs it and restows the mod. Then give the agent
+both variables and restart it. For Claude Code, in `~/.claude/settings.json`:
 `"env": {"DISPLAY": "herdr-askpass", "SUDO_ASKPASS":
 "/run/current-system/sw/bin/herdr-askpass"}`. `DISPLAY` only has to be
-non-empty. `SUDO_ASKPASS` repeats the module's value, because a Claude
-restarted in a shell from before the switch inherits that shell's old
-environment, and nix-darwin's `/etc/zshenv` doesn't set it again. Each
-viewing machine needs the mod, which means the dotfiles checkout and a
-restow there.
+non-empty. Each viewing machine needs the mod, which means the dotfiles
+checkout and a restow there.
 
 ## The markdown viewer (`herdr-md`)
 

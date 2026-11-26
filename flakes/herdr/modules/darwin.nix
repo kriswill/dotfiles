@@ -97,14 +97,6 @@ in
       environment.variables.BROWSER = core.browser.path;
       launchd.user.envVariables.BROWSER = core.browser.path;
     })
-
-    # The same two places for SUDO_ASKPASS. It does nothing by itself: sudo
-    # reads it for `sudo -A`, or with no terminal while DISPLAY is set too.
-    (lib.mkIf (core.enable && core.askpass.enable) {
-      environment.variables.SUDO_ASKPASS = core.askpass.path;
-      launchd.user.envVariables.SUDO_ASKPASS = core.askpass.path;
-    })
-
     (lib.mkIf app.enable {
       environment.etc."herdr-core/hc" = lib.mkIf core.enable {
         source = "${lib.getBin core.package}/bin/hc";
