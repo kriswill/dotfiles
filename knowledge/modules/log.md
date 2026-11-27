@@ -2,6 +2,10 @@
 
 ## 2026-11-26
 
+- **Update**: [Cognee](cognee.md) restarts after activation installs changed runtime credentials and marks login cookies `Secure` in HTTPS mode.
+
+- **Creation**: [Cognee](cognee.md) adds an opt-in native API and optional PostgreSQL and HTTPS launchd jobs.
+
 - **Update**: [sudo-1password](sudo-1password.md): `sudo-agent-gate`, a 2-second signing probe (`pam_exec`) before `pam_ssh_agent_auth`, skips the agent step when 1Password can't sign in time, so sudo reaches the password (the herdr-askpass dialog for an agent) in about 2 s instead of 60 s.
 
 - **Update**: [nebula-herdr](nebula-herdr.md): `programs.herdr-core.askpass.enable` installs herdr-askpass on nebula, the `SUDO_ASKPASS` of Claude Code's env there (with the session's own `DISPLAY=:0`); sudo still tries 1Password's ssh agent first.

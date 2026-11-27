@@ -2,6 +2,8 @@
 
 ## 2026-11-26
 
+- **Creation**: [Run Cognee as native macOS services](native-cognee-on-darwin.md) records the boot, storage, and resource choices for a shared LAN endpoint.
+
 - **Creation**: [sudo-agent-gate](sudo-agent-gate.md): nebula's sudo probes
   1Password's agent with a real 2-second signature before `pam_ssh_agent_auth`
   and skips it on failure, because the agent holds a locked or unapproved

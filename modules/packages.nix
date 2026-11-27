@@ -80,6 +80,7 @@
       # don't break eval on this line.
       // lib.optionalAttrs (system == "aarch64-darwin") {
         apple-container = inputs.apple-container.packages.${system}.apple-container;
+        cognee = inputs.cognee.packages.${system}.cognee;
         # Official prebuilt podman macOS remote client (aarch64-darwin only).
         podman = pkgs.callPackage ../pkgs/podman.nix { };
         # slack-leave-devopsinc — leave the Slack devopsinc-N incident channels

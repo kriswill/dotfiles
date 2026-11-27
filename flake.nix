@@ -154,6 +154,13 @@
       inputs.flake-parts.follows = "flake-parts";
     };
 
+    # Native Cognee runtime and system launchd services for Apple Silicon.
+    cognee = {
+      url = "./flakes/cognee";
+      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.flake-parts.follows = "flake-parts";
+    };
+
     # nixpkgs' replaceDirectDependencies, patched (./flakes/replace-dependencies):
     # nothing uses it since nebula's brotli graft retired (2026-11-10); kept for
     # the next graft.
