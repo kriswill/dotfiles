@@ -9,7 +9,7 @@
 # no hand-maintained imports list. Non-`.nix` files (secrets.yaml, *.pub) sit in
 # `nebula/` too — import-tree only picks up `.nix`, so they are ignored by the
 # scan and referenced by path.
-{ config, ... }:
+{ config, inputs, ... }:
 {
   configurations.nixos.nebula = {
     hostname = "nebula";
@@ -23,7 +23,19 @@
       # Pull in every shared feature module. The host-specific `nebula/*.nix`
       # files merge into this same `module` via the deferredModule, so they need
       # no listing here.
-      imports = builtins.attrValues config.flake.modules.nixos;
+      imports = (builtins.attrValues config.flake.modules.nixos) ++ [
+        inputs.cognee.nixosModules.clientTrust
+        (
+          { pkgs, ... }:
+          {
+            services.cognee.clientTrust = {
+              enable = true;
+              certificateFile = "${pkgs.callPackage ../../../lib/cognee-root-ca.nix { }}";
+              chromiumDnsNames = [ "mini.home.lan" ];
+            };
+          }
+        )
+      ];
 
       # Previously applied via the `nixosModules.default` import-tree wrapper;
       # re-applied here so wowup/hyprland resolve through our overlays.

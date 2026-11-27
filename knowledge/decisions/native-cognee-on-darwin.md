@@ -33,6 +33,11 @@ while Ladybug and the data files remain in Cognee's state directory.
 The PostgreSQL bootstrap uses a generated credential outside the Nix
 store. Optional HTTPS uses a separate account for the proxy and its CA.
 
+The optional dashboard uses a standalone Next.js build and its own
+loopback launchd listener. Caddy presents the frontend and API on the same
+HTTPS origin, so browser authentication uses Cognee's existing cookies.
+The dashboard's server-side routes talk to the loopback API directly.
+
 ## Consequences
 
 The API has one worker and defaults to small database pools and limited

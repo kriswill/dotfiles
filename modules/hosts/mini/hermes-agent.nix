@@ -23,19 +23,25 @@
 # The file is separate from ./secrets.yaml so it can be rewritten with only
 # mini's public recipient (the command is in
 # knowledge/modules/mini-hermes-agent.md). Until it is committed the secret
-# is not declared, so the host still builds, and Hermes runs without a key.
+# is not declared. Cognee has its own agent key in ./hermes-cognee.yaml.
 let
   sopsFile = ./hermes-secrets.yaml;
   haveSecrets = builtins.pathExists sopsFile;
 in
 {
   configurations.darwin.mini.module =
-    { config, lib, ... }:
+    {
+      config,
+      inputs,
+      lib,
+      ...
+    }:
     {
       imports = [ ../../../flakes/hermes-agent/nix/cua-calculator-module.nix ];
 
-      sops.secrets = lib.mkIf haveSecrets {
-        hermes-env = { inherit sopsFile; };
+      sops.secrets = {
+        hermes-env = lib.mkIf haveSecrets { inherit sopsFile; };
+        hermes-cognee-env.sopsFile = ./hermes-cognee.yaml;
       };
 
       # This is mini's primary workload. Keep the sub-flake's default for
@@ -68,8 +74,21 @@ in
         # Shared environment is loaded by both the CLI and launchd gateway.
         # HOME stays confined; hc must not discover a separate core there.
         # The desktop app owns core startup; no new launchd service is added.
-        environment.HC_SOCKET = "/Users/k/.local/state/herdr-core/default/default.sock";
-        environmentFiles = lib.optional haveSecrets config.sops.secrets.hermes-env.path;
+        environment = {
+          HC_SOCKET = "/Users/k/.local/state/herdr-core/default/default.sock";
+          COGNEE_BASE_URL = "http://127.0.0.1:8000";
+          COGNEE_PLUGIN_DATASET = "hermes-pilot";
+          COGNEE_PLUGIN_RECALL_MODE = "pinned";
+          COGNEE_CAPTURE = "false";
+          COGNEE_UPDATE_CHECK = "false";
+        };
+        environmentFiles = lib.optional haveSecrets config.sops.secrets.hermes-env.path ++ [
+          config.sops.secrets.hermes-cognee-env.path
+        ];
+        extraPythonPackages = [
+          (inputs.cognee.lib.mkHermesPlugin config.services.hermes-agent.package.python.pkgs)
+        ];
+        settings.memory.provider = "cognee";
         # Model selection belongs to Hermes (/model, including --global); see
         # nebula's file for why it is not declared here.
 

@@ -9,13 +9,18 @@ let
   cfg = config.services.cognee;
   pg = cfg.postgresql;
   proxy = cfg.https;
+  ui = cfg.frontend;
   appUser = "_cognee";
   pgUser = "_cognee-postgres";
   proxyUser = "_cognee-proxy";
+  uiUser = "_cognee-frontend";
+  uiState = "${cfg.stateDirectory}-frontend";
   group = "_cognee";
   passwordFile = "${pg.stateDirectory}/password";
   postgres = pkgs.postgresql_17.withPackages (ps: [ ps.pgvector ]);
   emptyEnvironment = pkgs.writeText "cognee-empty.env" "";
+  apiAddress = "127.0.0.1:${toString cfg.port}";
+  httpsOrigin = "https://${proxy.hostName}:${toString proxy.port}";
   pgPort = toString pg.port;
   cogneeJob = lib.escapeShellArg "system/${config.launchd.daemons.cognee.serviceConfig.Label}";
 
@@ -63,13 +68,28 @@ let
       skip_install_trust
     }
 
-    https://${proxy.hostName}:${toString proxy.port} {
+    ${httpsOrigin} {
       bind ${proxy.listenAddress}
       tls internal
 
-      @register path /api/v1/auth/register /api/v1/auth/register/
-      respond @register 404
-      reverse_proxy 127.0.0.1:${toString cfg.port}
+      route {
+        @register path /api/v1/auth/register /api/v1/auth/register/
+        respond @register 404
+        ${
+          if ui.enable then
+            ''
+              @api path /api/v1 /api/v1/* /health /health/* /docs /docs/* /redoc /openapi.json
+              handle @api {
+                reverse_proxy ${apiAddress}
+              }
+              handle {
+                reverse_proxy 127.0.0.1:${toString ui.port}
+              }
+            ''
+          else
+            "reverse_proxy ${apiAddress}"
+        }
+      }
     }
   '';
   directory = lib.types.strMatching "/[a-zA-Z0-9._/-]+";
@@ -103,6 +123,22 @@ in
       type = lib.types.attrsOf lib.types.str;
       default = { };
       description = "Non-secret Cognee settings inherited by the API process.";
+    };
+    frontend = {
+      enable = lib.mkEnableOption "the Cognee web dashboard behind its HTTPS proxy";
+      package =
+        lib.mkPackageOption self.packages.${pkgs.stdenv.hostPlatform.system} "cognee-frontend"
+          { };
+      uid = lib.mkOption {
+        type = lib.types.ints.positive;
+        default = 454;
+        description = "UID and GID of the _cognee-frontend service account.";
+      };
+      port = lib.mkOption {
+        type = lib.types.ints.between 1024 65535;
+        default = 3000;
+        description = "Loopback port for the Cognee web dashboard.";
+      };
     };
     postgresql = {
       enable = lib.mkEnableOption "Cognee's dedicated PostgreSQL 17 and pgvector LaunchDaemon";
@@ -161,6 +197,22 @@ in
           {
             assertion = !proxy.enable || (proxy.uid != cfg.uid && (!pg.enable || proxy.uid != pg.uid));
             message = "The Cognee HTTPS proxy needs its own UID.";
+          }
+          {
+            assertion = !ui.enable || proxy.enable;
+            message = "services.cognee.frontend requires services.cognee.https.enable.";
+          }
+          {
+            assertion =
+              !ui.enable
+              || (
+                ui.uid != cfg.uid
+                && ui.uid != proxy.uid
+                && ui.port != cfg.port
+                && ui.port != proxy.port
+                && (!pg.enable || (ui.uid != pg.uid && ui.port != pg.port))
+              );
+            message = "The Cognee web dashboard needs its own UID and port.";
           }
         ];
 
@@ -299,6 +351,31 @@ in
           };
           serviceConfig = daemon pgUser "${pg.stateDirectory}/cluster/cognee-postgresql.log" // {
             WorkingDirectory = "${pg.stateDirectory}/cluster";
+          };
+        };
+      })
+      (lib.mkIf ui.enable {
+        users.knownUsers = [ uiUser ];
+        users.knownGroups = [ uiUser ];
+        users.groups.${uiUser}.gid = ui.uid;
+        users.users.${uiUser} = mkUser ui.uid uiState // {
+          gid = ui.uid;
+        };
+        system.activationScripts.launchd.text = lib.mkBefore ''
+          /usr/bin/install -d -m 0700 -o ${uiUser} -g ${uiUser} ${lib.escapeShellArg uiState} || exit 1
+        '';
+        launchd.daemons.cognee-frontend = {
+          command = "${lib.getExe ui.package}";
+          environment = {
+            HOME = uiState;
+            HOSTNAME = "127.0.0.1";
+            PORT = toString ui.port;
+            COGNEE_BACKEND_URL = httpsOrigin;
+            COGNEE_INTERNAL_BACKEND_URL = "http://${apiAddress}";
+          };
+          serviceConfig = daemon uiUser "${uiState}/cognee-frontend.log" // {
+            GroupName = uiUser;
+            WorkingDirectory = uiState;
           };
         };
       })

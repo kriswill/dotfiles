@@ -72,6 +72,8 @@ Non-declarative BIOS facts, invisible to the flake:
 
 ## Host-selective features
 
+- [Cognee client trust](../modules/cognee.md) adds [mini](mini.md)'s CA to
+  the system PEM bundle and configures Helium trust for `mini.home.lan`.
 - [nebula-battlenet](../modules/nebula-battlenet.md) (enable-gate for the GE-Proton Battle.net launcher, and the twice-daily git backup of WoW's settings)
 - [ntsync](../modules/ntsync.md) (host-specific file)
 - [nebula-codebase-memory-mcp](../modules/nebula-codebase-memory-mcp.md) (code-graph daemon disabled)

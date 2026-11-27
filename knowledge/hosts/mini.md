@@ -59,12 +59,9 @@ boot-default generation 30 and `pmset` AC `sleep 0`; display sleep remains
 10 minutes. This keeps unattended access available during idle periods and
 does not change another host's power policy.
 
-Mini enables [Cognee](../modules/cognee.md) on `127.0.0.1:8000` for local
-agent sessions. Cognee uses embedded databases and local FastEmbed vectors.
-With `cognee-secrets.yaml` present, [sops-nix](../modules/sops.md) gives
-`_cognee` its OpenAI API key for graph extraction and generated recall. Both
-modes share the same local embedding model and vector index. OpenAI receives
-document chunks during extraction and retrieved context for generated recall.
+Mini enables [Cognee](../modules/mini-cognee.md) for local agent sessions
+and serves its dashboard and API at `https://mini.home.lan:8443` through
+Caddy.
 
 ## Source
 

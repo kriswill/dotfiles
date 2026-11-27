@@ -16,10 +16,21 @@
 
       services.cognee = {
         enable = true;
+        frontend.enable = true;
+        https = {
+          enable = true;
+          hostName = "mini.home.lan";
+          listenAddress = "192.168.0.79";
+        };
         secretsFile = lib.mkIf haveSecrets config.sops.secrets.cognee-env.path;
         environment = {
           EMBEDDING_PROVIDER = "fastembed";
           EMBEDDING_MODEL = "BAAI/bge-small-en-v1.5";
+          # Ingestion and the dashboard's polling can borrow connections at the same time.
+          POOL_ARGS = builtins.toJSON {
+            pool_size = 4;
+            max_overflow = 4;
+          };
         }
         // lib.optionalAttrs haveSecrets {
           LLM_PROVIDER = "openai";

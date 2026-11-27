@@ -49,6 +49,10 @@ creation_rules:
     key_groups:
       - age:
           - *mini
+  - path_regex: ^modules/hosts/mini/hermes-cognee\.yaml$
+    key_groups:
+      - age:
+          - *mini
   # The git commit-signing key itself (services.git-signing-agent with
   # keySecret), shared by every host that loads it straight from sops. mini
   # signs with the same key but reads it from 1Password with the service

@@ -1,11 +1,22 @@
 # k - my personal macbook pro M1 max, 64GB RAM
-{ config, lib, ... }:
+{
+  config,
+  inputs,
+  lib,
+  ...
+}:
 {
   configurations.darwin.k.module = {
     imports = (builtins.attrValues config.flake.modules.darwin) ++ [
+      inputs.cognee.darwinModules.clientTrust
       (
         { pkgs, ... }:
         {
+          services.cognee.clientTrust = {
+            enable = true;
+            certificateFile = "${pkgs.callPackage ../../../lib/cognee-root-ca.nix { }}";
+          };
+
           # Host-specific user-level packages (always-on baseline lives in
           # modules/darwin/user-packages.nix).
           users.users.k.packages = builtins.attrValues {

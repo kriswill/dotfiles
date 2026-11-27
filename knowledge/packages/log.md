@@ -2,6 +2,9 @@
 
 ## 2026-11-26
 
+- **Update**: [Cognee](cognee.md) packages its matching Next.js dashboard
+  with a pinned npm cache and local font assets.
+
 - **Creation**: [Cognee](cognee.md) adds a locked Apple Silicon runtime and reusable nix-darwin module.
 
 - **Update**: [herdr](herdr.md): `programs.herdr-core.askpass` only installs `herdr-askpass` now; `SUDO_ASKPASS` goes in the agent's env, because Homebrew adds `-A` to every sudo whenever it's set.

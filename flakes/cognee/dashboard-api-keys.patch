@@ -1,0 +1,146 @@
+--- a/src/modules/apiKeys/createAPIKey.ts
++++ b/src/modules/apiKeys/createAPIKey.ts
+@@ -1,3 +1,6 @@
++import localFetch from "@/modules/instances/localFetch";
++import { HttpError } from "@/services/http/errors";
++
+ export interface CreatedApiKey {
+   id: string;
+   key: string;
+@@ -11,8 +14,23 @@
+   | { ok: false; error: string; status?: number };
+
+ export default async function createApiKey(
+-  _options: { name?: string; noRedirectOnAuth?: boolean } = {},
++  options: { name?: string; noRedirectOnAuth?: boolean } = {},
+ ): Promise<CreateApiKeyResult> {
+-  console.warn("API key creation requires Cognee Cloud.");
+-  return { ok: false, error: "API key creation requires Cognee Cloud." };
++  try {
++    const response = await localFetch("/v1/auth/api-keys", {
++      method: "POST",
++      headers: { "Content-Type": "application/json" },
++      body: JSON.stringify({ name: options.name }),
++    });
++    if (!response.ok) {
++      return { ok: false, error: "Could not create an API key.", status: response.status };
++    }
++    return { ok: true, key: await response.json() };
++  } catch (error) {
++    return {
++      ok: false,
++      error: error instanceof Error ? error.message : "Could not create an API key.",
++      status: error instanceof HttpError ? error.status : undefined,
++    };
++  }
+ }
+--- a/src/modules/apiKeys/getAPIKeys.ts
++++ b/src/modules/apiKeys/getAPIKeys.ts
+@@ -1,6 +1,4 @@
+-/**
+- * Open-source stub — API keys are managed via the local backend directly.
+- */
++import localFetch from "@/modules/instances/localFetch";
+
+ export interface ApiKey {
+   id: string;
+@@ -10,5 +8,6 @@
+ }
+
+ export default async function getApiKeys(_instance?: unknown): Promise<ApiKey[]> {
+-  return [];
++  const response = await localFetch("/v1/auth/api-keys");
++  return response.json();
+ }
+--- a/src/modules/apiKeys/deleteAPIKey.ts
++++ b/src/modules/apiKeys/deleteAPIKey.ts
+@@ -1,6 +1,8 @@
+-/**
+- * Open-source stub — API key deletion not available in local mode.
+- */
+-export default async function deleteApiKey(_keyId: string): Promise<void> {
+-  console.warn("API key management requires Cognee Cloud.");
++import localFetch from "@/modules/instances/localFetch";
++
++export default async function deleteApiKey(keyId: string): Promise<void> {
++  const response = await localFetch("/v1/auth/api-keys/" + encodeURIComponent(keyId), {
++    method: "DELETE",
++  });
++  if (!response.ok) throw new Error("Could not revoke the API key.");
+ }
+--- a/src/ui/elements/AgentSetupModal.tsx
++++ b/src/ui/elements/AgentSetupModal.tsx
+@@ -6,6 +6,7 @@
+ import type { SetupConnectorCfg } from "@/modules/integrations/types";
+ import { isAgentIntegrationKey } from "@/modules/agents/getAgentConnections";
+ import { useDashboardTelemetry } from "@/app/(app)/dashboard/hooks/useDashboardTelemetry";
++import createApiKey from "@/modules/apiKeys/createAPIKey";
+ import { SetupWizardModal } from "./SetupWizardModal";
+ import { ConnectedAgentModal } from "./ConnectedAgentModal";
+
+@@ -38,7 +39,27 @@
+   // Keep the setup tab in view if a connection appears while this modal is open.
+   const [connectedOnOpen] = useState(() => Boolean(connectedKeys[activeKey ?? ""]));
+
++  const [localKeys, setLocalKeys] = useState<Partial<Record<string, string>>>({});
++  const [creatingKey, setCreatingKey] = useState<string | null>(null);
++  const [keyError, setKeyError] = useState<{ connector: string; message: string } | null>(null);
+   const activeCfg = cards.find((c) => c.key === activeKey);
++
++  async function prepareLocalKey(connector: SetupConnectorCfg) {
++    setCreatingKey(connector.key);
++    setKeyError(null);
++    try {
++      const result = await createApiKey({ name: connector.name + " setup" });
++      if (result.ok && result.key?.key) {
++        const key = result.key.key;
++        setLocalKeys((previous) => ({ ...previous, [connector.key]: key }));
++      } else {
++        const message = result.ok ? "The server did not return the key." : result.error;
++        setKeyError({ connector: connector.key, message });
++      }
++    } finally {
++      setCreatingKey(null);
++    }
++  }
+
+   const selectStep = useCallback((index: number) => {
+     if (!activeKey) return;
+@@ -49,11 +70,35 @@
+   if (!activeCfg) return null;
+
+   const baseUrl = serviceUrl || "https://your-tenant.aws.cognee.ai";
+-  const resolvedKey = apiKey || "your-api-key";
++  const localSetup = cogniInstance?.name === "LocalCognee" && (isAgentIntegrationKey(activeCfg.key) || activeCfg.key === "hermes");
++  const setupKey = localSetup ? localKeys[activeCfg.key] : apiKey;
++  const resolvedKey = setupKey || "your-api-key";
+   // See AgentConnectionSection: the gate is "no usable key yet", not just
+   // "still initializing" — otherwise the placeholder key above can be copied
+   // into ~/.cognee/.env over a real one.
+-  const steps = activeCfg.buildSteps(baseUrl, resolvedKey, isInitializing || !apiKey, os);
++  const steps = activeCfg.buildSteps(baseUrl, resolvedKey, isInitializing || !setupKey, os);
++  if (localSetup && !setupKey) {
++    steps[activeCfg.key === "hermes" ? 0 : 1] = {
++      title: "Create an API key",
++      description: "Create a Cognee API key to show the setup instructions.",
++      content: (
++        <>
++          <button
++            type="button"
++            className="mt-3 border border-white/20 px-3 py-2 text-sm text-white"
++            disabled={isInitializing || creatingKey !== null}
++            onClick={(event) => {
++              event.stopPropagation();
++              void prepareLocalKey(activeCfg);
++            }}
++          >
++            {creatingKey === activeCfg.key ? "Creating API key…" : "Create API key"}
++          </button>
++          {keyError?.connector === activeCfg.key && <p role="alert">{keyError.message}</p>}
++        </>
++      ),
++    };
++  }
+   const currentStep = stepIndexMap[activeCfg.key] ?? 0;
+   // A connected plugin agent (claude-code/codex) opens the connection summary
+   // instead of the install steps — those steps ask the user to do something

@@ -2,6 +2,19 @@
 
 ## 2026-11-26
 
+- **Update** — [Hermes on mini](mini-hermes-agent.md) uses Cognee's native
+  memory plugin with a dedicated agent key and an explicit-save pilot
+  dataset. The Cognee dashboard can generate keys in its Hermes setup dialog.
+
+- **Update**: [Cognee](cognee.md) connects the self-hosted dashboard's
+  API Keys page and harness setup dialogs to its authenticated key API.
+
+- **Update**: [Cognee](cognee.md) exports opt-in client trust modules for
+  macOS and NixOS, including System Keychain and managed Chromium support.
+
+- **Update**: [Cognee](cognee.md) adds an optional native dashboard job
+  and serves it alongside the API on the existing Caddy HTTPS origin.
+
 - **Update**: [Cognee](cognee.md) writes launchd output in service-owned state directories so the jobs can create their log files on first startup.
 
 - **Update**: [Cognee](cognee.md) restarts after activation installs changed runtime credentials and marks login cookies `Secure` in HTTPS mode.

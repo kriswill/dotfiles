@@ -2,6 +2,9 @@
 
 ## 2026-11-26
 
+- **Update**: [Run Cognee as native macOS services](native-cognee-on-darwin.md)
+  records how Caddy shares one HTTPS origin across the dashboard and API.
+
 - **Creation**: [Run Cognee as native macOS services](native-cognee-on-darwin.md) records the boot, storage, and resource choices for a shared LAN endpoint.
 
 - **Creation**: [sudo-agent-gate](sudo-agent-gate.md): nebula's sudo probes

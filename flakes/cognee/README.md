@@ -5,6 +5,12 @@ newer. The `cognee` and `default` package outputs provide a Python 3.12
 environment with `cognee-cli`, `uvicorn`, GLiNER, and the Postgres drivers.
 `uv.lock` pins the wheel and source hashes. Dependencies install during the
 Nix build. Local model weights download into the service's cache on first use.
+The optional `cognee-frontend` package builds the Next.js dashboard from the
+matching upstream tag and npm lockfile. Its standalone bundle includes the
+static assets and Nix-packaged Geist fonts.
+The `lib.mkHermesPlugin` output builds the pinned native Cognee memory
+plugin against Hermes' Python package set for use in
+`services.hermes-agent.extraPythonPackages`.
 
 ```sh
 nix build .#cognee
@@ -26,8 +32,10 @@ For loopback with the embedded databases, import the module and set
 `http://127.0.0.1:8000`. The package and this module are available from the
 dotfiles root. Enable the service in the host you choose.
 
-For a shared LAN deployment with local Postgres, pick a reserved LAN
-address and DNS name. The example values are placeholders.
+For a shared LAN deployment, pick a reserved LAN address and DNS name. The
+dashboard requires the HTTPS proxy. Enable `postgresql.enable` separately
+if the deployment needs PostgreSQL and pgvector. The example values are
+placeholders.
 
 ```nix
 { config, ... }:
@@ -40,7 +48,7 @@ address and DNS name. The example values are placeholders.
 
   services.cognee = {
     enable = true;
-    postgresql.enable = true;
+    frontend.enable = true;
     secretsFile = config.sops.secrets.cognee-env.path;
     https = {
       enable = true;
@@ -53,29 +61,33 @@ address and DNS name. The example values are placeholders.
 
 Set the encrypted `cognee-env` value to dotenv lines. Use a long random
 `FASTAPI_USERS_JWT_SECRET` to preserve login tokens across restarts.
-To provision the initial administrator, set `DEFAULT_USER_EMAIL` and
-`DEFAULT_USER_PASSWORD` before the first startup. Cognee applies that password
-only to a passwordless default account. Omit those lines if you prefer to
-register an account on loopback. Optional provider keys belong in the same
-runtime file. `services.cognee.environment` is for non-secret settings.
+The initial administrator email defaults to `default_user@example.com`.
+Set `DEFAULT_USER_EMAIL` before the first startup to choose a different email.
+Set `DEFAULT_USER_PASSWORD` to give a passwordless default account a login.
+Use the configured password in the browser. The sign-in form supports
+password-manager autofill. To provision additional accounts, register them on
+loopback. Optional provider keys belong in the same runtime file.
+`services.cognee.environment` is for non-secret settings.
 When `nrs` installs changed dotenv contents, launchd restarts Cognee so the
 new process reads them. Rotating the JWT signing key invalidates existing
 login tokens.
 
-Verify the default service account IDs (451, 452, and 453) are free on the
-target host before enabling the system jobs. Each ID is configurable.
+Verify the service account IDs are free on the target host before enabling
+the system jobs. The defaults are 451 for the API, 452 for PostgreSQL, 453
+for Caddy, and 454 for the dashboard. Each ID is configurable.
 On the dotfiles hosts, apply the enabled configuration with `nrs`.
 
 ## Connect and operate
 
 - Check `/health` on loopback after activation. For HTTPS, the example URL
-  is `https://cognee.home.arpa:8443`. With `tls internal`, Caddy generates
-  its CA, certificates, and private keys on the host under
-  `/var/lib/cognee-proxy` by default. Git holds the Caddy configuration.
-  Distribute only the public CA certificate at
-  `/var/lib/cognee-proxy/caddy/pki/authorities/local/root.crt` to clients.
-  On a fresh local-model setup, allow time for the first download. The
-  health check also probes the database adapters and embedder.
+  is `https://cognee.home.arpa:8443`. With the dashboard enabled, that URL
+  opens the sign-in page. Caddy forwards `/api/v1/*` to the loopback API
+  and serves the dashboard from its loopback service on port 3000. Both use
+  the same HTTPS origin so the browser can use the Cognee login cookie.
+- With `tls internal`, Caddy generates its CA and certificates under
+  `/var/lib/cognee-proxy` by default. Copy the public CA certificate from
+  `/var/lib/cognee-proxy/caddy/pki/authorities/local/root.crt` over an
+  authenticated channel and trust it on the clients that use the dashboard.
 - Signup through the LAN proxy is disabled. On the host, log in using
   `POST /api/v1/auth/login` with the email as `username` and the password
   as form fields. HTTPS mode sets the `Secure` flag on the login cookie.
@@ -84,13 +96,20 @@ On the dotfiles hosts, apply the enabled configuration with `nrs`.
   when it is issued. For everyday clients, provision agent accounts with
   the dataset permissions they need, then configure each harness with
   `COGNEE_BASE_URL` and `COGNEE_API_KEY`.
+- The self-hosted dashboard can create and revoke keys through **API Keys**.
+  The Codex, Claude Code, and Hermes setup dialogs create keys on request
+  and show their setup instructions. Save the key when it is issued. The
+  server stores its hash, and the dashboard can only list a masked value
+  afterward.
 - The system jobs are `org.nixos.cognee`, `org.nixos.cognee-postgresql`,
-  and `org.nixos.cognee-proxy` for the enabled components. Inspect them with
+  `org.nixos.cognee-proxy`, and `org.nixos.cognee-frontend` for the enabled
+  components. Inspect them with
   `launchctl print system/<label>`. The jobs write logs in their state
   directories. With default paths these are
   `/var/lib/cognee/cognee.log`,
   `/var/lib/cognee-postgresql/cluster/cognee-postgresql.log`, and
-  `/var/lib/cognee-proxy/cognee-proxy.log`.
+  `/var/lib/cognee-proxy/cognee-proxy.log`, with the dashboard log at
+  `/var/lib/cognee-frontend/cognee-frontend.log`.
   Cognee waits for a successful authenticated database query when managed
   PostgreSQL is enabled.
 - Managed PostgreSQL 17 listens on loopback port 55432 and starts before
@@ -112,9 +131,29 @@ per graph. Measure memory during ingestion and concurrent recall before
 expanding capture. Size the model cache, data directory, database, and
 backups using the amount of content you plan to ingest.
 
+## Trust the CA on clients
+
+Import `inputs.cognee.darwinModules.clientTrust` on macOS or
+`inputs.cognee.nixosModules.clientTrust` on NixOS. Set
+`services.cognee.clientTrust.enable = true` and point `certificateFile` at
+the public root PEM available to the Nix build. The client module adds the
+root to the system CA bundle. On macOS it also manages TLS trust in the
+System Keychain. On NixOS, set `chromiumDnsNames` to issue a managed Chromium
+policy for the dashboard hostname.
+
+The dotfiles hosts `k` and `nebula` use the same pinned certificate from
+`lib/cognee-root-ca.nix`. Seed the public PEM into the Nix store on a new
+build machine with `nix-store --add-fixed sha256 cognee-root.crt` after
+checking its fingerprint against `mini`. Keep the signing keys with Caddy.
+Changing the root CA requires seeding its replacement and updating the
+hash. For macOS removal, keep the client module imported and switch once
+with `clientTrust.enable = false` to remove its admin trust entry.
+
 ## Updating
 
-Change the Cognee pin in `pyproject.toml`, run `uv lock`, then build on
-Apple Silicon and check an authenticated remember and recall against a fresh
-Postgres instance. Back up existing state before activating a new version
-because Cognee can migrate data on startup.
+Change the Python pin in `pyproject.toml` and run `uv lock`. Update the
+matching dashboard tag and hashes in `frontend.nix` and check its source
+substitutions against the new tag. Build both packages on Apple Silicon and
+check dashboard access and an authenticated remember and recall. Back up
+existing state before activating a new version because Cognee can migrate
+data on startup.

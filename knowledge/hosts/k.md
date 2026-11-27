@@ -20,6 +20,11 @@ are opted into below per the
 - [apple-container](../modules/apple-container.md)
 - [ai-usage](../modules/ai-usage.md)
 - [claude-account-selector](../modules/claude-account-selector.md)
+- [Cognee client trust](../modules/cognee.md) adds [mini](mini.md)'s CA to
+  the system PEM bundle and the macOS System Keychain.
+- The Cognee Codex pilot uses an agent credential in `~/.cognee/.env` and
+  forwards explicit memory writes and recalls to [mini](mini.md). The
+  pilot dataset is shared back to the dashboard account for viewing.
 - [git-signing-agent](../modules/git-signing-agent.md): commits sign through a
   root-loaded ssh-agent with no 1Password prompt, so AI harnesses can commit
   unattended. The key is the one [mini](mini.md) uses, loaded from the

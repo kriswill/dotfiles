@@ -12,7 +12,7 @@ flake consumes via relative-path inputs.
 * [Cbissue](cbissue.md) - cbissue — open Codeberg (Forgejo) issues from the CLI.
 * [Cbissues](cbissues.md) - cbissues — browse/filter a Codeberg (Forgejo) repo's issues (fzf TUI + --plain).
 * [ccglass](ccglass.md) - ccglass — local logging reverse-proxy + web dashboard for coding agents, built as a standalone binary.
-* [Cognee](cognee.md) - Cognee is a graph-backed agent memory service packaged here as a locked Apple Silicon Python environment.
+* [Cognee](cognee.md) - Cognee is a graph-backed agent memory service packaged here as a locked Apple Silicon Python runtime and a Next.js dashboard.
 * [Direnv](direnv.md) - Nixpkgs overlay 'direnv'.
 * [dotbar](dotbar.md) - Braille-dot progress bar CLI for statuslines and terminals, consumed straight from the tlehman/dotbar flake.
 * [Dots Adopt](dots-adopt.md) - Custom Nix package 'dots-adopt'.

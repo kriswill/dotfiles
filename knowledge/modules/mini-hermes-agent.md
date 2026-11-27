@@ -15,6 +15,9 @@ sources:
   - id: sops-nix
     resource: https://github.com/Mic92/sops-nix
     title: sops-nix
+  - id: cognee-hermes
+    resource: https://github.com/topoteretes/cognee-integrations/tree/main/integrations/hermes-agent
+    title: Cognee Memory Plugin for Hermes Agent
 ---
 
 Turns on [hermes-agent](hermes-agent.md) for [mini](../hosts/mini.md),
@@ -73,22 +76,28 @@ are separate warm and cold measurements, with multiple changes between boots.
   in. On 2026-11-09 nebula's `model:` block (`gpt-6.1-sol`, `openai-codex`,
   its `base_url` and `api_mode`) was appended to `config.yaml` and the
   gateway restarted. `/model … --global` owns it from there.
-- **API keys, if wanted, come from sops.** The `hermes-env` secret holds
-  `KEY=value` lines (none exists yet). sops-nix decrypts it
-  root-only to `/run/secrets/hermes-env`,[^sops-nix] which the sandbox can't
-  read; activation copies it into `$HERMES_HOME/.env` (0600, k).
+- **API keys come from sops.** The optional `hermes-env` secret holds model
+  provider keys as `KEY=value` lines. sops-nix decrypts Hermes secrets into
+  root-only files under `/run/secrets`.[^sops-nix] Activation copies the
+  values into `$HERMES_HOME/.env` (0600, k).
 - **The secret has its own file**, `modules/hosts/mini/hermes-secrets.yaml`,
   with its own `.sops.yaml` rule. `secrets.yaml` opens only with mini's host
   key (root), so adding a key there means decrypting as root. A separate
   file is written whole from 1Password with only mini's public recipient,
   from any checkout.
-- **The secret is declared only once that file is tracked**
-  (`builtins.pathExists`), so the host builds before the key exists; Hermes
-  then relies on the Codex login alone. Mini's nonempty `environment`
-  also supplies `HC_SOCKET` and `HERMES_CUA_DRIVER_CMD`, so activation
-  rewrites `.env` even without that secret. Removing the secret declaration
-  drops its copied values at the next activation; already-running processes
-  retain their environment until restarted.
+- **The model-provider secret is declared when its file is tracked**
+  (`builtins.pathExists`). Hermes currently uses the Codex login for model
+  access. Activation rewrites `.env` using the managed environment and
+  secret files. Running processes pick up changed values on restart.
+- **Cognee provides graph memory.** Nix installs and selects the native
+  Hermes provider,[^cognee-hermes] connects it to [Cognee on mini](mini-cognee.md)
+  over loopback, and supplies a dedicated `hermes-mini` agent key from
+  `modules/hosts/mini/hermes-cognee.yaml`. Recall is pinned to
+  `hermes-pilot`, and automatic conversation and tool-call capture is off
+  for this pilot. Use `hermes cognee status` to check the active provider
+  and dataset. On 2026-11-26, one fresh Hermes session saved a test fact
+  and a second retrieved it. The dashboard account has read access to the
+  dataset.
 - **Herdr integration and delegation are enabled.** Status hooks support
   OSC reporting to the pane. Separately, the host allows
   `/Users/k/.local/state/herdr-core/default/default.sock` and sets `HC_SOCKET`
@@ -100,8 +109,8 @@ are separate warm and cold measurements, with multiple changes between boots.
   read the host's `gpg.ssh.program`. This verifies that delegation path,
   not an LLM-driven Git workflow or every status-reporting transport.
 - **General vault access is not provisioned by the signing service.** The
-  post-boot `.env` contained only the two nonsecret settings above; no
-  `hermes-env` file or agent service-account token was configured. The
+  earlier post-boot check found no `hermes-env` file or agent
+  service-account token. The
   root-only signing token can fetch its designated key, but is not exported
   to Hermes, Core or Codex. Additional assigned vaults need separately scoped
   noninteractive credentials or a broker. An existing OAuth `auth.json`
@@ -171,5 +180,6 @@ key) or `hermes -z hi`.
 
 [^subflake-readme]: flakes/hermes-agent/README.md
 [^sops-nix]: sops-nix
+[^cognee-hermes]: Cognee's native plugin exposes a Hermes memory provider and distinct remember and recall tools.
 
 [^cua-launch-grants]: CuaDriver enforces a matching per-app launch grant before dispatching launch_app.

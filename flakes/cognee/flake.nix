@@ -33,6 +33,7 @@
         packages.cognee = pkgs.callPackage ./package.nix {
           inherit (inputs) uv2nix pyproject-nix pyproject-build-systems;
         };
+        packages.cognee-frontend = pkgs.callPackage ./frontend.nix { };
         packages.default = config.packages.cognee;
         checks.cognee-imports = pkgs.runCommand "cognee-imports" { } ''
           export HOME="$TMPDIR"
@@ -45,9 +46,13 @@
         '';
       };
 
+      flake.lib.mkHermesPlugin = pythonPackages: pythonPackages.callPackage ./hermes-plugin.nix { };
+
       flake.darwinModules = {
         cognee = import ./darwin-module.nix self;
+        clientTrust = import ./client-trust.nix { isDarwin = true; };
         default = self.darwinModules.cognee;
       };
+      flake.nixosModules.clientTrust = import ./client-trust.nix { isDarwin = false; };
     };
 }

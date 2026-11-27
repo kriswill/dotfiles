@@ -2,6 +2,30 @@
 
 ## 2026-11-26
 
+- **Update**: [mini](mini.md) activated generation 48 with a larger Cognee
+  relational pool. The installed Codex plugin on [k](k.md) stored a test
+  fact in `codex-pilot` and shared the dataset with the dashboard account.
+  A fresh ephemeral Codex session retrieved the fact from that dataset.
+
+- **Update**: [mini](mini.md) activated generation 46 with the dashboard
+  sign-in form fix and the administrator credential from 1Password.
+  Verified HTTPS login with the saved credential.
+
+- **Update**: [mini](mini.md) activated generation 44 and provisioned
+  Cognee's initial dashboard administrator through sops-nix. Verified
+  HTTPS login and authenticated account access through Caddy.
+
+- **Update**: [k](k.md) generation 303 and [nebula](nebula.md) generation
+  255 opt in to [Cognee client trust](../modules/cognee.md). Both hosts
+  verified `mini.home.lan:8443` with normal TLS verification. Helium on
+  `nebula` rendered the sign-in page in an isolated profile.
+
+- **Update**: [mini](mini.md) activated generation 43 with the [Cognee
+  dashboard](../modules/mini-cognee.md) and Caddy on `mini.home.lan:8443`.
+  Verified TLS, dashboard assets, API health, and sign-out through Caddy.
+  The Caddy endpoint returned HTTP 404 for both signup paths. A request
+  from [k](k.md) through Herdr reached the sign-in page with HTTP 200.
+
 - **Update**: [mini](mini.md) activated generation 41 with OpenAI graph
   extraction and generated recall for [Cognee](../modules/cognee.md). The
   API key came from 1Password and is deployed through sops-nix. The detailed
