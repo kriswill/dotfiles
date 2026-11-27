@@ -230,8 +230,8 @@ in
           environment = {
             LANG = "en_US.UTF-8";
             TELEMETRY_DISABLED = "1";
+            GRAPH_EXTRACTOR = "llm";
             GLINER_AUTO_INSTALL = "false";
-            GLINER_INFERENCE_THREADS = "1";
             DATASET_QUEUE_MAX_CONCURRENT = "2";
             DATABASE_MAX_LRU_CACHE_SIZE = "2";
             KUZU_NUM_THREADS = "2";

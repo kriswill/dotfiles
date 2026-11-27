@@ -2,7 +2,11 @@
 
 This flake packages Cognee 1.6.10 for Apple Silicon Macs running macOS 15 or
 newer. The `cognee` and `default` package outputs provide a Python 3.12
-environment with `cognee-cli`, `uvicorn`, GLiNER, and the Postgres drivers.
+environment with `cognee-cli`, `uvicorn`, FastEmbed, and the Postgres drivers.
+Graph extraction requires a configured LLM provider. The offline GLiNER
+extractor is not packaged: it pulls in Transformers, whose patched releases
+require a newer Hugging Face Hub than Cognee 1.6.10 allows. Local FastEmbed
+embeddings do not need Transformers.
 `uv.lock` pins the wheel and source hashes. Dependencies install during the
 Nix build. Local model weights download into the service's cache on first use.
 The optional `cognee-frontend` package builds the Next.js dashboard from the
@@ -125,7 +129,7 @@ On the dotfiles hosts, apply the enabled configuration with `nrs`.
   an existing embedded instance to Postgres requires an explicit data
   migration. A Nix generation rollback does not restore database contents.
 
-The service starts one API worker, limits GLiNER to one inference batch,
+The service starts one API worker,
 limits active datasets to two, and sets the Ladybug buffer pool to 256 MiB
 per graph. Measure memory during ingestion and concurrent recall before
 expanding capture. Size the model cache, data directory, database, and

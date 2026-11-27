@@ -41,7 +41,12 @@
           export DATA_ROOT_DIRECTORY="$TMPDIR/data"
           export TELEMETRY_DISABLED=1
           export COGNEE_LOG_FILE=false
-          ${config.packages.cognee}/bin/python -c 'import asyncpg, fastembed, gliner2, ladybug, psycopg2, torch; from cognee.api.client import app'
+          ${config.packages.cognee}/bin/python - <<'PY'
+          from importlib.util import find_spec
+          import asyncpg, fastembed, ladybug, psycopg2
+          from cognee.api.client import app
+          assert find_spec("transformers") is None, "unexpected Transformers dependency"
+          PY
           touch "$out"
         '';
       };

@@ -2,7 +2,7 @@
 name = "cognee-runtime"
 version = "0.1.0"
 requires-python = ">=3.12,<3.13"
-dependencies = ["cognee[gliner,postgres-binary]==1.6.10"]
+dependencies = ["cognee[postgres-binary]==1.6.10"]
 
 [tool.uv]
 environments = ["sys_platform == 'darwin' and platform_machine == 'arm64'"]

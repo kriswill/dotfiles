@@ -6,6 +6,8 @@
 
 ## 2026-11-26
 
+- **Update**: [Cognee](cognee.md) omits the optional GLiNER/Transformers stack. Local FastEmbed embeddings and LLM graph extraction remain available.
+
 - **Update**: [Cognee](cognee.md) packages its matching Next.js dashboard
   with a pinned npm cache and local font assets.
 

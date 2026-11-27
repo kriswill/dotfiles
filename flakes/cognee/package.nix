@@ -45,8 +45,5 @@ let
   );
 in
 pythonSet.mkVirtualEnv "cognee" {
-  cognee = [
-    "gliner"
-    "postgres-binary"
-  ];
+  cognee = [ "postgres-binary" ];
 }

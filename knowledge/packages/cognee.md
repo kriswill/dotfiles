@@ -20,8 +20,10 @@ The package uses uv2nix and a dedicated lockfile, following the
 [Hermes packaging](hermes-agent.md) pattern.
 
 The Ladybug release supplies a macOS 15 wheel. The derivation sets its
-wheel selection target accordingly and includes GLiNER and PostgreSQL
-dependencies in the immutable runtime. Model weights are cached
+wheel selection target accordingly and includes FastEmbed and PostgreSQL
+dependencies in the immutable runtime. The packaged graph extractor uses a
+configured LLM; the optional offline GLiNER stack is excluded to avoid its
+vulnerable Transformers dependency. Embedding model weights are cached
 separately at runtime.[^dependencies] The
 [native hosting decision](../decisions/native-cognee-on-darwin.md)
 explains where mutable state lives.
