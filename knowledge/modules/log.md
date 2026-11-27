@@ -1,5 +1,12 @@
 # Log
 
+## 2026-11-27
+
+- **Update**: [Cognee on mini](mini-cognee.md) puts warnings and disk runway
+  first on `/capacity`, with storage and latency charts above raw readings.
+
+- **Update**: [Cognee on mini](mini-cognee.md) documents hourly capacity history, growth forecasts, aggregate service usage and alert thresholds.
+
 ## 2026-11-26
 
 - **Update**: [Hermes on mini](mini-hermes-agent.md) defaults writes to

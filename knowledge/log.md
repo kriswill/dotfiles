@@ -2,6 +2,8 @@
 
 ## 2026-11-27
 
+- **Update**: [Cognee on mini](modules/mini-cognee.md) separates service growth from host capacity and documents the disk-runway alerts.
+
 - The packaged [Cognee dashboard](packages/cognee.md) opens text in a formatted reader from both the main Datasets screen’s Documents column and the dataset detail page.
 
 ## 2026-11-21

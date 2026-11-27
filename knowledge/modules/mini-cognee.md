@@ -23,6 +23,46 @@ The original four-connection total timed out during the first Codex memory
 write while the dashboard was active. The expanded pool completed the
 same synthetic ingestion with the embedded databases.
 
+## Capacity monitoring
+
+The hourly Hermes watchdog retains 180 days of numeric samples in
+`$HERMES_HOME/state/cognee-capacity/history.sqlite`. The watchdog scripts and
+schedules are managed in the live Hermes profile, not installed by this
+module. Run `python3 $HERMES_HOME/scripts/cognee_capacity.py` for the weekly
+review's input.
+Host disk headroom, memory pressure, swap, load, API-account RSS/CPU and
+health latency are distinct from Cognee's own growth. After `nrs`, the
+`org.nixos.cognee-capacity` job publishes service-state bytes, document
+and dataset counts, and recorded remember/recall activity for the trailing
+hour at `/var/lib/cognee-capacity/latest.json`. It runs as the service user;
+no document text, query, account identifier or API key is exported.
+
+The forecast uses up to 28 days of daily medians and needs seven days with
+at least 12 hourly samples each. Warn at 90 days to the disk reserve
+(the larger of 10% or 20 GiB); escalate at 30 days. CPU, memory pressure
+and latency warnings use sustained observations, not a linear RAM estimate.
+Missing exporter data is unknown, not zero. On-host alerts cannot detect a
+total host outage while it is happening.
+
+Open `/capacity` on mini's existing Cognee HTTPS origin after signing in as the
+human operator. Warnings and disk runway come first, then daily storage and
+hourly operation-duration charts. Chart gaps are not interpolated; open
+**Raw measurements** for exact readings and operation counts. Reload the page
+to see the latest readings. Caddy routes `/capacity` and `/capacity/` to Bun
+over a Unix socket, and Bun checks the session over Cognee's API socket.
+When capacity is enabled, Caddy also uses the API socket for its HTTPS API
+routes. Only the respective service accounts can replace the socket files;
+if either listener is down, the request fails without a TCP fallback.
+Cognee still uses one worker and retains its loopback TCP port for local
+clients. On a fresh host, create `/var/lib/cognee-capacity-page/viewer.env`
+(`k:_www`, `0640`) with
+`CAPACITY_VIEWER` set to the operator's Cognee login email. Do not put this
+allowlist or the operator's password in the repository. A separate publisher
+copies the last 28 days of numeric history every five minutes, so the web
+process does not need access to Hermes or Cognee databases. Discord delivery
+is not configured.
+
 ## Source
 
 - Module: [`modules/hosts/mini/cognee.nix`](../../modules/hosts/mini/cognee.nix)
+- Capacity UI: [`cognee-capacity-page.js`](../../modules/hosts/mini/cognee-capacity-page.js)

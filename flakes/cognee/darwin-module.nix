@@ -20,6 +20,9 @@ let
   postgres = pkgs.postgresql_17.withPackages (ps: [ ps.pgvector ]);
   emptyEnvironment = pkgs.writeText "cognee-empty.env" "";
   apiAddress = "127.0.0.1:${toString cfg.port}";
+  capacityEnabled = proxy.enable && proxy.capacitySocket != null;
+  capacityApiSocketDir = "/var/lib/cognee-api-socket";
+  apiUpstream = if capacityEnabled then "unix/${proxy.capacityApiSocket}" else apiAddress;
   httpsOrigin = "https://${proxy.hostName}:${toString proxy.port}";
   pgPort = toString pg.port;
   cogneeJob = lib.escapeShellArg "system/${config.launchd.daemons.cognee.serviceConfig.Label}";
@@ -75,19 +78,25 @@ let
       route {
         @register path /api/v1/auth/register /api/v1/auth/register/
         respond @register 404
+        ${lib.optionalString capacityEnabled ''
+          @capacity path /capacity /capacity/
+          handle @capacity {
+            reverse_proxy unix/${proxy.capacitySocket}
+          }
+        ''}
         ${
           if ui.enable then
             ''
               @api path /api/v1 /api/v1/* /health /health/* /docs /docs/* /redoc /openapi.json
               handle @api {
-                reverse_proxy ${apiAddress}
+                reverse_proxy ${apiUpstream}
               }
               handle {
                 reverse_proxy 127.0.0.1:${toString ui.port}
               }
             ''
           else
-            "reverse_proxy ${apiAddress}"
+            "reverse_proxy ${apiUpstream}"
         }
       }
     }
@@ -173,6 +182,17 @@ in
         type = lib.types.strMatching "[0-9a-fA-F:.]+";
         description = "Local LAN IP address on which Caddy listens.";
       };
+      capacitySocket = lib.mkOption {
+        type = lib.types.nullOr (lib.types.strMatching "/var/lib/[a-zA-Z0-9_-]+/[a-zA-Z0-9_-]+[.]sock");
+        default = null;
+        description = "Optional Unix socket for a separately authenticated operator dashboard, in a directory writable only by its service account.";
+      };
+      capacityApiSocket = lib.mkOption {
+        type = lib.types.str;
+        readOnly = true;
+        default = "${capacityApiSocketDir}/api.sock";
+        description = "Protected API socket for the capacity dashboard, available when capacitySocket is enabled.";
+      };
       port = lib.mkOption {
         type = lib.types.ints.between 1024 65535;
         default = 8443;
@@ -188,6 +208,15 @@ in
           {
             assertion = !proxy.enable || cfg.secretsFile != null;
             message = "services.cognee.https requires a runtime secretsFile.";
+          }
+          {
+            assertion =
+              !capacityEnabled
+              || (
+                builtins.stringLength proxy.capacitySocket < 104
+                && dirOf proxy.capacitySocket != capacityApiSocketDir
+              );
+            message = "The capacity listener needs a short socket path in its own directory.";
           }
           {
             assertion =
@@ -284,9 +313,12 @@ in
                   /bin/sleep 1
                 done
               ''}
-              exec ${cfg.package}/bin/uvicorn cognee.api.client:app \
-                --host 127.0.0.1 --port ${toString cfg.port} --workers 1 \
-                --timeout-graceful-shutdown 10 \
+              exec ${
+                if capacityEnabled then
+                  "${cfg.package}/bin/python -I ${./dual-listener.py} --port ${toString cfg.port} --unix ${proxy.capacityApiSocket}"
+                else
+                  "${cfg.package}/bin/uvicorn cognee.api.client:app --host 127.0.0.1 --port ${toString cfg.port} --workers 1 --timeout-graceful-shutdown 10"
+              } \
                 ${lib.optionalString (
                   cfg.secretsFile != null
                 ) "--env-file ${lib.escapeShellArg cfg.secretsFile}"}
@@ -296,6 +328,12 @@ in
           };
         };
       }
+      (lib.mkIf capacityEnabled {
+        system.activationScripts.launchd.text = lib.mkBefore ''
+          test ! -L ${capacityApiSocketDir} || exit 1
+          /usr/bin/install -d -m 0755 -o ${appUser} -g ${group} ${capacityApiSocketDir} || exit 1
+        '';
+      })
       (lib.mkIf (cfg.secretsFile != null) {
         # sops-nix installs its runtime files at order 1500. The receipt under
         # /var/run records what was last handed to launchd, even after a failed activation.
