@@ -100,6 +100,8 @@ let
         }
       }
     }
+
+    ${proxy.extraSites}
   '';
   directory = lib.types.strMatching "/[a-zA-Z0-9._/-]+";
 in
@@ -169,6 +171,11 @@ in
     };
     https = {
       enable = lib.mkEnableOption "a LAN HTTPS endpoint using Caddy's internal CA";
+      extraSites = lib.mkOption {
+        type = lib.types.lines;
+        default = "";
+        description = "Additional Caddy site blocks sharing this proxy's internal CA and service account.";
+      };
       uid = lib.mkOption {
         type = lib.types.ints.positive;
         default = 453;

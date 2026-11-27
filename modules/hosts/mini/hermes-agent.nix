@@ -34,8 +34,13 @@ in
       config,
       inputs,
       lib,
+      pkgs,
       ...
     }:
+    let
+      dashboardDir = "${config.services.hermes-agent.stateDir}/dashboard";
+      dashboardEnv = "${dashboardDir}/auth.env";
+    in
     {
       imports = [ ../../../flakes/hermes-agent/nix/cua-calculator-module.nix ];
 
@@ -48,9 +53,28 @@ in
       # other hosts while measuring normal scheduling against cold boot.
       launchd.user.agents.hermes-agent.serviceConfig.ProcessType = lib.mkForce "Standard";
 
+      # Reuse the existing LAN CA, without exposing the backend's TCP port.
+      services.cognee.https.extraSites = ''
+        https://mini.home.lan:9443 {
+          bind 192.168.0.79
+          tls internal
+          reverse_proxy 127.0.0.1:9119
+        }
+      '';
+
+      # Provision once before the shared Hermes environment is assembled (2000).
+      # Credentials are runtime-only and survive rebuilds; never print them.
+      system.activationScripts.postActivation.text = lib.mkOrder 1900 ''
+        /usr/bin/install -d -o k -g staff -m 0700 ${dashboardDir}
+        ${pkgs.python3}/bin/python3 ${./hermes-dashboard-auth.py} ${dashboardDir}
+        chown k:staff ${dashboardDir}/auth.env ${dashboardDir}/login.json
+      '';
+
       services.hermes-agent = {
         enable = true;
         addToSystemPackages = true;
+        backend.mode = "dashboard";
+        settings.dashboard.public_url = "https://mini.home.lan:9443";
         # Idle/working/blocked status in the Herdr app's Agents list.
         herdr.enable = true;
         # Official signed immutable bundle + reviewed manual user-side launcher.
@@ -84,6 +108,7 @@ in
         };
         environmentFiles = lib.optional haveSecrets config.sops.secrets.hermes-env.path ++ [
           config.sops.secrets.hermes-cognee-env.path
+          dashboardEnv
         ];
         extraPythonPackages = [
           (inputs.cognee.lib.mkHermesPlugin config.services.hermes-agent.package.python.pkgs)

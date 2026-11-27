@@ -135,6 +135,47 @@ without resolving that Hermes's full Core delegation can reach them too.
 The [credential review](../../docs/mini-agent-credentials.md) records verified
 metadata, existing host GitHub access, and the pending authority decision.
 
+## LAN dashboard
+
+Mini declares a persistent `org.nixos.hermes-backend` launchd user agent
+(`RunAtLoad` and `KeepAlive`) using the gateway/CLI's existing private state
+and sandbox. It binds only `127.0.0.1:9119`. This starts at user login,
+not before a GUI/user session exists; the [headless login policy](headless-login.md)
+remains unchanged.
+
+The [Cognee proxy](cognee.md)'s `https.extraSites` adds
+`https://mini.home.lan:9443`, sharing its existing internal CA without
+changing Cognee's origin or creating another CA. `dashboard.public_url`
+declares that exact origin and **engages Hermes's authentication gate even
+though the backend is loopback-bound**. Do not remove it while proxying the
+backend. WebSockets pass through Caddy without a separate route.
+
+Activation provisions credentials once under
+`/Users/k/.hermes-agent/dashboard/`: `login.json` contains the generated
+password for username `hermes`, and `auth.env` contains its scrypt hash.
+Both are mode 0600 in a 0700 directory, owned by k. The hash is merged into
+Hermes's managed runtime environment; neither file enters Git or the Nix
+store. Rebuilds preserve credentials. Missing login data with an existing
+hash fails closed rather than silently resetting access. These credentials
+need private backup for recovery; this is local runtime provisioning, not
+SOPS-backed credential recovery.
+
+Check `launchctl print gui/$(id -u)/org.nixos.hermes-backend` and
+`~/Library/Logs/hermes-backend{,.err}.log`. Verify anonymous API requests
+are refused, valid login works, and authenticated WebSockets connect through
+HTTPS from a LAN client; a loopback probe alone does not establish remote
+reachability.
+
+Verified 2026-11-27, generation 58: launchd reports the backend running and
+the listener is loopback-only. k and nebula both fetch `/login` over normally
+verified HTTPS (200); k's anonymous `/api/auth/me` returns 401. On mini,
+an explicit pinned-CA HTTPS check verifies correct/incorrect passwords,
+Secure/HttpOnly session cookies, authenticated identity, a ticket-authenticated
+WebSocket upgrade through Caddy, and logout. Mini's default curl trust bundle
+does not trust this CA, so local probes must supply the pinned public root;
+do not bypass TLS validation. Authenticated model/chat execution and a cold
+boot are not part of these checks.
+
 ## Bounded desktop driver package
 
 The local signed-driver package at

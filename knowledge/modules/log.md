@@ -2,6 +2,12 @@
 
 ## 2026-11-27
 
+- **Update**: [Hermes on mini](mini-hermes-agent.md) declares a persistent
+  loopback dashboard behind the [Cognee Caddy proxy](cognee.md) on HTTPS
+  port 9443, with an explicit public-origin auth gate and private generated
+  runtime credentials. Activated in generation 58; k/nebula trusted-TLS login
+  rendering and on-mini authenticated HTTPS/WebSocket checks passed.
+
 - **Update**: [Cognee on mini](mini-cognee.md) puts warnings and disk runway
   first on `/capacity`, with storage and latency charts above raw readings.
 

@@ -30,6 +30,12 @@ standalone `clientTrust` modules. They pin the same public CA by file hash.
 Both use the system trust bundle, `k` also uses the System Keychain, and
 `nebula` gets a managed [Helium](helium.md) policy for `mini.home.lan`.
 
+The optional `services.cognee.https.extraSites` appends operator-owned Caddy
+site blocks to the same proxy, sharing its internal CA and service identity.
+[Hermes on mini](mini-hermes-agent.md) uses this for a separate HTTPS port;
+its own application authentication remains mandatory. Extra sites must
+declare their intended bind address and access controls explicitly.
+
 The activation hook runs after SOPS installs runtime files and requests a
 graceful Cognee restart when the dotenv contents change. A private digest
 under `/var/run` lets unchanged activations leave the API running.
