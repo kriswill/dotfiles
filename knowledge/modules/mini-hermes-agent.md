@@ -92,12 +92,13 @@ are separate warm and cold measurements, with multiple changes between boots.
 - **Cognee provides graph memory.** Nix installs and selects the native
   Hermes provider,[^cognee-hermes] connects it to [Cognee on mini](mini-cognee.md)
   over loopback, and supplies a dedicated `hermes-mini` agent key from
-  `modules/hosts/mini/hermes-cognee.yaml`. Recall is pinned to
-  `hermes-pilot`, and automatic conversation and tool-call capture is off
-  for this pilot. Use `hermes cognee status` to check the active provider
-  and dataset. On 2026-11-26, one fresh Hermes session saved a test fact
-  and a second retrieved it. The dashboard account has read access to the
-  dataset.
+  `modules/hosts/mini/hermes-cognee.yaml`. Hermes agents on mini save to
+  `mini-hermes`. Automatic recall lets Cognee choose a relevant dataset
+  the agent can read without changing where it saves. Share project datasets
+  with `hermes-mini` for read access; automatic conversation and tool-call
+  capture remains off. Check the configured defaults with `hermes cognee status`.
+  The earlier `hermes-pilot` dataset held the cross-session save/recall test;
+  switching the default does not migrate its contents or its dashboard sharing.
 - **Herdr integration and delegation are enabled.** Status hooks support
   OSC reporting to the pane. Separately, the host allows
   `/Users/k/.local/state/herdr-core/default/default.sock` and sets `HC_SOCKET`

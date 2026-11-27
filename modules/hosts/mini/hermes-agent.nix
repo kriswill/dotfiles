@@ -77,8 +77,8 @@ in
         environment = {
           HC_SOCKET = "/Users/k/.local/state/herdr-core/default/default.sock";
           COGNEE_BASE_URL = "http://127.0.0.1:8000";
-          COGNEE_PLUGIN_DATASET = "hermes-pilot";
-          COGNEE_PLUGIN_RECALL_MODE = "pinned";
+          COGNEE_PLUGIN_DATASET = "mini-hermes";
+          COGNEE_PLUGIN_RECALL_MODE = "auto";
           COGNEE_CAPTURE = "false";
           COGNEE_UPDATE_CHECK = "false";
         };

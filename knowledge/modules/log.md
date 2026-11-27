@@ -2,6 +2,9 @@
 
 ## 2026-11-26
 
+- **Update**: [Hermes on mini](mini-hermes-agent.md) defaults writes to
+  `mini-hermes` and allows recall from relevant readable datasets.
+
 - **Update** — [Hermes on mini](mini-hermes-agent.md) uses Cognee's native
   memory plugin with a dedicated agent key and an explicit-save pilot
   dataset. The Cognee dashboard can generate keys in its Hermes setup dialog.
