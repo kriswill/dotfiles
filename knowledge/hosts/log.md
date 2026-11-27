@@ -2,6 +2,11 @@
 
 ## 2026-11-26
 
+- **Update**: [mini](mini.md) activated generation 41 with OpenAI graph
+  extraction and generated recall for [Cognee](../modules/cognee.md). The
+  API key came from 1Password and is deployed through sops-nix. The detailed
+  health check passed for OpenAI completions and local FastEmbed vectors.
+
 - **Update**: [mini](mini.md) enables the [Cognee](../modules/cognee.md)
   loopback API for local agent sessions with embedded storage and local models.
   Generation 40 is running and set as the boot default. The health endpoint
