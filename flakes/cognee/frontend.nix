@@ -22,6 +22,7 @@ buildNpmPackage (finalAttrs: {
   patches = [
     ./dashboard-login.patch
     ./dashboard-api-keys.patch
+    ./dashboard-memory-reader.patch
   ];
   nativeBuildInputs = [ makeWrapper ];
 

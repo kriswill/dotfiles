@@ -1,5 +1,9 @@
 # Log
 
+## 2026-11-27
+
+- **Update**: The [Cognee](cognee.md) dashboard opens text memories and documents from the dataset list in a read-only viewer.
+
 ## 2026-11-26
 
 - **Update**: [Cognee](cognee.md) packages its matching Next.js dashboard

@@ -1,5 +1,9 @@
 # Log
 
+## 2026-11-27
+
+- The packaged [Cognee dashboard](packages/cognee.md) opens text in a formatted reader from both the main Datasets screen’s Documents column and the dataset detail page.
+
 ## 2026-11-21
 
 - **Update**: The [fastfetch manual](../docs/fastfetch.md#inside-herdr-herdr-core-hc-and-the-herdr-app) covers Herdr app panes: the two ways the logo failed there, the kitten shim that fixes them, the upstream issues that would retire it, and a test harness built on `hc` and `herdr-app shot`. Its version block is re-checked (fastfetch 2.70.0, kitten 0.48.2, Ghostty 1.4.0).

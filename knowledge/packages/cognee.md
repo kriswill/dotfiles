@@ -30,5 +30,11 @@ explains where mutable state lives.
 upstream npm lockfile. The build uses Nix-packaged Geist fonts, and the
 runtime serves its assets directly from the store.[^dashboard]
 
+On **Datasets**, select a dataset and click a memory, plain-text, or Markdown
+title in the **Documents** column. The separate dataset detail page’s file
+table opens the same reader. **Formatted** renders Markdown;
+**Original** preserves the source text. Both use the signed-in reader’s
+dataset access. Above 128 KiB the preview offers a full-text download.
+
 [^dependencies]: Cognee Python dependencies and platform support.
 [^dashboard]: Cognee dashboard source and dependency lockfile.
