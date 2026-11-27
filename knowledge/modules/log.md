@@ -2,6 +2,9 @@
 
 ## 2026-11-27
 
+- **Update**: [Cognee on mini](mini-cognee.md) adds GitHub notes for the
+  running version and a top-bar link to the latest stable release when newer.
+
 - **Update**: [Hermes on mini](mini-hermes-agent.md) declares a persistent
   loopback dashboard behind the [Cognee Caddy proxy](cognee.md) on HTTPS
   port 9443, with an explicit public-origin auth gate and private generated

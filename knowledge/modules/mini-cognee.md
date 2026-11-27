@@ -62,7 +62,18 @@ copies the last 28 days of numeric history every five minutes, so the web
 process does not need access to Hermes or Cognee databases. Discord delivery
 is not configured.
 
+## Release notes and updates
+
+The dashboard's `/releases` page uses the version reported by the running
+Cognee API's `/health`, not the version in the checkout. It fetches the
+matching GitHub release notes and separately shows notes for GitHub's latest
+stable release when its version is newer. The top-bar badge links to that
+section. An unavailable check is not treated as up to date. The frontend
+caches the upstream check for 15 minutes; no GitHub token or browser-side
+GitHub request is needed. The badge does not install updates.
+
 ## Source
 
 - Module: [`modules/hosts/mini/cognee.nix`](../../modules/hosts/mini/cognee.nix)
 - Capacity UI: [`cognee-capacity-page.js`](../../modules/hosts/mini/cognee-capacity-page.js)
+- Releases UI and endpoint: [`dashboard-releases.patch`](../../flakes/cognee/dashboard-releases.patch)
