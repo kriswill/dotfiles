@@ -59,8 +59,8 @@ boot-default generation 30 and `pmset` AC `sleep 0`; display sleep remains
 10 minutes. This keeps unattended access available during idle periods and
 does not change another host's power policy.
 
-The [Cognee module](../modules/cognee.md) is available for a shared LAN
-memory service on this host. Its jobs are opt-in.
+Mini enables [Cognee](../modules/cognee.md) on `127.0.0.1:8000` for local
+agent sessions. The pilot uses the embedded databases and local CPU models.
 
 ## Source
 

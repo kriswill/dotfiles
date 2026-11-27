@@ -86,8 +86,13 @@ On the dotfiles hosts, apply the enabled configuration with `nrs`.
   `COGNEE_BASE_URL` and `COGNEE_API_KEY`.
 - The system jobs are `org.nixos.cognee`, `org.nixos.cognee-postgresql`,
   and `org.nixos.cognee-proxy` for the enabled components. Inspect them with
-  `launchctl print system/<label>` and the corresponding files in `/var/log`.
-  Cognee waits for a successful authenticated database query at startup.
+  `launchctl print system/<label>`. The jobs write logs in their state
+  directories. With default paths these are
+  `/var/lib/cognee/cognee.log`,
+  `/var/lib/cognee-postgresql/cluster/cognee-postgresql.log`, and
+  `/var/lib/cognee-proxy/cognee-proxy.log`.
+  Cognee waits for a successful authenticated database query when managed
+  PostgreSQL is enabled.
 - Managed PostgreSQL 17 listens on loopback port 55432 and starts before
   login. Its data directory and generated password live under
   `/var/lib/cognee-postgresql`. The administrator can connect over the private

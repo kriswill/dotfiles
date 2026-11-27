@@ -23,6 +23,9 @@
     # Keep this headless agent host reachable when displays are idle.
     power.sleep.computer = "never";
 
+    # Local agent memory for the Codex pilot.
+    services.cognee.enable = true;
+
     # Hexley the platypus on the Nix snowflake (modules/darwin/fastfetch.nix).
     programs.fastfetch.logo = "hexley-nix.png";
 

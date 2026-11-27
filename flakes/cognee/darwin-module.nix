@@ -37,15 +37,15 @@ let
     inherit uid home;
     gid = cfg.uid;
   };
-  daemon = user: logName: {
+  daemon = user: logPath: {
     UserName = user;
     GroupName = group;
     RunAtLoad = true;
     KeepAlive = true;
     ExitTimeOut = 30;
     ThrottleInterval = 10;
-    StandardOutPath = "/var/log/${logName}.log";
-    StandardErrorPath = "/var/log/${logName}.log";
+    StandardOutPath = logPath;
+    StandardErrorPath = logPath;
     Umask = 63; # 077
   };
   postgresLauncher = pkgs.writeShellApplication {
@@ -239,7 +239,7 @@ in
                   cfg.secretsFile != null
                 ) "--env-file ${lib.escapeShellArg cfg.secretsFile}"}
           '';
-          serviceConfig = daemon appUser "cognee" // {
+          serviceConfig = daemon appUser "${cfg.stateDirectory}/cognee.log" // {
             WorkingDirectory = cfg.stateDirectory;
           };
         };
@@ -297,7 +297,7 @@ in
             COGNEE_PG_PORT = pgPort;
             LC_ALL = "C";
           };
-          serviceConfig = daemon pgUser "cognee-postgresql" // {
+          serviceConfig = daemon pgUser "${pg.stateDirectory}/cluster/cognee-postgresql.log" // {
             WorkingDirectory = "${pg.stateDirectory}/cluster";
           };
         };
@@ -318,7 +318,7 @@ in
             HOME = "${cfg.stateDirectory}-proxy";
             XDG_DATA_HOME = "${cfg.stateDirectory}-proxy";
           };
-          serviceConfig = daemon proxyUser "cognee-proxy" // {
+          serviceConfig = daemon proxyUser "${cfg.stateDirectory}-proxy/cognee-proxy.log" // {
             GroupName = proxyUser;
           };
         };

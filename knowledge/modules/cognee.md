@@ -24,10 +24,13 @@ The activation hook runs after SOPS installs runtime files and requests a
 graceful Cognee restart when the dotenv contents change. A private digest
 under `/var/run` lets unchanged activations leave the API running.
 
+Each job logs to its own state directory. Launchd opens the files as the
+service account, which can write there at first startup.
+
 The [native hosting decision](../decisions/native-cognee-on-darwin.md)
 covers boot ordering, the database credential, and the roles of launchd
-and Nix. [Mini](../hosts/mini.md) is the intended host for a shared
-deployment. The [sub-flake manual](../../flakes/cognee/README.md) has
+and Nix. [Mini](../hosts/mini.md) enables the loopback API for local agent
+sessions. The [sub-flake manual](../../flakes/cognee/README.md) has
 configuration and operating instructions.[^launchd]
 
 [^launchd]: nix-darwin configuration options.

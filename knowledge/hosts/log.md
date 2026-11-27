@@ -1,5 +1,12 @@
 # Log
 
+## 2026-11-26
+
+- **Update**: [mini](mini.md) enables the [Cognee](../modules/cognee.md)
+  loopback API for local agent sessions with embedded storage and local models.
+  Generation 40 is running and set as the boot default. The health endpoint
+  returned HTTP 200, and an unauthenticated dataset request returned HTTP 401.
+
 ## 2026-11-19
 
 - **Update**: [SOC-Kris-Williams](SOC-Kris-Williams.md) enables

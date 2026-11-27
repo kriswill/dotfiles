@@ -2,6 +2,8 @@
 
 ## 2026-11-26
 
+- **Update**: [Cognee](cognee.md) writes launchd output in service-owned state directories so the jobs can create their log files on first startup.
+
 - **Update**: [Cognee](cognee.md) restarts after activation installs changed runtime credentials and marks login cookies `Secure` in HTTPS mode.
 
 - **Creation**: [Cognee](cognee.md) adds an opt-in native API and optional PostgreSQL and HTTPS launchd jobs.
