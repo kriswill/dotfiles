@@ -114,6 +114,11 @@ in
           (inputs.cognee.lib.mkHermesPlugin config.services.hermes-agent.package.python.pkgs)
         ];
         settings.memory.provider = "cognee";
+        # The plugin lets cognee.json override the COGNEE_* environment above
+        # (only the recall mode is exempt), and `hermes memory setup cognee`
+        # writes that file even on this managed install. Activation replaces
+        # it, so the environment stays authoritative for everything else.
+        hermesHomeFiles."cognee.json" = builtins.toJSON { improve_on_end = true; };
         # Model selection belongs to Hermes (/model, including --global); see
         # nebula's file for why it is not declared here.
 

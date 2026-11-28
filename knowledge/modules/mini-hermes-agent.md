@@ -97,6 +97,12 @@ are separate warm and cold measurements, with multiple changes between boots.
   the agent can read without changing where it saves. Share project datasets
   with `hermes-mini` for read access; automatic conversation and tool-call
   capture remains off. Check the configured defaults with `hermes cognee status`.
+  The plugin lets `$HERMES_HOME/cognee.json` override the `COGNEE_*`
+  environment (only the recall mode is exempt), and `hermes memory setup cognee`
+  writes that file even though it cannot change `.env` or `config.yaml` here.
+  So `hermesHomeFiles."cognee.json"` declares it: activation replaces the file
+  with `improve_on_end: true` (improve the graph when a session ends) and
+  nothing else, which leaves dataset, URL and recall mode to the environment.
   The earlier `hermes-pilot` dataset held the cross-session save/recall test;
   switching the default does not migrate its contents or its dashboard sharing.
 - **Herdr integration and delegation are enabled.** Status hooks support
