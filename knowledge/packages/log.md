@@ -2,6 +2,9 @@
 
 ## 2026-11-27
 
+- **Update**: [Cognee](cognee.md) pins the API and dashboard to 1.6.11,
+  keeping the existing FastEmbed model and downstream dashboard patches.
+
 - **Update**: The [Cognee](cognee.md) dashboard opens text memories and documents from the dataset list in a read-only viewer.
 
 ## 2026-11-26

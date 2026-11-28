@@ -1,12 +1,12 @@
 # Cognee on Apple Silicon
 
-This flake packages Cognee 1.6.10 for Apple Silicon Macs running macOS 15 or
+This flake packages Cognee 1.6.11 for Apple Silicon Macs running macOS 15 or
 newer. The `cognee` and `default` package outputs provide a Python 3.12
 environment with `cognee-cli`, `uvicorn`, FastEmbed, and the Postgres drivers.
 Graph extraction requires a configured LLM provider. The offline GLiNER
 extractor is not packaged: it pulls in Transformers, whose patched releases
-require a newer Hugging Face Hub than Cognee 1.6.10 allows. Local FastEmbed
-embeddings do not need Transformers.
+require a newer Hugging Face Hub than the pinned Cognee release allows. Local
+FastEmbed embeddings do not need Transformers.
 `uv.lock` pins the wheel and source hashes. Dependencies install during the
 Nix build. Local model weights download into the service's cache on first use.
 The optional `cognee-frontend` package builds the Next.js dashboard from the
@@ -161,3 +161,9 @@ substitutions against the new tag. Build both packages on Apple Silicon and
 check dashboard access and an authenticated remember and recall. Back up
 existing state before activating a new version because Cognee can migrate
 data on startup.
+
+For 1.6.11, `mini` keeps its explicit FastEmbed provider and
+`BAAI/bge-small-en-v1.5` model. The migration to the new default local embedding
+model is for installs that leave the provider and model unconfigured; do not
+drop the existing pins during the upgrade. The 1.6.11 frontend uses the same
+npm lockfile and accepts the existing downstream patches.

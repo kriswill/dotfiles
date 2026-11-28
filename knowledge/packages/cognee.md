@@ -7,11 +7,11 @@ tags: [sub-flake, agent-memory, darwin]
 generated: { by: codex/gpt-6, at: 2026-11-26T12:00:00-08:00 }
 sources:
   - id: dependencies
-    resource: https://github.com/topoteretes/cognee/blob/v1.6.10/pyproject.toml
-    title: Cognee 1.6.10 dependency metadata
+    resource: https://github.com/topoteretes/cognee/blob/v1.6.11/pyproject.toml
+    title: Cognee 1.6.11 dependency metadata
   - id: dashboard
-    resource: https://github.com/topoteretes/cognee/tree/v1.6.10/cognee-frontend
-    title: Cognee 1.6.10 frontend source
+    resource: https://github.com/topoteretes/cognee/tree/v1.6.11/cognee-frontend
+    title: Cognee 1.6.11 frontend source
 ---
 
 The [Cognee module](../modules/cognee.md) consumes the runtime directly.

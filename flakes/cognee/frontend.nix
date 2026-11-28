@@ -8,13 +8,13 @@
 }:
 buildNpmPackage (finalAttrs: {
   pname = "cognee-frontend";
-  version = "1.6.10";
+  version = "1.6.11";
 
   src = fetchFromGitHub {
     owner = "topoteretes";
     repo = "cognee";
     tag = "v${finalAttrs.version}";
-    hash = "sha256-xqZq/fEKkHduShQH5IQfr+bwLnRLpYiELsk6fH7GfQI=";
+    hash = "sha256-/ZqNENrZAG02TTvW8CkVStUrNCaXyGSi7TvaiwNCrKQ=";
   };
   sourceRoot = "${finalAttrs.src.name}/cognee-frontend";
   npmDepsHash = "sha256-UDUVo15T5lUuqJ3013On2BMKUdVOMP9t1xIUwwlVJyg=";
