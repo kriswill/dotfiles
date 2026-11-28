@@ -2,6 +2,21 @@
 
 ## 2026-11-27
 
+- **Update**: [Cognee](cognee.md) ships the dashboard's API keys, document
+  reader and release notes as source overlays with their own tests, like
+  Manage Users, in place of three patches. Upstream files are edited only at
+  one-line `substituteInPlace` seams and no upstream test is edited. Two
+  small patches remain (sign-in form, narrow top bar).
+
+- **Update**: [Cognee](cognee.md) turns Manage Users into account
+  administration (create, superuser, deactivate, passwords, API keys, dataset
+  access, tenants and roles, delete) behind a superuser-session-only router
+  with self and last-superuser guardrails. The dashboard half ships as a
+  source overlay, not a patch.
+
+- **Update**: [Cognee](cognee.md) adds a read-only Manage Users page with a
+  superuser-only instance inventory and no credential values.
+
 - **Update**: [Cognee](cognee.md) pins the API and dashboard to 1.6.11,
   keeping the existing FastEmbed model and downstream dashboard patches.
 

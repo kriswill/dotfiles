@@ -49,6 +49,19 @@
           PY
           touch "$out"
         '';
+        checks.cognee-admin-users = pkgs.runCommand "cognee-admin-users" { } ''
+          export HOME="$TMPDIR"
+          export SYSTEM_ROOT_DIRECTORY="$TMPDIR/system"
+          export DATA_ROOT_DIRECTORY="$TMPDIR/data"
+          export PYTHON_DOTENV_DISABLED=1
+          export TELEMETRY_DISABLED=1
+          export COGNEE_LOG_FILE=false
+          export REQUIRE_AUTHENTICATION=false
+          export ENABLE_BACKEND_ACCESS_CONTROL=false
+          export HASH_API_KEY=true
+          ${config.packages.cognee}/bin/python ${./test-admin-users.py}
+          touch "$out"
+        '';
       };
 
       flake.lib.mkHermesPlugin = pythonPackages: pythonPackages.callPackage ./hermes-plugin.nix { };

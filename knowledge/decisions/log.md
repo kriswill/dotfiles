@@ -2,6 +2,10 @@
 
 ## 2026-11-27
 
+- **Update**: [Ship Cognee Dashboard Features as Source Overlays](cognee-dashboard-source-overlays.md): the API-keys, document-reader and release-notes patches are now overlays too. Records the five kinds of seam, one `upstream.ts` per module directory, no edits to upstream tests, and why the sign-in form and the narrow top bar stay patches.
+
+- **Creation**: [Ship Cognee Dashboard Features as Source Overlays](cognee-dashboard-source-overlays.md): Manage Users is real source under `flakes/cognee/dashboard/manage-users/`, copied over the upstream tree with a collision check, with one `substituteInPlace` seam. Records why not a patch and why not an npm package.
+
 - **Creation**: [Mirror OKF Bundle into a Read-Only Cognee Dataset](okf-cognee-read-only-mirror.md): records the one-way `knowledge/` → `dotfiles-knowledge` sync (`okf-cognee-sync.ts` under a `k` user LaunchAgent, 21-doc pilot, fleet-wide read-only ACLs, and anti-duplication guardrails).
 
 ## 2026-11-26

@@ -38,5 +38,32 @@ table opens the same reader. **Formatted** renders Markdown;
 **Original** preserves the source text. Both use the signed-in reader’s
 dataset access. Above 128 KiB the preview offers a full-text download.
 
+**Administration → Manage Users** is the instance's account administration:
+create users, grant or remove superuser access, deactivate, set passwords,
+issue and revoke API keys, edit per-dataset access, assign tenants and roles,
+and delete. Its [admin router](../../flakes/cognee/admin_users.py) requires a
+superuser's dashboard session cookie on every route, even if the service
+allows anonymous access elsewhere, and refuses API keys and bearer tokens.
+Changes also need a header only the dashboard sends, so another site cannot
+submit one with the operator's cookie. The router refuses to demote,
+deactivate or delete the caller, or the last superuser who can sign in. It
+never returns password hashes or stored keys; a new key is returned once.
+Setting a password ends that user's sessions, because Cognee binds each
+token to the password hash. Changes go through Cognee's own user manager,
+key, permission, tenant and role functions. API key management also requires
+an authenticated user and cannot fall back to the built-in account.
+
+No dashboard feature is a patch. Each is source under
+`flakes/cognee/dashboard/<feature>/`, copied over the upstream tree at build
+time and mounted by a few one-line edits to upstream files
+([decision](../decisions/cognee-dashboard-source-overlays.md)):
+`manage-users`, `api-keys` (the API Keys page and the agent setup dialogs
+that create a key), `memory-reader` (the document reader above) and
+`releases` (the release notes of the running version and of a newer stable
+release, with an update link in the top bar). The build runs each feature's
+tests. Two small patches remain for restyling upstream's own markup: the
+sign-in form without pre-filled credentials, and a top bar that fits a
+phone.
+
 [^dependencies]: Cognee Python dependencies and platform support.
 [^dashboard]: Cognee dashboard source and dependency lockfile.

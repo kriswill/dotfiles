@@ -89,4 +89,4 @@ under `DATABASE_MAX_LRU_CACHE_SIZE=2`.
 - Module: [`modules/hosts/mini/cognee.nix`](../../modules/hosts/mini/cognee.nix)
 - OKF mirror: [`modules/hosts/mini/okf-cognee-sync.nix`](../../modules/hosts/mini/okf-cognee-sync.nix) + [`okf-cognee-sync.ts`](../../modules/hosts/mini/okf-cognee-sync.ts)
 - Capacity UI: [`cognee-capacity-page.js`](../../modules/hosts/mini/cognee-capacity-page.js)
-- Releases UI and endpoint: [`dashboard-releases.patch`](../../flakes/cognee/dashboard-releases.patch)
+- Releases UI and endpoint: [`dashboard/releases/`](../../flakes/cognee/dashboard/releases/src/modules/self-hosted-releases/ReleaseNotesPage.tsx)

@@ -105,6 +105,28 @@ On the dotfiles hosts, apply the enabled configuration with `nrs`.
   and show their setup instructions. Save the key when it is issued. The
   server stores its hash, and the dashboard can only list a masked value
   afterward.
+- In the dashboard, **Administration → Manage Users** is where a signed-in
+  superuser manages every account on the instance. The list can be searched
+  by email and filtered by role, and **Add user** creates an account with a
+  password or, for an agent, with none. Opening a user gives one page to:
+  - grant or remove superuser access, deactivate or reactivate the account,
+    and record its email as verified
+  - set a new password, which signs that user out everywhere; their API
+    keys keep working unless revoked in the same step
+  - list API keys by name and date, create one on the user's behalf (shown
+    once) and revoke any of them
+  - see the datasets the user owns and those shared with them, and grant,
+    change or remove their access to another dataset
+  - add or remove tenant membership and roles, where tenants exist
+  - delete the account, which keeps the datasets it owns but leaves them
+    without an owner; give another account full access first
+
+  You cannot remove your own superuser access, deactivate or delete your own
+  account, or remove the last superuser who can sign in. The built-in
+  account cannot be deleted because Cognee recreates it. Cognee sends no
+  email, so pass a new password on yourself. Email addresses must be ones
+  Cognee accepts at sign-up; it rejects reserved domains such as `.test`
+  and `.local`.
 - The system jobs are `org.nixos.cognee`, `org.nixos.cognee-postgresql`,
   `org.nixos.cognee-proxy`, and `org.nixos.cognee-frontend` for the enabled
   components. Inspect them with
@@ -153,11 +175,60 @@ Changing the root CA requires seeding its replacement and updating the
 hash. For macOS removal, keep the client module imported and switch once
 with `clientTrust.enable = false` to remove its admin trust entry.
 
+## Dashboard changes
+
+A change to the upstream dashboard is a feature directory, plus the few
+lines of `frontend.nix` that mount it.
+
+`dashboard/<feature>/` holds a feature as ordinary source files, at the
+paths they have in the upstream `cognee-frontend` tree. `frontend.nix`
+copies each feature over the unpacked source and fails the build if upstream
+already has a file at one of those paths. Each module directory has an
+`upstream.ts` through which all of its imports of upstream code pass, so a
+rename upstream breaks one file. Tests live with the feature, and the build
+runs every `*.test.ts(x)` file under `dashboard/`.
+
+An upstream file is edited only at a seam: a `substituteInPlace
+--replace-fail` line in `frontend.nix` that names a string upstream must
+still contain and what replaces it. A seam adds an import, puts one line of
+JSX inside a feature's component, or hands a call to a feature's function.
+No upstream test file is edited.
+
+| Feature | What it adds | Upstream files with a seam |
+| --- | --- | --- |
+| `manage-users` | **Administration → Manage Users**, pages under `src/app/(app)/manage-users/` | `CustomAppShellNavbar.tsx` |
+| `api-keys` | Working **API Keys**, and agent setup dialogs that create a key on request | the three stubs in `src/modules/apiKeys/`; the import of the setup modal in `OverviewPage.tsx` and `SetupConnectorSection.tsx` |
+| `memory-reader` | The document reader on **Datasets** and on a dataset's own page | `datasets/[id]/page.tsx`, `FilesTable.tsx`, `DocumentsPanel.tsx`, `DocumentList.tsx` |
+| `releases` | The `/api/releases` route, the self-hosted **Release notes** page, the update link in the top bar | `releases/page.tsx`, `useReleases.ts`, `HelpMenu.tsx` |
+
+Next's router is file-based, so a new page or route handler needs no seam.
+The `api-keys` build step also fails if any other upstream file starts
+importing the setup modal directly, because that file would skip the wrapper.
+
+Two patch files remain, each restyling one upstream component in place,
+which a feature directory cannot do:
+
+- `dashboard-login.patch` empties the sign-in form's pre-filled default
+  credentials and names its fields for password managers.
+- `dashboard-topbar-narrow.patch` lets the top bar fit a phone-width screen.
+
+To work on a feature with editor tooling, unpack `cognee-frontend`, apply
+the patches and seams, copy `dashboard/*/` over it and run `npm ci`; then
+`npx jest`, `npx tsc --noEmit` and `npx eslint` work on the feature's files.
+
+The backend half of Manage Users is `admin_users.py`, installed into the
+Cognee package by `package.nix` and mounted with one `--replace-fail` edit to
+`cognee/api/client.py`. Every route requires a superuser's dashboard session
+cookie; API keys and bearer tokens are refused. `checks.cognee-admin-users`
+runs `test-admin-users.py` against the packaged app.
+
 ## Updating
 
 Change the Python pin in `pyproject.toml` and run `uv lock`. Update the
 matching dashboard tag and hashes in `frontend.nix` and check its source
-substitutions against the new tag. Build both packages on Apple Silicon and
+substitutions against the new tag. A failed `--replace-fail`, an overlay
+collision, a type error in an `upstream.ts`, or a failing feature test names
+what moved upstream. Build both packages on Apple Silicon and
 check dashboard access and an authenticated remember and recall. Back up
 existing state before activating a new version because Cognee can migrate
 data on startup.
@@ -166,4 +237,4 @@ For 1.6.11, `mini` keeps its explicit FastEmbed provider and
 `BAAI/bge-small-en-v1.5` model. The migration to the new default local embedding
 model is for installs that leave the provider and model unconfigured; do not
 drop the existing pins during the upgrade. The 1.6.11 frontend uses the same
-npm lockfile and accepts the existing downstream patches.
+npm lockfile and accepts the existing downstream changes.

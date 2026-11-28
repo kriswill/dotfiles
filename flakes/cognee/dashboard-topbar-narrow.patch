@@ -1,0 +1,63 @@
+--- a/src/ui/layout/TopBar.tsx
++++ b/src/ui/layout/TopBar.tsx
+@@ -123,12 +123,12 @@
+           : "active";
+ 
+   return (
+-    <header className="flex items-center justify-between flex-shrink-0" style={{ height: 53, paddingInline: 24, position: "relative", zIndex: 300, background: "rgba(0,0,0,0.65)", backdropFilter: "blur(12px)", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
++    <header className="flex items-center justify-between flex-shrink-0 gap-2 px-3 sm:px-6" style={{ height: 53, position: "relative", zIndex: 300, background: "rgba(0,0,0,0.65)", backdropFilter: "blur(12px)", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
+       {/* Left: logo + breadcrumbs */}
+-      <div className="flex items-center" style={{ gap: 8 }}>
+-        {/* Logo fixed-width box so workspace aligns with right edge of navbar (240px - 24px padding) */}
+-        <div style={{ width: 240, flexShrink: 0, display: "flex", alignItems: "center" }}>
+-          <Image src="/cognee-logo-black.svg" alt="Cognee" width={110} height={32} loading="eager" style={{ width: 110, height: "auto", flexShrink: 0, filter: "invert(1)" }} />
++      <div className="flex min-w-0 items-center gap-2">
++        {/* On wide screens, align the workspace with the right edge of the navbar. */}
++        <div className="flex w-[86px] shrink-0 items-center sm:w-[110px] lg:w-[240px]">
++          <Image src="/cognee-logo-black.svg" alt="Cognee" width={110} height={32} loading="eager" className="h-auto w-[86px] shrink-0 sm:w-[110px]" style={{ filter: "invert(1)" }} />
+         </div>
+ 
+         {/* 1. Workspace switcher */}
+@@ -136,7 +136,7 @@
+           trigger={
+             <div className="flex items-center" style={{ gap: 6 }}>
+               <WorkspaceBadge initial={workspace.initial} color={workspace.color} size={20} state={triggerBadgeState} />
+-              <span style={{ fontSize: 14, fontWeight: 500, color: "#EDECEA", flexShrink: 0 }}>{workspace.name}</span>
++              <span className="hidden sm:inline" style={{ fontSize: 14, fontWeight: 500, color: "#EDECEA", flexShrink: 0 }}>{workspace.name}</span>
+               <Chevron />
+             </div>
+           }
+@@ -203,20 +203,22 @@
+         </Dropdown>
+ 
+         {/* 2. Page name */}
+-        {isDatasetDetail ? (
+-          <>
+-            <Slash />
+-            <Link href="/datasets" className="hover:opacity-70" style={{ fontSize: 14, fontWeight: 500, color: "rgba(237,236,234,0.55)" }}>Datasets</Link>
+-            <Slash />
+-            <span style={{ fontSize: 14, fontWeight: 500, color: "rgba(237,236,234,0.7)" }}>Documents</span>
+-          </>
+-        ) : basePath !== "/" && basePath !== "/dashboard" ? (
+-          <><Slash /><span style={{ fontSize: 14, fontWeight: 500, color: "rgba(237,236,234,0.7)" }}>{pageName}</span></>
+-        ) : null}
++        <div className="hidden items-center gap-2 md:flex">
++          {isDatasetDetail ? (
++            <>
++              <Slash />
++              <Link href="/datasets" className="hover:opacity-70" style={{ fontSize: 14, fontWeight: 500, color: "rgba(237,236,234,0.55)" }}>Datasets</Link>
++              <Slash />
++              <span style={{ fontSize: 14, fontWeight: 500, color: "rgba(237,236,234,0.7)" }}>Documents</span>
++            </>
++          ) : basePath !== "/" && basePath !== "/dashboard" ? (
++            <><Slash /><span style={{ fontSize: 14, fontWeight: 500, color: "rgba(237,236,234,0.7)" }}>{pageName}</span></>
++          ) : null}
++        </div>
+       </div>
+ 
+       {/* Right: help + profile */}
+-      <div className="flex items-center gap-3">
++      <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+         <HelpMenu />
+         <ProfileMenu
+           // The name the person set on their profile, else the sign-in provider's.

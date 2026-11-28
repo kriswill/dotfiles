@@ -24,6 +24,21 @@ let
       pyproject-build-systems.overlays.default
       (workspace.mkPyprojectOverlay { sourcePreference = "wheel"; })
       (final: prev: {
+        cognee = prev.cognee.overrideAttrs (old: {
+          postInstall = (old.postInstall or "") + ''
+            api="$out/${python312.sitePackages}/cognee/api"
+            install -m644 ${./admin_users.py} "$api/admin_users.py"
+            # One seam: mount the router just before the module's entry point.
+            substituteInPlace "$api/client.py" \
+              --replace-fail 'if __name__ == "__main__":' $'from cognee.api.admin_users import router as admin_users_router\n\napp.include_router(admin_users_router)\n\n\nif __name__ == "__main__":'
+
+            # Credential management must not inherit the optional default user.
+            substituteInPlace "$api/v1/api_keys/routers/get_api_key_management_router.py" \
+              --replace-fail 'from cognee.modules.users.methods import get_authenticated_user' 'from cognee.modules.users.get_fastapi_users import get_fastapi_users' \
+              --replace-fail '    api_key_management_router = APIRouter()' $'    api_key_management_router = APIRouter()\n    require_authenticated_user = get_fastapi_users().current_user(active=True)' \
+              --replace-fail 'Depends(get_authenticated_user)' 'Depends(require_authenticated_user)'
+          '';
+        });
         # langdetect ships a setup.py sdist without build-system metadata.
         langdetect = prev.langdetect.overrideAttrs (old: {
           nativeBuildInputs = old.nativeBuildInputs ++ [ final.setuptools ];
