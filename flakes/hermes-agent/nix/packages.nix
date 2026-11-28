@@ -13,8 +13,8 @@
 # is readable under pure evaluation. A scope supplies it, so the nested
 # callPackage calls receive it without being passed it by hand.
 #
-# Dropped: the sandbox, desktop, tui, web, messaging, node-gyp and
-# update-npm-lockfile outputs and the per-tool pm-* packages. The TUI and web
+# Dropped: the sandbox, desktop, tui, web, messaging, node-gyp, pnpm-deps and
+# update-pnpm-lockfile outputs and the per-tool pm-* packages. The TUI and web
 # bundles still build as passthru of the package.
 { inputs, ... }:
 {
@@ -50,7 +50,7 @@
         extraDependencyGroups = [ ];
         inherit pmPackages;
         inherit (src) rev lastModified;
-        version = "0.23.0";
+        version = "0.23.4";
       };
 
       # All platform-portable optional integrations pre-built. These are the

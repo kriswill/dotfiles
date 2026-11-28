@@ -28,9 +28,11 @@ Herdr integration, shared by both modules), `nix/darwinModules.nix` and
 `nix/darwinSandbox.nix`.
 
 Upstream's `checks.nix`, `desktop.nix`, `devShell.nix`,
-`homeManagerModules.nix`, `overlays.nix`, `sandbox.nix` and `tests/` are not
-copied. `node-gyp-11-4-0-package-lock.json` is data, so it is read from the
-source input and not copied.
+`homeManagerModules.nix`, `node-gyp-11-4-0.nix`, `overlays.nix`, `sandbox.nix`
+and `tests/` are not copied. `pnpm-deps-hash` is read from the source input on
+Linux; `aarch64-darwin` pins its own deterministic `fetchPnpmDeps` hash in
+`nix/lib.nix`, because upstream's Nix CI computes `nix/pnpm-deps-hash` on
+`x86_64-linux` only.
 
 ### How the copies reach the source
 
@@ -50,7 +52,7 @@ these commands still show the derivations for comparison:
 ```sh
 nix eval --raw --apply 'p: (p.override { version = "0.0.0"; }).drvPath' \
   ./flakes/hermes-agent#packages.x86_64-linux.hermes-agent
-nix eval --raw github:NousResearch/hermes-agent/v0.23.0#packages.x86_64-linux.default.drvPath
+nix eval --raw github:NousResearch/hermes-agent/v0.23.4#packages.x86_64-linux.default.drvPath
 ```
 
 ## Flake outputs
@@ -60,8 +62,8 @@ nix eval --raw github:NousResearch/hermes-agent/v0.23.0#packages.x86_64-linux.de
   Changes against upstream:
   - `version` is the release tag. Upstream leaves it at `0.0.0`, and
     `hermes --version` printed `v0.0.0`.
-  - The desktop app, the dev-shell passthru and the npm-lockfile tooling are
-    gone.
+  - The desktop app, the dev-shell passthru, `node-gyp` and the pnpm-lockfile
+    tooling are gone.
   - The TUI, web and webapp bundles still build, as passthru.
   - `nix/tui-terminal-breadcrumbs.patch` attaches the TypeScript helper in
     `nix/tui-breadcrumbs/` to the TUI's committed session state. Unlike v0.22.5's
@@ -70,7 +72,7 @@ nix eval --raw github:NousResearch/hermes-agent/v0.23.0#packages.x86_64-linux.de
     Superseded attachment responses never write. Writes are atomic and private,
     respect local `session.terminal_continue`, and skip explicit remote gateway
     launches. The helper's regression tests run in the Nix TUI build.
-  - PM's pinned ffmpeg/ripgrep and existing node/npm are registered in an
+  - PM's pinned ffmpeg/ripgrep/pnpm and existing node/npm are registered in an
     immutable, digest-bound tool store. The install stamp's `runtimeDir`
     points PM at it, so a fresh profile recognizes the dependencies rather
     than reporting PATH-only executables as missing. The package ships
@@ -306,15 +308,16 @@ release was not tested with.
 1. Read upstream's `nix/` changes since the current tag, and port them into
    `nix/` (only the files copied here):
    ```sh
-   git -C <hermes-agent checkout> diff v0.23.0 v<new> -- nix/
+   git -C <hermes-agent checkout> diff v0.23.4 v<new> -- nix/
    ```
 2. Point `hermes-agent-src` at the new tag. Set `version` in
    `nix/packages.nix` to match.
 3. Lock our inputs to the revs in the new tag's `flake.lock` (`nixpkgs`,
    `pyproject-nix`, `uv2nix`, `pyproject-build-systems`), for example
    `nix flake lock --override-input nixpkgs github:NixOS/nixpkgs/<rev>`.
-   Then run `nix flake update hermes-agent` in the root.
-4. Check that both source patches still apply
+   Then run `nix flake update hermes-agent` in the root. If `pnpm-lock.yaml`
+   changed, also refresh the `aarch64-darwin` `pnpmDeps` hash in `nix/lib.nix`.
+4. Check that all local source patches still apply
    (`git -C <checkout> apply --check nix/*.patch`), compare the derivation
    (above) with `version = "0.0.0"` against the new tag's `default`, then
    build nebula and a mac.

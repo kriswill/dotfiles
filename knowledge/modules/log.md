@@ -13,6 +13,8 @@
   runtime credentials. Activated in generation 58; k/nebula trusted-TLS login
   rendering and on-mini authenticated HTTPS/WebSocket checks passed.
 
+- **Update**: [Nrs](nrs.md) wraps `darwin-rebuild activate` in `/bin/launchctl asuser <uid>` when invoked outside an `Aqua` session (e.g. SSH) and `gui/<uid>` is logged in, avoiding SIP exit 150 from nix-darwin's bare `launchctl setenv`.
+
 - **Update**: [Cognee on mini](mini-cognee.md) puts warnings and disk runway
   first on `/capacity`, with storage and latency charts above raw readings.
 

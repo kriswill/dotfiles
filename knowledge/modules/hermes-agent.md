@@ -17,7 +17,7 @@ sources:
 One-line re-exports of `inputs.hermes-agent.nixosModules.default` and
 `darwinModules.default`, the same shape as [battlenet](battlenet.md). The module lives in the
 [hermes-agent sub-flake](../packages/hermes-agent.md), copied from
-upstream's module (now at v0.23.0) and trimmed
+upstream's module (now at v0.23.4) and trimmed
 ([decision](../decisions/hermes-agent-vendored-nix.md)). It defaults
 `services.hermes-agent.package` to the sub-flake's own package (every
 portable optional integration: messaging, voice, anthropic, …), so there is

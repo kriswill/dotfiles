@@ -862,7 +862,9 @@ plan_nixos() {
 # darwin-rebuild (it sets HOME, PATH and NIX_REMOTE for root and handles any
 # legacy activate-user). Activation is root-only in current nix-darwin.
 activate_darwin() {
-  local rc shell
+  local rc shell uid
+  local -a activate_cmd=("$out/sw/bin/darwin-rebuild" activate)
+  local activate_label="darwin-rebuild activate"
   if [ "$mode" = test ]; then
     # Not `darwin-rebuild check`: it rebuilds from the flake as root, then runs
     # `checkActivation=1 activate`. activate's shebang is
@@ -891,9 +893,23 @@ activate_darwin() {
   fi
 
   set_profile
-  step "activating: darwin-rebuild activate"
+  # nix-darwin's user-launchd pass runs `sudo --user=<u> -- launchctl setenv`
+  # without `launchctl asuser`. From an SSH / non-Aqua shell (`launchctl
+  # managername` = System), `launchctl setenv` targets the System domain and
+  # SIP rejects it with exit 150. Re-enter the caller's Aqua GUI bootstrap
+  # namespace (keeping root euid) when one is active.
+  uid="$(id -u)"
+  if [ "$(/bin/launchctl managername 2>/dev/null || true)" != Aqua ]; then
+    if /bin/launchctl print "gui/$uid" >/dev/null 2>&1; then
+      activate_cmd=(/bin/launchctl asuser "$uid" "${activate_cmd[@]}")
+      activate_label="darwin-rebuild activate (via gui/$uid)"
+    else
+      warn "not in an Aqua session and gui/$uid is not logged in; launchctl setenv may fail with exit 150"
+    fi
+  fi
+  step "activating: $activate_label"
   set +e
-  sudo -H "$out/sw/bin/darwin-rebuild" activate 2>&1 | render_activity
+  sudo -H "${activate_cmd[@]}" 2>&1 | render_activity
   rc=${PIPESTATUS[0]}
   set -e
   lap activate

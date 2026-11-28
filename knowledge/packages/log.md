@@ -5,6 +5,15 @@
 - **Update**: [Cognee](cognee.md) pins the API and dashboard to 1.6.11,
   keeping the existing FastEmbed model and downstream dashboard patches.
 
+- **Update**: [hermes-agent](hermes-agent.md): bumped `v0.23.0` → `v0.23.4`
+  (ported upstream's npm → pnpm 12 workspace build migration, registered
+  PM-pinned `pnpm` 12.15.0 in the sealed tool store so `hermes pm doctor`
+  passes, pinned `aarch64-darwin`'s `fetchPnpmDeps` hash in `nix/lib.nix`
+  while preserving upstream's `x86_64-linux` drv, refreshed
+  `tui-terminal-breadcrumbs.patch`, switched `terminalBreadcrumbs.ts` to
+  root's `js-yaml` under pnpm's strict `node_modules`, and dropped unused
+  `nix/node-gyp-11-4-0.nix`).
+
 - **Update**: The [Cognee](cognee.md) dashboard opens text memories and documents from the dataset list in a read-only viewer.
 
 ## 2026-11-26

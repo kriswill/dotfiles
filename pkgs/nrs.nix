@@ -19,9 +19,9 @@
 # unit (Ctrl-C detaches instead of killing it). Manual:
 # docs/nrs-pipeline.html. Body: ./nrs.sh.
 #
-# Deliberately NOT pinned (resolved from the ambient PATH): nix and nix-store
-# (the system's own), sudo (the setuid wrapper), systemctl/systemd-run (the
-# running systemd), and scutil (macOS).
+# Deliberately NOT pinned (resolved from the ambient PATH or fixed system
+# paths): nix and nix-store (the system's own), sudo (the setuid wrapper),
+# systemctl/systemd-run (the running systemd), scutil and /bin/launchctl (macOS).
 writeShellApplication {
   name = "nrs";
   runtimeInputs = [

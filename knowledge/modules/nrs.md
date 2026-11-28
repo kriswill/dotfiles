@@ -105,7 +105,12 @@ in red.
 **darwin** (`modules/darwin/nrs.nix`):
 - **Same order as nh:** set the profile, then run the new generation's own
   `darwin-rebuild activate` under `sudo -H`. That script sets HOME, PATH and
-  NIX_REMOTE for root and handles any legacy `activate-user`.
+  NIX_REMOTE for root and handles any legacy `activate-user`. When invoked
+  outside an `Aqua` session (e.g. SSH, where `launchctl managername` is
+  `System`), `nrs` wraps activation in `/bin/launchctl asuser <uid>` if
+  `gui/<uid>` is logged in — nix-darwin runs `sudo --user=<u> -- launchctl
+  setenv` without `asuser`, which otherwise targets the System domain and
+  fails under SIP with exit 150.
 - **Host name:** `scutil --get LocalHostName`, as nh and darwin-rebuild use.
 - **No detach.** launchd has no systemd-run equivalent wired in here, so Ctrl-C
   interrupts activation, as it does under nh.

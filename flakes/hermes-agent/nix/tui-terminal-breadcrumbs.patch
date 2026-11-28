@@ -1,19 +1,28 @@
+diff --git a/ui-tui/src/app/useSessionLifecycle.ts b/ui-tui/src/app/useSessionLifecycle.ts
+index 62870429d2..54a9ca2e42 100644
 --- a/ui-tui/src/app/useSessionLifecycle.ts
 +++ b/ui-tui/src/app/useSessionLifecycle.ts
-@@ -23,4 +23,5 @@
- import { t } from '../i18n/runtime.js'
+@@ -24,6 +24,7 @@ import { t } from '../i18n/runtime.js'
+ import { launchRouteServes, localCreationOptions } from '../launchOptions.js'
  import { migratePendingInputs } from '../lib/pendingInputs.js'
  import { asRpcResult } from '../lib/rpc.js'
 +import { watchTerminalBreadcrumbs } from '../lib/terminalBreadcrumbs.js'
- import type { Msg, PanelSection, SessionInfo } from '../types.js'
-@@ -33,5 +34,5 @@
+ import type { Msg, PanelSection } from '../types.js'
+ 
+ import { noteBackgroundHandoff } from './backgroundSessionNotices.js'
+@@ -35,7 +36,7 @@ import { renameCanonicalSession } from './slash/canonicalSessionCommands.js'
  import { captureDestination } from './submissionDestination.js'
  import { turnController } from './turnController.js'
  import { patchTurnState } from './turnStore.js'
 -import { getUiState, patchUiState } from './uiStore.js'
 +import { $uiState, getUiState, patchUiState } from './uiStore.js'
  import { describeCredentialWarning } from './userMessages.js'
-@@ -172,3 +173,7 @@
+ 
+ export { refreshSessionView, scheduleResumeScrollToBottom } from './sessionResumeView.js'
+@@ -189,6 +190,10 @@ export function useSessionLifecycle(opts: UseSessionLifecycleOptions) {
+     sys
+   } = opts
+ 
 +  // Ours: follow committed create/resume/reset and compaction identities. Stale
 +  // attachment responses must never overwrite this terminal's continuation hint.
 +  useEffect(() => watchTerminalBreadcrumbs($uiState), [])

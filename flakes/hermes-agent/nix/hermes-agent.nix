@@ -167,13 +167,14 @@ let
 
   # Ours: PM receipts must describe the actual pinned artifacts, not
   # nixpkgs executables falsely labelled with PM's archive hashes.
-  inherit (pmPackages) ripgrep ffmpeg;
+  inherit (pmPackages) ripgrep ffmpeg pnpm;
 
   # Tools come from pm/lock.json, the same builds `hermes pm install`
   # provisions elsewhere. git and openssh are nixpkgs': the lock pins them for
   # win32 only. hermesNpmLib.nodejs is the pinned node with the pinned npm.
   runtimeDeps = [
     hermesNpmLib.nodejs
+    pmPackages.pnpm
     pmPackages.ripgrep
     pmPackages.ffmpeg
     git
@@ -317,7 +318,9 @@ stdenv.mkDerivation {
     ln -s ${ripgrep} "$out/tools/ripgrep"
     ln -s ${hermesNpmLib.nodejs} "$out/tools/node"
     ln -s ${hermesNpmLib.nodejs} "$out/tools/npm"
-    PATH="${runtimePath}:$PATH" ${hermesVenv}/bin/python3 - "$out/tools" <<'PY'
+    ln -s ${pnpm} "$out/tools/pnpm"
+    mkdir -p "$TMPDIR/pm-home"
+    HOME="$TMPDIR/pm-home" PATH="${runtimePath}:$PATH" ${hermesVenv}/bin/python3 - "$out/tools" <<'PY'
     import json, sys
     from pathlib import Path
     from pm.lock import Facts, Lockfile
@@ -329,7 +332,7 @@ stdenv.mkDerivation {
     lock = Lockfile(lockfile_path())
     facts = Facts(root / "facts.json")
     target = current_target()
-    for name in ("ffmpeg", "ripgrep", "node", "npm"):
+    for name in ("ffmpeg", "ripgrep", "node", "npm", "pnpm"):
         package = get_package(name)
         entry = root / name
         reason = package.verify(entry, target)

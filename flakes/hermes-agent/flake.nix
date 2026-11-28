@@ -8,7 +8,7 @@
     # re-locking the inputs below to that tag's flake.lock (see README.md).
     # Keep `version` in nix/packages.nix in step with the tag.
     hermes-agent-src = {
-      url = "github:NousResearch/hermes-agent/v0.23.0";
+      url = "github:NousResearch/hermes-agent/v0.23.4";
       flake = false;
     };
 

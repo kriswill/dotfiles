@@ -4,7 +4,7 @@ import { mkdirSync, readFileSync, readlinkSync, renameSync, rmSync, writeFileSyn
 import { homedir } from 'node:os'
 import { join } from 'node:path'
 import { isatty } from 'node:tty'
-import { parse } from 'yaml'
+import { load as parse } from 'js-yaml'
 
 export interface BreadcrumbState { storedSid: string | null; info: { cwd?: string } | null }
 export interface BreadcrumbStore { subscribe(listener: (state: BreadcrumbState) => void): () => void }
