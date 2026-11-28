@@ -72,8 +72,21 @@ section. An unavailable check is not treated as up to date. The frontend
 caches the upstream check for 15 minutes; no GitHub token or browser-side
 GitHub request is needed. The badge does not install updates.
 
+## Read-only OKF mirror (`dotfiles-knowledge`)
+
+[`modules/hosts/mini/okf-cognee-sync.nix`](../../modules/hosts/mini/okf-cognee-sync.nix)
+installs `okf-cognee-sync` (`okf-cognee-sync.ts` on `bun`) and runs a
+30-minute `launchd.user.agents.okf-cognee-sync` job under `k` to mirror
+committed `HEAD` OKF docs from `knowledge/` into the shared read-only
+`dotfiles-knowledge` dataset (see [decision](../decisions/okf-cognee-read-only-mirror.md)).
+It skips `index.md`, `log.md`, and `_okflight/`, exits without HTTP calls when
+the git manifest is unchanged, and starts with a 21-doc pilot (`patterns/`,
+`playbooks/`, `hosts/`, `okf-profile.md`) to keep memory headroom comfortable
+under `DATABASE_MAX_LRU_CACHE_SIZE=2`.
+
 ## Source
 
 - Module: [`modules/hosts/mini/cognee.nix`](../../modules/hosts/mini/cognee.nix)
+- OKF mirror: [`modules/hosts/mini/okf-cognee-sync.nix`](../../modules/hosts/mini/okf-cognee-sync.nix) + [`okf-cognee-sync.ts`](../../modules/hosts/mini/okf-cognee-sync.ts)
 - Capacity UI: [`cognee-capacity-page.js`](../../modules/hosts/mini/cognee-capacity-page.js)
 - Releases UI and endpoint: [`dashboard-releases.patch`](../../flakes/cognee/dashboard-releases.patch)

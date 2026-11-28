@@ -2,6 +2,8 @@
 
 ## 2026-11-27
 
+- **Update**: [Cognee on mini](mini-cognee.md) adds `okf-cognee-sync` (`modules/hosts/mini/okf-cognee-sync.{nix,ts}`) as a 30-minute user LaunchAgent mirroring committed `knowledge/` OKF pilot docs into the shared read-only `dotfiles-knowledge` Cognee dataset.
+
 - **Update**: [Cognee on mini](mini-cognee.md) adds GitHub notes for the
   running version and a top-bar link to the latest stable release when newer.
 

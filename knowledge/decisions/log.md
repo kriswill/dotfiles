@@ -1,5 +1,9 @@
 # Log
 
+## 2026-11-27
+
+- **Creation**: [Mirror OKF Bundle into a Read-Only Cognee Dataset](okf-cognee-read-only-mirror.md): records the one-way `knowledge/` → `dotfiles-knowledge` sync (`okf-cognee-sync.ts` under a `k` user LaunchAgent, 21-doc pilot, fleet-wide read-only ACLs, and anti-duplication guardrails).
+
 ## 2026-11-26
 
 - **Update**: [Run Cognee as native macOS services](native-cognee-on-darwin.md)
